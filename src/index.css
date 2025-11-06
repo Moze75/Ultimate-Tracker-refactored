@@ -8,6 +8,7 @@
 
 :root {
   color-scheme: dark;
+  --desktop-scale: 0.7;
 }
 
 html {
@@ -19,6 +20,55 @@ html {
   html {
     font-size: 16px;
   }
+}
+
+/* Desktop compact layout scaling */
+.desktop-compact-layout {
+  font-size: calc(1rem * 0.7);
+}
+
+.desktop-compact-layout h1 {
+  font-size: calc(2rem * 0.7);
+}
+
+.desktop-compact-layout h2 {
+  font-size: calc(1.5rem * 0.7);
+}
+
+.desktop-compact-layout h3 {
+  font-size: calc(1.25rem * 0.7);
+}
+
+.desktop-compact-layout h4 {
+  font-size: calc(1.1rem * 0.7);
+}
+
+.desktop-compact-layout .text-xs {
+  font-size: calc(0.75rem * 0.7);
+}
+
+.desktop-compact-layout .text-sm {
+  font-size: calc(0.875rem * 0.7);
+}
+
+.desktop-compact-layout .text-base {
+  font-size: calc(1rem * 0.7);
+}
+
+.desktop-compact-layout .text-lg {
+  font-size: calc(1.125rem * 0.7);
+}
+
+.desktop-compact-layout .text-xl {
+  font-size: calc(1.25rem * 0.7);
+}
+
+.desktop-compact-layout .text-2xl {
+  font-size: calc(1.5rem * 0.7);
+}
+
+.desktop-compact-layout .text-3xl {
+  font-size: calc(1.875rem * 0.7);
 }
 
 body {

@@ -1,0 +1,81 @@
+import React from 'react';
+import { Settings } from 'lucide-react';
+
+interface CompactAvatarProps {
+  player: {
+    id: string;
+    avatar_url: string | null;
+    adventurer_name?: string;
+    name: string;
+    class?: string;
+    level?: number;
+    secondary_class?: string | null;
+    secondary_level?: number | null;
+  };
+  onEdit: () => void;
+}
+
+export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
+  const getClassImage = (className: string | undefined) => {
+    if (!className) return '/icons/wmremove-transformed.png';
+    const classMap: Record<string, string> = {
+      'Barbare': '/Barbare.png',
+      'Barde': '/Barde.png',
+      'Clerc': '/Clerc.png',
+      'Druide': '/Druide.png',
+      'Ensorceleur': '/Ensorceleur.png',
+      'Guerrier': '/Guerrier.png',
+      'Magicien': '/Magicien.png',
+      'Moine': '/Moine.png',
+      'Occultiste': '/Occultiste.png',
+      'Paladin': '/Paladin.png',
+      'Rôdeur': '/Rodeur.png',
+      'Roublard': '/Voleur.png',
+    };
+    return classMap[className] || '/icons/wmremove-transformed.png';
+  };
+
+  const imageUrl = player.avatar_url || getClassImage(player.class);
+
+  return (
+    <div className="flex items-center gap-4">
+      {/* Avatar compact */}
+      <div className="relative w-20 h-28 rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
+        <img
+          src={imageUrl}
+          alt={player.adventurer_name || player.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = '/icons/wmremove-transformed.png';
+          }}
+        />
+        <button
+          onClick={onEdit}
+          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-gray-900/60 backdrop-blur-sm text-white hover:bg-gray-800/80 flex items-center justify-center transition-colors"
+          title="Paramètres"
+        >
+          <Settings className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Infos personnage */}
+      <div className="flex-1 min-w-0">
+        <h2 className="text-xl font-bold text-gray-100 truncate">
+          {player.adventurer_name || player.name}
+        </h2>
+        {player.class && (
+          <div className="space-y-0.5">
+            <p className="text-sm text-gray-300">
+              {player.class} niveau {player.level}
+            </p>
+            {player.secondary_class && player.secondary_level && (
+              <p className="text-xs text-purple-300">
+                {player.secondary_class} niveau {player.secondary_level}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

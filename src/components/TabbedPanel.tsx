@@ -194,12 +194,21 @@ function InventoryTabContent({
   inventory: any[];
   onInventoryUpdate: (inventory: any[]) => void;
 }) {
+  const [pendingEquipment] = React.useState<Set<string>>(new Set());
+
   return (
     <div className="space-y-4">
       <InventoryList
-        player={player}
         inventory={inventory}
         onInventoryUpdate={onInventoryUpdate}
+        pendingEquipment={pendingEquipment}
+        armorId={null}
+        shieldId={null}
+        onRequestToggle={() => {}}
+        onOpenEditItem={() => {}}
+        onOpenAddList={() => {}}
+        onOpenAddCustom={() => {}}
+        checkWeaponProficiency={undefined}
       />
     </div>
   );
