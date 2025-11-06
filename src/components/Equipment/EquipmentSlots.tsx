@@ -1,5 +1,5 @@
 import React from 'react';
-import { Backpack, Shield as ShieldIcon, Sword, Flask, Star } from 'lucide-react';
+import { Backpack, Shield as ShieldIcon, Sword, FlaskRound as Flask, Star } from 'lucide-react';
 import { EquipmentSlot } from './EquipmentSlot';
 import { InventoryItem } from '../../types/dnd';
 
