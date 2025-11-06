@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Coins } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { attackService } from '../services/attackService';
@@ -697,15 +696,7 @@ export function EquipmentTab({
         onOpenBagModal={() => setShowBagModal(true)}
       />
 
-      <div className="stat-card">
-        <div className="stat-header flex items-center gap-3">
-          <Coins className="text-green-500" size={24} />
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Mon argent</h2>
-        </div>
-        <div className="p-4">
-          <GoldManager player={player} onPlayerUpdate={onPlayerUpdate} />
-        </div>
-      </div>
+      <GoldManager player={player} onPlayerUpdate={onPlayerUpdate} />
 
       <InventoryList
         inventory={inventory}
