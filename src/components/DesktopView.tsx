@@ -76,45 +76,43 @@ export function DesktopView({
 
   return (
     <>
-      {/* Calque de fond Desktop uniquement (image + dimmer transparent) */}
       {deviceType === 'desktop' && (
         <div className="fixed inset-0 z-0 pointer-events-none">
-          {/* Image 2x plus large, centrée, couvrant la hauteur de l'écran */}
           <div className="absolute inset-0 flex justify-center">
             <div
               className="h-screen"
               style={{
-                width: '3600px', // 2x plus grand
+                width: '3600px',
                 backgroundImage: 'url(/background/bgfan.jpg)',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center top',
                 backgroundSize: 'cover',
-                filter: 'brightness(0.9)', // optionnel
+                filter: 'brightness(0.9)',
               }}
             />
           </div>
-          {/* Dimmer transparent derrière les composants (et au-dessus de l'image) */}
           <div className="absolute inset-0 bg-black/50" />
         </div>
       )}
 
-      {/* Conteneur principal SANS transparence */}
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          <DesktopHeader
-            player={player}
-            inventory={inventory}
-            onUpdate={onPlayerUpdate}
-            onEdit={() => setSettingsOpen(true)}
-            onOpenCampaigns={() => setShowCampaignModal(true)}
-            activeTooltip={activeTooltip}
-            setActiveTooltip={setActiveTooltip}
-          />
+          {/* Header désormais dans un bloc opaque */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+              <DesktopHeader
+                player={player}
+                inventory={inventory}
+                onUpdate={onPlayerUpdate}
+                onEdit={() => setSettingsOpen(true)}
+                onOpenCampaigns={() => setShowCampaignModal(true)}
+                activeTooltip={activeTooltip}
+                setActiveTooltip={setActiveTooltip}
+              />
+            </div>
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
-              {/* Blocs opaques */}
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
                 <HPManagerConnected
                   player={player}
@@ -129,12 +127,14 @@ export function DesktopView({
 
             <div className="col-span-8">
               {abilities.length > 0 && (
-                <HorizontalAbilityScores
-                  abilities={abilities}
-                  inventory={inventory}
-                  onAbilityClick={handleAbilityClick}
-                  onSavingThrowClick={handleSavingThrowClick}
-                />
+                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
+                  <HorizontalAbilityScores
+                    abilities={abilities}
+                    inventory={inventory}
+                    onAbilityClick={handleAbilityClick}
+                    onSavingThrowClick={handleSavingThrowClick}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -148,7 +148,6 @@ export function DesktopView({
             </div>
 
             <div className="col-span-8 flex">
-              {/* Bloc opaque */}
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 w-full flex flex-col">
                 <TabbedPanel
                   player={player}
