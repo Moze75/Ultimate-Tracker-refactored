@@ -123,7 +123,7 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
         className="flex flex-col items-center justify-center cursor-pointer relative"
         onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
       >
-       <div className="relative w-20 h-20 lg:w-20 lg:h-20"> 
+       <div className="relative w-16 h-16 lg:w-20 lg:h-20">  
           <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1]" />
           <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100">
             {totalAC}
