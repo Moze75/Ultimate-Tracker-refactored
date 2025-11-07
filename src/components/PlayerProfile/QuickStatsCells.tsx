@@ -131,7 +131,7 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
     {totalAC}
   </div> 
 </div>
-       <div className="text-xs uppercase tracking-wide text-gray-500 -translate-y-9 transform">CA</div>
+       <div className="text-xs uppercase tracking-wide text-gray-500 -translate-y-8 transform">CA</div>
         {activeTooltip === 'ac' && ( 
           <>
             <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
