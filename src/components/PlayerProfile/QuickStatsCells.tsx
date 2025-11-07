@@ -119,20 +119,19 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
 
   return (
     <div className="flex items-center gap-3">
-      <div
-        className="flex flex-col items-center justify-center cursor-pointer relative"
-        onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
-      >
-<div className="relative w-20 h-20 lg:w-24 lg:h-24">
-  <ShieldIcon
-    className="absolute left-0 top-2 lg:top-3 w-full h-full text-gray-400 stroke-[1] pointer-events-none"
-  />
-  <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100">
-    {totalAC}
-  </div>
-</div>
-       <div className="text-xs uppercase tracking-wide text-gray-500 -translate-y-9 transform">CA</div>
-        {activeTooltip === 'ac' && ( 
+        <div
+          className="flex flex-col items-center justify-center cursor-pointer relative"
+          onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+        >
+          <div className="relative w-20 h-20 lg:w-24 lg:h-24">
+            {/* Bouclier descendu sans déplacer le nombre */}
+            <ShieldIcon className="absolute left-0 top-2 lg:top-3 w-full h-full text-gray-400 stroke-[1] pointer-events-none" />
+            <div className="absolute inset-0 flex items-center justify-center text-xl lg:text-2xl font-bold text-gray-100">
+              {totalAC}
+            </div>
+          </div>
+          <div className="text-xs uppercase tracking-wide text-gray-500 mt-0">CA</div>
+          {activeTooltip === 'ac' && (
           <>
             <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
             <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
