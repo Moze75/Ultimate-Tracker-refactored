@@ -43,9 +43,9 @@ export function HPManager({
 }: HPManagerProps) {
   const isCriticalHealth = totalHP <= Math.floor(player.max_hp * 0.20);
 
-  return (
-    <div className="stat-card">
-      <div className="stat-header flex items-center justify-between">
+ return (
+    <div className="stat-card bg-gray-800/70">
+      <div className="stat-header from-gray-800/70 to-gray-900/70 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Heart className="w-5 h-5 text-red-500" />
           <div>
