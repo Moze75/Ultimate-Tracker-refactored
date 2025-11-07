@@ -272,3 +272,12 @@ select {
 /* Styles pour le reste des éléments et animations conservés depuis ton CSS précédent */
 
 /* … (tout le reste de ton CSS précédent reste inchangé) … */ 
+/* Surcharges limitées au layout Desktop */
+.desktop-compact-layout .stat-card {
+  background-color: rgb(31 41 55 / 0.7) !important; /* gray-800 @ 70% */
+  backdrop-filter: blur(8px);
+}
+
+.desktop-compact-layout .stat-header {
+  background: linear-gradient(to right, rgb(31 41 55 / 0.7), rgb(17 24 39 / 0.7)) !important; /* from gray-800/70 to gray-
+
