@@ -120,12 +120,16 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   return (
     <div className="flex items-center gap-3">
       <div
+      <div
         className="flex flex-col items-center justify-center cursor-pointer relative"
         onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
       >
-        <div className="relative w-12 h-12">
+        {/* Était: className="relative w-12 h-12" */}
+        <div className="relative w-16 h-16 lg:w-20 lg:h-20">
+          {/* L’icône remplit le conteneur, pas besoin de toucher */}
           <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1.5]" />
-          <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100">
+          {/* Était: text-xl */}
+          <div className="absolute inset-0 flex items-center justify-center text-2xl lg:text-3xl font-bold text-gray-100">
             {totalAC}
           </div>
         </div>
