@@ -118,7 +118,7 @@ export function DesktopView({
           </div>
 
           {/* LIGNE 3: Compétences à gauche + TabbedPanel à droite */}
-          <div className="grid grid-cols-12 gap-4 items-start">
+          <div className="grid grid-cols-12 gap-4 items-stretch">
             <div className="col-span-4 flex">
               <StandaloneSkillsSection
                 player={player}
