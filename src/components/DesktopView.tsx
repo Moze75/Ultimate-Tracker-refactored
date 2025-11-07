@@ -77,7 +77,7 @@ export function DesktopView({
   return (
     <>
       <div className="min-h-screen p-4 lg:p-6 bg-gray-900 desktop-compact-layout">
-        <div className="max-w-[1920px] mx-auto space-y-4">
+        <div className="max-w-[1280px] mx-auto space-y-4">
 
           {/* LIGNE 1: Header avec Avatar, CA/VIT/INIT/MAIT et boutons d'actions */}
           <DesktopHeader
