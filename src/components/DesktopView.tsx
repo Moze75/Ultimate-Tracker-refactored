@@ -77,23 +77,22 @@ export function DesktopView({
   return (
     <>
       {/* Calque de fond Desktop uniquement */}
-      {deviceType === 'desktop' && (
-        <div className="fixed inset-0 -z-10 flex justify-center overflow-hidden pointer-events-none">
-          {/* Image plus large que le contenu (fixe, pas responsive) */}
+           {deviceType === 'desktop' && (
+        <div className="fixed inset-0 z-0 flex justify-center overflow-hidden pointer-events-none">
           <img
             src="/background/bgfan.jpg"
             alt="Background"
             style={{
-              width: '1800px',      // taille fixe (ajuste à ton besoin)
+              width: '1800px',
               height: 'auto',
               objectFit: 'cover',
-              filter: 'brightness(0.85)', // légère atténuation si nécessaire
+              filter: 'brightness(0.85)',
             }}
           />
         </div>
       )}
 
-      <div className="min-h-screen p-4 lg:p-6 bg-gray-900/80 backdrop-blur-sm desktop-compact-layout">
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900/80 backdrop-blur-sm desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
           <DesktopHeader
