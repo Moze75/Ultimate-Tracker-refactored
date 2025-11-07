@@ -9,7 +9,7 @@ import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
 import { DiceRoller } from './DiceRoller';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
-import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // <-- import du hook
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 interface DesktopViewProps {
   player: Player;
@@ -35,7 +35,7 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
-  const deviceType = useResponsiveLayout(); // <-- usage
+  const deviceType = useResponsiveLayout();
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
@@ -78,21 +78,29 @@ export function DesktopView({
     <>
       {/* Calque de fond Desktop uniquement */}
       {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 flex justify-center overflow-hidden pointer-events-none">
-          <img
-            src="/background/bgfan.jpg"
-            alt="Background"
-            style={{
-              width: '3600px',      // 2x plus grand qu'avant
-              height: 'auto',
-              objectFit: 'cover',
-              filter: 'brightness(0.85)',
-            }}
-          />
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          {/* wrapper centré avec largeur visuelle 2x plus grande */}
+          <div className="absolute inset-0 flex justify-center">
+            <div
+              className="h-screen"
+              style={{
+                // Largeur volontairement très grande pour dépasser le contenu
+                width: '3600px',
+                backgroundImage: 'url(/background/bgfan.jpg)',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center top',
+                backgroundSize: 'cover',
+                // Transparence uniquement sur le calque
+                opacity: 0.5,
+                filter: 'brightness(0.9)',
+              }}
+            />
+          </div>
         </div>
       )}
 
-      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900/40 backdrop-blur-sm desktop-compact-layout">
+      {/* Conteneur principal SANS transparence */}
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
           <DesktopHeader
@@ -107,7 +115,8 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
-              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full">
+              {/* Bloc opaque */}
+              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
                 <HPManagerConnected
                   player={player}
                   onUpdate={onPlayerUpdate}
@@ -140,7 +149,8 @@ export function DesktopView({
             </div>
 
             <div className="col-span-8 flex">
-              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 w-full flex flex-col">
+              {/* Bloc opaque */}
+              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 w-full flex flex-col">
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
