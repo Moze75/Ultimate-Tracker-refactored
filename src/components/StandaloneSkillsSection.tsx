@@ -130,7 +130,7 @@ export function StandaloneSkillsSection({ player, onSkillClick }: StandaloneSkil
   };
 
   return (
-    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
+    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 w-full">
       <SkillsTable
         allSkills={allSkills}
         editing={false}

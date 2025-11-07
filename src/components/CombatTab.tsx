@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import { ConditionsSection } from './ConditionsSection';
 import { DiceRoller } from './DiceRoller';
 import { StandardActionsSection } from './StandardActionsSection';
-import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { AttackSection } from './Combat/AttackSection';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { attackService } from '../services/attackService';
@@ -610,15 +609,6 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   return (
     <div className="space-y-6">
-      <HPManagerConnected
-        player={player}
-        onUpdate={onUpdate}
-        onConcentrationCheck={(dc) => {
-          setConcentrationDC(dc);
-          setShowConcentrationCheck(true);
-        }}
-      />
-
       <AttackSection
         attacks={attacks}
         onAdd={() => {

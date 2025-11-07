@@ -5,7 +5,7 @@ import { AbilitiesTab } from './AbilitiesTab';
 import { EquipmentTab } from './EquipmentTab';
 import CombatTab from './CombatTab';
 
-type TabKey = 'actions' | 'class' | 'spells' | 'inventory';
+type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag';
 
 interface TabbedPanelProps {
   player: Player;
@@ -19,7 +19,9 @@ const TABS = [
   { key: 'actions', label: 'Actions' },
   { key: 'class', label: 'Classe' },
   { key: 'spells', label: 'Sorts' },
-  { key: 'inventory', label: 'Or + Inventaire' },
+  { key: 'gold', label: 'Or' },
+  { key: 'inventory', label: 'Inventaire' },
+  { key: 'bag', label: 'Sac' },
 ] as const;
 
 const STORAGE_KEY = 'desktopTabbedPanel:activeTab';
@@ -83,12 +85,33 @@ export function TabbedPanel({
           <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
         )}
 
+        {activeTab === 'gold' && (
+          <EquipmentTab
+            player={player}
+            inventory={inventory}
+            onPlayerUpdate={onPlayerUpdate}
+            onInventoryUpdate={onInventoryUpdate}
+            viewMode="gold"
+          />
+        )}
+
         {activeTab === 'inventory' && (
           <EquipmentTab
             player={player}
             inventory={inventory}
             onPlayerUpdate={onPlayerUpdate}
             onInventoryUpdate={onInventoryUpdate}
+            viewMode="inventory"
+          />
+        )}
+
+        {activeTab === 'bag' && (
+          <EquipmentTab
+            player={player}
+            inventory={inventory}
+            onPlayerUpdate={onPlayerUpdate}
+            onInventoryUpdate={onInventoryUpdate}
+            viewMode="bag"
           />
         )}
       </div>

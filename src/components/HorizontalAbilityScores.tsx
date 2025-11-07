@@ -58,7 +58,7 @@ export function HorizontalAbilityScores({
   const equipmentBonuses = calculateEquipmentBonuses();
 
   return (
-    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
+    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full">
       <h3 className="text-lg font-semibold text-gray-100 mb-4">Caractéristiques</h3>
       <div className="grid grid-cols-6 gap-3">
         {abilities.map((ability) => {

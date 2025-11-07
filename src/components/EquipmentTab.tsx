@@ -118,10 +118,11 @@ interface EquipmentTabProps {
   inventory: InventoryItem[];
   onPlayerUpdate: (player: Player) => void;
   onInventoryUpdate: (inventory: InventoryItem[]) => void;
+  viewMode?: 'all' | 'gold' | 'inventory' | 'bag';
 }
 
 export function EquipmentTab({
-  player, inventory, onPlayerUpdate, onInventoryUpdate
+  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all'
 }: EquipmentTabProps) {
   const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
   const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
@@ -674,31 +675,38 @@ export function EquipmentTab({
     }
   };
 
+  const showEquipmentSlots = viewMode === 'all' || viewMode === 'bag';
+  const showGold = viewMode === 'all' || viewMode === 'gold';
+  const showInventory = viewMode === 'all' || viewMode === 'inventory';
+
   return (
     <div className="space-y-6">
-      <EquipmentSlots
-        armor={armor}
-        shield={shield}
-        weaponsSummary={weaponsSummary}
-        potionText={potionText}
-        jewelryText={jewelryText}
-        bag={bag}
-        bagText={bagText}
-        inventory={inventory}
-        equippedWeaponsCount={equippedWeapons.length}
-        onOpenInventoryModal={(type) => {
-          setInventoryModalType(type);
-          setShowInventoryModal(true);
-        }}
-        onToggleFromSlot={toggleFromSlot}
-        onOpenEditFromSlot={openEditFromSlot}
-        onOpenWeaponsModal={() => setShowWeaponsModal(true)}
-        onOpenBagModal={() => setShowBagModal(true)}
-      />
+      {showEquipmentSlots && (
+        <EquipmentSlots
+          armor={armor}
+          shield={shield}
+          weaponsSummary={weaponsSummary}
+          potionText={potionText}
+          jewelryText={jewelryText}
+          bag={bag}
+          bagText={bagText}
+          inventory={inventory}
+          equippedWeaponsCount={equippedWeapons.length}
+          onOpenInventoryModal={(type) => {
+            setInventoryModalType(type);
+            setShowInventoryModal(true);
+          }}
+          onToggleFromSlot={toggleFromSlot}
+          onOpenEditFromSlot={openEditFromSlot}
+          onOpenWeaponsModal={() => setShowWeaponsModal(true)}
+          onOpenBagModal={() => setShowBagModal(true)}
+        />
+      )}
 
-      <GoldManager player={player} onPlayerUpdate={onPlayerUpdate} />
+      {showGold && <GoldManager player={player} onPlayerUpdate={onPlayerUpdate} />}
 
-      <InventoryList
+      {showInventory && (
+        <InventoryList
         inventory={inventory}
         onInventoryUpdate={onInventoryUpdate}
         pendingEquipment={pendingEquipment}
@@ -717,6 +725,7 @@ export function EquipmentTab({
         onOpenAddCustom={() => setShowCustom(true)}
         checkWeaponProficiency={checkWeaponProficiencyForInventory}
       />
+      )}
 
       {showList && (
         <EquipmentListModal

@@ -120,16 +120,16 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
+        className="flex flex-col items-center justify-center cursor-pointer relative"
         onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
       >
-        <div className="relative w-12 h-12 mb-1">
+        <div className="relative w-12 h-12">
           <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1.5]" />
           <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100">
             {totalAC}
           </div>
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500">CA</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">CA</div>
         {activeTooltip === 'ac' && (
           <>
             <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />

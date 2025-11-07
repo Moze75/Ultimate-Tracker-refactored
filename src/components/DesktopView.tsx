@@ -118,16 +118,16 @@ export function DesktopView({
           </div>
 
           {/* LIGNE 3: Compétences à gauche + TabbedPanel à droite */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4 items-start">
+            <div className="col-span-4 flex">
               <StandaloneSkillsSection
                 player={player}
                 onSkillClick={handleSkillClick}
               />
             </div>
 
-            <div className="col-span-8">
-              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
+            <div className="col-span-8 flex">
+              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 w-full flex flex-col">
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
