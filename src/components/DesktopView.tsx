@@ -9,6 +9,7 @@ import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
 import { DiceRoller } from './DiceRoller';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // <-- import du hook
 
 interface DesktopViewProps {
   player: Player;
@@ -34,13 +35,14 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
+  const deviceType = useResponsiveLayout(); // <-- usage
+
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
     : [];
 
   const handleAbilityClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + ability.modifier;
     setDiceRoll({
       show: true,
       result: roll,
@@ -52,7 +54,6 @@ export function DesktopView({
 
   const handleSavingThrowClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + ability.savingThrow;
     setDiceRoll({
       show: true,
       result: roll,
@@ -64,7 +65,6 @@ export function DesktopView({
 
   const handleSkillClick = (skillName: string, bonus: number) => {
     const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + bonus;
     setDiceRoll({
       show: true,
       result: roll,
@@ -76,10 +76,26 @@ export function DesktopView({
 
   return (
     <>
-      <div className="min-h-screen p-4 lg:p-6 bg-gray-900 desktop-compact-layout">
+      {/* Calque de fond Desktop uniquement */}
+      {deviceType === 'desktop' && (
+        <div className="fixed inset-0 -z-10 flex justify-center overflow-hidden pointer-events-none">
+          {/* Image plus large que le contenu (fixe, pas responsive) */}
+          <img
+            src="/background/bgfan.jpg"
+            alt="Background"
+            style={{
+              width: '1800px',      // taille fixe (ajuste à ton besoin)
+              height: 'auto',
+              objectFit: 'cover',
+              filter: 'brightness(0.85)', // légère atténuation si nécessaire
+            }}
+          />
+        </div>
+      )}
+
+      <div className="min-h-screen p-4 lg:p-6 bg-gray-900/80 backdrop-blur-sm desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* LIGNE 1: Header avec Avatar, CA/VIT/INIT/MAIT et boutons d'actions */}
           <DesktopHeader
             player={player}
             inventory={inventory}
@@ -90,7 +106,6 @@ export function DesktopView({
             setActiveTooltip={setActiveTooltip}
           />
 
-          {/* LIGNE 2: HPManager à gauche + Caractéristiques à droite */}
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
               <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full">
@@ -117,7 +132,6 @@ export function DesktopView({
             </div>
           </div>
 
-          {/* LIGNE 3: Compétences à gauche + TabbedPanel à droite */}
           <div className="grid grid-cols-12 gap-4 items-stretch">
             <div className="col-span-4 flex">
               <StandaloneSkillsSection
@@ -142,7 +156,6 @@ export function DesktopView({
         </div>
       </div>
 
-      {/* Dice Roller */}
       {diceRoll && (
         <DiceRoller
           result={diceRoll.result}
@@ -152,7 +165,6 @@ export function DesktopView({
         />
       )}
 
-      {/* Modals */}
       <PlayerProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
