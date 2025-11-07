@@ -113,7 +113,8 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+              {/* IMPORTANT: pas de fond ici, laisse la stat-card interne du HPManager gérer sa propre transparence */}
+              <div className="h-full">
                 <HPManagerConnected
                   player={player}
                   onUpdate={onPlayerUpdate}
@@ -141,7 +142,7 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4 items-stretch">
             <div className="col-span-4 flex">
-              {/* Ajout d’un conteneur similaire pour harmoniser */}
+              {/* Skills: tu peux garder ce fond si tu veux la même apparence que les autres blocs */}
               <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full">
                 <StandaloneSkillsSection
                   player={player}
@@ -151,7 +152,8 @@ export function DesktopView({
             </div>
 
             <div className="col-span-8 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col">
+              {/* IMPORTANT: retirer le fond du conteneur du TabbedPanel pour que les stat-card internes (ex: Mon argent) soient visibles */}
+              <div className="w-full flex flex-col">
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
