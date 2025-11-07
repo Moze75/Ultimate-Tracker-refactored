@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Player } from '../types/dnd';
+import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
-import { ActiveConditionsBadges } from './PlayerProfile/ActiveConditionsBadges';
-import { CompactAvatar } from './PlayerProfile/CompactAvatar';
-import { CompactActionsRow } from './PlayerProfile/CompactActionsRow';
-import { CompactStatsPanel } from './PlayerProfile/CompactStatsPanel';
+import { DesktopHeader } from './PlayerProfile/DesktopHeader';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
+import { DiceRoller } from './DiceRoller';
 
 interface DesktopViewProps {
   player: Player;
@@ -30,66 +28,66 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null);
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
     : [];
+
+  const handleAbilityClick = (ability: Ability) => {
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + ability.modifier;
+    setDiceRoll({
+      show: true,
+      result: roll,
+      modifier: ability.modifier,
+      description: `Test de ${ability.name}`
+    });
+    setTimeout(() => setDiceRoll(null), 3000);
+  };
+
+  const handleSavingThrowClick = (ability: Ability) => {
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + ability.savingThrow;
+    setDiceRoll({
+      show: true,
+      result: roll,
+      modifier: ability.savingThrow,
+      description: `Sauvegarde de ${ability.name}`
+    });
+    setTimeout(() => setDiceRoll(null), 3000);
+  };
+
+  const handleSkillClick = (skillName: string, bonus: number) => {
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + bonus;
+    setDiceRoll({
+      show: true,
+      result: roll,
+      modifier: bonus,
+      description: `Test de ${skillName}`
+    });
+    setTimeout(() => setDiceRoll(null), 3000);
+  };
 
   return (
     <>
       <div className="min-h-screen p-4 lg:p-6 bg-gray-900 desktop-compact-layout">
         <div className="max-w-[1920px] mx-auto space-y-4">
 
-          {/* LIGNE 1: Header - Avatar compact + Infos + Actions horizontales */}
-          <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
-            <div className="flex items-start gap-6">
-              {/* Avatar compact + Infos */}
-              <div className="flex-shrink-0">
-                <CompactAvatar
-                  player={player}
-                  onEdit={() => setSettingsOpen(true)}
-                />
-              </div>
+          {/* LIGNE 1: Header avec Avatar, CA/VIT/INIT/MAIT et boutons d'actions */}
+          <DesktopHeader
+            player={player}
+            inventory={inventory}
+            onUpdate={onPlayerUpdate}
+            onEdit={() => setSettingsOpen(true)}
+            onOpenCampaigns={() => setShowCampaignModal(true)}
+          />
 
-              {/* Boutons d'actions horizontaux */}
-              <div className="flex-1">
-                <CompactActionsRow
-                  player={player}
-                  onUpdate={onPlayerUpdate}
-                  onOpenCampaigns={() => setShowCampaignModal(true)}
-                />
-              </div>
-            </div>
-
-            {/* Conditions actives */}
-            <div className="mt-4">
-              <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
-            </div>
-          </div>
-
-          {/* LIGNE 2: Caractéristiques horizontales */}
-          {abilities.length > 0 && (
-            <HorizontalAbilityScores
-              abilities={abilities}
-              inventory={inventory}
-              onAbilityClick={() => {}}
-              onSavingThrowClick={() => {}}
-            />
-          )}
-
-          {/* LIGNE 3: Compétences à gauche + HP et Stats compacts à droite */}
+          {/* LIGNE 2: HPManager à gauche + Caractéristiques à droite */}
           <div className="grid grid-cols-12 gap-4">
-            {/* Compétences */}
             <div className="col-span-4">
-              <StandaloneSkillsSection
-                player={player}
-                onSkillClick={() => {}}
-              />
-            </div>
-
-            {/* HP Manager */}
-            <div className="col-span-4">
-              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
+              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full">
                 <HPManagerConnected
                   player={player}
                   onUpdate={onPlayerUpdate}
@@ -100,28 +98,52 @@ export function DesktopView({
               </div>
             </div>
 
-            {/* Stats compacts (CA, Vitesse, Init, Maîtrise) */}
-            <div className="col-span-4">
-              <CompactStatsPanel
-                player={player}
-                inventory={inventory}
-              />
+            <div className="col-span-8">
+              {abilities.length > 0 && (
+                <HorizontalAbilityScores
+                  abilities={abilities}
+                  inventory={inventory}
+                  onAbilityClick={handleAbilityClick}
+                  onSavingThrowClick={handleSavingThrowClick}
+                />
+              )}
             </div>
           </div>
 
-          {/* LIGNE 4: Bloc à onglets pleine largeur */}
-          <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
-            <TabbedPanel
-              player={player}
-              inventory={inventory}
-              onPlayerUpdate={onPlayerUpdate}
-              onInventoryUpdate={onInventoryUpdate}
-              classSections={classSections}
-            />
+          {/* LIGNE 3: Compétences à gauche + TabbedPanel à droite */}
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-4">
+              <StandaloneSkillsSection
+                player={player}
+                onSkillClick={handleSkillClick}
+              />
+            </div>
+
+            <div className="col-span-8">
+              <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
+                <TabbedPanel
+                  player={player}
+                  inventory={inventory}
+                  onPlayerUpdate={onPlayerUpdate}
+                  onInventoryUpdate={onInventoryUpdate}
+                  classSections={classSections}
+                />
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
+
+      {/* Dice Roller */}
+      {diceRoll && (
+        <DiceRoller
+          result={diceRoll.result}
+          modifier={diceRoll.modifier}
+          description={diceRoll.description}
+          onClose={() => setDiceRoll(null)}
+        />
+      )}
 
       {/* Modals */}
       <PlayerProfileSettingsModal

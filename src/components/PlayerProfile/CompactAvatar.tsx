@@ -40,7 +40,7 @@ export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
   return (
     <div className="flex items-center gap-4">
       {/* Avatar compact */}
-      <div className="relative w-20 h-28 rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
+      <div className="relative w-32 h-44 rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
         <img
           src={imageUrl}
           alt={player.adventurer_name || player.name}
@@ -51,25 +51,26 @@ export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
         />
         <button
           onClick={onEdit}
-          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-gray-900/60 backdrop-blur-sm text-white hover:bg-gray-800/80 flex items-center justify-center transition-colors"
-          title="Paramètres"
+          className="absolute top-2 left-2 px-2 py-1 rounded bg-gray-900/70 backdrop-blur-sm text-white hover:bg-gray-800/90 flex items-center gap-1 transition-colors text-xs"
+          title="Éditer le profil"
         >
           <Settings className="w-3 h-3" />
+          <span>Éditer</span>
         </button>
       </div>
 
       {/* Infos personnage */}
       <div className="flex-1 min-w-0">
-        <h2 className="text-xl font-bold text-gray-100 truncate">
+        <h2 className="text-2xl font-bold text-gray-100 truncate">
           {player.adventurer_name || player.name}
         </h2>
         {player.class && (
           <div className="space-y-0.5">
-            <p className="text-sm text-gray-300">
+            <p className="text-base text-gray-300">
               {player.class} niveau {player.level}
             </p>
             {player.secondary_class && player.secondary_level && (
-              <p className="text-xs text-purple-300">
+              <p className="text-sm text-purple-300">
                 {player.secondary_class} niveau {player.secondary_level}
               </p>
             )}
