@@ -98,22 +98,22 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Header désormais dans un bloc opaque */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-              <DesktopHeader
-                player={player}
-                inventory={inventory}
-                onUpdate={onPlayerUpdate}
-                onEdit={() => setSettingsOpen(true)}
-                onOpenCampaigns={() => setShowCampaignModal(true)}
-                activeTooltip={activeTooltip}
-                setActiveTooltip={setActiveTooltip}
-              />
-            </div>
+          {/* Header (30% transparence = /70 = 70% opacité) */}
+          <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
+            <DesktopHeader
+              player={player}
+              inventory={inventory}
+              onUpdate={onPlayerUpdate}
+              onEdit={() => setSettingsOpen(true)}
+              onOpenCampaigns={() => setShowCampaignModal(true)}
+              activeTooltip={activeTooltip}
+              setActiveTooltip={setActiveTooltip}
+            />
+          </div>
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
                 <HPManagerConnected
                   player={player}
                   onUpdate={onPlayerUpdate}
@@ -127,7 +127,7 @@ export function DesktopView({
 
             <div className="col-span-8">
               {abilities.length > 0 && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
                   <HorizontalAbilityScores
                     abilities={abilities}
                     inventory={inventory}
@@ -141,14 +141,17 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4 items-stretch">
             <div className="col-span-4 flex">
-              <StandaloneSkillsSection
-                player={player}
-                onSkillClick={handleSkillClick}
-              />
+              {/* Ajout d’un conteneur similaire pour harmoniser */}
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full">
+                <StandaloneSkillsSection
+                  player={player}
+                  onSkillClick={handleSkillClick}
+                />
+              </div>
             </div>
 
             <div className="col-span-8 flex">
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 w-full flex flex-col">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col">
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
