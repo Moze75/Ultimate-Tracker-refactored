@@ -76,31 +76,30 @@ export function DesktopView({
 
   return (
     <>
-      {/* Calque de fond Desktop uniquement */}
+      {/* Calque de fond Desktop uniquement (image + dimmer transparent) */}
       {deviceType === 'desktop' && (
         <div className="fixed inset-0 z-0 pointer-events-none">
-          {/* wrapper centré avec largeur visuelle 2x plus grande */}
+          {/* Image 2x plus large, centrée, couvrant la hauteur de l'écran */}
           <div className="absolute inset-0 flex justify-center">
             <div
               className="h-screen"
               style={{
-                // Largeur volontairement très grande pour dépasser le contenu
-                width: '3600px',
+                width: '3600px', // 2x plus grand
                 backgroundImage: 'url(/background/bgfan.jpg)',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center top',
                 backgroundSize: 'cover',
-                // Transparence uniquement sur le calque
-                opacity: 0.5,
-                filter: 'brightness(0.9)',
+                filter: 'brightness(0.9)', // optionnel
               }}
             />
           </div>
+          {/* Dimmer transparent derrière les composants (et au-dessus de l'image) */}
+          <div className="absolute inset-0 bg-black/50" />
         </div>
       )}
 
       {/* Conteneur principal SANS transparence */}
-      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900 desktop-compact-layout">
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
           <DesktopHeader
@@ -115,7 +114,7 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
-              {/* Bloc opaque */}
+              {/* Blocs opaques */}
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
                 <HPManagerConnected
                   player={player}
