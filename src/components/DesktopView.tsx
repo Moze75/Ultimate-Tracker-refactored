@@ -77,13 +77,13 @@ export function DesktopView({
   return (
     <>
       {/* Calque de fond Desktop uniquement */}
-           {deviceType === 'desktop' && (
+      {deviceType === 'desktop' && (
         <div className="fixed inset-0 z-0 flex justify-center overflow-hidden pointer-events-none">
           <img
             src="/background/bgfan.jpg"
             alt="Background"
             style={{
-              width: '1800px',
+              width: '3600px',      // 2x plus grand qu'avant
               height: 'auto',
               objectFit: 'cover',
               filter: 'brightness(0.85)',
@@ -92,7 +92,7 @@ export function DesktopView({
         </div>
       )}
 
-      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900/80 backdrop-blur-sm desktop-compact-layout">
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 bg-gray-900/40 backdrop-blur-sm desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
           <DesktopHeader
