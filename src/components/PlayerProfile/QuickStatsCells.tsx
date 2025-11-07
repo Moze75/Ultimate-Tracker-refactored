@@ -5,6 +5,8 @@ import { Player } from '../../types/dnd';
 interface QuickStatsCellsProps {
   player: Player;
   inventory: any[];
+  activeTooltip?: 'ac' | 'speed' | null;
+  setActiveTooltip?: (tooltip: 'ac' | 'speed' | null) => void;
 }
 
 const getProficiencyBonusForLevel = (level: number): number => {
@@ -77,7 +79,16 @@ const formatFr = (v: number | string | null | undefined): string => {
   return v.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 };
 
-export function QuickStatsCells({ player, inventory }: QuickStatsCellsProps) {
+const toNumber = (v: unknown): number => {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(',', '.'));
+    return isNaN(n) ? 0 : n;
+  }
+  return 0;
+};
+
+export function QuickStatsCells({ player, inventory, activeTooltip, setActiveTooltip }: QuickStatsCellsProps) {
   const calculatedProficiencyBonus = getProficiencyBonusForLevel(player.level);
   const stats = player.stats || {
     armor_class: 10,
@@ -108,7 +119,10 @@ export function QuickStatsCells({ player, inventory }: QuickStatsCellsProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
+      <div
+        className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
+        onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+      >
         <div className="relative w-12 h-12 mb-1">
           <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1.5]" />
           <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100">
@@ -116,27 +130,71 @@ export function QuickStatsCells({ player, inventory }: QuickStatsCellsProps) {
           </div>
         </div>
         <div className="text-xs uppercase tracking-wide text-gray-500">CA</div>
+        {activeTooltip === 'ac' && (
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
+              <h4 className="font-semibold text-gray-100 mb-1">Classe d'Armure</h4>
+              <p className="mb-2">Détermine la difficulté pour vous toucher en combat.</p>
+              <p className="text-gray-400">Calcul actuel :</p>
+              <ul className="list-disc list-inside text-gray-400 space-y-1">
+                {armorFormula ? (
+                  <>
+                    <li>Armure équipée: {computeArmorAC(armorFormula, dexMod)} (Formule: {armorFormula.base}{armorFormula.addDex ? ` + mod DEX${armorFormula.dexCap != null ? ` (max ${armorFormula.dexCap})` : ''}` : ''})</li>
+                  </>
+                ) : (
+                  <li>CA de base (profil): {baseACFromStats}</li>
+                )}
+                <li>+ Bonus de bouclier (équipement): {shieldBonus >= 0 ? `+${shieldBonus}` : shieldBonus}</li>
+                {equipmentBonuses.armor_class !== 0 && (
+                  <li>+ Bonus d'équipement: {equipmentBonuses.armor_class >= 0 ? `+${equipmentBonuses.armor_class}` : equipmentBonuses.armor_class}</li>
+                )}
+                <li>Total: {totalAC}</li>
+              </ul>
+              <p className="text-xs text-gray-500 mt-2">L'armure équipée remplace la CA de base. La CA de base est configurable dans les paramètres si vous n'utilisez pas d'armure.</p>
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
+      <div
+        className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
+        onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
+      >
         <div className="text-xl font-bold text-gray-100 mb-1">
           {formatFr(stats.speed)} m
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500">VIT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500">Vitesse</div>
+        {activeTooltip === 'speed' && (
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
+              <h4 className="font-semibold text-gray-100 mb-1">Vitesse</h4>
+              <p className="mb-2">Distance que vous pouvez parcourir en un tour.</p>
+              <div className="text-gray-400">
+                <p>Équivalences :</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>{formatFr(stats.speed)} mètres = {Math.floor(toNumber(stats.speed) / 1.5)} cases</li>
+                  <li>Course : × 2 ({formatFr(toNumber(stats.speed) * 2)} mètres)</li>
+                </ul>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
         <div className="text-xl font-bold text-gray-100 mb-1">
           {stats.initiative >= 0 ? '+' : ''}{stats.initiative}
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500">INIT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500">Initiative</div>
       </div>
 
       <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
         <div className="text-xl font-bold text-gray-100 mb-1">
           +{calculatedProficiencyBonus}
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500">MAÎT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500">Maîtrise</div>
       </div>
     </div>
   );

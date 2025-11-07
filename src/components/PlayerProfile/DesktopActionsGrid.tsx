@@ -167,35 +167,35 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
     <div className="grid grid-cols-3 gap-2">
       <button
         onClick={handleLongRest}
-        className="h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
+        className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
       >
-        <span className="flex-1 text-left text-xs">Repos long</span>
-        <Moon className="w-4 h-4" />
+        <span className="text-xs whitespace-nowrap">Repos long</span>
+        <Moon className="w-4 h-4 ml-2" />
       </button>
 
       <button
         onClick={handleShortRest}
-        className="h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
+        className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
       >
-        <span className="flex-1 text-left text-xs">Repos court</span>
-        <Sun className="w-4 h-4" />
+        <span className="text-xs whitespace-nowrap">Repos court</span>
+        <Sun className="w-4 h-4 ml-2" />
       </button>
 
       {player.hit_dice && (
-        <div className="h-9 px-2 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-center border border-gray-700/50">
-          <span className="text-xs text-gray-400 mr-2">Dés de vie</span>
-          <span className="text-gray-300 font-medium text-sm">
+        <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50 min-w-[115px]">
+          <span className="text-xs text-gray-400 whitespace-nowrap">Dés de vie</span>
+          <span className="text-gray-300 font-medium text-sm ml-2">
             {player.hit_dice.total - player.hit_dice.used}/{player.hit_dice.total}
           </span>
         </div>
       )}
 
-      <div className="h-9 rounded text-sm bg-gray-800/50 flex items-center border border-gray-700/50">
-        <div className="text-gray-400 text-xs px-2 flex items-center gap-1">
+      <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]">
+        <div className="text-gray-400 text-xs flex items-center gap-1">
           <Star className="w-3 h-3" />
-          <span>Inspi</span>
+          <span className="whitespace-nowrap">Inspi</span>
         </div>
-        <div className="flex items-center gap-1 px-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={async () => {
               try {
@@ -210,16 +210,16 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
                 toast.error('Erreur lors de la mise à jour');
               }
             }}
-            className={`w-5 h-5 flex items-center justify-center rounded ${
+            className={`w-6 h-6 flex items-center justify-center rounded ${
               (player.stats?.inspirations || 0) > 0
                 ? 'text-yellow-500 hover:bg-yellow-500/20'
                 : 'text-gray-600 cursor-not-allowed'
             }`}
             disabled={(player.stats?.inspirations || 0) <= 0}
           >
-            <Minus size={12} />
+            <Minus size={14} />
           </button>
-          <span className={`font-medium w-4 text-center text-sm ${(player.stats?.inspirations || 0) > 0 ? 'text-yellow-500' : 'text-gray-400'}`}>
+          <span className={`font-medium w-5 text-center text-sm ${(player.stats?.inspirations || 0) > 0 ? 'text-yellow-500' : 'text-gray-400'}`}>
             {player.stats?.inspirations || 0}
           </span>
           <button
@@ -236,14 +236,14 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
                 toast.error('Erreur lors de la mise à jour');
               }
             }}
-            className={`w-5 h-5 flex items-center justify-center rounded ${
+            className={`w-6 h-6 flex items-center justify-center rounded ${
               (player.stats?.inspirations || 0) < 3
                 ? 'text-yellow-500 hover:bg-yellow-500/20'
                 : 'text-gray-600 cursor-not-allowed'
             }`}
             disabled={(player.stats?.inspirations || 0) >= 3}
           >
-            <Plus size={12} />
+            <Plus size={14} />
           </button>
         </div>
       </div>
@@ -272,22 +272,22 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
             toast.error('Erreur lors de la modification de la concentration');
           }
         }}
-        className={`h-9 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 ${
+        className={`h-10 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 min-w-[115px] ${
           player.is_concentrating
             ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-lg shadow-purple-500/20 animate-pulse'
             : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50'
         }`}
       >
-        <span className="flex-1 text-left text-xs">Concentration</span>
-        <Brain className={`w-4 h-4 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
+        <span className="text-xs whitespace-nowrap">Concentration</span>
+        <Brain className={`w-4 h-4 ml-2 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
       </button>
 
       <button
         onClick={onOpenCampaigns}
-        className="h-9 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3"
+        className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3 min-w-[115px]"
       >
-        <span className="flex-1 text-left text-xs">Campagnes</span>
-        <Scroll className="w-4 h-4" />
+        <span className="text-xs whitespace-nowrap">Campagnes</span>
+        <Scroll className="w-4 h-4 ml-2" />
       </button>
     </div>
   );

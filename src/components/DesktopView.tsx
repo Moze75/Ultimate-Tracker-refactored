@@ -8,6 +8,7 @@ import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
 import { DiceRoller } from './DiceRoller';
+import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 
 interface DesktopViewProps {
   player: Player;
@@ -29,6 +30,9 @@ export function DesktopView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
+  const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
+  const [concentrationDC, setConcentrationDC] = useState(10);
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
@@ -82,6 +86,8 @@ export function DesktopView({
             onUpdate={onPlayerUpdate}
             onEdit={() => setSettingsOpen(true)}
             onOpenCampaigns={() => setShowCampaignModal(true)}
+            activeTooltip={activeTooltip}
+            setActiveTooltip={setActiveTooltip}
           />
 
           {/* LIGNE 2: HPManager à gauche + Caractéristiques à droite */}
@@ -92,7 +98,8 @@ export function DesktopView({
                   player={player}
                   onUpdate={onPlayerUpdate}
                   onConcentrationCheck={(dc) => {
-                    console.log('Concentration check DC:', dc);
+                    setConcentrationDC(dc);
+                    setShowConcentrationCheck(true);
                   }}
                 />
               </div>
@@ -163,6 +170,15 @@ export function DesktopView({
           console.log('New item added:', item);
         }}
       />
+
+      {showConcentrationCheck && (
+        <ConcentrationCheckModal
+          player={player}
+          concentrationDC={concentrationDC}
+          onUpdate={onPlayerUpdate}
+          onClose={() => setShowConcentrationCheck(false)}
+        />
+      )}
     </>
   );
 }

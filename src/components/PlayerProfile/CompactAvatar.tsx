@@ -38,9 +38,9 @@ export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
   const imageUrl = player.avatar_url || getClassImage(player.class);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="relative flex items-center gap-4">
       {/* Avatar compact */}
-      <div className="relative w-32 h-44 rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
+      <div className="w-32 h-44 rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
         <img
           src={imageUrl}
           alt={player.adventurer_name || player.name}
@@ -49,15 +49,15 @@ export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
             e.currentTarget.src = '/icons/wmremove-transformed.png';
           }}
         />
-        <button
-          onClick={onEdit}
-          className="absolute top-2 left-2 px-2 py-1 rounded bg-gray-900/70 backdrop-blur-sm text-white hover:bg-gray-800/90 flex items-center gap-1 transition-colors text-xs"
-          title="Éditer le profil"
-        >
-          <Settings className="w-3 h-3" />
-          <span>Éditer</span>
-        </button>
       </div>
+      <button
+        onClick={onEdit}
+        className="absolute top-0 left-[8.5rem] px-2 py-1 rounded bg-gray-900/70 backdrop-blur-sm text-white hover:bg-gray-800/90 flex items-center gap-1 transition-colors text-xs z-10"
+        title="Éditer le profil"
+      >
+        <Settings className="w-3 h-3" />
+        <span>Éditer</span>
+      </button>
 
       {/* Infos personnage */}
       <div className="flex-1 min-w-0">

@@ -131,7 +131,6 @@ export function StandaloneSkillsSection({ player, onSkillClick }: StandaloneSkil
 
   return (
     <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
-      <h3 className="text-lg font-semibold text-gray-100 mb-4">Compétences</h3>
       <SkillsTable
         allSkills={allSkills}
         editing={false}

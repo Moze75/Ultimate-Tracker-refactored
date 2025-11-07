@@ -11,24 +11,31 @@ interface DesktopHeaderProps {
   onUpdate: (player: Player) => void;
   onEdit: () => void;
   onOpenCampaigns: () => void;
+  activeTooltip?: 'ac' | 'speed' | null;
+  setActiveTooltip?: (tooltip: 'ac' | 'speed' | null) => void;
 }
 
-export function DesktopHeader({ player, inventory, onUpdate, onEdit, onOpenCampaigns }: DesktopHeaderProps) {
+export function DesktopHeader({ player, inventory, onUpdate, onEdit, onOpenCampaigns, activeTooltip, setActiveTooltip }: DesktopHeaderProps) {
   return (
     <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
-      <div className="flex items-center gap-6">
+      <div className="flex items-center justify-between gap-6">
         <CompactAvatar player={player} onEdit={onEdit} />
 
-        <div className="flex items-center gap-4 flex-1">
-          <QuickStatsCells player={player} inventory={inventory} />
+        <div className="flex-1 flex items-center justify-center">
+          <QuickStatsCells
+            player={player}
+            inventory={inventory}
+            activeTooltip={activeTooltip}
+            setActiveTooltip={setActiveTooltip}
+          />
+        </div>
 
-          <div className="w-64">
-            <DesktopActionsGrid
-              player={player}
-              onUpdate={onUpdate}
-              onOpenCampaigns={onOpenCampaigns}
-            />
-          </div>
+        <div className="w-auto">
+          <DesktopActionsGrid
+            player={player}
+            onUpdate={onUpdate}
+            onOpenCampaigns={onOpenCampaigns}
+          />
         </div>
       </div>
 
