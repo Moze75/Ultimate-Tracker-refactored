@@ -122,6 +122,13 @@ export function TabbedPanel({
         )}
       </div>
 
+        {activeTab === 'notes' && (
+          <NotesTab
+            player={player}
+            onUpdate={onPlayerUpdate}
+          />
+        )}
+      
       {/* Styles scrollbar */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
