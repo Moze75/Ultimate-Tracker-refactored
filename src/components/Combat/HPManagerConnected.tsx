@@ -173,6 +173,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
       getWoundLevel={getWoundLevel}
       getWoundColor={getWoundColor}
       getHPBarColor={getHPBarColor}
+      hpBarRef={hpBarRef}
     />
   );
 }
