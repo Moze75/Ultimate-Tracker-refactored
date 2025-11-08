@@ -30,10 +30,18 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     }
   }, [isOpen]);
 
-  // Initialiser la DiceBox quand le container est prêt
-  useEffect(() => {
-    if (!containerReady || !isOpen) return;
-    if (diceBoxRef.current) return;
+ // Initialiser la DiceBox quand le container est prêt
+useEffect(() => {
+  console.log('🔍 useEffect init déclenché', { containerReady, isOpen, hasDiceBox: !!diceBoxRef.current });
+  
+  if (!containerReady || !isOpen) {
+    console.log('⏸️ Conditions pas remplies pour init');
+    return;
+  }
+  if (diceBoxRef.current) {
+    console.log('⏸️ DiceBox déjà initialisée');
+    return;
+  }
 
     let mounted = true;
 
