@@ -31,9 +31,9 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
         if (!mounted) return;
 
-        const box = new DiceBox('#dice-box-overlay', {
-          assetPath: '/assets/dice-box/',
-          theme: 'default',
+ const box = new DiceBox('#dice-box-overlay', {
+  assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.5/dist/assets/',
+  theme: 'default',
           themeColor: '#8b5cf6',
           scale: 5,
           gravity: 1.5,
