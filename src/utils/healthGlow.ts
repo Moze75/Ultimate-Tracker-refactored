@@ -167,7 +167,7 @@ class HealthGlowEffect {
 const clone = document.createElement('div');
 clone.style.position = 'absolute';
 clone.style.inset = '0';
-clone.style.border = 'none'; // ✨ PAS DE BORDURE
+clone.style.border = '3px solid transparent'; // ✨ BORDURE TRANSPARENTE
 clone.style.borderRadius = 'inherit';
 clone.style.pointerEvents = 'none';
 
