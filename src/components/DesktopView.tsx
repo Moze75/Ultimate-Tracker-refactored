@@ -30,7 +30,15 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null);  
+  const [diceRoll, setDiceRoll] = useState<{ 
+  id: number;
+  show: boolean; 
+  result: number; 
+  modifier: number; 
+  description: string;
+  formula: string; // ← Ajoutez aussi formula
+} | null>(null);
+const rollIdRef = useRef(0); // ← Ajoutez cette ref
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
