@@ -18,10 +18,11 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[] } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialiser la DiceBox
   useEffect(() => {
-    if (!isOpen || !containerRef.current || diceBoxRef.current) return;
+    if (!isOpen || diceBoxRef.current) return;
 
     let mounted = true;
 
@@ -30,49 +31,43 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         // Import dynamique pour lazy loading
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
-        if (!mounted || !containerRef.current) return;
+        if (!mounted) return;
 
+        // ✅ Créer la DiceBox avec le sélecteur
         const box = new DiceBox('#dice-box-container', {
           assetPath: '/assets/dice-box/',
           theme: 'default',
           themeColor: '#8b5cf6',
           scale: 6,
-          gravity: 2,
-          mass: 1,
-          friction: 0.8,
-          restitution: 0.3,
-          linearDamping: 0.5,
-          angularDamping: 0.4,
-          spinForce: 6,
-          throwForce: 5,
-          startingHeight: 8,
-          settleTimeout: 5000,
-          offscreen: false,
-          delay: 10,
-
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
-            const rolls = results.rolls || [];
+            console.log('🎲 Résultats bruts:', results);
+            
+            // Extraire les résultats
+            const rolls = results?.rolls || [];
             const total = rolls.reduce((sum: number, roll: any) => {
-              return sum + (roll.value || 0);
+              return sum + (roll?.value || 0);
             }, 0);
 
             setResult({
               total: total + (rollData?.modifier || 0),
-              rolls: rolls.map((r: any) => r.value)
+              rolls: rolls.map((r: any) => r?.value || 0)
             });
             setIsRolling(false);
           }
         });
 
-        await box.init();
+        // ✅ Initialiser avec initialize() au lieu de init()
+        await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé');
         }
       } catch (error) {
-        console.error('Erreur initialisation DiceBox:', error);
+        console.error('❌ Erreur initialisation DiceBox:', error);
         if (mounted) {
           setIsRolling(false);
         }
@@ -84,31 +79,43 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     return () => {
       mounted = false;
       if (diceBoxRef.current) {
-        diceBoxRef.current.clear();
+        try {
+          diceBoxRef.current.clear();
+        } catch (e) {
+          console.warn('Erreur clear DiceBox:', e);
+        }
         diceBoxRef.current = null;
       }
+      setIsInitialized(false);
     };
   }, [isOpen]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || isRolling) return;
+    if (!isOpen || !rollData || !diceBoxRef.current || isRolling || !isInitialized) return;
+
+    console.log('🎲 Tentative de lancer:', rollData);
 
     setIsRolling(true);
     setResult(null);
 
     // Construire la notation (ex: "1d20+3")
-    const notation = rollData.modifier >= 0
-      ? `${rollData.diceFormula}+${rollData.modifier}`
-      : `${rollData.diceFormula}${rollData.modifier}`;
+    let notation = rollData.diceFormula;
+    if (rollData.modifier !== 0) {
+      notation += rollData.modifier >= 0 
+        ? `+${rollData.modifier}` 
+        : `${rollData.modifier}`;
+    }
+
+    console.log('🎲 Notation:', notation);
 
     try {
       diceBoxRef.current.roll(notation);
     } catch (error) {
-      console.error('Erreur lancer de dés:', error);
+      console.error('❌ Erreur lancer de dés:', error);
       setIsRolling(false);
     }
-  }, [isOpen, rollData, isRolling]);
+  }, [isOpen, rollData, isRolling, isInitialized]);
 
   if (!isOpen) return null;
 
@@ -147,12 +154,12 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         {/* Scene 3D */}
         <div className="relative bg-gradient-to-b from-gray-900 to-black rounded-b-xl border-x border-b border-purple-500/30 overflow-hidden">
-<div 
-  id="dice-box-container"
-  ref={containerRef} 
-  className="w-full h-[500px]"
-  style={{ touchAction: 'none' }}
-/>
+          <div 
+            id="dice-box-container"
+            ref={containerRef} 
+            className="w-full h-[500px]"
+            style={{ touchAction: 'none' }}
+          />
 
           {/* Résultat */}
           {result && !isRolling && (
@@ -171,11 +178,26 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             </div>
           )}
 
-          {/* Loading */}
-          {isRolling && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          {/* Loading/Initialisation */}
+          {!isInitialized && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+              <div className="text-center">
+                <img 
+                  src="/icons/wmremove-transformed.png" 
+                  alt="Chargement..." 
+                  className="animate-spin h-12 w-12 mx-auto mb-4 object-contain"
+                  style={{ backgroundColor: 'transparent' }}
+                />
+                <div className="text-white text-xl">Initialisation des dés 3D...</div>
+              </div>
+            </div>
+          )}
+
+          {/* Rolling */}
+          {isRolling && isInitialized && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
               <div className="text-white text-xl animate-pulse">
-                Lancer en cours...
+                🎲 Lancer en cours...
               </div>
             </div>
           )}
