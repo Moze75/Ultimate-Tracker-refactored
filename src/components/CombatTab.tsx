@@ -10,24 +10,7 @@ import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { attackService } from '../services/attackService';
 import './combat-tab.css';
 
-return (
-  <div className="space-y-6">
-    {/* ✨ AJOUTER LE HP MANAGER ICI */}
-    <HPManagerConnected
-      player={player}
-      onUpdate={onUpdate}
-      onConcentrationCheck={(dc) => {
-        setConcentrationDC(dc);
-        setShowConcentrationCheck(true);
-      }}
-    />
-
-    <AttackSection
-      attacks={attacks}
-      onAdd={() => {
-        setEditingAttack(null);
-        setShowAttackModal(true);
-      }}
+ 
 
 interface CombatTabProps {
   player: Player;
