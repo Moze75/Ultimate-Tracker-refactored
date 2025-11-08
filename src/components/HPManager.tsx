@@ -56,7 +56,7 @@ export function HPManager({
       </div>
       <div className="p-4">
         <div className="space-y-4">
-          <div className="relative">
+         <div className="relative py-3">
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none select-none">
               <span className="text-white font-bold text-sm drop-shadow-lg">
                 {totalHP} / {player.max_hp}
