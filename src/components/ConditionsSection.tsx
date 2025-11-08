@@ -303,4 +303,4 @@ export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) 
       )}
     </div>
   );
-}
+} 
