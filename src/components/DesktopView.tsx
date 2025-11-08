@@ -167,7 +167,7 @@ export function DesktopView({
         </div>
       </div>
 
-<DiceRoller
+<DiceRollerLazy
   isOpen={diceRoll !== null}
   onClose={() => setDiceRoll(null)}
   rollData={diceRoll ? {
