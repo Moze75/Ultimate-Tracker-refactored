@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react'; // ✅ Ajoutez useMemo
+import React, { useState, useRef, useMemo } from 'react';
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
@@ -31,7 +31,6 @@ export function DesktopView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   
-  // ✅ Nouveau state avec ID unique + formula
   const [diceRoll, setDiceRoll] = useState<{ 
     id: number;
     show: boolean; 
@@ -41,7 +40,7 @@ export function DesktopView({
     formula: string;
   } | null>(null);
   
-  const rollIdRef = useRef(0); // ✅ Ref pour ID unique
+  const rollIdRef = useRef(0);
   
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
@@ -53,45 +52,43 @@ export function DesktopView({
     ? player.abilities
     : [];
 
-  // ✅ Handlers modifiés sans setTimeout
   const handleAbilityClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      id: ++rollIdRef.current, // ✅ ID unique
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: ability.modifier,
       description: `Test de ${ability.name}`,
       formula: '1d20'
     });
-    // ❌ PAS de setTimeout - DiceBox3DInline gère la fermeture
   };
 
   const handleSavingThrowClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      id: ++rollIdRef.current, // ✅ ID unique
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: ability.savingThrow,
       description: `Sauvegarde de ${ability.name}`,
       formula: '1d20'
     });
-    // ❌ PAS de setTimeout
   };
 
   const handleSkillClick = (skillName: string, bonus: number) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      id: ++rollIdRef.current, // ✅ ID unique
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: bonus,
       description: `Test de ${skillName}`,
       formula: '1d20'
     });
+  }; // ✅ FERMETURE CORRECTE DE handleSkillClick
 
-  // ✅ AJOUTEZ CE USEMEMO ICI
+  // ✅ useMemo EN DEHORS des fonctions
   const memoizedRollData = useMemo(() => {
     if (!diceRoll) return null;
     
@@ -101,7 +98,7 @@ export function DesktopView({
       diceFormula: diceRoll.formula,
       modifier: diceRoll.modifier
     };
-  }, [diceRoll?.id]); // ✅ Dépend uniquement de l'ID, pas de tout l'objet
+  }, [diceRoll?.id]);
 
   return (
     <>
@@ -127,7 +124,6 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
             <DesktopHeader
               player={player}
@@ -195,15 +191,15 @@ export function DesktopView({
         </div>
       </div>
 
-{/* ✅ Utilisez memoizedRollData */}
-<DiceBox3DInline
-  isOpen={diceRoll !== null}
-  onClose={() => {
-    console.log('🔴 Fermeture DiceBox');
-    setDiceRoll(null);
-  }}
-  rollData={memoizedRollData}
-/>
+      <DiceBox3DInline
+        isOpen={diceRoll !== null}
+        onClose={() => {
+          console.log('🔴 Fermeture DiceBox');
+          setDiceRoll(null);
+        }}
+        rollData={memoizedRollData}
+      />
+
       <PlayerProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
