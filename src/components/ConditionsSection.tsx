@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // ← Ajouter cet import
 
-export const CONDITIONS: Condition[] = [
+const CONDITIONS: Condition[] = [...]
   {
     id: 'prone',
     name: 'À terre',
