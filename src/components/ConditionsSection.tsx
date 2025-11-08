@@ -171,7 +171,7 @@ export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) 
   const deviceType = useResponsiveLayout(); // ← Ajouter
    const deviceType = useResponsiveLayout(); //
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
-  const [conditionsExpanded, setConditionsExpanded] = useState(false);
+    const [conditionsExpanded, setConditionsExpanded] = useState(deviceType === 'desktop');
 
   if (!player) {
     return (
