@@ -3,6 +3,7 @@ import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { Condition, Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 export const CONDITIONS: Condition[] = [
   {
