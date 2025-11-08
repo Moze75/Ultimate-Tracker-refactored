@@ -167,7 +167,7 @@ interface ConditionsSectionProps {
 
 export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) {
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
-  const [conditionsExpanded, setConditionsExpanded] = useState(false);
+  const [conditionsExpanded, setConditionsExpanded] = useState(true);
 
   if (!player) {
     return (
