@@ -158,6 +158,7 @@ export function DesktopView({
         onPlayerUpdate={onPlayerUpdate}
         onInventoryUpdate={onInventoryUpdate}
         classSections={classSections}
+         hiddenTabs={['bag']} // ← Ajouter cette ligne
       />
     </div>
   </div>
