@@ -147,11 +147,12 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         {/* Scene 3D */}
         <div className="relative bg-gradient-to-b from-gray-900 to-black rounded-b-xl border-x border-b border-purple-500/30 overflow-hidden">
-          <div 
-            ref={containerRef} 
-            className="w-full h-[500px]"
-            style={{ touchAction: 'none' }}
-          />
+<div 
+  id="dice-box-container"
+  ref={containerRef} 
+  className="w-full h-[500px]"
+  style={{ touchAction: 'none' }}
+/>
 
           {/* Résultat */}
           {result && !isRolling && (
