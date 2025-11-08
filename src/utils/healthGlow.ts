@@ -260,23 +260,23 @@ clone.style.pointerEvents = 'none';
     const shieldRgb = '0,200,255';
     const shieldAlpha = 0.6;
 
-    if (zone === 'shield') {
-      clone.style.borderColor = `rgba(${shieldRgb},1)`;
-      wrap.style.filter = `
-        drop-shadow(0 0 6px rgba(${shieldRgb},${shieldAlpha}))
-        drop-shadow(0 0 12px rgba(${shieldRgb},${shieldAlpha}))
-        drop-shadow(0 0 18px rgba(${shieldRgb},${shieldAlpha}))
-        drop-shadow(0 0 24px rgba(${shieldRgb},${shieldAlpha}))
-      `;
-    } else {
-      clone.style.borderColor = `rgba(${rgb},1)`;
-      wrap.style.filter = `
-        drop-shadow(0 0 6px rgba(${rgb},${alpha}))
-        drop-shadow(0 0 12px rgba(${rgb},${alpha}))
-        drop-shadow(0 0 18px rgba(${rgb},${alpha}))
-        drop-shadow(0 0 24px rgba(${rgb},${alpha}))
-      `;
-    }
+if (zone === 'shield') {
+  // clone.style.borderColor supprimé - reste transparent
+  wrap.style.filter = `
+    drop-shadow(0 0 6px rgba(${shieldRgb},${shieldAlpha}))
+    drop-shadow(0 0 12px rgba(${shieldRgb},${shieldAlpha}))
+    drop-shadow(0 0 18px rgba(${shieldRgb},${shieldAlpha}))
+    drop-shadow(0 0 24px rgba(${shieldRgb},${shieldAlpha}))
+  `;
+} else {
+  // clone.style.borderColor supprimé - reste transparent
+  wrap.style.filter = `
+    drop-shadow(0 0 6px rgba(${rgb},${alpha}))
+    drop-shadow(0 0 12px rgba(${rgb},${alpha}))
+    drop-shadow(0 0 18px rgba(${rgb},${alpha}))
+    drop-shadow(0 0 24px rgba(${rgb},${alpha}))
+  `;
+}
 
     // Particles pour le shield
     if (zone === 'shield' && !document.hidden && !this.prefersReducedMotion) {
