@@ -49,6 +49,8 @@ export function TabbedPanel({
     } catch {}
   }, [activeTab, player.id]);
 
+ const visibleTabs = TABS.filter(tab => !hiddenTabs.includes(tab.key as TabKey));
+  
   return (
     <div className="flex flex-col h-full">
       {/* Onglets horizontaux en haut */}
