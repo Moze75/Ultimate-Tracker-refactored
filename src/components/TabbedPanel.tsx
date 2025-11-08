@@ -20,7 +20,7 @@ const TABS = [
   { key: 'class', label: 'Classe' },
   { key: 'spells', label: 'Sorts' },
   { key: 'gold', label: 'Or' },
-  { key: 'inventory', label: 'Inventaire' },
+  { key: 'inventory', label: 'Équipements' }, // ← Changé ici
   { key: 'bag', label: 'Sac' },
 ] as const;
 
