@@ -137,9 +137,27 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
   // Lancer les dés quand rollData change
   useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) {
-      return;
-    }
+if (!isOpen || !rollData) {
+  return;
+}
+
+console.log('🔍 État:', { 
+  isOpen, 
+  hasRollData: !!rollData, 
+  hasDiceBox: !!diceBoxRef.current, 
+  isInitialized,
+  containerReady 
+});
+
+if (!diceBoxRef.current) {
+  console.warn('⚠️ DiceBox pas encore initialisée, on attend...');
+  return;
+}
+
+if (!isInitialized) {
+  console.warn('⚠️ Initialisation pas terminée, on attend...');
+  return;
+}
 
     console.log('🎲 Préparation du lancer:', rollData);
 
