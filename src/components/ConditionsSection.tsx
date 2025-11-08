@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { Condition, Player } from '../types/dnd';
-import { supabase } from '../lib/supabase'; 
-import toast from 'react-hot-toast';  
+import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 export const CONDITIONS: Condition[] = [
   {
