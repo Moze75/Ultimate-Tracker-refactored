@@ -13,8 +13,8 @@ interface HPManagerConnectedProps {
 }
 
 
-
-
+ 
+export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: HPManagerConnectedProps) {
   const [damageValue, setDamageValue] = useState('');
   const [healValue, setHealValue] = useState('');
   const [tempHpValue, setTempHpValue] = useState('');
