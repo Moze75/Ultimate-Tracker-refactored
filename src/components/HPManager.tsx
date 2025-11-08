@@ -23,6 +23,7 @@ interface HPManagerProps {
   getWoundLevel: () => string;
   getWoundColor: () => string;
   getHPBarColor: () => string;
+  hpBarRef?: React.RefObject<HTMLDivElement>;
 }
 
 export function HPManager({
@@ -40,6 +41,7 @@ export function HPManager({
   getWoundLevel,
   getWoundColor,
   getHPBarColor
+  hpBarRef
 }: HPManagerProps) {
   const isCriticalHealth = totalHP <= Math.floor(player.max_hp * 0.20);
 
