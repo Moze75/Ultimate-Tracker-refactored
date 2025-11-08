@@ -271,7 +271,7 @@ export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) 
             {CONDITIONS.map((condition) => (
               <button
                 key={condition.id}
-                onClick={() => handleConditionClick(condition)}
+                onClick={() => handleConditionClick(condition)} 
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeConditions.includes(condition.id)
                     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
