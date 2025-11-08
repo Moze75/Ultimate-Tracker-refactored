@@ -195,7 +195,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
        
           <span className="whitespace-nowrap">Inspi</span>
         </div>
-        <span className="whitespace-nowrap text-sm">Inspi</span>
+        <div className="flex items-center gap-0.5">  
           <button
             onClick={async () => {
               try {
