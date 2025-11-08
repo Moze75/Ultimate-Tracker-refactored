@@ -1,6 +1,5 @@
 import React from 'react';
 import { Heart, Sword, Shield } from 'lucide-react';
-import { triggerBloodSplash } from '../../utils/bloodSplash';
 
 interface Player {
   id: string;
