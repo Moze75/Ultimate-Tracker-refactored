@@ -167,7 +167,8 @@ export function DesktopView({
         </div>
       </div>
 
-<DiceBox3D
+// APRÈS
+<DiceBox3DInline
   isOpen={diceRoll !== null}
   onClose={() => setDiceRoll(null)}
   rollData={diceRoll ? {
