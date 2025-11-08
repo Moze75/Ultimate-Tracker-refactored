@@ -3,7 +3,8 @@ import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { Condition, Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { CONDITIONS } from '../constants/conditions'; // ← Ajouter cette ligne
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // ← Et celle-ci pour le mode Desktop
 
 export const CONDITIONS: Condition[] = [
   {
@@ -167,6 +168,7 @@ interface ConditionsSectionProps {
 }
 
 export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) {
+  const deviceType = useResponsiveLayout(); // ← Ajouter
    const deviceType = useResponsiveLayout(); //
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [conditionsExpanded, setConditionsExpanded] = useState(false);
