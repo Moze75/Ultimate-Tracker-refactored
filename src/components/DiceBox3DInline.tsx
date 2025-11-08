@@ -19,31 +19,55 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   const [isRolling, setIsRolling] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialiser la DiceBox (une seule fois)
+  // Initialiser la DiceBox quand le composant s'ouvre
   useEffect(() => {
+    if (!isOpen) return;
     if (diceBoxRef.current) return;
 
     let mounted = true;
 
-   const initDiceBox = async () => {
-  try {
-    console.log('🎲 Début initialisation DiceBox...');
-    const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-    console.log('🎲 Module chargé:', DiceBox);
+    const initDiceBox = async () => {
+      try {
+        console.log('🎲 Début initialisation DiceBox...');
+        
+        // Attendre que le container existe dans le DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const container = document.querySelector('#dice-box-overlay');
+        console.log('🎲 Container trouvé:', container);
+        
+        if (!container) {
+          console.error('❌ Container #dice-box-overlay introuvable');
+          return;
+        }
 
-    if (!mounted) return;
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+        console.log('🎲 Module chargé');
 
-    console.log('🎲 Création de la box avec container:', '#dice-box-overlay');
-    const box = new DiceBox('#dice-box-overlay', {
-          assetPath: '/assets/dice-box/',
-          theme: 'default', 
+        if (!mounted) return;
+
+        const box = new DiceBox('#dice-box-overlay', {
+          assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.5/dist/assets/',
+          theme: 'default',
           themeColor: '#8b5cf6',
-          scale: 5,
-          gravity: 1.5,
+          scale: 6,
+          gravity: 2,
+          mass: 1,
+          friction: 0.8,
+          restitution: 0.3,
+          linearDamping: 0.5,
+          angularDamping: 0.4,
+          spinForce: 6,
+          throwForce: 5,
+          startingHeight: 8,
+          settleTimeout: 5000,
           offscreen: false,
+          delay: 10,
           
           onRollComplete: (results: any) => {
             if (!mounted) return;
+            
+            console.log('🎲 Résultats:', results);
             
             const rolls = results?.rolls || [];
             const total = rolls.reduce((sum: number, roll: any) => {
@@ -64,12 +88,13 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           }
         });
 
+        console.log('🎲 Initialisation de la box...');
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé');
+          console.log('✅ DiceBox initialisé avec succès');
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -84,13 +109,13 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isOpen]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || isRolling || !isInitialized) return;
 
-    console.log('🎲 Lancer:', rollData);
+    console.log('🎲 Lancer des dés:', rollData);
 
     setIsRolling(true);
     setResult(null);
@@ -101,6 +126,8 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         ? `+${rollData.modifier}` 
         : `${rollData.modifier}`;
     }
+
+    console.log('🎲 Notation:', notation);
 
     try {
       diceBoxRef.current.roll(notation);
@@ -120,6 +147,13 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           id="dice-box-overlay"
           ref={containerRef} 
           className="w-full h-full"
+          style={{ 
+            width: '100vw', 
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0
+          }}
         />
       </div>
 
@@ -162,16 +196,16 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           ) : (
             <div className="text-center py-2">
               <div className="text-white text-sm animate-pulse">
-                🎲 Lancer en cours...
+                {isInitialized ? '🎲 Lancer en cours...' : '⏳ Initialisation...'}
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Backdrop semi-transparent */}
+      {/* Backdrop semi-transparent cliquable */}
       <div 
-        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto"
+        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] animate-in fade-in duration-300 pointer-events-auto"
         onClick={onClose}
       />
     </>
