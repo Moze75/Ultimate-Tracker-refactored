@@ -23,6 +23,7 @@ const TABS = [
   { key: 'gold', label: 'Or' },
   { key: 'inventory', label: 'Équipements' }, // ← Changé ici
   { key: 'bag', label: 'Sac' },
+  { key: 'notes', label: 'Notes' }, // ← Ajouter cette ligne
 ] as const;
 
 const STORAGE_KEY = 'desktopTabbedPanel:activeTab';
