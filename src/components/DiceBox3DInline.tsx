@@ -1,6 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
+const canvasStyle = `
+  #dice-box-overlay canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 45 !important;
+    pointer-events: none !important;
+  }
+`;
+
 interface DiceBox3DInlineProps {
   isOpen: boolean;
   onClose: () => void;
