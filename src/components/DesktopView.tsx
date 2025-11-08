@@ -30,13 +30,7 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [diceRollerOpen, setDiceRollerOpen] = useState(false);
-const [rollData, setRollData] = useState<{
-  type: 'attack' | 'damage' | 'ability' | 'saving-throw' | 'skill';
-  attackName: string;
-  diceFormula: string;
-  modifier: number;
-} | null>(null);
+  const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null); 
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
