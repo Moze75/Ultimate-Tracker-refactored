@@ -33,7 +33,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
     return () => {
       if (hpBarRef.current) {
-        healthGlow.removeGlow(hpBarRef.current);
+    
       }
     };
   }, [player.current_hp, player.max_hp, player.temporary_hp]);
