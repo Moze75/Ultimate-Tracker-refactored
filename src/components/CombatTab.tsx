@@ -612,6 +612,16 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   return (
     <div className="space-y-6">
+
+          <HPManagerConnected
+      player={player}
+      onUpdate={onUpdate}
+      onConcentrationCheck={(dc) => {
+        setConcentrationDC(dc);
+        setShowConcentrationCheck(true);
+      }}
+    />
+      
       <AttackSection
         attacks={attacks}
         onAdd={() => {
