@@ -9,6 +9,7 @@ import { AttackSection } from './Combat/AttackSection';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { attackService } from '../services/attackService';
 import './combat-tab.css';
+import { HPManagerConnected } from './Combat/HPManagerConnected';
 
  
 
