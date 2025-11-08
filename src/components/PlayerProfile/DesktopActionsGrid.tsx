@@ -177,7 +177,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
         onClick={handleShortRest}
         className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
       >
-        <span className="text-xs whitespace-nowrap">Repos court</span>
+        <span className="text-xm whitespace-nowrap">Repos court</span>
         <Sun className="w-4 h-4 ml-2" />
       </button>
 
@@ -195,7 +195,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
        
           <span className="whitespace-nowrap">Inspi</span>
         </div>
-        <div className="flex items-center gap-0.5"> 
+        <span className="whitespace-nowrap text-sm">Inspi</span>
           <button
             onClick={async () => {
               try {
