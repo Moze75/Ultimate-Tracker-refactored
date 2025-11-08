@@ -325,6 +325,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     diceFormula: string;
     modifier: number;
   } | null>(null);
+  const deviceType = useResponsiveLayout();
 
   React.useEffect(() => {
     fetchAttacks();
