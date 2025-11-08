@@ -33,6 +33,7 @@ export function TabbedPanel({
   onPlayerUpdate,
   onInventoryUpdate,
   classSections,
+  hiddenTabs = [],
 }: TabbedPanelProps) {
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     try {
@@ -49,13 +50,14 @@ export function TabbedPanel({
     } catch {}
   }, [activeTab, player.id]);
 
-   
-  
+  // Filtrer les onglets à afficher
+  const visibleTabs = TABS.filter(tab => !hiddenTabs.includes(tab.key));
+
   return (
     <div className="flex flex-col h-full">
       {/* Onglets horizontaux en haut */}
       <div className="flex border-b border-gray-700 mb-4">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as TabKey)}
