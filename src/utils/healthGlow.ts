@@ -164,12 +164,12 @@ class HealthGlowEffect {
     wrap.style.width = rect.width + 'px';
     wrap.style.height = rect.height + 'px';
 
-    const clone = document.createElement('div');
-    clone.style.position = 'absolute';
-    clone.style.inset = '0';
-    clone.style.border = '3px solid rgba(255,0,0,1)';
-    clone.style.borderRadius = 'inherit';
-    clone.style.pointerEvents = 'none';
+const clone = document.createElement('div');
+clone.style.position = 'absolute';
+clone.style.inset = '0';
+clone.style.border = 'none'; // ✨ PAS DE BORDURE
+clone.style.borderRadius = 'inherit';
+clone.style.pointerEvents = 'none';
 
     wrap.appendChild(clone);
     document.body.appendChild(wrap);
