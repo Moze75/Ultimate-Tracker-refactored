@@ -4,7 +4,7 @@ import { HPManager } from '../HPManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
-import { healthGlow } from '../../utils/healthGlow';
+
 
 interface HPManagerConnectedProps {
   player: Player;
