@@ -193,7 +193,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
       <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]">
         <div className="text-gray-400 text-xs flex items-center gap-1">
        
-          <span className="whitespace-nowrap">Inspi</span>
+        <span className="whitespace-nowrap text-sm">Inspi</span>
         </div>
         <div className="flex items-center gap-0.5">  
           <button
