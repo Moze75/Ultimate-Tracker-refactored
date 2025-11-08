@@ -328,24 +328,12 @@ export function combineSpellSlots(player: Player): any {
     return combined;
   }
 
- // 4) ✅ CAS MODIFIÉ : Classe principale non-lanceur + Classe secondaire lanceur
-if (primaryCasterType === 'none' && secondaryCasterType !== 'none') {
-  // ✅ Recalculer les slots pour le niveau actuel de la classe secondaire
-  const secondaryLevel = player.secondary_level || 1;
-  const recalculatedSlots = calculateSpellSlotsForClass(
-    player.secondary_class!,
-    secondaryLevel
-  );
-  
-  // Préserver les emplacements utilisés
-  const result: any = { ...recalculatedSlots };
-  for (let i = 1; i <= 9; i++) {
-    const usedKey = `used${i}`;
-    result[usedKey] = (player.secondary_spell_slots as any)?.[usedKey] || 0;
-  }
-  
-  return result;
-}
+  // 4) ✅ CAS AJOUTÉ : Classe principale non-lanceur + Classe secondaire lanceur
+  if (primaryCasterType === 'none' && secondaryCasterType !== 'none') {
+    // Utiliser directement les spell_slots de la classe secondaire
+    const secondarySlots = player.secondary_spell_slots || {};
+    return secondarySlots;
+  } 
 
   // 5) ✅ CAS AJOUTÉ : Classe principale lanceur + Classe secondaire non-lanceur
   if (primaryCasterType !== 'none' && secondaryCasterType === 'none') {
