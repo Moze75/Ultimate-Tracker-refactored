@@ -242,60 +242,7 @@ export function calculateMulticlassSpellSlots(player: Player): Record<string, nu
 
 export function combineSpellSlots(player: Player): any {
 
-// Helper pour calculer les slots d'une seule classe
-function calculateSpellSlotsForClass(dndClass: DndClass, level: number): Record<string, number> {
-  const casterType = getCasterLevelForClass(dndClass);
-  
-  if (casterType === 'none') return {};
-  
-  let effectiveLevel = 0;
-  if (casterType === 'full') {
-    effectiveLevel = level;
-  } else if (casterType === 'half') {
-    effectiveLevel = Math.ceil(level / 2);
-  }
-  
-  effectiveLevel = Math.max(1, effectiveLevel);
-  
-  const spellSlotTable: Record<number, number[]> = {
-    1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
-    2: [3, 0, 0, 0, 0, 0, 0, 0, 0],
-    3: [4, 2, 0, 0, 0, 0, 0, 0, 0],
-    4: [4, 3, 0, 0, 0, 0, 0, 0, 0],
-    5: [4, 3, 2, 0, 0, 0, 0, 0, 0],
-    6: [4, 3, 3, 0, 0, 0, 0, 0, 0],
-    7: [4, 3, 3, 1, 0, 0, 0, 0, 0],
-    8: [4, 3, 3, 2, 0, 0, 0, 0, 0],
-    9: [4, 3, 3, 3, 1, 0, 0, 0, 0],
-    10: [4, 3, 3, 3, 2, 0, 0, 0, 0],
-    11: [4, 3, 3, 3, 2, 1, 0, 0, 0],
-    12: [4, 3, 3, 3, 2, 1, 0, 0, 0],
-    13: [4, 3, 3, 3, 2, 1, 1, 0, 0],
-    14: [4, 3, 3, 3, 2, 1, 1, 0, 0],
-    15: [4, 3, 3, 3, 2, 1, 1, 1, 0],
-    16: [4, 3, 3, 3, 2, 1, 1, 1, 0],
-    17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
-    18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
-    19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
-    20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
-  };
-  
-  const clampedLevel = Math.min(20, Math.max(1, effectiveLevel));
-  const slots = spellSlotTable[clampedLevel] || [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  
-  const result: Record<string, number> = {};
-  for (let i = 0; i < slots.length; i++) {
-    if (slots[i] > 0) {
-      result[`level${i + 1}`] = slots[i];
-    }
-  }
-  
-  return result;
-}
-
-export function combineSpellSlots(player: Player): any {
-  // ... le reste du code existant
-  
+   
   // 1) Si pas de multiclasse, retourner les spell_slots normaux
   if (!player.secondary_class) {
     return player.spell_slots || {};
