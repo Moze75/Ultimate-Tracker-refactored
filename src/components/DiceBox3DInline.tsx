@@ -19,9 +19,8 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   const [isRolling, setIsRolling] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialiser la DiceBox quand le composant s'ouvre
+  // Initialiser la DiceBox au premier rendu
   useEffect(() => {
-    if (!isOpen) return;
     if (diceBoxRef.current) return;
 
     let mounted = true;
@@ -30,19 +29,19 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       try {
         console.log('🎲 Début initialisation DiceBox...');
         
-        // Attendre que le container existe dans le DOM
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Attendre que le container existe
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         const container = document.querySelector('#dice-box-overlay');
-        console.log('🎲 Container trouvé:', container);
         
         if (!container) {
           console.error('❌ Container #dice-box-overlay introuvable');
           return;
         }
 
+        console.log('✅ Container trouvé:', container);
+
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-        console.log('🎲 Module chargé');
 
         if (!mounted) return;
 
@@ -67,28 +66,31 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
-            console.log('🎲 Résultats:', results);
+            console.log('🎲 Résultats bruts:', results);
             
             const rolls = results?.rolls || [];
             const total = rolls.reduce((sum: number, roll: any) => {
               return sum + (roll?.value || 0);
             }, 0);
 
-            setResult({
+            const finalResult = {
               total: total + (rollData?.modifier || 0),
               rolls: rolls.map((r: any) => r?.value || 0)
-            });
+            };
+
+            console.log('🎲 Résultat final:', finalResult);
+
+            setResult(finalResult);
             setIsRolling(false);
 
             // Auto-fermer après 3 secondes
             setTimeout(() => {
               onClose();
-              setResult(null);
             }, 3000);
           }
         });
 
-        console.log('🎲 Initialisation de la box...');
+        console.log('🎲 Initialisation...');
         await box.initialize();
         
         if (mounted) {
@@ -101,7 +103,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         if (mounted) {
           setIsRolling(false);
         }
-      } 
+      }
     };
 
     initDiceBox();
@@ -109,33 +111,58 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     return () => {
       mounted = false;
     };
-  }, [isOpen]);
+  }, []);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || isRolling || !isInitialized) return;
-
-    console.log('🎲 Lancer des dés:', rollData);
-
-    setIsRolling(true);
-    setResult(null);
-
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 
-        ? `+${rollData.modifier}` 
-        : `${rollData.modifier}`;
+    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) {
+      return;
     }
 
-    console.log('🎲 Notation:', notation);
+    console.log('🎲 Préparation du lancer:', rollData);
 
-    try {
-      diceBoxRef.current.roll(notation);
-    } catch (error) {
-      console.error('❌ Erreur lancer:', error);
+    // Attendre un peu pour être sûr que tout est prêt
+    const timer = setTimeout(() => {
+      if (!diceBoxRef.current) return;
+
+      setIsRolling(true);
+      setResult(null);
+
+      let notation = rollData.diceFormula;
+      if (rollData.modifier !== 0) {
+        notation += rollData.modifier >= 0 
+          ? `+${rollData.modifier}` 
+          : `${rollData.modifier}`;
+      }
+
+      console.log('🎲 Lancer avec notation:', notation);
+
+      try {
+        // Clear la scène avant de lancer
+        diceBoxRef.current.clear();
+        
+        // Petit délai avant le lancer
+        setTimeout(() => {
+          if (diceBoxRef.current) {
+            diceBoxRef.current.roll(notation);
+          }
+        }, 100);
+      } catch (error) {
+        console.error('❌ Erreur lors du lancer:', error);
+        setIsRolling(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, rollData, isInitialized]);
+
+  // Reset quand on ferme
+  useEffect(() => {
+    if (!isOpen && diceBoxRef.current) {
+      setResult(null);
       setIsRolling(false);
     }
-  }, [isOpen, rollData, isRolling, isInitialized, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -146,7 +173,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
-          className="w-full h-full"
           style={{ 
             width: '100vw', 
             height: '100vh',
@@ -196,7 +222,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           ) : (
             <div className="text-center py-2">
               <div className="text-white text-sm animate-pulse">
-                {isInitialized ? '🎲 Lancer en cours...' : '⏳ Initialisation...'}
+                {!isInitialized ? '⏳ Initialisation...' : '🎲 Lancer en cours...'}
               </div>
             </div>
           )}
