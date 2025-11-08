@@ -164,7 +164,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
   };
 
   return (
-    <div className="grid grid-cols-3 gap-2 mr-4">
+ <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mr-4 auto-rows-fr">
       <button
         onClick={handleLongRest}
         className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
