@@ -204,30 +204,7 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
 
 const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
 
- export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
-  const [editing, setEditing] = useState(false);
-  const [previousClass, setPreviousClass] = useState(player.class);
-  const [previousLevel, setPreviousLevel] = useState(player.level);
-  const [showSpellbook, setShowSpellbook] = useState(false);
-  const [showSpellSlotModal, setShowSpellSlotModal] = useState(false);
-  const [spellSlotModalData, setSpellSlotModalData] = useState<{
-    type: 'attack' | 'damage';
-    attackName: string;
-    diceFormula: string;
-    modifier: number;
-  } | null>(null);
-
-  const spellSlotsInitialized = useRef(false); // ← ✅ AJOUTER CETTE LIGNE ICI
-
-  // ← ✅ COLLER LE NOUVEAU useEffect JUSTE APRÈS CETTE LIGNE
-
-useEffect(() => {
-  if (player.class !== previousClass || player.level !== previousLevel) {
-    setPreviousClass(player.class);
-    setPreviousLevel(player.level);
-    initializeResources();
-  }
-}, [player.class, player.level, previousClass, previousLevel]); 
+   
    
   
 useEffect(() => {
