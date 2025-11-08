@@ -262,7 +262,7 @@ wrap.appendChild(clone);
     const shieldAlpha = 0.6;
 
 if (zone === 'shield') {
-  // clone.style.borderColor supprimé - reste transparent
+ clone.style.boxShadow = `0 0 0 3px rgba(${shieldRgb},0.01)`;
   wrap.style.filter = `
     drop-shadow(0 0 6px rgba(${shieldRgb},${shieldAlpha}))
     drop-shadow(0 0 12px rgba(${shieldRgb},${shieldAlpha}))
