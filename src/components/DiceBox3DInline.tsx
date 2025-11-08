@@ -221,13 +221,16 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Container 3D en fullscreen overlay */}
-      <div 
-        id="dice-box-overlay"
-        ref={containerRef}
-        className="fixed inset-0 z-50 pointer-events-none"
+return (
+  <>
+    {/* ✅ AJOUTEZ CE STYLE */}
+    <style>{canvasStyle}</style>
+
+    {/* Container 3D en fullscreen overlay */}
+    <div 
+      id="dice-box-overlay"
+      ref={containerRef}
+      className="fixed inset-0 z-50 pointer-events-none"
         style={{ 
           width: '100vw', 
           height: '100vh',
