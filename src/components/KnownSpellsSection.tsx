@@ -1091,8 +1091,15 @@ const fetchKnownSpells = async () => {
   }, [casterType, characterLevel]);
 
   // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
-  const levelsToRender = useMemo(() => {
-    const levels: string[] = [];
+const levelsToRender = useMemo(() => {
+  console.log('🔍 DEBUG levelsToRender:', {
+    combinedSpellSlots,
+    groupedSpells,
+    allowedLevelsSet: Array.from(allowedLevelsSet),
+    casterType
+  });
+  
+  const levels: string[] = [];
     if (groupedSpells['Tours de magie']?.length) levels.push('Tours de magie');
 
     if (casterType === 'warlock') {
