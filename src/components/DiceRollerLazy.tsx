@@ -1,3 +1,4 @@
+import React from 'react';
 import { DiceBox3DInline } from './DiceBox3DInline';
 
 interface DiceRollerLazyProps {
