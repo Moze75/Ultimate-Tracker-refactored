@@ -57,11 +57,13 @@ export function DiceRoller({ isOpen, onClose, rollData }: DiceRollerProps) {
       <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center">
         <div className="relative">
           {/* Animation de dés (vous pouvez ajouter votre propre animation ici) */}
-          {isRolling && (
-            <div className="text-9xl animate-bounce">
-              🎲
-            </div>
-          )}
+{isRolling && (
+  <div className="text-[14rem] drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]">
+    <div className="animate-spin" style={{ animationDuration: '0.5s' }}>
+      🎲
+    </div>
+  </div>
+)}
         </div>
       </div>
 
