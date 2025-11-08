@@ -111,30 +111,27 @@ export function DesktopView({
             />
           </div>
 
-          <div className="grid grid-cols-12 gap-4">
-<div className="col-span-4">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
-    <HPManagerConnected 
+       <div className="grid grid-cols-12 gap-4">
+  <div className="col-span-4 flex">
+    <StandaloneSkillsSection
       player={player}
-      onUpdate={onPlayerUpdate}
-      onConcentrationCheck={(dc) => {
-        setConcentrationDC(dc);
-        setShowConcentrationCheck(true);
-      }}
+      onSkillClick={handleSkillClick}
     />
   </div>
-</div>
 
-            <div className="col-span-8">
-              {abilities.length > 0 && (
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
-                  <HorizontalAbilityScores
-                    abilities={abilities}
-                    inventory={inventory}
-                    onAbilityClick={handleAbilityClick}
-                    onSavingThrowClick={handleSavingThrowClick}
-                  />
-                </div>
+  <div className="col-span-8 flex">
+    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+      <TabbedPanel
+        player={player}
+        inventory={inventory}
+        onPlayerUpdate={onPlayerUpdate}
+        onInventoryUpdate={onInventoryUpdate}
+        classSections={classSections}
+         hiddenTabs={['bag']}
+      />
+    </div>
+  </div>
+</div>
               )}
             </div>
           </div>
