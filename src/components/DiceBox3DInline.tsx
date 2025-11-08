@@ -37,7 +37,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           themeColor: '#8b5cf6',
           scale: 5,
           gravity: 1.5,
-          offscreen: true,
+          offscreen: false,
           
           onRollComplete: (results: any) => {
             if (!mounted) return;
