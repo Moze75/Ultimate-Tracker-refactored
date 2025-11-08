@@ -278,7 +278,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
             : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50'
         }`}
       >
-        <span className="text-xs whitespace-nowrap">Concentration</span>
+        <span className="text-xm whitespace-nowrap">Concentration</span>
         <Brain className={`w-4 h-4 ml-2 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
       </button>
 
