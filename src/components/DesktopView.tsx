@@ -90,8 +90,18 @@ export function DesktopView({
       description: `Test de ${skillName}`,
       formula: '1d20'
     });
-    // ❌ PAS de setTimeout
-  };
+
+  // ✅ AJOUTEZ CE USEMEMO ICI
+  const memoizedRollData = useMemo(() => {
+    if (!diceRoll) return null;
+    
+    return {
+      type: 'ability' as const,
+      attackName: diceRoll.description,
+      diceFormula: diceRoll.formula,
+      modifier: diceRoll.modifier
+    };
+  }, [diceRoll?.id]); // ✅ Dépend uniquement de l'ID, pas de tout l'objet
 
   return (
     <>
