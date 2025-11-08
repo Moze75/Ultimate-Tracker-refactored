@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { CONDITIONS } from '../constants/conditions'; // ← Ajouter cette ligne
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // ← Et celle-ci pour le mode Desktop
 
-export const CONDITIONS: Condition[] = [
+
   {
     id: 'prone',
     name: 'À terre',
