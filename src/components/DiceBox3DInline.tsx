@@ -90,7 +90,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           throwForce: 5,
           startingHeight: 8,
           settleTimeout: 5000,
-          offscreen: false,
+          
           delay: 10
             
         });
