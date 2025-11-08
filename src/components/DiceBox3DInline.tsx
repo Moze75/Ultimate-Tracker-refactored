@@ -118,98 +118,110 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     };
   }, [isOpen]);
 
-  // Lancer les dés
-  useEffect(() => {
-    if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
+ // Lancer les dés
+useEffect(() => {
+  // Vérifications préliminaires
+  if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
+    console.log('⏸️ Conditions non remplies:', { isOpen, hasRollData: !!rollData, isReady, hasDiceBox: !!diceBoxRef.current });
+    return;
+  }
+
+  // Si un lancer est déjà en cours, on annule
+  if (isRolling) {
+    console.log('⏸️ Un lancer est déjà en cours, skip');
+    return;
+  }
+
+  // ID unique pour tracer ce lancer
+  const currentRollId = ++rollIdRef.current;
+  console.log(`🎲 [Roll #${currentRollId}] Nouveau lancer:`, rollData);
+
+  // Timer pour décaler légèrement le lancer
+  const prepTimer = setTimeout(() => {
+    if (!diceBoxRef.current) {
+      console.warn(`⚠️ [Roll #${currentRollId}] DiceBox disparue`);
       return;
     }
 
-    if (isRolling) {
-      console.log('⏸️ Un lancer est déjà en cours, on attend...');
-      return;
-    }
+    console.log(`🎲 [Roll #${currentRollId}] Démarrage...`);
+    setIsRolling(true);
+    setResult(null);
 
-    const currentRollId = ++rollIdRef.current;
-    console.log(`🎲 [Roll #${currentRollId}] Lancement des dés:`, rollData);
+    // Timeout de sécurité : reset après 10s si aucun résultat
+    const safetyTimer = setTimeout(() => {
+      console.warn(`⚠️ [Roll #${currentRollId}] Timeout de sécurité - reset forcé`);
+      setIsRolling(false);
+    }, 10000);
 
-    const timer = setTimeout(() => {
-      if (!diceBoxRef.current) {
-        console.warn('⚠️ DiceBox non disponible');
-        return;
-      }
-
-      setIsRolling(true);
-      setResult(null); 
-
-      // Timeout de sécurité : si aucun résultat après 10s, reset
-      const safetyTimeout = setTimeout(() => {
-        console.warn(`⚠️ [Roll #${currentRollId}] Timeout de sécurité : reset du state`);
-        setIsRolling(false);
-      }, 10000);
-
-      // Re-bind du callback pour chaque lancer
-      diceBoxRef.current.onRollComplete = (results: any) => {
-        clearTimeout(safetyTimeout);
-        
-        console.log(`🎯 [Roll #${currentRollId}] Résultats bruts:`, results);
-        
-        const sets = results?.sets || [];
-        const rolls: number[] = [];
-        
-        sets.forEach((set: any) => {
-          if (set?.rolls) {
-            set.rolls.forEach((roll: any) => {
-              rolls.push(roll?.value || 0);
-            });
-          }
-        });
-        
-        console.log(`🎲 [Roll #${currentRollId}] Dés extraits:`, rolls);
-        
-        const finalResult = {
-          total: results?.total || 0,
-          rolls: rolls
-        };
-
-        console.log(`✅ [Roll #${currentRollId}] Résultat final:`, finalResult);
-
-        setResult(finalResult);
-        setIsRolling(false);
+    // Définir le callback AVANT de lancer
+    diceBoxRef.current.onRollComplete = (results: any) => {
+      clearTimeout(safetyTimer);
+      console.log(`🎯 [Roll #${currentRollId}] Résultats:`, results);
+      
+      // Extraction des valeurs des dés
+      const sets = results?.sets || [];
+      const rolls: number[] = [];
+      
+      sets.forEach((set: any) => {
+        if (set?.rolls) {
+          set.rolls.forEach((roll: any) => {
+            rolls.push(roll?.value || 0);
+          });
+        }
+      });
+      
+      const finalResult = {
+        total: results?.total || 0,
+        rolls: rolls
       };
 
-      // Construire la notation
-      let notation = rollData.diceFormula;
-      if (rollData.modifier !== 0) {
-        notation += rollData.modifier >= 0 
-          ? `+${rollData.modifier}` 
-          : `${rollData.modifier}`;
+      console.log(`✅ [Roll #${currentRollId}] Terminé:`, finalResult);
+      
+      setResult(finalResult);
+      setIsRolling(false);
+    };
+
+    // Construire la notation (ex: "1d20+3")
+    let notation = rollData.diceFormula;
+    if (rollData.modifier !== 0) {
+      notation += rollData.modifier >= 0 
+        ? `+${rollData.modifier}` 
+        : `${rollData.modifier}`;
+    }
+
+    console.log(`🎲 [Roll #${currentRollId}] Notation:`, notation);
+
+    try {
+      // Clear la scène des dés précédents
+      if (diceBoxRef.current.clear) {
+        diceBoxRef.current.clear();
       }
-
-      console.log(`🎲 [Roll #${currentRollId}] Notation:`, notation);
-
-      try {
-        if (diceBoxRef.current.clear) {
-          diceBoxRef.current.clear();
+      
+      // Délai court avant de lancer pour que clear() soit effectif
+      const rollTimer = setTimeout(() => {
+        if (diceBoxRef.current && diceBoxRef.current.roll) {
+          console.log(`🎲 [Roll #${currentRollId}] ROLL!`);
+          diceBoxRef.current.roll(notation);
+        } else {
+          console.error(`❌ [Roll #${currentRollId}] Méthode roll() non disponible`);
+          setIsRolling(false);
+          clearTimeout(safetyTimer);
         }
-        
-        setTimeout(() => {
-          if (diceBoxRef.current && diceBoxRef.current.roll) {
-            console.log(`🎲 [Roll #${currentRollId}] ROLL!`);
-            diceBoxRef.current.roll(notation);
-          } else {
-            console.error(`❌ [Roll #${currentRollId}] Méthode roll() non disponible`);
-            setIsRolling(false);
-            clearTimeout(safetyTimeout);
-          }
-        }, 150);
-      } catch (error) {
-        console.error(`❌ [Roll #${currentRollId}] Erreur lors du lancer:`, error);
-        setIsRolling(false);
-        clearTimeout(safetyTimeout);
-      }
-    }, 400);
+      }, 200);
 
-    return () => clearTimeout(timer);
+      // Cleanup du rollTimer si le composant unmount
+      return () => clearTimeout(rollTimer);
+      
+    } catch (error) {
+      console.error(`❌ [Roll #${currentRollId}] Erreur:`, error);
+      setIsRolling(false);
+      clearTimeout(safetyTimer);
+    }
+  }, 300);
+
+  // Cleanup du prepTimer si le composant unmount ou les deps changent
+  return () => clearTimeout(prepTimer);
+  
 }, [isOpen, rollData?.attackName, rollData?.diceFormula, rollData?.modifier, isReady, isRolling]);
 
   // Reset quand on ferme
