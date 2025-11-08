@@ -4,7 +4,7 @@ import { Condition, Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
-const CONDITIONS: Condition[] = [
+export const CONDITIONS: Condition[] = [
   {
     id: 'prone',
     name: 'À terre',
