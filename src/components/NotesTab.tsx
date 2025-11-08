@@ -131,8 +131,8 @@ export function NotesTab({ player, onUpdate }: NotesTabProps) {
     }
   };
 
-  return (
-    <div className="space-y-4 -mt-2">
+return (
+  <div className="space-y-4" style={{ marginTop: '-3rem' }}>
       <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-4">
         <label className="block text-sm font-medium text-gray-300 mb-2">Journal de campagne</label>
         <textarea
