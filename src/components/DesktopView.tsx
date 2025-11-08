@@ -7,7 +7,7 @@ import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
-import { DiceRoller } from './DiceRoller';
+import { DiceRollerLazy } from './DiceRollerLazy';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
