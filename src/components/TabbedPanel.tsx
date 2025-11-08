@@ -68,7 +68,7 @@ export function TabbedPanel({
       </div>
 
       {/* Contenu de l'onglet actif */}
-<div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+<div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === 'actions' && (
           <CombatTab
             player={player}
