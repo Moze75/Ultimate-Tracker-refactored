@@ -28,6 +28,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const isInitializingRef = useRef(false);
+  const rollIdRef = useRef(0);
   const [result, setResult] = useState<{ total: number; rolls: number[] } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -88,7 +89,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           throwForce: 5,
           startingHeight: 8,
           settleTimeout: 5000,
-          offscreen: false,  // ✅ CRITIQUE : doit être false pour voir les dés !
+          offscreen: false,
           delay: 10,
           enableShadows: true,
           lightIntensity: 0.9
@@ -119,11 +120,17 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
   // Lancer les dés
   useEffect(() => {
-    if (!isOpen || !rollData || !isReady || !diceBoxRef.current || isRolling) {
+    if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
       return;
     }
 
-    console.log('🎲 Lancement des dés:', rollData);
+    if (isRolling) {
+      console.log('⏸️ Un lancer est déjà en cours, on attend...');
+      return;
+    }
+
+    const currentRollId = ++rollIdRef.current;
+    console.log(`🎲 [Roll #${currentRollId}] Lancement des dés:`, rollData);
 
     const timer = setTimeout(() => {
       if (!diceBoxRef.current) {
@@ -134,9 +141,17 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       setIsRolling(true);
       setResult(null);
 
+      // Timeout de sécurité : si aucun résultat après 10s, reset
+      const safetyTimeout = setTimeout(() => {
+        console.warn(`⚠️ [Roll #${currentRollId}] Timeout de sécurité : reset du state`);
+        setIsRolling(false);
+      }, 10000);
+
       // Re-bind du callback pour chaque lancer
       diceBoxRef.current.onRollComplete = (results: any) => {
-        console.log('🎯 Résultats bruts:', results);
+        clearTimeout(safetyTimeout);
+        
+        console.log(`🎯 [Roll #${currentRollId}] Résultats bruts:`, results);
         
         const sets = results?.sets || [];
         const rolls: number[] = [];
@@ -149,14 +164,14 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           }
         });
         
-        console.log('🎲 Dés extraits:', rolls);
+        console.log(`🎲 [Roll #${currentRollId}] Dés extraits:`, rolls);
         
         const finalResult = {
           total: results?.total || 0,
           rolls: rolls
         };
 
-        console.log('✅ Résultat final:', finalResult);
+        console.log(`✅ [Roll #${currentRollId}] Résultat final:`, finalResult);
 
         setResult(finalResult);
         setIsRolling(false);
@@ -170,7 +185,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           : `${rollData.modifier}`;
       }
 
-      console.log('🎲 Notation:', notation);
+      console.log(`🎲 [Roll #${currentRollId}] Notation:`, notation);
 
       try {
         if (diceBoxRef.current.clear) {
@@ -179,16 +194,18 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         
         setTimeout(() => {
           if (diceBoxRef.current && diceBoxRef.current.roll) {
-            console.log('🎲 ROLL!');
+            console.log(`🎲 [Roll #${currentRollId}] ROLL!`);
             diceBoxRef.current.roll(notation);
           } else {
-            console.error('❌ Méthode roll() non disponible');
+            console.error(`❌ [Roll #${currentRollId}] Méthode roll() non disponible`);
             setIsRolling(false);
+            clearTimeout(safetyTimeout);
           }
         }, 150);
       } catch (error) {
-        console.error('❌ Erreur lors du lancer:', error);
+        console.error(`❌ [Roll #${currentRollId}] Erreur lors du lancer:`, error);
         setIsRolling(false);
+        clearTimeout(safetyTimeout);
       }
     }, 400);
 
@@ -198,6 +215,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   // Reset quand on ferme
   useEffect(() => {
     if (!isOpen) {
+      console.log('🔄 Reset : fermeture de la modale');
       setResult(null);
       setIsRolling(false);
       
@@ -296,4 +314,4 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       />
     </>
   );
-} 
+}
