@@ -132,7 +132,7 @@ export function NotesTab({ player, onUpdate }: NotesTabProps) {
   };
 
 return (
- <div className="absolute inset-0 pt-20 px-6 pb-6 overflow-y-auto space-y-4">
+ <div className="space-y-4 h-full overflow-y-auto">
     <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-4">
         <label className="block text-sm font-medium text-gray-300 mb-2">Journal de campagne</label>
         <textarea
