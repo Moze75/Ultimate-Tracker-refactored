@@ -195,18 +195,15 @@ export function DesktopView({
         </div>
       </div>
 
-      {/* ✅ DiceBox avec formula depuis le state */}
-      <DiceBox3DInline
-        isOpen={diceRoll !== null}
-        onClose={() => setDiceRoll(null)}
-        rollData={diceRoll ? {
-          type: 'ability',
-          attackName: diceRoll.description,
-          diceFormula: diceRoll.formula, // ✅ Utilisez formula du state
-          modifier: diceRoll.modifier
-        } : null}
-      />
-
+{/* ✅ Utilisez memoizedRollData */}
+<DiceBox3DInline
+  isOpen={diceRoll !== null}
+  onClose={() => {
+    console.log('🔴 Fermeture DiceBox');
+    setDiceRoll(null);
+  }}
+  rollData={memoizedRollData}
+/>
       <PlayerProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
