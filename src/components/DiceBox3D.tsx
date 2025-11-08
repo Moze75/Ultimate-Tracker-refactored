@@ -114,11 +114,12 @@ const box = new DiceBox('#dice-box-overlay', {
   return (
     <>
       {/* Container 3D en overlay fullscreen - PAS DE BACKDROP */}
-      <div 
-        id="dice-box-overlay"
-        ref={containerRef} 
-        className="fixed inset-0 z-40 pointer-events-none"
-      />
+<div 
+  id="dice-box-overlay"
+  ref={containerRef} 
+  className="fixed inset-0 z-40 pointer-events-none"
+  style={{ width: '100vw', height: '100vh' }} // ← Ajoutez cette ligne
+/>
 
       {/* Badge résultat en haut à droite */}
       <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top duration-300">
