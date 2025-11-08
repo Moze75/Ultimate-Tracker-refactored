@@ -219,9 +219,13 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         style={{ 
           width: '100vw', 
           height: '100vh',
-          backgroundColor: 'transparent'
-        }}
-      />
+    backgroundColor: 'transparent',
+    position: 'fixed',  // ✅ Ajoutez explicitement
+    top: 0,
+    left: 0,
+    zIndex: 50  // ✅ Ajoutez explicitement
+  }}
+/>
 
       {/* Badge résultat en haut à droite */}
       <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-top duration-300">
