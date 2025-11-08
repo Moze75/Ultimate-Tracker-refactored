@@ -5,7 +5,7 @@ import { AbilitiesTab } from './AbilitiesTab';
 import { EquipmentTab } from './EquipmentTab';
 import CombatTab from './CombatTab';
 
-type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag';
+type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag' | 'notes';
 
 interface TabbedPanelProps {
   player: Player;
