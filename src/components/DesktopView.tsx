@@ -166,14 +166,16 @@ export function DesktopView({
         </div>
       </div>
 
-      {diceRoll && (
-        <DiceRoller
-          result={diceRoll.result}
-          modifier={diceRoll.modifier}
-          description={diceRoll.description}
-          onClose={() => setDiceRoll(null)}
-        />
-      )}
+<DiceRoller
+  isOpen={diceRoll !== null}
+  onClose={() => setDiceRoll(null)}
+  rollData={diceRoll ? {
+    type: 'ability',
+    attackName: diceRoll.description,
+    diceFormula: '1d20',
+    modifier: diceRoll.modifier
+  } : null}
+/>
 
       <PlayerProfileSettingsModal
         open={settingsOpen}
