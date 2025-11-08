@@ -183,7 +183,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
 
       {player.hit_dice && (
         <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50 min-w-[115px]">
-          <span className="text-xs text-gray-400 whitespace-nowrap">Dés de vie</span>
+          <span className="text-xm text-gray-400 whitespace-nowrap">Dés de vie</span>
           <span className="text-gray-300 font-medium text-sm ml-2">
             {player.hit_dice.total - player.hit_dice.used}/{player.hit_dice.total}
           </span>
