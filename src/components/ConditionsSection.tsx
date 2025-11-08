@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // ← Ajouter cet import
 
-const CONDITIONS: Condition[] = [...]
+export const CONDITIONS: Condition[] = [
   {
     id: 'prone',
     name: 'À terre',
@@ -166,10 +166,10 @@ interface ConditionsSectionProps {
   onUpdate: (player: Player) => void;
 }
 
-export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) {
+export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) { 
   const deviceType = useResponsiveLayout(); // ← Ajouter cette ligne
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
-  const [conditionsExpanded, setConditionsExpanded] = useState(deviceType === 'desktop'); // ← Modifier cette ligne
+  const [conditionsExpanded, setConditionsExpanded] = useState(false);
 
   if (!player) {
     return (
@@ -306,4 +306,3 @@ export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) 
     </div>
   );
 }
-export { ConditionsSection }; // ou export default function ConditionsSection
