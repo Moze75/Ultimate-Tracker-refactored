@@ -150,8 +150,8 @@ export function DesktopView({
               </div>
             </div>
 
-<div className="col-span-8 flex h-full">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full h-full flex flex-col">
+<div className="col-span-8 flex">
+  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col">
     <TabbedPanel
       player={player}
       inventory={inventory}
