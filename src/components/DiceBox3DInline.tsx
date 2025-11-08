@@ -79,27 +79,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           startingHeight: 8,
           settleTimeout: 5000,
           offscreen: false,
-          delay: 10,
-          
-          onRollComplete: (results: any) => {
-            if (!mounted) return;
-            
-            console.log('🎯 Résultats:', results);
-            
-            const rolls = results?.rolls || [];
-            const sum = rolls.reduce((total: number, roll: any) => total + (roll?.value || 0), 0);
-            
-            setResult({
-              total: sum + (rollData?.modifier || 0),
-              rolls: rolls.map((r: any) => r?.value || 0)
-            });
-            setIsRolling(false);
-
-            // Auto-fermeture après 3 secondes
-            setTimeout(() => {
-              onClose();
-            }, 3000);
-          }
+          delay: 10
         });
 
         console.log('🎲 Initialisation...');
@@ -133,7 +113,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
     console.log('🎲 Lancement des dés:', rollData);
 
-    // Petit délai pour que tout soit prêt
     const timer = setTimeout(() => {
       if (!diceBoxRef.current) {
         console.warn('⚠️ DiceBox non disponible');
@@ -142,6 +121,25 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
       setIsRolling(true);
       setResult(null);
+
+      // ✅ Re-bind du callback pour chaque lancer
+      diceBoxRef.current.onRollComplete = (results: any) => {
+        console.log('🎯 Résultats:', results);
+        
+        const rolls = results?.rolls || [];
+        const sum = rolls.reduce((total: number, roll: any) => total + (roll?.value || 0), 0);
+        
+        const finalResult = {
+          total: sum + (rollData?.modifier || 0),
+          rolls: rolls.map((r: any) => r?.value || 0)
+        };
+
+        setResult(finalResult);
+        setIsRolling(false);
+        
+        console.log('✅ Résultat affiché:', finalResult);
+        // ❌ PAS DE AUTO-CLOSE ! L'utilisateur doit cliquer
+      };
 
       // Construire la notation
       let notation = rollData.diceFormula;
@@ -183,6 +181,15 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     if (!isOpen) {
       setResult(null);
       setIsRolling(false);
+      
+      // Nettoyer la scène 3D
+      if (diceBoxRef.current && diceBoxRef.current.clear) {
+        try {
+          diceBoxRef.current.clear();
+        } catch (e) {
+          console.warn('⚠️ Erreur lors du clear:', e);
+        }
+      }
     }
   }, [isOpen]);
 
@@ -231,11 +238,14 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
               <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-2">
                 {result.total}
               </div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-gray-300 mb-3">
                 Dés: [{result.rolls.join(', ')}]
                 {rollData && rollData.modifier !== 0 && (
                   <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
                 )}
+              </div>
+              <div className="text-xs text-purple-300 italic">
+                👆 Cliquez n'importe où pour fermer
               </div>
             </div>
           ) : (
@@ -248,10 +258,11 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         </div>
       </div>
 
-      {/* Backdrop semi-transparent */}
+      {/* Backdrop semi-transparent cliquable - FERME la modale */}
       <div 
-        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] animate-in fade-in duration-300 pointer-events-auto"
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto cursor-pointer"
         onClick={onClose}
+        title="Cliquez pour fermer"
       />
     </>
   );
