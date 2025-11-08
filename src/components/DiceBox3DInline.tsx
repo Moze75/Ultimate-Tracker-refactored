@@ -210,7 +210,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [isOpen, rollData, isReady, isRolling]);
+}, [isOpen, rollData?.attackName, rollData?.diceFormula, rollData?.modifier, isReady, isRolling]);
 
   // Reset quand on ferme
   useEffect(() => {
