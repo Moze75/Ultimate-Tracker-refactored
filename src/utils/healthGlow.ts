@@ -166,12 +166,13 @@ class HealthGlowEffect {
 
 const clone = document.createElement('div');
 clone.style.position = 'absolute';
-clone.style.inset = '0';
-clone.style.border = '3px solid transparent'; // ✨ BORDURE TRANSPARENTE
+clone.style.inset = '-4px'; // ✨ Déborde légèrement
+clone.style.background = 'transparent';
 clone.style.borderRadius = 'inherit';
 clone.style.pointerEvents = 'none';
+clone.style.boxShadow = '0 0 0 3px rgba(255,0,0,0.01)'; // ✨ Ombre interne quasi-invisible pour créer une surface
 
-    wrap.appendChild(clone);
+wrap.appendChild(clone);
     document.body.appendChild(wrap);
 
     const rec = { wrap, clone };
