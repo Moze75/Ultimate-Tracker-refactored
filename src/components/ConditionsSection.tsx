@@ -167,6 +167,7 @@ interface ConditionsSectionProps {
 }
 
 export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) {
+  const deviceType = useResponsiveLayout(); // ← Ajouter cette ligne
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [conditionsExpanded, setConditionsExpanded] = useState(false);
 
