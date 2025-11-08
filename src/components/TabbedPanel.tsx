@@ -122,7 +122,7 @@ export function TabbedPanel({
     />
   )}
 
-  {activeTab === 'notes' && (
+  {activeTab === 'notes' && ( 
     <NotesTab
       player={player}
       onUpdate={onPlayerUpdate}
