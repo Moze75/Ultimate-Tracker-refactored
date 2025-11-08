@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 
-const DiceBox3D = lazy(() => import('./DiceBox3D').then(module => ({ default: module.DiceBox3D })));
+const DiceBox3DInline = lazy(() => import('./DiceBox3DInline').then(module => ({ default: module.DiceBox3DInline })));
 
 interface DiceRollerLazyProps {
   isOpen: boolean;
@@ -18,19 +18,18 @@ export function DiceRollerLazy({ isOpen, onClose, rollData }: DiceRollerLazyProp
 
   return (
     <Suspense fallback={
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-        <div className="text-center">
+      <div className="fixed top-4 right-4 z-50">
+        <div className="bg-gray-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 p-4">
           <img 
             src="/icons/wmremove-transformed.png" 
             alt="Chargement..." 
-            className="animate-spin h-12 w-12 mx-auto mb-4 object-contain"
+            className="animate-spin h-8 w-8 object-contain"
             style={{ backgroundColor: 'transparent' }}
           />
-          <p className="text-white text-lg">Chargement des dés 3D...</p>
         </div>
       </div>
     }>
-      <DiceBox3D isOpen={isOpen} onClose={onClose} rollData={rollData} />
+      <DiceBox3DInline isOpen={isOpen} onClose={onClose} rollData={rollData} />
     </Suspense>
   );
 }
