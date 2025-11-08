@@ -41,7 +41,7 @@ export function HPManager({
   getWoundLevel,
   getWoundColor,
   getHPBarColor
-  hpBarRef
+  hpBarRef,
 }: HPManagerProps) {
   const isCriticalHealth = totalHP <= Math.floor(player.max_hp * 0.20);
 
