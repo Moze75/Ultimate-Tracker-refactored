@@ -139,29 +139,29 @@ export function DesktopView({
             </div>
           </div>
 
-       <div className="grid grid-cols-12 gap-4">   
-            <div className="col-span-4 flex">
-              {/* Ajout d’un conteneur similaire pour harmoniser */}
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full">
-                <StandaloneSkillsSection
-                  player={player}
-                  onSkillClick={handleSkillClick}
-                />
-              </div>
-            </div>
+     <div className="grid grid-cols-12 gap-4">
+  <div className="col-span-4 flex">
+    {/* Ajout d'un conteneur similaire pour harmoniser */}
+    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[500px]">
+      <StandaloneSkillsSection
+        player={player}
+        onSkillClick={handleSkillClick}
+      />
+    </div>
+  </div>
 
-<div className="col-span-8 flex">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col">
-    <TabbedPanel
-      player={player}
-      inventory={inventory}
-      onPlayerUpdate={onPlayerUpdate}
-      onInventoryUpdate={onInventoryUpdate}
-      classSections={classSections}
-    />
+  <div className="col-span-8 flex">
+    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[500px]">
+      <TabbedPanel
+        player={player}
+        inventory={inventory}
+        onPlayerUpdate={onPlayerUpdate}
+        onInventoryUpdate={onInventoryUpdate}
+        classSections={classSections}
+      />
+    </div>
   </div>
 </div>
-          </div>
 
         </div>
       </div>
