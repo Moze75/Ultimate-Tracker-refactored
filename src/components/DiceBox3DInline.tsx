@@ -52,7 +52,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       try {
         console.log('🎲 Début initialisation DiceBox...');
         
-        // Attendre que le DOM soit prêt
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const container = document.getElementById('dice-box-overlay');
@@ -64,7 +63,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
         console.log('✅ Container trouvé:', container.clientWidth, 'x', container.clientHeight);
 
-        // Import dynamique
         const { default: DiceBox } = await import('@3d-dice/dice-box-threejs');
         
         if (!mounted) {
@@ -90,9 +88,10 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           throwForce: 5,
           startingHeight: 8,
           settleTimeout: 5000,
-          
-          delay: 10
-            
+          offscreen: false,  // ✅ CRITIQUE : doit être false pour voir les dés !
+          delay: 10,
+          enableShadows: true,
+          lightIntensity: 0.9
         });
 
         console.log('🎲 Initialisation...');
@@ -135,11 +134,10 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       setIsRolling(true);
       setResult(null);
 
-      // ✅ Re-bind du callback pour chaque lancer
+      // Re-bind du callback pour chaque lancer
       diceBoxRef.current.onRollComplete = (results: any) => {
         console.log('🎯 Résultats bruts:', results);
         
-        // ✅ Extraire les valeurs des dés depuis sets
         const sets = results?.sets || [];
         const rolls: number[] = [];
         
@@ -153,7 +151,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
         
         console.log('🎲 Dés extraits:', rolls);
         
-        // dice-box calcule déjà le total avec le modificateur
         const finalResult = {
           total: results?.total || 0,
           rolls: rolls
@@ -163,8 +160,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
         setResult(finalResult);
         setIsRolling(false);
-        
-        // ❌ PAS DE AUTO-CLOSE - L'utilisateur doit cliquer
       };
 
       // Construire la notation
@@ -178,12 +173,10 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       console.log('🎲 Notation:', notation);
 
       try {
-        // Nettoyer la scène
         if (diceBoxRef.current.clear) {
           diceBoxRef.current.clear();
         }
         
-        // Petit délai avant le roll
         setTimeout(() => {
           if (diceBoxRef.current && diceBoxRef.current.roll) {
             console.log('🎲 ROLL!');
@@ -208,7 +201,6 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
       setResult(null);
       setIsRolling(false);
       
-      // Nettoyer la scène 3D
       if (diceBoxRef.current && diceBoxRef.current.clear) {
         try {
           diceBoxRef.current.clear();
@@ -221,28 +213,27 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
   if (!isOpen) return null;
 
-return (
-  <>
-    {/* ✅ AJOUTEZ CE STYLE */}
-    <style>{canvasStyle}</style>
+  return (
+    <>
+      <style>{canvasStyle}</style>
 
-    {/* Container 3D en fullscreen overlay */}
-    <div 
-      id="dice-box-overlay"
-      ref={containerRef}
-      className="fixed inset-0 z-50 pointer-events-none"
+      {/* Container 3D */}
+      <div 
+        id="dice-box-overlay"
+        ref={containerRef}
         style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
           width: '100vw', 
           height: '100vh',
-    backgroundColor: 'transparent',
-    position: 'fixed',  // ✅ Ajoutez explicitement
-    top: 0,
-    left: 0,
-    zIndex: 50  // ✅ Ajoutez explicitement
-  }}
-/>
+          zIndex: 45,
+          pointerEvents: 'none',
+          backgroundColor: 'transparent'
+        }}
+      />
 
-      {/* Badge résultat en haut à droite */}
+      {/* Badge résultat */}
       <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-top duration-300">
         <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 p-4 min-w-[280px]">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -265,7 +256,6 @@ return (
             </button>
           </div>
 
-          {/* Résultat */}
           {result && !isRolling ? (
             <div className="text-center py-2 animate-in zoom-in duration-300">
               <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 mb-2 drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">
@@ -298,7 +288,7 @@ return (
         </div>
       </div>
 
-      {/* Backdrop semi-transparent cliquable - FERME la modale */}
+      {/* Backdrop */}
       <div 
         className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto cursor-pointer"
         onClick={onClose}
