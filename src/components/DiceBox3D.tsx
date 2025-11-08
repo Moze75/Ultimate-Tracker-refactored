@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
-interface DiceBox3DProps {
+interface DiceBox3DInlineProps {
   isOpen: boolean;
   onClose: () => void;
   rollData: {
@@ -12,14 +12,14 @@ interface DiceBox3DProps {
   } | null;
 }
 
-export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
+export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[] } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialiser la DiceBox (une seule fois au montage du composant)
+  // Initialiser la DiceBox (une seule fois)
   useEffect(() => {
     if (diceBoxRef.current) return;
 
@@ -31,19 +31,15 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         if (!mounted) return;
 
-// APRÈS
-const box = new DiceBox('#dice-box-overlay', {
-  assetPath: '/assets/dice-box/',
-  theme: 'default',
-  themeColor: '#8b5cf6',
-  scale: 6,
-  gravity: 2,
-  mass: 1,
-  friction: 0.8,
-  restitution: 0.3,
-  offscreen: false, // ← CHANGÉ EN FALSE
-  
-  onRollComplete: (results: any) => {
+        const box = new DiceBox('#dice-box-overlay', {
+          assetPath: '/assets/dice-box/',
+          theme: 'default',
+          themeColor: '#8b5cf6',
+          scale: 5,
+          gravity: 1.5,
+          offscreen: true,
+          
+          onRollComplete: (results: any) => {
             if (!mounted) return;
             
             const rolls = results?.rolls || [];
@@ -70,7 +66,7 @@ const box = new DiceBox('#dice-box-overlay', {
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox 3D initialisé');
+          console.log('✅ DiceBox initialisé');
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -91,6 +87,8 @@ const box = new DiceBox('#dice-box-overlay', {
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || isRolling || !isInitialized) return;
 
+    console.log('🎲 Lancer:', rollData);
+
     setIsRolling(true);
     setResult(null);
 
@@ -104,7 +102,7 @@ const box = new DiceBox('#dice-box-overlay', {
     try {
       diceBoxRef.current.roll(notation);
     } catch (error) {
-      console.error('❌ Erreur lancer de dés:', error);
+      console.error('❌ Erreur lancer:', error);
       setIsRolling(false);
     }
   }, [isOpen, rollData, isRolling, isInitialized, onClose]);
@@ -113,17 +111,18 @@ const box = new DiceBox('#dice-box-overlay', {
 
   return (
     <>
-      {/* Container 3D en overlay fullscreen - PAS DE BACKDROP */}
-<div 
-  id="dice-box-overlay"
-  ref={containerRef} 
-  className="fixed inset-0 z-40 pointer-events-none"
-  style={{ width: '100vw', height: '100vh' }} // ← Ajoutez cette ligne
-/>
+      {/* Overlay fullscreen avec dés 3D */}
+      <div className="fixed inset-0 z-50 pointer-events-none">
+        <div 
+          id="dice-box-overlay"
+          ref={containerRef} 
+          className="w-full h-full"
+        />
+      </div>
 
-      {/* Badge résultat en haut à droite */}
-      <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top duration-300">
-        <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 p-4 min-w-[280px] pointer-events-auto">
+      {/* Badge du lancer en haut à droite */}
+      <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-top duration-300">
+        <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 p-4 min-w-[280px]">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1">
               <h4 className="text-white font-bold text-lg mb-1">
@@ -138,7 +137,7 @@ const box = new DiceBox('#dice-box-overlay', {
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors pointer-events-auto"
             >
               <X className="w-5 h-5 text-white" />
             </button>
@@ -166,6 +165,12 @@ const box = new DiceBox('#dice-box-overlay', {
           )}
         </div>
       </div>
+
+      {/* Backdrop semi-transparent */}
+      <div 
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto"
+        onClick={onClose}
+      />
     </>
   );
 }
