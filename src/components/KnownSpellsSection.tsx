@@ -1074,9 +1074,27 @@ const fetchKnownSpells = async () => {
     [spellcastingAbilityName, proficiencyBonus, abilityMod]
   );
 
-  // BORNAGE D&D 5e + rendu systématique des emplacements
-  const casterType = useMemo(() => getCasterType((player as any).class), [player]);
-  const characterLevel = useMemo(() => getCharacterLevel(player), [player]);
+  // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
+  const casterType = useMemo(() => {
+    const primaryCaster = getCasterType(player.class);
+    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+    
+    // Si l'une des deux classes est un lanceur, retourner ce type
+    if (primaryCaster !== 'none') return primaryCaster;
+    if (secondaryCaster !== 'none') return secondaryCaster;
+    return 'none';
+  }, [player.class, player.secondary_class]);
+
+  // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
+  const characterLevel = useMemo(() => {
+    const primaryCaster = getCasterType(player.class);
+    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+    
+    if (primaryCaster !== 'none') return getCharacterLevel(player);
+    if (secondaryCaster !== 'none') return player.secondary_level || 1;
+    return 1;
+  }, [player.class, player.secondary_class, player.level, player.secondary_level]);
+
   const allowedLevelsSet = useMemo(() => {
     const set = new Set<number>();
     if (casterType === 'none') return set;
