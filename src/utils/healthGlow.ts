@@ -270,7 +270,7 @@ if (zone === 'shield') {
     drop-shadow(0 0 24px rgba(${shieldRgb},${shieldAlpha}))
   `;
 } else {
-  // clone.style.borderColor supprimé - reste transparent
+ clone.style.boxShadow = `0 0 0 3px rgba(${rgb},0.01)`; // ✨ Quasi-invisible
   wrap.style.filter = `
     drop-shadow(0 0 6px rgba(${rgb},${alpha}))
     drop-shadow(0 0 12px rgba(${rgb},${alpha}))
