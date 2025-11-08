@@ -32,7 +32,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         if (!mounted || !containerRef.current) return;
 
-        const box = new DiceBox(containerRef.current, {
+        const box = new DiceBox('#dice-box-container', {
           assetPath: '/assets/dice-box/',
           theme: 'default',
           themeColor: '#8b5cf6',
