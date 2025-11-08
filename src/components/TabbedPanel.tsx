@@ -4,6 +4,7 @@ import { ClassesTabWrapper } from './ClassesTabWrapper';
 import { AbilitiesTab } from './AbilitiesTab';
 import { EquipmentTab } from './EquipmentTab';
 import CombatTab from './CombatTab';
+import { NotesTab } from './NotesTab';
 
 type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag' | 'notes';
 
