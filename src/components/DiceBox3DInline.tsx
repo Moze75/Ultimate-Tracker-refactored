@@ -20,118 +20,96 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialiser la DiceBox quand le composant s'ouvre
- Copilot said: Le problème c'est que **la DiceBox ne
-Le problème c'est que la DiceBox ne se réinitialise pas après le premier lancer. Il faut nettoyer et réinitialiser entre chaque lancer.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (diceBoxRef.current) return;
 
-Corrigez DiceBox3DInline.tsx
-Modifiez la partie cleanup et réinitialisation :
+    let mounted = true;
 
-TypeScript
-// Remplacez tout le premier useEffect (lignes ~23-111) par :
-
-useEffect(() => {
-  if (!isOpen) {
-    // Nettoyer quand on ferme
-    if (diceBoxRef.current) {
+    const initDiceBox = async () => {
       try {
-        diceBoxRef.current.clear();
-      } catch (e) {
-        console.warn('Erreur clear:', e);
-      }
-    }
-    return;
-  }
-
-  if (diceBoxRef.current && isInitialized) {
-    // Déjà initialisé, on ne refait pas
-    return;
-  }
-
-  let mounted = true;
-
-  const initDiceBox = async () => {
-    try {
-      console.log('🎲 Début initialisation DiceBox...');
-      
-      // Attendre que le container existe
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const container = document.querySelector('#dice-box-overlay');
-      console.log('🎲 Container trouvé:', container);
-      
-      if (!container) {
-        console.error('❌ Container introuvable');
-        return;
-      }
-
-      const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-      if (!mounted) return;
-
-      const box = new DiceBox('#dice-box-overlay', {
-        assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.5/dist/assets/',
-        theme: 'default',
-        themeColor: '#8b5cf6',
-        scale: 6,
-        gravity: 2,
-        mass: 1,
-        friction: 0.8,
-        restitution: 0.3,
-        linearDamping: 0.5,
-        angularDamping: 0.4,
-        spinForce: 6,
-        throwForce: 5,
-        startingHeight: 8,
-        settleTimeout: 5000,
-        offscreen: false,
-        delay: 10,
+        console.log('🎲 Début initialisation DiceBox...');
         
-        onRollComplete: (results: any) => {
-          if (!mounted) return;
-          
-          console.log('🎲 Résultats:', results);
-          
-          const rolls = results?.rolls || [];
-          const total = rolls.reduce((sum: number, roll: any) => {
-            return sum + (roll?.value || 0);
-          }, 0);
-
-          setResult({
-            total: total + (rollData?.modifier || 0),
-            rolls: rolls.map((r: any) => r?.value || 0)
-          });
-          setIsRolling(false);
-
-          // Auto-fermer après 3 secondes
-          setTimeout(() => {
-            onClose();
-            setResult(null);
-          }, 3000);
+        // Attendre que le container existe dans le DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const container = document.querySelector('#dice-box-overlay');
+        console.log('🎲 Container trouvé:', container);
+        
+        if (!container) {
+          console.error('❌ Container #dice-box-overlay introuvable');
+          return;
         }
-      });
 
-      await box.initialize();
-      
-      if (mounted) {
-        diceBoxRef.current = box;
-        setIsInitialized(true);
-        console.log('✅ DiceBox initialisé');
-      }
-    } catch (error) {
-      console.error('❌ Erreur initialisation:', error);
-      if (mounted) {
-        setIsRolling(false);
-      }
-    }
-  };
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+        console.log('🎲 Module chargé');
 
-  initDiceBox();
+        if (!mounted) return;
 
-  return () => {
-    mounted = false;
-  };
-}, [isOpen, rollData]); // ✅ Ajout de rollData en dépendance
+        const box = new DiceBox('#dice-box-overlay', {
+          assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.5/dist/assets/',
+          theme: 'default',
+          themeColor: '#8b5cf6',
+          scale: 6,
+          gravity: 2,
+          mass: 1,
+          friction: 0.8,
+          restitution: 0.3,
+          linearDamping: 0.5,
+          angularDamping: 0.4,
+          spinForce: 6,
+          throwForce: 5,
+          startingHeight: 8,
+          settleTimeout: 5000,
+          offscreen: false,
+          delay: 10,
+          
+          onRollComplete: (results: any) => {
+            if (!mounted) return;
+            
+            console.log('🎲 Résultats:', results);
+            
+            const rolls = results?.rolls || [];
+            const total = rolls.reduce((sum: number, roll: any) => {
+              return sum + (roll?.value || 0);
+            }, 0);
 
+            setResult({
+              total: total + (rollData?.modifier || 0),
+              rolls: rolls.map((r: any) => r?.value || 0)
+            });
+            setIsRolling(false);
+
+            // Auto-fermer après 3 secondes
+            setTimeout(() => {
+              onClose();
+              setResult(null);
+            }, 3000);
+          }
+        });
+
+        console.log('🎲 Initialisation de la box...');
+        await box.initialize();
+        
+        if (mounted) {
+          diceBoxRef.current = box;
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé avec succès');
+        }
+      } catch (error) {
+        console.error('❌ Erreur initialisation DiceBox:', error);
+        if (mounted) {
+          setIsRolling(false);
+        }
+      } 
+    };
+
+    initDiceBox();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
