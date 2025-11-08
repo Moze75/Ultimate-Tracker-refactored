@@ -25,13 +25,16 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
     let mounted = true;
 
-    const initDiceBox = async () => {
-      try {
-        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+   const initDiceBox = async () => {
+  try {
+    console.log('🎲 Début initialisation DiceBox...');
+    const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+    console.log('🎲 Module chargé:', DiceBox);
 
-        if (!mounted) return;
+    if (!mounted) return;
 
-        const box = new DiceBox('#dice-box-overlay', {
+    console.log('🎲 Création de la box avec container:', '#dice-box-overlay');
+    const box = new DiceBox('#dice-box-overlay', {
           assetPath: '/assets/dice-box/',
           theme: 'default', 
           themeColor: '#8b5cf6',
