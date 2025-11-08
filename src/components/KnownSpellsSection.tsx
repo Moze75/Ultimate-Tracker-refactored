@@ -839,14 +839,17 @@ useEffect(() => {
   initializeSecondarySpellSlots();
 }, [player.id, player.secondary_class, player.secondary_level, player.secondary_spell_slots, onUpdate]);
   
-  // Initialiser automatiquement les spell_slots si nécessaire
-  useEffect(() => {
-    const initializeSpellSlots = async () => {
-      if (!player.class || !player.id) return;
+ // Initialiser automatiquement les spell_slots si nécessaire
+useEffect(() => {
+  const initializeAllSpellSlots = async () => {
+    if (!player.id) return;
 
-      const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-      if (!spellcasters.includes(player.class)) return;
+    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
+    let needsUpdate = false;
+    const updates: any = {};
 
+    // 1️⃣ Initialiser spell_slots pour la classe principale
+    if (player.class && spellcasters.includes(player.class)) {
       const hasSpellSlots = player.spell_slots && Object.keys(player.spell_slots).some(key => {
         if (key.startsWith('level') && !key.startsWith('used')) {
           return (player.spell_slots as any)[key] > 0;
@@ -855,28 +858,56 @@ useEffect(() => {
       });
 
       if (!hasSpellSlots && !spellSlotsInitialized.current) {
-        spellSlotsInitialized.current = true;
-        try {
-          const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
-
-          const { error } = await supabase
-            .from('players')
-            .update({ spell_slots: newSpellSlots })
-            .eq('id', player.id);
-
-          if (error) throw error;
-
-          onUpdate({ ...player, spell_slots: newSpellSlots });
-          console.log('[KnownSpellsSection] Emplacements de sorts initialisés:', newSpellSlots);
-        } catch (err) {
-          console.error('[KnownSpellsSection] Erreur lors de l\'initialisation des spell_slots:', err);
-          spellSlotsInitialized.current = false;
-        }
+        const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
+        updates.spell_slots = newSpellSlots;
+        needsUpdate = true;
+        console.log('[KnownSpellsSection] Initialisation spell_slots:', newSpellSlots);
       }
-    };
+    }
 
-    initializeSpellSlots();
-  }, [player.id, player.class, player.level, player.spell_slots, onUpdate]);
+    // 2️⃣ ✅ NOUVEAU : Initialiser secondary_spell_slots pour la classe secondaire
+    if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
+      const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
+        if (key.startsWith('level') && !key.startsWith('used')) {
+          return (player.secondary_spell_slots as any)[key] > 0;
+        }
+        return false;
+      });
+
+      if (!hasSecondarySpellSlots) {
+        const newSecondarySpellSlots = getSpellSlotsByLevel(
+          player.secondary_class,
+          player.secondary_level || 1,
+          player.secondary_spell_slots
+        );
+        updates.secondary_spell_slots = newSecondarySpellSlots;
+        needsUpdate = true;
+        console.log('[KnownSpellsSection] Initialisation secondary_spell_slots:', newSecondarySpellSlots);
+      }
+    }
+
+    // 3️⃣ Effectuer la mise à jour si nécessaire
+    if (needsUpdate) {
+      spellSlotsInitialized.current = true;
+      try {
+        const { error } = await supabase
+          .from('players')
+          .update(updates)
+          .eq('id', player.id);
+
+        if (error) throw error;
+
+        onUpdate({ ...player, ...updates });
+        toast.success('Emplacements de sorts initialisés');
+      } catch (err) {
+        console.error('[KnownSpellsSection] Erreur initialisation:', err);
+        spellSlotsInitialized.current = false;
+      }
+    }
+  };
+
+  initializeAllSpellSlots();
+}, [player.id, player.class, player.level, player.secondary_class, player.secondary_level, player.spell_slots, player.secondary_spell_slots, onUpdate]);
 
 
 
