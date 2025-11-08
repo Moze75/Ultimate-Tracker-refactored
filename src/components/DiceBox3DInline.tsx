@@ -80,8 +80,7 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           settleTimeout: 5000,
           offscreen: false,
           delay: 10
-             enableShadows: true,
-  lightIntensity: 0.9,
+            
         });
 
         console.log('🎲 Initialisation...');
