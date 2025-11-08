@@ -13,6 +13,7 @@ interface TabbedPanelProps {
   onPlayerUpdate: (player: Player) => void;
   onInventoryUpdate: (inventory: any[]) => void;
   classSections: any[] | null;
+  hiddenTabs?: TabKey[]; // ← Ajouter cette ligne
 }
 
 const TABS = [
