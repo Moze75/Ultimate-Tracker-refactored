@@ -117,7 +117,7 @@ interface StandardActionsSectionProps {
 
 export function StandardActionsSection({ player, onUpdate }: StandardActionsSectionProps) {
   const deviceType = useResponsiveLayout(); // 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(deviceType === 'desktop');
   const [selectedAction, setSelectedAction] = useState<StandardAction | null>(null);
 
   const handleActionClick = (action: StandardAction) => {
