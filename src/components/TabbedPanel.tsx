@@ -74,61 +74,61 @@ export function TabbedPanel({
         ))}
       </div>
 
-      {/* Contenu de l'onglet actif */}
+{/* Contenu de l'onglet actif */}
 <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {activeTab === 'actions' && (
-          <CombatTab
-            player={player}
-            inventory={inventory}
-            onUpdate={onPlayerUpdate}
-          />
-        )}
+  {activeTab === 'actions' && (
+    <CombatTab
+      player={player}
+      inventory={inventory}
+      onUpdate={onPlayerUpdate}
+    />
+  )}
 
-        {activeTab === 'class' && (
-          <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
-        )}
+  {activeTab === 'class' && (
+    <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
+  )}
 
-        {activeTab === 'spells' && (
-          <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
-        )}
+  {activeTab === 'spells' && (
+    <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
+  )}
 
-        {activeTab === 'gold' && (
-          <EquipmentTab
-            player={player}
-            inventory={inventory}
-            onPlayerUpdate={onPlayerUpdate}
-            onInventoryUpdate={onInventoryUpdate}
-            viewMode="gold"
-          />
-        )}
+  {activeTab === 'gold' && (
+    <EquipmentTab
+      player={player}
+      inventory={inventory}
+      onPlayerUpdate={onPlayerUpdate}
+      onInventoryUpdate={onInventoryUpdate}
+      viewMode="gold"
+    />
+  )}
 
-        {activeTab === 'inventory' && (
-          <EquipmentTab
-            player={player}
-            inventory={inventory}
-            onPlayerUpdate={onPlayerUpdate}
-            onInventoryUpdate={onInventoryUpdate}
-            viewMode="inventory"
-          />
-        )}
+  {activeTab === 'inventory' && (
+    <EquipmentTab
+      player={player}
+      inventory={inventory}
+      onPlayerUpdate={onPlayerUpdate}
+      onInventoryUpdate={onInventoryUpdate}
+      viewMode="inventory"
+    />
+  )}
 
-        {activeTab === 'bag' && (
-          <EquipmentTab
-            player={player}
-            inventory={inventory}
-            onPlayerUpdate={onPlayerUpdate}
-            onInventoryUpdate={onInventoryUpdate}
-            viewMode="bag"
-          />
-        )}
-      </div>
+  {activeTab === 'bag' && (
+    <EquipmentTab
+      player={player}
+      inventory={inventory}
+      onPlayerUpdate={onPlayerUpdate}
+      onInventoryUpdate={onInventoryUpdate}
+      viewMode="bag"
+    />
+  )}
 
-        {activeTab === 'notes' && (
-          <NotesTab
-            player={player}
-            onUpdate={onPlayerUpdate}
-          />
-        )}
+  {activeTab === 'notes' && (
+    <NotesTab
+      player={player}
+      onUpdate={onPlayerUpdate}
+    />
+  )}
+</div> {/* ← Fermeture de la div overflow-y-auto */}
       
       {/* Styles scrollbar */}
       <style>{`
