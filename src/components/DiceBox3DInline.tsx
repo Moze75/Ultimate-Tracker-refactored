@@ -118,7 +118,8 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
     };
   }, [isOpen]);
 
- // Lancer les dés
+  // Lancer les dés
+// Lancer les dés
 useEffect(() => {
   if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
     return;
@@ -139,9 +140,6 @@ useEffect(() => {
   }
 
   console.log(`🎲 [Roll #${currentRollId}] Lancement des dés:`, rollData);
-
-      setIsRolling(true);
-      setResult(null);
 
       // Timeout de sécurité : si aucun résultat après 10s, reset
       const safetyTimeout = setTimeout(() => {
