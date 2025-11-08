@@ -31,15 +31,19 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         if (!mounted) return;
 
-        const box = new DiceBox('#dice-box-overlay', {
-          assetPath: '/assets/dice-box/',
-          theme: 'default',
-          themeColor: '#8b5cf6',
-          scale: 6,
-          gravity: 2,
-          offscreen: true,
-          
-          onRollComplete: (results: any) => {
+// APRÈS
+const box = new DiceBox('#dice-box-overlay', {
+  assetPath: '/assets/dice-box/',
+  theme: 'default',
+  themeColor: '#8b5cf6',
+  scale: 6,
+  gravity: 2,
+  mass: 1,
+  friction: 0.8,
+  restitution: 0.3,
+  offscreen: false, // ← CHANGÉ EN FALSE
+  
+  onRollComplete: (results: any) => {
             if (!mounted) return;
             
             const rolls = results?.rolls || [];
