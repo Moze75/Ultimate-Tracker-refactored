@@ -21,7 +21,15 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
   const hpBarRef = React.useRef<HTMLDivElement>(null);
 
-
+  React.useEffect(() => {
+    if (hpBarRef.current) {
+      healthGlow.updateGlow(
+        hpBarRef.current, 
+        player.current_hp,
+        player.max_hp,
+        player.temporary_hp
+      );
+    }
 
     return () => {
       if (hpBarRef.current) {
