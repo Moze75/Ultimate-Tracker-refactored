@@ -125,7 +125,7 @@ export function DesktopView({
 
             <div className="col-span-8">
               {abilities.length > 0 && (
-              <div className="bg-gray-800/40 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+              <div className="bg-gray-800/10 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
                   <HorizontalAbilityScores
                     abilities={abilities}
                     inventory={inventory}
