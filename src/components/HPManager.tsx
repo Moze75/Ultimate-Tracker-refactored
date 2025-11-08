@@ -40,7 +40,8 @@ export function HPManager({
   totalHP,
   getWoundLevel,
   getWoundColor,
-  getHPBarColor
+ getHPBarColor,
+  hpBarRef //
    
    
 }: HPManagerProps) {
