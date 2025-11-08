@@ -241,12 +241,20 @@ export function calculateMulticlassSpellSlots(player: Player): Record<string, nu
 }
 
 export function combineSpellSlots(player: Player): any {
+  // 1) Si pas de multiclasse, retourner les spell_slots normaux
   if (!player.secondary_class) {
     return player.spell_slots || {};
   }
 
-  // Si l'une des classes est Occultiste, gérer séparément
-  // Les emplacements de pacte de l'Occultiste sont stockés séparément et ne se combinent pas
+  const primaryCasterType = getCasterLevelForClass(player.class);
+  const secondaryCasterType = getCasterLevelForClass(player.secondary_class);
+
+  // 2) Si AUCUNE des deux classes n'est un lanceur de sorts
+  if (primaryCasterType === 'none' && secondaryCasterType === 'none') {
+    return {};
+  }
+
+  // 3) Cas spécial : Une ou les deux classes sont Occultiste
   if (player.class === 'Occultiste' || player.secondary_class === 'Occultiste') {
     const primaryIsWarlock = player.class === 'Occultiste';
     const warlockSlots = primaryIsWarlock ? player.spell_slots : player.secondary_spell_slots;
@@ -254,17 +262,16 @@ export function combineSpellSlots(player: Player): any {
     const otherLevel = primaryIsWarlock ? player.secondary_level : player.level;
     const otherCasterType = getCasterLevelForClass(otherClass);
 
-    // Créer l'objet combiné avec les emplacements de pacte de l'Occultiste
     const combined: any = {};
 
-    // Préserver les emplacements de pacte de l'Occultiste
+    // Emplacements de pacte de l'Occultiste
     if (warlockSlots) {
       combined.pact_slots = warlockSlots.pact_slots || 0;
       combined.pact_level = warlockSlots.pact_level || 1;
       combined.used_pact_slots = warlockSlots.used_pact_slots || 0;
     }
 
-    // Si l'autre classe est un lanceur de sorts, calculer ses emplacements normaux
+    // Emplacements normaux de l'autre classe (si lanceur)
     if (otherCasterType !== 'none' && otherLevel) {
       let effectiveLevel = 0;
 
@@ -278,7 +285,6 @@ export function combineSpellSlots(player: Player): any {
 
       effectiveLevel = Math.max(1, effectiveLevel);
 
-      // Table d'emplacements de sorts D&D 5e 2024
       const spellSlotTable: Record<number, number[]> = {
         1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
         2: [3, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -305,14 +311,13 @@ export function combineSpellSlots(player: Player): any {
       const clampedLevel = Math.min(20, Math.max(1, effectiveLevel));
       const slots = spellSlotTable[clampedLevel] || [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-      // Ajouter les emplacements normaux
       for (let i = 0; i < slots.length; i++) {
         if (slots[i] > 0) {
           combined[`level${i + 1}`] = slots[i];
         }
       }
 
-      // Récupérer les emplacements utilisés
+      // Emplacements utilisés
       const otherSlots = primaryIsWarlock ? player.secondary_spell_slots : player.spell_slots;
       for (let i = 1; i <= 9; i++) {
         const usedKey = `used${i}`;
@@ -323,7 +328,20 @@ export function combineSpellSlots(player: Player): any {
     return combined;
   }
 
-  // Pour les autres multiclasses (sans Occultiste), calculer les emplacements combinés
+  // 4) ✅ CAS AJOUTÉ : Classe principale non-lanceur + Classe secondaire lanceur
+  if (primaryCasterType === 'none' && secondaryCasterType !== 'none') {
+    // Utiliser directement les spell_slots de la classe secondaire
+    const secondarySlots = player.secondary_spell_slots || {};
+    return secondarySlots;
+  }
+
+  // 5) ✅ CAS AJOUTÉ : Classe principale lanceur + Classe secondaire non-lanceur
+  if (primaryCasterType !== 'none' && secondaryCasterType === 'none') {
+    // Utiliser directement les spell_slots de la classe principale
+    return player.spell_slots || {};
+  }
+
+  // 6) Multiclasse de deux lanceurs (hors Occultiste)
   const multiclassSlots = calculateMulticlassSpellSlots(player);
   const currentUsed: Record<string, number> = {};
 
