@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Book, Swords, Shield, Target, Eye, Users, Heart, Search, Wand2, Clock, Move, Lightbulb, MessageCircle } from 'lucide-react';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // ← Ajouter cet import
 
 interface StandardAction {
   id: string;
