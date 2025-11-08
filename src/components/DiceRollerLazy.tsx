@@ -1,6 +1,11 @@
 import React, { lazy, Suspense } from 'react';
 
-const DiceBox3DInline = lazy(() => import('./DiceBox3DInline').then(module => ({ default: module.DiceBox3DInline })));
+// ✅ CORRIGÉ : Import nommé au lieu de default
+const DiceBox3DInline = lazy(() => 
+  import('./DiceBox3DInline').then(module => ({ 
+    default: module.DiceBox3DInline 
+  }))
+);
 
 interface DiceRollerLazyProps {
   isOpen: boolean;
