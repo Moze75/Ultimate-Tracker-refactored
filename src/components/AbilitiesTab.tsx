@@ -202,7 +202,7 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
     modifier: number;
   } | null>(null);
 
-const spellSlotsInitialized = useRef(false);
+
 
    
   
