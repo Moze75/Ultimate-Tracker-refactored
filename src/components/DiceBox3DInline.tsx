@@ -124,21 +124,34 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
       // ✅ Re-bind du callback pour chaque lancer
       diceBoxRef.current.onRollComplete = (results: any) => {
-        console.log('🎯 Résultats:', results);
+        console.log('🎯 Résultats bruts:', results);
         
-        const rolls = results?.rolls || [];
-        const sum = rolls.reduce((total: number, roll: any) => total + (roll?.value || 0), 0);
+        // ✅ Extraire les valeurs des dés depuis sets
+        const sets = results?.sets || [];
+        const rolls: number[] = [];
         
+        sets.forEach((set: any) => {
+          if (set?.rolls) {
+            set.rolls.forEach((roll: any) => {
+              rolls.push(roll?.value || 0);
+            });
+          }
+        });
+        
+        console.log('🎲 Dés extraits:', rolls);
+        
+        // dice-box calcule déjà le total avec le modificateur
         const finalResult = {
-          total: sum + (rollData?.modifier || 0),
-          rolls: rolls.map((r: any) => r?.value || 0)
+          total: results?.total || 0,
+          rolls: rolls
         };
+
+        console.log('✅ Résultat final:', finalResult);
 
         setResult(finalResult);
         setIsRolling(false);
         
-        console.log('✅ Résultat affiché:', finalResult);
-        // ❌ PAS DE AUTO-CLOSE ! L'utilisateur doit cliquer
+        // ❌ PAS DE AUTO-CLOSE - L'utilisateur doit cliquer
       };
 
       // Construire la notation
@@ -235,23 +248,30 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
           {/* Résultat */}
           {result && !isRolling ? (
             <div className="text-center py-2 animate-in zoom-in duration-300">
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-2">
+              <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 mb-2 drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">
                 {result.total}
               </div>
-              <div className="text-xs text-gray-300 mb-3">
-                Dés: [{result.rolls.join(', ')}]
-                {rollData && rollData.modifier !== 0 && (
-                  <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
+              <div className="text-sm text-gray-300 mb-3">
+                {result.rolls.length > 0 ? (
+                  <>
+                    Dés: <span className="font-mono text-purple-300">[{result.rolls.join(', ')}]</span>
+                    {rollData && rollData.modifier !== 0 && (
+                      <span className="text-purple-400"> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-gray-400">Calcul en cours...</span>
                 )}
               </div>
-              <div className="text-xs text-purple-300 italic">
-                👆 Cliquez n'importe où pour fermer
+              <div className="text-xs text-purple-300 italic flex items-center justify-center gap-1">
+                <span className="text-lg">👆</span>
+                <span>Cliquez n'importe où pour fermer</span>
               </div>
             </div>
           ) : (
-            <div className="text-center py-2">
-              <div className="text-white text-sm animate-pulse">
-                {!isReady ? '⏳ Initialisation...' : '🎲 Lancer en cours...'}
+            <div className="text-center py-4">
+              <div className="text-white text-base animate-pulse">
+                {!isReady ? '⏳ Initialisation des dés 3D...' : '🎲 Lancer en cours...'}
               </div>
             </div>
           )}
