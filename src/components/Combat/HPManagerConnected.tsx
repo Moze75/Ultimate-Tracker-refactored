@@ -3,6 +3,7 @@ import { Player } from '../../types/dnd';
 import { HPManager } from '../HPManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { triggerBloodSplash } from '../../utils/bloodSplash';
 
 interface HPManagerConnectedProps {
   player: Player;
@@ -71,6 +72,8 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
   const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
     if (damage <= 0) return;
+
+      triggerBloodSplash(damage);
 
     let newCurrentHP = player.current_hp;
     let newTempHP = player.temporary_hp;
