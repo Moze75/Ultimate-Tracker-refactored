@@ -119,27 +119,27 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
   }, [isOpen]);
 
   // Lancer les dés
-// Lancer les dés
-useEffect(() => {
-  if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
-    return;
-  }
+  useEffect(() => {
+    if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
+      return;
+    }
 
-  if (isRolling) {
-    console.log('⏸️ Un lancer est déjà en cours, on attend...');
-    return;
-  }
+    if (isRolling) {
+      console.log('⏸️ Un lancer est déjà en cours, on attend...');
+      return;
+    }
 
-  // ✅ AJOUTEZ CETTE VÉRIFICATION
-  const currentRollId = ++rollIdRef.current;
-  
-  // Ne lancer qu'une seule fois par rollData unique
-  if (rollIdRef.current > 1 && !rollData.attackName) {
-    console.log('⏸️ RollData invalide, skip');
-    return;
-  }
+    const currentRollId = ++rollIdRef.current;
+    console.log(`🎲 [Roll #${currentRollId}] Lancement des dés:`, rollData);
 
-  console.log(`🎲 [Roll #${currentRollId}] Lancement des dés:`, rollData);
+    const timer = setTimeout(() => {
+      if (!diceBoxRef.current) {
+        console.warn('⚠️ DiceBox non disponible');
+        return;
+      }
+
+      setIsRolling(true);
+      setResult(null); 
 
       // Timeout de sécurité : si aucun résultat après 10s, reset
       const safetyTimeout = setTimeout(() => {
