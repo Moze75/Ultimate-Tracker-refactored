@@ -420,5 +420,76 @@ const BLOOD_SPLASH = (() => {
     const rot = rand(0, 360).toFixed(1) + "deg";
     const scale = rand(0.7, 1.3).toFixed(2);
 
-    el.style.setProperty("--mx0*`
-
+    el.style.setProperty("--mx0", "0px");
+    el.style.setProperty("--my0", "0px");
+    el.style.setProperty("--mx1", mx1.toFixed(1) + "px");
+    el.style.setProperty("--my1", my1.toFixed(1) + "px");
+    el.style.setProperty("--mRot", rot);
+    el.style.setProperty("--mScale", scale);
+
+    el.style.left = origin.x + "px";
+    el.style.top = origin.y + "px";
+    el.style.animationDuration = MIST_AIR_MS + "ms";
+
+    layer.appendChild(el);
+
+    if (MIST_AIR_MS > maxLifeMsRef.ms) maxLifeMsRef.ms = MIST_AIR_MS;
+  }
+
+  function spawnFlashOnce(anchor: { x: number; y: number }) {
+    const fx = document.createElement("div");
+    fx.className = "blood-slash-flash";
+    fx.style.setProperty("--fxX", anchor.x + "px");
+    fx.style.setProperty("--fxY", anchor.y + "px");
+    document.body.appendChild(fx);
+    setTimeout(() => fx.remove(), 300);
+  }
+
+  function triggerBurst(dmg: number) {
+    if (!dmg || dmg <= 0) return;
+
+    injectCssOnce();
+    ensureShakeWrapper();
+    ensureLayer();
+    slashGeom = newSlashGeom();
+
+    const wantBig = Math.min(Math.floor(dmg * BIG_PER_DAMAGE), MAX_PARTICLES);
+    const wantMist = Math.min(Math.floor(dmg * MIST_PER_DAMAGE), MAX_PARTICLES);
+
+    let flashed = false;
+    const maxLifeMsRef = { ms: 0 };
+
+    for (let i = 0; i < wantBig; i++) {
+      const origin = pickPointOnSlash();
+      if (!flashed) {
+        spawnFlashOnce(origin.flashAnchor);
+        triggerShake();
+        flashed = true;
+      }
+      if (Math.random() < 0.4) {
+        spawnStreak(layerEl!, origin, maxLifeMsRef);
+      } else {
+        spawnChunk(layerEl!, origin, maxLifeMsRef);
+      }
+    }
+
+    for (let i = 0; i < wantMist; i++) {
+      const origin = pickPointOnSlash();
+      spawnMist(layerEl!, origin, maxLifeMsRef);
+    }
+
+    const cleanupDelay = maxLifeMsRef.ms + 400;
+    setTimeout(() => {
+      if (!layerEl) return;
+      while (layerEl.firstChild) {
+        layerEl.removeChild(layerEl.firstChild);
+      }
+    }, cleanupDelay);
+  }
+
+  return {
+    triggerBurst
+  };
+})();
+
+export const triggerBloodSplash = BLOOD_SPLASH.triggerBurst;
