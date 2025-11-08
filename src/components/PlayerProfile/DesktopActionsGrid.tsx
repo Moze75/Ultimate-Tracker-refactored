@@ -169,7 +169,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
         onClick={handleLongRest}
         className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
       >
-        <span className="text-xs whitespace-nowrap">Repos long</span>
+        <span className="text-xm whitespace-nowrap">Repos long</span>
         <Moon className="w-4 h-4 ml-2" />
       </button>
 
@@ -286,7 +286,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
         onClick={onOpenCampaigns}
         className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3 min-w-[115px]"
       >
-        <span className="text-xs whitespace-nowrap">Campagnes</span>
+        <span className="text-xm whitespace-nowrap">Campagnes</span>
         <Scroll className="w-4 h-4 ml-2" />
       </button>
     </div>
