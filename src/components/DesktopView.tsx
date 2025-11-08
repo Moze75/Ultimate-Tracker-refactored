@@ -139,7 +139,7 @@ export function DesktopView({
             </div>
           </div>
 
-     <div className="grid grid-cols-12 gap-4 items-stretch max-h-[1100px]">
+       <div className="grid grid-cols-12 gap-4">   
             <div className="col-span-4 flex">
               {/* Ajout d’un conteneur similaire pour harmoniser */}
               <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full">
