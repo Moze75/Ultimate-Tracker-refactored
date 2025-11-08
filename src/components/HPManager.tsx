@@ -63,7 +63,7 @@ export function HPManager({
               </span>
             </div>
 
-            <div className="w-full bg-gray-700 rounded-full h-8 overflow-hidden relative">
+            <div className="w-full bg-gray-700 rounded-full h-5 overflow-hidden relative">
               <div
                 className={`hp-bar hp-bar-main h-full transition-all duration-500 bg-gradient-to-r ${getHPBarColor()} ${
                   isCriticalHealth ? 'heartbeat-animation' : ''
