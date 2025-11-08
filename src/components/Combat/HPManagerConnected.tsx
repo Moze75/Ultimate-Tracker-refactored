@@ -5,38 +5,16 @@ import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
 
-
 interface HPManagerConnectedProps {
   player: Player;
   onUpdate: (player: Player) => void;
   onConcentrationCheck: (dc: number) => void;
 }
 
-
- 
 export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: HPManagerConnectedProps) {
   const [damageValue, setDamageValue] = useState('');
   const [healValue, setHealValue] = useState('');
   const [tempHpValue, setTempHpValue] = useState('');
-
-  const hpBarRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (hpBarRef.current) {
-      healthGlow.updateGlow(
-        hpBarRef.current, 
-        player.current_hp,
-        player.max_hp,
-        player.temporary_hp
-      );
-    }
-
-    return () => {
-      if (hpBarRef.current) {
-    
-      }
-    };
-  }, [player.current_hp, player.max_hp, player.temporary_hp]);
 
   const totalHP = player.current_hp + player.temporary_hp;
 
@@ -173,7 +151,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
       getWoundLevel={getWoundLevel}
       getWoundColor={getWoundColor}
       getHPBarColor={getHPBarColor}
-      hpBarRef={hpBarRef}
     />
   );
 }
