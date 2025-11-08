@@ -31,7 +31,7 @@ const CONDITIONS: Condition[] = [
     effects: [
       'Incapable d\'entendre. Vous n\'entendez rien, et ratez automatiquement tous les tests de caractéristique qui reposent sur l\'ouïe.'
     ]
-  },
+  }, 
   {
     id: 'blinded',
     name: 'Aveuglé',
