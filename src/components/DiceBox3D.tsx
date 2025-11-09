@@ -221,73 +221,23 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* ✅ Indicateur de chargement FIXE dans le viewport utilisateur */}
-      {!isInitialized && (
-        <div 
-          className={`fixed z-50 transition-opacity duration-300 ${
-            isFading ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)'
-          }}
-        >
-          <div className="bg-black/80 backdrop-blur-sm rounded-xl p-6">
-            <div className="text-center">
-              <img 
-                src="/icons/wmremove-transformed.png" 
-                alt="Chargement..." 
-                className="animate-spin h-12 w-12 mx-auto mb-4 object-contain"
-                style={{ backgroundColor: 'transparent' }}
-              />
-              <div className="text-white text-lg">Initialisation des dés 3D...</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ Indicateur de lancer FIXE en haut du viewport utilisateur */}
-      {isRolling && isInitialized && (
-        <div 
-          className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
-            isFading ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '2rem',
-            left: '50vw',
-            transform: 'translateX(-50%)'
-          }}
-        >
-          <div className="bg-purple-900/90 backdrop-blur-sm rounded-full px-6 py-3 border border-purple-500/50 animate-pulse">
-            <div className="text-white text-lg font-semibold">
-              🎲 {rollData?.attackName} - Cliquez pour fermer
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ Bouton fermer FIXE en haut à droite du viewport utilisateur */}
-      {!isRolling && (
-        <button
-          onClick={handleClose}
-          className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
-            isFading ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem'
-          }}
-          title="Fermer (ou attendre la fermeture automatique)"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
+      {/* ✅ Bouton fermer discret en haut à droite */}
+      <button
+        onClick={handleClose}
+        className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
+          isFading ? 'opacity-0' : 'opacity-100'
+        }`}
+        style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem'
+        }}
+        title="Fermer"
+      >
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </>
   );
 } 
