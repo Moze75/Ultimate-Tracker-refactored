@@ -11,11 +11,21 @@ interface DesktopHeaderProps {
   onUpdate: (player: Player) => void;
   onEdit: () => void;
   onOpenCampaigns: () => void;
+  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
   activeTooltip?: 'ac' | 'speed' | null;
   setActiveTooltip?: (tooltip: 'ac' | 'speed' | null) => void;
 }
 
-export function DesktopHeader({ player, inventory, onUpdate, onEdit, onOpenCampaigns, activeTooltip, setActiveTooltip }: DesktopHeaderProps) {
+export function DesktopHeader({ 
+  player, 
+  inventory, 
+  onUpdate, 
+  onEdit, 
+  onOpenCampaigns, 
+  onOpenDiceSettings, // ✅
+  activeTooltip, 
+  setActiveTooltip 
+}: DesktopHeaderProps) {
   return (
     <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4">
       <div className="flex items-center justify-between gap-6">
@@ -35,6 +45,7 @@ export function DesktopHeader({ player, inventory, onUpdate, onEdit, onOpenCampa
             player={player}
             onUpdate={onUpdate}
             onOpenCampaigns={onOpenCampaigns}
+            onOpenDiceSettings={onOpenDiceSettings} // ✅
           />
         </div>
       </div>
