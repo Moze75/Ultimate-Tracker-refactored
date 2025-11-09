@@ -30,7 +30,12 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null);  
+  const [diceRoll, setDiceRoll] = useState<{
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  } | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
@@ -42,36 +47,30 @@ export function DesktopView({
     : [];
 
   const handleAbilityClick = (ability: Ability) => {
-    const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      show: true,
-      result: roll,
-      modifier: ability.modifier,
-      description: `Test de ${ability.name}`
+      type: 'ability',
+      attackName: `Test de ${ability.name}`,
+      diceFormula: '1d20',
+      modifier: ability.modifier
     });
-    setTimeout(() => setDiceRoll(null), 3000);
   };
 
   const handleSavingThrowClick = (ability: Ability) => {
-    const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      show: true,
-      result: roll,
-      modifier: ability.savingThrow,
-      description: `Sauvegarde de ${ability.name}`
+      type: 'saving-throw',
+      attackName: `Sauvegarde de ${ability.name}`,
+      diceFormula: '1d20',
+      modifier: ability.savingThrow
     });
-    setTimeout(() => setDiceRoll(null), 3000);
   };
 
   const handleSkillClick = (skillName: string, bonus: number) => {
-    const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
-      show: true,
-      result: roll,
-      modifier: bonus,
-      description: `Test de ${skillName}`
+      type: 'skill',
+      attackName: `Test de ${skillName}`,
+      diceFormula: '1d20',
+      modifier: bonus
     });
-    setTimeout(() => setDiceRoll(null), 3000);
   };
 
   return (
@@ -98,7 +97,7 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Header (30% transparence = /70 = 70% opacité) */}
+          {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
             <DesktopHeader
               player={player}
@@ -111,7 +110,7 @@ export function DesktopView({
             />
           </div>
 
-    <div className="grid grid-cols-12 gap-4">
+          <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
               <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
                 <HPManagerConnected 
@@ -141,42 +140,37 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4 flex">
-    {/* Ajout d'un conteneur similaire pour harmoniser */}
-    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
-      <StandaloneSkillsSection
-        player={player}
-        onSkillClick={handleSkillClick}
-      />
-    </div>
-  </div>
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+                <StandaloneSkillsSection
+                  player={player}
+                  onSkillClick={handleSkillClick}
+                />
+              </div>
+            </div>
 
-  <div className="col-span-8 flex">
-    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
-      <TabbedPanel
-        player={player}
-        inventory={inventory}
-        onPlayerUpdate={onPlayerUpdate}
-        onInventoryUpdate={onInventoryUpdate}
-        classSections={classSections}
-         hiddenTabs={['bag']} // ← Ajouter cette ligne
-      />
-    </div>
-  </div>
-</div>
+            <div className="col-span-8 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+                <TabbedPanel
+                  player={player}
+                  inventory={inventory}
+                  onPlayerUpdate={onPlayerUpdate}
+                  onInventoryUpdate={onInventoryUpdate}
+                  classSections={classSections}
+                  hiddenTabs={['bag']}
+                />
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>
 
-<DiceRollerLazy
-  isOpen={diceRoll !== null}
-  onClose={() => setDiceRoll(null)}
-  rollData={diceRoll ? {
-    type: 'ability',
-    attackName: diceRoll.description,
-    diceFormula: '1d20',
-    modifier: diceRoll.modifier
-  } : null}
-/>
+      {/* ✅ DiceRoller en overlay sur toute l'interface */}
+      <DiceRollerLazy
+        isOpen={diceRoll !== null}
+        onClose={() => setDiceRoll(null)}
+        rollData={diceRoll}
+      />
 
       <PlayerProfileSettingsModal
         open={settingsOpen}
@@ -206,4 +200,4 @@ export function DesktopView({
       )}
     </>
   );
-} 
+}
