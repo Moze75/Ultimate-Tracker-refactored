@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Dices } from 'lucide-react';
 
 interface CompactAvatarProps {
   player: {
@@ -13,9 +13,10 @@ interface CompactAvatarProps {
     secondary_level?: number | null;
   };
   onEdit: () => void;
+  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
 }
 
-export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
+export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAvatarProps) {
   const getClassImage = (className: string | undefined) => {
     if (!className) return '/icons/wmremove-transformed.png';
     const classMap: Record<string, string> = {
@@ -50,14 +51,29 @@ export function CompactAvatar({ player, onEdit }: CompactAvatarProps) {
           }}
         />
       </div>
-<button
-  onClick={onEdit}
-  className="absolute top-0 left-[8.5rem] px-2 py-1 rounded bg-transparent text-white hover:bg-gray-800/50 flex items-center gap-1 transition-colors text-xs z-10"
-  title="Éditer le profil"
->
-  <Settings className="w-3 h-3" />
-  <span>Éditer</span>
-</button>
+
+      {/* ✅ Boutons Éditer et Paramètres côte à côte */}
+      <div className="absolute top-0 left-[8.5rem] flex gap-1 z-10">
+        <button
+          onClick={onEdit}
+          className="px-2 py-1 rounded bg-transparent text-white hover:bg-gray-800/50 flex items-center gap-1 transition-colors text-xs"
+          title="Éditer le profil"
+        >
+          <Settings className="w-3 h-3" />
+          <span>Éditer</span>
+        </button>
+
+        {onOpenDiceSettings && (
+          <button
+            onClick={onOpenDiceSettings}
+            className="px-2 py-1 rounded bg-transparent text-purple-300 hover:bg-purple-800/30 flex items-center gap-1 transition-colors text-xs"
+            title="Paramètres des dés"
+          >
+            <Dices className="w-3 h-3" />
+            <span>Paramètres</span>
+          </button>
+        )}
+      </div>
 
       {/* Infos personnage */}
       <div className="flex-1 min-w-0">
