@@ -117,7 +117,16 @@ export function DesktopView({
                   setActiveTooltip={setActiveTooltip}
                 />
               </div>
-
+              {/* ✅ Bouton paramètres des dés */} 
+              <button
+                onClick={() => setShowDiceSettings(true)}
+                className="ml-4 p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg transition-colors group"
+                title="Paramètres des dés"
+              >
+                <Settings className="w-5 h-5 text-purple-400 group-hover:rotate-90 transition-transform duration-300" />
+              </button>
+            </div>
+          </div> 
           
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
@@ -130,7 +139,7 @@ export function DesktopView({
                     setShowConcentrationCheck(true);
                   }}
                 />
-              </div> 
+              </div>
             </div>
 
             <div className="col-span-8">
