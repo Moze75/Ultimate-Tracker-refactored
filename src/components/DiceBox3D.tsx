@@ -149,25 +149,39 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   return (
     <>
-      {/* Overlay transparent couvrant tout l'écran */}
+      {/* ✅ Overlay FIXE dans le viewport (pas absolue sur toute la page) */}
       <div 
-        className="fixed inset-0 z-40"
+        className="fixed inset-0 z-40 overflow-hidden"
         style={{ 
           backgroundColor: 'transparent',
-          pointerEvents: isRolling ? 'none' : 'auto' // ✅ Désactive les clics pendant le lancer
+          pointerEvents: isRolling ? 'none' : 'auto'
         }}
       >
+        {/* ✅ Conteneur 3D contraint au viewport visible */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
-          className="w-full h-full"
-          style={{ touchAction: 'none' }}
+          className="absolute top-0 left-0 w-screen h-screen"
+          style={{ 
+            touchAction: 'none',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            position: 'fixed',
+            overflow: 'hidden'
+          }}
         />
       </div>
 
-      {/* Résultat en overlay */}
+      {/* ✅ Résultat en overlay FIXE dans le viewport */}
       {result && !isRolling && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+        <div 
+          className="fixed z-50 pointer-events-none"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
           <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-md rounded-xl border border-purple-500/50 p-8 shadow-2xl animate-[fadeIn_0.3s_ease-in]">
             <div className="text-center">
               <p className="text-sm text-purple-200 mb-2">{rollData?.attackName}</p>
@@ -185,9 +199,16 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* Indicateur de chargement */}
+      {/* ✅ Indicateur de chargement FIXE dans le viewport */}
       {!isInitialized && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+        <div 
+          className="fixed z-50"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
           <div className="bg-black/80 backdrop-blur-sm rounded-xl p-6">
             <div className="text-center">
               <img 
@@ -202,9 +223,16 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* Indicateur de lancer */}
+      {/* ✅ Indicateur de lancer FIXE en haut du viewport */}
       {isRolling && isInitialized && (
-        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+        <div 
+          className="fixed z-50 pointer-events-none"
+          style={{
+            top: '2rem',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
+        >
           <div className="bg-purple-900/90 backdrop-blur-sm rounded-full px-6 py-3 border border-purple-500/50 animate-pulse">
             <div className="text-white text-lg font-semibold">
               🎲 {rollData?.attackName}
@@ -213,11 +241,15 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* Bouton fermer (visible seulement quand pas de lancer en cours) */}
+      {/* ✅ Bouton fermer FIXE en haut à droite du viewport */}
       {!isRolling && (
         <button
           onClick={onClose}
-          className="fixed top-4 right-4 z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-colors"
+          className="fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-colors"
+          style={{
+            top: '1rem',
+            right: '1rem'
+          }}
           title="Fermer (ou attendre la fermeture automatique)"
         >
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
