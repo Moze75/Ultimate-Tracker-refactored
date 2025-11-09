@@ -19,9 +19,11 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [forceShowResult, setForceShowResult] = useState(false);
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingResultRef = useRef<{ total: number; rolls: number[] } | null>(null);
 
   // Initialiser la DiceBox UNE SEULE FOIS au montage
   useEffect(() => {
@@ -61,6 +63,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
               rolls: rolls.map((r: any) => r?.value || 0)
             };
 
+            pendingResultRef.current = finalResult;
             setResult(finalResult);
             setIsRolling(false);
             setShowResult(true);
@@ -122,7 +125,9 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     setIsRolling(true);
     setResult(null);
     setShowResult(false);
+    setForceShowResult(false);
     setIsFading(false);
+    pendingResultRef.current = null;
 
     // Construire la notation
     let notation = rollData.diceFormula;
@@ -155,6 +160,8 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       setIsRolling(false);
       setIsFading(false);
       setShowResult(false);
+      setForceShowResult(false);
+      pendingResultRef.current = null;
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
@@ -178,20 +185,33 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   // ✅ Gestion du clic sur l'overlay
   const handleOverlayClick = () => {
+    console.log('🖱️ Clic overlay - isRolling:', isRolling, 'result:', result, 'pendingResult:', pendingResultRef.current);
+    
     // ✅ Si le jet est en cours, forcer l'affichage du résultat
     if (isRolling) {
       setIsRolling(false);
-      setShowResult(true);
       
-      // Si on n'a pas encore de résultat, fermer après un délai
-      if (!result) {
-        setTimeout(handleClose, 300);
-      } else {
-        // Afficher le résultat puis fermer
+      // ✅ Si on a déjà un résultat en attente (calcul terminé mais pas encore affiché)
+      if (pendingResultRef.current) {
+        console.log('✅ Affichage forcé du résultat en attente');
+        setResult(pendingResultRef.current);
+        setShowResult(true);
+        setForceShowResult(true);
+        
+        // Afficher 2 secondes puis fermer
         setTimeout(handleClose, 2000);
+      } else {
+        console.log('⏳ Pas encore de résultat, fermeture immédiate');
+        // Pas encore de résultat calculé, fermer
+        handleClose();
       }
+    } else if (result) {
+      // ✅ Si on a un résultat et qu'on n'est plus en train de rouler, fermer
+      console.log('👋 Fermeture normale avec résultat');
+      handleClose();
     } else {
-      // Sinon, fermer normalement
+      // ✅ Fermeture normale
+      console.log('👋 Fermeture normale sans résultat');
       handleClose();
     }
   };
@@ -200,7 +220,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   return (
     <>
-      {/* ✅ Overlay cliquable avec fade - TOUJOURS RENDU pour l'initialisation */}
+      {/* ✅ Overlay cliquable avec fade */}
       <div 
         onClick={handleOverlayClick}
         className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
@@ -210,7 +230,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
           backgroundColor: 'transparent'
         }}
       >
-        {/* ✅ Conteneur 3D - DOIT TOUJOURS ÊTRE DANS LE DOM pour l'initialisation */}
+        {/* ✅ Conteneur 3D */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
@@ -225,8 +245,8 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         />
       </div>
 
-      {/* ✅ Résultat affiché si disponible */}
-      {result && showResult && (
+      {/* ✅ Résultat affiché si disponible OU forcé */}
+      {result && (showResult || forceShowResult) && (
         <div 
           className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
             isFading ? 'opacity-0' : 'opacity-100'
