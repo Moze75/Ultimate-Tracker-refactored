@@ -345,46 +345,148 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         />
       </div>
 
-      {result && showResult && (
-        <div 
-          className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
-            isFadingAll ? 'opacity-0' : 'opacity-100'
-          }`}
+     // Remplacez le bloc du résultat (lignes ~350-390) par :
+
+{result && showResult && (
+  <div 
+    className={`fixed z-50 pointer-events-none transition-all duration-500 ${
+      isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+    }`}
+    style={{
+      position: 'fixed',
+      top: '50vh',
+      left: '50vw',
+      transform: 'translate(-50%, -50%)',
+      willChange: 'transform, opacity',
+      filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+    }}
+  >
+    {/* Aura démoniaque pulsante */}
+    <div className="absolute inset-0 animate-pulse">
+      <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
+      <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
+    </div>
+
+    {/* Particules de feu flottantes */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(12)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
           style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform'
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2 + Math.random() * 2}s`,
+            opacity: 0.3 + Math.random() * 0.7,
+            boxShadow: '0 0 10px currentColor'
           }}
-        >
-          <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-md rounded-xl border border-purple-500/50 p-8 shadow-2xl animate-[fadeIn_0.3s_ease-in]">
-            <div className="text-center">
-              <p className="text-sm text-purple-200 mb-2">{rollDataRef.current?.attackName}</p>
-              <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-3">
+        />
+      ))}
+    </div>
+
+    {/* Conteneur principal - style parchemin brûlé */}
+    <div className="relative">
+      {/* Bordure de flammes */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+      
+      {/* Fond texturé sombre */}
+      <div className="relative bg-gradient-to-br from-gray-900 via-red-950 to-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
+        {/* Texture de parchemin brûlé */}
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* Coins en crâne/os */}
+        <div className="absolute top-2 left-2 text-red-800 text-xl">☠</div>
+        <div className="absolute top-2 right-2 text-red-800 text-xl">☠</div>
+        <div className="absolute bottom-2 left-2 text-red-800 text-xl">🔥</div>
+        <div className="absolute bottom-2 right-2 text-red-800 text-xl">🔥</div>
+
+        {/* Contenu */}
+        <div className="relative px-12 py-10 text-center">
+          {/* Titre avec effet gravé */}
+          <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+            {rollDataRef.current?.attackName}
+          </p>
+          
+          {/* Résultat principal - style forgé dans les flammes */}
+          <div className="relative mb-4">
+            {/* Lueur derrière le nombre */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
                 {result.total}
               </div>
-              <div className="text-sm text-gray-300">
-                {result.rolls.length > 0 ? (
-                  <>
-                    Dés: [{result.rolls.join(', ')}] = {result.diceTotal}
-                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                      <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {rollDataRef.current?.diceFormula}: {result.diceTotal}
-                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                      <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
-                    )}
-                  </>
-                )}
-              </div>
+            </div>
+            
+            {/* Nombre principal avec effet métal brûlant */}
+            <div 
+              className="relative text-8xl font-black tracking-tight"
+              style={{
+                background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
+                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
+              }}
+            >
+              {result.total}
             </div>
           </div>
+
+          {/* Détails avec runes */}
+          <div className="text-sm text-red-200/80 font-serif">
+            {result.rolls.length > 0 ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-red-800">⟨</span>
+                <span className="tracking-wide">
+                  Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
+                </span>
+                {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                  <>
+                    <span className="text-orange-400 font-bold">
+                      {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                      {Math.abs(rollDataRef.current.modifier)}
+                    </span>
+                  </>
+                )}
+                <span className="text-red-800">⟩</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-red-800">⟨</span>
+                <span className="tracking-wide">
+                  {rollDataRef.current?.diceFormula}: {result.diceTotal}
+                </span>
+                {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                  <>
+                    <span className="text-orange-400 font-bold">
+                      {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                      {Math.abs(rollDataRef.current.modifier)}
+                    </span>
+                  </>
+                )}
+                <span className="text-red-800">⟩</span>
+              </div>
+            )}
+          </div>
+
+          {/* Ligne de séparation runique */}
+          <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
+            <span>⸎</span>
+            <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+            <span>✦</span>
+            <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+            <span>⸎</span>
+          </div>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
       <button
         onClick={handleClose}
