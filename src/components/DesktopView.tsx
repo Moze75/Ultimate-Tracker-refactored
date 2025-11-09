@@ -12,6 +12,7 @@ import { TabbedPanel } from './TabbedPanel';
 import { DiceRollerLazy } from './DiceRollerLazy';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { useDiceSettings } from '../hooks/useDiceSettings'; // ✅ Import du hook
 
 interface DesktopViewProps {
   player: Player;
