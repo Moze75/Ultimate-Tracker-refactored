@@ -66,11 +66,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox
+  // ✅ Initialiser la DiceBox une seule fois
   useEffect(() => {
     if (!isOpen) return;
     if (diceBoxRef.current && isInitialized) {
-      console.log('✓ DiceBox déjà initialisé');
+      console.log('✓ DiceBox déjà initialisé, réutilisation');
       return;
     }
 
@@ -94,35 +94,36 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           return;
         }
 
-        // ✅ Configuration correcte selon la documentation officielle
-const config = {
-  assetPath: '/assets/dice-box/',
-  
-  // Utiliser le colorset prédéfini OU custom
-  theme_colorset: effectiveSettings.theme || 'custom',
-  
-  // Si pas de thème : créer un colorset custom avec la couleur choisie
-  theme_customColorset: !effectiveSettings.theme ? {
-    name: 'custom',
-    foreground: '#ffffff',
-    background: effectiveSettings.themeColor, // Couleur UNIQUE
-    outline: effectiveSettings.themeColor,
-    texture: 'none',
-    material: effectiveSettings.themeMaterial
-  } : undefined,
-  
-  theme_material: effectiveSettings.themeMaterial || "plastic",
-  scale: effectiveSettings.scale,
-  gravity: effectiveSettings.gravity,
-  mass: 1,
-  friction: effectiveSettings.friction,
-  restitution: effectiveSettings.restitution,
-  angularDamping: 0.4,
-  linearDamping: 0.5,
-  sounds: effectiveSettings.soundsEnabled,
-  soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
-  
-  onRollComplete: (results: any) => {
+        const config = {
+          assetPath: '/assets/dice-box/',
+          
+          // ✅ Configuration des thèmes selon la doc officielle
+          theme_colorset: effectiveSettings.theme || 'custom',
+          
+          theme_customColorset: !effectiveSettings.theme ? {
+            name: 'custom',
+            foreground: '#ffffff',
+            background: effectiveSettings.themeColor,
+            outline: effectiveSettings.themeColor,
+            edge: effectiveSettings.themeColor,
+            texture: 'none',
+            material: effectiveSettings.themeMaterial
+          } : undefined,
+          
+          theme_material: effectiveSettings.themeMaterial || "plastic",
+          
+          scale: effectiveSettings.scale,
+          gravity: effectiveSettings.gravity,
+          mass: 1,
+          friction: effectiveSettings.friction,
+          restitution: effectiveSettings.restitution,
+          angularDamping: 0.4,
+          linearDamping: 0.5,
+          
+          sounds: effectiveSettings.soundsEnabled,
+          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+          
+          onRollComplete: (results: any) => {
             if (!mounted) return;
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -220,42 +221,22 @@ const config = {
         closeTimeoutRef.current = null;
       }
 
-      // ✅ Nettoyage complet lors du démontage
+      // ✅ Effacer seulement les dés visuels, PAS la DiceBox elle-même
+      // Cela conserve les textures chargées en mémoire
       if (diceBoxRef.current) {
         try {
-          console.log('🗑️ [CLEANUP] Destruction de DiceBox');
+          console.log('🗑️ [CLEANUP] Effacement des dés (conservation des textures)');
           if (typeof diceBoxRef.current.clear === 'function') {
             diceBoxRef.current.clear();
           }
-          if (diceBoxRef.current.scene) {
-            // Nettoyage des textures Three.js
-            diceBoxRef.current.scene.traverse((obj: any) => {
-              if (obj.material) {
-                if (obj.material.map) obj.material.map.dispose();
-                if (obj.material.bumpMap) obj.material.bumpMap.dispose();
-                if (obj.material.normalMap) obj.material.normalMap.dispose();
-                obj.material.dispose();
-              }
-              if (obj.geometry) {
-                obj.geometry.dispose();
-              }
-            }); 
-            diceBoxRef.current.scene.clear();
-          }
-          if (diceBoxRef.current.renderer) {
-            diceBoxRef.current.renderer.dispose();
-            if (diceBoxRef.current.renderer.forceContextLoss) {
-              diceBoxRef.current.renderer.forceContextLoss();
-            }
-          }
         } catch (e) {
-          console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
+          console.warn('⚠️ [CLEANUP] Erreur lors du clear:', e);
         }
-        diceBoxRef.current = null;
-        setIsInitialized(false);
       }
+      
+      // ℹ️ La destruction complète se fait automatiquement quand la clé change dans DiceRollerLazy
     };
-  }, [isOpen]);
+  }, [isOpen]); // ← Dépend seulement de isOpen, pas des settings
 
   // Lancer les dés quand rollData change
   useEffect(() => {
