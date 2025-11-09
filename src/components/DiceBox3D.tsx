@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
+import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings'; // ✅ Import des valeurs par défaut
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings: DiceSettings; // ✅ Ajout des settings
+  settings?: DiceSettings; // ✅ Rendre optionnel
 }
 
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
@@ -29,7 +30,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
-  const settingsRef = useRef(settings); // ✅ Ref pour les settings
+  
+  // ✅ Utiliser les settings par défaut si non fournis
+  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+  const settingsRef = useRef(effectiveSettings);
 
   useEffect(() => {
     rollDataRef.current = rollData;
@@ -37,8 +41,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
   // ✅ Mettre à jour la ref des settings
   useEffect(() => {
-    settingsRef.current = settings;
-  }, [settings]);
+    settingsRef.current = effectiveSettings;
+  }, [effectiveSettings]);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
     console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
@@ -73,7 +77,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   useEffect(() => {
     if (!isOpen) return;
     
-    // Si DiceBox existe déjà, on le détruit pour le recréer avec les nouveaux settings
     if (diceBoxRef.current) {
       console.log('🔄 Réinitialisation de DiceBox avec nouveaux paramètres');
       try {
@@ -86,7 +89,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       diceBoxRef.current = null;
       setIsInitialized(false);
     }
-  }, [settings, isOpen]);
+  }, [effectiveSettings, isOpen]);
 
   // Initialiser la DiceBox
   useEffect(() => {
@@ -115,7 +118,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           restitution: settingsRef.current.restitution,
           angularDamping: 0.4,
           linearDamping: 0.5,
-          // ✅ Sons conditionnels
           sounds: settingsRef.current.soundsEnabled,
           soundVolume: settingsRef.current.soundsEnabled ? 0.5 : 0,
           onRollComplete: (results: any) => {
@@ -204,7 +206,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, [isOpen, onClose, generateRandomResult]);
+  }, [isOpen, onClose]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
