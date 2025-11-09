@@ -66,35 +66,29 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox à chaque ouverture
+  // ✅ Initialiser UNE SEULE FOIS au montage du composant
   useEffect(() => {
     if (!isOpen) return;
+    if (diceBoxRef.current && isInitialized) {
+      console.log('✓ DiceBox déjà initialisé');
+      return;
+    }
 
     let mounted = true;
 
     const initDiceBox = async () => {
       try {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🎲 [INIT] Chargement du module DiceBox...');
-        console.log('🎲 [INIT] Settings:', effectiveSettings);
-        console.log('   - Theme:', effectiveSettings.theme);
-        console.log('   - Theme Material:', effectiveSettings.themeMaterial);
-        console.log('   - ThemeColor:', effectiveSettings.themeColor);
-        console.log('   - Scale:', effectiveSettings.scale);
+        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
-        if (!mounted) {
-          console.log('⚠️ [INIT] Composant démonté, annulation');
-          return;
-        }
+        if (!mounted) return;
 
         const config = {
           assetPath: '/assets/dice-box/',
-          
           theme_colorset: effectiveSettings.theme || 'custom',
-          
           theme_customColorset: !effectiveSettings.theme ? {
             name: 'custom',
             foreground: '#ffffff',
@@ -104,9 +98,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             texture: 'none',
             material: effectiveSettings.themeMaterial
           } : undefined,
-          
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          
           scale: effectiveSettings.scale,
           gravity: effectiveSettings.gravity,
           mass: 1,
@@ -114,22 +106,12 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           restitution: effectiveSettings.restitution,
           angularDamping: 0.4,
           linearDamping: 0.5,
-          
-          // ✅ Réactiver les sons
           sounds: effectiveSettings.soundsEnabled,
           soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
           
           onRollComplete: (results: any) => {
             if (!mounted) return;
-            
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('🎲 onRollComplete APPELÉ');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            
-            if (hasShownResultRef.current) {
-              console.log('⚠️ Résultat déjà affiché (force-stop), ignoré');
-              return;
-            }
+            if (hasShownResultRef.current) return;
 
             let rollValues: number[] = [];
             let diceTotal = 0;
@@ -144,128 +126,71 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                   });
                 }
               });
-              
               diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
             }
 
             const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-
-            const finalResult = {
-              total: finalTotal,
-              rolls: rollValues,
-              diceTotal: diceTotal
-            };
-
-            console.log('✅ Résultat FINAL:', finalResult);
+            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
 
             hasShownResultRef.current = true;
-            pendingResultRef.current = finalResult;
-            
             setResult(finalResult);
             setIsRolling(false);
             setShowResult(true);
 
-            setTimeout(() => {
-              if (mounted) {
-                setIsFadingDice(true);
-              }
-            }, 500);
-
+            setTimeout(() => { if (mounted) setIsFadingDice(true); }, 500);
             closeTimeoutRef.current = setTimeout(() => {
               if (mounted) {
                 setIsFadingAll(true);
-                setTimeout(() => {
-                  onClose();
-                }, 300);
+                setTimeout(() => onClose(), 300);
               }
             }, 3000);
           }
         };
 
-        console.log('📦 [INIT] Configuration complète:', config);
-
         const box = new DiceBox('#dice-box-overlay', config);
-
-        console.log('⏳ [INIT] Initialisation de DiceBox...');
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ [INIT] DiceBox initialisé avec succès');
-          console.log('   - Thème appliqué:', effectiveSettings.theme || 'aucun');
-          console.log('   - Matériau appliqué:', effectiveSettings.themeMaterial);
-          console.log('   - Couleur appliquée:', effectiveSettings.themeColor);
-          console.log('   - Scale appliquée:', effectiveSettings.scale);
+          console.log('✅ DiceBox initialisé et prêt !');
         }
       } catch (error) {
-        console.error('❌ [INIT] Erreur initialisation DiceBox:', error);
-        if (mounted) {
-          setIsRolling(false);
-        }
+        console.error('❌ Erreur init:', error);
+        if (mounted) setIsRolling(false);
       }
     };
 
     initDiceBox();
 
     return () => {
-      console.log('🧹 [CLEANUP] Nettoyage DiceBox3D');
       mounted = false;
-      
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-
-      // ✅ Détruire complètement la DiceBox
-      if (diceBoxRef.current) {
-        try {
-          if (typeof diceBoxRef.current.clear === 'function') {
-            diceBoxRef.current.clear();
-          }
-          // Nettoyer Three.js
-          if (diceBoxRef.current.scene) {
-            diceBoxRef.current.scene.traverse((obj: any) => {
-              if (obj.material) {
-                if (obj.material.map) obj.material.map.dispose();
-                if (obj.material.bumpMap) obj.material.bumpMap.dispose();
-                if (obj.material.normalMap) obj.material.normalMap.dispose();
-                obj.material.dispose();
-              }
-              if (obj.geometry) {
-                obj.geometry.dispose();
-              }
-            });
-          }
-          if (diceBoxRef.current.renderer) {
-            diceBoxRef.current.renderer.dispose();
-          }
-        } catch (e) {
-          console.warn('⚠️ Erreur nettoyage:', e);
-        }
-        diceBoxRef.current = null;
-      }
-      setIsInitialized(false);
+      // ❌ NE PAS détruire diceBoxRef.current ici !
+      // On le garde en mémoire pour les prochains lancers
     };
-  }, [isOpen]); // ← Recrée à chaque ouverture
+  }, [isOpen]); // Se lance seulement quand isOpen change
 
-  // Lancer les dés quand rollData change
+  // Lancer les dés
   useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) {
-      return;
-    }
+    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
     const rollSignature = JSON.stringify(rollData);
-    
-    if (rollSignature === lastRollDataRef.current) {
-      return;
-    }
+    if (rollSignature === lastRollDataRef.current) return;
 
     lastRollDataRef.current = rollSignature;
     currentRollIdRef.current += 1;
     const thisRollId = currentRollIdRef.current;
 
-    console.log('🎲 Nouveau lancer #' + thisRollId + ':', rollData);
+    console.log('🎲 Lancer #' + thisRollId);
+
+    // ✅ Clear les dés précédents SANS détruire les textures
+    if (typeof diceBoxRef.current.clear === 'function') {
+      diceBoxRef.current.clear();
+    }
 
     setIsRolling(true);
     setResult(null);
@@ -277,27 +202,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
     let notation = rollData.diceFormula;
     if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 
-        ? `+${rollData.modifier}` 
-        : `${rollData.modifier}`;
+      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
     }
 
-    console.log('🎲 Notation:', notation);
-
-    try {
-      setTimeout(() => {
-        if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-          console.log('🎲 Exécution de roll()');
-          diceBoxRef.current.roll(notation);
-        }
-      }, 100);
-    } catch (error) {
-      console.error('❌ Erreur lancer de dés:', error);
-      setIsRolling(false);
-    }
+    setTimeout(() => {
+      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+        diceBoxRef.current.roll(notation);
+      }
+    }, 150); // Petit délai pour que clear() finisse
   }, [isOpen, rollData, isInitialized]);
 
-  // Reset quand on ferme
+  // Reset à la fermeture
   useEffect(() => {
     if (!isOpen) {
       lastRollDataRef.current = '';
@@ -320,73 +235,35 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-
     setIsFadingAll(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
+    setTimeout(() => onClose(), 300);
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🖱️ CLIC OVERLAY');
-    console.log('   - isRolling:', isRolling);
-    console.log('   - showResult:', showResult);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
     if (isRolling) {
-      console.log('⚡ ARRÊT FORCÉ - Génération résultat IMMÉDIAT');
-      
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      
       hasShownResultRef.current = true;
       setIsFadingDice(true);
       setIsRolling(false);
       
-      if (diceBoxRef.current) {
-        console.log('🔍 Tentative d\'arrêt de la simulation...');
-        
-        if (typeof diceBoxRef.current.clear === 'function') {
-          console.log('  → Appel de clear()');
-          try { diceBoxRef.current.clear(); } catch (e) { console.log('  ✗ Échec clear()'); }
-        }
-        if (typeof diceBoxRef.current.clearDice === 'function') {
-          console.log('  → Appel de clearDice()');
-          try { diceBoxRef.current.clearDice(); } catch (e) { console.log('  ✗ Échec clearDice()'); }
-        }
-        if (typeof diceBoxRef.current.hide === 'function') {
-          console.log('  → Appel de hide()');
-          try { diceBoxRef.current.hide(); } catch (e) { console.log('  ✗ Échec hide()'); }
-        }
+      if (diceBoxRef.current && typeof diceBoxRef.current.clear === 'function') {
+        diceBoxRef.current.clear();
       }
       
       if (rollDataRef.current) {
-        const randomResult = generateRandomResult(
-          rollDataRef.current.diceFormula,
-          rollDataRef.current.modifier
-        );
-        
-        console.log('✅ Résultat aléatoire IMMÉDIAT:', randomResult);
-        
-        pendingResultRef.current = randomResult;
+        const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
         setResult(randomResult);
         setShowResult(true);
-        
-        closeTimeoutRef.current = setTimeout(() => {
-          handleClose();
-        }, 2000);
+        closeTimeoutRef.current = setTimeout(() => handleClose(), 2000);
       } else {
         handleClose();
       }
-      
     } else if (showResult) {
-      console.log('👋 Fermeture (résultat affiché)');
       handleClose();
     } else {
-      console.log('👋 Fermeture normale');
       handleClose();
     }
   }, [isRolling, showResult, handleClose, generateRandomResult]);
