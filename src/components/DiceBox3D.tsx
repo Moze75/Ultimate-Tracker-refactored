@@ -18,10 +18,8 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const [isRolling, setIsRolling] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isFading, setIsFading] = useState(false);
-  const [showResult, setShowResult] = useState(false);
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialiser la DiceBox UNE SEULE FOIS au montage
   useEffect(() => {
@@ -56,17 +54,14 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
               return sum + (roll?.value || 0);
             }, 0);
 
-            const finalResult = {
+            setResult({
               total: total + (rollData?.modifier || 0),
               rolls: rolls.map((r: any) => r?.value || 0)
-            };
-
-            setResult(finalResult);
+            });
             setIsRolling(false);
-            setShowResult(true);
 
             // ✅ Fermer automatiquement après 3 secondes
-            closeTimeoutRef.current = setTimeout(() => {
+            setTimeout(() => {
               if (mounted) {
                 handleClose();
               }
@@ -79,7 +74,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé (silencieux)');
+          console.log('✅ DiceBox initialisé');
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -93,9 +88,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
     return () => {
       mounted = false;
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -121,7 +113,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
     setIsRolling(true);
     setResult(null);
-    setShowResult(false);
     setIsFading(false);
 
     // Construire la notation
@@ -154,81 +145,53 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       setResult(null);
       setIsRolling(false);
       setIsFading(false);
-      setShowResult(false);
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
-      }
     }
   }, [isOpen]);
 
   // ✅ Fonction de fermeture avec fade
   const handleClose = () => {
-    // Annuler le timeout de fermeture auto si l'utilisateur ferme manuellement
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-
     setIsFading(true);
     setTimeout(() => {
       onClose();
     }, 300); // Durée de l'animation fade
   };
 
-  // ✅ Gestion du clic sur l'overlay
+  // ✅ Gestion du clic sur l'overlay (ferme pendant le jet)
   const handleOverlayClick = () => {
-    // ✅ Si le jet est en cours, forcer l'affichage du résultat
-    if (isRolling) {
-      setIsRolling(false);
-      setShowResult(true);
-      
-      // Si on n'a pas encore de résultat, fermer après un délai
-      if (!result) {
-        setTimeout(handleClose, 300);
-      } else {
-        // Afficher le résultat puis fermer
-        setTimeout(handleClose, 2000);
-      }
-    } else {
-      // Sinon, fermer normalement
-      handleClose();
-    }
+    handleClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* ✅ Overlay cliquable avec fade - VISIBLE seulement si initialisé */}
-      {isInitialized && (
+      {/* ✅ Overlay cliquable avec fade */}
+      <div 
+        onClick={handleOverlayClick}
+        className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
+          isFading ? 'opacity-0' : 'opacity-100'
+        }`}
+        style={{ 
+          backgroundColor: 'transparent'
+        }}
+      >
+        {/* ✅ Conteneur 3D contraint au viewport visible */}
         <div 
-          onClick={handleOverlayClick}
-          className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
-            isFading ? 'opacity-0' : 'opacity-100'
-          }`}
+          id="dice-box-overlay"
+          ref={containerRef} 
+          className="absolute top-0 left-0 w-screen h-screen pointer-events-none"
           style={{ 
-            backgroundColor: 'transparent'
+            touchAction: 'none',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            position: 'fixed',
+            overflow: 'hidden'
           }}
-        >
-          {/* ✅ Conteneur 3D contraint au viewport visible */}
-          <div 
-            id="dice-box-overlay"
-            ref={containerRef} 
-            className="absolute top-0 left-0 w-screen h-screen pointer-events-none"
-            style={{ 
-              touchAction: 'none',
-              maxWidth: '100vw',
-              maxHeight: '100vh',
-              position: 'fixed',
-              overflow: 'hidden'
-            }}
-          />
-        </div>
-      )}
+        />
+      </div>
 
-      {/* ✅ Résultat TOUJOURS affiché si disponible (même pendant le fade) */}
-      {result && showResult && (
+      {/* ✅ Résultat VRAIMENT FIXE dans le viewport utilisateur */}
+      {result && !isRolling && (
         <div 
           className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
             isFading ? 'opacity-0' : 'opacity-100'
@@ -258,25 +221,23 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* ✅ Bouton fermer discret - VISIBLE seulement si initialisé */}
-      {isInitialized && (
-        <button
-          onClick={handleClose}
-          className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
-            isFading ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem'
-          }}
-          title="Fermer"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
+      {/* ✅ Bouton fermer discret en haut à droite */}
+      <button
+        onClick={handleClose}
+        className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
+          isFading ? 'opacity-0' : 'opacity-100'
+        }`}
+        style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem'
+        }}
+        title="Fermer"
+      >
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </>
   );
 } 
