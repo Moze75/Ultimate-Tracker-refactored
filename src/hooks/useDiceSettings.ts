@@ -11,7 +11,7 @@ export interface DiceSettings {
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
-  theme: 'default',
+  theme: '', // ✅ Chaîne vide = pas de texture, juste la couleur
   themeColor: '#8b5cf6',
   soundsEnabled: true,
   scale: 6,
