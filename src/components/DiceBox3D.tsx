@@ -206,7 +206,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, [isOpen, onClose]);
+}, [isOpen, onClose, effectiveSettings]); // ✅ Ajoutez effectiveSettings
 
   // Lancer les dés quand rollData change
   useEffect(() => {
