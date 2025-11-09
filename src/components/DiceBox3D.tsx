@@ -67,18 +67,34 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
               return sum + (roll?.value || 0);
             }, 0);
 
-            // ✅ Utiliser rollDataRef au lieu de rollData
-            const modifier = rollDataRef.current?.modifier || 0;
+            // ✅ CORRECTION : Utiliser le total calculé par la bibliothèque
+            // La bibliothèque retourne results.value qui inclut déjà le modificateur
+            let finalTotal: number;
+            
+            if (typeof results?.value === 'number') {
+              // La bibliothèque a calculé le total (avec modificateur inclus)
+              finalTotal = results.value;
+              console.log('✅ Utilisation du total de la bibliothèque:', finalTotal);
+            } else if (typeof results?.total === 'number') {
+              // Fallback au cas où c'est dans results.total
+              finalTotal = results.total;
+              console.log('✅ Utilisation du total (fallback):', finalTotal);
+            } else {
+              // Fallback : calculer manuellement
+              const modifier = rollDataRef.current?.modifier || 0;
+              finalTotal = diceTotal + modifier;
+              console.log('⚠️ Calcul manuel du total:', finalTotal);
+            }
 
             const finalResult = {
-              total: diceTotal + modifier,
+              total: finalTotal,
               rolls: rolls.map((r: any) => r?.value || 0),
               diceTotal: diceTotal
             };
 
             console.log('✅ Résultat calculé:', finalResult);
             console.log('   - Dés:', finalResult.rolls, '= ', finalResult.diceTotal);
-            console.log('   - Modificateur:', modifier);
+            console.log('   - Modificateur:', rollDataRef.current?.modifier);
             console.log('   - Total:', finalResult.total);
 
             // ✅ Stocker IMMÉDIATEMENT dans la ref
@@ -329,4 +345,4 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       </button>
     </>
   );
-} 
+}
