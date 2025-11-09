@@ -98,28 +98,37 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         const config = {
           assetPath: '/assets/dice-box/',
           
-          // ✅ Thème avec texture et matériau
-          theme_texture: effectiveSettings.theme || "", // Nom de la texture (ex: "dragon", "ice")
-          theme_material: effectiveSettings.themeMaterial || "plastic", // Type de matériau
-          theme_colorset: "white", // Base colorset, la texture s'applique par-dessus
-          
-          // ✅ Couleur d'accent
-          themeColor: effectiveSettings.themeColor,
-          
-          // ✅ Paramètres physiques
-          scale: effectiveSettings.scale,
-          gravity: effectiveSettings.gravity,
-          mass: 1,
-          friction: effectiveSettings.friction,
-          restitution: effectiveSettings.restitution,
-          angularDamping: 0.4,
-          linearDamping: 0.5,
-          
-          // ✅ Sons
-          sounds: effectiveSettings.soundsEnabled,
-          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
-          
-          onRollComplete: (results: any) => {
+
+  // ✅ Si theme est vide → pas de texture, la couleur s'applique directement
+  // ✅ Si theme a une valeur → texture + colorisation par themeColor
+  theme_texture: effectiveSettings.theme || "none",
+  theme_material: effectiveSettings.themeMaterial || "plastic",
+  theme_colorset: effectiveSettings.theme ? "white" : "custom",
+
+   // ✅ Colorset personnalisé pour couleur unie (quand pas de texture)
+  theme_customColorset: !effectiveSettings.theme ? {
+    name: 'custom',
+    foreground: '#ffffff',
+    background: effectiveSettings.themeColor,
+    outline: effectiveSettings.themeColor,
+    texture: 'none',
+    material: effectiveSettings.themeMaterial
+  } : undefined,
+  
+  // ✅ themeColor s'applique toujours
+  themeColor: effectiveSettings.themeColor,
+  
+  scale: effectiveSettings.scale,
+  gravity: effectiveSettings.gravity,
+  mass: 1,
+  friction: effectiveSettings.friction,
+  restitution: effectiveSettings.restitution,
+  angularDamping: 0.4,
+  linearDamping: 0.5,
+  sounds: effectiveSettings.soundsEnabled,
+  soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+  
+  onRollComplete: (results: any) => {
             if (!mounted) return;
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
