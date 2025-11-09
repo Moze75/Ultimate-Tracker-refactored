@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Settings } from 'lucide-react'; // ✅ Import de l'icône
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
