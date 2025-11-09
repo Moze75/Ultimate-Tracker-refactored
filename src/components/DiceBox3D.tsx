@@ -343,176 +343,177 @@ requestAnimationFrame(() => {
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound]);
 
-  if (!isOpen) return null;
+ if (!isOpen) return null;
 
-  return (
-    <>
+return createPortal(
+  <>
+    <div 
+      onClick={handleOverlayClick}
+      className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
+        isFadingAll ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{ backgroundColor: 'transparent' }}
+    >
       <div 
-        onClick={handleOverlayClick}
-        className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
-          isFadingAll ? 'opacity-0' : 'opacity-100'
+        id="dice-box-overlay"
+        ref={containerRef} 
+        className={`absolute top-0 left-0 w-screen h-screen pointer-events-none transition-opacity duration-300 ${
+          isFadingDice ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ backgroundColor: 'transparent' }}
+        style={{ 
+          touchAction: 'none',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          position: 'fixed',
+          overflow: 'hidden'
+        }}
+      />
+    </div>
+
+    {result && showResult && (
+      <div 
+        className={`fixed z-50 pointer-events-none transition-all duration-500 ${
+          isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+        }`}
+        style={{
+          position: 'fixed',
+          top: '50vh',
+          left: '50vw',
+          transform: 'translate(-50%, -50%)',
+          willChange: 'transform, opacity',
+          filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+        }}
       >
-        <div 
-          id="dice-box-overlay"
-          ref={containerRef} 
-          className={`absolute top-0 left-0 w-screen h-screen pointer-events-none transition-opacity duration-300 ${
-            isFadingDice ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{ 
-            touchAction: 'none',
-            maxWidth: '100vw',
-            maxHeight: '100vh',
-            position: 'fixed',
-            overflow: 'hidden'
-          }}
-        />
-      </div>
+        {/* Aura démoniaque pulsante */}
+        <div className="absolute inset-0 animate-pulse">
+          <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
+          <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
+        </div>
 
-      {result && showResult && (
-        <div 
-          className={`fixed z-50 pointer-events-none transition-all duration-500 ${
-            isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform, opacity',
-            filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
-          }}
-        >
-          {/* Aura démoniaque pulsante */}
-          <div className="absolute inset-0 animate-pulse">
-            <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
-            <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
-          </div>
+        {/* Particules de feu flottantes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+                opacity: 0.3 + Math.random() * 0.7,
+                boxShadow: '0 0 10px currentColor'
+              }}
+            />
+          ))}
+        </div>
 
-          {/* Particules de feu flottantes */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 2}s`,
-                  opacity: 0.3 + Math.random() * 0.7,
-                  boxShadow: '0 0 10px currentColor'
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Conteneur principal */}
-          <div className="relative">
-            {/* Bordure de flammes */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
-            
-            {/* Fond noir pur */}
-            <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
-              {/* Contenu */}
-              <div className="relative px-12 py-10 text-center">
-                {/* Titre avec effet gravé */}
-                <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                  {rollDataRef.current?.attackName}
-                </p>
-                
-                {/* Résultat principal - style forgé dans les flammes */}
-                <div className="relative mb-4">
-                  {/* Lueur derrière le nombre */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
-                      {result.total}
-                    </div>
-                  </div>
-                  
-                  {/* Nombre principal avec effet métal brûlant */}
-                  <div 
-                    className="relative text-8xl font-black tracking-tight"
-                    style={{
-                      background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
-                    }}
-                  >
+        {/* Conteneur principal */}
+        <div className="relative">
+          {/* Bordure de flammes */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+          
+          {/* Fond noir pur */}
+          <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
+            {/* Contenu */}
+            <div className="relative px-12 py-10 text-center">
+              {/* Titre avec effet gravé */}
+              <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                {rollDataRef.current?.attackName}
+              </p>
+              
+              {/* Résultat principal - style forgé dans les flammes */}
+              <div className="relative mb-4">
+                {/* Lueur derrière le nombre */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
                     {result.total}
                   </div>
                 </div>
-
-                {/* Détails avec runes */}
-                <div className="text-sm text-red-200/80 font-serif">
-                  {result.rolls.length > 0 ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <>
-                          <span className="text-orange-400 font-bold">
-                            {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                            {Math.abs(rollDataRef.current.modifier)}
-                          </span>
-                        </>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        {rollDataRef.current?.diceFormula}: {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <>
-                          <span className="text-orange-400 font-bold">
-                            {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                            {Math.abs(rollDataRef.current.modifier)}
-                          </span>
-                        </>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  )}
+                
+                {/* Nombre principal avec effet métal brûlant */}
+                <div 
+                  className="relative text-8xl font-black tracking-tight"
+                  style={{
+                    background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
+                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
+                  }}
+                >
+                  {result.total}
                 </div>
+              </div>
 
-                {/* Ligne de séparation runique */}
-                <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
-                  <span>⸎</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>✦</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>⸎</span>
-                </div>
+              {/* Détails avec runes */}
+              <div className="text-sm text-red-200/80 font-serif">
+                {result.rolls.length > 0 ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-red-800">⟨</span>
+                    <span className="tracking-wide">
+                      Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
+                    </span>
+                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                      <>
+                        <span className="text-orange-400 font-bold">
+                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                          {Math.abs(rollDataRef.current.modifier)}
+                        </span>
+                      </>
+                    )}
+                    <span className="text-red-800">⟩</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-red-800">⟨</span>
+                    <span className="tracking-wide">
+                      {rollDataRef.current?.diceFormula}: {result.diceTotal}
+                    </span>
+                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                      <>
+                        <span className="text-orange-400 font-bold">
+                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                          {Math.abs(rollDataRef.current.modifier)}
+                        </span>
+                      </>
+                    )}
+                    <span className="text-red-800">⟩</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Ligne de séparation runique */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
+                <span>⸎</span>
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+                <span>✦</span>
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+                <span>⸎</span>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
-      <button
-        onClick={handleClose}
-        className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
-          isFadingAll ? 'opacity-0' : 'opacity-100'
-        }`}
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem'
-        }}
-        title="Fermer"
-      >
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </>
-  );
+    <button
+      onClick={handleClose}
+      className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
+        isFadingAll ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{
+        position: 'fixed',
+        top: '1rem',
+        right: '1rem'
+      }}
+      title="Fermer"
+    >
+      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </>,
+  document.body
+);
 }
