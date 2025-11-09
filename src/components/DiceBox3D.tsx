@@ -122,9 +122,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }
 };
 
-console.log('📦 [INIT] Configuration complète:', config);
-
-const box = new DiceBox('#dice-box-overlay', config);
+ 
             if (!mounted) return;
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
