@@ -12,11 +12,17 @@ interface DiceRollerLazyProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings: DiceSettings; // ✅ Ajout des settings
+  settings: DiceSettings;
 }
 
 export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRollerLazyProps) {
   if (!isOpen) return null;
+
+  // ✅ Créer une clé basée sur les paramètres critiques des settings
+  // Cela force React à détruire et recréer DiceBox3D quand ces paramètres changent
+  const diceBoxKey = `${settings.theme}-${settings.themeColor}-${settings.scale}`;
+
+  console.log('🔑 [DiceRollerLazy] Clé DiceBox:', diceBoxKey);
 
   return (
     <Suspense fallback={
@@ -33,10 +39,11 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
       </div>
     }>
       <DiceBox3D 
+        key={diceBoxKey} // ✅ CRUCIAL : Force le remontage complet du composant
         isOpen={isOpen} 
         onClose={onClose} 
         rollData={rollData}
-        settings={settings} // ✅ Passage des settings
+        settings={settings}
       />
     </Suspense>
   );
