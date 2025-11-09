@@ -422,4 +422,4 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       </button>
     </>
   );
-}
+} 
