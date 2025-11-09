@@ -8,7 +8,7 @@ interface DesktopActionsGridProps {
   player: Player;
   onUpdate: (player: Player) => void;
   onOpenCampaigns: () => void;
-  onOpenDiceSettings?: () => void;
+ 
 }
 
 export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDiceSettings }: DesktopActionsGridProps) {
@@ -290,16 +290,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDi
         <Scroll className="w-4 h-4 ml-2" />
       </button>
 
-      {/* ✅ Bouton Paramètres des dés */}
-      {onOpenDiceSettings && (
-        <button
-          onClick={onOpenDiceSettings}
-          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
-        >
-          <span className="text-xm whitespace-nowrap">Paramètres</span>
-          <Settings className="w-4 h-4 ml-2" />
-        </button>
-      )}
+
     </div>
   );
 }
