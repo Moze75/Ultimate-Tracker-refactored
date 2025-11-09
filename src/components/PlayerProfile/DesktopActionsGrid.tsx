@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Scroll, Brain, Plus, Minus, Star, Sun } from 'lucide-react';
+import { Moon, Scroll, Brain, Plus, Minus, Star, Sun, Settings } from 'lucide-react';
 import { Player, PlayerStats } from '../../types/dnd';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -8,9 +8,10 @@ interface DesktopActionsGridProps {
   player: Player;
   onUpdate: (player: Player) => void;
   onOpenCampaigns: () => void;
+  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
 }
 
-export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: DesktopActionsGridProps) {
+export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDiceSettings }: DesktopActionsGridProps) {
   const handleShortRest = async () => {
     if (!player.hit_dice || player.hit_dice.total - player.hit_dice.used <= 0) {
       toast.error('Aucun dé de vie disponible');
@@ -289,6 +290,17 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
         <span className="text-xm whitespace-nowrap">Campagnes</span>
         <Scroll className="w-4 h-4 ml-2" />
       </button>
+
+      {/* ✅ Nouveau bouton Paramètres */}
+      {onOpenDiceSettings && (
+        <button
+          onClick={onOpenDiceSettings}
+          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
+        >
+          <span className="text-xm whitespace-nowrap">Paramètres</span>
+          <Settings className="w-4 h-4 ml-2" />
+        </button>
+      )}
     </div>
   );
 }
