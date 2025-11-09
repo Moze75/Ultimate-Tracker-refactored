@@ -321,11 +321,12 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   const [diceRollerOpen, setDiceRollerOpen] = useState(false);
   const [rollData, setRollData] = useState<{
-    type: 'attack' | 'damage';
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
     diceFormula: string;
     modifier: number;
   } | null>(null);
+  const { settings: diceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
 
   React.useEffect(() => {
