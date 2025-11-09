@@ -345,7 +345,7 @@ requestAnimationFrame(() => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       <div 
         onClick={handleOverlayClick}
@@ -362,13 +362,27 @@ requestAnimationFrame(() => {
           }`}
           style={{ 
             touchAction: 'none',
-            maxWidth: '100vw', 
+            maxWidth: '100vw',
             maxHeight: '100vh',
             position: 'fixed',
             overflow: 'hidden'
           }}
         />
       </div>
+
+      {result && showResult && (
+        // ... GARDEZ TOUT le code existant de la popup de résultat ...
+      )}
+
+      <button
+        onClick={handleClose}
+        // ... GARDEZ TOUT le code existant du bouton ...
+      >
+      </button>
+    </>,
+    document.body
+  );
+}
 
       {result && showResult && (
         <div 
