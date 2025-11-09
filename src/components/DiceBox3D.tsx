@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
-import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings'; // ✅ Import des valeurs par défaut
+import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings?: DiceSettings; // ✅ Rendre optionnel
+  settings?: DiceSettings;
 }
 
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
@@ -31,17 +31,37 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   
-  // ✅ Utiliser les settings par défaut si non fournis
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
   const settingsRef = useRef(effectiveSettings);
+  
+  // ✅ Créer une clé unique basée sur les settings pour forcer la réinitialisation
+  const settingsKey = useRef(JSON.stringify(effectiveSettings));
 
   useEffect(() => {
     rollDataRef.current = rollData;
   }, [rollData]);
 
-  // ✅ Mettre à jour la ref des settings
   useEffect(() => {
     settingsRef.current = effectiveSettings;
+    const newKey = JSON.stringify(effectiveSettings);
+    
+    // Si les settings ont changé, forcer la réinitialisation
+    if (newKey !== settingsKey.current) {
+      console.log('🔄 Settings changés, destruction de DiceBox');
+      settingsKey.current = newKey;
+      
+      if (diceBoxRef.current) {
+        try {
+          if (typeof diceBoxRef.current.clear === 'function') {
+            diceBoxRef.current.clear();
+          }
+        } catch (e) {
+          console.log('⚠️ Impossible de clear DiceBox');
+        }
+        diceBoxRef.current = null;
+        setIsInitialized(false);
+      }
+    }
   }, [effectiveSettings]);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
@@ -73,24 +93,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Réinitialiser DiceBox quand les settings changent
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    if (diceBoxRef.current) {
-      console.log('🔄 Réinitialisation de DiceBox avec nouveaux paramètres');
-      try {
-        if (typeof diceBoxRef.current.clear === 'function') {
-          diceBoxRef.current.clear();
-        }
-      } catch (e) {
-        console.log('⚠️ Impossible de clear DiceBox');
-      }
-      diceBoxRef.current = null;
-      setIsInitialized(false);
-    }
-  }, [effectiveSettings, isOpen]);
-
   // Initialiser la DiceBox
   useEffect(() => {
     if (diceBoxRef.current) return;
@@ -106,7 +108,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         console.log('🎲 Initialisation DiceBox avec settings:', settingsRef.current);
 
-        // ✅ Utiliser les settings pour la configuration
         const box = new DiceBox('#dice-box-overlay', {
           assetPath: '/assets/dice-box/',
           theme: settingsRef.current.theme,
@@ -188,7 +189,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec thème:', settingsRef.current.theme);
+          console.log('✅ DiceBox initialisé avec thème:', settingsRef.current.theme, 'couleur:', settingsRef.current.themeColor);
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -206,7 +207,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         clearTimeout(closeTimeoutRef.current);
       }
     };
-}, [isOpen, onClose, effectiveSettings]); // ✅ Ajoutez effectiveSettings
+  }, [isOpen, onClose, settingsKey.current]); // ✅ Dépend de settingsKey pour réinitialiser
 
   // Lancer les dés quand rollData change
   useEffect(() => {
