@@ -191,15 +191,10 @@ export function DesktopView({
         </div>
       </div>
 
-<DiceRoller
+<DiceRollerLazy
   isOpen={diceRoll !== null}
   onClose={() => setDiceRoll(null)}
-  rollData={diceRoll ? {
-    type: 'ability',
-    attackName: diceRoll.description,
-    diceFormula: '1d20',
-    modifier: diceRoll.modifier
-  } : null}
+  rollData={diceRoll}
 />
 
       <PlayerProfileSettingsModal
