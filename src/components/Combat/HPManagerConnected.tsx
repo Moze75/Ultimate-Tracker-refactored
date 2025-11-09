@@ -29,6 +29,18 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
   };
 
+    // ✅ Fonction pour jouer le son de guérison
+  const playHealingSound = () => {
+    try {
+      const audio = new Audio('/Sounds/Healing/Healing.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(err => console.warn('Erreur lecture son guérison:', err));
+    } catch (error) {
+      console.warn('Impossible de jouer le son de guérison:', error);
+    }
+  };
+
+
   const getWoundLevel = () => {
     const percentage = (totalHP / player.max_hp) * 100;
     if (totalHP <= 0) return 'Mort';
@@ -125,6 +137,9 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
+  // ✅ Jouer le son de guérison
+    playHealingSound();
+    
     const newCurrentHP = Math.min(player.max_hp, player.current_hp + healing);
     await updateHP(newCurrentHP);
     setHealValue('');
