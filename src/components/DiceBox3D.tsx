@@ -96,24 +96,35 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         // ✅ Configuration avec le bon format pour les textures
         const config = {
           assetPath: '/assets/dice-box/',
-          // Essayez TOUTES les propriétés possibles
-          theme: effectiveSettings.theme,
-          theme_texture: effectiveSettings.theme,
-          theme_colorset: effectiveSettings.theme,
-          themeColor: effectiveSettings.themeColor,
-          scale: effectiveSettings.scale,
-          gravity: effectiveSettings.gravity,
-          mass: 1,
-          friction: effectiveSettings.friction,
-          restitution: effectiveSettings.restitution,
-          angularDamping: 0.4,
-          linearDamping: 0.5,
-          sounds: effectiveSettings.soundsEnabled,
-          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
-          // ✅ Forcer le rechargement des textures
-          enableShadows: true,
-          delay: 10,
-          onRollComplete: (results: any) => {
+         // ✅ Configuration correcte selon la documentation officielle
+  theme_texture: effectiveSettings.theme || "", // Nom de la texture (ex: "dragon", "ice")
+  theme_material: effectiveSettings.themeMaterial || "plastic", // Type de matériau
+  theme_colorset: "white", // Base colorset, la texture s'applique par-dessus
+  
+  // ✅ Couleur d'accent
+  themeColor: effectiveSettings.themeColor,
+  
+  // ✅ Paramètres physiques
+  scale: effectiveSettings.scale,
+  gravity: effectiveSettings.gravity,
+  mass: 1,
+  friction: effectiveSettings.friction,
+  restitution: effectiveSettings.restitution,
+  angularDamping: 0.4,
+  linearDamping: 0.5,
+  
+  // ✅ Sons
+  sounds: effectiveSettings.soundsEnabled,
+  soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+  
+  onRollComplete: (results: any) => {
+    // ... votre code existant onRollComplete
+  }
+};
+
+console.log('📦 [INIT] Configuration complète:', config);
+
+const box = new DiceBox('#dice-box-overlay', config);
             if (!mounted) return;
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
