@@ -66,7 +66,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox - simplifié sans lock
+  // ✅ Initialiser la DiceBox
   useEffect(() => {
     if (!isOpen) return;
     if (diceBoxRef.current && isInitialized) {
@@ -93,9 +93,13 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           return;
         }
 
-        const box = new DiceBox('#dice-box-overlay', {
+        // ✅ Configuration avec le bon format pour les textures
+        const config = {
           assetPath: '/assets/dice-box/',
+          // Essayez TOUTES les propriétés possibles
           theme: effectiveSettings.theme,
+          theme_texture: effectiveSettings.theme,
+          theme_colorset: effectiveSettings.theme,
           themeColor: effectiveSettings.themeColor,
           scale: effectiveSettings.scale,
           gravity: effectiveSettings.gravity,
@@ -106,6 +110,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           linearDamping: 0.5,
           sounds: effectiveSettings.soundsEnabled,
           soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+          // ✅ Forcer le rechargement des textures
+          enableShadows: true,
+          delay: 10,
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
@@ -167,7 +174,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
               }
             }, 3000);
           }
-        });
+        };
+
+        console.log('📦 [INIT] Configuration complète:', config);
+
+        const box = new DiceBox('#dice-box-overlay', config);
 
         console.log('⏳ [INIT] Initialisation de DiceBox...');
         await box.initialize();
@@ -179,6 +190,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           console.log('   - Thème appliqué:', effectiveSettings.theme);
           console.log('   - Couleur appliquée:', effectiveSettings.themeColor);
           console.log('   - Scale appliquée:', effectiveSettings.scale);
+          
+          // ✅ Log de l'instance pour debug
+          console.log('📊 [INIT] Instance DiceBox:', box);
         }
       } catch (error) {
         console.error('❌ [INIT] Erreur initialisation DiceBox:', error);
@@ -207,14 +221,23 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             diceBoxRef.current.clear();
           }
           if (diceBoxRef.current.scene) {
+            // ✅ Vider toutes les textures du cache Three.js
+            diceBoxRef.current.scene.traverse((obj: any) => {
+              if (obj.material) {
+                if (obj.material.map) obj.material.map.dispose();
+                if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+                if (obj.material.normalMap) obj.material.normalMap.dispose();
+                obj.material.dispose();
+              }
+              if (obj.geometry) {
+                obj.geometry.dispose();
+              }
+            });
             diceBoxRef.current.scene.clear();
           }
           if (diceBoxRef.current.renderer) {
             diceBoxRef.current.renderer.dispose();
-            // Forcer la perte du contexte WebGL pour libérer la mémoire
-            if (diceBoxRef.current.renderer.forceContextLoss) {
-              diceBoxRef.current.renderer.forceContextLoss();
-            }
+            diceBoxRef.current.renderer.forceContextLoss();
           }
         } catch (e) {
           console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
@@ -223,7 +246,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         setIsInitialized(false);
       }
     };
-  }, [isOpen]); // ✅ Ne dépend QUE de isOpen - la clé React gère les changements de settings
+  }, [isOpen]);
+
+  // (Le reste du code reste identique...)
+  // ... [Copier le reste de votre code actuel ici]
 
   // Lancer les dés quand rollData change
   useEffect(() => {
