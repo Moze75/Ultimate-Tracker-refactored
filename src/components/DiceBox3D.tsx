@@ -82,6 +82,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Chargement du module DiceBox...');
         console.log('🎲 [INIT] Settings:', effectiveSettings);
         console.log('   - Theme:', effectiveSettings.theme);
+        console.log('   - Theme Material:', effectiveSettings.themeMaterial);
         console.log('   - ThemeColor:', effectiveSettings.themeColor);
         console.log('   - Scale:', effectiveSettings.scale);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -93,36 +94,32 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           return;
         }
 
-        // ✅ Configuration avec le bon format pour les textures
+        // ✅ Configuration correcte selon la documentation officielle
         const config = {
           assetPath: '/assets/dice-box/',
-         // ✅ Configuration correcte selon la documentation officielle
-  theme_texture: effectiveSettings.theme || "", // Nom de la texture (ex: "dragon", "ice")
-  theme_material: effectiveSettings.themeMaterial || "plastic", // Type de matériau
-  theme_colorset: "white", // Base colorset, la texture s'applique par-dessus
-  
-  // ✅ Couleur d'accent
-  themeColor: effectiveSettings.themeColor,
-  
-  // ✅ Paramètres physiques
-  scale: effectiveSettings.scale,
-  gravity: effectiveSettings.gravity,
-  mass: 1,
-  friction: effectiveSettings.friction,
-  restitution: effectiveSettings.restitution,
-  angularDamping: 0.4,
-  linearDamping: 0.5,
-  
-  // ✅ Sons
-  sounds: effectiveSettings.soundsEnabled,
-  soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
-  
-  onRollComplete: (results: any) => {
-    // ... votre code existant onRollComplete
-  }
-};
-
- 
+          
+          // ✅ Thème avec texture et matériau
+          theme_texture: effectiveSettings.theme || "", // Nom de la texture (ex: "dragon", "ice")
+          theme_material: effectiveSettings.themeMaterial || "plastic", // Type de matériau
+          theme_colorset: "white", // Base colorset, la texture s'applique par-dessus
+          
+          // ✅ Couleur d'accent
+          themeColor: effectiveSettings.themeColor,
+          
+          // ✅ Paramètres physiques
+          scale: effectiveSettings.scale,
+          gravity: effectiveSettings.gravity,
+          mass: 1,
+          friction: effectiveSettings.friction,
+          restitution: effectiveSettings.restitution,
+          angularDamping: 0.4,
+          linearDamping: 0.5,
+          
+          // ✅ Sons
+          sounds: effectiveSettings.soundsEnabled,
+          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+          
+          onRollComplete: (results: any) => {
             if (!mounted) return;
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -196,12 +193,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           diceBoxRef.current = box;
           setIsInitialized(true);
           console.log('✅ [INIT] DiceBox initialisé avec succès');
-          console.log('   - Thème appliqué:', effectiveSettings.theme);
+          console.log('   - Thème appliqué:', effectiveSettings.theme || 'aucun');
+          console.log('   - Matériau appliqué:', effectiveSettings.themeMaterial);
           console.log('   - Couleur appliquée:', effectiveSettings.themeColor);
           console.log('   - Scale appliquée:', effectiveSettings.scale);
-          
-          // ✅ Log de l'instance pour debug
-          console.log('📊 [INIT] Instance DiceBox:', box);
         }
       } catch (error) {
         console.error('❌ [INIT] Erreur initialisation DiceBox:', error);
@@ -230,7 +225,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             diceBoxRef.current.clear();
           }
           if (diceBoxRef.current.scene) {
-            // ✅ Vider toutes les textures du cache Three.js
+            // Nettoyage des textures Three.js
             diceBoxRef.current.scene.traverse((obj: any) => {
               if (obj.material) {
                 if (obj.material.map) obj.material.map.dispose();
@@ -246,7 +241,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           }
           if (diceBoxRef.current.renderer) {
             diceBoxRef.current.renderer.dispose();
-            diceBoxRef.current.renderer.forceContextLoss();
+            if (diceBoxRef.current.renderer.forceContextLoss) {
+              diceBoxRef.current.renderer.forceContextLoss();
+            }
           }
         } catch (e) {
           console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
@@ -256,9 +253,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       }
     };
   }, [isOpen]);
-
-  // (Le reste du code reste identique...)
-  // ... [Copier le reste de votre code actuel ici]
 
   // Lancer les dés quand rollData change
   useEffect(() => {
