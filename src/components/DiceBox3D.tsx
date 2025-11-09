@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import type { DiceSettings } from '../hooks/useDiceSettings';
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -9,9 +10,10 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
+  settings: DiceSettings; // ✅ Ajout des settings
 }
 
-export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
+export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -27,8 +29,17 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
+  const settingsRef = useRef(settings); // ✅ Ref pour les settings
 
-  // ✅ Fonction pour générer un résultat aléatoire INSTANTANÉ
+  useEffect(() => {
+    rollDataRef.current = rollData;
+  }, [rollData]);
+
+  // ✅ Mettre à jour la ref des settings
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
     console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
     
@@ -58,13 +69,29 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     };
   }, []);
 
+  // ✅ Réinitialiser DiceBox quand les settings changent
   useEffect(() => {
-    rollDataRef.current = rollData;
-  }, [rollData]);
+    if (!isOpen) return;
+    
+    // Si DiceBox existe déjà, on le détruit pour le recréer avec les nouveaux settings
+    if (diceBoxRef.current) {
+      console.log('🔄 Réinitialisation de DiceBox avec nouveaux paramètres');
+      try {
+        if (typeof diceBoxRef.current.clear === 'function') {
+          diceBoxRef.current.clear();
+        }
+      } catch (e) {
+        console.log('⚠️ Impossible de clear DiceBox');
+      }
+      diceBoxRef.current = null;
+      setIsInitialized(false);
+    }
+  }, [settings, isOpen]);
 
-  // Initialiser la DiceBox UNE SEULE FOIS au montage
+  // Initialiser la DiceBox
   useEffect(() => {
     if (diceBoxRef.current) return;
+    if (!isOpen) return;
 
     let mounted = true;
 
@@ -74,17 +101,23 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         if (!mounted) return;
 
+        console.log('🎲 Initialisation DiceBox avec settings:', settingsRef.current);
+
+        // ✅ Utiliser les settings pour la configuration
         const box = new DiceBox('#dice-box-overlay', {
           assetPath: '/assets/dice-box/',
-          theme: 'default',
-          themeColor: '#8b5cf6',
-          scale: 6,
-          gravity: 1,
+          theme: settingsRef.current.theme,
+          themeColor: settingsRef.current.themeColor,
+          scale: settingsRef.current.scale,
+          gravity: settingsRef.current.gravity,
           mass: 1,
-          friction: 0.8,
-          restitution: 0,
+          friction: settingsRef.current.friction,
+          restitution: settingsRef.current.restitution,
           angularDamping: 0.4,
           linearDamping: 0.5,
+          // ✅ Sons conditionnels
+          sounds: settingsRef.current.soundsEnabled,
+          soundVolume: settingsRef.current.soundsEnabled ? 0.5 : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
@@ -92,13 +125,11 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             console.log('🎲 onRollComplete APPELÉ');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
-            // ✅ Si on a déjà affiché un résultat (force-stop), ignorer
             if (hasShownResultRef.current) {
               console.log('⚠️ Résultat déjà affiché (force-stop), ignoré');
               return;
             }
 
-            // ✅ Extraire les valeurs depuis results.sets
             let rollValues: number[] = [];
             let diceTotal = 0;
             
@@ -126,7 +157,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
             console.log('✅ Résultat FINAL:', finalResult);
 
-            // ✅ Marquer comme affiché
             hasShownResultRef.current = true;
             pendingResultRef.current = finalResult;
             
@@ -134,14 +164,12 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             setIsRolling(false);
             setShowResult(true);
 
-            // Fade les dés après 500ms
             setTimeout(() => {
               if (mounted) {
                 setIsFadingDice(true);
               }
             }, 500);
 
-            // Fermer automatiquement après 3 secondes
             closeTimeoutRef.current = setTimeout(() => {
               if (mounted) {
                 setIsFadingAll(true);
@@ -158,7 +186,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé');
+          console.log('✅ DiceBox initialisé avec thème:', settingsRef.current.theme);
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -176,7 +204,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, [onClose]);
+  }, [isOpen, onClose, generateRandomResult]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
@@ -256,7 +284,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     }, 300);
   }, [onClose]);
 
-  // ✅ NOUVELLE STRATÉGIE : Arrêt forcé avec résultat aléatoire IMMÉDIAT
   const handleOverlayClick = useCallback(() => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🖱️ CLIC OVERLAY');
@@ -267,24 +294,18 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     if (isRolling) {
       console.log('⚡ ARRÊT FORCÉ - Génération résultat IMMÉDIAT');
       
-      // Nettoyer les timers
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
       
-      // ✅ Marquer comme déjà affiché pour ignorer onRollComplete
       hasShownResultRef.current = true;
-      
-      // ✅ Fade les dés
       setIsFadingDice(true);
       setIsRolling(false);
       
-      // ✅ Tenter d'arrêter la simulation physique
       if (diceBoxRef.current) {
         console.log('🔍 Tentative d\'arrêt de la simulation...');
         
-        // Essayer différentes méthodes
         if (typeof diceBoxRef.current.clear === 'function') {
           console.log('  → Appel de clear()');
           try { diceBoxRef.current.clear(); } catch (e) { console.log('  ✗ Échec clear()'); }
@@ -299,7 +320,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         }
       }
       
-      // ✅ Générer un résultat aléatoire IMMÉDIAT
       if (rollDataRef.current) {
         const randomResult = generateRandomResult(
           rollDataRef.current.diceFormula,
@@ -312,7 +332,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         setResult(randomResult);
         setShowResult(true);
         
-        // Fermer après 2s
         closeTimeoutRef.current = setTimeout(() => {
           handleClose();
         }, 2000);
