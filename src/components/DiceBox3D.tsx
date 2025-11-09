@@ -62,25 +62,24 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             console.log('🎲 Résultats bruts onRollComplete:', results);
             console.log('🎲 rollDataRef.current:', rollDataRef.current);
             
+            // ✅ CORRECTION 1 : Extraire correctement les valeurs des dés
             const rolls = results?.rolls || [];
-            const diceTotal = rolls.reduce((sum: number, roll: any) => {
-              return sum + (roll?.value || 0);
-            }, 0);
+            const rollValues = rolls.map((r: any) => r?.value || 0);
+            const diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
 
-            // ✅ CORRECTION : Utiliser le total calculé par la bibliothèque
-            // La bibliothèque retourne results.value qui inclut déjà le modificateur
+            console.log('🎲 Valeurs des dés extraites:', rollValues);
+            console.log('🎲 Total des dés:', diceTotal);
+
+            // ✅ Utiliser le total calculé par la bibliothèque
             let finalTotal: number;
             
             if (typeof results?.value === 'number') {
-              // La bibliothèque a calculé le total (avec modificateur inclus)
               finalTotal = results.value;
               console.log('✅ Utilisation du total de la bibliothèque:', finalTotal);
             } else if (typeof results?.total === 'number') {
-              // Fallback au cas où c'est dans results.total
               finalTotal = results.total;
               console.log('✅ Utilisation du total (fallback):', finalTotal);
             } else {
-              // Fallback : calculer manuellement
               const modifier = rollDataRef.current?.modifier || 0;
               finalTotal = diceTotal + modifier;
               console.log('⚠️ Calcul manuel du total:', finalTotal);
@@ -88,7 +87,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
             const finalResult = {
               total: finalTotal,
-              rolls: rolls.map((r: any) => r?.value || 0),
+              rolls: rollValues, // ✅ Utiliser rollValues au lieu de rolls.map
               diceTotal: diceTotal
             };
 
@@ -104,6 +103,13 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             setResult(finalResult);
             setIsRolling(false);
             setShowResult(true);
+
+            // ✅ Fade les dés après 500ms
+            setTimeout(() => {
+              if (mounted) {
+                setIsFadingDice(true);
+              }
+            }, 500);
 
             // ✅ Fermer automatiquement après 3 secondes
             closeTimeoutRef.current = setTimeout(() => {
@@ -222,7 +228,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     }, 300);
   }, [onClose]);
 
-  // ✅ Gestion du clic sur l'overlay
+  // ✅ CORRECTION 2 : Gestion du clic sur l'overlay
   const handleOverlayClick = useCallback(() => {
     console.log('🖱️ Clic overlay');
     console.log('   - isRolling:', isRolling);
@@ -231,42 +237,55 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     console.log('   - pendingResultRef.current:', pendingResultRef.current);
     
     if (isRolling) {
-      console.log('⏸️ Arrêt forcé du jet');
+      console.log('⏸️ Arrêt forcé du jet - fade dés + affichage résultat');
       
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
       
+      // ✅ Fade uniquement les dés
       setIsFadingDice(true);
       setIsRolling(false);
       
-      if (pendingResultRef.current) {
-        console.log('✅ Résultat disponible, affichage immédiat');
-        setResult(pendingResultRef.current);
+      // ✅ Fonction pour afficher le résultat et programmer la fermeture
+      const displayResultAndClose = (resultData: { total: number; rolls: number[]; diceTotal: number }) => {
+        console.log('✅ Affichage du résultat:', resultData);
+        setResult(resultData);
         setShowResult(true);
         
-        setTimeout(() => {
+        // Fermer après 2 secondes
+        closeTimeoutRef.current = setTimeout(() => {
           handleClose();
         }, 2000);
+      };
+      
+      if (pendingResultRef.current) {
+        console.log('✅ Résultat disponible immédiatement');
+        displayResultAndClose(pendingResultRef.current);
       } else {
-        console.log('⏳ Pas de résultat, attente 500ms...');
-        // ✅ Attendre un peu au cas où le résultat arrive juste après
-        setTimeout(() => {
+        console.log('⏳ Attente du résultat...');
+        // ✅ Attendre max 1 seconde pour le résultat
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+          attempts++;
           if (pendingResultRef.current) {
-            console.log('✅ Résultat trouvé après attente');
-            setResult(pendingResultRef.current);
-            setShowResult(true);
-            setTimeout(() => {
-              handleClose();
-            }, 2000);
-          } else {
-            console.log('❌ Toujours pas de résultat, fermeture');
+            console.log('✅ Résultat trouvé après', attempts * 100, 'ms');
+            clearInterval(checkInterval);
+            displayResultAndClose(pendingResultRef.current);
+          } else if (attempts >= 10) {
+            console.log('❌ Timeout : aucun résultat après 1s, fermeture');
+            clearInterval(checkInterval);
             handleClose();
           }
-        }, 500);
+        }, 100);
       }
+    } else if (showResult) {
+      // Si le résultat est déjà affiché, fermer immédiatement
+      console.log('👋 Fermeture (résultat déjà affiché)');
+      handleClose();
     } else {
+      // Cas improbable
       console.log('👋 Fermeture normale');
       handleClose();
     }
@@ -276,17 +295,21 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   return (
     <>
+      {/* ✅ Overlay cliquable - ne fade que si isFadingAll */}
       <div 
         onClick={handleOverlayClick}
         className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
-          isFadingDice || isFadingAll ? 'opacity-0' : 'opacity-100'
+          isFadingAll ? 'opacity-0' : 'opacity-100'
         }`}
         style={{ backgroundColor: 'transparent' }}
       >
+        {/* ✅ Container des dés - fade indépendamment avec isFadingDice */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
-          className="absolute top-0 left-0 w-screen h-screen pointer-events-none"
+          className={`absolute top-0 left-0 w-screen h-screen pointer-events-none transition-opacity duration-300 ${
+            isFadingDice ? 'opacity-0' : 'opacity-100'
+          }`}
           style={{ 
             touchAction: 'none',
             maxWidth: '100vw',
@@ -297,6 +320,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         />
       </div>
 
+      {/* ✅ Popup de résultat - reste visible même quand les dés fade */}
       {result && showResult && (
         <div 
           className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
@@ -317,6 +341,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
                 {result.total}
               </div>
               <div className="text-sm text-gray-300">
+                {/* ✅ Affichage correct des valeurs des dés */}
                 Dés: [{result.rolls.join(', ')}] = {result.diceTotal}
                 {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
                   <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
@@ -327,6 +352,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
+      {/* ✅ Bouton fermer - fade seulement avec isFadingAll */}
       <button
         onClick={handleClose}
         className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
