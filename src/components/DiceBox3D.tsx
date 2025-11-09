@@ -14,10 +14,6 @@ interface DiceBox3DProps {
   settings?: DiceSettings;
 }
 
-// ✅ Variable globale pour empêcher les initialisations simultanées
-let globalInitLock = false;
-let globalDiceBoxInstance: any = null;
-
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
@@ -31,7 +27,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasShownResultRef = useRef(false);
-  const initAttemptedRef = useRef(false);
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -71,40 +66,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox avec protection contre double initialisation
+  // ✅ Initialiser la DiceBox - simplifié sans lock
   useEffect(() => {
     if (!isOpen) return;
-    if (initAttemptedRef.current) {
-      console.log('⏸️ [INIT] Initialisation déjà tentée, skip');
+    if (diceBoxRef.current && isInitialized) {
+      console.log('✓ DiceBox déjà initialisé');
       return;
     }
 
     let mounted = true;
-    initAttemptedRef.current = true;
 
     const initDiceBox = async () => {
-      // ✅ Vérifier le lock global
-      if (globalInitLock) {
-        console.log('🔒 [INIT] Initialisation déjà en cours globalement, attente...');
-        
-        // Attendre que l'initialisation globale soit terminée
-        let attempts = 0;
-        while (globalInitLock && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          attempts++;
-        }
-        
-        if (globalDiceBoxInstance && mounted) {
-          console.log('♻️ [INIT] Réutilisation de l\'instance globale existante');
-          diceBoxRef.current = globalDiceBoxInstance;
-          setIsInitialized(true);
-          return;
-        }
-      }
-
-      // ✅ Acquérir le lock
-      globalInitLock = true;
-
       try {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('🎲 [INIT] Chargement du module DiceBox...');
@@ -118,7 +90,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         if (!mounted) {
           console.log('⚠️ [INIT] Composant démonté, annulation');
-          globalInitLock = false;
           return;
         }
 
@@ -203,7 +174,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         
         if (mounted) {
           diceBoxRef.current = box;
-          globalDiceBoxInstance = box;
           setIsInitialized(true);
           console.log('✅ [INIT] DiceBox initialisé avec succès');
           console.log('   - Thème appliqué:', effectiveSettings.theme);
@@ -215,9 +185,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (mounted) {
           setIsRolling(false);
         }
-      } finally {
-        // ✅ Libérer le lock
-        globalInitLock = false;
       }
     };
 
@@ -232,38 +199,31 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
 
-      // ⚠️ Ne pas détruire l'instance globale immédiatement
-      // Elle sera réutilisée par la prochaine instance
-      // On la détruira seulement lors de la fermeture du modal
-    };
-  }, [isOpen]); // Ne dépend que de isOpen
-
-  // ✅ Cleanup de l'instance globale à la fermeture du modal
-  useEffect(() => {
-    if (!isOpen && globalDiceBoxInstance) {
-      console.log('🗑️ [CLEANUP] Destruction de l\'instance globale');
-      
-      try {
-        if (typeof globalDiceBoxInstance.clear === 'function') {
-          globalDiceBoxInstance.clear();
+      // ✅ Nettoyage complet lors du démontage
+      if (diceBoxRef.current) {
+        try {
+          console.log('🗑️ [CLEANUP] Destruction de DiceBox');
+          if (typeof diceBoxRef.current.clear === 'function') {
+            diceBoxRef.current.clear();
+          }
+          if (diceBoxRef.current.scene) {
+            diceBoxRef.current.scene.clear();
+          }
+          if (diceBoxRef.current.renderer) {
+            diceBoxRef.current.renderer.dispose();
+            // Forcer la perte du contexte WebGL pour libérer la mémoire
+            if (diceBoxRef.current.renderer.forceContextLoss) {
+              diceBoxRef.current.renderer.forceContextLoss();
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
         }
-        if (globalDiceBoxInstance.scene) {
-          globalDiceBoxInstance.scene.clear();
-        }
-        if (globalDiceBoxInstance.renderer) {
-          globalDiceBoxInstance.renderer.dispose();
-          globalDiceBoxInstance.renderer.forceContextLoss();
-        }
-      } catch (e) {
-        console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
+        diceBoxRef.current = null;
+        setIsInitialized(false);
       }
-      
-      globalDiceBoxInstance = null;
-      diceBoxRef.current = null;
-      initAttemptedRef.current = false;
-      setIsInitialized(false);
-    }
-  }, [isOpen]);
+    };
+  }, [isOpen]); // ✅ Ne dépend QUE de isOpen - la clé React gère les changements de settings
 
   // Lancer les dés quand rollData change
   useEffect(() => {
