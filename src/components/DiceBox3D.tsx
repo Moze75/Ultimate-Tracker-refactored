@@ -207,4 +207,4 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   );
 
   return createPortal(modalContent, document.body);
-}
+} 
