@@ -220,21 +220,42 @@ const config = {
         closeTimeoutRef.current = null;
       }
 
-  // ❌ NE PAS détruire la DiceBox à chaque fois
-  // ✅ Juste effacer les dés si le modal se ferme
-  if (diceBoxRef.current && !isOpen) {
-    try {
-      console.log('🗑️ [CLEANUP] Effacement des dés (pas de destruction)');
-      if (typeof diceBoxRef.current.clear === 'function') {
-        diceBoxRef.current.clear();
+      // ✅ Nettoyage complet lors du démontage
+      if (diceBoxRef.current) {
+        try {
+          console.log('🗑️ [CLEANUP] Destruction de DiceBox');
+          if (typeof diceBoxRef.current.clear === 'function') {
+            diceBoxRef.current.clear();
+          }
+          if (diceBoxRef.current.scene) {
+            // Nettoyage des textures Three.js
+            diceBoxRef.current.scene.traverse((obj: any) => {
+              if (obj.material) {
+                if (obj.material.map) obj.material.map.dispose();
+                if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+                if (obj.material.normalMap) obj.material.normalMap.dispose();
+                obj.material.dispose();
+              }
+              if (obj.geometry) {
+                obj.geometry.dispose();
+              }
+            }); 
+            diceBoxRef.current.scene.clear();
+          }
+          if (diceBoxRef.current.renderer) {
+            diceBoxRef.current.renderer.dispose();
+            if (diceBoxRef.current.renderer.forceContextLoss) {
+              diceBoxRef.current.renderer.forceContextLoss();
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
+        }
+        diceBoxRef.current = null;
+        setIsInitialized(false);
       }
-    } catch (e) {
-      console.warn('⚠️ [CLEANUP] Erreur lors du clear:', e);
-    }
-    // ❌ NE PAS mettre diceBoxRef.current = null ici
-    // ❌ NE PAS mettre setIsInitialized(false) ici
-  }
-};
+    };
+  }, [isOpen]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
