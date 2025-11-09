@@ -24,8 +24,14 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // ✅ REF pour stocker le résultat immédiatement quand il arrive
+  // ✅ REF pour stocker rollData et le résultat
+  const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
+
+  // ✅ Mettre à jour rollDataRef quand rollData change
+  useEffect(() => {
+    rollDataRef.current = rollData;
+  }, [rollData]);
 
   // Initialiser la DiceBox UNE SEULE FOIS au montage
   useEffect(() => {
@@ -54,13 +60,15 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             if (!mounted) return;
             
             console.log('🎲 Résultats bruts onRollComplete:', results);
+            console.log('🎲 rollDataRef.current:', rollDataRef.current);
             
             const rolls = results?.rolls || [];
             const diceTotal = rolls.reduce((sum: number, roll: any) => {
               return sum + (roll?.value || 0);
             }, 0);
 
-            const modifier = rollData?.modifier || 0;
+            // ✅ Utiliser rollDataRef au lieu de rollData
+            const modifier = rollDataRef.current?.modifier || 0;
 
             const finalResult = {
               total: diceTotal + modifier,
@@ -84,7 +92,10 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             // ✅ Fermer automatiquement après 3 secondes
             closeTimeoutRef.current = setTimeout(() => {
               if (mounted) {
-                handleClose();
+                setIsFadingAll(true);
+                setTimeout(() => {
+                  onClose();
+                }, 300);
               }
             }, 3000);
           }
@@ -113,7 +124,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, []);
+  }, [onClose]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
@@ -140,7 +151,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     setShowResult(false);
     setIsFadingDice(false);
     setIsFadingAll(false);
-    pendingResultRef.current = null; // ✅ Reset de la ref
+    pendingResultRef.current = null;
 
     // Construire la notation
     let notation = rollData.diceFormula;
@@ -153,9 +164,9 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     console.log('🎲 Notation:', notation);
 
     try {
-      // ✅ Petit délai pour laisser le DOM se mettre à jour
       setTimeout(() => {
         if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+          console.log('🎲 Exécution de roll()');
           diceBoxRef.current.roll(notation);
         }
       }, 100);
@@ -184,7 +195,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   // ✅ Fonction de fermeture complète avec fade
   const handleClose = useCallback(() => {
-    // Annuler le timeout de fermeture auto
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
@@ -204,37 +214,43 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     console.log('   - result:', result);
     console.log('   - pendingResultRef.current:', pendingResultRef.current);
     
-    // ✅ Si le jet est en cours
     if (isRolling) {
       console.log('⏸️ Arrêt forcé du jet');
       
-      // Annuler le timeout de fermeture auto
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
       
-      // Fade les dés
       setIsFadingDice(true);
       setIsRolling(false);
       
-      // ✅ Vérifier IMMÉDIATEMENT si on a un résultat dans la ref
       if (pendingResultRef.current) {
-        console.log('✅ Résultat disponible dans ref, affichage immédiat');
+        console.log('✅ Résultat disponible, affichage immédiat');
         setResult(pendingResultRef.current);
         setShowResult(true);
         
-        // Fermer après 2 secondes
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        console.log('⏳ Pas de résultat, fermeture directe');
-        // Pas encore de résultat, fermer
-        handleClose();
+        console.log('⏳ Pas de résultat, attente 500ms...');
+        // ✅ Attendre un peu au cas où le résultat arrive juste après
+        setTimeout(() => {
+          if (pendingResultRef.current) {
+            console.log('✅ Résultat trouvé après attente');
+            setResult(pendingResultRef.current);
+            setShowResult(true);
+            setTimeout(() => {
+              handleClose();
+            }, 2000);
+          } else {
+            console.log('❌ Toujours pas de résultat, fermeture');
+            handleClose();
+          }
+        }, 500);
       }
     } else {
-      // ✅ Sinon, fermer normalement
       console.log('👋 Fermeture normale');
       handleClose();
     }
@@ -244,17 +260,13 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
   return (
     <>
-      {/* ✅ Overlay cliquable avec fade */}
       <div 
         onClick={handleOverlayClick}
         className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
           isFadingDice || isFadingAll ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ 
-          backgroundColor: 'transparent'
-        }}
+        style={{ backgroundColor: 'transparent' }}
       >
-        {/* ✅ Conteneur 3D */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
@@ -269,7 +281,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         />
       </div>
 
-      {/* ✅ Résultat - Ne fade PAS avec isFadingDice */}
       {result && showResult && (
         <div 
           className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
@@ -285,14 +296,14 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         >
           <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-md rounded-xl border border-purple-500/50 p-8 shadow-2xl animate-[fadeIn_0.3s_ease-in]">
             <div className="text-center">
-              <p className="text-sm text-purple-200 mb-2">{rollData?.attackName}</p>
+              <p className="text-sm text-purple-200 mb-2">{rollDataRef.current?.attackName}</p>
               <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-3">
                 {result.total}
               </div>
               <div className="text-sm text-gray-300">
                 Dés: [{result.rolls.join(', ')}] = {result.diceTotal}
-                {rollData && rollData.modifier !== 0 && (
-                  <span> {rollData.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollData.modifier)}</span>
+                {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                  <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
                 )}
               </div>
             </div>
@@ -300,7 +311,6 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* ✅ Bouton fermer */}
       <button
         onClick={handleClose}
         className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
