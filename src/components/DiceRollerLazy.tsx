@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import type { DiceSettings } from '../hooks/useDiceSettings';
 
 const DiceBox3D = lazy(() => import('./DiceBox3D').then(module => ({ default: module.DiceBox3D })));
 
@@ -11,9 +12,10 @@ interface DiceRollerLazyProps {
     diceFormula: string;
     modifier: number;
   } | null;
+  settings: DiceSettings; // ✅ Ajout des settings
 }
 
-export function DiceRollerLazy({ isOpen, onClose, rollData }: DiceRollerLazyProps) {
+export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRollerLazyProps) {
   if (!isOpen) return null;
 
   return (
@@ -30,7 +32,12 @@ export function DiceRollerLazy({ isOpen, onClose, rollData }: DiceRollerLazyProp
         </div>
       </div>
     }>
-      <DiceBox3D isOpen={isOpen} onClose={onClose} rollData={rollData} />
+      <DiceBox3D 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        rollData={rollData}
+        settings={settings} // ✅ Passage des settings
+      />
     </Suspense>
   );
 }
