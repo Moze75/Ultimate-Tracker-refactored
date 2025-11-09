@@ -14,20 +14,54 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   const [localSettings, setLocalSettings] = React.useState<DiceSettings>(settings);
 
   React.useEffect(() => {
+    console.log('🔵 [DiceSettingsModal] useEffect - Props settings:', settings);
     setLocalSettings(settings);
   }, [settings]);
+
+  React.useEffect(() => {
+    console.log('🟢 [DiceSettingsModal] Modal ouvert:', open);
+    if (open) {
+      console.log('📥 [DiceSettingsModal] Settings reçus:', settings);
+      console.log('📦 [DiceSettingsModal] LocalSettings actuel:', localSettings);
+    }
+  }, [open]);
 
   if (!open) return null;
 
   const handleSave = () => {
-    console.log('💾 Sauvegarde des paramètres:', localSettings);
-    onSave(localSettings);
-    onClose();
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('💾 [DiceSettingsModal] handleSave APPELÉ');
+    console.log('📤 [DiceSettingsModal] LocalSettings à sauvegarder:', localSettings);
+    console.log('🔍 [DiceSettingsModal] Comparaison:');
+    console.log('   - Avant (settings prop):', settings);
+    console.log('   - Après (localSettings):', localSettings);
+    console.log('   - Changé:', JSON.stringify(settings) !== JSON.stringify(localSettings));
+    
+    try {
+      console.log('🔄 [DiceSettingsModal] Appel de onSave...');
+      onSave(localSettings);
+      console.log('✅ [DiceSettingsModal] onSave terminé');
+      console.log('🚪 [DiceSettingsModal] Fermeture du modal...');
+      onClose();
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    } catch (error) {
+      console.error('❌ [DiceSettingsModal] Erreur dans handleSave:', error);
+    }
   };
 
   const handleReset = () => {
-    console.log('🔄 Réinitialisation aux valeurs par défaut');
+    console.log('🔄 [DiceSettingsModal] Réinitialisation aux valeurs par défaut');
+    console.log('   - Valeurs par défaut:', DEFAULT_DICE_SETTINGS);
     setLocalSettings(DEFAULT_DICE_SETTINGS);
+  };
+
+  const handleChange = (key: keyof DiceSettings, value: any) => {
+    console.log(`🔧 [DiceSettingsModal] Changement: ${key} = ${value}`);
+    setLocalSettings(prev => {
+      const updated = { ...prev, [key]: value };
+      console.log('   - Nouveau state local:', updated);
+      return updated;
+    });
   };
 
   return (
@@ -46,14 +80,14 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
 
         {/* Content */}
         <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-          {/* Texture - TOUTES LES TEXTURES DISPONIBLES */}
+          {/* Texture */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Texture des dés
             </label>
             <select
               value={localSettings.theme}
-              onChange={(e) => setLocalSettings({ ...localSettings, theme: e.target.value })}
+              onChange={(e) => handleChange('theme', e.target.value)}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
             >
               <option value="default">Par défaut</option>
@@ -94,13 +128,13 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               <input
                 type="color"
                 value={localSettings.themeColor}
-                onChange={(e) => setLocalSettings({ ...localSettings, themeColor: e.target.value })}
+                onChange={(e) => handleChange('themeColor', e.target.value)}
                 className="w-16 h-10 rounded cursor-pointer border border-gray-600"
               />
               <input
                 type="text"
                 value={localSettings.themeColor}
-                onChange={(e) => setLocalSettings({ ...localSettings, themeColor: e.target.value })}
+                onChange={(e) => handleChange('themeColor', e.target.value)}
                 className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
                 placeholder="#8b5cf6"
               />
@@ -113,7 +147,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               Sons activés
             </label>
             <button
-              onClick={() => setLocalSettings({ ...localSettings, soundsEnabled: !localSettings.soundsEnabled })}
+              onClick={() => handleChange('soundsEnabled', !localSettings.soundsEnabled)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
                 localSettings.soundsEnabled ? 'bg-purple-600' : 'bg-gray-600'
               }`}
@@ -137,7 +171,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               max="10"
               step="0.5"
               value={localSettings.scale}
-              onChange={(e) => setLocalSettings({ ...localSettings, scale: parseFloat(e.target.value) })}
+              onChange={(e) => handleChange('scale', parseFloat(e.target.value))}
               className="w-full accent-purple-600"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -157,7 +191,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               max="2"
               step="0.1"
               value={localSettings.gravity}
-              onChange={(e) => setLocalSettings({ ...localSettings, gravity: parseFloat(e.target.value) })}
+              onChange={(e) => handleChange('gravity', parseFloat(e.target.value))}
               className="w-full accent-purple-600"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -177,7 +211,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               max="1"
               step="0.1"
               value={localSettings.friction}
-              onChange={(e) => setLocalSettings({ ...localSettings, friction: parseFloat(e.target.value) })}
+              onChange={(e) => handleChange('friction', parseFloat(e.target.value))}
               className="w-full accent-purple-600"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -197,7 +231,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               max="1"
               step="0.1"
               value={localSettings.restitution}
-              onChange={(e) => setLocalSettings({ ...localSettings, restitution: parseFloat(e.target.value) })}
+              onChange={(e) => handleChange('restitution', parseFloat(e.target.value))}
               className="w-full accent-purple-600"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
