@@ -18,6 +18,17 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
   const totalHP = player.current_hp + player.temporary_hp;
 
+  // ✅ Fonction pour jouer le son de dégâts
+  const playSwordSliceSound = () => {
+    try {
+      const audio = new Audio('/Sounds/Damage-sounds/sword-slice.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(err => console.warn('Erreur lecture son dégâts:', err));
+    } catch (error) {
+      console.warn('Impossible de jouer le son de dégâts:', error);
+    }
+  };
+
   const getWoundLevel = () => {
     const percentage = (totalHP / player.max_hp) * 100;
     if (totalHP <= 0) return 'Mort';
@@ -73,7 +84,10 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const damage = parseInt(damageValue) || 0;
     if (damage <= 0) return;
 
-      triggerBloodSplash(damage);
+    // ✅ Jouer le son AVANT les effets visuels
+    playSwordSliceSound();
+    
+    triggerBloodSplash(damage);
 
     let newCurrentHP = player.current_hp;
     let newTempHP = player.temporary_hp;
