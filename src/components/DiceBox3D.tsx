@@ -32,49 +32,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
-  const settingsRef = useRef(effectiveSettings);
-  
-  // ✅ Créer une clé sérialisée comme STATE pour déclencher les re-renders
-  const [settingsKey, setSettingsKey] = useState(() => JSON.stringify(effectiveSettings));
 
   useEffect(() => {
     rollDataRef.current = rollData;
   }, [rollData]);
-
-  // ✅ Détection de changement de settings avec STATE
-  useEffect(() => {
-    const newKey = JSON.stringify(effectiveSettings);
-    
-    if (newKey !== settingsKey) {
-      console.log('🔄 Settings changés, destruction de DiceBox');
-      console.log('   Ancien:', settingsKey);
-      console.log('   Nouveau:', newKey);
-      
-      settingsRef.current = effectiveSettings;
-      setSettingsKey(newKey);
-      
-      // Forcer la destruction de DiceBox
-      if (diceBoxRef.current) {
-        console.log('🗑️ Nettoyage de l\'ancienne instance DiceBox');
-        try {
-          if (typeof diceBoxRef.current.clear === 'function') {
-            diceBoxRef.current.clear();
-          }
-          // Détruire la scène Three.js si possible
-          if (diceBoxRef.current.scene) {
-            diceBoxRef.current.scene.clear();
-          }
-          if (diceBoxRef.current.renderer) {
-            diceBoxRef.current.renderer.dispose();
-          }
-        } catch (e) {
-          console.warn('⚠️ Erreur lors du nettoyage:', e);
-        }
-        diceBoxRef.current = null;
-        setIsInitialized(false);
-      }
-    }
-  }, [effectiveSettings, settingsKey]);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
     console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
@@ -105,49 +66,46 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox (avec settingsKey comme dépendance)
+  // ✅ Initialiser la DiceBox UNE SEULE FOIS au montage
   useEffect(() => {
-    // Ne pas réinitialiser si déjà initialisé avec les mêmes settings
-    if (diceBoxRef.current && isInitialized) {
-      console.log('✓ DiceBox déjà initialisé avec ces settings');
-      return;
-    }
-    
-    if (!isOpen) {
-      console.log('⏸️ Modal fermé, skip initialisation');
-      return;
-    }
+    if (!isOpen) return;
 
     let mounted = true;
+    let initStarted = false;
 
     const initDiceBox = async () => {
+      if (initStarted) {
+        console.log('⚠️ Initialisation déjà en cours, skip');
+        return;
+      }
+      initStarted = true;
+
       try {
-        console.log('🎲 Chargement du module DiceBox...');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🎲 [INIT] Chargement du module DiceBox...');
+        console.log('🎲 [INIT] Settings:', effectiveSettings);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
         if (!mounted) {
-          console.log('⚠️ Composant démonté, annulation');
+          console.log('⚠️ [INIT] Composant démonté, annulation');
           return;
         }
 
-        console.log('🎲 Initialisation DiceBox avec settings:', settingsRef.current);
-        console.log('   - theme:', settingsRef.current.theme);
-        console.log('   - themeColor:', settingsRef.current.themeColor);
-        console.log('   - scale:', settingsRef.current.scale);
-
         const box = new DiceBox('#dice-box-overlay', {
           assetPath: '/assets/dice-box/',
-          theme: settingsRef.current.theme,
-          themeColor: settingsRef.current.themeColor,
-          scale: settingsRef.current.scale,
-          gravity: settingsRef.current.gravity,
+          theme: effectiveSettings.theme,
+          themeColor: effectiveSettings.themeColor,
+          scale: effectiveSettings.scale,
+          gravity: effectiveSettings.gravity,
           mass: 1,
-          friction: settingsRef.current.friction,
-          restitution: settingsRef.current.restitution,
+          friction: effectiveSettings.friction,
+          restitution: effectiveSettings.restitution,
           angularDamping: 0.4,
           linearDamping: 0.5,
-          sounds: settingsRef.current.soundsEnabled,
-          soundVolume: settingsRef.current.soundsEnabled ? 0.5 : 0,
+          sounds: effectiveSettings.soundsEnabled,
+          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
@@ -211,16 +169,19 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           }
         });
 
-        console.log('⏳ Initialisation de DiceBox...');
+        console.log('⏳ [INIT] Initialisation de DiceBox...');
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec thème:', settingsRef.current.theme, 'couleur:', settingsRef.current.themeColor);
+          console.log('✅ [INIT] DiceBox initialisé');
+          console.log('   - Thème:', effectiveSettings.theme);
+          console.log('   - Couleur:', effectiveSettings.themeColor);
+          console.log('   - Scale:', effectiveSettings.scale);
         }
       } catch (error) {
-        console.error('❌ Erreur initialisation DiceBox:', error);
+        console.error('❌ [INIT] Erreur initialisation DiceBox:', error);
         if (mounted) {
           setIsRolling(false);
         }
@@ -230,12 +191,33 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     initDiceBox();
 
     return () => {
+      console.log('🧹 [CLEANUP] Nettoyage DiceBox3D');
       mounted = false;
+      
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+
+      if (diceBoxRef.current) {
+        try {
+          console.log('🗑️ [CLEANUP] Destruction de DiceBox');
+          if (typeof diceBoxRef.current.clear === 'function') {
+            diceBoxRef.current.clear();
+          }
+          if (diceBoxRef.current.scene) {
+            diceBoxRef.current.scene.clear();
+          }
+          if (diceBoxRef.current.renderer) {
+            diceBoxRef.current.renderer.dispose();
+          }
+        } catch (e) {
+          console.warn('⚠️ [CLEANUP] Erreur lors du nettoyage:', e);
+        }
+        diceBoxRef.current = null;
       }
     };
-  }, [isOpen, onClose, settingsKey]); // ✅ Dépend de settingsKey (STATE, pas ref)
+  }, [isOpen]); // ✅ Ne dépend QUE de isOpen - les settings changent via la clé React
 
   // Lancer les dés quand rollData change
   useEffect(() => {
