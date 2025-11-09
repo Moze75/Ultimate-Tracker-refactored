@@ -20,17 +20,19 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   if (!open) return null;
 
   const handleSave = () => {
+    console.log('💾 Sauvegarde des paramètres:', localSettings);
     onSave(localSettings);
     onClose();
   };
 
   const handleReset = () => {
+    console.log('🔄 Réinitialisation aux valeurs par défaut');
     setLocalSettings(DEFAULT_DICE_SETTINGS);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Paramètres des dés 3D</h2>
@@ -43,11 +45,11 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
-          {/* Theme */}
+        <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Texture - TOUTES LES TEXTURES DISPONIBLES */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Thème
+              Texture des dés
             </label>
             <select
               value={localSettings.theme}
@@ -55,8 +57,30 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
             >
               <option value="default">Par défaut</option>
-              <option value="gemstone">Pierre précieuse</option>
+              <option value="astral">Astral</option>
+              <option value="bronze01">Bronze 1</option>
+              <option value="bronze02">Bronze 2</option>
+              <option value="bronze03">Bronze 3</option>
+              <option value="bronze04">Bronze 4</option>
+              <option value="cheetah">Guépard</option>
+              <option value="cloudy">Nuageux</option>
+              <option value="dragon">Dragon</option>
+              <option value="feather">Plume</option>
+              <option value="fire">Feu</option>
+              <option value="glitter">Paillettes</option>
+              <option value="ice">Glace</option>
+              <option value="leopard">Léopard</option>
+              <option value="lizard">Lézard</option>
+              <option value="marble">Marbre</option>
               <option value="metal">Métal</option>
+              <option value="paper">Papier</option>
+              <option value="skulls">Crânes</option>
+              <option value="speckles">Tacheté</option>
+              <option value="stainedglass">Vitrail</option>
+              <option value="stars">Étoiles</option>
+              <option value="stone">Pierre</option>
+              <option value="tiger">Tigre</option>
+              <option value="water">Eau</option>
               <option value="wood">Bois</option>
             </select>
           </div>
@@ -64,14 +88,23 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
           {/* Theme Color */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Couleur du thème
+              Couleur du thème : {localSettings.themeColor}
             </label>
-            <input
-              type="color"
-              value={localSettings.themeColor}
-              onChange={(e) => setLocalSettings({ ...localSettings, themeColor: e.target.value })}
-              className="w-full h-10 rounded cursor-pointer"
-            />
+            <div className="flex gap-2 items-center">
+              <input
+                type="color"
+                value={localSettings.themeColor}
+                onChange={(e) => setLocalSettings({ ...localSettings, themeColor: e.target.value })}
+                className="w-16 h-10 rounded cursor-pointer border border-gray-600"
+              />
+              <input
+                type="text"
+                value={localSettings.themeColor}
+                onChange={(e) => setLocalSettings({ ...localSettings, themeColor: e.target.value })}
+                className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+                placeholder="#8b5cf6"
+              />
+            </div>
           </div>
 
           {/* Sounds */}
@@ -105,8 +138,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               step="0.5"
               value={localSettings.scale}
               onChange={(e) => setLocalSettings({ ...localSettings, scale: parseFloat(e.target.value) })}
-              className="w-full"
+              className="w-full accent-purple-600"
             />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Petit (3)</span>
+              <span>Grand (10)</span>
+            </div>
           </div>
 
           {/* Gravity */}
@@ -121,8 +158,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               step="0.1"
               value={localSettings.gravity}
               onChange={(e) => setLocalSettings({ ...localSettings, gravity: parseFloat(e.target.value) })}
-              className="w-full"
+              className="w-full accent-purple-600"
             />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Faible (0.5)</span>
+              <span>Forte (2)</span>
+            </div>
           </div>
 
           {/* Friction */}
@@ -137,8 +178,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               step="0.1"
               value={localSettings.friction}
               onChange={(e) => setLocalSettings({ ...localSettings, friction: parseFloat(e.target.value) })}
-              className="w-full"
+              className="w-full accent-purple-600"
             />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Glissant (0)</span>
+              <span>Rugueux (1)</span>
+            </div>
           </div>
 
           {/* Restitution */}
@@ -153,8 +198,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               step="0.1"
               value={localSettings.restitution}
               onChange={(e) => setLocalSettings({ ...localSettings, restitution: parseFloat(e.target.value) })}
-              className="w-full"
+              className="w-full accent-purple-600"
             />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Aucun (0)</span>
+              <span>Élastique (1)</span>
+            </div>
           </div>
         </div>
 
