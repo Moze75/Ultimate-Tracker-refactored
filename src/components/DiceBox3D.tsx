@@ -176,45 +176,43 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           sounds: effectiveSettings.soundsEnabled,
           soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
           
-          onRollComplete: (results: any) => {
-            if (!mounted) return;
-            if (hasShownResultRef.current) return;
+        // Dans onRollComplete (vers ligne ~210-230), SUPPRIMEZ les timeouts automatiques :
 
-            let rollValues: number[] = [];
-            let diceTotal = 0;
-            
-            if (Array.isArray(results?.sets)) {
-              results.sets.forEach((set: any) => {
-                if (Array.isArray(set?.rolls)) {
-                  set.rolls.forEach((roll: any) => {
-                    if (typeof roll?.value === 'number') {
-                      rollValues.push(roll.value);
-                    }
-                  });
-                }
-              });
-              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-            }
+onRollComplete: (results: any) => {
+  if (!mounted) return;
+  if (hasShownResultRef.current) return;
 
-            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-            hasShownResultRef.current = true;
-            setResult(finalResult);
-            setIsRolling(false);
-            setShowResult(true);
-
-            // Jouer le son du résultat
-            playResultSound();
-
-            setTimeout(() => { if (mounted) setIsFadingDice(true); }, 500);
-            closeTimeoutRef.current = setTimeout(() => {
-              if (mounted) {
-                setIsFadingAll(true);
-                setTimeout(() => onClose(), 300);
-              }
-            }, 3000);
+  let rollValues: number[] = [];
+  let diceTotal = 0;
+  
+  if (Array.isArray(results?.sets)) {
+    results.sets.forEach((set: any) => {
+      if (Array.isArray(set?.rolls)) {
+        set.rolls.forEach((roll: any) => {
+          if (typeof roll?.value === 'number') {
+            rollValues.push(roll.value);
           }
+        });
+      }
+    });
+    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+  }
+
+  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+  hasShownResultRef.current = true;
+  setResult(finalResult);
+  setIsRolling(false);
+  setShowResult(true);
+
+  // Jouer le son du résultat
+  playResultSound();
+
+  // ✅ SUPPRIMÉ : les timeouts automatiques
+  // Le résultat reste affiché jusqu'au clic de l'utilisateur
+  setTimeout(() => { if (mounted) setIsFadingDice(true); }, 500);
+}
         };
 
         console.log('📦 Config complète:', config);
