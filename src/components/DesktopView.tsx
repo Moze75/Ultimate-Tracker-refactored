@@ -195,6 +195,14 @@ export function DesktopView({
         }}
       /> 
 
+      {/* ✅ Modal paramètres des dés */}
+      <DiceSettingsModal
+        open={showDiceSettings}
+        onClose={() => setShowDiceSettings(false)}
+        settings={diceSettings}
+        onSave={saveDiceSettings}
+      />
+      
       {showConcentrationCheck && (
         <ConcentrationCheckModal
           player={player}
