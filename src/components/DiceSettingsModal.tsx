@@ -90,7 +90,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               onChange={(e) => handleChange('theme', e.target.value)}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
             >
-              <option value="default">Par défaut</option>
+              <option value="">Aucune texture (couleur unie)</option>
               <option value="astral">Astral</option>
               <option value="bronze01">Bronze 1</option>
               <option value="bronze02">Bronze 2</option>
@@ -117,6 +117,27 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               <option value="water">Eau</option>
               <option value="wood">Bois</option>
             </select>
+          </div>
+
+          {/* Matériau - NOUVEAU */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Matériau des dés
+            </label>
+            <select
+              value={localSettings.themeMaterial}
+              onChange={(e) => handleChange('themeMaterial', e.target.value)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="none">Aucun (mat)</option>
+              <option value="plastic">Plastique</option>
+              <option value="metal">Métal</option>
+              <option value="wood">Bois</option>
+              <option value="glass">Verre</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Le matériau affecte le rendu visuel (brillance, reflets)
+            </p>
           </div>
 
           {/* Theme Color */}
