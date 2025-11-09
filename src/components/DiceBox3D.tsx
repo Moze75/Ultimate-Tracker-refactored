@@ -269,22 +269,21 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     pendingResultRef.current = null;
     hasShownResultRef.current = false;
 
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
+let notation = rollData.diceFormula;
+if (rollData.modifier !== 0) {
+  notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+}
 
-    // ✅ Lancement immédiat avec son
-    requestAnimationFrame(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🚀 Lancement immédiat !');
-        
-        // ✅ Jouer le son du lancement de dés
-        playDiceDropSound();
-        
-        diceBoxRef.current.roll(notation);
-      }
-    });
+// ✅ Jouer le son IMMÉDIATEMENT (avant requestAnimationFrame)
+playDiceDropSound();
+
+// Lancement des dés juste après
+requestAnimationFrame(() => {
+  if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+    console.log('🚀 Lancement immédiat !');
+    diceBoxRef.current.roll(notation);
+  }
+});
   }, [isOpen, rollData, isInitialized, playDiceDropSound]);
 
   // Reset à la fermeture
