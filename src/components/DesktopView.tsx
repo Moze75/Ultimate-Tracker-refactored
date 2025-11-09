@@ -45,6 +45,7 @@ export function DesktopView({
   const [concentrationDC, setConcentrationDC] = useState(10);
 
   const deviceType = useResponsiveLayout();
+  const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings(); // ✅ Utilisation du hook
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
