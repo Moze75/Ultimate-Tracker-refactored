@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react'; // ✅ Import de l'icône
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
+import { DiceSettingsModal } from './DiceSettingsModal'; // ✅ Import du nouveau modal
 import { DesktopHeader } from './PlayerProfile/DesktopHeader';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
