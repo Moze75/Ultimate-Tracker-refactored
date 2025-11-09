@@ -209,10 +209,7 @@ onRollComplete: (results: any) => {
   // Jouer le son du résultat
   playResultSound();
 
-  // ✅ SUPPRIMÉ : les timeouts automatiques
-  // Le résultat reste affiché jusqu'au clic de l'utilisateur
-  setTimeout(() => { if (mounted) setIsFadingDice(true); }, 500);
-}
+
         };
 
         console.log('📦 Config complète:', config);
