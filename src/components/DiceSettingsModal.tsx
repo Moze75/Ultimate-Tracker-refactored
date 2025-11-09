@@ -80,102 +80,216 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
 
         {/* Content */}
         <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-          {/* Texture */}
+          
+          {/* Style des dés (Colorset) */}
           <div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">
-    Texture des dés
-  </label>
-  <select
-    value={localSettings.theme}
-    onChange={(e) => handleChange('theme', e.target.value)}
-    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-  >
-    <option value="">Aucune (couleur unie)</option>
-    <option value="astral">Astral</option>
-    <option value="bronze01">Bronze 1</option>
-    <option value="bronze02">Bronze 2</option>
-    <option value="bronze03">Bronze 3</option>
-    <option value="bronze04">Bronze 4</option>
-    <option value="cheetah">Guépard</option>
-    <option value="cloudy">Nuageux</option>
-    <option value="dragon">Dragon</option>
-    <option value="feather">Plume</option>
-    <option value="fire">Feu</option>
-    <option value="glitter">Paillettes</option>
-    <option value="ice">Glace</option>
-    <option value="leopard">Léopard</option>
-    <option value="lizard">Lézard</option>
-    <option value="marble">Marbre</option>
-    <option value="metal">Métal</option>
-    <option value="paper">Papier</option>
-    <option value="skulls">Crânes</option>
-    <option value="speckles">Tacheté</option>
-    <option value="stainedglass">Vitrail</option>
-    <option value="stars">Étoiles</option>
-    <option value="stone">Pierre</option>
-    <option value="tiger">Tigre</option>
-    <option value="water">Eau</option>
-    <option value="wood">Bois</option>
-  </select>
-  <p className="text-xs text-gray-500 mt-1">
-    Laissez "Aucune" pour des dés de couleur unie
-  </p>
-</div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Style des dés
+            </label>
+            <select
+              value={localSettings.theme}
+              onChange={(e) => handleChange('theme', e.target.value)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">💎 Couleur unie personnalisée</option>
+              
+              <optgroup label="🎯 Types de dégâts D&D">
+                <option value="fire">🔥 Feu</option>
+                <option value="ice">❄️ Glace</option>
+                <option value="poison">☠️ Poison</option>
+                <option value="acid">🧪 Acide</option>
+                <option value="thunder">⚡ Tonnerre</option>
+                <option value="lightning">⚡ Foudre</option>
+                <option value="water">💧 Eau</option>
+                <option value="air">💨 Air</option>
+                <option value="earth">🌍 Terre</option>
+                <option value="force">✨ Force</option>
+                <option value="psychic">🧠 Psychique</option>
+                <option value="necrotic">💀 Nécrotique</option>
+                <option value="radiant">☀️ Radiant</option>
+              </optgroup>
+              
+              <optgroup label="🎨 Sets personnalisés">
+                <option value="bronze">⚱️ Bronze Thyléen</option>
+                <option value="dragons">🐉 Dragons</option>
+                <option value="tigerking">🐯 Tigre/Léopard/Guépard</option>
+                <option value="birdup">🦜 Oiseaux</option>
+                <option value="astralsea">🌌 Mer Astrale</option>
+                <option value="glitterparty">✨ Paillettes</option>
+                <option value="starynight">🌃 Nuit Étoilée</option>
+                <option value="bloodmoon">🌙 Lune de Sang</option>
+                <option value="pinkdreams">💖 Rêves Roses</option>
+                <option value="breebaby">🌅 Coucher de Soleil Pastel</option>
+                <option value="inspired">💡 Inspiré</option>
+              </optgroup>
+              
+              <optgroup label="🎨 Couleurs de base">
+                <option value="black">⚫ Noir</option>
+                <option value="white">⚪ Blanc</option>
+                <option value="rainbow">🌈 Arc-en-ciel</option>
+              </optgroup>
+              
+              <optgroup label="🎮 Autres">
+                <option value="covid">🦠 COViD</option>
+                <option value="acleaf">🍃 Animal Crossing</option>
+                <option value="isabelle">🐕 Isabelle</option>
+                <option value="thecage">🎬 Nicolas Cage</option>
+              </optgroup>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {localSettings.theme 
+                ? "Style prédéfini avec texture et couleurs intégrées" 
+                : "Créez votre propre couleur personnalisée ci-dessous"}
+            </p>
+          </div>
 
-{/* Matériau des dés */}
-<div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">
-    Matériau des dés
-  </label>
-  <select
-    value={localSettings.themeMaterial}
-    onChange={(e) => handleChange('themeMaterial', e.target.value)}
-    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-  >
-    <option value="none">Aucun (mat)</option>
-    <option value="plastic">Plastique</option>
-    <option value="metal">Métal</option>
-    <option value="wood">Bois</option>
-    <option value="glass">Verre</option>
-  </select>
-  <p className="text-xs text-gray-500 mt-1">
-    Le matériau affecte le rendu visuel (brillance, reflets)
-  </p>
-</div>
+          {/* Matériau des dés */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Matériau des dés
+            </label>
+            <select
+              value={localSettings.themeMaterial}
+              onChange={(e) => handleChange('themeMaterial', e.target.value)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="none">Mat (aucun effet)</option>
+              <option value="plastic">🧊 Plastique</option>
+              <option value="metal">⚙️ Métal</option>
+              <option value="wood">🪵 Bois</option>
+              <option value="glass">💎 Verre</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Le matériau affecte la brillance et les reflets
+            </p>
+          </div>
 
-{/* Couleur du thème */}
-<div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">
-    Couleur du thème : {localSettings.themeColor}
-  </label>
-  <p className="text-xs text-gray-400 mb-2">
-    {localSettings.theme 
-      ? "Teinte appliquée sur la texture" 
-      : "Couleur principale des dés"}
-  </p>
-  <div className="flex gap-2 items-center">
-    <input
-      type="color"
-      value={localSettings.themeColor}
-      onChange={(e) => handleChange('themeColor', e.target.value)}
-      className="w-16 h-10 rounded cursor-pointer border border-gray-600"
-    />
-    <input
-      type="text"
-      value={localSettings.themeColor}
-      onChange={(e) => handleChange('themeColor', e.target.value)}
-      className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
-      placeholder="#ff0000"
-    />
-  </div>
-</div>
+          {/* Couleur personnalisée - seulement si pas de colorset prédéfini */}
+          {!localSettings.theme && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Couleur personnalisée : {localSettings.themeColor}
+              </label>
+              <p className="text-xs text-gray-400 mb-3">
+                Choisissez la couleur principale de vos dés
+              </p>
+              
+              {/* Palettes de couleurs prédéfinies */}
+              <div className="grid grid-cols-6 gap-2 mb-3">
+                <button 
+                  onClick={() => handleChange('themeColor', '#ff0000')} 
+                  className="w-10 h-10 rounded-lg bg-red-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Rouge"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#ff8800')} 
+                  className="w-10 h-10 rounded-lg bg-orange-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Orange"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#ffd700')} 
+                  className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  style={{backgroundColor: '#ffd700'}}
+                  title="Or"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#00ff00')} 
+                  className="w-10 h-10 rounded-lg bg-green-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Vert"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#0088ff')} 
+                  className="w-10 h-10 rounded-lg bg-blue-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Bleu"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#8800ff')} 
+                  className="w-10 h-10 rounded-lg bg-purple-600 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Violet"
+                  type="button"
+                />
+                
+                <button 
+                  onClick={() => handleChange('themeColor', '#ff00ff')} 
+                  className="w-10 h-10 rounded-lg bg-pink-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Rose"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#00ffff')} 
+                  className="w-10 h-10 rounded-lg bg-cyan-400 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Cyan"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#8B4513')} 
+                  className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  style={{backgroundColor: '#8B4513'}}
+                  title="Marron"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#C0C0C0')} 
+                  className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  style={{backgroundColor: '#C0C0C0'}}
+                  title="Argent"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#ffffff')} 
+                  className="w-10 h-10 rounded-lg bg-white border border-gray-600 hover:ring-2 ring-purple-500 transition-all shadow-md hover:scale-105" 
+                  title="Blanc"
+                  type="button"
+                />
+                <button 
+                  onClick={() => handleChange('themeColor', '#000000')} 
+                  className="w-10 h-10 rounded-lg bg-black border border-gray-600 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+                  title="Noir"
+                  type="button"
+                />
+              </div>
+              
+              {/* Sélecteur de couleur personnalisé */}
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={localSettings.themeColor}
+                  onChange={(e) => handleChange('themeColor', e.target.value)}
+                  className="w-16 h-10 rounded cursor-pointer border border-gray-600"
+                />
+                <input
+                  type="text"
+                  value={localSettings.themeColor}
+                  onChange={(e) => handleChange('themeColor', e.target.value)}
+                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500"
+                  placeholder="#ff0000"
+                />
+              </div>
+            </div>
+          )}
 
-          {/* Sounds */}
+          {/* Info si colorset sélectionné */}
+          {localSettings.theme && (
+            <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3">
+              <p className="text-xs text-blue-200">
+                ℹ️ <strong>Note :</strong> Les styles prédéfinis ont leurs propres couleurs et textures intégrées. 
+                Pour utiliser une couleur personnalisée, sélectionnez "Couleur unie personnalisée".
+              </p>
+            </div>
+          )}
+
+          {/* Sons activés */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-300">
-              Sons activés
+              🔊 Sons activés
             </label>
             <button
+              type="button"
               onClick={() => handleChange('soundsEnabled', !localSettings.soundsEnabled)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
                 localSettings.soundsEnabled ? 'bg-purple-600' : 'bg-gray-600'
@@ -189,10 +303,10 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             </button>
           </div>
 
-          {/* Scale */}
+          {/* Échelle */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Échelle : {localSettings.scale}
+              📏 Échelle des dés : {localSettings.scale}
             </label>
             <input
               type="range"
@@ -209,10 +323,10 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             </div>
           </div>
 
-          {/* Gravity */}
+          {/* Gravité */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Gravité : {localSettings.gravity}
+              🌍 Gravité : {localSettings.gravity}
             </label>
             <input
               type="range"
@@ -232,7 +346,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
           {/* Friction */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Friction : {localSettings.friction}
+              🤚 Friction : {localSettings.friction}
             </label>
             <input
               type="range"
@@ -249,10 +363,10 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             </div>
           </div>
 
-          {/* Restitution */}
+          {/* Rebond (Restitution) */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Rebond : {localSettings.restitution}
+              🏀 Rebond : {localSettings.restitution}
             </label>
             <input
               type="range"
@@ -273,23 +387,26 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-gray-700">
           <button
+            type="button"
             onClick={handleReset}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
           >
-            Réinitialiser
+            🔄 Réinitialiser
           </button>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={onClose}
               className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               Annuler
             </button>
             <button
+              type="button"
               onClick={handleSave}
               className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
             >
-              Enregistrer
+              💾 Enregistrer
             </button>
           </div>
         </div>
