@@ -131,7 +131,7 @@ export function DesktopView({
                   }}
                 />
               </div>
-            </div>
+        
 
             <div className="col-span-8">
               {abilities.length > 0 && (
