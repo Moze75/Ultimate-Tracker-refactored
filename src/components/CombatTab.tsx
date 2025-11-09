@@ -4,7 +4,6 @@ import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
 import { ConditionsSection } from './ConditionsSection';
 import { DiceBox3D } from './DiceBox3D';
-import { createPortal } from 'react-dom';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { StandardActionsSection } from './StandardActionsSection';
 import { AttackSection } from './Combat/AttackSection';
