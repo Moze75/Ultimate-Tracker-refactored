@@ -130,10 +130,22 @@ export function DesktopView({
                     setShowConcentrationCheck(true);
                   }}
                 />
-           
-      
+              </div> 
+            </div>
 
-
+            <div className="col-span-8">
+              {abilities.length > 0 && (
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
+                  <HorizontalAbilityScores
+                    abilities={abilities}
+                    inventory={inventory}
+                    onAbilityClick={handleAbilityClick}
+                    onSavingThrowClick={handleSavingThrowClick}
+                  />
+                </div>
+              )} 
+            </div>
+          </div> 
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4 flex">
