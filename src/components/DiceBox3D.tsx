@@ -14,6 +14,38 @@ interface DiceBox3DProps {
   settings?: DiceSettings;
 }
 
+// ✅ Mapping des textures par colorset
+const COLORSET_TEXTURES: Record<string, string> = {
+  'fire': 'fire',
+  'ice': 'ice',
+  'poison': 'cloudy',
+  'acid': 'marble',
+  'thunder': 'cloudy',
+  'lightning': 'ice',
+  'air': 'cloudy',
+  'water': 'water',
+  'earth': 'speckles',
+  'force': 'stars',
+  'psychic': 'speckles',
+  'necrotic': 'skulls',
+  'radiant': 'paper',
+  'bronze': 'bronze01',
+  'dragons': 'dragon',
+  'tigerking': 'tiger',
+  'birdup': 'bird',
+  'astralsea': 'astral',
+  'glitterparty': 'glitter',
+  'starynight': 'stars',
+  'bloodmoon': 'marble',
+  'pinkdreams': 'skulls',
+  'breebaby': 'marble',
+  'inspired': 'none',
+  'black': 'none',
+  'white': 'none',
+  'rainbow': 'stars',
+  'covid': 'skulls',
+};
+
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
@@ -66,7 +98,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS au montage du composant
+  // ✅ Initialiser UNE SEULE FOIS
   useEffect(() => {
     if (!isOpen) return;
     if (diceBoxRef.current && isInitialized) {
@@ -80,15 +112,29 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       try {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+        console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
+        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
         if (!mounted) return;
 
+        // ✅ Déterminer la texture selon le colorset
+        const textureForTheme = effectiveSettings.theme 
+          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
+          : 'none';
+
+        console.log('🎨 Texture sélectionnée:', textureForTheme);
+
         const config = {
           assetPath: '/assets/dice-box/',
+          
           theme_colorset: effectiveSettings.theme || 'custom',
+          
+          // ✅ AJOUTER theme_texture
+          theme_texture: textureForTheme,
+          
           theme_customColorset: !effectiveSettings.theme ? {
             name: 'custom',
             foreground: '#ffffff',
@@ -98,7 +144,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             texture: 'none',
             material: effectiveSettings.themeMaterial
           } : undefined,
+          
           theme_material: effectiveSettings.themeMaterial || "plastic",
+          
           scale: effectiveSettings.scale,
           gravity: effectiveSettings.gravity,
           mass: 1,
@@ -147,13 +195,15 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           }
         };
 
+        console.log('📦 Config complète:', config);
+
         const box = new DiceBox('#dice-box-overlay', config);
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé et prêt !');
+          console.log('✅ DiceBox initialisé !');
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -169,10 +219,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      // ❌ NE PAS détruire diceBoxRef.current ici !
-      // On le garde en mémoire pour les prochains lancers
     };
-  }, [isOpen]); // Se lance seulement quand isOpen change
+  }, [isOpen]);
 
   // Lancer les dés
   useEffect(() => {
@@ -187,7 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
     console.log('🎲 Lancer #' + thisRollId);
 
-    // ✅ Clear les dés précédents SANS détruire les textures
     if (typeof diceBoxRef.current.clear === 'function') {
       diceBoxRef.current.clear();
     }
@@ -209,7 +256,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
         diceBoxRef.current.roll(notation);
       }
-    }, 150); // Petit délai pour que clear() finisse
+    }, 150);
   }, [isOpen, rollData, isInitialized]);
 
   // Reset à la fermeture
