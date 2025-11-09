@@ -8,7 +8,7 @@ interface DesktopActionsGridProps {
   player: Player;
   onUpdate: (player: Player) => void;
   onOpenCampaigns: () => void;
-  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
+  onOpenDiceSettings?: () => void;
 }
 
 export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDiceSettings }: DesktopActionsGridProps) {
@@ -165,7 +165,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDi
   };
 
   return (
- <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mr-4 auto-rows-fr">
+    <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mr-4 auto-rows-fr">
       <button
         onClick={handleLongRest}
         className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
@@ -193,8 +193,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDi
 
       <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]">
         <div className="text-gray-400 text-xs flex items-center gap-1">
-       
-        <span className="whitespace-nowrap text-sm">Inspi</span>
+          <span className="whitespace-nowrap text-sm">Inspi</span>
         </div>
         <div className="flex items-center gap-0.5">  
           <button
@@ -291,7 +290,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDi
         <Scroll className="w-4 h-4 ml-2" />
       </button>
 
-      {/* ✅ Nouveau bouton Paramètres */}
+      {/* ✅ Bouton Paramètres des dés */}
       {onOpenDiceSettings && (
         <button
           onClick={onOpenDiceSettings}
