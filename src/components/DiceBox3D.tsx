@@ -14,7 +14,7 @@ interface DiceBox3DProps {
   settings?: DiceSettings;
 }
 
-// ✅ Mapping des textures par colorset
+// Mapping des textures par colorset
 const COLORSET_TEXTURES: Record<string, string> = {
   'fire': 'fire',
   'ice': 'ice',
@@ -69,7 +69,18 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     rollDataRef.current = rollData;
   }, [rollData]);
 
-  // ✅ Fonction pour jouer le son du résultat
+  // ✅ Fonction pour jouer le son du lancement de dés
+  const playDiceDropSound = useCallback(() => {
+    try {
+      const audio = new Audio('/assets/dice-box/sounds/dice-drop/dice_drop.mp3');
+      audio.volume = 0.6;
+      audio.play().catch(err => console.warn('Erreur lecture son lancement:', err));
+    } catch (error) {
+      console.warn('Impossible de jouer le son de lancement:', error);
+    }
+  }, []);
+
+  // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
     try {
       const audio = new Audio('/assets/dice-box/sounds/dicepopup/dice_results.mp3');
@@ -109,7 +120,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS
+  // Initialiser UNE SEULE FOIS
   useEffect(() => {
     if (!isOpen) return;
     if (diceBoxRef.current && isInitialized) {
@@ -193,7 +204,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             setIsRolling(false);
             setShowResult(true);
 
-            // ✅ Jouer le son du résultat
+            // Jouer le son du résultat
             playResultSound();
 
             setTimeout(() => { if (mounted) setIsFadingDice(true); }, 500);
@@ -263,14 +274,18 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
     }
 
-    // ✅ Lancement immédiat avec requestAnimationFrame
+    // ✅ Lancement immédiat avec son
     requestAnimationFrame(() => {
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
         console.log('🚀 Lancement immédiat !');
+        
+        // ✅ Jouer le son du lancement de dés
+        playDiceDropSound();
+        
         diceBoxRef.current.roll(notation);
       }
     });
-  }, [isOpen, rollData, isInitialized]);
+  }, [isOpen, rollData, isInitialized, playDiceDropSound]);
 
   // Reset à la fermeture
   useEffect(() => {
@@ -318,7 +333,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         setResult(randomResult);
         setShowResult(true);
         
-        // ✅ Jouer le son aussi lors de l'arrêt forcé
+        // Jouer le son aussi lors de l'arrêt forcé
         playResultSound();
         
         closeTimeoutRef.current = setTimeout(() => handleClose(), 2000);
