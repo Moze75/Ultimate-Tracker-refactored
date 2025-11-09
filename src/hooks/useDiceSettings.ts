@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export interface DiceSettings {
-  theme: string;
+  theme: string; // Nom de la texture
+  themeMaterial: 'none' | 'metal' | 'wood' | 'glass' | 'plastic';
   themeColor: string;
   soundsEnabled: boolean;
   scale: number;
@@ -11,14 +12,16 @@ export interface DiceSettings {
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
-  theme: '', // ✅ Chaîne vide = pas de texture, juste la couleur
+  theme: '', // Pas de texture par défaut
+  themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
   scale: 6,
   gravity: 1,
   friction: 0.8,
-  restitution: 0,
+  restitution: 0.5
 };
+
 
 const STORAGE_KEY = 'dice-settings';
 
