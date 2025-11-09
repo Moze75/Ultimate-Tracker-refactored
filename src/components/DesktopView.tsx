@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
@@ -7,7 +7,7 @@ import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
-import { DiceBox3DInline } from './DiceBox3DInline';
+import { DiceRollerLazy } from './DiceRollerLazy';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
@@ -30,7 +30,18 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [diceRoll, setDiceRoll] = useState<{ show: boolean; result: number; modifier: number; description: string } | null>(null);   
+  
+  const [diceRoll, setDiceRoll] = useState<{ 
+    id: number;
+    show: boolean; 
+    result: number; 
+    modifier: number; 
+    description: string;
+    formula: string;
+  } | null>(null);
+  
+  const rollIdRef = useRef(0);
+  
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
@@ -44,35 +55,50 @@ export function DesktopView({
   const handleAbilityClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: ability.modifier,
-      description: `Test de ${ability.name}`
+      description: `Test de ${ability.name}`,
+      formula: '1d20'
     });
-    setTimeout(() => setDiceRoll(null), 3000);
   };
 
   const handleSavingThrowClick = (ability: Ability) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: ability.savingThrow,
-      description: `Sauvegarde de ${ability.name}`
+      description: `Sauvegarde de ${ability.name}`,
+      formula: '1d20'
     });
-    setTimeout(() => setDiceRoll(null), 3000);
   };
 
   const handleSkillClick = (skillName: string, bonus: number) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     setDiceRoll({
+      id: ++rollIdRef.current,
       show: true,
       result: roll,
       modifier: bonus,
-      description: `Test de ${skillName}`
+      description: `Test de ${skillName}`,
+      formula: '1d20'
     });
-    setTimeout(() => setDiceRoll(null), 3000);
-  };
+  }; // ✅ FERMETURE CORRECTE DE handleSkillClick
+
+  // ✅ useMemo EN DEHORS des fonctions
+  const memoizedRollData = useMemo(() => {
+    if (!diceRoll) return null;
+    
+    return {
+      type: 'ability' as const,
+      attackName: diceRoll.description,
+      diceFormula: diceRoll.formula,
+      modifier: diceRoll.modifier
+    };
+  }, [diceRoll?.id]);
 
   return (
     <>
@@ -98,7 +124,6 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Header (30% transparence = /70 = 70% opacité) */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
             <DesktopHeader
               player={player}
@@ -111,7 +136,7 @@ export function DesktopView({
             />
           </div>
 
-    <div className="grid grid-cols-12 gap-4">
+          <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
               <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
                 <HPManagerConnected 
@@ -141,42 +166,35 @@ export function DesktopView({
 
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4 flex">
-    {/* Ajout d'un conteneur similaire pour harmoniser */}
-    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
-      <StandaloneSkillsSection
-        player={player}
-        onSkillClick={handleSkillClick}
-      />
-    </div>
-  </div>
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+                <StandaloneSkillsSection
+                  player={player}
+                  onSkillClick={handleSkillClick}
+                />
+              </div>
+            </div>
 
-  <div className="col-span-8 flex">
-    <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
-      <TabbedPanel
-        player={player}
-        inventory={inventory}
-        onPlayerUpdate={onPlayerUpdate}
-        onInventoryUpdate={onInventoryUpdate}
-        classSections={classSections}
-         hiddenTabs={['bag']} // ← Ajouter cette ligne
-      />
-    </div>
-  </div>
-</div>
+            <div className="col-span-8 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+                <TabbedPanel
+                  player={player}
+                  inventory={inventory}
+                  onPlayerUpdate={onPlayerUpdate}
+                  onInventoryUpdate={onInventoryUpdate}
+                  classSections={classSections}
+                  hiddenTabs={['bag']}
+                />
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>
 
-// APRÈS
-<DiceBox3DInline
+<DiceRollerLazy
   isOpen={diceRoll !== null}
   onClose={() => setDiceRoll(null)}
-  rollData={diceRoll ? {
-    type: 'ability',
-    attackName: diceRoll.description,
-    diceFormula: '1d20',
-    modifier: diceRoll.modifier
-  } : null}
+  rollData={diceRoll}
 />
 
       <PlayerProfileSettingsModal
@@ -207,4 +225,4 @@ export function DesktopView({
       )}
     </>
   );
-}
+} 
