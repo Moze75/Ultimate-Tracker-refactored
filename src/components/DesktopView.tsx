@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Settings } from 'lucide-react'; // ✅ Import de l'icône
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
-import { DiceSettingsModal } from './DiceSettingsModal'; // ✅ Import du nouveau modal
+import { DiceSettingsModal } from './DiceSettingsModal';
 import { DesktopHeader } from './PlayerProfile/DesktopHeader';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
@@ -12,7 +11,7 @@ import { TabbedPanel } from './TabbedPanel';
 import { DiceRollerLazy } from './DiceRollerLazy';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
-import { useDiceSettings } from '../hooks/useDiceSettings'; // ✅ Import du hook
+import { useDiceSettings } from '../hooks/useDiceSettings';
 
 interface DesktopViewProps {
   player: Player;
@@ -33,7 +32,7 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [showDiceSettings, setShowDiceSettings] = useState(false); // ✅ State pour le modal des dés
+  const [showDiceSettings, setShowDiceSettings] = useState(false);
   const [diceRoll, setDiceRoll] = useState<{
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
@@ -45,7 +44,7 @@ export function DesktopView({
   const [concentrationDC, setConcentrationDC] = useState(10);
 
   const deviceType = useResponsiveLayout();
-  const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings(); // ✅ Utilisation du hook
+  const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
@@ -102,18 +101,19 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-       
-            
-              {/* ✅ Bouton paramètres des dés */} 
-              <button
-                onClick={() => setShowDiceSettings(true)}
-                className="ml-4 p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg transition-colors group"
-                title="Paramètres des dés"
-              >
-                <Settings className="w-5 h-5 text-purple-400 group-hover:rotate-90 transition-transform duration-300" />
-              </button>
-            </div>
-          </div> 
+          {/* Header */}
+          <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
+            <DesktopHeader
+              player={player}
+              inventory={inventory}
+              onUpdate={onPlayerUpdate}
+              onEdit={() => setSettingsOpen(true)}
+              onOpenCampaigns={() => setShowCampaignModal(true)}
+              onOpenDiceSettings={() => setShowDiceSettings(true)}
+              activeTooltip={activeTooltip}
+              setActiveTooltip={setActiveTooltip}
+            />
+          </div>
           
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
@@ -175,6 +175,7 @@ export function DesktopView({
         isOpen={diceRoll !== null}
         onClose={() => setDiceRoll(null)}
         rollData={diceRoll}
+        settings={diceSettings}
       />
 
       <PlayerProfileSettingsModal
@@ -213,4 +214,4 @@ export function DesktopView({
       )}
     </>
   );
-} 
+}
