@@ -343,9 +343,9 @@ requestAnimationFrame(() => {
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound]);
 
- if (!isOpen) return null;
+  if (!isOpen) return null;
 
-  return createPortal(
+  return (
     <>
       <div 
         onClick={handleOverlayClick}
@@ -362,7 +362,7 @@ requestAnimationFrame(() => {
           }`}
           style={{ 
             touchAction: 'none',
-            maxWidth: '100vw',
+            maxWidth: '100vw', 
             maxHeight: '100vh',
             position: 'fixed',
             overflow: 'hidden'
