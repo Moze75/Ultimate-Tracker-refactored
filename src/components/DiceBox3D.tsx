@@ -210,6 +210,7 @@ onRollComplete: (results: any) => {
   playResultSound();
 
 
+}
         };
 
         console.log('📦 Config complète:', config);
