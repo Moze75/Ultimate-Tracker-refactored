@@ -1,19 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-const canvasStyle = `
-  #dice-box-overlay canvas {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 45 !important;
-    pointer-events: none !important;
-  }
-`;
-
-interface DiceBox3DInlineProps {
+interface DiceBox3DProps {
   isOpen: boolean;
   onClose: () => void;
   rollData: {
@@ -24,90 +13,64 @@ interface DiceBox3DInlineProps {
   } | null;
 }
 
-export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlineProps) {
+export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
-  const isInitializingRef = useRef(false);
-  const rollIdRef = useRef(0);
   const [result, setResult] = useState<{ total: number; rolls: number[] } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialisation de la DiceBox (une seule fois)
+  // Initialiser la DiceBox
   useEffect(() => {
-    if (!isOpen) return;
-    if (diceBoxRef.current) {
-      console.log('✅ DiceBox déjà prête');
-      setIsReady(true);
-      return;
-    }
-    if (isInitializingRef.current) {
-      console.log('⏳ Initialisation déjà en cours...');
-      return;
-    }
+    if (!isOpen || diceBoxRef.current) return;
 
-    isInitializingRef.current = true;
     let mounted = true;
 
     const initDiceBox = async () => {
       try {
-        console.log('🎲 Début initialisation DiceBox...');
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const container = document.getElementById('dice-box-overlay');
-        if (!container) {
-          console.error('❌ Container introuvable');
-          isInitializingRef.current = false;
-          return;
-        }
+        // Import dynamique pour lazy loading
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
-        console.log('✅ Container trouvé:', container.clientWidth, 'x', container.clientHeight);
+        if (!mounted) return;
 
-        const { default: DiceBox } = await import('@3d-dice/dice-box-threejs');
-        
-        if (!mounted) {
-          console.log('⚠️ Composant démonté');
-          isInitializingRef.current = false;
-          return;
-        }
-
-        console.log('🎲 Création de la DiceBox...');
-        
-        const box = new DiceBox('#dice-box-overlay', {
-          assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.5/dist/assets/',
+        // ✅ Créer la DiceBox avec le sélecteur
+        const box = new DiceBox('#dice-box-container', {
+          assetPath: '/assets/dice-box/',
           theme: 'default',
           themeColor: '#8b5cf6',
           scale: 6,
-          gravity: 2,
-          mass: 1,
-          friction: 0.8,
-          restitution: 0.3,
-          linearDamping: 0.5,
-          angularDamping: 0.4,
-          spinForce: 6,
-          throwForce: 5,
-          startingHeight: 8,
-          settleTimeout: 5000,
-          offscreen: false,
-          delay: 10,
-          enableShadows: true,
-          lightIntensity: 0.9
+          onRollComplete: (results: any) => {
+            if (!mounted) return;
+            
+            console.log('🎲 Résultats bruts:', results);
+            
+            // Extraire les résultats
+            const rolls = results?.rolls || [];
+            const total = rolls.reduce((sum: number, roll: any) => {
+              return sum + (roll?.value || 0);
+            }, 0);
+
+            setResult({
+              total: total + (rollData?.modifier || 0),
+              rolls: rolls.map((r: any) => r?.value || 0)
+            });
+            setIsRolling(false);
+          }
         });
 
-        console.log('🎲 Initialisation...');
+        // ✅ Initialiser avec initialize() au lieu de init()
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
-          setIsReady(true);
-          isInitializingRef.current = false;
-          console.log('✅✅✅ DiceBox prête !');
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé');
         }
       } catch (error) {
-        console.error('❌ Erreur initialisation:', error);
-        isInitializingRef.current = false;
-        setIsReady(false);
+        console.error('❌ Erreur initialisation DiceBox:', error);
+        if (mounted) {
+          setIsRolling(false);
+        }
       }
     };
 
@@ -115,71 +78,26 @@ export function DiceBox3DInline({ isOpen, onClose, rollData }: DiceBox3DInlinePr
 
     return () => {
       mounted = false;
+      if (diceBoxRef.current) {
+        try {
+          diceBoxRef.current.clear();
+        } catch (e) {
+          console.warn('Erreur clear DiceBox:', e);
+        }
+        diceBoxRef.current = null;
+      }
+      setIsInitialized(false);
     };
   }, [isOpen]);
 
- // Lancer les dés
-useEffect(() => {
-  // Vérifications préliminaires
-  if (!isOpen || !rollData || !isReady || !diceBoxRef.current) {
-    console.log('⏸️ Conditions non remplies:', { isOpen, hasRollData: !!rollData, isReady, hasDiceBox: !!diceBoxRef.current });
-    return;
-  }
+  // Lancer les dés quand rollData change
+  useEffect(() => {
+    if (!isOpen || !rollData || !diceBoxRef.current || isRolling || !isInitialized) return;
 
-  // Si un lancer est déjà en cours, on annule
-  if (isRolling) {
-    console.log('⏸️ Un lancer est déjà en cours, skip');
-    return;
-  }
+    console.log('🎲 Tentative de lancer:', rollData);
 
-  // ID unique pour tracer ce lancer
-  const currentRollId = ++rollIdRef.current;
-  console.log(`🎲 [Roll #${currentRollId}] Nouveau lancer:`, rollData);
-
-  // Timer pour décaler légèrement le lancer
-  const prepTimer = setTimeout(() => {
-    if (!diceBoxRef.current) {
-      console.warn(`⚠️ [Roll #${currentRollId}] DiceBox disparue`);
-      return;
-    }
-
-    console.log(`🎲 [Roll #${currentRollId}] Démarrage...`);
     setIsRolling(true);
     setResult(null);
-
-    // Timeout de sécurité : reset après 10s si aucun résultat
-    const safetyTimer = setTimeout(() => {
-      console.warn(`⚠️ [Roll #${currentRollId}] Timeout de sécurité - reset forcé`);
-      setIsRolling(false);
-    }, 10000);
-
-    // Définir le callback AVANT de lancer
-    diceBoxRef.current.onRollComplete = (results: any) => {
-      clearTimeout(safetyTimer);
-      console.log(`🎯 [Roll #${currentRollId}] Résultats:`, results);
-      
-      // Extraction des valeurs des dés
-      const sets = results?.sets || [];
-      const rolls: number[] = [];
-      
-      sets.forEach((set: any) => {
-        if (set?.rolls) {
-          set.rolls.forEach((roll: any) => {
-            rolls.push(roll?.value || 0);
-          });
-        }
-      });
-      
-      const finalResult = {
-        total: results?.total || 0,
-        rolls: rolls
-      };
-
-      console.log(`✅ [Roll #${currentRollId}] Terminé:`, finalResult);
-      
-      setResult(finalResult);
-      setIsRolling(false);
-    };
 
     // Construire la notation (ex: "1d20+3")
     let notation = rollData.diceFormula;
@@ -189,89 +107,36 @@ useEffect(() => {
         : `${rollData.modifier}`;
     }
 
-    console.log(`🎲 [Roll #${currentRollId}] Notation:`, notation);
+    console.log('🎲 Notation:', notation);
 
     try {
-      // Clear la scène des dés précédents
-      if (diceBoxRef.current.clear) {
-        diceBoxRef.current.clear();
-      }
-      
-      // Délai court avant de lancer pour que clear() soit effectif
-      const rollTimer = setTimeout(() => {
-        if (diceBoxRef.current && diceBoxRef.current.roll) {
-          console.log(`🎲 [Roll #${currentRollId}] ROLL!`);
-          diceBoxRef.current.roll(notation);
-        } else {
-          console.error(`❌ [Roll #${currentRollId}] Méthode roll() non disponible`);
-          setIsRolling(false);
-          clearTimeout(safetyTimer);
-        }
-      }, 200);
-
-      // Cleanup du rollTimer si le composant unmount
-      return () => clearTimeout(rollTimer);
-      
+      diceBoxRef.current.roll(notation);
     } catch (error) {
-      console.error(`❌ [Roll #${currentRollId}] Erreur:`, error);
+      console.error('❌ Erreur lancer de dés:', error);
       setIsRolling(false);
-      clearTimeout(safetyTimer);
     }
-  }, 300);
-
-  // Cleanup du prepTimer si le composant unmount ou les deps changent
-  return () => clearTimeout(prepTimer);
-  
-}, [isOpen, rollData?.attackName, rollData?.diceFormula, rollData?.modifier, isReady, isRolling]);
-
-  // Reset quand on ferme
-  useEffect(() => {
-    if (!isOpen) {
-      console.log('🔄 Reset : fermeture de la modale');
-      setResult(null);
-      setIsRolling(false);
-      
-      if (diceBoxRef.current && diceBoxRef.current.clear) {
-        try {
-          diceBoxRef.current.clear();
-        } catch (e) {
-          console.warn('⚠️ Erreur lors du clear:', e);
-        }
-      }
-    }
-  }, [isOpen]);
+  }, [isOpen, rollData, isRolling, isInitialized]);
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      <style>{canvasStyle}</style>
-
-      {/* Container 3D */}
+  const modalContent = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div 
-        id="dice-box-overlay"
-        ref={containerRef}
-        style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw', 
-          height: '100vh',
-          zIndex: 45,
-          pointerEvents: 'none',
-          backgroundColor: 'transparent'
-        }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        onClick={onClose}
       />
 
-      {/* Badge résultat */}
-      <div className="fixed top-4 right-4 z-[60] animate-in slide-in-from-top duration-300">
-        <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 p-4 min-w-[280px]">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex-1">
-              <h4 className="text-white font-bold text-lg mb-1">
-                {rollData?.attackName}
-              </h4>
-              <p className="text-purple-200 text-sm">
+      {/* Modal */}
+      <div className="relative z-10 w-full max-w-4xl">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-900/90 to-blue-900/90 backdrop-blur-md rounded-t-xl border border-purple-500/30 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white">
+                {rollData?.attackName || 'Lancer de dés'}
+              </h3>
+              <p className="text-sm text-purple-200">
                 {rollData?.diceFormula}
                 {rollData && rollData.modifier !== 0 && (
                   <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
@@ -280,50 +145,66 @@ useEffect(() => {
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors pointer-events-auto"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
+        </div>
 
-          {result && !isRolling ? (
-            <div className="text-center py-2 animate-in zoom-in duration-300">
-              <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 mb-2 drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">
-                {result.total}
-              </div>
-              <div className="text-sm text-gray-300 mb-3">
-                {result.rolls.length > 0 ? (
-                  <>
-                    Dés: <span className="font-mono text-purple-300">[{result.rolls.join(', ')}]</span>
-                    {rollData && rollData.modifier !== 0 && (
-                      <span className="text-purple-400"> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-gray-400">Calcul en cours...</span>
-                )}
-              </div>
-              <div className="text-xs text-purple-300 italic flex items-center justify-center gap-1">
-                <span className="text-lg">👆</span>
-                <span>Cliquez n'importe où pour fermer</span>
+        {/* Scene 3D */}
+        <div className="relative bg-gradient-to-b from-gray-900 to-black rounded-b-xl border-x border-b border-purple-500/30 overflow-hidden">
+          <div 
+            id="dice-box-container"
+            ref={containerRef} 
+            className="w-full h-[500px]"
+            style={{ touchAction: 'none' }}
+          />
+
+          {/* Résultat */}
+          {result && !isRolling && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
+              <div className="text-center">
+                <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                  {result.total}
+                </div>
+                <div className="text-sm text-gray-400">
+                  Dés: [{result.rolls.join(', ')}]
+                  {rollData && rollData.modifier !== 0 && (
+                    <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
+                  )}
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-4">
-              <div className="text-white text-base animate-pulse">
-                {!isReady ? '⏳ Initialisation des dés 3D...' : '🎲 Lancer en cours...'}
+          )}
+
+          {/* Loading/Initialisation */}
+          {!isInitialized && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+              <div className="text-center">
+                <img 
+                  src="/icons/wmremove-transformed.png" 
+                  alt="Chargement..." 
+                  className="animate-spin h-12 w-12 mx-auto mb-4 object-contain"
+                  style={{ backgroundColor: 'transparent' }}
+                />
+                <div className="text-white text-xl">Initialisation des dés 3D...</div>
+              </div>
+            </div>
+          )}
+
+          {/* Rolling */}
+          {isRolling && isInitialized && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
+              <div className="text-white text-xl animate-pulse">
+                🎲 Lancer en cours...
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto cursor-pointer"
-        onClick={onClose}
-        title="Cliquez pour fermer"
-      />
-    </>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
