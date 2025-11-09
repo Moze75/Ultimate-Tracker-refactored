@@ -101,10 +101,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   // ✅ Initialiser UNE SEULE FOIS
   useEffect(() => {
     if (!isOpen) return;
-    if (diceBoxRef.current && isInitialized) {
-      console.log('✓ DiceBox déjà initialisé');
-      return;
-    }
+if (diceBoxRef.current) {
+  console.log('⚡ Lancement instantané !');
+  diceBoxRef.current.roll(notation);
+}
 
     let mounted = true;
 
