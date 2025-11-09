@@ -95,30 +95,23 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
 
         // ✅ Configuration correcte selon la documentation officielle
- const config = {
+const config = {
   assetPath: '/assets/dice-box/',
   
-  // ✅ Si un colorset prédéfini est sélectionné, l'utiliser
-  // ✅ Sinon, utiliser "custom" avec des couleurs personnalisées
+  // Utiliser le colorset prédéfini OU custom
   theme_colorset: effectiveSettings.theme || 'custom',
   
-  // ✅ Créer un colorset personnalisé quand pas de thème prédéfini
+  // Si pas de thème : créer un colorset custom avec la couleur choisie
   theme_customColorset: !effectiveSettings.theme ? {
     name: 'custom',
-    foreground: '#ffffff', // Chiffres blancs
-    background: effectiveSettings.themeColor, // ✅ Couleur unique, pas un array
+    foreground: '#ffffff',
+    background: effectiveSettings.themeColor, // Couleur UNIQUE
     outline: effectiveSettings.themeColor,
-    edge: effectiveSettings.themeColor,
-    texture: 'none', // Pas de texture pour couleur unie
+    texture: 'none',
     material: effectiveSettings.themeMaterial
   } : undefined,
   
-  // ✅ Le matériau s'applique toujours
   theme_material: effectiveSettings.themeMaterial || "plastic",
-  
-  // ❌ NE PAS utiliser theme_texture ou themeColor directement
-  // Les colorsets gèrent tout !
-  
   scale: effectiveSettings.scale,
   gravity: effectiveSettings.gravity,
   mass: 1,
