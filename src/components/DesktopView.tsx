@@ -33,6 +33,7 @@ export function DesktopView({
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [showDiceSettings, setShowDiceSettings] = useState(false); // ✅ State pour le modal des dés
   const [diceRoll, setDiceRoll] = useState<{
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
