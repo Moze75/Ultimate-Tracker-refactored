@@ -191,14 +191,16 @@ export function DesktopView({
         </div>
       </div>
 
-      <DiceBox3DInline
-        isOpen={diceRoll !== null}
-        onClose={() => {
-          console.log('🔴 Fermeture DiceBox');
-          setDiceRoll(null);
-        }}
-        rollData={memoizedRollData}
-      />
+<DiceRoller
+  isOpen={diceRoll !== null}
+  onClose={() => setDiceRoll(null)}
+  rollData={diceRoll ? {
+    type: 'ability',
+    attackName: diceRoll.description,
+    diceFormula: '1d20',
+    modifier: diceRoll.modifier
+  } : null}
+/>
 
       <PlayerProfileSettingsModal
         open={settingsOpen}
