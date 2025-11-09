@@ -223,41 +223,44 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, [isOpen]);
 
   // Lancer les dés
-  useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
+ useEffect(() => {
+  if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
-    const rollSignature = JSON.stringify(rollData);
-    if (rollSignature === lastRollDataRef.current) return;
+  const rollSignature = JSON.stringify(rollData);
+  if (rollSignature === lastRollDataRef.current) return;
 
-    lastRollDataRef.current = rollSignature;
-    currentRollIdRef.current += 1;
-    const thisRollId = currentRollIdRef.current;
+  lastRollDataRef.current = rollSignature;
+  currentRollIdRef.current += 1;
+  const thisRollId = currentRollIdRef.current;
 
-    console.log('🎲 Lancer #' + thisRollId);
+  console.log('🎲 Lancer #' + thisRollId);
 
-    if (typeof diceBoxRef.current.clear === 'function') {
-      diceBoxRef.current.clear();
+  // ✅ Clear synchrone avant le lancer
+  if (typeof diceBoxRef.current.clear === 'function') {
+    diceBoxRef.current.clear();
+  }
+
+  setIsRolling(true);
+  setResult(null);
+  setShowResult(false);
+  setIsFadingDice(false);
+  setIsFadingAll(false);
+  pendingResultRef.current = null;
+  hasShownResultRef.current = false;
+
+  let notation = rollData.diceFormula;
+  if (rollData.modifier !== 0) {
+    notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+  }
+
+  // ✅ Lancement immédiat (avec micro-délai pour laisser React render)
+  requestAnimationFrame(() => {
+    if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+      console.log('🚀 Lancement immédiat !');
+      diceBoxRef.current.roll(notation);
     }
-
-    setIsRolling(true);
-    setResult(null);
-    setShowResult(false);
-    setIsFadingDice(false);
-    setIsFadingAll(false);
-    pendingResultRef.current = null;
-    hasShownResultRef.current = false;
-
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
-
-    setTimeout(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        diceBoxRef.current.roll(notation);
-      }
-    }, 150);
-  }, [isOpen, rollData, isInitialized]);
+  });
+}, [isOpen, rollData, isInitialized]);
 
   // Reset à la fermeture
   useEffect(() => {
