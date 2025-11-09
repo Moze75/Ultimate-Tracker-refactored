@@ -82,85 +82,93 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Texture */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Texture des dés
-            </label>
-            <select
-              value={localSettings.theme}
-              onChange={(e) => handleChange('theme', e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">Aucune texture (couleur unie)</option>
-              <option value="astral">Astral</option>
-              <option value="bronze01">Bronze 1</option>
-              <option value="bronze02">Bronze 2</option>
-              <option value="bronze03">Bronze 3</option>
-              <option value="bronze04">Bronze 4</option>
-              <option value="cheetah">Guépard</option>
-              <option value="cloudy">Nuageux</option>
-              <option value="dragon">Dragon</option>
-              <option value="feather">Plume</option>
-              <option value="fire">Feu</option>
-              <option value="glitter">Paillettes</option>
-              <option value="ice">Glace</option>
-              <option value="leopard">Léopard</option>
-              <option value="lizard">Lézard</option>
-              <option value="marble">Marbre</option>
-              <option value="metal">Métal</option>
-              <option value="paper">Papier</option>
-              <option value="skulls">Crânes</option>
-              <option value="speckles">Tacheté</option>
-              <option value="stainedglass">Vitrail</option>
-              <option value="stars">Étoiles</option>
-              <option value="stone">Pierre</option>
-              <option value="tiger">Tigre</option>
-              <option value="water">Eau</option>
-              <option value="wood">Bois</option>
-            </select>
-          </div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">
+    Texture des dés
+  </label>
+  <select
+    value={localSettings.theme}
+    onChange={(e) => handleChange('theme', e.target.value)}
+    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+  >
+    <option value="">Aucune (couleur unie)</option>
+    <option value="astral">Astral</option>
+    <option value="bronze01">Bronze 1</option>
+    <option value="bronze02">Bronze 2</option>
+    <option value="bronze03">Bronze 3</option>
+    <option value="bronze04">Bronze 4</option>
+    <option value="cheetah">Guépard</option>
+    <option value="cloudy">Nuageux</option>
+    <option value="dragon">Dragon</option>
+    <option value="feather">Plume</option>
+    <option value="fire">Feu</option>
+    <option value="glitter">Paillettes</option>
+    <option value="ice">Glace</option>
+    <option value="leopard">Léopard</option>
+    <option value="lizard">Lézard</option>
+    <option value="marble">Marbre</option>
+    <option value="metal">Métal</option>
+    <option value="paper">Papier</option>
+    <option value="skulls">Crânes</option>
+    <option value="speckles">Tacheté</option>
+    <option value="stainedglass">Vitrail</option>
+    <option value="stars">Étoiles</option>
+    <option value="stone">Pierre</option>
+    <option value="tiger">Tigre</option>
+    <option value="water">Eau</option>
+    <option value="wood">Bois</option>
+  </select>
+  <p className="text-xs text-gray-500 mt-1">
+    Laissez "Aucune" pour des dés de couleur unie
+  </p>
+</div>
 
-          {/* Matériau - NOUVEAU */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Matériau des dés
-            </label>
-            <select
-              value={localSettings.themeMaterial}
-              onChange={(e) => handleChange('themeMaterial', e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="none">Aucun (mat)</option>
-              <option value="plastic">Plastique</option>
-              <option value="metal">Métal</option>
-              <option value="wood">Bois</option>
-              <option value="glass">Verre</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Le matériau affecte le rendu visuel (brillance, reflets)
-            </p>
-          </div>
+{/* Matériau des dés */}
+<div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">
+    Matériau des dés
+  </label>
+  <select
+    value={localSettings.themeMaterial}
+    onChange={(e) => handleChange('themeMaterial', e.target.value)}
+    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+  >
+    <option value="none">Aucun (mat)</option>
+    <option value="plastic">Plastique</option>
+    <option value="metal">Métal</option>
+    <option value="wood">Bois</option>
+    <option value="glass">Verre</option>
+  </select>
+  <p className="text-xs text-gray-500 mt-1">
+    Le matériau affecte le rendu visuel (brillance, reflets)
+  </p>
+</div>
 
-          {/* Theme Color */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Couleur du thème : {localSettings.themeColor}
-            </label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={localSettings.themeColor}
-                onChange={(e) => handleChange('themeColor', e.target.value)}
-                className="w-16 h-10 rounded cursor-pointer border border-gray-600"
-              />
-              <input
-                type="text"
-                value={localSettings.themeColor}
-                onChange={(e) => handleChange('themeColor', e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
-                placeholder="#8b5cf6"
-              />
-            </div>
-          </div>
+{/* Couleur du thème */}
+<div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">
+    Couleur du thème : {localSettings.themeColor}
+  </label>
+  <p className="text-xs text-gray-400 mb-2">
+    {localSettings.theme 
+      ? "Teinte appliquée sur la texture" 
+      : "Couleur principale des dés"}
+  </p>
+  <div className="flex gap-2 items-center">
+    <input
+      type="color"
+      value={localSettings.themeColor}
+      onChange={(e) => handleChange('themeColor', e.target.value)}
+      className="w-16 h-10 rounded cursor-pointer border border-gray-600"
+    />
+    <input
+      type="text"
+      value={localSettings.themeColor}
+      onChange={(e) => handleChange('themeColor', e.target.value)}
+      className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+      placeholder="#ff0000"
+    />
+  </div>
+</div>
 
           {/* Sounds */}
           <div className="flex items-center justify-between">
