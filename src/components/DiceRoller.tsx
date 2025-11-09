@@ -1,121 +1,306 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { Dice6, Target, Sword, X, RotateCcw, Dices } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+interface DiceResult {
+  die: number;
+  result: number;
+  isMax: boolean;
+  isMin: boolean;
+}
+
+interface RollResult {
+  dice: DiceResult[];
+  modifier: number;
+  total: number;
+  type: 'attack' | 'damage' | 'ability' | 'saving-throw' | 'skill';
+  attackName: string;
+}
 
 interface DiceRollerProps {
   isOpen: boolean;
   onClose: () => void;
   rollData: {
-    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    type: 'attack' | 'damage' | 'ability' | 'saving-throw' | 'skill';
     attackName: string;
     diceFormula: string;
     modifier: number;
   } | null;
 }
 
+const parseDiceFormula = (formula: string): { count: number; sides: number }[] => {
+  const dicePattern = /(\d+)d(\d+)/g;
+  const dice: { count: number; sides: number }[] = [];
+  let match;
+  
+  while ((match = dicePattern.exec(formula)) !== null) {
+    dice.push({
+      count: parseInt(match[1]),
+      sides: parseInt(match[2])
+    });
+  }
+  
+  return dice;
+};
+
+const rollDie = (sides: number): number => {
+  return Math.floor(Math.random() * sides) + 1;
+};
+
+const getDiceIcon = (sides: number) => {
+  // Retourne une représentation textuelle du dé selon ses faces
+  switch (sides) {
+    case 4: return '🔺'; // Tétraèdre
+    case 6: return '⚀'; // Cube
+    case 8: return '🔸'; // Octaèdre
+    case 10: return '🔟'; // Décaèdre
+    case 12: return '🔷'; // Dodécaèdre
+    case 20: return (
+      <img 
+        src="/icons/wmremove-transformed.png" 
+        alt="D20" 
+        className="w-16 h-16 object-contain"
+        style={{ backgroundColor: 'transparent' }}
+      />
+    ); // Votre icône personnalisée pour le D20
+    case 100: return '💯'; // Dé de pourcentage
+    default: return (
+      <img 
+        src="/icons/wmremove-transformed.png" 
+        alt="Dé" 
+        className="w-16 h-16 object-contain"
+        style={{ backgroundColor: 'transparent' }}
+      />
+    ); // Utilise aussi votre icône par défaut
+  }
+};
+
+// ✅ Fonction pour obtenir l'icône et la couleur selon le type
+const getRollTypeInfo = (type: string) => {
+  switch (type) {
+    case 'attack':
+      return {
+        icon: <Target className="w-6 h-6 text-blue-400" />,
+        title: 'Jet d\'attaque',
+        color: 'text-blue-400'
+      };
+    case 'damage':
+      return {
+        icon: <Sword className="w-6 h-6 text-red-400" />,
+        title: 'Jet de dégâts',
+        color: 'text-red-400'
+      };
+    case 'ability':
+      return {
+        icon: <Dices className="w-6 h-6 text-purple-400" />,
+        title: '', // Le titre sera le nom de la caractéristique (ex: "Test de Force")
+        color: 'text-purple-400'
+      };
+    case 'saving-throw':
+      return {
+        icon: <Target className="w-6 h-6 text-orange-400" />,
+        title: '', // Le titre sera "Jet de sauvegarde de X"
+        color: 'text-orange-400'
+      };
+    case 'skill':
+      return {
+        icon: <Dices className="w-6 h-6 text-green-400" />,
+        title: '', // Le titre sera "Test de compétence\nNom"
+        color: 'text-green-400'
+      };
+    default:
+      return {
+        icon: <Dice6 className="w-6 h-6 text-gray-400" />,
+        title: 'Jet de dés',
+        color: 'text-gray-400'
+      };
+  }
+};
+
 export function DiceRoller({ isOpen, onClose, rollData }: DiceRollerProps) {
-  const [result, setResult] = useState<number | null>(null);
-  const [rolls, setRolls] = useState<number[]>([]);
+  const [rollResult, setRollResult] = useState<RollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !rollData) return;
+    if (isOpen && rollData) {
+      performRoll();
+    }
+  }, [isOpen, rollData]);
+
+  const performRoll = () => {
+    if (!rollData) return;
 
     setIsRolling(true);
-    setResult(null);
-    setRolls([]);
+    setShowResult(false);
 
-    // Simuler le lancer de dés
+    // Animation delay
     setTimeout(() => {
-      const diceMatch = rollData.diceFormula.match(/(\d+)d(\d+)/);
-      if (diceMatch) {
-        const numDice = parseInt(diceMatch[1]);
-        const diceSize = parseInt(diceMatch[2]);
-        const newRolls: number[] = [];
-        
-        for (let i = 0; i < numDice; i++) {
-          newRolls.push(Math.floor(Math.random() * diceSize) + 1);
-        }
-        
-        const total = newRolls.reduce((sum, roll) => sum + roll, 0) + rollData.modifier;
-        setRolls(newRolls);
-        setResult(total);
-        setIsRolling(false);
+      const diceGroups = parseDiceFormula(rollData.diceFormula);
+      const allDice: DiceResult[] = [];
 
-        // Auto-fermeture après 3 secondes
-        setTimeout(() => {
-          onClose();
-        }, 3000);
-      }
-    }, 500);
-  }, [isOpen, rollData, onClose]);
+      diceGroups.forEach(({ count, sides }) => {
+        for (let i = 0; i < count; i++) {
+          const result = rollDie(sides);
+          allDice.push({
+            die: sides,
+            result,
+            isMax: result === sides,
+            isMin: result === 1
+          });
+        }
+      });
+
+      const total = allDice.reduce((sum, die) => sum + die.result, 0) + rollData.modifier;
+
+      setRollResult({
+        dice: allDice,
+        modifier: rollData.modifier,
+        total,
+        type: rollData.type,
+        attackName: rollData.attackName
+      });
+
+      setIsRolling(false);
+      setShowResult(true);
+    }, 800);
+  };
+
+  const reroll = () => {
+    setShowResult(false);
+    performRoll();
+  };
 
   if (!isOpen || !rollData) return null;
 
-  return (
-    <>
-      {/* Dés qui roulent en overlay fullscreen (pas de backdrop) */}
-      <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center">
-        <div className="relative">
-          {/* Animation de dés (vous pouvez ajouter votre propre animation ici) */}
-{isRolling && (
-  <div className="text-[14rem] drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]">
-    <div className="animate-spin" style={{ animationDuration: '0.5s' }}>
-      🎲
-    </div>
-  </div>
-)}
-        </div>
-      </div>
+  const typeInfo = getRollTypeInfo(rollData.type);
 
-      {/* Résultat en haut à droite */}
-      <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top duration-300">
-        <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-xl rounded-xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 p-4 min-w-[280px] pointer-events-auto">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex-1">
-              <h4 className="text-white font-bold text-lg mb-1">
-                {rollData.attackName}
-              </h4>
-              <p className="text-purple-200 text-sm">
-                {rollData.diceFormula}
-                {rollData.modifier !== 0 && (
-                  <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-md w-full border border-gray-700/50 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-red-600/20 to-orange-600/20 border-b border-gray-700/50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {typeInfo.icon}
+              <div>
+                {typeInfo.title ? (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-100">
+                      {typeInfo.title}
+                    </h3>
+                    <p className="text-sm text-gray-400">{rollData.attackName}</p>
+                  </>
+                ) : (
+                  <h3 className="text-lg font-semibold text-gray-100 whitespace-pre-line">
+                    {rollData.attackName}
+                  </h3>
                 )}
-              </p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-white" />
+              <X size={20} />
             </button>
           </div>
+        </div>
 
-          {/* Résultat */}
-          {result !== null && !isRolling ? (
-            <div className="text-center py-2 animate-in zoom-in duration-300">
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-2">
-                {result}
-              </div>
-              <div className="text-xs text-gray-300">
-                {rolls.length > 0 && (
-                  <>
-                    Dés: [{rolls.join(', ')}]
-                    {rollData.modifier !== 0 && (
-                      <span> {rollData.modifier >= 0 ? '+' : ''}{rollData.modifier}</span>
-                    )}
-                  </>
-                )}
-              </div>
+        {/* Content */}
+        <div className="p-6">
+          {/* Dice Animation */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              {rollData && (
+                <div className={`text-6xl transition-all duration-300 ${
+                  isRolling ? 'animate-spin' : ''
+                }`}>
+                  {getDiceIcon(parseDiceFormula(rollData.diceFormula)[0]?.sides || 20)}
+                </div>
+              )}
+              {isRolling && (
+                <div className="absolute inset-0 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-2">
-              <div className="text-white text-sm animate-pulse">
-                🎲 Lancer en cours...
+          </div>
+
+          {/* Formula Display */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-2 bg-gray-800/50 rounded-lg px-4 py-2 border border-gray-700/50">
+              <span className="text-gray-300 font-mono">
+                {rollData.diceFormula}
+                {rollData.modifier !== 0 && (
+                  <span className={rollData.modifier > 0 ? 'text-green-400' : 'text-red-400'}>
+                    {rollData.modifier > 0 ? '+' : ''}{rollData.modifier}
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* Results */}
+          {showResult && rollResult && (
+            <div className="space-y-4 animate-fade-in">
+              {/* Individual Dice */}
+              <div className="flex flex-wrap justify-center gap-2">
+                {rollResult.dice.map((die, index) => (
+                  <div
+                    key={index}
+                    className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center font-bold text-lg transition-all duration-300 ${
+                      die.isMax 
+                        ? 'border-green-400 bg-green-400/20 text-green-400 shadow-lg shadow-green-400/20' 
+                        : die.isMin 
+                        ? 'border-red-400 bg-red-400/20 text-red-400 shadow-lg shadow-red-400/20'
+                        : 'border-gray-600 bg-gray-700/50 text-gray-300'
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {die.result}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calculation */}
+              <div className="text-center space-y-2">
+                <div className="text-sm text-gray-400">
+                  {rollResult.dice.map(die => die.result).join(' + ')}
+                  {rollResult.modifier !== 0 && (
+                    <span className={rollResult.modifier > 0 ? 'text-green-400' : 'text-red-400'}>
+                      {' '}{rollResult.modifier > 0 ? '+' : ''}{rollResult.modifier}
+                    </span>
+                  )}
+                </div>
+                
+                {/* Total Result */}
+                <div className={`text-4xl font-bold ${typeInfo.color}`}>
+                  {rollResult.total}
+                </div>
               </div>
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={reroll}
+              disabled={isRolling}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={18} />
+              Relancer
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
