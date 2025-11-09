@@ -102,19 +102,20 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Header */}
+          {/* Header avec bouton paramètres des dés - ✅ CORRECTION ICI */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
-            <DesktopHeader
-              player={player}
-              inventory={inventory}
-              onUpdate={onPlayerUpdate}
-              onEdit={() => setSettingsOpen(true)}
-              onOpenCampaigns={() => setShowCampaignModal(true)}
-              activeTooltip={activeTooltip}
-              setActiveTooltip={setActiveTooltip}
-            />
-          </div>
-
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <DesktopHeader
+                  player={player}
+                  inventory={inventory}
+                  onUpdate={onPlayerUpdate}
+                  onEdit={() => setSettingsOpen(true)}
+                  onOpenCampaigns={() => setShowCampaignModal(true)}
+                  activeTooltip={activeTooltip}
+                  setActiveTooltip={setActiveTooltip}
+                />
+              </div>
               {/* ✅ Bouton paramètres des dés */}
               <button
                 onClick={() => setShowDiceSettings(true)}
@@ -124,7 +125,7 @@ export function DesktopView({
                 <Settings className="w-5 h-5 text-purple-400 group-hover:rotate-90 transition-transform duration-300" />
               </button>
             </div>
-          </div> 
+          </div>
           
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">
