@@ -27,7 +27,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasShownResultRef = useRef(false);
-  const isInitializingRef = useRef(false); // ✅ Empêcher double initialisation
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -67,17 +66,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser SEULEMENT à la première ouverture, puis réutiliser
+  // ✅ Initialiser la DiceBox à chaque ouverture
   useEffect(() => {
     if (!isOpen) return;
 
-    // ✅ Empêcher la double initialisation en StrictMode
-    if (isInitializingRef.current || (diceBoxRef.current && isInitialized)) {
-      console.log('✓ DiceBox déjà en cours d\'initialisation ou déjà prêt');
-      return;
-    }
-
-    isInitializingRef.current = true;
     let mounted = true;
 
     const initDiceBox = async () => {
@@ -95,7 +87,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         if (!mounted) {
           console.log('⚠️ [INIT] Composant démonté, annulation');
-          isInitializingRef.current = false;
           return;
         }
 
@@ -124,8 +115,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           angularDamping: 0.4,
           linearDamping: 0.5,
           
-          sounds: false, // ✅ Désactiver les sons temporairement
-          soundVolume: 0,
+          // ✅ Réactiver les sons
+          sounds: effectiveSettings.soundsEnabled,
+          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
           
           onRollComplete: (results: any) => {
             if (!mounted) return;
@@ -200,7 +192,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          isInitializingRef.current = false;
           console.log('✅ [INIT] DiceBox initialisé avec succès');
           console.log('   - Thème appliqué:', effectiveSettings.theme || 'aucun');
           console.log('   - Matériau appliqué:', effectiveSettings.themeMaterial);
@@ -209,7 +200,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
       } catch (error) {
         console.error('❌ [INIT] Erreur initialisation DiceBox:', error);
-        isInitializingRef.current = false;
         if (mounted) {
           setIsRolling(false);
         }
@@ -227,16 +217,37 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
 
-      // ✅ Clear seulement les dés, pas le contexte WebGL
-      if (diceBoxRef.current && typeof diceBoxRef.current.clear === 'function') {
+      // ✅ Détruire complètement la DiceBox
+      if (diceBoxRef.current) {
         try {
-          diceBoxRef.current.clear();
+          if (typeof diceBoxRef.current.clear === 'function') {
+            diceBoxRef.current.clear();
+          }
+          // Nettoyer Three.js
+          if (diceBoxRef.current.scene) {
+            diceBoxRef.current.scene.traverse((obj: any) => {
+              if (obj.material) {
+                if (obj.material.map) obj.material.map.dispose();
+                if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+                if (obj.material.normalMap) obj.material.normalMap.dispose();
+                obj.material.dispose();
+              }
+              if (obj.geometry) {
+                obj.geometry.dispose();
+              }
+            });
+          }
+          if (diceBoxRef.current.renderer) {
+            diceBoxRef.current.renderer.dispose();
+          }
         } catch (e) {
-          console.warn('⚠️ Erreur lors du clear:', e);
+          console.warn('⚠️ Erreur nettoyage:', e);
         }
+        diceBoxRef.current = null;
       }
+      setIsInitialized(false);
     };
-  }, [isOpen]); // ← NE dépend que de isOpen
+  }, [isOpen]); // ← Recrée à chaque ouverture
 
   // Lancer les dés quand rollData change
   useEffect(() => {
@@ -255,15 +266,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     const thisRollId = currentRollIdRef.current;
 
     console.log('🎲 Nouveau lancer #' + thisRollId + ':', rollData);
-
-    // ✅ Clear avant chaque lancer
-    if (diceBoxRef.current && typeof diceBoxRef.current.clear === 'function') {
-      try {
-        diceBoxRef.current.clear();
-      } catch (e) {
-        console.warn('⚠️ Erreur clear avant lancer:', e);
-      }
-    }
 
     setIsRolling(true);
     setResult(null);
