@@ -112,6 +112,7 @@ export function DesktopView({
                   onUpdate={onPlayerUpdate}
                   onEdit={() => setSettingsOpen(true)}
                   onOpenCampaigns={() => setShowCampaignModal(true)}
+                   onOpenDiceSettings={() => setShowDiceSettings(true)} // ✅ Ajoutez cette ligne
                   activeTooltip={activeTooltip}
                   setActiveTooltip={setActiveTooltip}
                 />
