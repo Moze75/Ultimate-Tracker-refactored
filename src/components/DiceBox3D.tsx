@@ -20,6 +20,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const [isFadingDice, setIsFadingDice] = useState(false);
   const [isFadingAll, setIsFadingAll] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false); // ✅ Nouveau state pour le loader
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -32,6 +33,38 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   useEffect(() => {
     rollDataRef.current = rollData;
   }, [rollData]);
+
+  // ✅ Fonction pour parser la formule de dés et générer un résultat aléatoire
+  const generateRandomResult = useCallback((formula: string, modifier: number) => {
+    console.log('🎲 Génération résultat aléatoire pour:', formula);
+    
+    // Parser la formule (ex: "1d20", "2d6", "3d8")
+    const match = formula.match(/(\d+)d(\d+)/i);
+    if (!match) {
+      console.warn('⚠️ Formule invalide, utilisation par défaut');
+      return {
+        total: Math.floor(Math.random() * 20) + 1 + modifier,
+        rolls: [Math.floor(Math.random() * 20) + 1],
+        diceTotal: Math.floor(Math.random() * 20) + 1
+      };
+    }
+
+    const numDice = parseInt(match[1]);
+    const diceSize = parseInt(match[2]);
+    
+    const rolls: number[] = [];
+    for (let i = 0; i < numDice; i++) {
+      rolls.push(Math.floor(Math.random() * diceSize) + 1);
+    }
+    
+    const diceTotal = rolls.reduce((sum, val) => sum + val, 0);
+    
+    return {
+      total: diceTotal + modifier,
+      rolls,
+      diceTotal
+    };
+  }, []);
 
   // Initialiser la DiceBox UNE SEULE FOIS au montage
   useEffect(() => {
@@ -59,42 +92,97 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
-            console.log('🎲 Résultats bruts onRollComplete:', results);
-            console.log('🎲 rollDataRef.current:', rollDataRef.current);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('🎲🎲🎲 DEBUG COMPLET onRollComplete 🎲🎲🎲');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('📦 Type de results:', typeof results);
+            console.log('📦 Keys de results:', results ? Object.keys(results) : 'null');
+            console.log('📦 results complet (JSON):');
+            try {
+              console.log(JSON.stringify(results, null, 2));
+            } catch (e) {
+              console.log('(non-sérialisable)', results);
+            }
+            console.log('📦 results.rolls:', results?.rolls);
+            console.log('📦 results.value:', results?.value);
+            console.log('📦 results.total:', results?.total);
+            console.log('📦 rollDataRef.current:', rollDataRef.current);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
-            // ✅ CORRECTION 1 : Extraire correctement les valeurs des dés
-            const rolls = results?.rolls || [];
-            const rollValues = rolls.map((r: any) => r?.value || 0);
-            const diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+            // ✅ Extraire les valeurs des dés
+            let rollValues: number[] = [];
+            let diceTotal = 0;
+            
+            // Tentative 1 : results.rolls est un tableau
+            if (Array.isArray(results?.rolls)) {
+              console.log('✅ results.rolls est un tableau, longueur:', results.rolls.length);
+              
+              // Vérifier la structure de chaque élément
+              results.rolls.forEach((roll: any, index: number) => {
+                console.log(`   Roll[${index}]:`, roll);
+                console.log(`   - Type:`, typeof roll);
+                console.log(`   - Keys:`, roll ? Object.keys(roll) : 'null');
+                console.log(`   - roll.value:`, roll?.value);
+                console.log(`   - roll.qty:`, roll?.qty);
+                console.log(`   - roll.sides:`, roll?.sides);
+              });
+              
+              // Extraire les valeurs
+              rollValues = results.rolls.map((r: any) => {
+                if (typeof r === 'number') return r;
+                if (r?.value !== undefined) return r.value;
+                if (r?.qty !== undefined) return r.qty;
+                return 0;
+              }).filter((v: number) => v > 0);
+              
+              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+              console.log('✅ Valeurs extraites:', rollValues, 'Total:', diceTotal);
+            } else {
+              console.log('⚠️ results.rolls n\'est pas un tableau ou est undefined');
+            }
 
-            console.log('🎲 Valeurs des dés extraites:', rollValues);
-            console.log('🎲 Total des dés:', diceTotal);
-
-            // ✅ Utiliser le total calculé par la bibliothèque
+            // ✅ Récupérer le total final
             let finalTotal: number;
+            const modifier = rollDataRef.current?.modifier || 0;
             
             if (typeof results?.value === 'number') {
               finalTotal = results.value;
-              console.log('✅ Utilisation du total de la bibliothèque:', finalTotal);
+              console.log('✅ Utilisation de results.value:', finalTotal);
+              
+              // Si on n'a pas les valeurs individuelles, calculer à rebours
+              if (rollValues.length === 0 && finalTotal > 0) {
+                diceTotal = finalTotal - modifier;
+                console.log('⚠️ Calcul à rebours: diceTotal =', diceTotal);
+                // On ne peut pas reconstituer les valeurs individuelles
+                rollValues = []; // Rester vide pour affichage alternatif
+              }
             } else if (typeof results?.total === 'number') {
               finalTotal = results.total;
-              console.log('✅ Utilisation du total (fallback):', finalTotal);
+              console.log('✅ Utilisation de results.total:', finalTotal);
+              
+              if (rollValues.length === 0 && finalTotal > 0) {
+                diceTotal = finalTotal - modifier;
+                console.log('⚠️ Calcul à rebours: diceTotal =', diceTotal);
+                rollValues = [];
+              }
             } else {
-              const modifier = rollDataRef.current?.modifier || 0;
+              // Fallback : calcul manuel
               finalTotal = diceTotal + modifier;
               console.log('⚠️ Calcul manuel du total:', finalTotal);
             }
 
             const finalResult = {
               total: finalTotal,
-              rolls: rollValues, // ✅ Utiliser rollValues au lieu de rolls.map
+              rolls: rollValues,
               diceTotal: diceTotal
             };
 
-            console.log('✅ Résultat calculé:', finalResult);
-            console.log('   - Dés:', finalResult.rolls, '= ', finalResult.diceTotal);
-            console.log('   - Modificateur:', rollDataRef.current?.modifier);
+            console.log('✅✅✅ Résultat FINAL:', finalResult);
             console.log('   - Total:', finalResult.total);
+            console.log('   - Rolls:', finalResult.rolls);
+            console.log('   - DiceTotal:', finalResult.diceTotal);
+            console.log('   - Modifier:', modifier);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
             // ✅ Stocker IMMÉDIATEMENT dans la ref
             pendingResultRef.current = finalResult;
@@ -102,6 +190,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             // Puis dans le state
             setResult(finalResult);
             setIsRolling(false);
+            setIsCalculating(false); // ✅ Arrêter le loader
             setShowResult(true);
 
             // ✅ Fade les dés après 500ms
@@ -134,6 +223,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         console.error('❌ Erreur initialisation DiceBox:', error);
         if (mounted) {
           setIsRolling(false);
+          setIsCalculating(false);
         }
       }
     };
@@ -173,6 +263,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     setShowResult(false);
     setIsFadingDice(false);
     setIsFadingAll(false);
+    setIsCalculating(false);
     pendingResultRef.current = null;
 
     // Construire la notation
@@ -195,6 +286,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     } catch (error) {
       console.error('❌ Erreur lancer de dés:', error);
       setIsRolling(false);
+      setIsCalculating(false);
     }
   }, [isOpen, rollData, isInitialized]);
 
@@ -207,6 +299,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       setIsFadingDice(false);
       setIsFadingAll(false);
       setShowResult(false);
+      setIsCalculating(false);
       pendingResultRef.current = null;
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
@@ -228,74 +321,108 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     }, 300);
   }, [onClose]);
 
-  // ✅ CORRECTION 2 : Gestion du clic sur l'overlay
+  // ✅ NOUVELLE LOGIQUE : Gestion du clic sur l'overlay
   const handleOverlayClick = useCallback(() => {
-    console.log('🖱️ Clic overlay');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🖱️ CLIC OVERLAY');
     console.log('   - isRolling:', isRolling);
     console.log('   - showResult:', showResult);
+    console.log('   - isCalculating:', isCalculating);
     console.log('   - result:', result);
     console.log('   - pendingResultRef.current:', pendingResultRef.current);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     if (isRolling) {
-      console.log('⏸️ Arrêt forcé du jet - fade dés + affichage résultat');
+      console.log('⏸️ ARRÊT FORCÉ du jet');
       
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
       
-      // ✅ Fade uniquement les dés
+      // ✅ Fade les dés immédiatement
       setIsFadingDice(true);
       setIsRolling(false);
       
-      // ✅ Fonction pour afficher le résultat et programmer la fermeture
-      const displayResultAndClose = (resultData: { total: number; rolls: number[]; diceTotal: number }) => {
-        console.log('✅ Affichage du résultat:', resultData);
-        setResult(resultData);
-        setShowResult(true);
-        
-        // Fermer après 2 secondes
-        closeTimeoutRef.current = setTimeout(() => {
-          handleClose();
-        }, 2000);
-      };
+      // ✅ Afficher le loader "Calcul du résultat..."
+      setIsCalculating(true);
+      setShowResult(true);
       
-      if (pendingResultRef.current) {
-        console.log('✅ Résultat disponible immédiatement');
-        displayResultAndClose(pendingResultRef.current);
-      } else {
-        console.log('⏳ Attente du résultat...');
-        // ✅ Attendre max 1 seconde pour le résultat
-        let attempts = 0;
-        const checkInterval = setInterval(() => {
-          attempts++;
-          if (pendingResultRef.current) {
-            console.log('✅ Résultat trouvé après', attempts * 100, 'ms');
-            clearInterval(checkInterval);
-            displayResultAndClose(pendingResultRef.current);
-          } else if (attempts >= 10) {
-            console.log('❌ Timeout : aucun résultat après 1s, fermeture');
-            clearInterval(checkInterval);
+      // ✅ Vérifier si la bibliothèque a une méthode pour forcer l'arrêt
+      if (diceBoxRef.current) {
+        console.log('🔍 Méthodes disponibles sur diceBoxRef.current:', Object.keys(diceBoxRef.current));
+        
+        // Tenter d'appeler une méthode stop/clear si elle existe
+        if (typeof diceBoxRef.current.stop === 'function') {
+          console.log('✅ Appel de diceBoxRef.current.stop()');
+          diceBoxRef.current.stop();
+        } else if (typeof diceBoxRef.current.clear === 'function') {
+          console.log('✅ Appel de diceBoxRef.current.clear()');
+          diceBoxRef.current.clear();
+        } else {
+          console.log('⚠️ Aucune méthode stop/clear trouvée');
+        }
+      }
+      
+      // ✅ Attendre le résultat de la bibliothèque (max 1.5s)
+      let attempts = 0;
+      const maxAttempts = 15;
+      
+      const checkInterval = setInterval(() => {
+        attempts++;
+        console.log(`⏳ Tentative ${attempts}/${maxAttempts} de récupération du résultat...`);
+        
+        if (pendingResultRef.current) {
+          console.log('✅ Résultat trouvé après', attempts * 100, 'ms');
+          clearInterval(checkInterval);
+          setIsCalculating(false);
+          setResult(pendingResultRef.current);
+          
+          // Fermer après 2s
+          closeTimeoutRef.current = setTimeout(() => {
+            handleClose();
+          }, 2000);
+        } else if (attempts >= maxAttempts) {
+          console.log('❌ TIMEOUT : Génération d\'un résultat aléatoire');
+          clearInterval(checkInterval);
+          
+          // ✅ Générer un résultat aléatoire en fallback
+          if (rollDataRef.current) {
+            const randomResult = generateRandomResult(
+              rollDataRef.current.diceFormula,
+              rollDataRef.current.modifier
+            );
+            console.log('🎲 Résultat aléatoire généré:', randomResult);
+            
+            pendingResultRef.current = randomResult;
+            setResult(randomResult);
+            setIsCalculating(false);
+            
+            // Fermer après 2s
+            closeTimeoutRef.current = setTimeout(() => {
+              handleClose();
+            }, 2000);
+          } else {
+            console.log('❌ Impossible de générer un résultat, fermeture');
             handleClose();
           }
-        }, 100);
-      }
+        }
+      }, 100);
+      
     } else if (showResult) {
-      // Si le résultat est déjà affiché, fermer immédiatement
       console.log('👋 Fermeture (résultat déjà affiché)');
       handleClose();
     } else {
-      // Cas improbable
       console.log('👋 Fermeture normale');
       handleClose();
     }
-  }, [isRolling, showResult, result, handleClose]);
+  }, [isRolling, showResult, isCalculating, result, handleClose, generateRandomResult]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* ✅ Overlay cliquable - ne fade que si isFadingAll */}
+      {/* ✅ Overlay cliquable */}
       <div 
         onClick={handleOverlayClick}
         className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
@@ -303,7 +430,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         }`}
         style={{ backgroundColor: 'transparent' }}
       >
-        {/* ✅ Container des dés - fade indépendamment avec isFadingDice */}
+        {/* ✅ Container des dés - fade indépendamment */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
@@ -320,8 +447,8 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         />
       </div>
 
-      {/* ✅ Popup de résultat - reste visible même quand les dés fade */}
-      {result && showResult && (
+      {/* ✅ Popup de résultat OU loader */}
+      {showResult && (
         <div 
           className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
             isFadingAll ? 'opacity-0' : 'opacity-100'
@@ -337,22 +464,44 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
           <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-md rounded-xl border border-purple-500/50 p-8 shadow-2xl animate-[fadeIn_0.3s_ease-in]">
             <div className="text-center">
               <p className="text-sm text-purple-200 mb-2">{rollDataRef.current?.attackName}</p>
-              <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-3">
-                {result.total}
-              </div>
-              <div className="text-sm text-gray-300">
-                {/* ✅ Affichage correct des valeurs des dés */}
-                Dés: [{result.rolls.join(', ')}] = {result.diceTotal}
-                {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                  <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
-                )}
-              </div>
+              
+              {/* ✅ Si en train de calculer, afficher un loader */}
+              {isCalculating ? (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-400 mb-4"></div>
+                  <p className="text-purple-300 text-lg">Calcul du résultat...</p>
+                </div>
+              ) : result ? (
+                <>
+                  <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-3">
+                    {result.total}
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    {/* ✅ Affichage adaptatif selon si on a les valeurs individuelles */}
+                    {result.rolls.length > 0 ? (
+                      <>
+                        Dés: [{result.rolls.join(', ')}] = {result.diceTotal}
+                        {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                          <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {rollDataRef.current?.diceFormula}: {result.diceTotal}
+                        {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                          <span> {rollDataRef.current.modifier >= 0 ? ' + ' : ' - '}{Math.abs(rollDataRef.current.modifier)}</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ Bouton fermer - fade seulement avec isFadingAll */}
+      {/* ✅ Bouton fermer */}
       <button
         onClick={handleClose}
         className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
