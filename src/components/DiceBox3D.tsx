@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
-import { createPortal } from 'react-dom';
+ 
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -345,7 +345,7 @@ requestAnimationFrame(() => {
 
   if (!isOpen) return null;
 
-  return createPortal(
+  return (
     <>
       <div 
         onClick={handleOverlayClick}
@@ -369,20 +369,6 @@ requestAnimationFrame(() => {
           }}
         />
       </div>
-
-      {result && showResult && (
-        // ... GARDEZ TOUT le code existant de la popup de résultat ...
-      )}
-
-      <button
-        onClick={handleClose}
-        // ... GARDEZ TOUT le code existant du bouton ...
-      >
-      </button>
-    </>,
-    document.body
-  );
-}
 
       {result && showResult && (
         <div 
