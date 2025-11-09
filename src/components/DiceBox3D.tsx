@@ -66,13 +66,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser la DiceBox une seule fois
+  // ✅ Recréer complètement la DiceBox à chaque ouverture
   useEffect(() => {
     if (!isOpen) return;
-    if (diceBoxRef.current && isInitialized) {
-      console.log('✓ DiceBox déjà initialisé, réutilisation');
-      return;
-    }
 
     let mounted = true;
 
@@ -92,6 +88,38 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (!mounted) {
           console.log('⚠️ [INIT] Composant démonté, annulation');
           return;
+        }
+
+        // ✅ Si une DiceBox existe déjà, la détruire complètement
+        if (diceBoxRef.current) {
+          console.log('🗑️ [INIT] Destruction de l\'ancienne DiceBox pour rechargement complet');
+          try {
+            if (typeof diceBoxRef.current.clear === 'function') {
+              diceBoxRef.current.clear();
+            }
+            // Nettoyage Three.js pour libérer la mémoire
+            if (diceBoxRef.current.scene) {
+              diceBoxRef.current.scene.traverse((obj: any) => {
+                if (obj.material) {
+                  if (obj.material.map) obj.material.map.dispose();
+                  if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+                  if (obj.material.normalMap) obj.material.normalMap.dispose();
+                  obj.material.dispose();
+                }
+                if (obj.geometry) {
+                  obj.geometry.dispose();
+                }
+              });
+              diceBoxRef.current.scene.clear();
+            }
+            if (diceBoxRef.current.renderer) {
+              diceBoxRef.current.renderer.dispose();
+            }
+          } catch (e) {
+            console.warn('⚠️ Erreur destruction ancienne DiceBox:', e);
+          }
+          diceBoxRef.current = null;
+          setIsInitialized(false);
         }
 
         const config = {
@@ -221,83 +249,57 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
 
-      // ✅ Effacer seulement les dés visuels, PAS la DiceBox elle-même
-      // Cela conserve les textures chargées en mémoire
-      if (diceBoxRef.current) {
-        try {
-          console.log('🗑️ [CLEANUP] Effacement des dés (conservation des textures)');
-          if (typeof diceBoxRef.current.clear === 'function') {
-            diceBoxRef.current.clear();
-          }
-        } catch (e) {
-          console.warn('⚠️ [CLEANUP] Erreur lors du clear:', e);
-        }
-      }
-      
-      // ℹ️ La destruction complète se fait automatiquement quand la clé change dans DiceRollerLazy
+      // Ne rien faire ici, la destruction se fait dans initDiceBox avant la recréation
     };
-  }, [isOpen]); // ← Dépend seulement de isOpen, pas des settings
+  }, [isOpen]); // ← Dépend SEULEMENT de isOpen
 
   // Lancer les dés quand rollData change
-// Remplacez le useEffect de lancement des dés (lignes 242-287) par :
-
-useEffect(() => {
-  if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) {
-    return;
-  }
-
-  const rollSignature = JSON.stringify(rollData);
-  
-  if (rollSignature === lastRollDataRef.current) {
-    return;
-  }
-
-  lastRollDataRef.current = rollSignature;
-  currentRollIdRef.current += 1;
-  const thisRollId = currentRollIdRef.current;
-
-  console.log('🎲 Nouveau lancer #' + thisRollId + ':', rollData);
-
-  // ✅ NETTOYER les dés précédents AVANT de lancer
-  if (diceBoxRef.current && typeof diceBoxRef.current.clear === 'function') {
-    console.log('🧹 Nettoyage des dés précédents...');
-    try {
-      diceBoxRef.current.clear();
-    } catch (e) {
-      console.warn('⚠️ Erreur lors du clear avant lancer:', e);
+  useEffect(() => {
+    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) {
+      return;
     }
-  }
 
-  setIsRolling(true);
-  setResult(null);
-  setShowResult(false);
-  setIsFadingDice(false);
-  setIsFadingAll(false);
-  pendingResultRef.current = null;
-  hasShownResultRef.current = false;
+    const rollSignature = JSON.stringify(rollData);
+    
+    if (rollSignature === lastRollDataRef.current) {
+      return;
+    }
 
-  let notation = rollData.diceFormula;
-  if (rollData.modifier !== 0) {
-    notation += rollData.modifier >= 0 
-      ? `+${rollData.modifier}` 
-      : `${rollData.modifier}`;
-  }
+    lastRollDataRef.current = rollSignature;
+    currentRollIdRef.current += 1;
+    const thisRollId = currentRollIdRef.current;
 
-  console.log('🎲 Notation:', notation);
+    console.log('🎲 Nouveau lancer #' + thisRollId + ':', rollData);
 
-  try {
-    // ✅ Attendre un peu plus pour que le clear soit bien effectué
-    setTimeout(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🎲 Exécution de roll() avec textures conservées');
-        diceBoxRef.current.roll(notation);
-      }
-    }, 150); // 150ms au lieu de 100ms
-  } catch (error) {
-    console.error('❌ Erreur lancer de dés:', error);
-    setIsRolling(false);
-  }
-}, [isOpen, rollData, isInitialized]);
+    setIsRolling(true);
+    setResult(null);
+    setShowResult(false);
+    setIsFadingDice(false);
+    setIsFadingAll(false);
+    pendingResultRef.current = null;
+    hasShownResultRef.current = false;
+
+    let notation = rollData.diceFormula;
+    if (rollData.modifier !== 0) {
+      notation += rollData.modifier >= 0 
+        ? `+${rollData.modifier}` 
+        : `${rollData.modifier}`;
+    }
+
+    console.log('🎲 Notation:', notation);
+
+    try {
+      setTimeout(() => {
+        if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+          console.log('🎲 Exécution de roll()');
+          diceBoxRef.current.roll(notation);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('❌ Erreur lancer de dés:', error);
+      setIsRolling(false);
+    }
+  }, [isOpen, rollData, isInitialized]);
 
   // Reset quand on ferme
   useEffect(() => {
