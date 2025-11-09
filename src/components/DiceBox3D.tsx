@@ -17,6 +17,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const [result, setResult] = useState<{ total: number; rolls: number[] } | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isFading, setIsFading] = useState(false);
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
 
@@ -62,7 +63,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
             // ✅ Fermer automatiquement après 3 secondes
             setTimeout(() => {
               if (mounted) {
-                onClose();
+                handleClose();
               }
             }, 3000);
           }
@@ -112,6 +113,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
     setIsRolling(true);
     setResult(null);
+    setIsFading(false);
 
     // Construire la notation
     let notation = rollData.diceFormula;
@@ -142,26 +144,42 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
       lastRollDataRef.current = '';
       setResult(null);
       setIsRolling(false);
+      setIsFading(false);
     }
   }, [isOpen]);
+
+  // ✅ Fonction de fermeture avec fade
+  const handleClose = () => {
+    setIsFading(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Durée de l'animation fade
+  };
+
+  // ✅ Gestion du clic sur l'overlay (ferme pendant le jet)
+  const handleOverlayClick = () => {
+    handleClose();
+  };
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* ✅ Overlay FIXE dans le viewport (pas absolue sur toute la page) */}
+      {/* ✅ Overlay cliquable avec fade */}
       <div 
-        className="fixed inset-0 z-40 overflow-hidden"
+        onClick={handleOverlayClick}
+        className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
+          isFading ? 'opacity-0' : 'opacity-100'
+        }`}
         style={{ 
-          backgroundColor: 'transparent',
-          pointerEvents: isRolling ? 'none' : 'auto'
+          backgroundColor: 'transparent'
         }}
       >
         {/* ✅ Conteneur 3D contraint au viewport visible */}
         <div 
           id="dice-box-overlay"
           ref={containerRef} 
-          className="absolute top-0 left-0 w-screen h-screen"
+          className="absolute top-0 left-0 w-screen h-screen pointer-events-none"
           style={{ 
             touchAction: 'none',
             maxWidth: '100vw',
@@ -172,14 +190,18 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         />
       </div>
 
-      {/* ✅ Résultat en overlay FIXE dans le viewport */}
+      {/* ✅ Résultat VRAIMENT FIXE dans le viewport utilisateur */}
       {result && !isRolling && (
         <div 
-          className="fixed z-50 pointer-events-none"
+          className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
+            isFading ? 'opacity-0' : 'opacity-100'
+          }`}
           style={{
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)'
+            position: 'fixed',
+            top: '50vh',
+            left: '50vw',
+            transform: 'translate(-50%, -50%)',
+            willChange: 'transform'
           }}
         >
           <div className="bg-gradient-to-r from-purple-900/95 to-blue-900/95 backdrop-blur-md rounded-xl border border-purple-500/50 p-8 shadow-2xl animate-[fadeIn_0.3s_ease-in]">
@@ -199,13 +221,16 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* ✅ Indicateur de chargement FIXE dans le viewport */}
+      {/* ✅ Indicateur de chargement FIXE dans le viewport utilisateur */}
       {!isInitialized && (
         <div 
-          className="fixed z-50"
+          className={`fixed z-50 transition-opacity duration-300 ${
+            isFading ? 'opacity-0' : 'opacity-100'
+          }`}
           style={{
-            top: '50%',
-            left: '50%',
+            position: 'fixed',
+            top: '50vh',
+            left: '50vw',
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -223,30 +248,36 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         </div>
       )}
 
-      {/* ✅ Indicateur de lancer FIXE en haut du viewport */}
+      {/* ✅ Indicateur de lancer FIXE en haut du viewport utilisateur */}
       {isRolling && isInitialized && (
         <div 
-          className="fixed z-50 pointer-events-none"
+          className={`fixed z-50 pointer-events-none transition-opacity duration-300 ${
+            isFading ? 'opacity-0' : 'opacity-100'
+          }`}
           style={{
+            position: 'fixed',
             top: '2rem',
-            left: '50%',
+            left: '50vw',
             transform: 'translateX(-50%)'
           }}
         >
           <div className="bg-purple-900/90 backdrop-blur-sm rounded-full px-6 py-3 border border-purple-500/50 animate-pulse">
             <div className="text-white text-lg font-semibold">
-              🎲 {rollData?.attackName}
+              🎲 {rollData?.attackName} - Cliquez pour fermer
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ Bouton fermer FIXE en haut à droite du viewport */}
+      {/* ✅ Bouton fermer FIXE en haut à droite du viewport utilisateur */}
       {!isRolling && (
         <button
-          onClick={onClose}
-          className="fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-colors"
+          onClick={handleClose}
+          className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
+            isFading ? 'opacity-0' : 'opacity-100'
+          }`}
           style={{
+            position: 'fixed',
             top: '1rem',
             right: '1rem'
           }}
