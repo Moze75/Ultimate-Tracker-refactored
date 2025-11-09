@@ -1,0 +1,10 @@
+{
+  "id": "default",
+  "name": "Default",
+  "description": "Default dice theme",
+  "foreground": "#ffffff",
+  "background": "#000000",
+  "texture": "none",
+  "material": "plastic",
+  "font": "Arial"
+}
