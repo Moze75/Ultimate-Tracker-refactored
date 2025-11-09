@@ -343,9 +343,9 @@ requestAnimationFrame(() => {
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound]);
 
-  if (!isOpen) return null;
+ if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       <div 
         onClick={handleOverlayClick}
