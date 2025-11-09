@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import type { DiceSettings } from '../hooks/useDiceSettings';
+import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -9,9 +11,10 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
+  settings?: DiceSettings; // ✅ Ajout de la prop settings
 }
 
-export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
+export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -27,6 +30,10 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
+
+  // ✅ Utiliser les settings fournis ou les valeurs par défaut
+  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+  const settingsRef = useRef(effectiveSettings);
 
   // ✅ Fonction pour générer un résultat aléatoire INSTANTANÉ
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
@@ -62,9 +69,33 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
     rollDataRef.current = rollData;
   }, [rollData]);
 
-  // Initialiser la DiceBox UNE SEULE FOIS au montage
+  // ✅ Mettre à jour la ref des settings
+  useEffect(() => {
+    settingsRef.current = effectiveSettings;
+  }, [effectiveSettings]);
+
+  // ✅ Réinitialiser DiceBox quand les settings changent
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    if (diceBoxRef.current) {
+      console.log('🔄 Réinitialisation de DiceBox avec nouveaux paramètres');
+      try {
+        if (typeof diceBoxRef.current.clear === 'function') {
+          diceBoxRef.current.clear();
+        }
+      } catch (e) {
+        console.log('⚠️ Impossible de clear DiceBox');
+      }
+      diceBoxRef.current = null;
+      setIsInitialized(false);
+    }
+  }, [effectiveSettings, isOpen]);
+
+  // Initialiser la DiceBox avec les settings
   useEffect(() => {
     if (diceBoxRef.current) return;
+    if (!isOpen) return;
 
     let mounted = true;
 
@@ -74,17 +105,22 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 
         if (!mounted) return;
 
+        console.log('🎲 Initialisation DiceBox avec settings:', settingsRef.current);
+
+        // ✅ Utiliser les settings personnalisés
         const box = new DiceBox('#dice-box-overlay', {
           assetPath: '/assets/dice-box/',
-          theme: 'default',
-          themeColor: '#8b5cf6',
-          scale: 6,
-          gravity: 1,
+          theme: settingsRef.current.theme,
+          themeColor: settingsRef.current.themeColor,
+          scale: settingsRef.current.scale,
+          gravity: settingsRef.current.gravity,
           mass: 1,
-          friction: 0.8,
-          restitution: 0,
+          friction: settingsRef.current.friction,
+          restitution: settingsRef.current.restitution,
           angularDamping: 0.4,
           linearDamping: 0.5,
+          sounds: settingsRef.current.soundsEnabled,
+          soundVolume: settingsRef.current.soundsEnabled ? 0.5 : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
             
@@ -158,7 +194,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé');
+          console.log('✅ DiceBox initialisé avec thème:', settingsRef.current.theme);
         }
       } catch (error) {
         console.error('❌ Erreur initialisation DiceBox:', error);
@@ -176,7 +212,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
   // Lancer les dés quand rollData change
   useEffect(() => {
