@@ -536,4 +536,4 @@ function HistoryTab({
       </div>
     </div>
   );
-}
+} 
