@@ -347,6 +347,16 @@ requestAnimationFrame(() => {
         const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
         setResult(randomResult);
         setShowResult(true);
+
+      // ✅ AJOUTER : Sauvegarder le résultat lors de l'interruption
+      addRoll({
+        attackName: rollDataRef.current.attackName,
+        diceFormula: rollDataRef.current.diceFormula,
+        modifier: rollDataRef.current.modifier,
+        total: randomResult.total,
+        rolls: randomResult.rolls,
+        diceTotal: randomResult.diceTotal,
+      });
         
         // Jouer le son aussi lors de l'arrêt forcé
         playResultSound();
