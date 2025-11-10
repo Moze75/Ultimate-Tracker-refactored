@@ -212,6 +212,18 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   setIsRolling(false);
   setShowResult(true);
 
+    // ✅ AJOUTER : Enregistrer dans l'historique
+    if (rollDataRef.current) {
+      addRoll({
+        attackName: rollDataRef.current.attackName,
+        diceFormula: rollDataRef.current.diceFormula,
+        modifier: rollDataRef.current.modifier,
+        total: finalResult.total,
+        rolls: finalResult.rolls,
+        diceTotal: finalResult.diceTotal,
+      });
+    }
+    
   // Jouer le son du résultat
   playResultSound();
 
