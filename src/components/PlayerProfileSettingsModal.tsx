@@ -464,27 +464,42 @@ export function PlayerProfileSettingsModal({
     ALLOWED_FIGHTING_STYLES,
   ]);
 
-  useEffect(() => {
-    if (!open) return;
-    const loadSubclasses = async () => {
-      if (!selectedClass) {
-        setAvailableSubclasses([]);
-        return;
+useEffect(() => {
+  if (!open) return;
+  const loadSubclasses = async () => {
+    if (!selectedClass) {
+      setAvailableSubclasses([]);
+      return;
+    }
+    // reset UI quickly to avoid showing stale values
+    setAvailableSubclasses([]);
+    try {
+      const rpcClass = mapClassForRpc(selectedClass);
+      console.log('[DEBUG] loadSubclasses - selectedClass:', selectedClass, 'rpcClass:', rpcClass);
+      const { data, error } = await supabase.rpc('get_subclasses_by_class', { p_class: rpcClass });
+      console.log('[DEBUG] rpc response raw data:', data, 'error:', error);
+      if (error) throw error;
+
+      const raw = toStringArrayMaybe(data);
+      console.log('[DEBUG] rpc parsed array:', raw);
+
+      const map = new Map<string, string>();
+      for (const item of raw) {
+        const key = normalizeKeyForDedupe(item);
+        if (!map.has(key) && item && item.toString().trim() !== '') {
+          map.set(key, item);
+        }
       }
-      try {
-        const rpcClass = mapClassForRpc(selectedClass);
-        const { data, error } = await supabase.rpc('get_subclasses_by_class', {
-          p_class: rpcClass,
-        });
-        if (error) throw error;
-        setAvailableSubclasses((data as any) || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des sous-classes:', error);
-        setAvailableSubclasses([]);
-      }
-    };
-    loadSubclasses();
-  }, [open, selectedClass]);
+      const unique = Array.from(map.values());
+      console.log('[DEBUG] availableSubclasses final:', unique);
+      setAvailableSubclasses(unique);
+    } catch (err) {
+      console.error('Erreur lors du chargement des sous-classes:', err);
+      setAvailableSubclasses([]);
+    }
+  };
+  loadSubclasses();
+}, [open, selectedClass]);
 
   // Chargement des sous-classes secondaires
   useEffect(() => {
