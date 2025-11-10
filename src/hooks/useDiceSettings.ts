@@ -1,27 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export interface DiceSettings {
-  theme: string; // Nom de la texture
+  theme: string; // Nom du colorset prédéfini (ex: 'fire', 'ice', etc.)
   themeMaterial: 'none' | 'metal' | 'wood' | 'glass' | 'plastic';
-  themeColor: string;
+  themeColor: string; // Couleur personnalisée (seulement si theme === '')
   soundsEnabled: boolean;
-  scale: number;
-  gravity: number;
-  friction: number;
-  restitution: number;
+  
+  // ✅ Paramètres physiques valides
+  baseScale: number;    // Taille des dés (correspond à scale dans le modal, mais baseScale dans dice-box)
+  gravity: number;      // Multiplicateur de gravité (sera multiplié par 400)
+  strength: number;     // Force du lancer (0.5 à 3)
+  volume: number;       // Volume des sons du module (0 à 100)
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
-  theme: '', // Pas de texture par défaut
+  theme: '', // Pas de colorset prédéfini = couleur personnalisée
   themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
-  scale: 6,
-  gravity: 1,
-  friction: 0.8,
-  restitution: 0.5
+  baseScale: 6,         // Taille moyenne des dés
+  gravity: 1,           // Gravité normale (1x = 400 dans le module)
+  strength: 1,          // Force normale
+  volume: 100,          // Volume max des sons intégrés
 };
-
 
 const STORAGE_KEY = 'dice-settings';
 
@@ -41,6 +42,16 @@ export function useDiceSettings() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<DiceSettings>;
+        
+        // Migration : convertir scale -> baseScale si nécessaire
+        if ('scale' in parsed && !('baseScale' in parsed)) {
+          (parsed as any).baseScale = (parsed as any).scale;
+          delete (parsed as any).scale;
+        }
+        
+        // Migration : supprimer friction et restitution obsolètes
+        delete (parsed as any).friction;
+        delete (parsed as any).restitution;
         
         // Fusionner avec les valeurs par défaut pour gérer les nouvelles clés
         setSettings({
@@ -164,12 +175,13 @@ export function importDiceSettings(jsonString: string): boolean {
     // Valider que les clés sont valides
     const validKeys: (keyof DiceSettings)[] = [
       'theme',
+      'themeMaterial',
       'themeColor',
       'soundsEnabled',
-      'scale',
+      'baseScale',
       'gravity',
-      'friction',
-      'restitution',
+      'strength',
+      'volume',
     ];
     
     const settings: DiceSettings = {
