@@ -4,6 +4,7 @@ import { HPManager } from '../HPManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
+import { audioManager } from '../../utils/audioManager';
 
 interface HPManagerConnectedProps {
   player: Player;
