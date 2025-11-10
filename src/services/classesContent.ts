@@ -103,81 +103,40 @@ function negativeSet(url: string): void {
   negativeCache.set(url, { ts: Date.now() });
 }
 
-// Robust fetchFirstExisting: replace your existing implementation with this
-async function fetchFirstExisting(candidates: string[], options?: { classFolder?: string }) {
-  // base repo / possible branches & folder variants to try (prioritize main + Subclasses)
-  const owner = 'Moze75';
-  const repo = 'Ultimate_Tracker';
-  const branches = ['main', 'master']; // try main first, then master
-  const folderVariants = [
-    'Classes', // top-level
-    'Classes/Moine/Subclasses',            // correct expected path
-    'Classes/Moine/Sous classes',         // some older variant
-    'Classes/Moine/Sous-classes',         // another variant
-    'Classes/Moine/Sous classes/Subclasses' // just in case
-  ];
-
-  const normalizeForFilename = (s: string) => {
-    if (!s) return '';
-    let r = s.replace(/[\u2018\u2019\u201A\u201B]/g, "'").replace(/[\u2013\u2014]/g, '-');
-    try { r = r.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e) {}
-    r = r.trim().replace(/\s+/g, ' ');
-    return r;
-  };
-
-  const toSlug = (s: string) => normalizeForFilename(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-  // build prioritized filenames
-  const expandedNames = [];
-  for (const raw of candidates) {
-    if (!raw) continue;
-    const norm = normalizeForFilename(raw);
-    const noApos = norm.replace(/['’]/g, '');
-    const spaceApos = norm.replace(/['’]/g, ' ');
-    const slug = toSlug(norm);
-
-    // common useful variants (priority order)
-    expandedNames.push(`Sous-classe - ${norm}`);
-    expandedNames.push(norm);
-    expandedNames.push(`Sous-classe - ${noApos}`);
-    expandedNames.push(noApos);
-    expandedNames.push(`Sous-classe - ${spaceApos}`);
-    expandedNames.push(spaceApos);
-    expandedNames.push(`Sous-classe - ${slug}`);
-    expandedNames.push(slug);
+async function fetchFirstExisting(urls: string[], dbgLabel?: string): Promise<string | null> {
+  if (DEBUG) {
+    console.debug("[classesContent] Try candidates", dbgLabel || "", {
+      count: urls.length,
+      firsts: urls.slice(0, 8),
+    });
   }
-
-  // dedupe preserving order
-  const uniqNames = Array.from(new Set(expandedNames)).filter(Boolean);
-
-  // try combinations: branch x folder x filename (encode filename segment only)
-  for (const branch of branches) {
-    for (const folder of folderVariants) {
-      const basePath = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}`;
-      for (const name of uniqNames) {
-        const filename = name.toLowerCase().endsWith('.md') ? name : `${name}.md`;
-        const encoded = encodeURIComponent(filename);
-        const url = `${basePath}/${encoded}`;
-        try {
-          console.debug('[fetchFirstExisting] trying', url);
-          const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            const text = await res.text();
-            console.info('[fetchFirstExisting] found', url);
-            return { url, text };
-          } else {
-            console.debug('[fetchFirstExisting] not found', res.status, url);
-          }
-        } catch (err) {
-          console.debug('[fetchFirstExisting] fetch error', url, err);
-        }
+  for (const url of urls) {
+    try {
+      if (negativeHas(url)) {
+        if (DEBUG) console.debug("[classesContent] skip known 404:", url);
+        continue;
       }
+      if (textCache.has(url)) {
+        if (DEBUG) console.debug("[classesContent] cache hit:", url);
+        return textCache.get(url)!;
+      }
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok) {
+        const txt = await res.text();
+        textCache.set(url, txt);
+        if (DEBUG) console.debug("[classesContent] OK:", url);
+        return txt;
+      } else {
+        negativeSet(url);
+        if (DEBUG) console.debug("[classesContent] not OK:", res.status, url);
+      }
+    } catch (e) {
+      if (DEBUG) console.debug("[classesContent] fetch error -> continue", url, e);
     }
   }
-
-  console.warn('[fetchFirstExisting] no file found for candidates:', candidates);
+  if (DEBUG) console.debug("[classesContent] No match for", dbgLabel || "", "(tried:", urls.length, "urls)");
   return null;
-}
+} 
 
 /* ===========================================================
    Mappings classes & sous-classes (2024)
