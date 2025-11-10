@@ -19,18 +19,65 @@ export function CompactActionsRow({ player, onUpdate, onOpenCampaigns }: Compact
     toast.success(newInspirations ? 'Inspiration activée' : 'Inspiration utilisée');
   };
 
-  const handleLongRest = () => {
-    if (!window.confirm('Effectuer un repos long ? (restaure tous les PV, sorts, etc.)')) return;
-    const maxHp = player.max_hp || 1;
-    onUpdate({
-      ...player,
-      current_hp: maxHp,
-      temp_hp: 0,
-      hit_dice_used: 0,
-      stats: { ...player.stats, inspirations: 0 }
-    });
-    toast.success('Repos long effectué');
+ const handleLongRest = () => {
+  if (!window.confirm('Effectuer un repos long ? (restaure tous les PV, sorts, etc.)')) return;
+  
+  const maxHp = player.max_hp || 1;
+  
+  // 🔧 Reset classe principale
+  const nextCR: any = { ...(player.class_resources || {}) };
+  nextCR.used_rage = 0;
+  nextCR.used_bardic_inspiration = 0;
+  nextCR.used_channel_divinity = 0;
+  nextCR.used_wild_shape = 0;
+  nextCR.used_sorcery_points = 0;
+  nextCR.used_action_surge = 0;
+  nextCR.used_arcane_recovery = false;
+  nextCR.arcane_recovery_slots_used = 0;
+  nextCR.used_credo_points = 0;
+  nextCR.used_ki_points = 0;
+  nextCR.used_lay_on_hands = 0;
+  nextCR.used_favored_foe = 0;
+  nextCR.used_innate_sorcery = 0;
+  nextCR.used_supernatural_metabolism = 0;
+
+  // 🔧 AJOUTER : Reset classe secondaire
+  const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
+  nextSecondaryCR.used_rage = 0;
+  nextSecondaryCR.used_bardic_inspiration = 0;
+  nextSecondaryCR.used_channel_divinity = 0;
+  nextSecondaryCR.used_wild_shape = 0;
+  nextSecondaryCR.used_sorcery_points = 0;
+  nextSecondaryCR.used_action_surge = 0;
+  nextSecondaryCR.used_arcane_recovery = false;
+  nextSecondaryCR.arcane_recovery_slots_used = 0;
+  nextSecondaryCR.used_credo_points = 0;
+  nextSecondaryCR.used_ki_points = 0;
+  nextSecondaryCR.used_lay_on_hands = 0;
+  nextSecondaryCR.used_favored_foe = 0;
+  nextSecondaryCR.used_innate_sorcery = 0;
+  nextSecondaryCR.used_supernatural_metabolism = 0;
+
+  const updateData: any = {
+    current_hp: maxHp,
+    temp_hp: 0,
+    hit_dice_used: 0,
+    class_resources: nextCR,
+    stats: { ...player.stats, inspirations: 0 }
   };
+
+  // Ajouter secondary_class_resources si présent
+  if (player.secondary_class) {
+    updateData.secondary_class_resources = nextSecondaryCR;
+  }
+
+  onUpdate({
+    ...player,
+    ...updateData
+  });
+  
+  toast.success('Repos long effectué');
+};
 
   const handleShortRest = () => {
     if (!window.confirm('Effectuer un repos court ?')) return;
