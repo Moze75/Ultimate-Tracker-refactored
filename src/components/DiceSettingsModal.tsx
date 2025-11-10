@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Settings, History, Trash2 } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
@@ -11,12 +11,23 @@ interface DiceSettingsModalProps {
   onSave: (settings: DiceSettings) => void;
 }
 
-type TabType = 'settings' | 'history'; 
+type TabType = 'settings' | 'history';
 
 export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSettingsModalProps) {
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
-  const { history, clearHistory, removeEntry } = useDiceHistory();
+  const { history, clearHistory, removeEntry, isLoading } = useDiceHistory(); // ✅ Ajouter isLoading
+
+  // ✅ Debug: Afficher l'état de l'historique
+  useEffect(() => {
+    if (open && activeTab === 'history') {
+      console.log('📊 [DiceSettingsModal] État historique:', {
+        isLoading,
+        historyLength: history.length,
+        history: history
+      });
+    }
+  }, [open, activeTab, history, isLoading]);
 
   React.useEffect(() => {
     setLocalSettings(settings);
@@ -24,7 +35,6 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
 
   React.useEffect(() => {
     if (open) {
-      // Réinitialiser l'onglet actif à l'ouverture
       setActiveTab('settings');
     }
   }, [open]);
@@ -49,108 +59,109 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   };
 
   const handleClearHistory = () => {
-    if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
       clearHistory();
     }
-  }; 
- 
-  return ( 
-   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
-       <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-xl font-bold text-white">Dés 3D</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
+  };
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'settings'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            Paramètres
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'history'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            Historique
-            {history.length > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
-                {history.length}
-              </span>
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h2 className="text-xl font-bold text-white">Dés 3D</h2>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-gray-700">
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'settings'
+                  ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Paramètres
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'history'
+                  ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Historique
+              {history.length > 0 && (
+                <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
+                  {history.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            {activeTab === 'settings' ? (
+              <SettingsTab
+                localSettings={localSettings}
+                handleChange={handleChange}
+              />
+            ) : (
+              <HistoryTab
+                history={history}
+                isLoading={isLoading}
+                onClearHistory={handleClearHistory}
+                onRemoveEntry={removeEntry}
+              />
             )}
-          </button>
-        </div>
+          </div>
 
-        {/* Content */}
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {activeTab === 'settings' ? (
-            <SettingsTab
-              localSettings={localSettings}
-              handleChange={handleChange}
-            />
-          ) : (
-            <HistoryTab
-              history={history}
-              onClearHistory={handleClearHistory}
-              onRemoveEntry={removeEntry}
-            />
+          {/* Footer - seulement pour l'onglet paramètres */}
+          {activeTab === 'settings' && (
+            <div className="flex items-center justify-between p-4 border-t border-gray-700">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                🔄 Réinitialiser
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                >
+                  💾 Enregistrer
+                </button>
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Footer - seulement pour l'onglet paramètres */}
-        {activeTab === 'settings' && (
-          <div className="flex items-center justify-between p-4 border-t border-gray-700">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              🔄 Réinitialiser
-            </button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-              >
-                💾 Enregistrer
-              </button> 
-            </div> 
-          </div>
-        )}
       </div>
     </div>
-     </div>
   );
 }
 
-// Composant pour l'onglet Paramètres
+// Composant pour l'onglet Paramètres (inchangé)
 function SettingsTab({
   localSettings,
   handleChange,
