@@ -89,13 +89,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
   // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
-    try {
-      const audio = new Audio('/assets/dice-box/sounds/dicepopup/dice_results.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(err => console.warn('Erreur lecture son résultat:', err));
-    } catch (error) {
-      console.warn('Impossible de jouer le son:', error);
-    }
+    audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
   }, []);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
