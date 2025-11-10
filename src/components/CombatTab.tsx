@@ -682,6 +682,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       <ConditionsSection player={player} onUpdate={onUpdate} />
 
 <DiceRollerLazy
+  key={settingsKey}  // 🔧 Force la recréation du composant quand settingsKey change
   isOpen={diceRollerOpen}
   onClose={() => setDiceRollerOpen(false)}
   rollData={rollData}
