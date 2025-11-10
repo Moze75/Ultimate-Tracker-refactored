@@ -137,19 +137,19 @@ export function Avatar({
           />
           
           {/* ✅ NOUVEAU : Bouton paramètres dés (visible seulement sur mobile) */}
-          {onOpenDiceSettings && !editable && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Empêche l'ouverture du modal
-                onOpenDiceSettings();
-              }}
-              className="absolute top-2 right-2 md:hidden px-2 py-1.5 rounded-lg bg-purple-600/90 hover:bg-purple-700 text-white flex items-center gap-1.5 transition-colors text-xs font-medium shadow-lg z-10"
-              title="Paramètres des dés"
-            >
-              <Dices className="w-3.5 h-3.5" />
-              <span>Paramètres</span>
-            </button>
-          )}
+{onOpenDiceSettings && !editable && (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpenDiceSettings();
+    }}
+    className="absolute top-2 right-2 md:hidden px-2 py-1.5 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center gap-1.5 transition-colors text-xs font-medium shadow-lg z-10"
+    title="Paramètres des dés"
+  >
+    <Dices className="w-3.5 h-3.5" />
+    <span>Paramètres</span>
+  </button>
+)}
 
           {editable && (
             <div
