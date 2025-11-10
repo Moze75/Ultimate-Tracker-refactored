@@ -141,8 +141,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               >
                 💾 Enregistrer
               </button> 
-            </div>
-             
+            </div> 
           </div>
         )}
       </div>
