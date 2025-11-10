@@ -123,7 +123,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
   // Initialiser UNE SEULE FOIS
   useEffect(() => {
-    if (!isOpen) return;
+    
     if (diceBoxRef.current && isInitialized) {
       console.log('✓ DiceBox déjà initialisé');
       return;
