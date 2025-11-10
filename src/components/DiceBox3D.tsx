@@ -497,22 +497,7 @@ return createPortal(
       </div>
     )}
 
-    <button
-      onClick={handleClose}
-      className={`fixed z-50 p-2 bg-gray-900/80 hover:bg-gray-800/90 rounded-lg border border-gray-700 transition-all duration-300 ${
-        isFadingAll ? 'opacity-0' : 'opacity-100'
-      }`}
-      style={{
-        position: 'fixed',
-        top: '1rem',
-        right: '1rem'
-      }}
-      title="Fermer"
-    >
-      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
+
   </>,
   document.body
 );
