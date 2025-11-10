@@ -241,12 +241,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
     initDiceBox();
 
-    return () => {
-      mounted = false;
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
+  return () => {
+    mounted = false;
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
     }
+    // 🔧 Arrêter les sons (ne pas nettoyer complètement)
+    if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
+      audioManager.stopAll();
+    }
+  };
     // 🔧 AJOUTER : Nettoyer les sons quand le composant se démonte
     audioManager.stopAll();
   };
