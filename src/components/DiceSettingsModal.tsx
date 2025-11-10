@@ -146,6 +146,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         )}
       </div>
     </div>
+     </div>
   );
 }
 
