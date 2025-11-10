@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dices, Settings, Save, Star } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { DiceRoller } from './DiceRoller';
+import { DiceRollerLazy } from './DiceRollerLazy';
+import { useDiceSettings } from '../hooks/useDiceSettings';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { AbilityScoreGrid } from './AbilityScoreGrid';
 import { SkillsTable } from './SkillsTable';
 
@@ -142,6 +145,53 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
   const [editing, setEditing] = useState(false);
 
   const effectiveProficiency = getProficiencyBonusForLevel(player.level);
+
+  // 🔧 Hook pour détecter mobile/desktop
+  const deviceType = useResponsiveLayout();
+
+  // 🔧 Settings pour DiceRollerLazy (mobile uniquement)
+  const { settings: diceSettings } = useDiceSettings();
+  const [settingsKey, setSettingsKey] = useState(0);
+  const [localSettings, setLocalSettings] = useState(diceSettings);
+
+  // Synchroniser les settings locaux quand diceSettings change
+  useEffect(() => {
+    setLocalSettings(diceSettings);
+  }, [diceSettings]);
+
+  // 🔧 Écouter les changements des paramètres de dés (mobile uniquement)
+  useEffect(() => {
+    if (deviceType === 'desktop') return; // Skip sur desktop
+
+    const handleDiceSettingsChange = () => {
+      console.log('🎲 [StatsTab] Paramètres de dés changés, rechargement...');
+      
+      try {
+        const stored = localStorage.getItem('dice-settings');
+        if (stored) {
+          const newSettings = JSON.parse(stored);
+          setLocalSettings({ ...newSettings });
+          setSettingsKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Erreur rechargement settings:', error);
+      }
+    };
+    
+    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dice-settings') {
+        handleDiceSettingsChange();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [deviceType]);
 
   const calculateEquipmentBonuses = React.useCallback(() => {
     const bonuses = {
@@ -495,11 +545,22 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
         </div>
       </div>
 
-      <DiceRoller 
-        isOpen={diceRollerOpen} 
-        onClose={() => setDiceRollerOpen(false)} 
-        rollData={rollData} 
-      />
+      {/* 🔧 Utiliser DiceRollerLazy sur mobile, DiceRoller sur desktop */}
+      {deviceType === 'desktop' ? (
+        <DiceRoller 
+          isOpen={diceRollerOpen} 
+          onClose={() => setDiceRollerOpen(false)} 
+          rollData={rollData} 
+        />
+      ) : (
+        <DiceRollerLazy
+          key={settingsKey}
+          isOpen={diceRollerOpen}
+          onClose={() => setDiceRollerOpen(false)}
+          rollData={rollData}
+          settings={localSettings}
+        />
+      )}
     </div>
   );
 }
