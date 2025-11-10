@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';  // ✅ Ajouter useEffect ici
 import type { DiceSettings } from '../hooks/useDiceSettings';
 
 const DiceBox3D = lazy(() => import('./DiceBox3D').then(module => ({ default: module.DiceBox3D })));
@@ -16,6 +16,14 @@ interface DiceRollerLazyProps {
 }
 
 export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRollerLazyProps) {
+  // ✅ AJOUTER CE USEEFFECT ICI - précharge le module dès le montage
+  useEffect(() => {
+    console.log('🔄 [DiceRollerLazy] Préchargement du module DiceBox3D...');
+    import('./DiceBox3D')
+      .then(() => console.log('✅ [DiceRollerLazy] Module DiceBox3D préchargé'))
+      .catch(err => console.error('❌ [DiceRollerLazy] Erreur préchargement:', err));
+  }, []);
+
   if (!isOpen) return null;
 
   // ✅ Créer une clé basée sur les paramètres critiques des settings
@@ -39,7 +47,7 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
       </div>
     }>
       <DiceBox3D 
-        key={diceBoxKey} // ✅ CRUCIAL : Force le remontage complet du composant
+        key={diceBoxKey}
         isOpen={isOpen} 
         onClose={onClose} 
         rollData={rollData}
