@@ -143,11 +143,12 @@ export function Avatar({
       e.stopPropagation();
       onOpenDiceSettings();
     }}
-    className="absolute top-2 right-2 md:hidden px-2 py-1.5 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center gap-1.5 transition-colors text-xs font-medium shadow-lg z-10"
+    className="absolute top-2 right-2 md:hidden flex items-center gap-1.5 text-purple-300 hover:text-purple-100 transition-colors text-xs font-medium z-10 drop-shadow-lg"
+    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
     title="Paramètres des dés"
   >
-    <Dices className="w-3.5 h-3.5" />
-    <span>Paramètres</span>
+    <Dices className="w-4 h-4 drop-shadow-lg" />
+    <span className="drop-shadow-lg">Paramètres</span>
   </button>
 )}
 
