@@ -54,13 +54,11 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
     }
   };
 
-return (
-  <div className="fixed inset-0 z-50 bg-black/50">
-    {/* ✅ Conteneur scrollable séparé avec centrage flex */}
-    <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-      <div className="pointer-events-auto bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
+  return ( 
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Dés 3D</h2>
           <button
             onClick={onClose}
@@ -71,7 +69,7 @@ return (
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700 flex-shrink-0">
+        <div className="flex border-b border-gray-700">
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -101,8 +99,8 @@ return (
           </button>
         </div>
 
-        {/* Content - avec overflow propre */}
-        <div className="p-4 overflow-y-auto flex-1">
+        {/* Content */}
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
           {activeTab === 'settings' ? (
             <SettingsTab
               localSettings={localSettings}
@@ -119,7 +117,7 @@ return (
 
         {/* Footer - seulement pour l'onglet paramètres */}
         {activeTab === 'settings' && (
-          <div className="flex items-center justify-between p-4 border-t border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-t border-gray-700">
             <button
               type="button"
               onClick={handleReset}
@@ -141,14 +139,14 @@ return (
                 className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
               >
                 💾 Enregistrer
-              </button>
+              </button> 
             </div>
           </div>
         )}
       </div>
     </div>
-  </div>
-);
+  );
+}
 
 // Composant pour l'onglet Paramètres
 function SettingsTab({
