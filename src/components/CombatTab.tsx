@@ -663,10 +663,10 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       <ConditionsSection player={player} onUpdate={onUpdate} />
 
 <DiceRollerLazy
+  key={settingsKey}
   isOpen={diceRollerOpen}
   onClose={() => setDiceRollerOpen(false)}
   rollData={rollData}
-  settings={diceSettings}
 />
       {showConcentrationCheck && (
         <ConcentrationCheckModal
