@@ -168,18 +168,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           theme_material: effectiveSettings.themeMaterial || "plastic",
           
           scale: effectiveSettings.scale,
-          gravity: effectiveSettings.gravity,
-          mass: 1,
-          friction: effectiveSettings.friction,
-          restitution: effectiveSettings.restitution,
-          angularDamping: 0.4,
-          linearDamping: 0.5,
-          sounds: effectiveSettings.soundsEnabled,
-          soundVolume: effectiveSettings.soundsEnabled ? 1.0 : 0,
-          
-        // Dans onRollComplete (vers ligne ~210-230), SUPPRIMEZ les timeouts automatiques :
-
-onRollComplete: (results: any) => {
+ // ✅ PARAMÈTRES VALIDES SELON LA DOCUMENTATION
+  gravity_multiplier: effectiveSettings.gravity * 400, // Multiplier par 400 (valeur par défaut)
+  strength: effectiveSettings.strength || 1,           // Force de lancer (nouveau paramètre)
+  
+  // ❌ RETIRER CES PARAMÈTRES (n'existent pas dans dice-box-threejs)
+  // gravity: effectiveSettings.gravity,
+  // mass: 1,
+  // friction: effectiveSettings.friction,
+  // restitution: effectiveSettings.restitution,
+  // angularDamping: 0.4,
+  // linearDamping: 0.5,
+  
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? 100 : 0,  // ✅ Utiliser "volume" au lieu de "soundVolume"
+  
+  onRollComplete: (results: any) => {
   if (!mounted) return;
   if (hasShownResultRef.current) return;
 
