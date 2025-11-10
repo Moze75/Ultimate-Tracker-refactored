@@ -7,6 +7,8 @@ import { ActiveConditionsBadges } from './PlayerProfile/ActiveConditionsBadges';
 import { PlayerAvatar } from './PlayerProfile/PlayerAvatar';
 import { PlayerActionsPanel } from './PlayerProfile/PlayerActionsPanel';
 import { QuickStatsDisplay } from './PlayerProfile/QuickStatsDisplay';
+import { DiceSettingsModal } from './DiceSettingsModal'; // ✅ Ajouter
+import { useDiceSettings } from '../hooks/useDiceSettings'; // ✅ Ajouter
 
 export interface PlayerProfileProps {
   player: Player;
@@ -19,6 +21,10 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
   const [editing, setEditing] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | 'initiative' | 'proficiency' | null>(null);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  
+  // ✅ AJOUTER : State pour les paramètres de dés
+  const [isDiceSettingsOpen, setIsDiceSettingsOpen] = useState(false);
+  const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
 
   return (
     <>
@@ -28,7 +34,7 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
         </SwipeNavigator>
       </div>
 
-    <div className="stat-card w-full">
+      <div className="stat-card w-full">
         <div className="stat-header flex items-start justify-between">
           <div className="flex flex-col gap-4 w-full">
             <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
@@ -37,7 +43,12 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
               className="grid items-start gap-3 sm:gap-4"
               style={{ gridTemplateColumns: 'minmax(0,1fr) 8rem' }}
             >
-            <PlayerAvatar player={player} onEdit={() => setEditing(true)} />
+              {/* ✅ Passer onOpenDiceSettings */}
+              <PlayerAvatar 
+                player={player} 
+                onEdit={() => setEditing(true)}
+                onOpenDiceSettings={() => setIsDiceSettingsOpen(true)}
+              />
 
               <PlayerActionsPanel
                 player={player}
@@ -64,7 +75,7 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
         onUpdate={onUpdate}
       />
 
-      {/* ✅ Modal Campagnes */}
+      {/* Modal Campagnes */}
       <CampaignPlayerModal
         open={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
@@ -72,6 +83,14 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
         onUpdate={onUpdate}
         onInventoryAdd={onInventoryAdd}
       />
+
+      {/* ✅ AJOUTER : Modal Paramètres des dés */}
+      <DiceSettingsModal
+        open={isDiceSettingsOpen}
+        onClose={() => setIsDiceSettingsOpen(false)}
+        settings={diceSettings}
+        onSave={saveDiceSettings}
+      />
     </>
   );  
-}  
+}
