@@ -175,7 +175,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           angularDamping: 0.4,
           linearDamping: 0.5,
           sounds: effectiveSettings.soundsEnabled,
-          soundVolume: effectiveSettings.soundsEnabled ? 0.5 : 0,
+          soundVolume: effectiveSettings.soundsEnabled ? 1.0 : 0,
           
         // Dans onRollComplete (vers ligne ~210-230), SUPPRIMEZ les timeouts automatiques :
 
