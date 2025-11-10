@@ -54,11 +54,13 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+ return (
+  <div className="fixed inset-0 z-50 bg-black/50">
+    {/* ✅ Conteneur scrollable séparé avec centrage flex */}
+    <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+      <div className="pointer-events-auto bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
           <h2 className="text-xl font-bold text-white">Dés 3D</h2>
           <button
             onClick={onClose}
@@ -69,7 +71,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-gray-700 flex-shrink-0">
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -99,8 +101,8 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
+        {/* Content - avec overflow propre */}
+        <div className="p-4 overflow-y-auto flex-1">
           {activeTab === 'settings' ? (
             <SettingsTab
               localSettings={localSettings}
@@ -117,7 +119,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
 
         {/* Footer - seulement pour l'onglet paramètres */}
         {activeTab === 'settings' && (
-          <div className="flex items-center justify-between p-4 border-t border-gray-700">
+          <div className="flex items-center justify-between p-4 border-t border-gray-700 flex-shrink-0">
             <button
               type="button"
               onClick={handleReset}
@@ -145,8 +147,8 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
         )}
       </div>
     </div>
-  );
-}
+  </div>
+);
 
 // Composant pour l'onglet Paramètres
 function SettingsTab({
