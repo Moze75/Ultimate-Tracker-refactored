@@ -285,7 +285,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
     };
-  }, [effectiveSettings, playResultSound]);
+}, [effectiveSettings, playResultSound, addRoll]); // ✅ Dépend de effectiveSettings
 
   // Lancer les dés
   useEffect(() => {
