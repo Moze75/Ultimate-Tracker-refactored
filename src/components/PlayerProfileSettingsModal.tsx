@@ -502,27 +502,39 @@ useEffect(() => {
 }, [open, selectedClass]);
 
   // Chargement des sous-classes secondaires
-  useEffect(() => {
-    if (!open) return;
-    const loadSecondarySubclasses = async () => {
-      if (!selectedSecondaryClass) {
-        setAvailableSecondarySubclasses([]);
-        return;
+useEffect(() => {
+  if (!open) return;
+  const loadSecondarySubclasses = async () => {
+    if (!selectedSecondaryClass) {
+      setAvailableSecondarySubclasses([]);
+      return;
+    }
+    setAvailableSecondarySubclasses([]);
+    try {
+      const rpcClass = mapClassForRpc(selectedSecondaryClass);
+      console.log('[DEBUG] loadSecondarySubclasses - selectedSecondaryClass:', selectedSecondaryClass, 'rpcClass:', rpcClass);
+      const { data, error } = await supabase.rpc('get_subclasses_by_class', { p_class: rpcClass });
+      console.log('[DEBUG] rpc response raw data (secondary):', data, 'error:', error);
+      if (error) throw error;
+
+      const raw = toStringArrayMaybe(data);
+      const map = new Map<string, string>();
+      for (const item of raw) {
+        const key = normalizeKeyForDedupe(item);
+        if (!map.has(key) && item && item.toString().trim() !== '') {
+          map.set(key, item);
+        }
       }
-      try {
-        const rpcClass = mapClassForRpc(selectedSecondaryClass);
-        const { data, error } = await supabase.rpc('get_subclasses_by_class', {
-          p_class: rpcClass,
-        });
-        if (error) throw error;
-        setAvailableSecondarySubclasses((data as any) || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des sous-classes secondaires:', error);
-        setAvailableSecondarySubclasses([]);
-      }
-    };
-    loadSecondarySubclasses();
-  }, [open, selectedSecondaryClass]);
+      const unique = Array.from(map.values());
+      console.log('[DEBUG] availableSecondarySubclasses final:', unique);
+      setAvailableSecondarySubclasses(unique);
+    } catch (err) {
+      console.error('Erreur lors du chargement des sous-classes secondaires:', err);
+      setAvailableSecondarySubclasses([]);
+    }
+  };
+  loadSecondarySubclasses();
+}, [open, selectedSecondaryClass]);
 
   useEffect(() => {
     setHitDice((prev) => {
