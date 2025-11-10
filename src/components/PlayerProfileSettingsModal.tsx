@@ -14,7 +14,7 @@ const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
 const getProficiencyBonusForLevel = (level: number): number => {
   if (level >= 17) return 6;
-  if (level >= 13) return 5;
+  if (level >= 13) return 5; 
   if (level >= 9) return 4;
   if (level >= 5) return 3;
   return 2;
@@ -55,80 +55,7 @@ function mapClassForRpc(pClass: DndClass | null | undefined): string | null | un
   return pClass;
 }
 
-// Ajoute ces helpers en haut du fichier, près des autres helpers
-function normalizeKeyForDedupe(s?: string) {
-  if (!s) return '';
-  return s
-    .replace(/[\u2018\u2019\u201A\u201B]/g, "'") // apostrophes typographiques -> droite
-    .normalize?.('NFD')?.replace(/[\u0300-\u036f]/g, '') || s
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
 
-function toStringArrayMaybe(data: any): string[] {
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  if (typeof data === 'string') {
-    // parfois Supabase renvoie le jsonb sous forme de string : '["A","B"]'
-    try {
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      // fallback : traiter la chaîne entière comme un seul élément
-      return [data];
-    }
-  }
-  // si c'est un object avec .data ou autre
-  if (typeof data === 'object') {
-    try {
-      return Object.values(data).map(String);
-    } catch (e) {
-      return [];
-    }
-  }
-  return [String(data)];
-}
-
-// Remplacer ton useEffect actuel par celui-ci :
-useEffect(() => {
-  if (!open) return;
-  const loadSubclasses = async () => {
-    if (!selectedClass) {
-      setAvailableSubclasses([]);
-      return;
-    }
-    // reset UI quickly to avoid showing old values
-    setAvailableSubclasses([]);
-    try {
-      const rpcClass = mapClassForRpc(selectedClass);
-      console.log('[DEBUG] loadSubclasses - selectedClass:', selectedClass, 'rpcClass:', rpcClass);
-
-      const { data, error } = await supabase.rpc('get_subclasses_by_class', { p_class: rpcClass });
-      console.log('[DEBUG] rpc response raw data:', data, 'error:', error);
-      if (error) throw error;
-
-      const raw = toStringArrayMaybe(data);
-      console.log('[DEBUG] rpc parsed array:', raw);
-
-      // dedupe / keep first occurrence (preserve displayed form)
-      const map = new Map<string, string>();
-      for (const item of raw) {
-        const key = normalizeKeyForDedupe(item);
-        if (!map.has(key) && item && item.toString().trim() !== '') {
-          map.set(key, item);
-        }
-      }
-      const unique = Array.from(map.values());
-      console.log('[DEBUG] availableSubclasses final:', unique);
-      setAvailableSubclasses(unique);
-    } catch (err) {
-      console.error('Erreur lors du chargement des sous-classes:', err);
-      setAvailableSubclasses([]);
-    }
-  };
-  loadSubclasses();
-}, [open, selectedClass]);
 
 /* ============================ Données de sélection ============================ */
 
