@@ -326,11 +326,17 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     diceFormula: string;
     modifier: number;
   } | null>(null);
-  const { settings: diceSettings, reloadSettings } = useDiceSettings();
+  const { settings: diceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
   
   // 🔧 État pour forcer le rechargement du DiceRoller
   const [settingsKey, setSettingsKey] = useState(0);
+  const [localSettings, setLocalSettings] = useState(diceSettings);
+
+  // Synchroniser les settings locaux quand diceSettings change
+  useEffect(() => {
+    setLocalSettings(diceSettings);
+  }, [diceSettings]);
 
   React.useEffect(() => {
     fetchAttacks();
@@ -357,20 +363,19 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   // 🔧 Écouter les changements des paramètres de dés
   useEffect(() => {
     const handleDiceSettingsChange = () => {
-      console.log('🎲 Paramètres de dés changés, rechargement...');
+      console.log('🎲 Paramètres de dés changés, rechargement du DiceRoller...');
       
-      // Fermer le modal de dés
-      setDiceRollerOpen(false);
-      
-      // Recharger les settings depuis localStorage
-      if (reloadSettings) {
-        reloadSettings();
+      // Recharger depuis localStorage
+      try {
+        const stored = localStorage.getItem('dice-settings');
+        if (stored) {
+          const newSettings = JSON.parse(stored);
+          setLocalSettings({ ...newSettings }); // Nouvelle référence d'objet
+          setSettingsKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Erreur rechargement settings:', error);
       }
-      
-      // Incrémenter la clé pour forcer la recréation
-      setTimeout(() => {
-        setSettingsKey(prev => prev + 1);
-      }, 100);
     };
     
     window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
@@ -386,7 +391,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [reloadSettings]);
+  }, []);
 
   const fetchAttacks = async () => {
     try {
@@ -699,12 +704,14 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       <StandardActionsSection player={player} onUpdate={onUpdate} />
       <ConditionsSection player={player} onUpdate={onUpdate} />
 
-<DiceRollerLazy
-  key={settingsKey}
-  isOpen={diceRollerOpen}
-  onClose={() => setDiceRollerOpen(false)}
-  rollData={rollData}
-/>
+      <DiceRollerLazy
+        key={settingsKey}
+        isOpen={diceRollerOpen}
+        onClose={() => setDiceRollerOpen(false)}
+        rollData={rollData}
+        settings={localSettings}
+      />
+      
       {showConcentrationCheck && (
         <ConcentrationCheckModal
           player={player}
@@ -716,4 +723,3 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     </div>
   );
 }
- 
