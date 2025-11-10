@@ -14,11 +14,12 @@ interface PlayerAvatarProps {
     secondary_level?: number | null;
   };
   onEdit: () => void;
+  onOpenDiceSettings?: () => void; // ✅ Ajouter
 }
 
-export function PlayerAvatar({ player, onEdit }: PlayerAvatarProps) {
+export function PlayerAvatar({ player, onEdit, onOpenDiceSettings }: PlayerAvatarProps) {
   return (
-    <div className="relative w-full min-w-0 aspect-[7/10] sm:aspect-[2/3] md:aspect-[auto] md:h-[60vh] lg:h-[70vh] rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center md:max-h-screen">
+    <div className="relative w-full min-w-0 aspect-[7/10] sm:aspect-[2/3] md:aspect-[auto] md:h-[60vh] lg:h-[70vh] rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center md:max-h-[500px]">
       <button
         onClick={onEdit}
         className="absolute top-2 left-2 w-9 h-9 rounded-full bg-gray-900/40 backdrop-blur-sm text-white hover:bg-gray-800/50 hover:text-white flex items-center justify-center z-10 transition-colors"
@@ -27,6 +28,7 @@ export function PlayerAvatar({ player, onEdit }: PlayerAvatarProps) {
         <Menu className="w-5 h-5" />
       </button>
 
+      {/* ✅ Passer onOpenDiceSettings à Avatar */}
       <Avatar
         url={player.avatar_url || ''}
         playerId={player.id}
@@ -35,6 +37,7 @@ export function PlayerAvatar({ player, onEdit }: PlayerAvatarProps) {
         onAvatarUpdate={() => {}}
         secondaryClass={player.secondary_class}
         secondaryLevel={player.secondary_level}
+        onOpenDiceSettings={onOpenDiceSettings}
       />
 
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pointer-events-none">
