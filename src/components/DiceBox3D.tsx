@@ -281,11 +281,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     return () => {
       mounted = false;
       if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
+        clearTimeout(closeTimeoutRef.current); 
         closeTimeoutRef.current = null;
       }
     };
-}, [effectiveSettings, playResultSound, addRoll]); // ✅ Dépend de effectiveSettings
+  }, [effectiveSettings, playResultSound]);
 
   // Lancer les dés
   useEffect(() => {
