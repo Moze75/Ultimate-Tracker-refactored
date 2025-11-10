@@ -384,20 +384,23 @@ return createPortal(
       }`}
       style={{ backgroundColor: 'transparent' }}
     >
-      <div 
-        id="dice-box-overlay"
-        ref={containerRef} 
-        className={`absolute top-0 left-0 w-screen h-screen pointer-events-none transition-opacity duration-300 ${
-          isFadingDice ? 'opacity-0' : 'opacity-100'
-        }`}
-        style={{ 
-          touchAction: 'none',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          position: 'fixed',
-          overflow: 'hidden'
-        }}
-      />
+<div 
+  id="dice-box-overlay"
+  ref={containerRef} 
+  className={`pointer-events-none transition-opacity duration-300 ${
+    isFadingDice ? 'opacity-0' : 'opacity-100'
+  }`}
+  style={{ 
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    touchAction: 'none',
+    overflow: 'hidden',
+    pointerEvents: 'none'
+  }}
+/>
     </div>
 
     {result && showResult && (
