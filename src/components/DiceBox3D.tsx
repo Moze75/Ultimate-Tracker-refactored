@@ -167,21 +167,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           
           theme_material: effectiveSettings.themeMaterial || "plastic",
           
-          scale: effectiveSettings.scale,
- // ✅ PARAMÈTRES VALIDES SELON LA DOCUMENTATION
-  gravity_multiplier: effectiveSettings.gravity * 400, // Multiplier par 400 (valeur par défaut)
-  strength: effectiveSettings.strength || 1,           // Force de lancer (nouveau paramètre)
+ // ✅ PARAMÈTRES PHYSIQUES VALIDES
+  baseScale: effectiveSettings.baseScale * 100 / 6,  // Normaliser : baseScale dans settings (3-10) → baseScale dans dice-box (~50-166)
+  gravity_multiplier: effectiveSettings.gravity * 400, // 0.5-2 → 200-800
+  strength: effectiveSettings.strength,               // 0.5-3
   
-  // ❌ RETIRER CES PARAMÈTRES (n'existent pas dans dice-box-threejs)
-  // gravity: effectiveSettings.gravity,
-  // mass: 1,
-  // friction: effectiveSettings.friction,
-  // restitution: effectiveSettings.restitution,
-  // angularDamping: 0.4,
-  // linearDamping: 0.5,
-  
+  // ✅ SONS
   sounds: effectiveSettings.soundsEnabled,
-  volume: effectiveSettings.soundsEnabled ? 100 : 0,  // ✅ Utiliser "volume" au lieu de "soundVolume"
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
   
   onRollComplete: (results: any) => {
   if (!mounted) return;
