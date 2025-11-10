@@ -87,6 +87,13 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
   }, []);
 
+  // 🔧 AJOUTER : Débloquer l'audio au premier clic sur mobile
+  useEffect(() => {
+    if (isOpen) {
+      audioManager.unlock();
+    }
+  }, [isOpen]);
+
   // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
     audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
