@@ -475,17 +475,45 @@ function SettingsTab({
 // Composant pour l'onglet Historique
 function HistoryTab({
   history,
+  isLoading,
   onClearHistory,
   onRemoveEntry,
 }: {
   history: DiceRollHistoryEntry[];
+  isLoading: boolean;
   onClearHistory: () => void;
   onRemoveEntry: (id: string) => void;
 }) {
-  if (history.length === 0) {
+  const [localHistory, setLocalHistory] = useState<DiceRollHistoryEntry[]>([]);
+
+  // ✅ Relire depuis localStorage à chaque render
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dice-roll-history');
+      if (stored) {
+        const parsed = JSON.parse(stored) as DiceRollHistoryEntry[];
+        setLocalHistory(parsed);
+      }
+    } catch (error) {
+      console.error('❌ Erreur chargement historique:', error);
+    }
+  }, [history]);
+
+  const displayHistory = localHistory.length > 0 ? localHistory : history;
+
+  if (isLoading) {
     return (
       <div className="text-center py-12">
-        <History className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-400">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (displayHistory.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <HistoryIcon className="w-16 h-16 mx-auto mb-4 text-gray-600" />
         <p className="text-gray-400 mb-2">Aucun jet de dés enregistré</p>
         <p className="text-sm text-gray-500">
           Lancez des dés pour voir l'historique apparaître ici
