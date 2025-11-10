@@ -55,7 +55,38 @@ function mapClassForRpc(pClass: DndClass | null | undefined): string | null | un
   return pClass;
 }
 
+// --- Helpers ajoutés pour debug / parsing / déduplication ---
+// Placez ce bloc juste après mapClassForRpc (avant la section "Données de sélection").
 
+function normalizeKeyForDedupe(s?: string) {
+  if (!s) return '';
+  const replaced = s.replace(/[\u2018\u2019\u201A\u201B]/g, "'"); // apostrophes typographiques -> droite
+  const normalized = replaced.normalize ? replaced.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : replaced;
+  return normalized.replace(/[^a-zA-Z0-9]+/g, ' ').trim().toLowerCase();
+}
+
+function toStringArrayMaybe(data: any): string[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data.map((d) => (d == null ? '' : String(d)));
+  if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed.map((d) => (d == null ? '' : String(d)));
+    } catch (e) {
+      // pas JSON : retourner la chaîne comme un seul élément
+      return [data];
+    }
+  }
+  if (typeof data === 'object') {
+    try {
+      // si supabase renvoie un object-like
+      return Object.values(data).map((v) => (v == null ? '' : String(v)));
+    } catch (e) {
+      return [];
+    }
+  }
+  return [String(data)];
+}
 
 /* ============================ Données de sélection ============================ */
 
