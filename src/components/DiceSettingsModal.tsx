@@ -56,6 +56,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
  
   return ( 
    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+       <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -140,6 +141,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               >
                 💾 Enregistrer
               </button> 
+            </div>
             </div>
           </div>
         )}
