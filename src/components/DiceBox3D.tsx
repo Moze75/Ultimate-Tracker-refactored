@@ -137,33 +137,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   // ✅ Calculer une clé unique pour les settings
   const currentSettingsKey = JSON.stringify(effectiveSettings);
   
- // ✅ Si les settings ont changé, DÉTRUIRE et réinitialiser
-  if (settingsKeyRef.current !== currentSettingsKey && diceBoxRef.current) {
-    console.log('🔄 [SETTINGS CHANGED] Destruction du DiceBox...');
-    
-    // Détruire proprement l'instance
-    try {
-      if (typeof diceBoxRef.current.clear === 'function') {
-        diceBoxRef.current.clear();
-      }
-      // Supprimer le canvas s'il existe
-      const canvas = document.querySelector('#dice-box-overlay canvas');
-      if (canvas) {
-        canvas.remove();
-      }
-    } catch (e) {
-      console.warn('Erreur lors de la destruction:', e);
-    }
-    
+  // ✅ Si les settings ont changé, réinitialiser
+  if (diceBoxRef.current && isInitialized && settingsKeyRef.current !== currentSettingsKey) {
+    console.log('🔄 Settings changés, réinitialisation du DiceBox...');
     diceBoxRef.current = null;
     setIsInitialized(false);
-    settingsKeyRef.current = currentSettingsKey;
   }
   
   if (diceBoxRef.current && isInitialized) {
     console.log('✓ DiceBox déjà initialisé');
     return;
-  }
+  } 
 
   let mounted = true;
 
@@ -171,10 +155,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     try {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🎲 [INIT] Initialisation de DiceBox...');
-      console.log('🎲 [INIT] Settings Key:', currentSettingsKey.substring(0, 50) + '...');
       console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
       console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-      console.log('🎲 [INIT] Color:', effectiveSettings.themeColor);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
       const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
@@ -281,7 +263,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     return () => {
       mounted = false;
       if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current); 
+        clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
     };
