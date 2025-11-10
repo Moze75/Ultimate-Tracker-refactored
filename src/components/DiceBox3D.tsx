@@ -134,8 +134,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
   // Initialiser UNE SEULE FOIS
  useEffect(() => {
-  // ✅ Calculer une clé unique pour les settings
-  const currentSettingsKey = JSON.stringify(effectiveSettings);
+
   
   // ✅ Si les settings ont changé, réinitialiser
   if (diceBoxRef.current && isInitialized && settingsKeyRef.current !== currentSettingsKey) {
