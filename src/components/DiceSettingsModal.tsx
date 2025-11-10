@@ -375,8 +375,8 @@ function SettingsTab({
           )}
 
       {/* Sons activés */}
-         🔊 Sons activés
-        </label>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-300">🔊 Sons activés</label>
         <button
           type="button"
           onClick={() => handleChange('soundsEnabled', !localSettings.soundsEnabled)}
@@ -391,6 +391,71 @@ function SettingsTab({
           />
         </button>
       </div>
+
+      {/* Taille */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          📏 Taille des dés : {localSettings.baseScale}
+        </label>
+        <input
+          type="range"
+          min="3"
+          max="10"
+          step="0.5"
+          value={localSettings.baseScale}
+          onChange={(e) => handleChange('baseScale', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+      </div>
+
+      {/* Gravité */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          🌍 Gravité : {localSettings.gravity}x
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="2"
+          step="0.1"
+          value={localSettings.gravity}
+          onChange={(e) => handleChange('gravity', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+      </div>
+
+      {/* Force */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          💪 Force de lancer : {localSettings.strength}
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="3"
+          step="0.1"
+          value={localSettings.strength}
+          onChange={(e) => handleChange('strength', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+      </div>
+
+      {/* Volume */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          🔊 Volume des dés : {localSettings.volume}%
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={localSettings.volume}
+          onChange={(e) => handleChange('volume', parseInt(e.target.value))}
+          className="w-full accent-purple-600"
+          disabled={!localSettings.soundsEnabled}
+        />
+      </div>
     </div>
   );
 }
@@ -398,28 +463,13 @@ function SettingsTab({
 // Composant pour l'onglet Historique
 function HistoryTab({
   history,
-  isLoading,
   onClearHistory,
   onRemoveEntry,
 }: {
   history: DiceRollHistoryEntry[];
-  isLoading: boolean;
   onClearHistory: () => void;
   onRemoveEntry: (id: string) => void;
 }) {
-  // ✅ Afficher un loader pendant le chargement
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-400">Chargement de l'historique...</p>
-      </div>
-    );
-  }
-
-  // ✅ Debug: afficher dans la console
-  console.log('🎲 [HistoryTab] Rendu avec', history.length, 'entrées:', history);
-
   if (history.length === 0) {
     return (
       <div className="text-center py-12">
@@ -434,9 +484,11 @@ function HistoryTab({
 
   return (
     <div className="space-y-3">
-      {/* Header */}
+      {/* Header avec bouton effacer */}
       <div className="flex items-center justify-between pb-2 border-b border-gray-700">
-        <p className="text-sm text-gray-400">{history.length} / 20 jets enregistrés</p>
+        <p className="text-sm text-gray-400">
+          {history.length} / 20 jets enregistrés
+        </p>
         <button
           onClick={onClearHistory}
           className="px-3 py-1 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors flex items-center gap-1"
@@ -446,13 +498,13 @@ function HistoryTab({
         </button>
       </div>
 
-      {/* Liste */}
+      {/* Liste des jets */}
       <div className="space-y-2">
         {history.map((entry) => (
           <div
             key={entry.id}
             className="bg-gray-700/50 rounded-lg p-3 border border-gray-600/50 hover:border-purple-500/50 transition-colors"
-          >
+          > 
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-200">{entry.attackName}</p>
@@ -468,7 +520,12 @@ function HistoryTab({
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-purple-400">{entry.total}</span>
+              {/* Résultat total */}
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-purple-400">{entry.total}</span>
+              </div>
+
+              {/* Détails */}
               <div className="flex-1 text-xs text-gray-400">
                 <p>
                   {entry.diceFormula} → [{entry.rolls.join(', ')}] = {entry.diceTotal}
