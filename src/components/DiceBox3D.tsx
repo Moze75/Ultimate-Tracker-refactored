@@ -147,7 +147,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   if (diceBoxRef.current && isInitialized) {
     console.log('✓ DiceBox déjà initialisé');
     return;
-  } 
+  }
 
   let mounted = true;
 
