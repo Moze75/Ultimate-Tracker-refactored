@@ -84,18 +84,26 @@ if (player.secondary_class === 'Moine') {
         }
       }
 
-      const { error } = await supabase
-        .from('players')
-        .update({
-          current_hp: Math.min(player.max_hp, player.current_hp + healing),
-          hit_dice: {
-            ...player.hit_dice,
-            used: player.hit_dice.used + 1
-          },
-          class_resources: nextCR,
-          spell_slots: nextSpellSlots
-        })
-        .eq('id', player.id);
+     // 🔧 Construire l'objet de mise à jour
+const updateData: any = {
+  current_hp: Math.min(player.max_hp, player.current_hp + healing),
+  hit_dice: {
+    ...player.hit_dice,
+    used: player.hit_dice.used + 1
+  },
+  class_resources: nextCR,
+  spell_slots: nextSpellSlots
+};
+
+// 🔧 Ajouter secondary_class_resources si classe secondaire existe
+if (player.secondary_class) {
+  updateData.secondary_class_resources = nextSecondaryCR;
+}
+
+const { error } = await supabase
+  .from('players')
+  .update(updateData)
+  .eq('id', player.id);
 
       if (error) throw error;
 
