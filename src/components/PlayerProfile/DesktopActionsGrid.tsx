@@ -65,6 +65,17 @@ if (player.class === 'Moine') {
   }
 }
 
+      // 🔧 AJOUTER ICI : Reset points de crédo pour le Moine (classe secondaire)
+const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
+if (player.secondary_class === 'Moine') {
+  nextSecondaryCR.used_credo_points = 0;
+  nextSecondaryCR.used_ki_points = 0;
+  const total = nextSecondaryCR.credo_points || nextSecondaryCR.ki_points || 0;
+  if (total > 0) {
+    recoveredLabel += ` (+${total} point${total > 1 ? 's' : ''} de crédo (classe secondaire) récupéré${total > 1 ? 's' : ''})`;
+  }
+}
+
       const nextSpellSlots = { ...(player.spell_slots || {}) };
       if (player.class === 'Occultiste' && typeof nextSpellSlots.used_pact_slots === 'number') {
         const pactSlots = nextSpellSlots.pact_slots || 0;
