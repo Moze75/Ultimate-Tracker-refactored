@@ -324,52 +324,65 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
           </div>
 
           {/* Gravité */}
-<div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">
-    🌍 Gravité : {localSettings.gravity}x
-  </label>
-  <input
-    type="range"
-    min="0.5"
-    max="2"
-    step="0.1"
-    value={localSettings.gravity}
-    onChange={(e) => handleChange('gravity', parseFloat(e.target.value))}
-    className="w-full accent-purple-600"
-  />
-  <div className="flex justify-between text-xs text-gray-500 mt-1">
-    <span>Faible (0.5x)</span>
-    <span>Normale (1x)</span>
-    <span>Forte (2x)</span>
-  </div>
-  <p className="text-xs text-gray-400 mt-1">
-    Multiplie la gravité par défaut (400). Plus c'est élevé, plus les dés tombent vite.
-  </p>
-</div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              🌍 Gravité : {localSettings.gravity}
+            </label>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={localSettings.gravity}
+              onChange={(e) => handleChange('gravity', parseFloat(e.target.value))}
+              className="w-full accent-purple-600"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Faible (0.5)</span>
+              <span>Forte (2)</span>
+            </div>
+          </div>
 
-{/* ✅ NOUVEAU : Force de lancer (strength) */}
-<div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">
-    💪 Force de lancer : {localSettings.strength || 1}
-  </label>
-  <input
-    type="range"
-    min="0.5"
-    max="3"
-    step="0.1"
-    value={localSettings.strength || 1}
-    onChange={(e) => handleChange('strength', parseFloat(e.target.value))}
-    className="w-full accent-purple-600"
-  />
-  <div className="flex justify-between text-xs text-gray-500 mt-1">
-    <span>Doux (0.5)</span>
-    <span>Normal (1)</span>
-    <span>Fort (3)</span>
-  </div>
-  <p className="text-xs text-gray-400 mt-1">
-    Contrôle la vitesse initiale des dés. Plus c'est élevé, plus le lancer est violent.
-  </p>
-</div>
+          {/* Friction */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              🤚 Friction : {localSettings.friction}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={localSettings.friction}
+              onChange={(e) => handleChange('friction', parseFloat(e.target.value))}
+              className="w-full accent-purple-600"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Glissant (0)</span>
+              <span>Rugueux (1)</span>
+            </div>
+          </div>
+
+          {/* Rebond (Restitution) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              🏀 Rebond : {localSettings.restitution}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={localSettings.restitution}
+              onChange={(e) => handleChange('restitution', parseFloat(e.target.value))}
+              className="w-full accent-purple-600"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Aucun (0)</span>
+              <span>Élastique (1)</span>
+            </div>
+          </div>
+        </div> 
 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-gray-700">
