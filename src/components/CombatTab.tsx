@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
@@ -326,11 +326,8 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     diceFormula: string;
     modifier: number;
   } | null>(null);
-  const { settings: diceSettings, reloadSettings } = useDiceSettings();
+  const { settings: diceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
-  
-  // 🔧 État pour forcer le rechargement du DiceRoller
-  const [settingsKey, setSettingsKey] = useState(0);
 
   React.useEffect(() => {
     fetchAttacks();
@@ -353,40 +350,6 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [player.id]);
-
-  // 🔧 Écouter les changements des paramètres de dés
-  useEffect(() => {
-    const handleDiceSettingsChange = () => {
-      console.log('🎲 Paramètres de dés changés, rechargement...');
-      
-      // Fermer le modal de dés
-      setDiceRollerOpen(false);
-      
-      // Recharger les settings depuis localStorage
-      if (reloadSettings) {
-        reloadSettings();
-      }
-      
-      // Incrémenter la clé pour forcer la recréation
-      setTimeout(() => {
-        setSettingsKey(prev => prev + 1);
-      }, 100);
-    };
-    
-    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'dice-settings') {
-        handleDiceSettingsChange();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [reloadSettings]);
 
   const fetchAttacks = async () => {
     try {
@@ -700,10 +663,10 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       <ConditionsSection player={player} onUpdate={onUpdate} />
 
 <DiceRollerLazy
-  key={settingsKey}
   isOpen={diceRollerOpen}
   onClose={() => setDiceRollerOpen(false)}
   rollData={rollData}
+  settings={diceSettings}
 />
       {showConcentrationCheck && (
         <ConcentrationCheckModal
