@@ -328,6 +328,9 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   } | null>(null);
   const { settings: diceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
+  
+  // 🔧 État pour forcer le rechargement du DiceRoller quand les settings changent
+  const [settingsKey, setSettingsKey] = useState(0);
 
   React.useEffect(() => {
     fetchAttacks();
