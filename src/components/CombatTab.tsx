@@ -326,17 +326,17 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     diceFormula: string;
     modifier: number;
   } | null>(null);
-  const { settings: diceSettings } = useDiceSettings();
+  const { settings: diceSettings, reloadSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
   
-  // 🔧 État pour forcer le rechargement du DiceRoller quand les settings changent
+  // 🔧 État pour forcer le rechargement du DiceRoller
   const [settingsKey, setSettingsKey] = useState(0);
 
   React.useEffect(() => {
     fetchAttacks();
   }, [player.id]);
 
-   React.useEffect(() => {
+  React.useEffect(() => {
     const handler = (e: any) => {
       try {
         if (e?.detail?.playerId && e.detail.playerId !== player.id) return;
@@ -357,20 +357,26 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   // 🔧 Écouter les changements des paramètres de dés
   useEffect(() => {
     const handleDiceSettingsChange = () => {
-      console.log('🎲 Paramètres de dés changés, rechargement du DiceRoller...');
-      // Forcer la fermeture puis réouverture pour recharger les settings
+      console.log('🎲 Paramètres de dés changés, rechargement...');
+      
+      // Fermer le modal de dés
       setDiceRollerOpen(false);
-      // Utiliser setTimeout pour laisser le temps au composant de se démonter
+      
+      // Recharger les settings depuis localStorage
+      if (reloadSettings) {
+        reloadSettings();
+      }
+      
+      // Incrémenter la clé pour forcer la recréation
       setTimeout(() => {
         setSettingsKey(prev => prev + 1);
-      }, 50);
+      }, 100);
     };
     
     window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
     
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'dice-settings') {
-        console.log('🎲 Paramètres changés depuis un autre onglet');
         handleDiceSettingsChange();
       }
     };
@@ -380,7 +386,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [reloadSettings]);
 
   const fetchAttacks = async () => {
     try {
