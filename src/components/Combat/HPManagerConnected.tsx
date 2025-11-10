@@ -21,24 +21,12 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
   // ✅ Fonction pour jouer le son de dégâts
   const playSwordSliceSound = () => {
-    try {
-      const audio = new Audio('/Sounds/Damage-sounds/sword-slice.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(err => console.warn('Erreur lecture son dégâts:', err));
-    } catch (error) {
-      console.warn('Impossible de jouer le son de dégâts:', error);
-    }
+    audioManager.play('/Sounds/Damage-sounds/sword-slice.mp3', 0.5);
   };
 
-    // ✅ Fonction pour jouer le son de guérison
+  // ✅ Fonction pour jouer le son de guérison
   const playHealingSound = () => {
-    try {
-      const audio = new Audio('/Sounds/Healing/Healing.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(err => console.warn('Erreur lecture son guérison:', err));
-    } catch (error) {
-      console.warn('Impossible de jouer le son de guérison:', error);
-    }
+    audioManager.play('/Sounds/Healing/Healing.mp3', 0.5);
   };
 
 
