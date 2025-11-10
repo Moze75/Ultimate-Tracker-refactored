@@ -336,7 +336,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     fetchAttacks();
   }, [player.id]);
 
-  React.useEffect(() => {
+   React.useEffect(() => {
     const handler = (e: any) => {
       try {
         if (e?.detail?.playerId && e.detail.playerId !== player.id) return;
@@ -353,6 +353,22 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [player.id]);
+
+  // 🔧 Écouter les changements des paramètres de dés
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dice-settings') {
+        console.log('🎲 Paramètres de dés changés, rechargement...');
+        setSettingsKey(prev => prev + 1);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const fetchAttacks = async () => {
     try {
