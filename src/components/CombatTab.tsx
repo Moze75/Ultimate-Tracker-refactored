@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
