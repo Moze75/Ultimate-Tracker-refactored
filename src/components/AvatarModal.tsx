@@ -58,11 +58,12 @@ export function AvatarModal({ url, onClose, onOpenDiceSettings }: AvatarModalPro
       onOpenDiceSettings();
       onClose();
     }}
-    className="absolute top-4 left-4 md:hidden px-3 py-2 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center gap-2 transition-colors text-sm font-medium shadow-lg z-[9999]"
+    className="absolute top-4 left-4 md:hidden flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors text-sm font-medium z-[9999] drop-shadow-lg"
+    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
     title="Paramètres des dés"
   >
-    <Dices className="w-4 h-4" />
-    <span>Paramètres</span>
+    <Dices className="w-5 h-5 drop-shadow-lg" />
+    <span className="drop-shadow-lg">Paramètres</span>
   </button>
 )}
 
