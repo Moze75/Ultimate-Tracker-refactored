@@ -10,6 +10,7 @@ import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
  import { createPortal } from 'react-dom';
 import { useDiceHistory } from '../hooks/useDiceHistory';
+import { audioManager } from '../utils/audioManager';
 
 interface DiceBox3DProps {
   isOpen: boolean;
