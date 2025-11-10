@@ -52,11 +52,11 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
     if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
       clearHistory();
     }
-  };
+  }; 
  
   return ( 
-   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
-  <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Dés 3D</h2>
