@@ -133,67 +133,61 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, []);
 
   // Initialiser UNE SEULE FOIS
- useEffect(() => {
- 
+  useEffect(() => {
+    
+    if (diceBoxRef.current && isInitialized) {
+      console.log('✓ DiceBox déjà initialisé');
+      return;
+    }
+
+    let mounted = true;
+
+    const initDiceBox = async () => {
+      try {
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+        console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
+        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+
+        if (!mounted) return;
+
+        const textureForTheme = effectiveSettings.theme 
+          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
+          : 'none';
+
+        console.log('🎨 Texture sélectionnée:', textureForTheme);
+
+        const config = {
+          assetPath: '/assets/dice-box/',
+          
+          theme_colorset: effectiveSettings.theme || 'custom',
+          theme_texture: textureForTheme,
+          
+          theme_customColorset: !effectiveSettings.theme ? {
+            name: 'custom',
+            foreground: '#ffffff',
+            background: effectiveSettings.themeColor,
+            outline: effectiveSettings.themeColor,
+            edge: effectiveSettings.themeColor,
+            texture: 'none',
+            material: effectiveSettings.themeMaterial
+          } : undefined,
+          
+          theme_material: effectiveSettings.themeMaterial || "plastic",
+          
+ // ✅ PARAMÈTRES PHYSIQUES VALIDES
+  baseScale: effectiveSettings.baseScale * 100 / 6,  // Normaliser : baseScale dans settings (3-10) → baseScale dans dice-box (~50-166)
+  gravity_multiplier: effectiveSettings.gravity * 400, // 0.5-2 → 200-800
+  strength: effectiveSettings.strength,               // 0.5-3
   
-  // ✅ Si les settings ont changé, réinitialiser
-  if (diceBoxRef.current && isInitialized && settingsKeyRef.current !== currentSettingsKey) {
-    console.log('🔄 Settings changés, réinitialisation du DiceBox...');
-    diceBoxRef.current = null;
-    setIsInitialized(false);
-  }
+  // ✅ SONS
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
   
-  if (diceBoxRef.current && isInitialized) {
-    console.log('✓ DiceBox déjà initialisé');
-    return;
-  }
-
-  let mounted = true;
-
-  const initDiceBox = async () => {
-    try {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🎲 [INIT] Initialisation de DiceBox...');
-      console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
-      console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      
-      const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-      if (!mounted) return;
-
-      const textureForTheme = effectiveSettings.theme 
-        ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-        : 'none';
-
-      console.log('🎨 Texture sélectionnée:', textureForTheme);
-
-      const config = {
-        assetPath: '/assets/dice-box/',
-        
-        theme_colorset: effectiveSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        
-        theme_customColorset: !effectiveSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: effectiveSettings.themeColor,
-          outline: effectiveSettings.themeColor,
-          edge: effectiveSettings.themeColor,
-          texture: 'none',
-          material: effectiveSettings.themeMaterial
-        } : undefined,
-        
-        theme_material: effectiveSettings.themeMaterial || "plastic",
-        
-        baseScale: effectiveSettings.baseScale * 100 / 6,
-        gravity_multiplier: effectiveSettings.gravity * 400,
-        strength: effectiveSettings.strength,
-        
-        sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-        
-        onRollComplete: (results: any) => {
+  onRollComplete: (results: any) => {
   if (!mounted) return;
   if (hasShownResultRef.current) return;
 
@@ -248,7 +242,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-           settingsKeyRef.current = currentSettingsKey; // ✅ Sauvegarder la clé
           console.log('✅ DiceBox initialisé !');
         }
       } catch (error) {
@@ -266,7 +259,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
     };
-  }, [effectiveSettings, playResultSound]);
+  }, [isOpen, effectiveSettings, playResultSound]);
 
   // Lancer les dés
   useEffect(() => {
