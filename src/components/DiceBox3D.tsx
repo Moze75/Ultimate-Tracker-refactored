@@ -249,6 +249,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
+           settingsKeyRef.current = currentSettingsKey; // ✅ Sauvegarder la clé
           console.log('✅ DiceBox initialisé !');
         }
       } catch (error) {
