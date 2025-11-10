@@ -356,16 +356,25 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   // 🔧 Écouter les changements des paramètres de dés
   useEffect(() => {
+    const handleDiceSettingsChange = (e: Event) => {
+      console.log('🎲 Paramètres de dés changés, rechargement du DiceRoller...');
+      setSettingsKey(prev => prev + 1);
+    };
+    
+    // Écouter l'événement personnalisé émis par useDiceSettings
+    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
+    
+    // Écouter aussi storage pour la synchronisation entre onglets
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'dice-settings') {
-        console.log('🎲 Paramètres de dés changés, rechargement...');
+        console.log('🎲 Paramètres changés depuis un autre onglet');
         setSettingsKey(prev => prev + 1);
       }
     };
-    
     window.addEventListener('storage', handleStorageChange);
     
     return () => {
+      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
