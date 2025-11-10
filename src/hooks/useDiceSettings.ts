@@ -119,11 +119,28 @@ export function useDiceSettings() {
     });
   }, []);
 
+    // Fonction pour recharger depuis localStorage
+  const reloadSettings = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<DiceSettings>;
+        setSettings({
+          ...DEFAULT_DICE_SETTINGS,
+          ...parsed,
+        });
+        console.log('🔄 Paramètres rechargés depuis localStorage:', parsed);
+      }
+    } catch (error) {
+      console.error('❌ Erreur rechargement settings:', error);
+    }
+  }, []);
+
   return {
     settings,
     saveSettings,
     resetSettings,
-    updateSetting,
+    reloadSettings,  // 🔧 Nouvelle fonction
     isLoading,
   };
 }
