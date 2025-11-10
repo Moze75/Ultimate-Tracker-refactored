@@ -107,16 +107,10 @@ const { error } = await supabase
 
       if (error) throw error;
 
-      onUpdate({
-        ...player,
-        current_hp: Math.min(player.max_hp, player.current_hp + healing),
-        hit_dice: {
-          ...player.hit_dice,
-          used: player.hit_dice.used + 1
-        },
-        class_resources: nextCR,
-        spell_slots: nextSpellSlots
-      });
+onUpdate({
+  ...player,
+  ...updateData // 🔧 Utilise updateData qui contient déjà secondary_class_resources
+});
 
       toast.success(`Repos court : +${healing} PV${recoveredLabel}`);
     } catch (error) {
