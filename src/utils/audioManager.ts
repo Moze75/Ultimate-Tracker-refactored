@@ -1,22 +1,41 @@
-/**
- * Gestionnaire audio centralisé pour éviter la création excessive de WebMediaPlayer
- * Réutilise les instances Audio au lieu d'en créer de nouvelles à chaque fois
- */
-
 class AudioManager {
   private audioCache: Map<string, HTMLAudioElement> = new Map();
-  private maxInstances = 10; // Limite le nombre d'instances audio
+  private maxInstances = 10;
+  private isUnlocked = false; // 🔧 AJOUTER
 
   /**
-   * Joue un son en réutilisant une instance existante ou en créant une nouvelle
+   * 🔧 Débloque l'audio sur mobile (nécessite une interaction utilisateur)
    */
+  unlock(): void {
+    if (this.isUnlocked) return;
+    
+    const dummyAudio = new Audio();
+    const promise = dummyAudio.play();
+    
+    if (promise !== undefined) {
+      promise
+        .then(() => {
+          dummyAudio.pause();
+          dummyAudio.remove();
+          this.isUnlocked = true;
+          console.log('🔓 [AudioManager] Audio débloqué');
+        })
+        .catch(() => {
+          console.warn('🔒 [AudioManager] Audio toujours bloqué (nécessite interaction utilisateur)');
+        });
+    }
+  }
+
   play(src: string, volume: number = 0.5): void {
+    // 🔧 Débloquer au premier appel
+    if (!this.isUnlocked) {
+      this.unlock();
+    }
+
     try {
       let audio = this.audioCache.get(src);
 
-      // Si l'audio n'existe pas, le créer
       if (!audio) {
-        // Si on atteint la limite, supprimer la plus ancienne
         if (this.audioCache.size >= this.maxInstances) {
           const firstKey = this.audioCache.keys().next().value;
           const oldAudio = this.audioCache.get(firstKey);
@@ -32,13 +51,11 @@ class AudioManager {
         audio.volume = volume;
         this.audioCache.set(src, audio);
 
-        // Nettoyer quand le son est terminé
         audio.addEventListener('ended', () => {
-          audio!.currentTime = 0; // Réinitialiser pour pouvoir rejouer
+          audio!.currentTime = 0;
         });
       }
 
-      // Si l'audio est déjà en cours, la redémarrer
       if (!audio.paused) {
         audio.currentTime = 0;
       }
@@ -46,20 +63,15 @@ class AudioManager {
       audio.volume = volume;
       audio.play().catch(err => {
         console.warn(`[AudioManager] Erreur lecture "${src}":`, err.message);
+        // 🔧 Retry si bloqué
+        if (err.name === 'NotAllowedError') {
+          this.isUnlocked = false;
+          console.warn('[AudioManager] Audio bloqué, réessayez après interaction utilisateur');
+        }
       });
     } catch (error) {
       console.warn(`[AudioManager] Impossible de jouer "${src}":`, error);
     }
-  }
-
-  /**
-   * Arrête tous les sons en cours
-   */
-  stopAll(): void {
-    this.audioCache.forEach(audio => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
   }
 
   /**
