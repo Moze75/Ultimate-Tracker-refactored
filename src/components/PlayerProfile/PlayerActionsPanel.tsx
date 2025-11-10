@@ -97,71 +97,93 @@ export function PlayerActionsPanel({ player, onUpdate, onOpenCampaigns }: Player
   };
 
   const handleLongRest = async () => {
-    try {
-      const nextCR: any = { ...(player.class_resources || {}) };
-      nextCR.used_rage = 0;
-      nextCR.used_bardic_inspiration = 0;
-      nextCR.used_channel_divinity = 0;
-      nextCR.used_wild_shape = 0;
-      nextCR.used_sorcery_points = 0;
-      nextCR.used_action_surge = 0;
-      nextCR.used_arcane_recovery = false;
-      nextCR.arcane_recovery_slots_used = 0;
-      nextCR.used_credo_points = 0;
-      nextCR.used_ki_points = 0;
-      nextCR.used_lay_on_hands = 0;
-      nextCR.used_favored_foe = 0;
-      nextCR.used_innate_sorcery = 0;
-      nextCR.used_supernatural_metabolism = 0;
+  try {
+    // 🔧 Reset classe principale
+    const nextCR: any = { ...(player.class_resources || {}) };
+    nextCR.used_rage = 0;
+    nextCR.used_bardic_inspiration = 0;
+    nextCR.used_channel_divinity = 0;
+    nextCR.used_wild_shape = 0;
+    nextCR.used_sorcery_points = 0;
+    nextCR.used_action_surge = 0;
+    nextCR.used_arcane_recovery = false;
+    nextCR.arcane_recovery_slots_used = 0;
+    nextCR.used_credo_points = 0;
+    nextCR.used_ki_points = 0;
+    nextCR.used_lay_on_hands = 0;
+    nextCR.used_favored_foe = 0;
+    nextCR.used_innate_sorcery = 0;
+    nextCR.used_supernatural_metabolism = 0;
 
-      const { error } = await supabase
-        .from('players')
-        .update({
-          current_hp: player.max_hp,
-          temporary_hp: 0,
-          hit_dice: {
-            total: player.level,
-            used: Math.max(0, player.hit_dice?.used - Math.floor(player.level / 2) || 0)
-          },
-          class_resources: nextCR,
-          spell_slots: {
-            ...player.spell_slots,
-            used1: 0, used2: 0, used3: 0, used4: 0,
-            used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
-            used_pact_slots: 0
-          },
-          is_concentrating: false,
-          concentration_spell: null
-        })
-        .eq('id', player.id);
+    // 🔧 AJOUTER : Reset classe secondaire
+    const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
+    nextSecondaryCR.used_rage = 0;
+    nextSecondaryCR.used_bardic_inspiration = 0;
+    nextSecondaryCR.used_channel_divinity = 0;
+    nextSecondaryCR.used_wild_shape = 0;
+    nextSecondaryCR.used_sorcery_points = 0;
+    nextSecondaryCR.used_action_surge = 0;
+    nextSecondaryCR.used_arcane_recovery = false;
+    nextSecondaryCR.arcane_recovery_slots_used = 0;
+    nextSecondaryCR.used_credo_points = 0;
+    nextSecondaryCR.used_ki_points = 0;
+    nextSecondaryCR.used_lay_on_hands = 0;
+    nextSecondaryCR.used_favored_foe = 0;
+    nextSecondaryCR.used_innate_sorcery = 0;
+    nextSecondaryCR.used_supernatural_metabolism = 0;
 
-      if (error) throw error;
+    // 🔧 Construire l'objet de mise à jour
+    const updateData: any = {
+      current_hp: player.max_hp,
+      temporary_hp: 0,
+      hit_dice: {
+        total: player.level,
+        used: Math.max(0, player.hit_dice?.used - Math.floor(player.level / 2) || 0)
+      },
+      class_resources: nextCR,
+      spell_slots: {
+        ...player.spell_slots,
+        used1: 0, used2: 0, used3: 0, used4: 0,
+        used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
+        used_pact_slots: 0
+      },
+      is_concentrating: false,
+      concentration_spell: null
+    };
 
-      onUpdate({
-        ...player,
-        current_hp: player.max_hp,
-        temporary_hp: 0,
-        hit_dice: {
-          total: player.level,
-          used: Math.max(0, player.hit_dice?.used - Math.floor(player.level / 2) || 0)
-        },
-        class_resources: nextCR,
-        spell_slots: {
-          ...player.spell_slots,
-          used1: 0, used2: 0, used3: 0, used4: 0,
-          used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
-          used_pact_slots: 0
-        },
-        is_concentrating: false,
-        concentration_spell: null
-      });
-
-      toast.success('Repos long effectué (toutes les ressources restaurées)');
-    } catch (error) {
-      console.error('Erreur lors du repos long:', error);
-      toast.error('Erreur lors du repos');
+    // 🔧 Ajouter secondary_class_resources si présent
+    if (player.secondary_class) {
+      updateData.secondary_class_resources = nextSecondaryCR;
     }
-  };
+
+    // 🔧 AJOUTER : Reset secondary_spell_slots si présent
+    if (player.secondary_spell_slots) {
+      updateData.secondary_spell_slots = {
+        ...player.secondary_spell_slots,
+        used1: 0, used2: 0, used3: 0, used4: 0,
+        used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
+        used_pact_slots: 0
+      };
+    }
+
+    const { error } = await supabase
+      .from('players')
+      .update(updateData)
+      .eq('id', player.id);
+
+    if (error) throw error;
+
+    onUpdate({
+      ...player,
+      ...updateData
+    });
+
+    toast.success('Repos long effectué (toutes les ressources restaurées)');
+  } catch (error) {
+    console.error('Erreur lors du repos long:', error);
+    toast.error('Erreur lors du repos');
+  }
+};
 
   return (
     <div className="flex flex-col gap-3 sm:gap-4 items-stretch w-32 justify-start">
