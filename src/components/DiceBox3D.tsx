@@ -246,8 +246,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
-      }
-    };
+    }
+    // 🔧 AJOUTER : Nettoyer les sons quand le composant se démonte
+    audioManager.stopAll();
+  };
   }, [isOpen, effectiveSettings, playResultSound]);
 
   // Lancer les dés
