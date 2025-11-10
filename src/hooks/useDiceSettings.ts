@@ -76,6 +76,11 @@ export function useDiceSettings() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
       setSettings(newSettings);
       console.log('✅ Paramètres des dés sauvegardés:', newSettings);
+      
+      // 🔧 Émettre un événement pour notifier les composants du changement
+      window.dispatchEvent(new CustomEvent('dice-settings-changed', { 
+        detail: newSettings 
+      }));
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde des paramètres des dés:', error);
       throw error;
