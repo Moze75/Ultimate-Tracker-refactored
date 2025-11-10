@@ -51,20 +51,20 @@ export function AvatarModal({ url, onClose, onOpenDiceSettings }: AvatarModalPro
       </button>
 
       {/* ✅ NOUVEAU : Bouton paramètres dés (visible seulement sur mobile) */}
-      {onOpenDiceSettings && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDiceSettings();
-            onClose(); // Ferme le modal après ouverture des paramètres
-          }}
-          className="absolute top-4 left-4 md:hidden px-3 py-2 rounded-lg bg-purple-600/90 hover:bg-purple-700 text-white flex items-center gap-2 transition-colors text-sm font-medium shadow-lg z-[9999]"
-          title="Paramètres des dés"
-        >
-          <Dices className="w-4 h-4" />
-          <span>Paramètres</span>
-        </button>
-      )}
+{onOpenDiceSettings && (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpenDiceSettings();
+      onClose();
+    }}
+    className="absolute top-4 left-4 md:hidden px-3 py-2 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center gap-2 transition-colors text-sm font-medium shadow-lg z-[9999]"
+    title="Paramètres des dés"
+  >
+    <Dices className="w-4 h-4" />
+    <span>Paramètres</span>
+  </button>
+)}
 
       <div className="w-screen h-screen flex items-center justify-center p-4 sm:p-6 md:p-8" onClick={onClose}>
         <img
