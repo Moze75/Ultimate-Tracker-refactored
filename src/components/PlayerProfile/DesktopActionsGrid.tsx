@@ -55,6 +55,16 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns, onOpenDi
         if (before > 0) recoveredLabel = ' (+1 Conduit divin récupéré)';
       }
 
+      // 🔧 NOUVEAU : Reset points de crédo pour le Moine
+if (player.class === 'Moine') {
+  nextCR.used_credo_points = 0;
+  nextCR.used_ki_points = 0;
+  const total = nextCR.credo_points || nextCR.ki_points || 0;
+  if (total > 0) {
+    recoveredLabel += ` (+${total} point${total > 1 ? 's' : ''} de crédo récupéré${total > 1 ? 's' : ''})`;
+  }
+}
+
       const nextSpellSlots = { ...(player.spell_slots || {}) };
       if (player.class === 'Occultiste' && typeof nextSpellSlots.used_pact_slots === 'number') {
         const pactSlots = nextSpellSlots.pact_slots || 0;
