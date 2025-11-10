@@ -32,24 +32,8 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   }, [open]);
 
 
-  // ✅ Rafraîchir l'historique quand on bascule sur l'onglet
-  useEffect(() => {
-    if (open && activeTab === 'history') {
-      setRefreshKey(prev => prev + 1);
-    }
-  }, [open, activeTab]);
 
-  // ✅ Polling pour mettre à jour automatiquement l'historique
-  useEffect(() => {
-    if (!open || activeTab !== 'history') return;
-
-    const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
-    }, 1000); // Refresh toutes les secondes
-
-    return () => clearInterval(interval);
-  }, [open, activeTab]);
-
+  
   if (!open) return null;
 
   const handleSave = () => {
@@ -70,11 +54,10 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   };
 
   const handleClearHistory = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+    if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
       clearHistory();
-      setRefreshKey(prev => prev + 1);
     }
-  };
+  };  
  
   return ( 
    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
@@ -131,7 +114,6 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             />
           ) : (
             <HistoryTab
-               key={refreshKey} // ✅ Force re-render
               history={history}
               onClearHistory={handleClearHistory}
               onRemoveEntry={removeEntry}
@@ -474,7 +456,7 @@ function SettingsTab({
 
 // Composant pour l'onglet Historique
 function HistoryTab({
-  history, 
+  history,
   onClearHistory,
   onRemoveEntry,
 }: {
