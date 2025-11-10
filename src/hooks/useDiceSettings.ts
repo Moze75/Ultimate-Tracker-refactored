@@ -13,7 +13,7 @@ export interface DiceSettings {
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
-  theme: '', // Pas de colorset prédéfini = couleur personnalisée
+  theme: 'bronze', // ⚱️ Bronze Thyléen par défaut pour les nouveaux utilisateurs
   themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
