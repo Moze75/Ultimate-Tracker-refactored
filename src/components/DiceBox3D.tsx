@@ -1,3 +1,10 @@
+/**
+ * This component uses @3d-dice/dice-box-threejs
+ * Copyright (c) 2022 3D Dice - MIT License
+ * https://github.com/3d-dice/dice-box-threejs
+ */
+
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
