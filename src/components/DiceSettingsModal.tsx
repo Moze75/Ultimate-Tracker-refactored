@@ -75,31 +75,6 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
       setRefreshKey(prev => prev + 1);
     }
   };
-  
-  if (!open) return null;
-
-  const handleSave = () => {
-    try {
-      onSave(localSettings);
-      onClose();
-    } catch (error) {
-      console.error('❌ [DiceSettingsModal] Erreur dans handleSave:', error);
-    }
-  };
-
-  const handleReset = () => {
-    setLocalSettings(DEFAULT_DICE_SETTINGS);
-  };
-
-  const handleChange = (key: keyof DiceSettings, value: any) => {
-    setLocalSettings(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleClearHistory = () => {
-    if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
-      clearHistory();
-    }
-  }; 
  
   return ( 
    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
