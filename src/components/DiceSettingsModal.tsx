@@ -17,6 +17,8 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const { history, clearHistory, removeEntry } = useDiceHistory();
+  const [refreshKey, setRefreshKey] = useState(0); // ✅ Pour forcer le refresh
+
 
   React.useEffect(() => {
     setLocalSettings(settings);
