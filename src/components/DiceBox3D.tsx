@@ -84,14 +84,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
   // ✅ Fonction pour jouer le son du lancement de dés
   const playDiceDropSound = useCallback(() => {
-    try {
-      const audio = new Audio('/assets/dice-box/sounds/dice-drop/dice_drop.mp3');
-      audio.volume = 0.6;
-      audio.play().catch(err => console.warn('Erreur lecture son lancement:', err));
-    } catch (error) {
-      console.warn('Impossible de jouer le son de lancement:', error);
-    }
-  }, []); 
+    audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
+  }, []);
 
   // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
