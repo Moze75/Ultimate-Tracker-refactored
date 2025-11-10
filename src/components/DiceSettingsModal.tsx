@@ -131,6 +131,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             />
           ) : (
             <HistoryTab
+               key={refreshKey} // ✅ Force re-render
               history={history}
               onClearHistory={handleClearHistory}
               onRemoveEntry={removeEntry}
