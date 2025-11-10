@@ -303,27 +303,31 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
             </button>
           </div>
 
-          {/* Échelle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              📏 Échelle des dés : {localSettings.scale}
-            </label>
-            <input
-              type="range"
-              min="3"
-              max="10"
-              step="0.5"
-              value={localSettings.scale}
-              onChange={(e) => handleChange('scale', parseFloat(e.target.value))}
-              className="w-full accent-purple-600"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Petit (3)</span>
-              <span>Grand (10)</span>
-            </div>
-          </div>
+{/* Échelle */}
+<div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">
+    📏 Taille des dés : {localSettings.baseScale}
+  </label>
+  <input
+    type="range"
+    min="3"
+    max="10"
+    step="0.5"
+    value={localSettings.baseScale}
+    onChange={(e) => handleChange('baseScale', parseFloat(e.target.value))}
+    className="w-full accent-purple-600"
+  />
+  <div className="flex justify-between text-xs text-gray-500 mt-1">
+    <span>Petit (3)</span>
+    <span>Moyen (6)</span>
+    <span>Grand (10)</span>
+  </div>
+  <p className="text-xs text-gray-400 mt-1">
+    Contrôle la taille physique des dés 3D.
+  </p>
+</div>
 
-          {/* Gravité */}
+{/* Gravité */}
 <div>
   <label className="block text-sm font-medium text-gray-300 mb-2">
     🌍 Gravité : {localSettings.gravity}x
@@ -343,21 +347,21 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
     <span>Forte (2x)</span>
   </div>
   <p className="text-xs text-gray-400 mt-1">
-    Multiplie la gravité par défaut (400). Plus c'est élevé, plus les dés tombent vite.
+    Multiplie la gravité par défaut. Plus c'est élevé, plus les dés tombent vite.
   </p>
 </div>
 
-{/* ✅ NOUVEAU : Force de lancer (strength) */}
+{/* Force de lancer */}
 <div>
   <label className="block text-sm font-medium text-gray-300 mb-2">
-    💪 Force de lancer : {localSettings.strength || 1}
+    💪 Force de lancer : {localSettings.strength}
   </label>
   <input
     type="range"
     min="0.5"
     max="3"
     step="0.1"
-    value={localSettings.strength || 1}
+    value={localSettings.strength}
     onChange={(e) => handleChange('strength', parseFloat(e.target.value))}
     className="w-full accent-purple-600"
   />
@@ -370,8 +374,31 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
     Contrôle la vitesse initiale des dés. Plus c'est élevé, plus le lancer est violent.
   </p>
 </div>
-        </div> 
 
+{/* ✅ NOUVEAU : Volume des sons intégrés */}
+<div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">
+    🔊 Volume des dés : {localSettings.volume}%
+  </label>
+  <input
+    type="range"
+    min="0"
+    max="100"
+    step="5"
+    value={localSettings.volume}
+    onChange={(e) => handleChange('volume', parseInt(e.target.value))}
+    className="w-full accent-purple-600"
+    disabled={!localSettings.soundsEnabled}
+  />
+  <div className="flex justify-between text-xs text-gray-500 mt-1">
+    <span>Muet (0%)</span>
+    <span>Fort (100%)</span>
+  </div>
+  <p className="text-xs text-gray-400 mt-1">
+    Volume des sons de collision dés/table intégrés au module 3D.
+  </p>
+</div>
+</div>
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-gray-700">
           <button
