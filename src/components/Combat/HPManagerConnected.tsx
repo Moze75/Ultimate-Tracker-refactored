@@ -92,9 +92,20 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
   };
 
-  const applyDamage = async () => {
+    const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
     if (damage <= 0) return;
+
+    // 🔧 Sauvegarder la position de scroll actuelle
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+
+    // 🔧 Empêcher le scroll temporairement
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = `-${scrollX}px`;
+    document.body.style.width = '100%';
 
     // ✅ Jouer le son AVANT les effets visuels
     playSwordSliceSound();
@@ -131,6 +142,16 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
       const dc = Math.max(10, Math.floor(damage / 2));
       onConcentrationCheck(dc);
     }
+
+    // 🔧 Restaurer le scroll après l'animation (durée de l'effet de sang)
+    setTimeout(() => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      window.scrollTo(scrollX, scrollY);
+    }, 2000); // Ajuste cette durée selon la durée de ton animation de sang
   };
 
   const applyHealing = async () => {
