@@ -267,7 +267,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         closeTimeoutRef.current = null;
       }
     };
-  }, [isOpen, effectiveSettings, playResultSound]);
+  }, [effectiveSettings, playResultSound]);
 
   // Lancer les dés
   useEffect(() => {
