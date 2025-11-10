@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export interface DiceSettings {
-  theme: string; // Nom du colorset prédéfini (ex: 'fire', 'ice', etc.)
+  theme: string;
   themeMaterial: 'none' | 'metal' | 'wood' | 'glass' | 'plastic';
-  themeColor: string; // Couleur personnalisée (seulement si theme === '')
+  themeColor: string;
   soundsEnabled: boolean;
   
-  // ✅ Paramètres physiques valides
-  baseScale: number;    // Taille des dés (correspond à scale dans le modal, mais baseScale dans dice-box)
-  gravity: number;      // Multiplicateur de gravité (sera multiplié par 400)
-  strength: number;     // Force du lancer (0.5 à 3)
-  volume: number;       // Volume des sons du module (0 à 100)
+  baseScale: number;     // ✅ Taille des dés (3-10)
+  gravity: number;       // ✅ Multiplicateur de gravité (0.5-2)
+  strength: number;      // ✅ Force de lancer (0.5-3)
+  volume: number;        // ✅ Volume sons module (0-100)
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
