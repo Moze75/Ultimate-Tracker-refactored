@@ -109,7 +109,7 @@ export const SUBCLASS_ALIASES: Record<string, string[]> = {
   'credo des elements': ['Crédo des Éléments', 'Credo des Elements', 'Way of the Four Elements'],
   'credo de la misericorde': ['Crédo de la Miséricorde', 'Credo de la Misericorde', 'Way of Mercy'],
   // Affichage prioritaire en ASCII pour correspondre au nom de fichier GitHub
-  'credo de l ombre': ['Crédo de l Ombre', 'Crédo de l\'Ombre', 'Crédo de l’Ombre', 'Credo de l Ombre', 'Shadow'],
+  'credo de l ombre': ['Crédo de l Ombre', 'Crédo de l\'Ombre', 'Crédo de l’ombre', 'Credo de l Ombre', 'Shadow'],
   'credo de la paume': ['Crédo de la Paume'],
 
   /* ============================
