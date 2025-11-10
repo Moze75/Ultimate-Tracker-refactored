@@ -281,7 +281,7 @@ requestAnimationFrame(() => {
     diceBoxRef.current.roll(notation);
   }
 });
-  }, [isOpen, rollData, isInitialized, playDiceDropSound]);
+  }, [rollData, isInitialized, playDiceDropSound]);
 
   // Reset à la fermeture
   useEffect(() => {
