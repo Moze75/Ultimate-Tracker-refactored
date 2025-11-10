@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { User, Upload } from 'lucide-react';
+import { User, Upload, Dices } from 'lucide-react';
 import { AvatarModal } from './AvatarModal';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -10,11 +10,10 @@ interface AvatarProps {
   onAvatarUpdate: (url: string) => void;
   size?: 'sm' | 'md' | 'lg';
   editable?: boolean;
-  // NEW: cover sur mobile, contain à partir de md
   containOnMdUp?: boolean;
-  // Multiclass badge
   secondaryClass?: string | null;
   secondaryLevel?: number | null;
+  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
 }
 
 export function Avatar({
@@ -26,6 +25,7 @@ export function Avatar({
   containOnMdUp = false,
   secondaryClass = null,
   secondaryLevel = null,
+  onOpenDiceSettings, // ✅ Ajouter
 }: AvatarProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +135,22 @@ export function Avatar({
               containOnMdUp ? 'object-cover md:object-contain' : 'object-cover'
             }`}
           />
+          
+          {/* ✅ NOUVEAU : Bouton paramètres dés (visible seulement sur mobile) */}
+          {onOpenDiceSettings && !editable && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Empêche l'ouverture du modal
+                onOpenDiceSettings();
+              }}
+              className="absolute top-2 right-2 md:hidden px-2 py-1.5 rounded-lg bg-purple-600/90 hover:bg-purple-700 text-white flex items-center gap-1.5 transition-colors text-xs font-medium shadow-lg z-10"
+              title="Paramètres des dés"
+            >
+              <Dices className="w-3.5 h-3.5" />
+              <span>Paramètres</span>
+            </button>
+          )}
+
           {editable && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-gray-900/50 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
@@ -158,6 +174,7 @@ export function Avatar({
           {editable && <Upload className="w-4 h-4 text-gray-500 mt-1" />}
         </div>
       )}
+      
       {editable && (
         <input
           ref={fileInputRef}
@@ -168,8 +185,14 @@ export function Avatar({
           disabled={isUploading}
         />
       )}
+      
+      {/* ✅ Passer onOpenDiceSettings au modal */}
       {showModal && url && (
-        <AvatarModal url={url} onClose={() => setShowModal(false)} />
+        <AvatarModal 
+          url={url} 
+          onClose={() => setShowModal(false)}
+          onOpenDiceSettings={onOpenDiceSettings}
+        />
       )}
     </div>
   );
