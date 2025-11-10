@@ -51,7 +51,7 @@ export const SUBCLASS_ALIASES: Record<string, string[]> = {
 
   'voie de l arbre monde': ['Voie de l\'Arbre-Monde', 'Voie de l arbre-monde', 'Voie de l arbre monde', 'Path of the World Tree'],
   'voie du berserker': ['Voie du Berserker', 'Berserker', 'Path of the Berserker'],
-  'voie du coeur sauvage': ['Voie du Cœur sauvage', 'Voie du Coeur sauvage', 'Path of the Wild Heart'],
+  'voie du coeur sauvage': ['Voie du Coeur sauvage', 'Voie du Cœur sauvage', 'Path of the Wild Heart'],
   'voie du zelateur': ['Voie du Zélateur', 'Voie du Zelateur', 'Path of the Zealot'],
 
   /* ============================
@@ -108,7 +108,8 @@ export const SUBCLASS_ALIASES: Record<string, string[]> = {
    * ============================ */
   'credo des elements': ['Crédo des Éléments', 'Credo des Elements', 'Way of the Four Elements'],
   'credo de la misericorde': ['Crédo de la Miséricorde', 'Credo de la Misericorde', 'Way of Mercy'],
-  'credo de l ombre': ['Crédo de l\'Ombre', 'Credo de l Ombre', 'Way of Shadow', 'Shadow'],
+  // Affichage prioritaire en ASCII pour correspondre au nom de fichier GitHub
+  'credo de l ombre': ['Credo de l Ombre', 'Crédo de l\'Ombre', 'Crédo de l’Ombre', 'Way of Shadow', 'Shadow'],
   'credo de la paume': ['Crédo de la Paume'],
 
   /* ============================
