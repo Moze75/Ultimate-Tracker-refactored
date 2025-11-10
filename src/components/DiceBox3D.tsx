@@ -232,8 +232,21 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         console.log('📦 Config complète:', config);
 
-        const box = new DiceBox('#dice-box-overlay', config);
-        await box.initialize();
+ const box = new DiceBox('#dice-box-overlay', config);
+
+// 🔧 AJOUTER : Forcer les dimensions au viewport visible
+if (containerRef.current) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+  
+  // Forcer la taille du container
+  containerRef.current.style.width = `${viewportWidth}px`;
+  containerRef.current.style.height = `${viewportHeight}px`;
+}
+
+await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
