@@ -290,7 +290,7 @@ function buildSubclassNameVariants(name: string): string[] {
   // Cas particulier: "... de dévotion" -> forcer aussi "... de Dévotion"
   const altDev = (s: string) => s.replace(/(de)\s+(d[ée]votion)/i, "de Dévotion");
   
-  // ✅ NOUVEAU: Forcer les minuscules après "l " et "d "
+  // ✅ CORRIGÉ : Forcer les bonnes casses
   const fixArticleCase = (s: string) => {
     let result = s;
     // Remplacer "de L " ou "du L " par "de l " (minuscule)
@@ -305,9 +305,8 @@ function buildSubclassNameVariants(name: string): string[] {
     });
     // Arbre-Monde -> arbre-monde (tout en minuscules)
     result = result.replace(/Arbre-Monde/gi, "arbre-monde");
-    // Cœur/Coeur sauvage -> Cœur sauvage (minuscule)
-    result = result.replace(/C[oœ]eur\s+sauvage/gi, "Cœur sauvage");
-    result = result.replace(/C[oœ]eur\s+Sauvage/gi, "Cœur sauvage");
+    // ✅ CORRIGÉ : Garder "Cœur sauvage" avec C majuscule
+    result = result.replace(/c[oœ]eur\s+sauvage/gi, "Cœur sauvage");
     return result;
   };
   
@@ -325,17 +324,13 @@ function buildSubclassNameVariants(name: string): string[] {
     const firstCapExact = v.charAt(0).toUpperCase() + v.slice(1);
     extraVariants.push(firstCapExact);
     
-    // Version avec première lettre majuscule, reste en minuscule
-    const firstCapLower = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-    extraVariants.push(firstCapLower);
-    
     // Version complètement minuscule
     extraVariants.push(v.toLowerCase());
     
     // Version avec fixArticleCase appliqué
     extraVariants.push(fixArticleCase(v));
     extraVariants.push(fixArticleCase(firstCapExact));
-    extraVariants.push(fixArticleCase(firstCapLower));
+    extraVariants.push(fixArticleCase(v.toLowerCase()));
   });
 
   const allVariants = uniq([
@@ -347,6 +342,7 @@ function buildSubclassNameVariants(name: string): string[] {
   ]);
 
   return allVariants;
+
 }
 
 /* ===========================================================
