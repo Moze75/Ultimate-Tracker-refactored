@@ -92,7 +92,7 @@ export function DesktopView({
             <div
               className="min-h-screen"
               style={{
-                width: '1800px', // Réduit de moitié (de 3600px à 1800px)
+                width: '600px', // Réduit de moitié (de 3600px à 1800px)
                 backgroundImage: 'url(/background/bgfan.jpg)',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
