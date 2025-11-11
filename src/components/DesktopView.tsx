@@ -88,27 +88,24 @@ export function DesktopView({
 {/* Image de background qui scroll avec l'interface */}
 {deviceType === 'desktop' && (
   <div className="absolute inset-0 z-0 pointer-events-none">
-    {/* Image de fond (remontée vers le haut en changeant la position Y) */}
-    <div className="absolute inset-0 flex justify-center z-[1]">
+    <div className="absolute inset-0 flex justify-center">
       <div
         className="min-h-screen"
         style={{
-          width: '100%',
+          // largeur fixe souhaitée (change à 2500px ou autre)
+          width: '2500px',
           backgroundImage: 'url(/background/bgfan.png)',
           backgroundRepeat: 'no-repeat',
-          // remonte l'image : augmente la valeur négative si tu veux la monter encore
-          backgroundPosition: 'center -120px',
-          backgroundSize: 'cover',
-          filter: 'brightness(0.9)',
+          // colle le haut de l'image sur le haut du conteneur
+          backgroundPosition: 'center top',
+          // force la largeur d'affichage sans "cover" qui zoomait l'image
+          backgroundSize: '2500px auto',
+          // l'image doit scroller avec le contenu (valeur par défaut "scroll")
+          backgroundAttachment: 'scroll',
+          filter: 'brightness(0.95)',
         }}
       />
     </div>
-
-    {/* Petit fade en haut : court (120px) et discret pour ne pas masquer l'image */}
-    <div
-      className="absolute top-0 left-0 right-0 z-[2] pointer-events-none"
-
-    />
   </div>
 )}
 
