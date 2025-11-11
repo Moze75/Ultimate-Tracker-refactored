@@ -85,33 +85,15 @@ export function DesktopView({
 
   return (
     <>
-      {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 flex justify-center">
-            <div
-              className="h-screen"
-              style={{
-                width: '3600px',
-                backgroundImage: 'url(/background/bgfan.jpg)',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 120px', // Décalé vers le bas (était 'center top')
-                backgroundSize: 'cover',
-                filter: 'brightness(0.9)',
-              }}
-            />
-          </div>
-        </div>
-      )}
-
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Bande grise foncée qui scroll avec le contenu - touche maintenant le haut */}
+          {/* Bande grise foncée qui scroll avec le contenu - touche le haut */}
           <div 
             className="absolute left-0 right-0 -z-10 pointer-events-none"
             style={{ 
               height: `${headerBandHeight}px`,
-              top: '0', // Touche maintenant le haut de l'écran (était '1rem')
+              top: '0', // Touche le haut de l'écran
               background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), transparent)'
             }}
           />
