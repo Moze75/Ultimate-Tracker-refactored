@@ -260,88 +260,86 @@ function getSubclassDirNames(): string[] {
  */
 function buildSubclassNameVariants(name: string): string[] {
   const base = normalizeName(name);
-  const lower = base.toLowerCase();
-  const tFr = titleCaseFrench(base);
-  const sent = sentenceCaseFrench(base);
-  const noParen = stripParentheses(base);
-  const noParenLower = noParen.toLowerCase();
-  const noParenT = titleCaseFrench(noParen);
-  const noParenSent = sentenceCaseFrench(noParen);
-  const apos = normalizeApos(base);
-  const aposLower = apos.toLowerCase();
-  const aposT = titleCaseFrench(apos);
-  const aposSent = sentenceCaseFrench(apos);
-
-  // ✅ Variantes avec espaces au lieu d'apostrophes
-  const withSpaces = replaceApostropheWithSpace(base);
-  const withSpacesLower = withSpaces.toLowerCase();
-  const withSpacesTFr = titleCaseFrench(withSpaces);
-  const withSpacesSent = sentenceCaseFrench(withSpaces);
-
-  const withAccents = [
-    base, lower, tFr, sent,
-    noParen, noParenLower, noParenT, noParenSent,
-    apos, aposLower, aposT, aposSent,
-    withSpaces, withSpacesLower, withSpacesTFr, withSpacesSent,
-  ];
-
-  const noAccents = withAccents.map(stripDiacritics);
-
-  // Cas particulier: "... de dévotion" -> forcer aussi "... de Dévotion"
-  const altDev = (s: string) => s.replace(/(de)\s+(d[ée]votion)/i, "de Dévotion");
   
-  // ✅ CORRIGÉ : Forcer les bonnes casses
-  const fixArticleCase = (s: string) => {
+  // ✅ NOUVEAU : Appliquer les corrections de casse AVANT tout
+  const fixSpecialCases = (s: string) => {
     let result = s;
     // Remplacer "de L " ou "du L " par "de l " (minuscule)
     result = result.replace(/\b(de|du)\s+L\s+/gi, (match) => {
       const article = match.trim().split(/\s+/)[0].toLowerCase();
       return article + " l ";
     });
-    // Remplacer "de D " ou "du D " par "de d " (minuscule)
-    result = result.replace(/\b(de|du)\s+D\s+/gi, (match) => {
-      const article = match.trim().split(/\s+/)[0].toLowerCase();
-      return article + " d ";
-    });
     // Arbre-Monde -> arbre-monde (tout en minuscules)
     result = result.replace(/Arbre-Monde/gi, "arbre-monde");
-    // ✅ CORRIGÉ : Garder "Cœur sauvage" avec C majuscule
-    result = result.replace(/c[oœ]eur\s+sauvage/gi, "Cœur sauvage");
+    result = result.replace(/arbre\s+monde/gi, "arbre-monde");
+    // ✅ IMPORTANT : Cœur sauvage doit TOUJOURS avoir C majuscule
+    result = result.replace(/\bc[oœ]eur\s+sauvage\b/gi, "Cœur sauvage");
+    result = result.replace(/\bcoeur\s+sauvage\b/gi, "Cœur sauvage");
     return result;
   };
   
+  // Appliquer les corrections spéciales dès le début
+  const baseCorrected = fixSpecialCases(base);
+  
+  const lower = baseCorrected.toLowerCase();
+  const tFr = titleCaseFrench(baseCorrected);
+  const sent = sentenceCaseFrench(baseCorrected);
+  const noParen = stripParentheses(baseCorrected);
+  const noParenLower = noParen.toLowerCase();
+  const noParenT = titleCaseFrench(noParen);
+  const noParenSent = sentenceCaseFrench(noParen);
+  const apos = normalizeApos(baseCorrected);
+  const aposLower = apos.toLowerCase();
+  const aposT = titleCaseFrench(apos);
+  const aposSent = sentenceCaseFrench(apos);
+
+  // Variantes avec espaces au lieu d'apostrophes
+  const withSpaces = replaceApostropheWithSpace(baseCorrected);
+  const withSpacesLower = withSpaces.toLowerCase();
+  const withSpacesTFr = titleCaseFrench(withSpaces);
+  const withSpacesSent = sentenceCaseFrench(withSpaces);
+
+  const withAccents = [
+    baseCorrected, lower, tFr, sent,
+    noParen, noParenLower, noParenT, noParenSent,
+    apos, aposLower, aposT, aposSent,
+    withSpaces, withSpacesLower, withSpacesTFr, withSpacesSent,
+  ];
+
+  // ✅ Appliquer fixSpecialCases à TOUTES les variantes
+  const withAccentsCorrected = withAccents.map(fixSpecialCases);
+  const noAccents = withAccentsCorrected.map(stripDiacritics);
+
+  // Cas particulier: "... de dévotion"
+  const altDev = (s: string) => s.replace(/(de)\s+(d[ée]votion)/i, "de Dévotion");
+  
   const withAltDev = uniq([
-    ...withAccents, 
-    ...withAccents.map(altDev), 
-    ...withAccents.map(fixArticleCase),
-    ...withAccents.map(s => fixArticleCase(altDev(s)))
+    ...withAccentsCorrected, 
+    ...withAccentsCorrected.map(altDev), 
+    ...withAccentsCorrected.map(fixSpecialCases),
   ]);
 
-  // ✅ Ajouter des variations supplémentaires
+  // Ajouter des variations supplémentaires
   const extraVariants: string[] = [];
   withAltDev.forEach(v => {
-    // Version avec première lettre majuscule, reste exact
     const firstCapExact = v.charAt(0).toUpperCase() + v.slice(1);
     extraVariants.push(firstCapExact);
-    
-    // Version complètement minuscule
     extraVariants.push(v.toLowerCase());
-    
-    // Version avec fixArticleCase appliqué
-    extraVariants.push(fixArticleCase(v));
-    extraVariants.push(fixArticleCase(firstCapExact));
-    extraVariants.push(fixArticleCase(v.toLowerCase()));
+    extraVariants.push(fixSpecialCases(v));
+    extraVariants.push(fixSpecialCases(firstCapExact));
+    extraVariants.push(fixSpecialCases(v.toLowerCase()));
   });
 
   const allVariants = uniq([
     ...withAltDev, 
     ...noAccents, 
     ...noAccents.map(altDev), 
-    ...noAccents.map(fixArticleCase),
+    ...noAccents.map(fixSpecialCases),
     ...extraVariants
   ]);
 
   return allVariants;
+
 
 }
 
