@@ -84,33 +84,39 @@ export function DesktopView({
   const headerBandHeight = 500; // en pixels
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-{/* Image de background fixe */}
-{deviceType === 'desktop' && (
-  <div className="fixed inset-0 z-0 pointer-events-none flex items-start justify-center">
-   <img
-  src="/background/bgfan.png"
-  alt="background"
-  style={{
-    position: 'absolute',
-    top: 0,
-    left: '50%',
-    transform: 'translateX(-50%) scale(1.25)',
-    transformOrigin: 'top center',
-    width: '1500px',
-    maxWidth: 'none',
-    height: '100vh',
-    objectFit: 'cover',
-    pointerEvents: 'none',
-    userSelect: 'none',
-    filter: 'brightness(0.95)',
-    zIndex: 0,
-  }}
-/>
-  </div>
-)}
-      <div className="relative z-10 h-full overflow-y-auto p-4 lg:p-6 desktop-compact-layout">
-        <div className="max-w-[1280px] mx-auto space-y-4">
+  return (
+    <>
+      {/* Image de background fixe */}
+      {deviceType === 'desktop' && (
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <img
+            src="/background/bgfan.png"
+            alt="background"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: '50%',
+              transform: 'translateX(-50%) scale(1.25)',
+              transformOrigin: 'top center',
+              width: '1500px',
+              maxWidth: 'none',
+              height: '100vh',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              filter: 'brightness(0.95)',
+              zIndex: 0,
+            }}
+          />
+        </div>
+      )}
+
+      {/* Conteneur principal avec layout flex */}
+      <div className="fixed inset-0 z-10 flex flex-col overflow-hidden">
+        
+        {/* Zone scrollable : Header + Grilles */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 desktop-compact-layout">
+          <div className="max-w-[1280px] mx-auto space-y-4">
 
 
 
