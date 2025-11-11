@@ -45,6 +45,11 @@ export function DesktopView({
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
+  
+  // 🆕 AJOUT : État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
+  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
+    return localStorage.getItem('desktop-background') || '/background/bgfan.png';
+  });
 
   const deviceType = useResponsiveLayout();
   const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
@@ -80,6 +85,12 @@ export function DesktopView({
     });
   };
 
+  // 🆕 AJOUT : Fonction pour changer et sauvegarder le fond d'écran
+  const handleBackgroundChange = (url: string) => {
+    setBackgroundImage(url);
+    localStorage.setItem('desktop-background', url);
+  };
+
   return (
     <>
           {/* Image de background fixe - ne bouge jamais */}
@@ -91,7 +102,7 @@ export function DesktopView({
           }}
         >
           <img
-            src="/background/bgfan.png"
+            src={backgroundImage}
             alt="background"
             style={{
               position: 'fixed',
@@ -239,6 +250,8 @@ export function DesktopView({
         onClose={() => setShowDiceSettings(false)}
         settings={diceSettings}
         onSave={saveDiceSettings}
+        currentBackground={backgroundImage}
+        onBackgroundChange={handleBackgroundChange}
       />
       
       {showConcentrationCheck && (
