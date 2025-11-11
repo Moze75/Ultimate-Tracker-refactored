@@ -104,7 +104,7 @@ export function DesktopView({
 
           {/* Bande grise foncée derrière le header (z-5) */}
           <div className="fixed top-0 left-0 right-0 z-[5] pointer-events-none">
-            <div className="h-50 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-transparent" />
+            <div className="h-10 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-transparent" />
           </div>
         </>
       )}
