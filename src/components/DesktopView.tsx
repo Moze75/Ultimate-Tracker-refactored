@@ -81,7 +81,7 @@ export function DesktopView({
   };
 
   // Hauteur de la bande grise (agrandie)
-  const headerBandHeight = 430; // en pixels
+  const headerBandHeight = 600; // en pixels
 
   return (
     <>
