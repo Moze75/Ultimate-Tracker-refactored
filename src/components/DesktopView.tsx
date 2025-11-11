@@ -82,7 +82,7 @@ export function DesktopView({
 
   return (
     <>
-      {/* Image de background fixe - ne bouge jamais */}
+          {/* Image de background fixe - ne bouge jamais */}
       {deviceType === 'desktop' && (
         <div 
           className="fixed inset-0 z-0 pointer-events-none"
@@ -91,22 +91,21 @@ export function DesktopView({
           }}
         >
           <img
-             src="/background/bgfan.png"
+            src="/background/bgfan.png"
             alt="background"
             style={{
               position: 'fixed',
               top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              transformOrigin: 'top center',
-              width: '100vw',
-              height: '100vh',
+              left: 0,
+              width: '100%',
+              height: '100%',
               objectFit: 'cover',
+              objectPosition: 'center top',
               pointerEvents: 'none',
               userSelect: 'none',
               filter: 'brightness(0.95)',
             }}
-          /> 
+          />
         </div>
       )}
 
