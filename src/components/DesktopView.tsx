@@ -165,8 +165,8 @@ export function DesktopView({
               </div>
             </div> 
 
-                   {/* Grille Skills + TabbedPanel */}
-            <div className="grid grid-cols-12 gap-4">
+           {/* Grille Skills + TabbedPanel */}
+            <div className="grid grid-cols-12 gap-4 items-start">
               <div className="col-span-4">
                 <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full h-[1000px] overflow-y-auto">
                   <StandaloneSkillsSection
@@ -177,7 +177,7 @@ export function DesktopView({
               </div>
 
               <div className="col-span-8">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full h-[1000px] flex flex-col">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full h-[1000px] flex flex-col overflow-hidden">
                   <TabbedPanel
                     player={player}
                     inventory={inventory}
