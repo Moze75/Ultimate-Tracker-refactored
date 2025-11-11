@@ -83,22 +83,30 @@ export function DesktopView({
   return (
     <>
       {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 flex justify-center">
-            <div
-              className="h-screen"
-              style={{
-                width: '3600px',
-                backgroundImage: 'url(/background/bgfan.jpg)',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center top',
-                backgroundSize: 'cover',
-                filter: 'brightness(0.9)',
-              }}
-            />
+        <>
+          {/* Background image layer (z-0) */}
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 flex justify-center">
+              <div
+                className="h-screen"
+                style={{
+                  width: '3600px',
+                  backgroundImage: 'url(/background/bgfan.jpg)',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center top',
+                  backgroundSize: 'cover',
+                  filter: 'brightness(0.9)',
+                }}
+              />
+            </div>
+            <div className="absolute inset-0 bg-black/40" />
           </div>
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+
+          {/* Bande grise foncée derrière le header (z-5) */}
+          <div className="fixed top-0 left-0 right-0 z-[5] pointer-events-none">
+            <div className="h-32 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-transparent" />
+          </div>
+        </>
       )}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
