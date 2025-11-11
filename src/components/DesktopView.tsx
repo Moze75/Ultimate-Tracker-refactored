@@ -86,35 +86,37 @@ export function DesktopView({
   return (
     <>
       {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 flex justify-center">
-            <div
-              className="h-screen"
-              style={{
-                width: '3600px',
-                backgroundImage: 'url(/background/bgfan.jpg)',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center top',
-                backgroundSize: 'cover',
-                filter: 'brightness(0.9)',
-              }}
-            />
+        <>
+          {/* Bande grise foncée fixée en haut */}
+          <div 
+            className="fixed top-0 left-0 right-0 z-[1] pointer-events-none"
+            style={{ 
+              height: `${headerBandHeight}px`,
+              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), transparent)'
+            }}
+          />
+
+          {/* Background image qui commence sous la bande grise */}
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 flex justify-center">
+              <div
+                className="h-screen"
+                style={{
+                  width: '3600px',
+                  backgroundImage: 'url(/background/bgfan.jpg)',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: `center ${headerBandHeight}px`,
+                  backgroundSize: 'cover',
+                  filter: 'brightness(0.9)',
+                }}
+              />
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
-
-          {/* Bande grise foncée qui scroll avec le contenu */}
-          <div 
-            className="absolute left-0 right-0 -z-10 pointer-events-none"
-            style={{ 
-              height: `${headerBandHeight}px`,
-              top: '1rem', // Aligne avec le padding p-4
-              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), transparent)'
-            }}
-          />
 
           {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
