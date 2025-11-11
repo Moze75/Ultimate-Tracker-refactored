@@ -46,7 +46,7 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
   
-  // 🆕 AJOUT : État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
+  // 🆕 État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/background/bgfan.png';
   });
@@ -85,7 +85,7 @@ export function DesktopView({
     });
   };
 
-  // 🆕 AJOUT : Fonction pour changer et sauvegarder le fond d'écran
+  // 🆕 Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
@@ -93,7 +93,7 @@ export function DesktopView({
 
   return (
     <>
-          {/* Image de background fixe - ne bouge jamais */}
+      {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */}
       {deviceType === 'desktop' && (
         <div 
           className="fixed inset-0 z-0 pointer-events-none"
@@ -120,10 +120,10 @@ export function DesktopView({
         </div>
       )}
 
-      {/* Conteneur principal - occupe tout l'écran, pas de scroll sur body */}
+      {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
       <div className="fixed inset-0 z-10 flex flex-col">
         
-        {/* Zone scrollable - contient Header + Grilles + Bouton */}
+        {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
         <div 
           className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
           style={{
@@ -175,33 +175,32 @@ export function DesktopView({
               </div>
             </div> 
 
-                {/* Grille Skills + TabbedPanel */}
-     <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
-                <StandaloneSkillsSection
-                  player={player}
-                  onSkillClick={handleSkillClick}
-                />
+            {/* Grille Skills + TabbedPanel */}
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4 flex">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+                  <StandaloneSkillsSection
+                    player={player}
+                    onSkillClick={handleSkillClick}
+                  />
+                </div>
+              </div>
+
+              <div className="col-span-8 flex">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+                  <TabbedPanel
+                    player={player}
+                    inventory={inventory}
+                    onPlayerUpdate={onPlayerUpdate}
+                    onInventoryUpdate={onInventoryUpdate}
+                    classSections={classSections}
+                    hiddenTabs={['bag']}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="col-span-8 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
-                <TabbedPanel
-                  player={player}
-                  inventory={inventory}
-                  onPlayerUpdate={onPlayerUpdate}
-                  onInventoryUpdate={onInventoryUpdate}
-                  classSections={classSections}
-                  hiddenTabs={['bag']}
-                />
-              </div>
-            </div>
-          </div>
-
-
-            {/* Bouton Retour aux personnages - à la fin de la zone scrollable */}
+            {/* Bouton Retour aux personnages - À LA FIN DE LA ZONE SCROLLABLE */}
             {onBackToSelection && (
               <div className="w-full mt-6 pb-6">
                 <button
@@ -219,7 +218,7 @@ export function DesktopView({
 
       </div>
 
-      {/* Modals en overlay */}
+      {/* 🔥 MODALS EN OVERLAY */}
       <DiceRollerLazy
         isOpen={diceRoll !== null}
         onClose={() => setDiceRoll(null)}
