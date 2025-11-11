@@ -178,7 +178,7 @@ export function DesktopView({
                 />
               </div>
             </div>
-          </div>
+          </div> 
 
           {/* Bouton Retour aux personnages */}
           {onBackToSelection && (
