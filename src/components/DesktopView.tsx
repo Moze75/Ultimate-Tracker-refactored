@@ -109,7 +109,7 @@ export function DesktopView({
   </div>
 )}
       <div className="relative z-10 h-screen overflow-hidden p-4 lg:p-6 desktop-compact-layout">
-        <div className="max-w-[1280px] mx-auto space-y-4">
+      <div className="max-w-[1280px] mx-auto space-y-4 h-full overflow-y-auto pb-6">
 
 
 
