@@ -91,15 +91,17 @@ export function DesktopView({
 
   return (
     <>
-      {/* IMAGE DE BACKGROUND FIXE */}
+          {/* IMAGE DE BACKGROUND FIXE */}
       {deviceType === 'desktop' && (
         <div 
+          key={backgroundImage}
           className="fixed inset-0 pointer-events-none"
           style={{
             zIndex: -1,
           }}
         >
           <img
+            key={backgroundImage}
             src={backgroundImage}
             alt="background"
             className="w-full h-full object-cover"
