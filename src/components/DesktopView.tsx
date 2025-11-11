@@ -176,8 +176,8 @@ export function DesktopView({
                 </div>
               </div>
 
-              <div className="col-span-8">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col" style={{ maxHeight: '880px' }}>
+                          <div className="col-span-8">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-hidden" style={{ maxHeight: '880px' }}>
                   <TabbedPanel
                     player={player}
                     inventory={inventory}
@@ -188,7 +188,6 @@ export function DesktopView({
                   />
                 </div>
               </div>
-            </div>
 
             {/* Bouton Retour aux personnages - à la fin de la zone scrollable */}
             {onBackToSelection && (
