@@ -95,7 +95,7 @@ export function DesktopView({
       style={{
         position: 'absolute',
         top: 0,
-        left: '50%',
+        left: '0%',
         transform: 'translateX(-50%)',
         width: '2500px',    // <- largeur fixe souhaitée (change si besoin)
         height: 'auto',     // garde les proportions, pas de crop vertical
