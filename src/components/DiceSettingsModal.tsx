@@ -596,19 +596,81 @@ function BackgroundTab({
   onBackgroundChange?: (backgroundUrl: string) => void;
 }) {
   // Liste des fonds d'écran disponibles
-  const backgrounds = [
-    { url: '/background/bgfan.png', name: 'Éventail' },
-    { url: '/fondecran/bg1.jpg', name: 'Fond 1' },
-    { url: '/fondecran/bg2.jpg', name: 'Fond 2' },
-    { url: '/fondecran/bg3.jpg', name: 'Fond 3' },
-    { url: '/fondecran/bg4.jpg', name: 'Fond 4' },
-    { url: '/fondecran/bg5.jpg', name: 'Fond 5' },
-    { url: '/fondecran/bg6.jpg', name: 'Fond 6' },
-    { url: '/fondecran/bg7.jpg', name: 'Fond 7' },
-    { url: '/fondecran/bg8.jpg', name: 'Fond 8' },
-    { url: '/fondecran/bg9.jpg', name: 'Fond 9' },
-    { url: '/fondecran/bg10.jpg', name: 'Fond 10' },
-  ];
+// Composant pour l'onglet Fond d'écran
+function BackgroundTab({
+  currentBackground,
+  onBackgroundChange,
+}: {
+  currentBackground?: string;
+  onBackgroundChange?: (backgroundUrl: string) => void;
+}) {
+  const [availableBackgrounds, setAvailableBackgrounds] = React.useState<Array<{ url: string; name: string }>>([
+    { url: '/background/bgfan.png', name: 'bgfan' },
+  ]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Charger dynamiquement les images du dossier fondecran
+  React.useEffect(() => {
+    const loadBackgrounds = async () => {
+      const backgrounds: Array<{ url: string; name: string }> = [
+        { url: '/background/bgfan.png', name: 'bgfan' },
+      ];
+
+      // Liste des noms de fichiers connus dans le dossier fondecran
+      const imageNames = [
+        'bg1', 'bg2', 'bg3', 'bg4', 'bg5',
+        'bg6', 'bg7', 'bg8', 'bg9', 'bg10',
+        'bg11', 'bg12', 'bg13', 'bg14', 'bg15',
+        'bg16', 'bg17', 'bg18', 'bg19', 'bg20',
+        'bg21', 'bg22', 'bg23', 'bg24', 'bg25',
+        'bg26', 'bg27', 'bg28', 'bg29', 'bg30'
+      ];
+
+      // Tenter de charger chaque image
+      for (const name of imageNames) {
+        try {
+          // Tenter différentes extensions
+          const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+          
+          for (const ext of extensions) {
+            const url = `/fondecran/${name}.${ext}`;
+            
+            // Vérifier si l'image existe en essayant de la charger
+            const img = new Image();
+            const imageExists = await new Promise<boolean>((resolve) => {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+              img.src = url;
+            });
+
+            if (imageExists) {
+              backgrounds.push({ url, name });
+              break; // Arrêter dès qu'on trouve une extension valide
+            }
+          }
+        } catch (error) {
+          // Ignorer les erreurs et continuer
+          console.debug(`Image ${name} non trouvée`);
+        }
+      }
+
+      setAvailableBackgrounds(backgrounds);
+      setIsLoading(false);
+    };
+
+    loadBackgrounds();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-400 text-sm">Chargement des fonds d'écran...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -617,12 +679,12 @@ function BackgroundTab({
           Choisissez un fond d'écran
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Cliquez sur une image pour l'appliquer en arrière-plan
+          Cliquez sur une image pour l'appliquer en arrière-plan ({availableBackgrounds.length} disponible{availableBackgrounds.length > 1 ? 's' : ''})
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {backgrounds.map((bg) => (
+        {availableBackgrounds.map((bg) => (
           <button
             key={bg.url}
             type="button"
