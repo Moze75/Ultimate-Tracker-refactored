@@ -80,7 +80,7 @@ export function DesktopView({
     });
   };
 
-  // Hauteur de la bande grise depuis le haut du conteneur
+  // Hauteur de la bande grise (ajustable ici)
   const headerBandHeight = 310; // en pixels
 
   return (
@@ -104,17 +104,19 @@ export function DesktopView({
       )}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
-        <div className="max-w-[1280px] mx-auto space-y-4">
+        
+        {/* Bande grise foncée qui scroll avec le contenu - remontée jusqu'en haut */}
+        <div 
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{ 
+            height: `${headerBandHeight}px`,
+            top: 0, // Commence en haut du conteneur parent
+            background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), rgba(17, 24, 39, 0.70), transparent)',
+            zIndex: 1 // Au-dessus du background mais sous le contenu
+          }}
+        />
 
-          {/* Bande grise foncée qui scroll avec le contenu - EXACTEMENT comme v4 mais plus haute */}
-          <div 
-            className="absolute left-0 right-0 -z-10 pointer-events-none"
-            style={{ 
-              height: `${headerBandHeight}px`,
-              top: '1rem', // EXACTEMENT comme v4 - ne pas changer !
-              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), rgba(17, 24, 39, 0.70), transparent)'
-            }}
-          />
+        <div className="max-w-[1280px] mx-auto space-y-4 relative" style={{ zIndex: 2 }}>
 
           {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
