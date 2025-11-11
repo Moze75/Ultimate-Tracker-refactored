@@ -192,28 +192,7 @@ const BLOOD_SPLASH = (() => {
     return layerEl;
   }
 
-   function ensureShakeWrapper() {
-    if (shakeWrapper && shakeWrapper.isConnected) return shakeWrapper;
-
-    // 🔧 CORRECTION : Chercher d'abord un wrapper existant dans le DOM
-    const existingWrapper = document.querySelector(".blood-shake-wrapper") as HTMLElement;
-    if (existingWrapper) {
-      shakeWrapper = existingWrapper;
-      return shakeWrapper;
-    }
-
-    const rootGuess = document.querySelector("#root") || document.body;
-
-    if (rootGuess.classList.contains("blood-shake-wrapper")) {
-      shakeWrapper = rootGuess as HTMLElement;
-      return shakeWrapper;
-    }
-
-    // 🔧 CORRECTION : Ne pas créer de wrapper si on est en fixed layout
-    // On applique le shake directement sur le body
-    shakeWrapper = document.body;
-    return shakeWrapper;
-  }
+   
 
   function triggerShake() {
     function jitter(n: number) {
@@ -452,7 +431,7 @@ const BLOOD_SPLASH = (() => {
     if (!dmg || dmg <= 0) return;
 
     injectCssOnce();
-    ensureShakeWrapper();
+ 
     ensureLayer();
     slashGeom = newSlashGeom();
 
