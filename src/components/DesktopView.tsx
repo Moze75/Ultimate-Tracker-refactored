@@ -186,9 +186,13 @@ export function DesktopView({
             </div>
           </div>
 
-               {/* Bouton Retour aux personnages */}
-          {onBackToSelection && (
-            <div className="w-full mt-6 pb-6">
+                </div>
+        </div>
+
+        {/* Zone fixe en bas : Bouton Retour aux personnages */}
+        {onBackToSelection && (
+          <div className="flex-shrink-0 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm p-4">
+            <div className="max-w-[1280px] mx-auto">
               <button
                 onClick={onBackToSelection}
                 className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
@@ -197,11 +201,10 @@ export function DesktopView({
                 Retour aux personnages
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-        </div>
       </div>
-    </div>
 
       {/* ✅ DiceRoller en overlay sur toute l'interface */}
       <DiceRollerLazy
