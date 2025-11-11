@@ -93,7 +93,7 @@ export function DesktopView({
         className="min-h-screen"
         style={{
           // largeur fixe souhaitée (change à 2500px ou autre)
-          width: '2500px',
+          width: '1500px',
           backgroundImage: 'url(/background/bgfan.png)',
           backgroundRepeat: 'no-repeat',
           // colle le haut de l'image sur le haut du conteneur
