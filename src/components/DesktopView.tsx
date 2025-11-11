@@ -104,17 +104,18 @@ export function DesktopView({
       )}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
-        {/* Bande grisée avec dégradé attachée au contenu scrollable */}
-        <div 
-          className="absolute top-0 left-0 right-0 pointer-events-none"
-          style={{ 
-            height: `${headerBandHeight}px`,
-            background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), rgba(17, 24, 39, 0.70), transparent)',
-            zIndex: 1
-          }}
-        />
+        <div className="max-w-[1280px] mx-auto space-y-4 relative">
 
-        <div className="max-w-[1280px] mx-auto space-y-4 relative z-[2]">
+          {/* Bande grisée avec dégradé attachée au contenu scrollable */}
+          <div 
+            className="absolute left-0 right-0 pointer-events-none"
+            style={{ 
+              top: '-1rem', // Compense le padding p-4
+              height: `${headerBandHeight}px`,
+              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), rgba(17, 24, 39, 0.70), transparent)',
+              zIndex: -1
+            }}
+          />
 
           {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
