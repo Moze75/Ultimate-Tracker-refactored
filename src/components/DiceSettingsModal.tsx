@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, History, Trash2 } from 'lucide-react';
+import { X, Settings, History, Trash2, Image } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
 import { useDiceHistory, formatRelativeTime, type DiceRollHistoryEntry } from '../hooks/useDiceHistory';
@@ -9,11 +9,13 @@ interface DiceSettingsModalProps {
   onClose: () => void;
   settings: DiceSettings;
   onSave: (settings: DiceSettings) => void;
+  currentBackground?: string;
+  onBackgroundChange?: (backgroundUrl: string) => void;
 }
 
-type TabType = 'settings' | 'history'; 
+type TabType = 'settings' | 'history' | 'background'; 
 
-export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSettingsModalProps) {
+export function DiceSettingsModal({ open, onClose, settings, onSave, currentBackground, onBackgroundChange }: DiceSettingsModalProps) {
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const { history, clearHistory, removeEntry } = useDiceHistory();
@@ -124,6 +126,17 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('background')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === 'background'
+                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+            }`}
+          >
+            <Image className="w-4 h-4" />
+            Fond
+          </button>
         </div>
 
         {/* Content */}
@@ -133,11 +146,16 @@ export function DiceSettingsModal({ open, onClose, settings, onSave }: DiceSetti
               localSettings={localSettings}
               handleChange={handleChange}
             />
-          ) : (
+          ) : activeTab === 'history' ? (
             <HistoryTab
               history={historySnapshot}
               onClearHistory={handleClearHistory}
               onRemoveEntry={handleRemoveEntry}
+            />
+          ) : (
+            <BackgroundTab
+              currentBackground={currentBackground}
+              onBackgroundChange={onBackgroundChange}
             />
           )}
         </div>
@@ -565,6 +583,93 @@ function HistoryTab({
           </div>
         ))}
       </div> 
+    </div>
+  );
+}
+
+// Composant pour l'onglet Fond d'écran
+function BackgroundTab({
+  currentBackground,
+  onBackgroundChange,
+}: {
+  currentBackground?: string;
+  onBackgroundChange?: (backgroundUrl: string) => void;
+}) {
+  // Liste des fonds d'écran disponibles
+  const backgrounds = [
+    { url: '/background/bgfan.png', name: 'Éventail' },
+    { url: '/fondecran/bg1.jpg', name: 'Fond 1' },
+    { url: '/fondecran/bg2.jpg', name: 'Fond 2' },
+    { url: '/fondecran/bg3.jpg', name: 'Fond 3' },
+    { url: '/fondecran/bg4.jpg', name: 'Fond 4' },
+    { url: '/fondecran/bg5.jpg', name: 'Fond 5' },
+    { url: '/fondecran/bg6.jpg', name: 'Fond 6' },
+    { url: '/fondecran/bg7.jpg', name: 'Fond 7' },
+    { url: '/fondecran/bg8.jpg', name: 'Fond 8' },
+    { url: '/fondecran/bg9.jpg', name: 'Fond 9' },
+    { url: '/fondecran/bg10.jpg', name: 'Fond 10' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-medium text-gray-300 mb-3">
+          Choisissez un fond d'écran
+        </h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Cliquez sur une image pour l'appliquer en arrière-plan
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {backgrounds.map((bg) => (
+          <button
+            key={bg.url}
+            type="button"
+            onClick={() => onBackgroundChange?.(bg.url)}
+            className={`relative group rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+              currentBackground === bg.url
+                ? 'border-purple-500 ring-2 ring-purple-500/50'
+                : 'border-gray-600 hover:border-purple-400'
+            }`}
+          >
+            <div className="aspect-video relative bg-gray-900">
+              <img
+                src={bg.url}
+                alt={bg.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              
+              {/* Overlay au survol */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                  Sélectionner
+                </span>
+              </div>
+
+              {/* Indicateur de sélection */}
+              {currentBackground === bg.url && (
+                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <div className="p-2 bg-gray-700/50 text-center">
+              <p className="text-xs text-gray-300 truncate">{bg.name}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3 mt-4">
+        <p className="text-xs text-blue-200">
+          ℹ️ <strong>Note :</strong> Le fond d'écran s'applique uniquement en vue bureau (desktop).
+        </p>
+      </div>
     </div>
   );
 }
