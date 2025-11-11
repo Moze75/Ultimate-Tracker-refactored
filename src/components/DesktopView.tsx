@@ -162,9 +162,9 @@ export function DesktopView({
             </div>
           </div> 
 
-          <div className="grid grid-cols-12 gap-4">
+                 <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
                 <StandaloneSkillsSection
                   player={player}
                   onSkillClick={handleSkillClick}
@@ -173,7 +173,7 @@ export function DesktopView({
             </div>
 
             <div className="col-span-8 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
@@ -184,7 +184,7 @@ export function DesktopView({
                 />
               </div>
             </div>
-          </div> 
+          </div>
 
                {/* Bouton Retour aux personnages */}
           {onBackToSelection && (
