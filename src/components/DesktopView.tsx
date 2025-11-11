@@ -93,7 +93,7 @@ export function DesktopView({
               className="min-h-screen"
               style={{
                 width: '100%', // Réduit de moitié (de 3600px à 1800px)
-                backgroundImage: 'url(/background/bgfan.png)',
+                backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.9) 10%, rgba(17, 24, 39, 0.6) 25%, transparent 40%), url(/background/bgfan.jpg)`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
                 backgroundSize: 'cover',
