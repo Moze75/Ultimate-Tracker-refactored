@@ -192,8 +192,15 @@ const BLOOD_SPLASH = (() => {
     return layerEl;
   }
 
-  function ensureShakeWrapper() {
+   function ensureShakeWrapper() {
     if (shakeWrapper && shakeWrapper.isConnected) return shakeWrapper;
+
+    // 🔧 CORRECTION : Chercher d'abord un wrapper existant dans le DOM
+    const existingWrapper = document.querySelector(".blood-shake-wrapper") as HTMLElement;
+    if (existingWrapper) {
+      shakeWrapper = existingWrapper;
+      return shakeWrapper;
+    }
 
     const rootGuess = document.querySelector("#root") || document.body;
 
@@ -202,20 +209,9 @@ const BLOOD_SPLASH = (() => {
       return shakeWrapper;
     }
 
-    const wrap = document.createElement("div");
-    wrap.className = "blood-shake-wrapper";
-    wrap.style.willChange = "transform";
-    wrap.style.transformOrigin = "center center";
-
-    const parent = rootGuess.parentNode;
-    if (!parent) {
-      shakeWrapper = null;
-      return null;
-    }
-    parent.insertBefore(wrap, rootGuess);
-    wrap.appendChild(rootGuess);
-
-    shakeWrapper = wrap;
+    // 🔧 CORRECTION : Ne pas créer de wrapper si on est en fixed layout
+    // On applique le shake directement sur le body
+    shakeWrapper = document.body;
     return shakeWrapper;
   }
 
