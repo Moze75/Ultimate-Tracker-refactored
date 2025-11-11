@@ -99,7 +99,7 @@ export function DesktopView({
           // colle le haut de l'image sur le haut du conteneur
           backgroundPosition: 'center top',
           // force la largeur d'affichage sans "cover" qui zoomait l'image
-          backgroundSize: '800px auto',
+          backgroundSize: '1800px auto',
           // l'image doit scroller avec le contenu (valeur par défaut "scroll")
           backgroundAttachment: 'scroll',
           filter: 'brightness(0.95)',
