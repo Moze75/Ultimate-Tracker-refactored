@@ -80,7 +80,7 @@ export function DesktopView({
     });
   };
 
-  // Hauteur totale de la bande grise (du haut de l'écran jusqu'après le header)
+  // Hauteur de la bande grise depuis le haut du conteneur
   const headerBandHeight = 310; // en pixels
 
   return (
@@ -106,12 +106,12 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Bande grise foncée qui scroll avec le contenu - va jusqu'en haut de l'écran */}
+          {/* Bande grise foncée qui scroll avec le contenu - EXACTEMENT comme v4 mais plus haute */}
           <div 
             className="absolute left-0 right-0 -z-10 pointer-events-none"
             style={{ 
               height: `${headerBandHeight}px`,
-              top: '-1.5rem', // Monte au-dessus du conteneur pour aller jusqu'en haut
+              top: '1rem', // EXACTEMENT comme v4 - ne pas changer !
               background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), rgba(17, 24, 39, 0.70), transparent)'
             }}
           />
