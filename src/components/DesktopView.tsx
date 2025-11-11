@@ -80,11 +80,14 @@ export function DesktopView({
     });
   };
 
+  // Hauteur de la bande grise (ajustable ici)
+  const headerBandHeight = 180; // en pixels
+
   return (
     <>
       {deviceType === 'desktop' && (
         <>
-          {/* Background image layer (z-0) */}
+          {/* Background image layer (z-0) - décalée vers le bas */}
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 flex justify-center">
               <div
@@ -93,7 +96,7 @@ export function DesktopView({
                   width: '3600px',
                   backgroundImage: 'url(/background/bgfan.jpg)',
                   backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center top',
+                  backgroundPosition: `center ${headerBandHeight}px`, // Décalage vers le bas
                   backgroundSize: 'cover',
                   filter: 'brightness(0.9)',
                 }}
@@ -104,7 +107,10 @@ export function DesktopView({
 
           {/* Bande grise foncée derrière le header (z-5) */}
           <div className="fixed top-0 left-0 right-0 z-[5] pointer-events-none">
-            <div className="h-90 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-transparent" />
+            <div 
+              className="bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-transparent"
+              style={{ height: `${headerBandHeight}px` }}
+            />
           </div>
         </>
       )}
