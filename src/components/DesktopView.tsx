@@ -97,7 +97,7 @@ export function DesktopView({
         top: 0,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '1800px',    // <- largeur fixe souhaitée (change si besoin)
+        width: '2500px',    // <- largeur fixe souhaitée (change si besoin)
         height: 'auto',     // garde les proportions, pas de crop vertical
         objectFit: 'none',  // s'assure qu'on ne "fit" pas l'image
         pointerEvents: 'none',
