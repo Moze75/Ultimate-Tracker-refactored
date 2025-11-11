@@ -97,7 +97,7 @@ export function DesktopView({
     left: '50%',
     transform: 'translateX(-50%) scale(1.25)', // zoom
     transformOrigin: 'top center',
-    width: '2500px',
+    width: '1500px',
     maxWidth: 'none',   // <-- important si un max-width global existe
     height: 'auto',
     pointerEvents: 'none',
