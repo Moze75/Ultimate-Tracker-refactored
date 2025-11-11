@@ -46,7 +46,6 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
   
-  // 🆕 État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/background/bgfan.png';
   });
@@ -85,7 +84,6 @@ export function DesktopView({
     });
   };
 
-  // 🆕 Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
@@ -93,133 +91,114 @@ export function DesktopView({
 
   return (
     <>
-          {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */}
+      {/* IMAGE DE BACKGROUND FIXE */}
       {deviceType === 'desktop' && (
         <div 
           className="fixed inset-0 pointer-events-none"
           style={{
-            zIndex: 0,
-            overflow: 'hidden',
+            zIndex: -1,
           }}
         >
           <img
             src={backgroundImage}
             alt="background"
+            className="w-full h-full object-cover"
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center top',
-              pointerEvents: 'none',
-              userSelect: 'none',
               filter: 'brightness(0.95)',
             }}
           />
         </div>
       )}
 
-      {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
-      <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
-        
-        {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-        <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
-          style={{
-            scrollbarGutter: 'stable',
-          }}
-        >
-          <div className="max-w-[1280px] mx-auto space-y-4">
+      {/* CONTENEUR PRINCIPAL */}
+      <div className="min-h-screen p-4 lg:p-6" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="max-w-[1280px] mx-auto space-y-4">
 
-            {/* Header */}
-            <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
-              <DesktopHeader
-                player={player}
-                inventory={inventory}
-                onUpdate={onPlayerUpdate}
-                onEdit={() => setSettingsOpen(true)}
-                onOpenCampaigns={() => setShowCampaignModal(true)}
-                onOpenDiceSettings={() => setShowDiceSettings(true)}
-                activeTooltip={activeTooltip}
-                setActiveTooltip={setActiveTooltip}
-              />
-            </div>
-            
-            {/* Grille HP + Abilities */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
-                  <HPManagerConnected 
-                    player={player}
-                    onUpdate={onPlayerUpdate}
-                    onConcentrationCheck={(dc) => {
-                      setConcentrationDC(dc);
-                      setShowConcentrationCheck(true);
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-8">
-                {abilities.length > 0 && (
-                  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
-                    <HorizontalAbilityScores
-                      abilities={abilities}
-                      inventory={inventory}
-                      onAbilityClick={handleAbilityClick}
-                      onSavingThrowClick={handleSavingThrowClick}
-                    />
-                  </div>
-                )} 
-              </div>
-            </div> 
-
-            {/* Grille Skills + TabbedPanel */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4 flex">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
-                  <StandaloneSkillsSection
-                    player={player}
-                    onSkillClick={handleSkillClick}
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-8 flex">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
-                  <TabbedPanel
-                    player={player}
-                    inventory={inventory}
-                    onPlayerUpdate={onPlayerUpdate}
-                    onInventoryUpdate={onInventoryUpdate}
-                    classSections={classSections}
-                    hiddenTabs={['bag']}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Bouton Retour aux personnages - À LA FIN DE LA ZONE SCROLLABLE */}
-            {onBackToSelection && (
-              <div className="w-full mt-6 pb-6">
-                <button
-                  onClick={onBackToSelection}
-                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
-                >
-                  <LogOut size={20} />
-                  Retour aux personnages
-                </button>
-              </div>
-            )}
-
+          {/* Header */}
+          <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
+            <DesktopHeader
+              player={player}
+              inventory={inventory}
+              onUpdate={onPlayerUpdate}
+              onEdit={() => setSettingsOpen(true)}
+              onOpenCampaigns={() => setShowCampaignModal(true)}
+              onOpenDiceSettings={() => setShowDiceSettings(true)}
+              activeTooltip={activeTooltip}
+              setActiveTooltip={setActiveTooltip}
+            />
           </div>
-        </div>
+          
+          {/* Grille HP + Abilities */}
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-4">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+                <HPManagerConnected 
+                  player={player}
+                  onUpdate={onPlayerUpdate}
+                  onConcentrationCheck={(dc) => {
+                    setConcentrationDC(dc);
+                    setShowConcentrationCheck(true);
+                  }}
+                />
+              </div>
+            </div>
 
+            <div className="col-span-8">
+              {abilities.length > 0 && (
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
+                  <HorizontalAbilityScores
+                    abilities={abilities}
+                    inventory={inventory}
+                    onAbilityClick={handleAbilityClick}
+                    onSavingThrowClick={handleSavingThrowClick}
+                  />
+                </div>
+              )} 
+            </div>
+          </div> 
+
+          {/* Grille Skills + TabbedPanel */}
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-4 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+                <StandaloneSkillsSection
+                  player={player}
+                  onSkillClick={handleSkillClick}
+                />
+              </div>
+            </div>
+
+            <div className="col-span-8 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+                <TabbedPanel
+                  player={player}
+                  inventory={inventory}
+                  onPlayerUpdate={onPlayerUpdate}
+                  onInventoryUpdate={onInventoryUpdate}
+                  classSections={classSections}
+                  hiddenTabs={['bag']}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bouton Retour */}
+          {onBackToSelection && (
+            <div className="w-full mt-6 pb-6">
+              <button
+                onClick={onBackToSelection}
+                className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
+              >
+                <LogOut size={20} />
+                Retour aux personnages
+              </button>
+            </div>
+          )}
+
+        </div>
       </div>
 
-      {/* 🔥 MODALS EN OVERLAY */}
+      {/* MODALS EN OVERLAY - z-index: 50 */}
       <DiceRollerLazy
         isOpen={diceRoll !== null}
         onClose={() => setDiceRoll(null)}
