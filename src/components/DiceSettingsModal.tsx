@@ -99,7 +99,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
 
         {/* Tabs */}
         <div className="flex border-b border-gray-700">
-          <button
+                   <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
               activeTab === 'settings'
@@ -108,7 +108,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
             }`}
           >
             <Settings className="w-4 h-4" />
-            Paramètres
+            Dés 3D
           </button>
           <button
             onClick={() => setActiveTab('history')}
