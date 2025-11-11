@@ -166,28 +166,30 @@ export function DesktopView({
             </div> 
 
                 {/* Grille Skills + TabbedPanel */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full overflow-y-auto" style={{ maxHeight: '880px' }}>
-                  <StandaloneSkillsSection
-                    player={player}
-                    onSkillClick={handleSkillClick}
-                  />
-                </div>
+     <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-4 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
+                <StandaloneSkillsSection
+                  player={player}
+                  onSkillClick={handleSkillClick}
+                />
               </div>
+            </div>
 
-                          <div className="col-span-8">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-hidden" style={{ maxHeight: '880px' }}>
-                  <TabbedPanel
-                    player={player}
-                    inventory={inventory}
-                    onPlayerUpdate={onPlayerUpdate}
-                    onInventoryUpdate={onInventoryUpdate}
-                    classSections={classSections}
-                    hiddenTabs={['bag']}
-                  />
-                </div>
+            <div className="col-span-8 flex">
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
+                <TabbedPanel
+                  player={player}
+                  inventory={inventory}
+                  onPlayerUpdate={onPlayerUpdate}
+                  onInventoryUpdate={onInventoryUpdate}
+                  classSections={classSections}
+                  hiddenTabs={['bag']}
+                />
               </div>
+            </div>
+          </div>
+
 
             {/* Bouton Retour aux personnages - à la fin de la zone scrollable */}
             {onBackToSelection && (
