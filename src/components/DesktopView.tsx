@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LogOut } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
@@ -20,6 +21,7 @@ interface DesktopViewProps {
   onInventoryUpdate: (inventory: any[]) => void;
   classSections: any[] | null;
   session: any;
+  onBackToSelection?: () => void;
 }
 
 export function DesktopView({
@@ -29,6 +31,7 @@ export function DesktopView({
   onInventoryUpdate,
   classSections,
   session,
+  onBackToSelection,
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
@@ -166,6 +169,19 @@ export function DesktopView({
               </div>
             </div>
           </div>
+
+          {/* Bouton Retour aux personnages */}
+          {onBackToSelection && (
+            <div className="w-full mt-6 pb-6">
+              <button
+                onClick={onBackToSelection}
+                className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+              >
+                <LogOut size={20} />
+                Retour aux personnages
+              </button>
+            </div>
+          )}
 
         </div>
       </div>
