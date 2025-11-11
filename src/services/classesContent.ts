@@ -57,7 +57,7 @@ function replaceApostropheWithSpace(s: string): string {
 
 function titleCaseFrench(input: string): string {
   // TitleCase fr avec petits mots conservés en minuscule
-  const small = new Set(["de", "des", "du", "la", "le", "les", "et", "d'", "l'"]);
+  const small = new Set(["de", "des", "du", "la", "le", "les", "et", "d'", "l'", "d", "l"]); // ✅ AJOUTÉ "d" et "l"
   return (input || "")
     .trim()
     .split(/(\s+)/)
@@ -256,8 +256,7 @@ function getSubclassDirNames(): string[] {
 }
 
 /**
- * ✅ MODIFIÉ: Variantes robustes pour un nom de sous-classe
- * Ajoute des variantes avec espaces au lieu d'apostrophes + variations de casse
+ * ✅ CORRIGÉ: Variantes robustes pour un nom de sous-classe
  */
 function buildSubclassNameVariants(name: string): string[] {
   const base = normalizeName(name);
@@ -273,7 +272,7 @@ function buildSubclassNameVariants(name: string): string[] {
   const aposT = titleCaseFrench(apos);
   const aposSent = sentenceCaseFrench(apos);
 
-  // ✅ CORRIGÉ: Variantes avec espaces au lieu d'apostrophes (MINUSCULES)
+  // ✅ Variantes avec espaces au lieu d'apostrophes
   const withSpaces = replaceApostropheWithSpace(base);
   const withSpacesLower = withSpaces.toLowerCase();
   const withSpacesTFr = titleCaseFrench(withSpaces);
@@ -294,18 +293,21 @@ function buildSubclassNameVariants(name: string): string[] {
   // ✅ NOUVEAU: Forcer les minuscules après "l " et "d "
   const fixArticleCase = (s: string) => {
     let result = s;
-    // Remplacer "de L " par "de l " (minuscule)
+    // Remplacer "de L " ou "du L " par "de l " (minuscule)
     result = result.replace(/\b(de|du)\s+L\s+/gi, (match) => {
-      const article = match.trim().split(/\s+/)[0];
+      const article = match.trim().split(/\s+/)[0].toLowerCase();
       return article + " l ";
     });
-    // Remplacer "de D " par "de d " (minuscule)
+    // Remplacer "de D " ou "du D " par "de d " (minuscule)
     result = result.replace(/\b(de|du)\s+D\s+/gi, (match) => {
-      const article = match.trim().split(/\s+/)[0];
+      const article = match.trim().split(/\s+/)[0].toLowerCase();
       return article + " d ";
     });
-    // Arbre-Monde variations (tout en minuscules)
+    // Arbre-Monde -> arbre-monde (tout en minuscules)
     result = result.replace(/Arbre-Monde/gi, "arbre-monde");
+    // Cœur/Coeur sauvage -> Cœur sauvage (minuscule)
+    result = result.replace(/C[oœ]eur\s+sauvage/gi, "Cœur sauvage");
+    result = result.replace(/C[oœ]eur\s+Sauvage/gi, "Cœur sauvage");
     return result;
   };
   
@@ -316,7 +318,7 @@ function buildSubclassNameVariants(name: string): string[] {
     ...withAccents.map(s => fixArticleCase(altDev(s)))
   ]);
 
-  // ✅ NOUVEAU: Ajouter des variations avec première lettre majuscule + reste en minuscule
+  // ✅ Ajouter des variations supplémentaires
   const extraVariants: string[] = [];
   withAltDev.forEach(v => {
     // Version avec première lettre majuscule, reste exact
