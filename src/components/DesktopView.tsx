@@ -168,7 +168,7 @@ export function DesktopView({
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full overflow-y-auto" style={{ maxHeight: '800px' }}>
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full overflow-y-auto" style={{ maxHeight: '1000px' }}>
                   <StandaloneSkillsSection
                     player={player}
                     onSkillClick={handleSkillClick}
@@ -177,7 +177,7 @@ export function DesktopView({
               </div>
 
               <div className="col-span-8">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-hidden" style={{ maxHeight: '800px' }}>
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-hidden" style={{ maxHeight: '1000px' }}>
                   <TabbedPanel
                     player={player}
                     inventory={inventory}
