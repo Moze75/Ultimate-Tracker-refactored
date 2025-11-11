@@ -80,27 +80,22 @@ export function DesktopView({
     });
   };
 
+  // Hauteur de la bande grise (agrandie)
+  const headerBandHeight = 500; // en pixels
+
   return (
     <>
-      {/* Image de background avec dégradé en haut qui scroll avec l'interface */}
+      {/* Image de background qui scroll avec l'interface */}
       {deviceType === 'desktop' && (
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 flex justify-center">
             <div
               className="min-h-screen"
               style={{
-                width: '1800px',
-                backgroundImage: `
-                  linear-gradient(to bottom, 
-                    rgba(17, 24, 39, 1) 0%, 
-                    rgba(17, 24, 39, 0.95) 15%, 
-                    rgba(17, 24, 39, 0.7) 30%, 
-                    transparent 45%
-                  ),
-                  url(/background/bgfan.jpg)
-                `,
+                width: '100%', // Réduit de moitié (de 3600px à 1800px)
+                backgroundImage: 'url(/background/bgfan.png)',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 180px',
+                backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
                 backgroundSize: 'cover',
                 filter: 'brightness(0.9)',
               }}
@@ -111,6 +106,16 @@ export function DesktopView({
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
+
+          {/* Bande grise foncée avec opacité encore augmentée qui scroll avec le contenu */}
+          <div 
+            className="absolute left-0 right-0 -z-10 pointer-events-none"
+            style={{ 
+              height: `${headerBandHeight}px`,
+              top: '0',
+             background: 'linear-gradient(to bottom, rgba(17, 24, 39, 1), rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.92), transparent)' 
+            }}
+          />
 
           {/* Header */}
           <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
@@ -223,7 +228,7 @@ export function DesktopView({
       {/* ✅ Modal paramètres des dés */}
       <DiceSettingsModal
         open={showDiceSettings}
-     onClose={() => setShowDiceSettings(false)}
+        onClose={() => setShowDiceSettings(false)}
         settings={diceSettings}
         onSave={saveDiceSettings}
       />
@@ -236,6 +241,6 @@ export function DesktopView({
           onClose={() => setShowConcentrationCheck(false)}
         />
       )}
-    </>
+    </> 
   );
-}
+}  
