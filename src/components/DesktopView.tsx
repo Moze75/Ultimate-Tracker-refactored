@@ -84,10 +84,10 @@ export function DesktopView({
   const headerBandHeight = 500; // en pixels
 
   return (
-    <>
+    <div className="fixed inset-0 overflow-hidden">
 {/* Image de background qui scroll avec l'interface */}
 {deviceType === 'desktop' && (
-  <div className="absolute inset-0 z-0 pointer-events-none" style={{ overflow: 'visible' }}>
+  <div className="absolute inset-0 z-0 pointer-events-none">
    <img
   src="/background/bgfan.png"
   alt="background"
@@ -108,7 +108,7 @@ export function DesktopView({
 />
   </div>
 )}
-      <div className="relative z-10 h-screen overflow-hidden p-4 lg:p-6 desktop-compact-layout">
+      <div className="relative z-10 h-full overflow-y-auto p-4 lg:p-6 desktop-compact-layout">
       <div className="max-w-[1280px] mx-auto space-y-4 h-full overflow-y-auto pb-6">
 
 
