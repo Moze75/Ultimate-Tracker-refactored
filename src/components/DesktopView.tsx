@@ -81,21 +81,21 @@ export function DesktopView({
   };
 
   // Hauteur de la bande grise (agrandie)
-  const headerBandHeight = 380; // en pixels (augmenté de 294 à 380)
+  const headerBandHeight = 380; // en pixels
 
   return (
     <>
-      {/* Image de background fixe */}
+      {/* Image de background qui scroll avec l'interface */}
       {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 flex justify-center">
             <div
-              className="h-screen"
+              className="min-h-screen"
               style={{
                 width: '3600px',
                 backgroundImage: 'url(/background/bgfan.jpg)',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 120px', // Décalé vers le bas
+                backgroundPosition: 'center 120px',
                 backgroundSize: 'cover',
                 filter: 'brightness(0.9)',
               }}
@@ -107,13 +107,13 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Bande grise foncée qui scroll avec le contenu - touche le haut */}
+          {/* Bande grise foncée avec opacité augmentée qui scroll avec le contenu */}
           <div 
             className="absolute left-0 right-0 -z-10 pointer-events-none"
             style={{ 
               height: `${headerBandHeight}px`,
-              top: '0', // Touche le haut de l'écran
-              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), transparent)'
+              top: '0',
+              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.85), transparent)'
             }}
           />
 
