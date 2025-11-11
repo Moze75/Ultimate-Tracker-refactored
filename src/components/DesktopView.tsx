@@ -87,28 +87,26 @@ export function DesktopView({
     <>
 {/* Image de background qui scroll avec l'interface */}
 {deviceType === 'desktop' && (
-  <div className="absolute inset-0 z-0 pointer-events-none overflow-visible">
-    {/* image <img> fixe en largeur, top collé, centrée */}
+  <div className="absolute inset-0 z-0 pointer-events-none" style={{ overflow: 'visible' }}>
     <img
       src="/background/bgfan.png"
       alt="background"
       style={{
         position: 'absolute',
         top: 0,
-        left: '50%', 
-        transform: 'translateX(-50%)',
-        width: '2500px',    // <- largeur fixe souhaitée (change si besoin)
-        height: 'auto',     // garde les proportions, pas de crop vertical
-        objectFit: 'none',  // s'assure qu'on ne "fit" pas l'image
+        left: '50%',
+        transform: 'translateX(-50%) scale(1.25)', // <-- change la valeur pour zoomer (1 = 100%, 1.25 = 125%)
+        transformOrigin: 'top center',              // le haut reste collé en haut
+        width: '2500px',                            // largeur de base (change si tu veux)
+        height: 'auto',
         pointerEvents: 'none',
         userSelect: 'none',
         filter: 'brightness(0.95)',
+        zIndex: 0,
       }}
     />
   </div>
 )}
-      <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
-        <div className="max-w-[1280px] mx-auto space-y-4">
 
 
 
