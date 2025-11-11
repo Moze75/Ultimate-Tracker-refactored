@@ -90,25 +90,22 @@ export function DesktopView({
             overflow: 'hidden',
           }}
         >
-          <img
+                   <img
             src="/background/bgfan.png"
             alt="background"
             style={{
               position: 'fixed',
               top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              transformOrigin: 'top center',
-              width: '100vw',
-              height: '100vh',
+              left: 0,
+              width: '100%',
+              height: '100%',
               objectFit: 'cover',
+              objectPosition: 'center top',
               pointerEvents: 'none',
               userSelect: 'none',
               filter: 'brightness(0.95)',
             }}
           />
-        </div>
-      )}
 
       {/* Conteneur principal - occupe tout l'écran, pas de scroll sur body */}
       <div className="fixed inset-0 z-10 flex flex-col">
