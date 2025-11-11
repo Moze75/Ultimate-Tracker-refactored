@@ -80,8 +80,8 @@ export function DesktopView({
     });
   };
 
-  // Hauteur de la bande grise (ajustable ici)
-  const headerBandHeight = 294; // en pixels
+  // Hauteur de la bande grise (agrandie)
+  const headerBandHeight = 380; // en pixels (augmenté de 294 à 380)
 
   return (
     <>
@@ -94,7 +94,7 @@ export function DesktopView({
                 width: '3600px',
                 backgroundImage: 'url(/background/bgfan.jpg)',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center top',
+                backgroundPosition: 'center 120px', // Décalé vers le bas (était 'center top')
                 backgroundSize: 'cover',
                 filter: 'brightness(0.9)',
               }}
@@ -106,12 +106,12 @@ export function DesktopView({
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
-          {/* Bande grise foncée qui scroll avec le contenu */}
+          {/* Bande grise foncée qui scroll avec le contenu - touche maintenant le haut */}
           <div 
             className="absolute left-0 right-0 -z-10 pointer-events-none"
             style={{ 
               height: `${headerBandHeight}px`,
-              top: '1rem', // Aligne avec le padding p-4
+              top: '0', // Touche maintenant le haut de l'écran (était '1rem')
               background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.90), transparent)'
             }}
           />
