@@ -88,30 +88,31 @@ export function DesktopView({
 {/* Image de background qui scroll avec l'interface */}
 {deviceType === 'desktop' && (
   <div className="absolute inset-0 z-0 pointer-events-none">
-    {/* Fade en haut - AVANT l'image pour être sûr qu'il soit visible */}
-    <div 
-      className="absolute top-0 left-0 right-0 z-[2]"
-      style={{
-        height: '300px',
-        background: 'linear-gradient(to bottom, rgb(17, 24, 39) 0%, rgba(17, 24, 39, 0.7) 40%, transparent 100%)',
-        pointerEvents: 'none'
-      }}
-    />
-    {/* Image de fond */}
+    {/* Image de fond (remontée vers le haut en changeant la position Y) */}
     <div className="absolute inset-0 flex justify-center z-[1]">
       <div
         className="min-h-screen"
         style={{
           width: '100%',
-          backgroundImage: 'url(/background/bgfan.png)',    
+          backgroundImage: 'url(/background/bgfan.png)',
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center 180px',
+          // remonte l'image : augmente la valeur négative si tu veux la monter encore
+          backgroundPosition: 'center -120px',
           backgroundSize: 'cover',
           filter: 'brightness(0.9)',
         }}
       />
     </div>
-  </div> 
+
+    {/* Petit fade en haut : court (120px) et discret pour ne pas masquer l'image */}
+    <div
+      className="absolute top-0 left-0 right-0 z-[2] pointer-events-none"
+      style={{
+        height: '120px', // réduit pour n'affecter que le tout haut
+        background: 'linear-gradient(to bottom, rgba(17,24,39,0.65) 0%, rgba(17,24,39,0.35) 60%, transparent 100%)',
+      }}
+    />
+  </div>
 )}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
