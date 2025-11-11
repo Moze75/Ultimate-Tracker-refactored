@@ -824,14 +824,15 @@ const renderPane = (key: TabKey | 'profile-details') => {
 
         </div>
 
-        <DesktopView
-          player={currentPlayer}
-          inventory={inventory}
-          onPlayerUpdate={applyPlayerUpdate}
-          onInventoryUpdate={setInventory}
-          classSections={classSections}
-          session={session}
-        />
+<DesktopView
+  player={currentPlayer}
+  inventory={inventory}
+  onPlayerUpdate={applyPlayerUpdate}
+  onInventoryUpdate={setInventory}
+  classSections={classSections}
+  session={session}
+  onBackToSelection={handleBackToSelection}
+/>
 
         <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
           <button
