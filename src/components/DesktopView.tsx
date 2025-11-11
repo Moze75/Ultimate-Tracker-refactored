@@ -180,7 +180,7 @@ export function DesktopView({
             </div>
           </div> 
 
-          {/* Bouton Retour aux personnages */}
+           {/* Bouton Retour aux personnages */}
           {onBackToSelection && (
             <div className="w-full mt-6 pb-6">
               <button
@@ -195,7 +195,6 @@ export function DesktopView({
 
         </div>
       </div>
-        </div>
 
       {/* ✅ DiceRoller en overlay sur toute l'interface */}
       <DiceRollerLazy
