@@ -84,39 +84,39 @@ export function DesktopView({
   const headerBandHeight = 500; // en pixels
 
   return (
-  return (
     <>
-      {/* Image de background fixe */}
-      {deviceType === 'desktop' && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <img
-            src="/background/bgfan.png"
-            alt="background"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%) scale(1.25)',
-              transformOrigin: 'top center',
-              width: '1500px',
-              maxWidth: 'none',
-              height: '100vh',
-              objectFit: 'cover',
-              pointerEvents: 'none',
-              userSelect: 'none',
-              filter: 'brightness(0.95)',
-              zIndex: 0,
-            }}
-          />
-        </div>
-      )}
+{/* Image de background qui scroll avec l'interface */}
+{deviceType === 'desktop' && (
+  <div className="absolute inset-0 z-0 pointer-events-none">
+    {/* Image de fond (remontée vers le haut en changeant la position Y) */}
+    <div className="absolute inset-0 flex justify-center z-[1]">
+      <div
+        className="min-h-screen"
+        style={{
+          width: '100%',
+          backgroundImage: 'url(/background/bgfan.png)',
+          backgroundRepeat: 'no-repeat',
+          // remonte l'image : augmente la valeur négative si tu veux la monter encore
+          backgroundPosition: 'center -120px',
+          backgroundSize: 'cover',
+          filter: 'brightness(0.9)',
+        }}
+      />
+    </div>
 
-      {/* Conteneur principal avec layout flex */}
-      <div className="fixed inset-0 z-10 flex flex-col overflow-hidden">
-        
-        {/* Zone scrollable : Header + Grilles */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 desktop-compact-layout">
-          <div className="max-w-[1280px] mx-auto space-y-4">
+    {/* Petit fade en haut : court (120px) et discret pour ne pas masquer l'image */}
+    <div
+      className="absolute top-0 left-0 right-0 z-[2] pointer-events-none"
+      style={{
+        height: '120px', // réduit pour n'affecter que le tout haut
+        background: 'linear-gradient(to bottom, rgba(17,24,39,0.65) 0%, rgba(17,24,39,0.35) 60%, transparent 100%)',
+      }}
+    />
+  </div>
+)}
+
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
+        <div className="max-w-[1280px] mx-auto space-y-4">
 
 
 
@@ -162,9 +162,9 @@ export function DesktopView({
             </div>
           </div> 
 
-                 <div className="grid grid-cols-12 gap-4">
+          <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
                 <StandaloneSkillsSection
                   player={player}
                   onSkillClick={handleSkillClick}
@@ -173,7 +173,7 @@ export function DesktopView({
             </div>
 
             <div className="col-span-8 flex">
-              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+              <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[880px]">
                 <TabbedPanel
                   player={player}
                   inventory={inventory}
@@ -186,13 +186,9 @@ export function DesktopView({
             </div>
           </div>
 
-                </div>
-        </div>
-
-        {/* Zone fixe en bas : Bouton Retour aux personnages */}
-        {onBackToSelection && (
-          <div className="flex-shrink-0 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm p-4">
-            <div className="max-w-[1280px] mx-auto">
+          {/* Bouton Retour aux personnages */}
+          {onBackToSelection && (
+            <div className="w-full mt-6 pb-6">
               <button
                 onClick={onBackToSelection}
                 className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
@@ -201,9 +197,9 @@ export function DesktopView({
                 Retour aux personnages
               </button>
             </div>
-          </div>
-        )}
+          )}
 
+        </div>
       </div>
 
       {/* ✅ DiceRoller en overlay sur toute l'interface */}
@@ -250,4 +246,4 @@ export function DesktopView({
       )}
     </> 
   );
-}
+}  
