@@ -85,24 +85,33 @@ export function DesktopView({
 
   return (
     <>
-      {/* Image de background qui scroll avec l'interface */}
-      {deviceType === 'desktop' && (
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 flex justify-center">
-            <div
-              className="min-h-screen"
-              style={{
-                width: '100%', // Réduit de moitié (de 3600px à 1800px)
-                backgroundImage: 'url(/background/bgfan.png)',    
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
-                backgroundSize: 'cover',
-                filter: 'brightness(0.9)',
-              }}
-            />
-          </div> 
-        </div> 
-      )} 
+{/* Image de background qui scroll avec l'interface */}
+{deviceType === 'desktop' && (
+  <div className="absolute inset-0 z-0 pointer-events-none">
+    <div className="absolute inset-0 flex justify-center">
+      <div
+        className="min-h-screen relative"
+        style={{
+          width: '100%',
+          backgroundImage: 'url(/background/bgfan.png)',    
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center 180px',
+          backgroundSize: 'cover',
+          filter: 'brightness(0.9)',
+        }}
+      />
+    </div>
+    {/* Fade overlay - positionné au-dessus de l'image mais en dessous du contenu */}
+    <div 
+      className="absolute top-0 left-0 right-0"
+      style={{
+        height: '200px',
+        background: 'linear-gradient(to bottom, rgb(17, 24, 39), transparent)',
+        pointerEvents: 'none'
+      }}
+    />
+  </div> 
+)}
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
