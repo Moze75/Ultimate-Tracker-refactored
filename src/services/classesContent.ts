@@ -273,7 +273,7 @@ function buildSubclassNameVariants(name: string): string[] {
   const aposT = titleCaseFrench(apos);
   const aposSent = sentenceCaseFrench(apos);
 
-  // ✅ NOUVEAU: Variantes avec espaces au lieu d'apostrophes
+  // ✅ CORRIGÉ: Variantes avec espaces au lieu d'apostrophes (MINUSCULES)
   const withSpaces = replaceApostropheWithSpace(base);
   const withSpacesLower = withSpaces.toLowerCase();
   const withSpacesTFr = titleCaseFrench(withSpaces);
@@ -283,7 +283,6 @@ function buildSubclassNameVariants(name: string): string[] {
     base, lower, tFr, sent,
     noParen, noParenLower, noParenT, noParenSent,
     apos, aposLower, aposT, aposSent,
-    // ✅ Ajout des variantes avec espaces
     withSpaces, withSpacesLower, withSpacesTFr, withSpacesSent,
   ];
 
@@ -292,32 +291,60 @@ function buildSubclassNameVariants(name: string): string[] {
   // Cas particulier: "... de dévotion" -> forcer aussi "... de Dévotion"
   const altDev = (s: string) => s.replace(/(de)\s+(d[ée]votion)/i, "de Dévotion");
   
-  // ✅ NOUVEAU: Cas particulier pour "Arbre-Monde" -> aussi "arbre-monde"
-  const altCase = (s: string) => {
+  // ✅ NOUVEAU: Forcer les minuscules après "l " et "d "
+  const fixArticleCase = (s: string) => {
     let result = s;
-    // Arbre-Monde variations
-    result = result.replace(/Arbre-Monde/g, "arbre-monde");
-    result = result.replace(/ARBRE-MONDE/g, "arbre-monde");
-    // Cœur/Coeur variations
-    result = result.replace(/Cœur/g, "Cœur");
-    result = result.replace(/Coeur/g, "Cœur");
+    // Remplacer "de L " par "de l " (minuscule)
+    result = result.replace(/\b(de|du)\s+L\s+/gi, (match) => {
+      const article = match.trim().split(/\s+/)[0];
+      return article + " l ";
+    });
+    // Remplacer "de D " par "de d " (minuscule)
+    result = result.replace(/\b(de|du)\s+D\s+/gi, (match) => {
+      const article = match.trim().split(/\s+/)[0];
+      return article + " d ";
+    });
+    // Arbre-Monde variations (tout en minuscules)
+    result = result.replace(/Arbre-Monde/gi, "arbre-monde");
     return result;
   };
   
-  const withAltDev = uniq([...withAccents, ...withAccents.map(altDev), ...withAccents.map(altCase)]);
+  const withAltDev = uniq([
+    ...withAccents, 
+    ...withAccents.map(altDev), 
+    ...withAccents.map(fixArticleCase),
+    ...withAccents.map(s => fixArticleCase(altDev(s)))
+  ]);
 
-  // ✅ NOUVEAU: Ajouter des variations de casse spécifiques pour les fichiers observés
+  // ✅ NOUVEAU: Ajouter des variations avec première lettre majuscule + reste en minuscule
   const extraVariants: string[] = [];
   withAltDev.forEach(v => {
-    // Générer une version "tout en minuscule sauf première lettre"
-    const firstCap = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-    extraVariants.push(firstCap);
+    // Version avec première lettre majuscule, reste exact
+    const firstCapExact = v.charAt(0).toUpperCase() + v.slice(1);
+    extraVariants.push(firstCapExact);
+    
+    // Version avec première lettre majuscule, reste en minuscule
+    const firstCapLower = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+    extraVariants.push(firstCapLower);
     
     // Version complètement minuscule
     extraVariants.push(v.toLowerCase());
+    
+    // Version avec fixArticleCase appliqué
+    extraVariants.push(fixArticleCase(v));
+    extraVariants.push(fixArticleCase(firstCapExact));
+    extraVariants.push(fixArticleCase(firstCapLower));
   });
 
-  return uniq([...withAltDev, ...noAccents, ...noAccents.map(altDev), ...noAccents.map(altCase), ...extraVariants]);
+  const allVariants = uniq([
+    ...withAltDev, 
+    ...noAccents, 
+    ...noAccents.map(altDev), 
+    ...noAccents.map(fixArticleCase),
+    ...extraVariants
+  ]);
+
+  return allVariants;
 }
 
 /* ===========================================================
