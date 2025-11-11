@@ -194,6 +194,7 @@ export function DesktopView({
 
         </div>
       </div>
+        </div>
 
       {/* ✅ DiceRoller en overlay sur toute l'interface */}
       <DiceRollerLazy
