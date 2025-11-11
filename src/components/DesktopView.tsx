@@ -193,21 +193,20 @@ export function DesktopView({
           </div>
         </div>
 
-       {/* Bouton Retour aux personnages - à la fin de la zone scrollable */}
-            {onBackToSelection && (
-              <div className="w-full mt-6 pb-6">
-                <button
-                  onClick={onBackToSelection}
-                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
-                >
-                  <LogOut size={20} />
-                  Retour aux personnages
-                </button>
-              </div>
-            )}
-
+        {/* Zone fixe en bas - Bouton toujours visible */}
+        {onBackToSelection && (
+          <div className="flex-shrink-0 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm p-4 z-20">
+            <div className="max-w-[1280px] mx-auto">
+              <button
+                onClick={onBackToSelection}
+                className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
+              >
+                <LogOut size={20} />
+                Retour aux personnages
+              </button> 
+            </div>
           </div>
-        </div>
+        )} 
 
       </div>
 
