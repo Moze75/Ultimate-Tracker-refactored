@@ -85,6 +85,25 @@ export function DesktopView({
 
   return (
     <>
+      {/* Image de background fixe */}
+      {deviceType === 'desktop' && (
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 flex justify-center">
+            <div
+              className="h-screen"
+              style={{
+                width: '3600px',
+                backgroundImage: 'url(/background/bgfan.jpg)',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center 120px', // Décalé vers le bas
+                backgroundSize: 'cover',
+                filter: 'brightness(0.9)',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
 
