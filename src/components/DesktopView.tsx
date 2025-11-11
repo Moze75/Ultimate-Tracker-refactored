@@ -107,6 +107,8 @@ export function DesktopView({
     />
   </div>
 )}
+      <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
+        <div className="max-w-[1280px] mx-auto space-y-4">
 
 
 
