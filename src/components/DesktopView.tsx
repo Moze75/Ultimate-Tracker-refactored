@@ -94,27 +94,25 @@ export function DesktopView({
   return (
     <>
       {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */}
+          {/* IMAGE DE BACKGROUND FIXE */}
       {deviceType === 'desktop' && (
         <div 
-          className="fixed inset-0 z-0 pointer-events-none"
+          key={backgroundImage}
+          className="fixed inset-0 pointer-events-none"
           style={{
-            overflow: 'hidden',
+            zIndex: -1,
+            backgroundColor: '#111827',
           }}
         >
           <img
+            key={backgroundImage}
             src={backgroundImage}
             alt="background"
+            className="w-full h-full"
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center top',
-              pointerEvents: 'none',
-              userSelect: 'none',
               filter: 'brightness(0.95)',
+              objectFit: 'cover',
+              objectPosition: 'center center',
             }}
           />
         </div>
