@@ -85,36 +85,24 @@ export function DesktopView({
 
   return (
     <>
-  {/* Image de background - NE PAS TOUCHER */}
-{deviceType === 'desktop' && (
-  <div className="absolute inset-0 z-0 pointer-events-none">
-    <div className="absolute inset-0 flex justify-center">
-      <div
-        className="min-h-screen"
-        style={{
-          width: '1800px',
-          backgroundImage: 'url(/background/bgfan.jpg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center 180px',
-          backgroundSize: 'cover',
-          filter: 'brightness(0.9)',
-        }}
-      />
-    </div>
-  </div>
-)}
-
-{/* NOUVEAU : Fade overlay en haut - SÉPARÉ de l'image */}
-{deviceType === 'desktop' && (
-  <div 
-    className="absolute top-0 left-0 right-0 pointer-events-none"
-    style={{ 
-      height: '250px',
-      background: 'linear-gradient(to bottom, #111827 0%, #11182799 50%, transparent 100%)',
-      zIndex: 5
-    }}
-  />
-)}
+      {/* Image de background qui scroll avec l'interface */}
+      {deviceType === 'desktop' && (
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 flex justify-center">
+            <div
+              className="min-h-screen"
+              style={{
+                width: '100%', // Réduit de moitié (de 3600px à 1800px)
+                backgroundImage: 'url(/background/bgfan.png)',    
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
+                backgroundSize: 'cover',
+                filter: 'brightness(0.9)',
+              }}
+            />
+          </div> 
+        </div> 
+      )} 
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
