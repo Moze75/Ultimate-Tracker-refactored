@@ -97,9 +97,9 @@ export function DesktopView({
               position: 'fixed',
               top: 0,
               left: '50%',
-              transform: 'translateX(-50%) scale(1.25)',
+              transform: 'translateX(-50%)',
               transformOrigin: 'top center',
-              width: '1500px',
+              width: '100vw',
               height: '100vh',
               objectFit: 'cover',
               pointerEvents: 'none',
@@ -113,7 +113,7 @@ export function DesktopView({
       {/* Conteneur principal - occupe tout l'écran, pas de scroll sur body */}
       <div className="fixed inset-0 z-10 flex flex-col">
         
-        {/* Zone scrollable - contient Header + Grilles */}
+        {/* Zone scrollable - contient Header + Grilles + Bouton */}
         <div 
           className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
           style={{
@@ -190,23 +190,21 @@ export function DesktopView({
               </div>
             </div>
 
+            {/* Bouton Retour aux personnages - à la fin de la zone scrollable */}
+            {onBackToSelection && (
+              <div className="w-full mt-6 pb-6">
+                <button
+                  onClick={onBackToSelection}
+                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
+                >
+                  <LogOut size={20} />
+                  Retour aux personnages
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
-
-        {/* Zone fixe en bas - Bouton toujours visible */}
-        {onBackToSelection && (
-          <div className="flex-shrink-0 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm p-4 z-20">
-            <div className="max-w-[1280px] mx-auto">
-              <button
-                onClick={onBackToSelection}
-                className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
-              >
-                <LogOut size={20} />
-                Retour aux personnages
-              </button> 
-            </div>
-          </div>
-        )} 
 
       </div>
 
