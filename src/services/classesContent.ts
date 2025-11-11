@@ -1,5 +1,5 @@
-/* Service de chargement et parsing des contenus de classes/sous-classes pour l’app
-   Aligné avec la nomenclature “règles 2024”.
+/* Service de chargement et parsing des contenus de classes/sous-classes pour l'app
+   Aligné avec la nomenclature "règles 2024".
 */
 
 export type AbilitySection = {
@@ -43,8 +43,18 @@ function normalizeName(name: string): string {
   return (name || "").trim();
 }
 function normalizeApos(s: string): string {
-  return (s || "").replace(/[’]/g, "'");
+  return (s || "").replace(/[']/g, "'");
 }
+
+// ✅ NOUVEAU: Remplace l' par "l " (espace au lieu d'apostrophe)
+function replaceApostropheWithSpace(s: string): string {
+  return (s || "")
+    .replace(/l'/gi, "l ")
+    .replace(/l'/gi, "l ")
+    .replace(/d'/gi, "d ")
+    .replace(/d'/gi, "d ");
+}
+
 function titleCaseFrench(input: string): string {
   // TitleCase fr avec petits mots conservés en minuscule
   const small = new Set(["de", "des", "du", "la", "le", "les", "et", "d'", "l'"]);
@@ -61,7 +71,7 @@ function titleCaseFrench(input: string): string {
     .join("");
 }
 function sentenceCaseFrench(input: string): string {
-  // Premier mot capitalisé, reste en minuscule (utile pour “Collège du savoir”, “Credo de la paume”)
+  // Premier mot capitalisé, reste en minuscule (utile pour "Collège du savoir", "Credo de la paume")
   const s = (input || "").trim().toLowerCase();
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -73,7 +83,7 @@ function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-// Jointure d’URL: n’encode pas la base, encode chaque segment
+// Jointure d'URL: n'encode pas la base, encode chaque segment
 function urlJoin(base: string, ...segments: string[]) {
   const cleanBase = base.replace(/\/+$/, "");
   const encodedSegments = segments.map((s) => encodeURIComponent(s));
@@ -81,7 +91,7 @@ function urlJoin(base: string, ...segments: string[]) {
 }
 
 /* ===========================================================
-   Cache “positif” + cache “négatif” (anti-404 répétées)
+   Cache "positif" + cache "négatif" (anti-404 répétées)
    =========================================================== */
 
 const textCache = new Map<string, string>();
@@ -191,7 +201,7 @@ const CLASS_NAME_MAP: Record<string, string> = {
   "sorcier": "Occultiste",
 };
 
-// On garde une table minimale et on s’appuie surtout sur les variantes générées.
+// On garde une table minimale et on s'appuie surtout sur les variantes générées.
 // Ajoute ici si tu veux forcer des renommages officiels.
 const SUBCLASS_NAME_MAP: Record<string, string> = {
   // Paladin — casse exacte dans le dépôt
@@ -222,7 +232,7 @@ function canonicalizeSubclassName(_classCanonical: string, input?: string | null
  * Dossiers possibles pour une classe dans le dépôt.
  * - nom canonique
  * - variante sans accents (ex: Rôdeur -> Rodeur)
- * - “Sorcier” et “Warlock” en plus pour Occultiste
+ * - "Sorcier" et "Warlock" en plus pour Occultiste
  */
 function getClassFolderNames(appClassName: string): string[] {
   const primary = canonicalizeClassName(appClassName);
@@ -231,25 +241,23 @@ function getClassFolderNames(appClassName: string): string[] {
   const k = lowerNoAccents(primary);
   if (k === "occultiste") variants.push("Sorcier", "Warlock");
 
-  // Ajouter une variante sans accents pour tous (utile si certains dossiers n’ont pas d’accents)
+  // Ajouter une variante sans accents pour tous (utile si certains dossiers n'ont pas d'accents)
   variants.push(stripDiacritics(primary));
 
   return uniq(variants);
 }
 
 /**
- * Dossiers possibles pour les sous-classes — “Subclasses” en premier (structure réelle),
- * garder d’autres variantes par tolérance.
+ * Dossiers possibles pour les sous-classes — "Subclasses" en premier (structure réelle),
+ * garder d'autres variantes par tolérance.
  */
 function getSubclassDirNames(): string[] {
   return ["Subclasses", "Sous-classes", "Sous classes", "SousClasses", "SubClasses", "Sous_Classes"];
 }
 
 /**
- * Variantes robustes pour un nom de sous-classe:
- * - base d’entrée, TitleCase fr, tout en minuscule, “Phrase” (premier mot cap),
- * - sans parenthèses, apostrophes normalisées,
- * - chaque variante déclinée aussi en “sans accents”.
+ * ✅ MODIFIÉ: Variantes robustes pour un nom de sous-classe
+ * Ajoute des variantes avec espaces au lieu d'apostrophes + variations de casse
  */
 function buildSubclassNameVariants(name: string): string[] {
   const base = normalizeName(name);
@@ -265,19 +273,51 @@ function buildSubclassNameVariants(name: string): string[] {
   const aposT = titleCaseFrench(apos);
   const aposSent = sentenceCaseFrench(apos);
 
+  // ✅ NOUVEAU: Variantes avec espaces au lieu d'apostrophes
+  const withSpaces = replaceApostropheWithSpace(base);
+  const withSpacesLower = withSpaces.toLowerCase();
+  const withSpacesTFr = titleCaseFrench(withSpaces);
+  const withSpacesSent = sentenceCaseFrench(withSpaces);
+
   const withAccents = [
     base, lower, tFr, sent,
     noParen, noParenLower, noParenT, noParenSent,
     apos, aposLower, aposT, aposSent,
+    // ✅ Ajout des variantes avec espaces
+    withSpaces, withSpacesLower, withSpacesTFr, withSpacesSent,
   ];
 
   const noAccents = withAccents.map(stripDiacritics);
 
-  // Cas particulier: “... de dévotion” -> forcer aussi “... de Dévotion”
+  // Cas particulier: "... de dévotion" -> forcer aussi "... de Dévotion"
   const altDev = (s: string) => s.replace(/(de)\s+(d[ée]votion)/i, "de Dévotion");
-  const withAltDev = uniq([...withAccents, ...withAccents.map(altDev)]);
+  
+  // ✅ NOUVEAU: Cas particulier pour "Arbre-Monde" -> aussi "arbre-monde"
+  const altCase = (s: string) => {
+    let result = s;
+    // Arbre-Monde variations
+    result = result.replace(/Arbre-Monde/g, "arbre-monde");
+    result = result.replace(/ARBRE-MONDE/g, "arbre-monde");
+    // Cœur/Coeur variations
+    result = result.replace(/Cœur/g, "Cœur");
+    result = result.replace(/Coeur/g, "Cœur");
+    return result;
+  };
+  
+  const withAltDev = uniq([...withAccents, ...withAccents.map(altDev), ...withAccents.map(altCase)]);
 
-  return uniq([...withAltDev, ...noAccents, ...noAccents.map(altDev)]);
+  // ✅ NOUVEAU: Ajouter des variations de casse spécifiques pour les fichiers observés
+  const extraVariants: string[] = [];
+  withAltDev.forEach(v => {
+    // Générer une version "tout en minuscule sauf première lettre"
+    const firstCap = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+    extraVariants.push(firstCap);
+    
+    // Version complètement minuscule
+    extraVariants.push(v.toLowerCase());
+  });
+
+  return uniq([...withAltDev, ...noAccents, ...noAccents.map(altDev), ...noAccents.map(altCase), ...extraVariants]);
 }
 
 /* ===========================================================
@@ -325,7 +365,7 @@ async function loadSubclassMarkdown(className: string, subclassName: string): Pr
       for (const subdir of subdirs) {
         const baseSub = urlJoin(base, c, subdir);
 
-        // 1) Fichiers directs — d’abord le format observé
+        // 1) Fichiers directs — d'abord le format observé
         for (const nm of nameVariants) {
           candidates.push(
             urlJoin(baseSub, `${bestPrefix} ${dash} ${nm}.md`),
@@ -346,7 +386,7 @@ async function loadSubclassMarkdown(className: string, subclassName: string): Pr
           }
         }
 
-        // 3) Dossiers “<Nom>/{README.md,index.md}”
+        // 3) Dossiers "<Nom>/{README.md,index.md}"
         const inside = ["README.md", "index.md"];
         for (const nm of nameVariants) {
           const subFolderVariants = uniq([
@@ -455,7 +495,7 @@ export async function loadClassSections(inputClass: string): Promise<AbilitySect
   for (const base of RAW_BASES) {
     for (const c of classFolders) {
       const folder = urlJoin(base, c);
-      // Essayer d’abord <Classe>/<Classe>.md (réel)
+      // Essayer d'abord <Classe>/<Classe>.md (réel)
       candidates.push(urlJoin(folder, `${c}.md`));
       // Fallbacks ensuite
       candidates.push(urlJoin(folder, "README.md"), urlJoin(folder, "index.md"));
@@ -509,7 +549,7 @@ export async function loadClassAndSubclassContent(
 }
 
 /* ===========================================================
-   API rétro-compatible avec l’app
+   API rétro-compatible avec l'app
    =========================================================== */
 
 export async function loadAbilitySections(params: {
