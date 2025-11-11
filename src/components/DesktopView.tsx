@@ -86,33 +86,23 @@ export function DesktopView({
   return (
     <>
       {/* Image de background qui scroll avec l'interface */}
-{deviceType === 'desktop' && (
-  <div className="absolute inset-0 z-0 pointer-events-none">
-    <div className="absolute inset-0 flex justify-center">
-      {/* L'image de fond */}
-      <div
-        className="min-h-screen relative"
-        style={{
-          width: '1800px',
-          backgroundImage: 'url(/background/bgfan.jpg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center 180px',
-          backgroundSize: 'cover',
-          filter: 'brightness(0.9)',
-        }}
-      >
-        {/* Le fade en haut UNIQUEMENT */}
-        <div
-          className="absolute top-0 left-0 right-0"
-          style={{
-            height: '300px',
-            background: 'linear-gradient(to bottom, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.8) 40%, transparent 100%)',
-          }}
-        />
-      </div>
-    </div>
-  </div>
-)}
+      {deviceType === 'desktop' && (
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 flex justify-center">
+            <div
+              className="min-h-screen"
+              style={{
+                width: '100%', // Réduit de moitié (de 3600px à 1800px)
+                backgroundImage: 'url(/background/bgfan.png)',    
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center 180px', // Descendu davantage (de 120px à 180px)
+                backgroundSize: 'cover',
+                filter: 'brightness(0.9)',
+              }}
+            />
+          </div> 
+        </div>
+      )} 
 
       <div className="relative z-10 min-h-screen p-4 lg:p-6 desktop-compact-layout">
         <div className="max-w-[1280px] mx-auto space-y-4">
