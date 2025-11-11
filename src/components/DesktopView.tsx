@@ -107,10 +107,7 @@ export function DesktopView({
     {/* Petit fade en haut : court (120px) et discret pour ne pas masquer l'image */}
     <div
       className="absolute top-0 left-0 right-0 z-[2] pointer-events-none"
-      style={{
-        height: '120px', // réduit pour n'affecter que le tout haut
-        background: 'linear-gradient(to bottom, rgba(17,24,39,0.65) 0%, rgba(17,24,39,0.35) 60%, transparent 100%)',
-      }}
+
     />
   </div>
 )}
