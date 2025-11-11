@@ -113,7 +113,7 @@ export function DesktopView({
             style={{ 
               height: `${headerBandHeight}px`,
               top: '0',
-             background: 'linear-gradient(to bottom, rgba(17, 39, 50, 1), rgba(17, 39, 50, 0.98), rgba(17, 39, 50, 0.92), transparent)'
+             background: 'linear-gradient(to bottom, rgba(17, 39, 50, 1), rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.92), transparent)' 
             }}
           />
 
