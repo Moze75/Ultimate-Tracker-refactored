@@ -93,11 +93,12 @@ export function DesktopView({
 
   return (
     <>
-      {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */}
+          {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */}
       {deviceType === 'desktop' && (
         <div 
-          className="fixed inset-0 z-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-none"
           style={{
+            zIndex: 0,
             overflow: 'hidden',
           }}
         >
@@ -121,7 +122,7 @@ export function DesktopView({
       )}
 
       {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
-      <div className="fixed inset-0 z-10 flex flex-col">
+      <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
         <div 
