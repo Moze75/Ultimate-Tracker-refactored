@@ -19,7 +19,7 @@ export const DEFAULT_DICE_SETTINGS: DiceSettings = {
   soundsEnabled: true,
   baseScale: 6,         // Taille moyenne des dés
   gravity: 1,           // Gravité normale (1x = 400 dans le module)
-  strength: 2,          // Force normale
+  strength: 1,          // Force normale
   volume: 100,          // Volume max des sons intégrés
 };
 
