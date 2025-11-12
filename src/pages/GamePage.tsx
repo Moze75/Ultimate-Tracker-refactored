@@ -24,6 +24,8 @@ import { loadAbilitySections } from '../services/classesContent';
 
 import { PlayerProfileSettingsModal } from '../components/PlayerProfileSettingsModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { useDiceSettings } from '../hooks/useDiceSettings';
+import { DiceBox3D } from '../components/DiceBox3D';
 import { DesktopView } from '../components/DesktopView';
 
 import '../styles/swipe.css';
