@@ -3,9 +3,7 @@ import { Dices, Settings, Save, Star } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { DiceRoller } from './DiceRoller';
-import { DiceRollContext } from './ResponsiveGameLayout';
-import { useDiceSettings } from '../hooks/useDiceSettings';
+import { DiceRollContext } from './ResponsiveGameLayout'; // ✨ AJOUT
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { AbilityScoreGrid } from './AbilityScoreGrid';
 import { SkillsTable } from './SkillsTable';
@@ -144,54 +142,10 @@ const getAbilityShortName = (abilityName: string): string => {
 export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
   const [editing, setEditing] = useState(false);
 
+  // ✨ AJOUT : Utiliser le contexte de lancer de dés
+  const { rollDice } = React.useContext(DiceRollContext);
+
   const effectiveProficiency = getProficiencyBonusForLevel(player.level);
-
-  // 🔧 Hook pour détecter mobile/desktop
-  const deviceType = useResponsiveLayout();
-
-  // 🔧 Settings pour DiceRollerLazy (mobile uniquement)
-  const { settings: diceSettings } = useDiceSettings();
-  const [settingsKey, setSettingsKey] = useState(0);
-  const [localSettings, setLocalSettings] = useState(diceSettings);
-
-  // Synchroniser les settings locaux quand diceSettings change
-  useEffect(() => {
-    setLocalSettings(diceSettings);
-  }, [diceSettings]);
-
-  // 🔧 Écouter les changements des paramètres de dés (mobile uniquement)
-  useEffect(() => {
-    if (deviceType === 'desktop') return; // Skip sur desktop
-
-    const handleDiceSettingsChange = () => {
-      console.log('🎲 [StatsTab] Paramètres de dés changés, rechargement...');
-      
-      try {
-        const stored = localStorage.getItem('dice-settings');
-        if (stored) {
-          const newSettings = JSON.parse(stored);
-          setLocalSettings({ ...newSettings });
-          setSettingsKey(prev => prev + 1);
-        }
-      } catch (error) {
-        console.error('Erreur rechargement settings:', error);
-      }
-    };
-    
-    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'dice-settings') {
-        handleDiceSettingsChange();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [deviceType]);
 
   const calculateEquipmentBonuses = React.useCallback(() => {
     const bonuses = {
@@ -252,14 +206,6 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     }
     return DEFAULT_ABILITIES;
   });
-
-  const [diceRollerOpen, setDiceRollerOpen] = useState(false);
-  const [rollData, setRollData] = useState<{
-    type: 'ability' | 'saving-throw' | 'skill';
-    attackName: string;
-    diceFormula: string;
-    modifier: number;
-  } | null>(null);
 
   const expertiseLimit = getExpertiseLimit(player.class, player.level);
   const currentExpertiseCount = abilities.reduce((count, ability) => 
@@ -342,40 +288,40 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventory, player.id]);
 
+  // ✨ MODIFICATION : Utiliser rollDice du contexte
   const rollAbilityCheck = (ability: Ability) => {
     if (editing) return;
     
-    setRollData({
+    rollDice({
       type: 'ability',
       attackName: `Test de ${ability.name}`,
       diceFormula: '1d20',
       modifier: ability.modifier
     });
-    setDiceRollerOpen(true);
   };
 
+  // ✨ MODIFICATION : Utiliser rollDice du contexte
   const rollSavingThrow = (ability: Ability) => {
     if (editing) return;
     
-    setRollData({
+    rollDice({
       type: 'saving-throw',
       attackName: `Jet de sauvegarde de ${ability.name}`,
       diceFormula: '1d20',
       modifier: ability.savingThrow
     });
-    setDiceRollerOpen(true);
   };
 
+  // ✨ MODIFICATION : Utiliser rollDice du contexte
   const rollSkillCheck = (skillName: string, bonus: number) => {
     if (editing) return;
     
-    setRollData({
+    rollDice({
       type: 'skill',
-      attackName: `Test de compétence\n${skillName}`,
+      attackName: `Test de ${skillName}`,
       diceFormula: '1d20',
       modifier: bonus
     });
-    setDiceRollerOpen(true);
   };
 
   const handleSave = async () => {
@@ -545,22 +491,7 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
         </div>
       </div>
 
-      {/* 🔧 Utiliser DiceRollerLazy sur mobile, DiceRoller sur desktop */}
-      {deviceType === 'desktop' ? (
-        <DiceRoller 
-          isOpen={diceRollerOpen} 
-          onClose={() => setDiceRollerOpen(false)} 
-          rollData={rollData} 
-        />
-      ) : (
-        <DiceRollerLazy
-          key={settingsKey}
-          isOpen={diceRollerOpen}
-          onClose={() => setDiceRollerOpen(false)}
-          rollData={rollData}
-          settings={localSettings}
-        />
-      )}
+      {/* ✨ SUPPRESSION : Plus besoin de DiceRoller/DiceRollerLazy ici */}
     </div>
   );
 }
