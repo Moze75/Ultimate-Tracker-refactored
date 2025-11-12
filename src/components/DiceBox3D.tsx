@@ -80,19 +80,16 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     rollDataRef.current = rollData;
   }, [rollData]);
 
-  // ✅ Fonction pour jouer le son du lancement de dés
   const playDiceDropSound = useCallback(() => {
     audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
   }, []);
 
-  // 🔧 Débloquer l'audio au premier clic sur mobile
   useEffect(() => {
     if (isOpen) {
       audioManager.unlock();
     }
   }, [isOpen]);
 
-  // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
     audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
   }, []);
@@ -126,7 +123,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS (sans dépendre de isOpen ou settings)
+  // ✅ Initialiser UNE SEULE FOIS
   useEffect(() => {
     let mounted = true;
 
@@ -254,9 +251,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         audioManager.stopAll();
       }
     };
-  }, []); // ✅ AUCUNE dépendance = init vraiment UNE SEULE FOIS
+  }, []);
 
-  // ✅ Gérer les changements de settings avec updateConfig
+  // ✅ Gérer les changements de settings
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
@@ -304,7 +301,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
     console.log('🎲 Lancer #' + thisRollId);
 
-    // ✅ clearDice() est appelé automatiquement par roll() dans le code original (ligne 861)
     setIsRolling(true);
     setResult(null);
     setShowResult(false);
@@ -323,7 +319,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     requestAnimationFrame(() => {
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
         console.log('🚀 Lancement immédiat du roll !');
-        diceBoxRef.current.roll(notation); // ✅ roll() appelle clearDice() en interne
+        diceBoxRef.current.roll(notation);
       }
     });
   }, [rollData, isInitialized, playDiceDropSound, isOpen]);
@@ -396,37 +392,43 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
-  if (!isOpen) return null;
-
+  // ✅ TOUJOURS rendre le container du canvas (jamais de display:none)
   return createPortal(
     <>
+      {/* Container du canvas - TOUJOURS visible */}
       <div 
-        onClick={handleOverlayClick}
-        className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
-          isFadingAll ? 'opacity-0' : 'opacity-100'
+        id="dice-box-overlay"
+        ref={containerRef} 
+        className={`pointer-events-none transition-opacity duration-300 ${
+          isFadingDice ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ backgroundColor: 'transparent' }}
-      >
-        <div 
-          id="dice-box-overlay"
-          ref={containerRef} 
-          className={`pointer-events-none transition-opacity duration-300 ${
-            isFadingDice ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{ 
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100vw',
-            height: '100vh',
-            touchAction: 'none',
-            overflow: 'hidden',
-            pointerEvents: 'none'
-          }}
-        />
-      </div>
+        style={{ 
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100vw',
+          height: '100vh',
+          touchAction: 'none',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: isOpen ? 40 : -1, // ✅ Derrière quand fermé
+          opacity: isOpen ? 1 : 0, // ✅ Invisible mais présent
+        }}
+      />
 
-      {result && showResult && (
+      {/* Overlay cliquable - Conditionnel */}
+      {isOpen && (
+        <div 
+          onClick={handleOverlayClick}
+          className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
+            isFadingAll ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{ backgroundColor: 'transparent' }}
+        />
+      )}
+
+      {/* Résultat - Conditionnel */}
+      {result && showResult && isOpen && (
         <div 
           className={`fixed z-50 pointer-events-none transition-all duration-500 ${
             isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
@@ -440,13 +442,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
           }}
         >
-          {/* Aura démoniaque pulsante */}
           <div className="absolute inset-0 animate-pulse">
             <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
             <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
           </div>
 
-          {/* Particules de feu flottantes */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(12)].map((_, i) => (
               <div
@@ -464,30 +464,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             ))}
           </div>
 
-          {/* Conteneur principal */}
           <div className="relative">
-            {/* Bordure de flammes */}
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
             
-            {/* Fond noir pur */}
             <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
-              {/* Contenu */}
               <div className="relative px-12 py-10 text-center">
-                {/* Titre avec effet gravé */}
                 <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                   {rollDataRef.current?.attackName}
                 </p>
                 
-                {/* Résultat principal - style forgé dans les flammes */}
                 <div className="relative mb-4">
-                  {/* Lueur derrière le nombre */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
                       {result.total}
                     </div>
                   </div>
                   
-                  {/* Nombre principal avec effet métal brûlant */}
                   <div 
                     className="relative text-8xl font-black tracking-tight"
                     style={{
@@ -502,7 +494,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                   </div>
                 </div>
 
-                {/* Détails avec runes */}
                 <div className="text-sm text-red-200/80 font-serif">
                   {result.rolls.length > 0 ? (
                     <div className="flex items-center justify-center gap-2">
@@ -511,12 +502,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                         Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
                       </span>
                       {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <>
-                          <span className="text-orange-400 font-bold">
-                            {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                            {Math.abs(rollDataRef.current.modifier)}
-                          </span>
-                        </>
+                        <span className="text-orange-400 font-bold">
+                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                          {Math.abs(rollDataRef.current.modifier)}
+                        </span>
                       )}
                       <span className="text-red-800">⟩</span>
                     </div>
@@ -527,19 +516,16 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                         {rollDataRef.current?.diceFormula}: {result.diceTotal}
                       </span>
                       {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <>
-                          <span className="text-orange-400 font-bold">
-                            {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                            {Math.abs(rollDataRef.current.modifier)}
-                          </span>
-                        </>
+                        <span className="text-orange-400 font-bold">
+                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+                          {Math.abs(rollDataRef.current.modifier)}
+                        </span>
                       )}
                       <span className="text-red-800">⟩</span>
                     </div>
                   )}
                 </div>
 
-                {/* Ligne de séparation runique */}
                 <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
                   <span>⸎</span>
                   <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
@@ -554,5 +540,5 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       )}
     </>,
     document.body
-  );  
+  );
 }
