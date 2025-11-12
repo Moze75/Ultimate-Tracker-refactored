@@ -113,7 +113,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
               height: '100%', 
               objectFit: 'cover',
               objectPosition: 'center top',
-              pointerEvents: 'auto',
+              pointerEvents: 'none', 
               userSelect: 'none',
               filter: 'brightness(0.95)',
             }}
