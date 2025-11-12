@@ -291,6 +291,29 @@ strength: effectiveSettings.strength * 3,  // ✅ Pareil que l'init
     updateSettings();
   }, [effectiveSettings, isInitialized]);
 
+// ✅ Recalculer les dimensions à chaque ouverture
+useEffect(() => {
+  if (isOpen && diceBoxRef.current && containerRef.current) {
+    requestAnimationFrame(() => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
+      
+      // Forcer les dimensions
+      if (containerRef.current) {
+        containerRef.current.style.width = '100vw';
+        containerRef.current.style.height = '100vh';
+      }
+      
+      // Forcer la bibliothèque à recalculer son viewport
+      if (typeof diceBoxRef.current.setDimensions === 'function') {
+        diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
+      }
+    });
+  }
+}, [isOpen]);
+  
   // ✅ Lancer les dés
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
