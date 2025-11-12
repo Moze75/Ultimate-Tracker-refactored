@@ -75,14 +75,15 @@ const handleSavingThrowClick = (ability: Ability) => {
   });
 };
 
-  const handleSkillClick = (skillName: string, bonus: number) => {
-    setDiceRoll({
-      type: 'skill',
-      attackName: `Test de ${skillName}`,
-      diceFormula: '1d20',
-      modifier: bonus
-    });
-  };
+const handleSkillClick = (skillName: string, bonus: number) => {
+  console.log('🎲 [DesktopView] Lancer compétence:', skillName);
+  rollDice({
+    type: 'skill',
+    attackName: `Test de ${skillName}`,
+    diceFormula: '1d20',
+    modifier: bonus
+  });
+};
 
   // 🆕 Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
