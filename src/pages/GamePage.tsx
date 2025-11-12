@@ -105,6 +105,27 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
+  // ✨ État pour le contexte de dés centralisé
+const [diceRollData, setDiceRollData] = useState<{
+  type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+  attackName: string;
+  diceFormula: string;
+  modifier: number;
+} | null>(null);
+
+const { settings: diceSettings } = useDiceSettings();
+
+// ✨ Fonction pour lancer les dés (partagée via Context)
+const rollDice = useCallback((data: {
+  type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+  attackName: string;
+  diceFormula: string;
+  modifier: number;
+}) => {
+  console.log('🎲 [GamePage] rollDice appelé:', data);
+  setDiceRollData(data);
+}, []);
+
   // --- START: Realtime subscription for inventory_items (GamePage) ---
 const lastInventoryCheckRef = useRef<string | null>(null);
 const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
