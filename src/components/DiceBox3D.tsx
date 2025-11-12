@@ -277,9 +277,9 @@ strength: effectiveSettings.strength * 3,  // ✅ Plus raisonnable que * 5
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: effectiveSettings.baseScale * 200 / 6,
-        gravity_multiplier: effectiveSettings.gravity * 800,
-        strength: effectiveSettings.strength,
+baseScale: effectiveSettings.baseScale * 100 / 6,  // ✅ Pareil que l'init
+gravity_multiplier: effectiveSettings.gravity * 400,  // ✅ Pareil que l'init
+strength: effectiveSettings.strength * 3,  // ✅ Pareil que l'init
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
