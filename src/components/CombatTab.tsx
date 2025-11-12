@@ -571,27 +571,27 @@ const { rollDice } = React.useContext(DiceRollContext);
     return baseAbilityMod + equipmentBonus + weaponBonus;
   };
 
-  const rollAttack = (attack: Attack) => {
-    const attackBonus = getAttackBonus(attack);
-    setRollData({
-      type: 'attack',
-      attackName: attack.name,
-      diceFormula: '1d20',
-      modifier: attackBonus
-    });
-    setDiceRollerOpen(true);
-  };
+const rollAttack = (attack: Attack) => {
+  const attackBonus = getAttackBonus(attack);
+  console.log('🎲 [CombatTab] Lancer attaque:', attack.name);
+  rollDice({
+    type: 'attack',
+    attackName: attack.name,
+    diceFormula: '1d20',
+    modifier: attackBonus
+  });
+};
 
-  const rollDamage = (attack: Attack) => {
-    const damageBonus = getDamageBonus(attack);
-    setRollData({
-      type: 'damage',
-      attackName: attack.name,
-      diceFormula: attack.damage_dice,
-      modifier: damageBonus
-    });
-    setDiceRollerOpen(true);
-  };
+const rollDamage = (attack: Attack) => {
+  const damageBonus = getDamageBonus(attack);
+  console.log('🎲 [CombatTab] Lancer dégâts:', attack.name);
+  rollDice({
+    type: 'damage',
+    attackName: attack.name,
+    diceFormula: attack.damage_dice,
+    modifier: damageBonus
+  });
+};
 
   const setAmmoCount = async (attack: Attack, next: number) => {
     const clamped = Math.max(0, Math.floor(next || 0));
