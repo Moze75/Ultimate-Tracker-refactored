@@ -216,16 +216,19 @@ strength: effectiveSettings.strength * 3,  // ✅ Plus raisonnable que * 5
 
         const box = new DiceBox('#dice-box-overlay', config);
 
-        if (containerRef.current) {
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          
-          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
-          
-          containerRef.current.style.width = `${viewportWidth}px`;
-          containerRef.current.style.height = `${viewportHeight}px`;
-        }
-
+      if (containerRef.current) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+  
+  // ✅ FORCER les dimensions à 100% de l'écran (pas de calcul JS)
+  containerRef.current.style.width = '100vw';
+  containerRef.current.style.height = '100vh';
+  containerRef.current.style.position = 'fixed';
+  containerRef.current.style.top = '0';
+  containerRef.current.style.left = '0';
+}
         await box.initialize();
         
         if (mounted) {
