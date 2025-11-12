@@ -658,13 +658,7 @@ const rollDamage = (attack: Attack) => {
       <StandardActionsSection player={player} onUpdate={onUpdate} />
       <ConditionsSection player={player} onUpdate={onUpdate} />
 
-      <DiceRollerLazy
-        key={settingsKey}
-        isOpen={diceRollerOpen}
-        onClose={() => setDiceRollerOpen(false)}
-        rollData={rollData}
-        settings={localSettings}
-      />
+
       
       {showConcentrationCheck && (
         <ConcentrationCheckModal
