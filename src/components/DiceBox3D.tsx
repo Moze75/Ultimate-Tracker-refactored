@@ -11,6 +11,7 @@ import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
  import { createPortal } from 'react-dom';
 import { useDiceHistory } from '../hooks/useDiceHistory';
 import { audioManager } from '../utils/audioManager';
+import { getDiceBoxInstance, updateDiceBoxSettings } from '../utils/diceBoxInstance';
 
 interface DiceBox3DProps {
   isOpen: boolean;
