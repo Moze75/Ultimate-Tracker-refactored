@@ -130,107 +130,152 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, []);
 
   // Initialiser UNE SEULE FOIS
-import { getDiceBoxInstance, updateDiceBoxSettings } from '../utils/diceBoxInstance';
-
-export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
-  // ... (garder les mêmes refs et states)
-
-  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
-  const settingsRef = useRef(effectiveSettings);
-
-  // ✅ Initialiser UNE SEULE FOIS au montage du composant
   useEffect(() => {
+    
+    if (diceBoxRef.current && isInitialized) {
+      console.log('✓ DiceBox déjà initialisé');
+      return;
+    }
+
     let mounted = true;
 
     const initDiceBox = async () => {
-      if (!containerRef.current) return;
-
       try {
-        console.log('🎲 Initialisation DiceBox...');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+        console.log('🎲 [INIT] Theme:', effectiveSettings.theme); 
+        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        const box = await getDiceBoxInstance(
-          '#dice-box-overlay',
-          effectiveSettings
-        );
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
         if (!mounted) return;
 
-        // Override le callback onRollComplete
-        box.onRollComplete = (results: any) => {
-          if (!mounted) return;
-          if (hasShownResultRef.current) return;
+        const textureForTheme = effectiveSettings.theme 
+          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
+          : 'none';
 
-          let rollValues: number[] = [];
-          let diceTotal = 0;
+        console.log('🎨 Texture sélectionnée:', textureForTheme);
+
+        const config = {
+          assetPath: '/assets/dice-box/',
           
-          if (Array.isArray(results?.sets)) {
-            results.sets.forEach((set: any) => {
-              if (Array.isArray(set?.rolls)) {
-                set.rolls.forEach((roll: any) => {
-                  if (typeof roll?.value === 'number') {
-                    rollValues.push(roll.value);
-                  }
-                });
-              }
-            });
-            diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-          }
-
-          const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-          const finalResult = { total: finalTotal, rolls: rollValues, diceTotal };
-
-          hasShownResultRef.current = true;
-          setResult(finalResult);
-          setIsRolling(false);
-          setShowResult(true);
-
-          if (rollDataRef.current) {
-            addRoll({
-              attackName: rollDataRef.current.attackName,
-              diceFormula: rollDataRef.current.diceFormula,
-              modifier: rollDataRef.current.modifier,
-              total: finalResult.total,
-              rolls: finalResult.rolls,
-              diceTotal: finalResult.diceTotal,
-            });
-          }
+          theme_colorset: effectiveSettings.theme || 'custom',
+          theme_texture: textureForTheme,
           
-          playResultSound();
+          theme_customColorset: !effectiveSettings.theme ? {
+            name: 'custom',
+            foreground: '#ffffff',
+            background: effectiveSettings.themeColor,
+            outline: effectiveSettings.themeColor,
+            edge: effectiveSettings.themeColor,
+            texture: 'none',
+            material: effectiveSettings.themeMaterial
+          } : undefined,
+          
+          theme_material: effectiveSettings.themeMaterial || "plastic",
+          
+ // ✅ PARAMÈTRES PHYSIQUES VALIDES
+  baseScale: effectiveSettings.baseScale * 100 / 6,  // Normaliser : baseScale dans settings (3-10) → baseScale dans dice-box (~50-166)
+  gravity_multiplier: effectiveSettings.gravity * 400, // 0.5-2 → 200-800
+  strength: effectiveSettings.strength,               // 0.5-3
+  
+  // ✅ SONS
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+  
+  onRollComplete: (results: any) => {
+  if (!mounted) return;
+  if (hasShownResultRef.current) return;
+
+  let rollValues: number[] = [];
+  let diceTotal = 0;
+  
+  if (Array.isArray(results?.sets)) {
+    results.sets.forEach((set: any) => {
+      if (Array.isArray(set?.rolls)) {
+        set.rolls.forEach((roll: any) => {
+          if (typeof roll?.value === 'number') {
+            rollValues.push(roll.value);
+          }
+        });
+      }
+    });
+    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+  }
+
+  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+  hasShownResultRef.current = true;
+  setResult(finalResult);
+  setIsRolling(false);
+  setShowResult(true);
+
+    // ✅ AJOUTER : Enregistrer dans l'historique
+    if (rollDataRef.current) {
+      addRoll({
+        attackName: rollDataRef.current.attackName,
+        diceFormula: rollDataRef.current.diceFormula,
+        modifier: rollDataRef.current.modifier,
+        total: finalResult.total,
+        rolls: finalResult.rolls,
+        diceTotal: finalResult.diceTotal,
+      });
+    }
+    
+  // Jouer le son du résultat
+  playResultSound();
+
+
+}
         };
 
-        diceBoxRef.current = box;
-        setIsInitialized(true);
-        console.log('✅ DiceBox prêt');
+        console.log('📦 Config complète:', config);
 
+ const box = new DiceBox('#dice-box-overlay', config);
+
+// 🔧 AJOUTER : Forcer les dimensions au viewport visible
+if (containerRef.current) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+  
+  // Forcer la taille du container
+  containerRef.current.style.width = `${viewportWidth}px`;
+  containerRef.current.style.height = `${viewportHeight}px`;
+}
+
+await box.initialize();
+        
+        if (mounted) {
+          diceBoxRef.current = box;
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé !');
+        }
       } catch (error) {
-        console.error('❌ Erreur init DiceBox:', error);
+        console.error('❌ Erreur init:', error);
         if (mounted) setIsRolling(false);
       }
     };
 
     initDiceBox();
 
-    return () => {
-      mounted = false;
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-      audioManager.stopAll();
-    };
-  }, []); // ✅ Dépendances vides = UNE SEULE FOIS
-
-  // ✅ Gérer les changements de settings SANS réinitialisation
-  useEffect(() => {
-    const settingsChanged = JSON.stringify(settingsRef.current) !== JSON.stringify(effectiveSettings);
-    
-    if (settingsChanged && isInitialized) {
-      console.log('🔧 Settings modifiés, mise à jour...');
-      updateDiceBoxSettings(effectiveSettings);
-      settingsRef.current = effectiveSettings;
+  return () => {
+    mounted = false;
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
     }
-  }, [effectiveSettings, isInitialized]);
+    // 🔧 Arrêter les sons (ne pas nettoyer complètement)
+    if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
+      audioManager.stopAll();
+    }
+  };
+  }, [isOpen, effectiveSettings, playResultSound]);
 
-  // ✅ Lancer les dés (reste identique)
+  // Lancer les dés
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
@@ -255,23 +300,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     pendingResultRef.current = null;
     hasShownResultRef.current = false;
 
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
+let notation = rollData.diceFormula;
+if (rollData.modifier !== 0) {
+  notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+}
 
-    playDiceDropSound();
+// ✅ Jouer le son IMMÉDIATEMENT (avant requestAnimationFrame)
+playDiceDropSound();
 
-    requestAnimationFrame(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🚀 Lancement immédiat !');
-        diceBoxRef.current.roll(notation);
-      }
-    });
+// Lancement des dés juste après
+requestAnimationFrame(() => {
+  if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+    console.log('🚀 Lancement immédiat !');
+    diceBoxRef.current.roll(notation);
+  }
+});
   }, [rollData, isInitialized, playDiceDropSound]);
-
-  // ... (reste du code identique)
-} 
 
   // Reset à la fermeture
   useEffect(() => {
