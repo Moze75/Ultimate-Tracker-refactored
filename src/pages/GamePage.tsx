@@ -763,288 +763,291 @@ const renderPane = (key: TabKey | 'profile-details') => {
   }
 }; 
 
-  /* ---------------- Loading / Error ---------------- */
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <img
-            src="/icons/wmremove-transformed.png"
-            alt="Chargement..."
-            className="animate-spin rounded-full h-12 w-12 mx-auto object-cover"
-          />
-          <p className="text-gray-400">Chargement en cours...</p>
-        </div>
-      </div>
-    );
-  }
-  if (connectionError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-4 stat-card p-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-500 mb-4">Erreur de connexion</h2>
-            <p className="text-gray-300 mb-4">{connectionError}</p>
-            <p className="text-sm text-gray-400 mb-4">
-              Vérifiez votre connexion Internet et réessayez.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setConnectionError(null);
-              setLoading(true);
-              (async () => {
-                try {
-                  const isConnected = await testConnection();
-                  if (!isConnected.success) throw new Error('Impossible de se connecter');
-                  const inventoryData = await inventoryService.getPlayerInventory(selectedCharacter.id);
-                  setInventory(inventoryData);
-                  setCurrentPlayer(selectedCharacter);
-                  setLoading(false);
-                } catch (e: any) {
-                  console.error(e);
-                  setConnectionError(e?.message ?? 'Erreur inconnue');
-                  setLoading(false);
-                }
-              })();
-            }}
-            className="w-full btn-primary px-4 py-2 rounded-lg"
-          >
-            Réessayer
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---------------- Swipe transforms ---------------- */
-  const neighborTypeRaw: 'prev' | 'next' | null = (() => {
-    if (dragX > 0 && prevKey) return 'prev';
-    if (dragX < 0 && nextKey) return 'next';
-    return null;
-  })();
-  // Pendant l’animation, garde le voisin verrouillé si dragX est revenu à 0
-  const neighborType: 'prev' | 'next' | null =
-    neighborTypeRaw ?? (animating ? latchedNeighbor : null);
-
-  const currentTransform = `translate3d(${dragX}px, 0, 0)`;
-  const neighborTransform =
-    neighborType === 'next'
-      ? `translate3d(calc(100% + ${dragX}px), 0, 0)`
-      : neighborType === 'prev'
-      ? `translate3d(calc(-100% + ${dragX}px), 0, 0)`
-      : undefined;
-  const showAsStatic = !isInteracting && !animating;
-
-/* ---------------- Rendu principal ---------------- */
-
-  // Si on est en mode desktop et pas en mode grille, afficher la nouvelle interface
-  if (deviceType === 'desktop' && !isGridMode && currentPlayer) {
-    return (
-      <>
-        {/* Bouton Mode Grille (ancien) visible en haut à droite */}
-        <div className="fixed top-4 right-4 z-50">
-
-        </div>
-
-<DesktopView
-  player={currentPlayer}
-  inventory={inventory}
-  onPlayerUpdate={applyPlayerUpdate}
-  onInventoryUpdate={setInventory}
-  classSections={classSections}
-  session={session}
-  onBackToSelection={handleBackToSelection}
-/>
-
-        <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
-          <button
-            onClick={handleBackToSelection}
-            className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-          >
-            <LogOut size={20} />
-            Retour aux personnages
-          </button>
-        </div>
-      </>
-    );
-  }
- 
+/* ---------------- Rendu principal avec Provider ---------------- */
 return (
   <DiceRollContext.Provider value={{ rollDice }}>
-    <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
-    {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
-    {deviceType === 'desktop' && !isGridMode && (
-      <div className="fixed top-4 right-4 z-50">
-        <button
-          onClick={() => {
-            setIsGridMode(true);
-            toast.success('Mode grille activé');
-          }}
-          className="px-4 py-2 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 flex items-center gap-2 shadow-lg transition-all hover:scale-105"
-        >
-          <Grid3x3 className="w-5 h-5" />
-          Mode Grille
-        </button>
-      </div>
-    )}
+    {(() => {
+      /* ---------------- Loading ---------------- */
+      if (loading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <img
+                src="/icons/wmremove-transformed.png"
+                alt="Chargement..."
+                className="animate-spin rounded-full h-12 w-12 mx-auto object-cover"
+              />
+              <p className="text-gray-400">Chargement en cours...</p>
+            </div>
+          </div>
+        );
+      }
 
-    {/* Zone de capture de SWIPE au bord gauche (seulement en mode onglets) */}
-    {!settingsOpen && !isGridMode && (
-      <div
-        className="fixed inset-y-0 left-0 w-4 sm:w-5 z-50"
-        onTouchStart={(e) => {
-          const t = e.touches[0];
-          (e.currentTarget as any).__sx = t.clientX;
-          (e.currentTarget as any).__sy = t.clientY;
-          (e.currentTarget as any).__edge = t.clientX <= 16;
-        }}
-        onTouchMove={(e) => {
-          const sx = (e.currentTarget as any).__sx ?? null;
-          const sy = (e.currentTarget as any).__sy ?? null;
-          const edge = (e.currentTarget as any).__edge ?? false;
-          if (!edge || sx == null || sy == null) return;
-          const t = e.touches[0];
-          const dx = t.clientX - sx;
-          const dy = t.clientY - sy;
-          if (Math.abs(dx) < 14) return;
-          if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 48) {
-            e.stopPropagation();
-            e.preventDefault();
-            openSettings('left');
-          }
-        }}
-        onTouchEnd={(e) => {
-          (e.currentTarget as any).__sx = null;
-          (e.currentTarget as any).__sy = null;
-          (e.currentTarget as any).__edge = false;
-        }}
-      >
-        <div className="w-full h-full" aria-hidden />
-      </div>
-    )}
-
-<div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'}`}>
-  {currentPlayer && (
-<PlayerContext.Provider value={currentPlayer}>
-  {/* PlayerProfile visible SEULEMENT en mode onglets */}
-{/* PlayerProfile visible SEULEMENT en mode onglets */}
-{!isGridMode && <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} inventory={inventory} />}
-
-{/* MODE GRILLE (desktop uniquement) */}
-{isGridMode && deviceType === 'desktop' ? (
-  <ResponsiveGameLayout
-    player={currentPlayer}
-    userId={session?.user?.id}
-    onPlayerUpdate={applyPlayerUpdate}
-    inventory={inventory}
-    onInventoryUpdate={setInventory}
-    classSections={classSections}
-    renderPane={renderPane}
-    onToggleMode={() => {
-      setIsGridMode(false);
-      toast.success('Mode onglets activé');
-    }}
-  />
-   ) : (
-  /* MODE ONGLETS CLASSIQUE */
-  <>
-    <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
-
-              <div
-                ref={stageRef}
-                className="relative"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                onTouchCancel={() => {
-                  fullAbortInteraction();
+      /* ---------------- Erreur de connexion ---------------- */
+      if (connectionError) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="max-w-md w-full space-y-4 stat-card p-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-red-500 mb-4">Erreur de connexion</h2>
+                <p className="text-gray-300 mb-4">{connectionError}</p>
+                <p className="text-sm text-gray-400 mb-4">
+                  Vérifiez votre connexion Internet et réessayez.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setConnectionError(null);
+                  setLoading(true);
+                  (async () => {
+                    try {
+                      const isConnected = await testConnection();
+                      if (!isConnected.success) throw new Error('Impossible de se connecter');
+                      const inventoryData = await inventoryService.getPlayerInventory(selectedCharacter.id);
+                      setInventory(inventoryData);
+                      setCurrentPlayer(selectedCharacter);
+                      setLoading(false);
+                    } catch (e: any) {
+                      console.error(e);
+                      setConnectionError(e?.message ?? 'Erreur inconnue');
+                      setLoading(false);
+                    }
+                  })();
                 }}
-                style={{
-                  touchAction: 'pan-y',
-                  height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-                  transition: heightLocking ? 'height 280ms ease' : undefined,
-                }}
+                className="w-full btn-primary px-4 py-2 rounded-lg"
               >
-                {Array.from(visitedTabs).map((key) => {
-                  const isActive = key === activeTab;
-                  const isNeighbor =
-                    (neighborType === 'next' && key === nextKey) ||
-                    (neighborType === 'prev' && key === prevKey);
+                Réessayer
+              </button>
+            </div>
+          </div>
+        );
+      }
 
-                  if (showAsStatic) {
-                    return (
-                      <div
-                        key={key}
-                        ref={(el) => { paneRefs.current[key] = el; }}
-                        data-tab={key}
-                        style={{
-                          display: isActive ? 'block' : 'none',
-                          position: 'relative',
-                          transform: 'none'
-                        }}
-                      >
-                        {key === 'class' && classSections === null
-                          ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
-                          : renderPane(key)}
-                      </div>
-                    );
-                  }
+      /* ---------------- Swipe transforms (calculs) ---------------- */
+      const neighborTypeRaw: 'prev' | 'next' | null = (() => {
+        if (dragX > 0 && prevKey) return 'prev';
+        if (dragX < 0 && nextKey) return 'next';
+        return null;
+      })();
 
-                  const display = isActive || isNeighbor ? 'block' : 'none';
-                  let transform = 'translate3d(0,0,0)';
-                  if (isActive) transform = currentTransform;
-                  if (isNeighbor && neighborTransform) transform = neighborTransform;
+      const neighborType: 'prev' | 'next' | null =
+        neighborTypeRaw ?? (animating ? latchedNeighbor : null);
 
-                  return (
+      const currentTransform = `translate3d(${dragX}px, 0, 0)`;
+      const neighborTransform =
+        neighborType === 'next'
+          ? `translate3d(calc(100% + ${dragX}px), 0, 0)`
+          : neighborType === 'prev'
+          ? `translate3d(calc(-100% + ${dragX}px), 0, 0)`
+          : undefined;
+      const showAsStatic = !isInteracting && !animating;
+
+      /* ---------------- Mode Desktop (sans grille) ---------------- */
+      if (deviceType === 'desktop' && !isGridMode && currentPlayer) {
+        return (
+          <>
+            <div className="fixed top-4 right-4 z-50"></div>
+
+            <DesktopView
+              player={currentPlayer}
+              inventory={inventory}
+              onPlayerUpdate={applyPlayerUpdate}
+              onInventoryUpdate={setInventory}
+              classSections={classSections}
+              session={session}
+              onBackToSelection={handleBackToSelection}
+            />
+
+            <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
+              <button
+                onClick={handleBackToSelection}
+                className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+              >
+                <LogOut size={20} />
+                Retour aux personnages
+              </button>
+            </div>
+          </>
+        );
+      }
+
+      /* ---------------- Mode normal (onglets/grille) ---------------- */
+      return (
+        <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
+          {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
+          {deviceType === 'desktop' && !isGridMode && (
+            <div className="fixed top-4 right-4 z-50">
+              <button
+                onClick={() => {
+                  setIsGridMode(true);
+                  toast.success('Mode grille activé');
+                }}
+                className="px-4 py-2 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 flex items-center gap-2 shadow-lg transition-all hover:scale-105"
+              >
+                <Grid3x3 className="w-5 h-5" />
+                Mode Grille
+              </button>
+            </div>
+          )}
+
+          {/* Zone de capture de SWIPE au bord gauche (seulement en mode onglets) */}
+          {!settingsOpen && !isGridMode && (
+            <div
+              className="fixed inset-y-0 left-0 w-4 sm:w-5 z-50"
+              onTouchStart={(e) => {
+                const t = e.touches[0];
+                (e.currentTarget as any).__sx = t.clientX;
+                (e.currentTarget as any).__sy = t.clientY;
+                (e.currentTarget as any).__edge = t.clientX <= 16;
+              }}
+              onTouchMove={(e) => {
+                const sx = (e.currentTarget as any).__sx ?? null;
+                const sy = (e.currentTarget as any).__sy ?? null;
+                const edge = (e.currentTarget as any).__edge ?? false;
+                if (!edge || sx == null || sy == null) return;
+                const t = e.touches[0];
+                const dx = t.clientX - sx;
+                const dy = t.clientY - sy;
+                if (Math.abs(dx) < 14) return;
+                if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 48) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openSettings('left');
+                }
+              }}
+              onTouchEnd={(e) => {
+                (e.currentTarget as any).__sx = null;
+                (e.currentTarget as any).__sy = null;
+                (e.currentTarget as any).__edge = false;
+              }}
+            >
+              <div className="w-full h-full" aria-hidden />
+            </div>
+          )}
+
+          <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'}`}>
+            {currentPlayer && (
+              <PlayerContext.Provider value={currentPlayer}>
+                {/* PlayerProfile visible SEULEMENT en mode onglets */}
+                {!isGridMode && <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} inventory={inventory} />}
+
+                {/* MODE GRILLE (desktop uniquement) */}
+                {isGridMode && deviceType === 'desktop' ? (
+                  <ResponsiveGameLayout
+                    player={currentPlayer}
+                    userId={session?.user?.id}
+                    onPlayerUpdate={applyPlayerUpdate}
+                    inventory={inventory}
+                    onInventoryUpdate={setInventory}
+                    classSections={classSections}
+                    renderPane={renderPane}
+                    onToggleMode={() => {
+                      setIsGridMode(false);
+                      toast.success('Mode onglets activé');
+                    }}
+                  />
+                ) : (
+                  /* MODE ONGLETS CLASSIQUE */
+                  <>
+                    <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
+
                     <div
-                      key={key}
-                      ref={(el) => { paneRefs.current[key] = el; }}
-                      data-tab={key}
-                      className={animating ? 'sv-anim' : undefined}
+                      ref={stageRef}
+                      className="relative"
+                      onTouchStart={onTouchStart}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={onTouchEnd}
+                      onTouchCancel={() => {
+                        fullAbortInteraction();
+                      }}
                       style={{
-                        position: 'absolute',
-                        inset: 0,
-                        display,
-                        transform,
-                        willChange: isActive || isNeighbor ? 'transform' : undefined
+                        touchAction: 'pan-y',
+                        height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                        transition: heightLocking ? 'height 280ms ease' : undefined,
                       }}
                     >
-                      {key === 'class' && classSections === null
-                        ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
-                        : renderPane(key)}
+                      {Array.from(visitedTabs).map((key) => {
+                        const isActive = key === activeTab;
+                        const isNeighbor =
+                          (neighborType === 'next' && key === nextKey) ||
+                          (neighborType === 'prev' && key === prevKey);
+
+                        if (showAsStatic) {
+                          return (
+                            <div
+                              key={key}
+                              ref={(el) => { paneRefs.current[key] = el; }}
+                              data-tab={key}
+                              style={{
+                                display: isActive ? 'block' : 'none',
+                                position: 'relative',
+                                transform: 'none'
+                              }}
+                            >
+                              {key === 'class' && classSections === null
+                                ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
+                                : renderPane(key)}
+                            </div>
+                          );
+                        }
+
+                        const display = isActive || isNeighbor ? 'block' : 'none';
+                        let transform = 'translate3d(0,0,0)';
+                        if (isActive) transform = currentTransform;
+                        if (isNeighbor && neighborTransform) transform = neighborTransform;
+
+                        return (
+                          <div
+                            key={key}
+                            ref={(el) => { paneRefs.current[key] = el; }}
+                            data-tab={key}
+                            className={animating ? 'sv-anim' : undefined}
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              display,
+                              transform,
+                              willChange: isActive || isNeighbor ? 'transform' : undefined
+                            }}
+                          >
+                            {key === 'class' && classSections === null
+                              ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
+                              : renderPane(key)}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            </>
+                  </>
+                )}
+              </PlayerContext.Provider>
+            )}
+          </div>
+
+          <div className="w-full max-w-md mx-auto mt-6 px-4">
+            <button
+              onClick={handleBackToSelection}
+              className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+            >
+              <LogOut size={20} />
+              Retour aux personnages
+            </button>
+          </div>
+
+          {/* Modale Paramètres */}
+          {currentPlayer && (
+            <PlayerProfileSettingsModal
+              open={settingsOpen}
+              onClose={closeSettings}
+              player={currentPlayer}
+              onUpdate={applyPlayerUpdate}
+              slideFrom={settingsSlideFrom}
+            />
           )}
-        </PlayerContext.Provider>
-      )}
-    </div>
+        </div>
+      );
+    })()}
 
-    <div className="w-full max-w-md mx-auto mt-6 px-4">
-      <button
-        onClick={handleBackToSelection}
-        className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-      >
-        <LogOut size={20} />
-        Retour aux personnages
-      </button>
-    </div>
-
-    {/* Modale Paramètres (fond opaque, couvre tout) */}
-    {currentPlayer && (
-      <PlayerProfileSettingsModal
-        open={settingsOpen}
-        onClose={closeSettings}
-        player={currentPlayer}
-        onUpdate={applyPlayerUpdate}
-        slideFrom={settingsSlideFrom}
-      />
-    )}
-    
-    {/* ✨ DiceBox3D centralisé */}
+    {/* ✨ DiceBox3D centralisé - EN DEHORS de la fonction, mais DANS le Provider */}
     <DiceBox3D
       key="dice-box-gamepage"
       isOpen={!!diceRollData}
@@ -1055,9 +1058,8 @@ return (
       rollData={diceRollData}
       settings={diceSettings}
     />
-  </div>
   </DiceRollContext.Provider>
 );
 }
 
-export default GamePage; 
+export default GamePage;
