@@ -16,10 +16,10 @@ interface DiceRollerLazyProps {
 }
 
 export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRollerLazyProps) {
+  // ✅ État pour savoir si le module est chargé
   const [isModuleLoaded, setIsModuleLoaded] = useState(false);
-  const [hasBeenOpenedOnce, setHasBeenOpenedOnce] = useState(false); // ✅ NOUVEAU
 
-  // Précharger le module au montage
+  // ✅ Précharger le module dès le montage du composant (en arrière-plan)
   useEffect(() => {
     console.log('🔄 [DiceRollerLazy] Préchargement du module DiceBox3D...');
     import('./DiceBox3D')
@@ -30,19 +30,10 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
       .catch(err => console.error('❌ [DiceRollerLazy] Erreur préchargement:', err));
   }, []);
 
-  // ✅ Marquer qu'on a ouvert au moins une fois
-  useEffect(() => {
-    if (isOpen && !hasBeenOpenedOnce) {
-      setHasBeenOpenedOnce(true);
-    }
-  }, [isOpen, hasBeenOpenedOnce]);
+  // ✅ Si la modale n'est pas ouverte, ne rien afficher
+  if (!isOpen) return null;
 
-  // ✅ Ne rien afficher tant qu'on n'a jamais ouvert
-  if (!hasBeenOpenedOnce) {
-    return null;
-  }
-
-  // ✅ Afficher le loader si module pas chargé
+  // ✅ Si le module n'est pas encore chargé, afficher un loader SANS fond noir
   if (!isModuleLoaded) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
@@ -59,11 +50,17 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
     );
   }
 
-  // ✅ IMPORTANT : Pas de clé, le composant persiste
-  // Le display:none dans DiceBox3D gère la visibilité
+  // ✅ Créer une clé unique pour forcer le remontage si les settings changent
+  const diceBoxKey = `${settings.theme}-${settings.themeMaterial}-${settings.themeColor}-${settings.scale}`;
+
+  console.log('🔑 [DiceRollerLazy] Clé DiceBox:', diceBoxKey);
+
+  // ✅ Le module est chargé, on peut afficher le DiceBox3D
+  // Le fallback est "null" car le module est déjà préchargé
   return (
     <Suspense fallback={null}>
       <DiceBox3D 
+        key={diceBoxKey}
         isOpen={isOpen} 
         onClose={onClose} 
         rollData={rollData}
