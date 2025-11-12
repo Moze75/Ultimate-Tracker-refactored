@@ -65,14 +65,15 @@ const handleAbilityClick = (ability: Ability) => {
   });
 };
 
-  const handleSavingThrowClick = (ability: Ability) => {
-    setDiceRoll({
-      type: 'saving-throw',
-      attackName: `Sauvegarde de ${ability.name}`,
-      diceFormula: '1d20',
-      modifier: ability.savingThrow
-    });
-  };
+const handleSavingThrowClick = (ability: Ability) => {
+  console.log('🎲 [DesktopView] Lancer sauvegarde:', ability.name);
+  rollDice({
+    type: 'saving-throw',
+    attackName: `Sauvegarde de ${ability.name}`,
+    diceFormula: '1d20',
+    modifier: ability.savingThrow
+  });
+};
 
   const handleSkillClick = (skillName: string, bonus: number) => {
     setDiceRoll({
