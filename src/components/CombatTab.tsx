@@ -345,38 +345,7 @@ const { rollDice } = React.useContext(DiceRollContext);
     };
   }, [player.id]);
 
-  // 🔧 Écouter les changements des paramètres de dés
-  useEffect(() => {
-    const handleDiceSettingsChange = () => {
-      console.log('🎲 Paramètres de dés changés, rechargement du DiceRoller...');
-      
-      // Recharger depuis localStorage
-      try {
-        const stored = localStorage.getItem('dice-settings');
-        if (stored) {
-          const newSettings = JSON.parse(stored);
-          setLocalSettings({ ...newSettings }); // Nouvelle référence d'objet
-          setSettingsKey(prev => prev + 1);
-        }
-      } catch (error) {
-        console.error('Erreur rechargement settings:', error);
-      }
-    };
-    
-    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'dice-settings') {
-        handleDiceSettingsChange();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+
 
   const fetchAttacks = async () => {
     try {
