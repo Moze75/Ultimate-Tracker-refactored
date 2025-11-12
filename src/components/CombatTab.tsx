@@ -3,7 +3,8 @@ import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
 import { ConditionsSection } from './ConditionsSection';
-import { DiceRollContext } from './ResponsiveGameLayout'; // ✨ AJOUT
+import { DiceRollerLazy } from './DiceRollerLazy';
+import { useDiceSettings } from '../hooks/useDiceSettings';
 import { StandardActionsSection } from './StandardActionsSection';
 import { AttackSection } from './Combat/AttackSection';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
@@ -11,6 +12,8 @@ import { attackService } from '../services/attackService';
 import './combat-tab.css';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+
+ 
 
 interface CombatTabProps {
   player: Player;
@@ -316,10 +319,24 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
-  // ✨ AJOUT : Utiliser le contexte de lancer de dés
-  const { rollDice } = React.useContext(DiceRollContext);
-  
+  const [diceRollerOpen, setDiceRollerOpen] = useState(false);
+  const [rollData, setRollData] = useState<{
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  } | null>(null);
+  const { settings: diceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout();
+  
+  // 🔧 État pour forcer le rechargement du DiceRoller
+  const [settingsKey, setSettingsKey] = useState(0);
+  const [localSettings, setLocalSettings] = useState(diceSettings);
+
+  // Synchroniser les settings locaux quand diceSettings change
+  useEffect(() => {
+    setLocalSettings(diceSettings);
+  }, [diceSettings]);
 
   React.useEffect(() => {
     fetchAttacks();
@@ -342,6 +359,39 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [player.id]);
+
+  // 🔧 Écouter les changements des paramètres de dés
+  useEffect(() => {
+    const handleDiceSettingsChange = () => {
+      console.log('🎲 Paramètres de dés changés, rechargement du DiceRoller...');
+      
+      // Recharger depuis localStorage
+      try {
+        const stored = localStorage.getItem('dice-settings');
+        if (stored) {
+          const newSettings = JSON.parse(stored);
+          setLocalSettings({ ...newSettings }); // Nouvelle référence d'objet
+          setSettingsKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Erreur rechargement settings:', error);
+      }
+    };
+    
+    window.addEventListener('dice-settings-changed', handleDiceSettingsChange);
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dice-settings') {
+        handleDiceSettingsChange();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('dice-settings-changed', handleDiceSettingsChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const fetchAttacks = async () => {
     try {
@@ -567,27 +617,26 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     return baseAbilityMod + equipmentBonus + weaponBonus;
   };
 
-  // ✨ AJOUT : Fonctions qui utilisent le contexte et sont passées à AttackSection
-  const handleRollAttack = (attack: Attack) => {
+  const rollAttack = (attack: Attack) => {
     const attackBonus = getAttackBonus(attack);
-    console.log('🎲 [CombatTab] Lancer attaque:', attack.name, 'bonus:', attackBonus);
-    rollDice({
+    setRollData({
       type: 'attack',
       attackName: attack.name,
       diceFormula: '1d20',
       modifier: attackBonus
     });
+    setDiceRollerOpen(true);
   };
 
-  const handleRollDamage = (attack: Attack) => {
+  const rollDamage = (attack: Attack) => {
     const damageBonus = getDamageBonus(attack);
-    console.log('🎲 [CombatTab] Lancer dégâts:', attack.name, 'formule:', attack.damage_dice, 'bonus:', damageBonus);
-    rollDice({
+    setRollData({
       type: 'damage',
-      attackName: `${attack.name} (Dégâts)`,
+      attackName: attack.name,
       diceFormula: attack.damage_dice,
       modifier: damageBonus
     });
+    setDiceRollerOpen(true);
   };
 
   const setAmmoCount = async (attack: Attack, next: number) => {
@@ -609,30 +658,31 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   return (
     <div className="space-y-6">
-      {deviceType !== 'desktop' && (
-        <HPManagerConnected
-          player={player}
-          onUpdate={onUpdate}
-          onConcentrationCheck={(dc) => {
-            setConcentrationDC(dc);
-            setShowConcentrationCheck(true);
-          }}
-        />
-      )}
 
-      <AttackSection
-        attacks={attacks}
-        onAdd={() => {
-          setEditingAttack(null);
-          setShowAttackModal(true);
+    {deviceType !== 'desktop' && (
+      <HPManagerConnected
+        player={player}
+        onUpdate={onUpdate}
+        onConcentrationCheck={(dc) => {
+          setConcentrationDC(dc);
+          setShowConcentrationCheck(true);
         }}
-        onEdit={(attack) => { 
+      />
+    )}
+
+    <AttackSection
+      attacks={attacks}
+      onAdd={() => {
+        setEditingAttack(null);
+        setShowAttackModal(true);
+      }}
+        onEdit={(attack) => {
           setEditingAttack(attack);
           setShowAttackModal(true);
         }}
         onDelete={deleteAttack}
-        onRollAttack={handleRollAttack}  // ✅ PASSÉ
-        onRollDamage={handleRollDamage}  // ✅ PASSÉ
+        onRollAttack={rollAttack}
+        onRollDamage={rollDamage}
         getAttackBonus={getAttackBonus}
         getDamageBonus={getDamageBonus}
         changeAmmoCount={changeAmmoCount}
@@ -653,6 +703,14 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
       <StandardActionsSection player={player} onUpdate={onUpdate} />
       <ConditionsSection player={player} onUpdate={onUpdate} />
+
+      <DiceRollerLazy
+        key={settingsKey}
+        isOpen={diceRollerOpen}
+        onClose={() => setDiceRollerOpen(false)}
+        rollData={rollData}
+        settings={localSettings}
+      />
       
       {showConcentrationCheck && (
         <ConcentrationCheckModal
