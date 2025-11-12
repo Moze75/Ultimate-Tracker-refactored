@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Settings, Trash2, Sword } from 'lucide-react';
-import BowIcon from '../icons/BowIcon'; // si tu as un fichier d'icône centralisé, sinon l'icône inline peut être réutilisée
+import BowIcon from '../icons/BowIcon';
 
 type Attack = any;
 
@@ -9,8 +9,8 @@ interface AttackSectionProps {
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
   onDelete: (attackId: string) => void;
-  onRollAttack: (attack: Attack) => void;
-  onRollDamage: (attack: Attack) => void;
+  onRollAttack: (attack: Attack) => void;  // ✅ PROP NÉCESSAIRE
+  onRollDamage: (attack: Attack) => void;  // ✅ PROP NÉCESSAIRE
   getAttackBonus: (attack: Attack) => number;
   getDamageBonus: (attack: Attack) => number;
   changeAmmoCount: (attack: Attack, delta: number) => void;
@@ -27,8 +27,8 @@ export function AttackSection({
   onAdd,
   onEdit,
   onDelete,
-  onRollAttack,
-  onRollDamage,
+  onRollAttack,  // ✅ REÇU DU PARENT
+  onRollDamage,  // ✅ REÇU DU PARENT
   getAttackBonus,
   getDamageBonus,
   changeAmmoCount,
@@ -76,7 +76,10 @@ export function AttackSection({
         <div className="flex gap-2 text-sm items-stretch">
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollAttack(attack)}
+              onClick={() => {
+                console.log('🎯 [AttackSection] Clic Attaque:', attack.name);
+                onRollAttack(attack);  // ✅ APPELLE LA FONCTION DU PARENT
+              }}
               className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Attaque : 1d20+{getAttackBonus(attack)}
@@ -97,7 +100,10 @@ export function AttackSection({
 
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollDamage(attack)}
+              onClick={() => {
+                console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
+                onRollDamage(attack);  // ✅ APPELLE LA FONCTION DU PARENT
+              }}
               className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Dégâts : {dmgLabel}
@@ -165,4 +171,4 @@ export function AttackSection({
       </div>
     </div>
   );
-} 
+}
