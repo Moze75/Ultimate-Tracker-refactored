@@ -12,6 +12,7 @@ import { TabbedPanel } from './TabbedPanel';
 import { DiceRollContext } from './ResponsiveGameLayout';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { useDiceSettings } from '../hooks/useDiceSettings';
 
 
 interface DesktopViewProps {
