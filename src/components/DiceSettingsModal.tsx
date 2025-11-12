@@ -597,8 +597,7 @@ function BackgroundTab({
 }) {
   // Liste des fonds d'écran disponibles (basée sur les fichiers réels du dossier public/fondecran)
   const backgrounds = [
-    { url: '/background/bgfan.png', name: 'bgfan' },
-    { url: '/fondecran/Magic.png', name: 'Magic' },
+     { url: '/fondecran/Magic.png', name: 'Magic' },
     { url: '/fondecran/Table.png', name: 'Table' },
     { url: '/fondecran/Toits.png', name: 'Toits' },
     { url: '/fondecran/War.png', name: 'War' },
