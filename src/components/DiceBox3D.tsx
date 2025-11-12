@@ -164,9 +164,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale * 100 / 6,
-          gravity_multiplier: effectiveSettings.gravity * 400,
-          strength: effectiveSettings.strength,
+      baseScale: effectiveSettings.baseScale * 100 / 6,
+gravity_multiplier: effectiveSettings.gravity * 400,
+strength: effectiveSettings.strength,
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
           onRollComplete: (results: any) => {
