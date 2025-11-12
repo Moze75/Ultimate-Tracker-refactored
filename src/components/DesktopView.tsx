@@ -9,10 +9,10 @@ import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
-import { DiceRollerLazy } from './DiceRollerLazy';
+import { DiceRollContext } from './ResponsiveGameLayout';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
-import { useDiceSettings } from '../hooks/useDiceSettings';
+
 
 interface DesktopViewProps {
   player: Player;
