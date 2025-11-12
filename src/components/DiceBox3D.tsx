@@ -75,7 +75,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
-  const settingsKeyRef = useRef<string>(''); // ✅ AJOUTER
+  const settingsRef = useRef(effectiveSettings);
 
    const { addRoll } = useDiceHistory();
 
