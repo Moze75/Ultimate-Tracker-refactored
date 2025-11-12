@@ -219,13 +219,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
 
       </div>
 
-      {/* 🔥 MODALS EN OVERLAY */}
-      <DiceRollerLazy
-        isOpen={diceRoll !== null}
-        onClose={() => setDiceRoll(null)}
-        rollData={diceRoll}
-        settings={diceSettings}
-      />
+
 
       <PlayerProfileSettingsModal
         open={settingsOpen}
