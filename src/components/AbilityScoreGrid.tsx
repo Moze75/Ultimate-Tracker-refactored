@@ -105,7 +105,7 @@ export function AbilityScoreGrid({
                 >
                   <div className="flex items-center gap-2">
                     {editing ? (
-                      <button
+                      <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSavingThrowChange(abilityIndex);
@@ -127,7 +127,7 @@ export function AbilityScoreGrid({
                     )}
                     <span className="text-xs text-gray-400">Sauv.</span>
                   </div>
-                  <span className="text-lg font-medium text-gray-200">
+                  <span className="text-base font-medium text-gray-200">
                     {ability.savingThrow >= 0 ? '+' : ''}{ability.savingThrow}
                   </span>
                 </div>
