@@ -297,6 +297,10 @@ strength: effectiveSettings.strength,  // ✅ Pareil que l'init
     
     const newSettings = e.detail as DiceSettings;
     console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
+
+ // ✅ AJOUTER CES LOGS DE DEBUG
+    console.log('💪 [DiceBox3D] Nouvelle valeur strength:', newSettings.strength);
+    console.log('💪 [DiceBox3D] Valeur envoyée à la lib:', newSettings.strength);
     
     const textureForTheme = newSettings.theme 
       ? (COLORSET_TEXTURES[newSettings.theme] || '')
