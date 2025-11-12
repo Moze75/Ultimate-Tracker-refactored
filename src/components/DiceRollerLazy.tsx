@@ -28,12 +28,12 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
         setIsModuleLoaded(true);
       })
       .catch(err => console.error('❌ [DiceRollerLazy] Erreur préchargement:', err));
-  }, []); // ✅ Dépendances vides = préchargement UNE SEULE FOIS
+  }, []);
 
   // ✅ Si la modale n'est pas ouverte, ne rien afficher
   if (!isOpen) return null;
 
-  // ✅ Si le module n'est pas encore chargé, afficher un loader
+  // ✅ Si le module n'est pas encore chargé, afficher un loader SANS fond noir
   if (!isModuleLoaded) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
@@ -50,11 +50,17 @@ export function DiceRollerLazy({ isOpen, onClose, rollData, settings }: DiceRoll
     );
   }
 
+  // ✅ Créer une clé unique pour forcer le remontage si les settings changent
+  const diceBoxKey = `${settings.theme}-${settings.themeMaterial}-${settings.themeColor}-${settings.scale}`;
+
+  console.log('🔑 [DiceRollerLazy] Clé DiceBox:', diceBoxKey);
+
   // ✅ Le module est chargé, on peut afficher le DiceBox3D
-  // SANS clé pour que l'instance persiste
+  // Le fallback est "null" car le module est déjà préchargé
   return (
     <Suspense fallback={null}>
       <DiceBox3D 
+        key={diceBoxKey}
         isOpen={isOpen} 
         onClose={onClose} 
         rollData={rollData}
