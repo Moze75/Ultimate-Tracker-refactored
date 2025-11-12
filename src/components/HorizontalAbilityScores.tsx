@@ -80,9 +80,9 @@ export function HorizontalAbilityScores({
                 title={`Cliquer pour lancer 1d20+${ability.modifier}`}
               >
                 <div className="absolute top-6 left-0 right-0 flex flex-col items-center pointer-events-none">
-                  <h4 className="text-[6.3px] font-normal text-gray-100 capitalize tracking-wide">
-                    {ability.name}
-                  </h4>
+  <h4 className="text-xs font-semibold text-gray-100 capitalize tracking-wide">
+  {ability.name}
+</h4>
                 </div>
 
                 {equipmentBonus !== 0 && (
