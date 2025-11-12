@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Settings, Trash2, Sword } from 'lucide-react';
-import BowIcon from '../icons/BowIcon';
+import BowIcon from '../icons/BowIcon'; // si tu as un fichier d'icône centralisé, sinon l'icône inline peut être réutilisée
 
 type Attack = any;
 
@@ -9,8 +9,8 @@ interface AttackSectionProps {
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
   onDelete: (attackId: string) => void;
-  onRollAttack: (attack: Attack) => void;  // ✅ RESTAURÉ
-  onRollDamage: (attack: Attack) => void;  // ✅ RESTAURÉ
+  onRollAttack: (attack: Attack) => void;
+  onRollDamage: (attack: Attack) => void;
   getAttackBonus: (attack: Attack) => number;
   getDamageBonus: (attack: Attack) => number;
   changeAmmoCount: (attack: Attack, delta: number) => void;
@@ -27,8 +27,8 @@ export function AttackSection({
   onAdd,
   onEdit,
   onDelete,
-  onRollAttack,   // ✅ RESTAURÉ
-  onRollDamage,   // ✅ RESTAURÉ
+  onRollAttack,
+  onRollDamage,
   getAttackBonus,
   getDamageBonus,
   changeAmmoCount,
@@ -76,7 +76,7 @@ export function AttackSection({
         <div className="flex gap-2 text-sm items-stretch">
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollAttack(attack)}  // ✅ RESTAURÉ
+              onClick={() => onRollAttack(attack)}
               className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Attaque : 1d20+{getAttackBonus(attack)}
@@ -97,7 +97,7 @@ export function AttackSection({
 
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollDamage(attack)}  // ✅ RESTAURÉ
+              onClick={() => onRollDamage(attack)}
               className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Dégâts : {dmgLabel}
