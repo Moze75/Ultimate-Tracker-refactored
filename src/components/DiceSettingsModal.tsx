@@ -596,12 +596,13 @@ function BackgroundTab({
   onBackgroundChange?: (backgroundUrl: string) => void;
 }) {
   // Liste des fonds d'écran disponibles (basée sur les fichiers réels du dossier public/fondecran)
-const backgrounds = [
-    { url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Backgroundapp/Magic.png', name: 'Magic' },
-    { url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Backgroundapp/Table.png', name: 'Table' },
-    { url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Backgroundapp/Toits.png', name: 'Toits' },
-    { url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Backgroundapp/War.png', name: 'War' },
-    { url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Backgroundapp/forest.png', name: 'forest' },
+  const backgrounds = [
+    { url: '/background/bgfan.png', name: 'bgfan' },
+    { url: '/fondecran/Magic.png', name: 'Magic' },
+    { url: '/fondecran/Table.png', name: 'Table' },
+    { url: '/fondecran/Toits.png', name: 'Toits' },
+    { url: '/fondecran/War.png', name: 'War' },
+    { url: '/fondecran/forest.png', name: 'forest' },
   ];
 
   return (
