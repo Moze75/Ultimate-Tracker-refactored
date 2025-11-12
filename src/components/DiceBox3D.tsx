@@ -270,7 +270,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     });
   }, [rollData, isInitialized, playDiceDropSound]);
 
-
+  // ... (reste du code identique)
+} 
 
   // Reset à la fermeture
   useEffect(() => {
