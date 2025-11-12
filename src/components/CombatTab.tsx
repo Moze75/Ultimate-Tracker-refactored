@@ -316,16 +316,10 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
-  // ✨ SUPPRESSION : Plus besoin de ces états pour DiceRoller
-  // const [diceRollerOpen, setDiceRollerOpen] = useState(false);
-  // const [rollData, setRollData] = useState<...>(null);
-  // const { settings: diceSettings } = useDiceSettings();
+  // ✨ AJOUT : Utiliser le contexte de lancer de dés
+  const { rollDice } = React.useContext(DiceRollContext);
   
   const deviceType = useResponsiveLayout();
-  
-  // ✨ SUPPRESSION : Plus besoin de gérer les settings manuellement
-  // const [settingsKey, setSettingsKey] = useState(0);
-  // const [localSettings, setLocalSettings] = useState(diceSettings);
 
   React.useEffect(() => {
     fetchAttacks();
@@ -348,9 +342,6 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [player.id]);
-
-  // ✨ SUPPRESSION : Plus besoin d'écouter les changements de settings
-  // useEffect(() => { ... }, []);
 
   const fetchAttacks = async () => {
     try {
@@ -576,9 +567,28 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
     return baseAbilityMod + equipmentBonus + weaponBonus;
   };
 
-  // ✨ SUPPRESSION : Ces fonctions ne sont plus nécessaires
-  // const rollAttack = (attack: Attack) => { ... };
-  // const rollDamage = (attack: Attack) => { ... };
+  // ✨ AJOUT : Fonctions qui utilisent le contexte et sont passées à AttackSection
+  const handleRollAttack = (attack: Attack) => {
+    const attackBonus = getAttackBonus(attack);
+    console.log('🎲 [CombatTab] Lancer attaque:', attack.name, 'bonus:', attackBonus);
+    rollDice({
+      type: 'attack',
+      attackName: attack.name,
+      diceFormula: '1d20',
+      modifier: attackBonus
+    });
+  };
+
+  const handleRollDamage = (attack: Attack) => {
+    const damageBonus = getDamageBonus(attack);
+    console.log('🎲 [CombatTab] Lancer dégâts:', attack.name, 'formule:', attack.damage_dice, 'bonus:', damageBonus);
+    rollDice({
+      type: 'damage',
+      attackName: `${attack.name} (Dégâts)`,
+      diceFormula: attack.damage_dice,
+      modifier: damageBonus
+    });
+  };
 
   const setAmmoCount = async (attack: Attack, next: number) => {
     const clamped = Math.max(0, Math.floor(next || 0));
@@ -621,9 +631,8 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
           setShowAttackModal(true);
         }}
         onDelete={deleteAttack}
-        // ✨ SUPPRESSION : onRollAttack et onRollDamage ne sont plus passés
-        // onRollAttack={rollAttack}
-        // onRollDamage={rollDamage}
+        onRollAttack={handleRollAttack}  // ✅ PASSÉ
+        onRollDamage={handleRollDamage}  // ✅ PASSÉ
         getAttackBonus={getAttackBonus}
         getDamageBonus={getDamageBonus}
         changeAmmoCount={changeAmmoCount}
@@ -644,9 +653,6 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
       <StandardActionsSection player={player} onUpdate={onUpdate} />
       <ConditionsSection player={player} onUpdate={onUpdate} />
-
-      {/* ✨ SUPPRESSION : DiceRollerLazy n'est plus nécessaire ici */}
-      {/* <DiceRollerLazy ... /> */}
       
       {showConcentrationCheck && (
         <ConcentrationCheckModal
