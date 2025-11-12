@@ -4,7 +4,7 @@ import { Player, Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { DiceRoller } from './DiceRoller';
-import { DiceRollerLazy } from './DiceRollerLazy';
+import { DiceRollContext } from './ResponsiveGameLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { AbilityScoreGrid } from './AbilityScoreGrid';
