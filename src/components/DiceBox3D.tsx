@@ -291,16 +291,13 @@ strength: effectiveSettings.strength,  // ✅ Pareil que l'init
     updateSettings();
   }, [effectiveSettings, isInitialized]);
 
-   useEffect(() => {
+  useEffect(() => {
   const handleSettingsChanged = async (e: CustomEvent) => {
     if (!diceBoxRef.current || !isInitialized) return;
     
     const newSettings = e.detail as DiceSettings;
     console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
-
- // ✅ AJOUTER CES LOGS DE DEBUG
     console.log('💪 [DiceBox3D] Nouvelle valeur strength:', newSettings.strength);
-    console.log('💪 [DiceBox3D] Valeur envoyée à la lib:', newSettings.strength);
     
     const textureForTheme = newSettings.theme 
       ? (COLORSET_TEXTURES[newSettings.theme] || '')
@@ -325,6 +322,14 @@ strength: effectiveSettings.strength,  // ✅ Pareil que l'init
       sounds: newSettings.soundsEnabled,
       volume: newSettings.soundsEnabled ? newSettings.volume : 0,
     });
+    
+    // ✅ FORCER L'APPLICATION DU NOUVEAU STRENGTH
+    // La bibliothèque utilise directement `this.strength` dans startClickThrow()
+    // Donc on force la mise à jour de la propriété
+    if (diceBoxRef.current) {
+      diceBoxRef.current.strength = newSettings.strength;
+      console.log('✅ [DiceBox3D] strength forcé à:', diceBoxRef.current.strength);
+    }
   };
 
   window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
