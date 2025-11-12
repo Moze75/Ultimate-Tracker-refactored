@@ -670,17 +670,24 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       />
     )}
 
-<AttackSection
-  attacks={attacks}
-  onAdd={handleAddAttack}
-  onEdit={handleEditAttack}
-  onDelete={handleDeleteAttack}
-  // ✅ onRollAttack et onRollDamage supprimés
-  getAttackBonus={getAttackBonus}
-  getDamageBonus={getDamageBonus}
-  changeAmmoCount={changeAmmoCount}
-  setAmmoCount={setAmmoCount}
-/>
+    <AttackSection
+      attacks={attacks}
+      onAdd={() => {
+        setEditingAttack(null);
+        setShowAttackModal(true);
+      }}
+        onEdit={(attack) => { 
+          setEditingAttack(attack);
+          setShowAttackModal(true);
+        }}
+        onDelete={deleteAttack}
+        onRollAttack={rollAttack}
+        onRollDamage={rollDamage}
+        getAttackBonus={getAttackBonus}
+        getDamageBonus={getDamageBonus}
+        changeAmmoCount={changeAmmoCount}
+        setAmmoCount={setAmmoCount}
+      />
 
       {showAttackModal && (
         <AttackEditModal
