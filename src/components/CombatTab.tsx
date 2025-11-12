@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
-import { DiceRollContext } from './ResponsiveGameLayout';
-import { useDiceSettings } from '../hooks/useDiceSettings';
+import { ConditionsSection } from './ConditionsSection';  // ✅ CELLE-CI !
+import { DiceRollContext } from './ResponsiveGameLayout';  // ✅ NOUVELLE
 import { StandardActionsSection } from './StandardActionsSection';
 import { AttackSection } from './Combat/AttackSection';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
@@ -11,7 +11,6 @@ import { attackService } from '../services/attackService';
 import './combat-tab.css';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
-
  
 
 interface CombatTabProps {
