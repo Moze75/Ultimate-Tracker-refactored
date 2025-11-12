@@ -32,7 +32,7 @@ const TAB_LABELS: Record<string, { icon: string; label: string }> = {
   equipment: { label: 'Équipement' },
 };
 
-// ✨ NOUVEAU : Context pour partager la fonction de lancer de dés
+// ✨ Context pour partager la fonction de lancer de dés
 export const DiceRollContext = React.createContext<{
   rollDice: (data: {
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
@@ -41,7 +41,9 @@ export const DiceRollContext = React.createContext<{
     modifier: number;
   }) => void;
 }>({
-  rollDice: () => {},
+  rollDice: () => {
+    console.warn('⚠️ rollDice appelé hors contexte');
+  },
 });
 
 export function ResponsiveGameLayout({
@@ -58,7 +60,7 @@ export function ResponsiveGameLayout({
   const [isLocked, setIsLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✨ NOUVEAU : État pour gérer le DiceBox3D centralisé
+  // ✨ État pour gérer le DiceBox3D centralisé
   const [diceRollData, setDiceRollData] = useState<{
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
@@ -68,16 +70,38 @@ export function ResponsiveGameLayout({
   
   const { settings: diceSettings } = useDiceSettings();
 
-  // ✨ NOUVEAU : Fonction pour lancer les dés (sera partagée via Context)
+  // ✨ DEBUG : Logger les changements de diceRollData
+  useEffect(() => {
+    console.log('🎲 [LAYOUT] diceRollData a changé:', diceRollData);
+    console.log('🎲 [LAYOUT] DiceBox3D devrait être:', diceRollData ? 'OUVERT' : 'FERMÉ');
+    console.log('🎲 [LAYOUT] isOpen sera:', !!diceRollData);
+  }, [diceRollData]);
+
+  // ✨ Fonction pour lancer les dés (sera partagée via Context)
+  // ⚠️ CORRECTION : Retirer diceRollData des dépendances pour éviter la closure stale
   const rollDice = useCallback((data: {
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
     diceFormula: string;
     modifier: number;
   }) => {
-    console.log('🎲 [LAYOUT] Demande de lancer de dés:', data);
-    setDiceRollData(data);
-  }, []);
+    console.log('🎲 [LAYOUT] rollDice appelé avec:', data);
+    console.log('🎲 [LAYOUT] Type de données:', {
+      type: data.type,
+      attackName: data.attackName,
+      diceFormula: data.diceFormula,
+      modifier: data.modifier
+    });
+    
+    // Utiliser la forme fonctionnelle pour être sûr d'avoir le dernier état
+    setDiceRollData((prev) => {
+      console.log('🎲 [LAYOUT] setDiceRollData - prev:', prev);
+      console.log('🎲 [LAYOUT] setDiceRollData - new:', data);
+      return data;
+    });
+    
+    console.log('🎲 [LAYOUT] setDiceRollData appelé');
+  }, []); // ✅ Pas de dépendances pour éviter les problèmes
 
   // Charger les préférences de layout
   useEffect(() => {
@@ -151,6 +175,12 @@ export function ResponsiveGameLayout({
     }
   };
 
+  // ✨ Fonction de fermeture avec log
+  const handleCloseDiceBox = useCallback(() => {
+    console.log('🎲 [LAYOUT] DiceBox3D onClose appelé');
+    setDiceRollData(null);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -161,6 +191,9 @@ export function ResponsiveGameLayout({
       </div>
     );
   }
+
+  console.log('🎲 [LAYOUT] Render - diceRollData:', diceRollData);
+  console.log('🎲 [LAYOUT] Render - DiceBox3D isOpen:', !!diceRollData);
 
   return (
     <DiceRollContext.Provider value={{ rollDice }}>
@@ -277,10 +310,12 @@ export function ResponsiveGameLayout({
           ))}
         </ResponsiveGridLayout>
 
-        {/* ✨ NOUVEAU : DiceBox3D centralisé - toujours monté */}
+        {/* ✨ DiceBox3D centralisé - toujours monté */}
+        {console.log('🎲 [LAYOUT] Rendu DiceBox3D avec:', { isOpen: !!diceRollData, rollData: diceRollData })}
         <DiceBox3D
+          key="dice-box-central"
           isOpen={!!diceRollData}
-          onClose={() => setDiceRollData(null)}
+          onClose={handleCloseDiceBox}
           rollData={diceRollData}
           settings={diceSettings}
         />
