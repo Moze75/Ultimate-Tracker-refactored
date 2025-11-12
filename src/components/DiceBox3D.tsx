@@ -277,7 +277,7 @@ strength: effectiveSettings.strength * 3,  // ← Au lieu de * 2
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: effectiveSettings.baseScale * 100 / 6,
+        baseScale: effectiveSettings.baseScale * 200 / 6,
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength,
         sounds: effectiveSettings.soundsEnabled,
