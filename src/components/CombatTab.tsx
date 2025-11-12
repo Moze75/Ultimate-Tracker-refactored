@@ -318,14 +318,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
-  const [diceRollerOpen, setDiceRollerOpen] = useState(false);
-  const [rollData, setRollData] = useState<{
-    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
-    attackName: string;
-    diceFormula: string;
-    modifier: number;
-  } | null>(null);
-  const { settings: diceSettings } = useDiceSettings();
+const { rollDice } = React.useContext(DiceRollContext);
   const deviceType = useResponsiveLayout();
   
   // 🔧 État pour forcer le rechargement du DiceRoller
