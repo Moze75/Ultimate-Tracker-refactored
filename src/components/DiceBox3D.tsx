@@ -393,56 +393,57 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
   // ✅ TOUJOURS rendre le container du canvas (jamais de display:none)
-  return createPortal(
-    <>
-      {/* Container du canvas - TOUJOURS visible */}
+// ✅ TOUJOURS rendre le container du canvas (jamais de display:none)
+return createPortal(
+  <>
+    {/* Container du canvas - TOUJOURS visible */}
+    <div 
+      id="dice-box-overlay"
+      ref={containerRef} 
+      className={`pointer-events-none transition-opacity duration-300 ${
+        isFadingDice ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        touchAction: 'none',
+        overflow: 'hidden', // ✅ Empêche le débordement
+        pointerEvents: 'none',
+        zIndex: 9999, // ✅ TOUJOURS au-dessus (même si invisible)
+        opacity: isOpen ? 1 : 0, // ✅ Invisible quand fermé
+        visibility: isOpen ? 'visible' : 'hidden', // ✅ Caché mais présent dans le DOM
+      }}
+    />
+
+    {/* Overlay cliquable - Conditionnel */}
+    {isOpen && (
       <div 
-        id="dice-box-overlay"
-        ref={containerRef} 
-        className={`pointer-events-none transition-opacity duration-300 ${
-          isFadingDice ? 'opacity-0' : 'opacity-100'
+        onClick={handleOverlayClick}
+        className={`fixed inset-0 z-[9998] overflow-hidden cursor-pointer transition-opacity duration-300 ${
+          isFadingAll ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ 
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '100vw',
-          height: '100vh',
-            zIndex: 9999,  //
-          touchAction: 'none',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          zIndex: isOpen ? 40 : -1, // ✅ Derrière quand fermé
-          opacity: isOpen ? 1 : 0, // ✅ Invisible mais présent
-        }}
+        style={{ backgroundColor: 'transparent' }}
       />
+    )}
 
-      {/* Overlay cliquable - Conditionnel */}
-      {isOpen && (
-        <div 
-          onClick={handleOverlayClick}
-          className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
-            isFadingAll ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{ backgroundColor: 'transparent' }}
-        />
-      )}
-
-      {/* Résultat - Conditionnel */}
-      {result && showResult && isOpen && (
-        <div 
-          className={`fixed z-50 pointer-events-none transition-all duration-500 ${
-            isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform, opacity',
-            filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
-          }}
-        >
+    {/* Résultat - Conditionnel */}
+    {result && showResult && isOpen && (
+      <div 
+        className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
+          isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+        }`}
+        style={{
+          position: 'fixed',
+          top: '50vh',
+          left: '50vw',
+          transform: 'translate(-50%, -50%)',
+          willChange: 'transform, opacity',
+          filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+        }}
+      >
           <div className="absolute inset-0 animate-pulse">
             <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
             <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
