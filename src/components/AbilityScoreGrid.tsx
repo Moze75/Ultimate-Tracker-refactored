@@ -55,7 +55,7 @@ export function AbilityScoreGrid({
                 title={!editing ? `Cliquer pour lancer 1d20+${ability.modifier}` : ''}
               >
                 <div className="absolute top-7 left-0 right-0 flex flex-col items-center pointer-events-none">
-<h4 className="text-xs font-normal text-gray-100 uppercase tracking-wide">
+<h4 className="text-sm font-normal text-gray-100 uppercase tracking-wide">
   {ability.name}
 </h4>
                 </div>
