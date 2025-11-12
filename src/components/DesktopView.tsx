@@ -110,7 +110,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
               top: 0,
               left: 0,
               width: '100%',
-              height: '100%',
+              height: '100%', 
               objectFit: 'cover',
               objectPosition: 'center top',
               pointerEvents: 'none',
@@ -122,7 +122,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
       )}
 
       {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
-     <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1, pointerEvents: 'none' }}>
+      <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
         <div 
