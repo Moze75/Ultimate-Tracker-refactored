@@ -219,6 +219,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
 
       </div>
 
+      {/* 🔥 MODALS EN OVERLAY */}
 
 
       <PlayerProfileSettingsModal
