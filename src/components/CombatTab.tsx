@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Player, Attack } from '../types/dnd';
 import toast from 'react-hot-toast';
-import { ConditionsSection } from './ConditionsSection';  // ✅ CELLE-CI !
-import { DiceRollContext } from './ResponsiveGameLayout';  // ✅ NOUVELLE
+import { ConditionsSection } from './ConditionsSection';
+import { DiceRollContext } from './ResponsiveGameLayout';
 import { StandardActionsSection } from './StandardActionsSection';
 import { AttackSection } from './Combat/AttackSection';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
@@ -11,7 +11,6 @@ import { attackService } from '../services/attackService';
 import './combat-tab.css';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
- 
 
 interface CombatTabProps {
   player: Player;
@@ -310,12 +309,6 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
 };
 
 export default function CombatTab({ player, inventory, onUpdate }: CombatTabProps) {
-    // ✨ AJOUT DEBUG
-  const context = React.useContext(DiceRollContext);
-  console.log('🎲 [CombatTab] Context:', context);
-  console.log('🎲 [CombatTab] rollDice existe?', typeof context?.rollDice);
-  
-  const { rollDice } = context;
   const [attacks, setAttacks] = useState<Attack[]>([]);
   const [editingAttack, setEditingAttack] = useState<Attack | null>(null);
   const [showAttackModal, setShowAttackModal] = useState(false);
@@ -323,10 +316,14 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
 
-const { rollDice } = React.useContext(DiceRollContext);
-  const deviceType = useResponsiveLayout();
+  // ✨ UTILISATION DU CONTEXTE
+  const context = React.useContext(DiceRollContext);
+  console.log('🎲 [CombatTab] Context:', context);
+  console.log('🎲 [CombatTab] rollDice existe?', typeof context?.rollDice);
   
- 
+  const { rollDice } = context;
+  
+  const deviceType = useResponsiveLayout();
 
   React.useEffect(() => {
     fetchAttacks();
@@ -349,8 +346,6 @@ const { rollDice } = React.useContext(DiceRollContext);
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [player.id]);
-
-
 
   const fetchAttacks = async () => {
     try {
@@ -576,27 +571,46 @@ const { rollDice } = React.useContext(DiceRollContext);
     return baseAbilityMod + equipmentBonus + weaponBonus;
   };
 
-const rollAttack = (attack: Attack) => {
-  const attackBonus = getAttackBonus(attack);
-  console.log('🎲 [CombatTab] Lancer attaque:', attack.name);
-  rollDice({
-    type: 'attack',
-    attackName: attack.name,
-    diceFormula: '1d20',
-    modifier: attackBonus
-  });
-};
+  // ✨ FONCTIONS MODIFIÉES POUR UTILISER LE CONTEXTE
+  const rollAttack = (attack: Attack) => {
+    console.log('🎯 [CombatTab] rollAttack APPELÉ', attack.name);
+    console.log('🎯 [CombatTab] rollDice disponible?', typeof rollDice);
+    
+    const attackBonus = getAttackBonus(attack);
+    console.log('🎲 [CombatTab] Lancer attaque:', attack.name, 'bonus:', attackBonus);
+    
+    if (!rollDice) {
+      console.error('❌ [CombatTab] rollDice est undefined !');
+      return;
+    }
+    
+    rollDice({
+      type: 'attack',
+      attackName: attack.name,
+      diceFormula: '1d20',
+      modifier: attackBonus
+    });
+  };
 
-const rollDamage = (attack: Attack) => {
-  const damageBonus = getDamageBonus(attack);
-  console.log('🎲 [CombatTab] Lancer dégâts:', attack.name);
-  rollDice({
-    type: 'damage',
-    attackName: attack.name,
-    diceFormula: attack.damage_dice,
-    modifier: damageBonus
-  });
-};
+  const rollDamage = (attack: Attack) => {
+    console.log('🎯 [CombatTab] rollDamage APPELÉ', attack.name);
+    console.log('🎯 [CombatTab] rollDice disponible?', typeof rollDice);
+    
+    const damageBonus = getDamageBonus(attack);
+    console.log('🎲 [CombatTab] Lancer dégâts:', attack.name, 'formule:', attack.damage_dice);
+    
+    if (!rollDice) {
+      console.error('❌ [CombatTab] rollDice est undefined !');
+      return;
+    }
+    
+    rollDice({
+      type: 'damage',
+      attackName: attack.name,
+      diceFormula: attack.damage_dice,
+      modifier: damageBonus
+    });
+  };
 
   const setAmmoCount = async (attack: Attack, next: number) => {
     const clamped = Math.max(0, Math.floor(next || 0));
@@ -617,24 +631,23 @@ const rollDamage = (attack: Attack) => {
 
   return (
     <div className="space-y-6">
+      {deviceType !== 'desktop' && (
+        <HPManagerConnected
+          player={player}
+          onUpdate={onUpdate}
+          onConcentrationCheck={(dc) => {
+            setConcentrationDC(dc);
+            setShowConcentrationCheck(true);
+          }}
+        />
+      )}
 
-    {deviceType !== 'desktop' && (
-      <HPManagerConnected
-        player={player}
-        onUpdate={onUpdate}
-        onConcentrationCheck={(dc) => {
-          setConcentrationDC(dc);
-          setShowConcentrationCheck(true);
+      <AttackSection
+        attacks={attacks}
+        onAdd={() => {
+          setEditingAttack(null);
+          setShowAttackModal(true);
         }}
-      />
-    )}
-
-    <AttackSection
-      attacks={attacks}
-      onAdd={() => {
-        setEditingAttack(null);
-        setShowAttackModal(true);
-      }}
         onEdit={(attack) => {
           setEditingAttack(attack);
           setShowAttackModal(true);
@@ -662,8 +675,6 @@ const rollDamage = (attack: Attack) => {
 
       <StandardActionsSection player={player} onUpdate={onUpdate} />
       <ConditionsSection player={player} onUpdate={onUpdate} />
-
-
       
       {showConcentrationCheck && (
         <ConcentrationCheckModal
