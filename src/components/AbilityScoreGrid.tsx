@@ -127,7 +127,7 @@ export function AbilityScoreGrid({
                     )}
                     <span className="text-xs text-gray-400">Sauv.</span>
                   </div>
-                  <span className="text-base font-medium text-gray-200">
+                  <span className="text-lg font-medium text-gray-200">
                     {ability.savingThrow >= 0 ? '+' : ''}{ability.savingThrow}
                   </span>
                 </div>
