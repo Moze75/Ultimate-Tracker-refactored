@@ -408,6 +408,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           left: '0',
           width: '100vw',
           height: '100vh',
+           zIndex: 9999,  //
           touchAction: 'none',
           overflow: 'hidden',
           pointerEvents: 'none',
