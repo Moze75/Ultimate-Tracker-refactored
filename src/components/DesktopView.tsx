@@ -37,12 +37,7 @@ export function DesktopView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [showDiceSettings, setShowDiceSettings] = useState(false);
-  const [diceRoll, setDiceRoll] = useState<{
-    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
-    attackName: string;
-    diceFormula: string;
-    modifier: number;
-  } | null>(null);
+
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
@@ -53,6 +48,7 @@ export function DesktopView({
   });
 
   const deviceType = useResponsiveLayout();
+  const { rollDice } = React.useContext(DiceRollContext);
   const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
 
   const abilities = Array.isArray(player.abilities) && player.abilities.length > 0
