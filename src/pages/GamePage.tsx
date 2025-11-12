@@ -1042,8 +1042,21 @@ return (
         onUpdate={applyPlayerUpdate}
         slideFrom={settingsSlideFrom}
       />
-    )} 
+    )}
+    
+    {/* ✨ DiceBox3D centralisé */}
+    <DiceBox3D
+      key="dice-box-gamepage"
+      isOpen={!!diceRollData}
+      onClose={() => {
+        console.log('🎲 [GamePage] DiceBox fermé');
+        setDiceRollData(null);
+      }}
+      rollData={diceRollData}
+      settings={diceSettings}
+    />
   </div>
+  </DiceRollContext.Provider>
 );
 }
 
