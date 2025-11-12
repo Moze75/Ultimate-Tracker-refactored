@@ -14,7 +14,7 @@ import { StatsTab } from '../components/StatsTab';
 import { ClassesTabWrapper } from '../components/ClassesTabWrapper';
 import { PlayerContext } from '../contexts/PlayerContext';
 
-import { ResponsiveGameLayout } from '../components/ResponsiveGameLayout';
+import { ResponsiveGameLayout, DiceRollContext } from '../components/ResponsiveGameLayout';
 import { Grid3x3 } from 'lucide-react';
 
 import inventoryService from '../services/inventoryService';  // ✅ Utilise l'export par défaut
