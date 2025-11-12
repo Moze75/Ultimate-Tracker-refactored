@@ -7,7 +7,31 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'fire': 'fire',
   'ice': 'ice',
   'poison': 'cloudy',
-  // ... (copier depuis DiceBox3D.tsx)
+  'acid': 'marble',
+  'thunder': 'cloudy',
+  'lightning': 'ice',
+  'air': 'cloudy',
+  'water': 'water',
+  'earth': 'speckles',
+  'force': 'stars',
+  'psychic': 'speckles',
+  'necrotic': 'skulls',
+  'radiant': 'paper',
+  'bronze': 'bronze01',
+  'dragons': 'dragon',
+  'tigerking': 'tiger',
+  'birdup': 'bird',
+  'astralsea': 'astral',
+  'glitterparty': 'glitter',
+  'starynight': 'stars',
+  'bloodmoon': 'marble',
+  'pinkdreams': 'skulls',
+  'breebaby': 'marble',
+  'inspired': 'none',
+  'black': 'none',
+  'white': 'none',
+  'rainbow': 'stars',
+  'covid': 'skulls',
 };
 
 export async function getDiceBoxInstance(
@@ -109,6 +133,17 @@ export async function updateDiceBoxSettings(settings: DiceSettings) {
   });
 
   console.log('✅ Settings mis à jour sans réinitialisation');
+}
+
+// ✅ AJOUTER : Fonction pour nettoyer les dés entre les lancers
+export function clearDiceBoxDice() {
+  if (!diceBoxInstance) return;
+  
+  // Utiliser la méthode clearDice() du code original (ligne 850-858)
+  if (typeof diceBoxInstance.clearDice === 'function') {
+    console.log('🧹 Nettoyage des dés de la scène');
+    diceBoxInstance.clearDice();
+  }
 }
 
 export function clearDiceBoxInstance() {
