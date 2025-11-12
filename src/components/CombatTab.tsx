@@ -310,6 +310,12 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
 };
 
 export default function CombatTab({ player, inventory, onUpdate }: CombatTabProps) {
+    // ✨ AJOUT DEBUG
+  const context = React.useContext(DiceRollContext);
+  console.log('🎲 [CombatTab] Context:', context);
+  console.log('🎲 [CombatTab] rollDice existe?', typeof context?.rollDice);
+  
+  const { rollDice } = context;
   const [attacks, setAttacks] = useState<Attack[]>([]);
   const [editingAttack, setEditingAttack] = useState<Attack | null>(null);
   const [showAttackModal, setShowAttackModal] = useState(false);
