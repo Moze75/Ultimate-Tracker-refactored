@@ -55,14 +55,15 @@ export function DesktopView({
     ? player.abilities
     : [];
 
-  const handleAbilityClick = (ability: Ability) => {
-    setDiceRoll({
-      type: 'ability',
-      attackName: `Test de ${ability.name}`,
-      diceFormula: '1d20',
-      modifier: ability.modifier
-    });
-  };
+const handleAbilityClick = (ability: Ability) => {
+  console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
+  rollDice({
+    type: 'ability',
+    attackName: `Test de ${ability.name}`,
+    diceFormula: '1d20',
+    modifier: ability.modifier
+  });
+};
 
   const handleSavingThrowClick = (ability: Ability) => {
     setDiceRoll({
