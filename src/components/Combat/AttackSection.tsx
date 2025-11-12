@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings, Trash2, Sword } from 'lucide-react';
-import BowIcon from '../icons/BowIcon'; // si tu as un fichier d'icône centralisé, sinon l'icône inline peut être réutilisée
+import BowIcon from '../icons/BowIcon';
+import { DiceRollContext } from '../ResponsiveGameLayout'; // ✨ AJOUT
 
 type Attack = any;
 
@@ -9,8 +10,9 @@ interface AttackSectionProps {
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
   onDelete: (attackId: string) => void;
-  onRollAttack: (attack: Attack) => void;
-  onRollDamage: (attack: Attack) => void;
+  // ✨ SUPPRESSION : onRollAttack et onRollDamage ne sont plus nécessaires en props
+  // onRollAttack: (attack: Attack) => void;
+  // onRollDamage: (attack: Attack) => void;
   getAttackBonus: (attack: Attack) => number;
   getDamageBonus: (attack: Attack) => number;
   changeAmmoCount: (attack: Attack, delta: number) => void;
@@ -27,15 +29,40 @@ export function AttackSection({
   onAdd,
   onEdit,
   onDelete,
-  onRollAttack,
-  onRollDamage,
+  // ✨ SUPPRESSION : Ces props ne sont plus destructurées
+  // onRollAttack,
+  // onRollDamage,
   getAttackBonus,
   getDamageBonus,
   changeAmmoCount,
   setAmmoCount,
   isEmptyLabel
 }: AttackSectionProps) {
+  // ✨ AJOUT : Utiliser le contexte de lancer de dés
+  const { rollDice } = React.useContext(DiceRollContext);
+
   const physicalAttacks = attacks.filter((a: Attack) => (a.attack_type || 'physical') === 'physical');
+
+  // ✨ AJOUT : Fonctions pour lancer les dés
+  const handleRollAttack = (attack: Attack) => {
+    const attackBonus = getAttackBonus(attack);
+    rollDice({
+      type: 'attack',
+      attackName: attack.name,
+      diceFormula: '1d20',
+      modifier: attackBonus
+    });
+  };
+
+  const handleRollDamage = (attack: Attack) => {
+    const damageBonus = getDamageBonus(attack);
+    rollDice({
+      type: 'damage',
+      attackName: `${attack.name} (Dégâts)`,
+      diceFormula: attack.damage_dice,
+      modifier: damageBonus
+    });
+  };
 
   const renderAttackCard = (attack: Attack) => {
     const dmgBonus = getDamageBonus(attack);
@@ -76,7 +103,7 @@ export function AttackSection({
         <div className="flex gap-2 text-sm items-stretch">
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollAttack(attack)}
+              onClick={() => handleRollAttack(attack)} // ✨ MODIFICATION : Utiliser handleRollAttack local
               className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Attaque : 1d20+{getAttackBonus(attack)}
@@ -97,7 +124,7 @@ export function AttackSection({
 
           <div className="flex-1 flex flex-col">
             <button
-              onClick={() => onRollDamage(attack)}
+              onClick={() => handleRollDamage(attack)} // ✨ MODIFICATION : Utiliser handleRollDamage local
               className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
               Dégâts : {dmgLabel}
