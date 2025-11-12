@@ -1,54 +1,120 @@
 import type { DiceSettings } from '../hooks/useDiceSettings';
 
 let diceBoxInstance: any = null;
-let currentContainer: HTMLElement | null = null;
+let isInitializing = false;
+
+const COLORSET_TEXTURES: Record<string, string> = {
+  'fire': 'fire',
+  'ice': 'ice',
+  'poison': 'cloudy',
+  // ... (copier depuis DiceBox3D.tsx)
+};
 
 export async function getDiceBoxInstance(
-  container: HTMLElement,
+  containerId: string,
   settings: DiceSettings
 ) {
-  // Si l'instance existe et le container n'a pas changé, réutiliser
-  if (diceBoxInstance && currentContainer === container) {
+  // Si déjà initialisé, retourner l'instance existante
+  if (diceBoxInstance) {
+    console.log('♻️ Réutilisation de l\'instance DiceBox existante');
     return diceBoxInstance;
   }
 
-  // Importer le module
-  const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-  // Créer la config
-  const config = {
-    assetPath: '/assets/dice-box/',
-    theme_colorset: settings.theme || 'custom',
-    // ... autres configs
-  };
-
-  // Nettoyer l'ancienne instance si nécessaire
-  if (diceBoxInstance && typeof diceBoxInstance.clear === 'function') {
-    diceBoxInstance.clear();
+  // Éviter les initialisations simultanées
+  if (isInitializing) {
+    console.log('⏳ Initialisation en cours, attente...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return getDiceBoxInstance(containerId, settings);
   }
 
-  // Créer et initialiser
-  const box = new DiceBox(container, config);
-  await box.initialize();
+  isInitializing = true;
+  console.log('🎲 Création de l\'instance DiceBox (UNE SEULE FOIS)');
 
-  diceBoxInstance = box;
-  currentContainer = container;
+  try {
+    const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
-  return box;
+    const textureForTheme = settings.theme 
+      ? (COLORSET_TEXTURES[settings.theme] || '')
+      : 'none';
+
+    const config = {
+      assetPath: '/assets/dice-box/',
+      theme_colorset: settings.theme || 'custom',
+      theme_texture: textureForTheme,
+      theme_customColorset: !settings.theme ? {
+        name: 'custom',
+        foreground: '#ffffff',
+        background: settings.themeColor,
+        outline: settings.themeColor,
+        edge: settings.themeColor,
+        texture: 'none',
+        material: settings.themeMaterial
+      } : undefined,
+      theme_material: settings.themeMaterial || "plastic",
+      baseScale: settings.baseScale * 100 / 6,
+      gravity_multiplier: settings.gravity * 400,
+      strength: settings.strength,
+      sounds: settings.soundsEnabled,
+      volume: settings.soundsEnabled ? settings.volume : 0,
+      onRollComplete: () => {}, // Sera overridé dans DiceBox3D
+    };
+
+    const box = new DiceBox(containerId, config);
+    await box.initialize();
+
+    diceBoxInstance = box;
+    isInitializing = false;
+
+    console.log('✅ Instance DiceBox créée et prête');
+    return box;
+
+  } catch (error) {
+    isInitializing = false;
+    console.error('❌ Erreur création DiceBox:', error);
+    throw error;
+  }
 }
 
-export function updateDiceBoxSettings(settings: DiceSettings) {
-  if (!diceBoxInstance) return;
-  
-  // Si le moteur supporte la mise à jour dynamique
-  if (typeof diceBoxInstance.updateConfig === 'function') {
-    diceBoxInstance.updateConfig({
-      theme_colorset: settings.theme,
-      baseScale: settings.baseScale * 100 / 6,
-      // ...
-    });
-  } else {
-    // Sinon, forcer la réinitialisation
-    diceBoxInstance = null;
+export async function updateDiceBoxSettings(settings: DiceSettings) {
+  if (!diceBoxInstance) {
+    console.warn('⚠️ Aucune instance à mettre à jour');
+    return;
   }
+
+  console.log('🔧 Mise à jour des settings DiceBox...');
+
+  const textureForTheme = settings.theme 
+    ? (COLORSET_TEXTURES[settings.theme] || '')
+    : 'none';
+
+  // Utiliser la méthode updateConfig() du code original
+  await diceBoxInstance.updateConfig({
+    theme_colorset: settings.theme || 'custom',
+    theme_texture: textureForTheme,
+    theme_material: settings.themeMaterial || "plastic",
+    theme_customColorset: !settings.theme ? {
+      name: 'custom',
+      foreground: '#ffffff',
+      background: settings.themeColor,
+      outline: settings.themeColor,
+      edge: settings.themeColor,
+      texture: 'none',
+      material: settings.themeMaterial
+    } : undefined,
+    baseScale: settings.baseScale * 100 / 6,
+    gravity_multiplier: settings.gravity * 400,
+    strength: settings.strength,
+    sounds: settings.soundsEnabled,
+    volume: settings.soundsEnabled ? settings.volume : 0,
+  });
+
+  console.log('✅ Settings mis à jour sans réinitialisation');
+}
+
+export function clearDiceBoxInstance() {
+  if (diceBoxInstance && typeof diceBoxInstance.clearDice === 'function') {
+    diceBoxInstance.clearDice();
+  }
+  diceBoxInstance = null;
+  isInitializing = false;
 }
