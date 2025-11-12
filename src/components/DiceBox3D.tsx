@@ -291,6 +291,52 @@ strength: effectiveSettings.strength,  // ✅ Pareil que l'init
     updateSettings();
   }, [effectiveSettings, isInitialized]);
 
+  useEffect(() => {
+  const handleSettingsChanged = async (e: CustomEvent) => {
+    if (!diceBoxRef.current || !isInitialized) return;
+    
+    const newSettings = e.detail as DiceSettings;
+    console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
+    
+    const textureForTheme = newSettings.theme 
+      ? (COLORSET_TEXTURES[newSettings.theme] || '')
+      : 'none';
+
+    await diceBoxRef.current.updateConfig({
+      theme_colorset: newSettings.theme || 'custom',
+      theme_texture: textureForTheme,
+      theme_material: newSettings.themeMaterial || "plastic",
+      theme_customColorset: !newSettings.theme ? {
+        name: 'custom',
+        foreground: '#ffffff',
+        background: newSettings.themeColor,
+        outline: newSettings.themeColor,
+        edge: newSettings.themeColor,
+        texture: 'none',
+        material: newSettings.themeMaterial
+      } : undefined,
+      baseScale: newSettings.baseScale * 100 / 6,
+      gravity_multiplier: newSettings.gravity * 400,
+      strength: newSettings.strength,  // ✅ CRITIQUE
+      sounds: newSettings.soundsEnabled,
+      volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+    });
+  };
+
+  window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
+  
+  return () => {
+    window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
+  };
+}, [isInitialized]);
+
+// ✅ Recalculer les dimensions à chaque ouverture (useEffect existant - continue après)
+useEffect(() => {
+  if (isOpen && diceBoxRef.current && containerRef.current) {
+    // ... code existant ...
+  }
+}, [isOpen]);
+
 // ✅ Recalculer les dimensions à chaque ouverture
 useEffect(() => {
   if (isOpen && diceBoxRef.current && containerRef.current) {
