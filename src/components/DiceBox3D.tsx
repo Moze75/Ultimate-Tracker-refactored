@@ -297,7 +297,7 @@ setTimeout(() => {
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: effectiveSettings.baseScale * 100 / 6,
+        baseScale: (effectiveSettings.baseScale / 10) * 100,  // ✅ CORRIGÉ
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
