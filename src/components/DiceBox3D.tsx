@@ -166,7 +166,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: (effectiveSettings.baseScale / 10) * 100,  // ✅ CORRIGÉ
+          baseScale: effectiveSettings.baseScale * 100 / 6, 
           gravity_multiplier: effectiveSettings.gravity * 400,
           
           // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
@@ -297,7 +297,7 @@ setTimeout(() => {
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: (effectiveSettings.baseScale / 10) * 100,  // ✅ CORRIGÉ
+        baseScale: effectiveSettings.baseScale * 100 / 6,
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
@@ -339,7 +339,7 @@ setTimeout(() => {
           texture: 'none',
           material: newSettings.themeMaterial
         } : undefined,
-        baseScale: (newSettings.baseScale / 10) * 100,  // ✅ CORRIGÉ
+        baseScale: newSettings.baseScale * 100 / 6,
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
