@@ -56,6 +56,9 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
   const handleSave = () => {
     try {
       onSave(localSettings);
+
+          window.dispatchEvent(new CustomEvent('dice-box-remount'));
+      
       onClose();
     } catch (error) {
       console.error('❌ [DiceSettingsModal] Erreur dans handleSave:', error);
