@@ -282,7 +282,7 @@ strength: effectiveSettings.strength,
         } : undefined,
 baseScale: effectiveSettings.baseScale * 100 / 6,  // ✅ Pareil que l'init
 gravity_multiplier: effectiveSettings.gravity * 400,  // ✅ Pareil que l'init
-strength: effectiveSettings.strength * 1.3,  // ✅ Pareil que l'init
+strength: effectiveSettings.strength * 1.9,  // ✅ Pareil que l'init
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
