@@ -113,7 +113,7 @@ const [diceRollData, setDiceRollData] = useState<{
   modifier: number;
 } | null>(null);
 
-const { settings: diceSettings } = useDiceSettings();
+const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
 // ✨ Fonction pour lancer les dés (partagée via Context)
 const rollDice = useCallback((data: {
