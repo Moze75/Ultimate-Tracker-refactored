@@ -223,7 +223,10 @@ setTimeout(() => {
   }
 }
         };
-
+console.log('🔍 [DEBUG] baseScale slider:', effectiveSettings.baseScale);
+console.log('🔍 [DEBUG] baseScale converti:', convertBaseScale(effectiveSettings.baseScale));
+console.log('🔍 [DEBUG] baseScale dans config:', config.baseScale);
+console.log('📦 Config complète:', config);  // ← Cette ligne existe déjà
         console.log('📦 Config complète:', config);
 
         const box = new DiceBox('#dice-box-overlay', config);
