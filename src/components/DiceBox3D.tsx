@@ -369,12 +369,7 @@ setTimeout(() => {
       }
     }
 
-      // ✅ NOUVEAU : Forcer la gravité du monde physique
-if (diceBoxRef.current.world && diceBoxRef.current.world.gravity) {
-  const newGravityValue = -9.8 * (newSettings.gravity * 400);
-  diceBoxRef.current.world.gravity.set(0, 0, newGravityValue);
-  console.log('✅ [EVENT] Gravité forcée:', newSettings.gravity, '→', newGravityValue);
-}
+       
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
