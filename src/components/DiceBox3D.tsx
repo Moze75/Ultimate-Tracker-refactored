@@ -202,22 +202,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   setIsRolling(false);
   
   // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
-  setTimeout(() => {
-    if (mounted) {
-      console.log('📊 [AUTO] Affichage automatique du résultat');
-      setShowResult(true);
-      playResultSound();
-      
-      // ✅ NOUVEAU : Auto-fermeture après 3 secondes
-      closeTimeoutRef.current = setTimeout(() => {
-        if (mounted) {
-          console.log('🚪 [AUTO] Fermeture automatique');
-          setIsFadingAll(true);
-          setTimeout(() => onClose(), 300);
-        }
-      }, 3000);
-    }
-  }, 50); // Délai de 1 seconde pour voir les dés s'arrêter
+setTimeout(() => {
+  if (mounted) {
+    console.log('📊 [AUTO] Affichage automatique du résultat');
+    setShowResult(true);
+    playResultSound();
+    // ✅ Plus d'auto-fermeture, le popup reste affiché
+  }
+}, 50);
 
   if (rollDataRef.current) {
     addRoll({
