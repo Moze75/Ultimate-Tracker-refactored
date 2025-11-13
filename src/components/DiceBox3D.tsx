@@ -55,11 +55,6 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
-// 🎯 Helper pour convertir baseScale (3-10) en valeur moteur 3D (30-100)
-const convertBaseScale = (sliderValue: number): number => {
-  return (sliderValue / 10) * 100;
-};
-
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
@@ -171,7 +166,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: convertBaseScale(effectiveSettings.baseScale),
+          baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           
           // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
@@ -302,7 +297,7 @@ setTimeout(() => {
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: convertBaseScale(effectiveSettings.baseScale),
+        baseScale: effectiveSettings.baseScale * 100 / 6,
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
@@ -344,7 +339,7 @@ setTimeout(() => {
           texture: 'none',
           material: newSettings.themeMaterial
         } : undefined,
-      baseScale: convertBaseScale(newSettings.baseScale),
+        baseScale: newSettings.baseScale * 100 / 6,
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
