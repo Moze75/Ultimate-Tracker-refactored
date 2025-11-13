@@ -114,7 +114,6 @@ const [diceRollData, setDiceRollData] = useState<{
 } | null>(null);
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
-  const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
@@ -129,6 +128,7 @@ useEffect(() => {
   console.log('  - Montera DiceBox?', !isDiceSettingsLoading);
   console.log('  - diceRollData:', diceRollData);
 }, [isDiceSettingsLoading, diceRollData]);
+  
 
 // ✨ Fonction pour lancer les dés (partagée via Context)
 const rollDice = useCallback((data: {
