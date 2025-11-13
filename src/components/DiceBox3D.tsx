@@ -346,47 +346,9 @@ setTimeout(() => {
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
-
-useEffect(() => {
-  const handleSettingsChanged = async (e: CustomEvent) => {
-    if (!diceBoxRef.current || !isInitialized) return;
-    
-    const newSettings = e.detail as DiceSettings;
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔧 [EVENT] Settings changés via événement custom');
-    console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
-    console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
-    console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
-    console.log('📏 [EVENT] baseScale slider:', newSettings.baseScale);
-    console.log('📏 [EVENT] baseScale moteur:', newSettings.baseScale * 10);
-    
-    const textureForTheme = newSettings.theme 
-      ? (COLORSET_TEXTURES[newSettings.theme] || '')
-      : 'none';
-
-    await diceBoxRef.current.updateConfig({
-      theme_colorset: newSettings.theme || 'custom',
-      theme_texture: textureForTheme,
-      theme_material: newSettings.themeMaterial || "plastic",
-      theme_customColorset: !newSettings.theme ? {
-        name: 'custom',
-        foreground: '#ffffff',
-        background: newSettings.themeColor,
-        outline: newSettings.themeColor,
-        edge: newSettings.themeColor,
-        texture: 'none',
-        material: newSettings.themeMaterial
-      } : undefined,
-      baseScale: newSettings.baseScale * 10,
-      gravity_multiplier: newSettings.gravity * 400,
-      strength: newSettings.strength * 1.3,
-      sounds: newSettings.soundsEnabled,
-      volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-    });
-
-    // ✅ Forcer baseScale directement sur l'objet
+  // ✅ Forcer baseScale directement sur l'objet
     if (diceBoxRef.current) {
-      diceBoxRef.current.baseScale = newSettings.baseScale * 10;
+      diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
       console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
       
       // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
@@ -394,33 +356,19 @@ useEffect(() => {
         try {
           const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
           diceBoxRef.current.DiceFactory = new DiceFactory({
-            baseScale: newSettings.baseScale * 10
+            baseScale: newSettings.baseScale * 100 / 6
           });
           // Réappliquer les textures
           if (diceBoxRef.current.colorData) {
             diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
           }
-          console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 10);
+          console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
         } catch (error) {
           console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
         }
       }
     }
-    
-    // Force directe strength sur l'objet (double sécurité)
-    if (diceBoxRef.current) {
-      diceBoxRef.current.strength = newSettings.strength * 1.3;
-      console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-    }
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  };
 
-  window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-  
-  return () => {
-    window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-  };
-}, [isInitialized]);
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
