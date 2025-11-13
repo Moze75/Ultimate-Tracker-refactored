@@ -115,6 +115,8 @@ const [diceRollData, setDiceRollData] = useState<{
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
+  const [diceBoxKey, setDiceBoxKey] = useState(0);  // ✅ AJOUTE CETTE LIGNE ICI
+
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
   console.log('🔧 [GamePage] isDiceSettingsLoading:', isDiceSettingsLoading);
