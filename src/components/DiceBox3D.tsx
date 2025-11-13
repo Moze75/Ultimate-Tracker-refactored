@@ -55,6 +55,11 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
+// 🎯 Helper pour convertir baseScale (3-10) en valeur moteur 3D (30-100)
+const convertBaseScale = (sliderValue: number): number => {
+  return (sliderValue / 10) * 100;
+};
+
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
