@@ -138,7 +138,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
         console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
         console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-        console.log('🎲 [INIT] Strength:', effectiveSettings.strength);
+        console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
+        console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
@@ -239,6 +240,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           diceBoxRef.current = box;
           setIsInitialized(true);
           console.log('✅ DiceBox initialisé avec strength x1.3 !');
+          console.log('💪 Force finale du moteur:', box.strength);
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -265,7 +267,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     if (!diceBoxRef.current || !isInitialized) return;
 
     const updateSettings = async () => {
-      console.log('🔧 Mise à jour des settings...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔧 [UPDATE] Mise à jour des settings...');
+      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
+      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
+      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
       
       const textureForTheme = effectiveSettings.theme 
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
@@ -290,6 +296,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
+      
+      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
     updateSettings();
@@ -300,8 +309,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       if (!diceBoxRef.current || !isInitialized) return;
       
       const newSettings = e.detail as DiceSettings;
-      console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
-      console.log('💪 [DiceBox3D] Nouvelle valeur strength:', newSettings.strength);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔧 [EVENT] Settings changés via événement custom');
+      console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
+      console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
+      console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
       
       const textureForTheme = newSettings.theme 
         ? (COLORSET_TEXTURES[newSettings.theme] || '')
@@ -327,10 +339,12 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
       
+      // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
         diceBoxRef.current.strength = newSettings.strength * 1.3;
-        console.log('✅ [DiceBox3D] strength forcé à:', diceBoxRef.current.strength);
+        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
       }
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
     window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
@@ -372,7 +386,16 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     currentRollIdRef.current += 1;
     const thisRollId = currentRollIdRef.current;
 
-    console.log('🎲 Lancer #' + thisRollId);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎲 [ROLL] Lancer #' + thisRollId);
+    console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
+    console.log('⚙️ [ROLL] Settings effectifs:', {
+      strength: effectiveSettings.strength,
+      strengthApplied: effectiveSettings.strength * 1.3,
+      gravity: effectiveSettings.gravity,
+      baseScale: effectiveSettings.baseScale
+    });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     setIsRolling(true);
     setResult(null);
@@ -395,7 +418,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         diceBoxRef.current.roll(notation);
       }
     });
-  }, [rollData, isInitialized, playDiceDropSound, isOpen]);
+  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings]);
 
   // Reset à la fermeture
   useEffect(() => {
