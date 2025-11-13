@@ -348,6 +348,12 @@ setTimeout(() => {
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
+
+      // ✅ AJOUTER CES 3 LIGNES JUSTE ICI
+console.log('📏 [EVENT] baseScale slider:', newSettings.baseScale);
+console.log('📏 [EVENT] baseScale converti:', convertBaseScale(newSettings.baseScale));
+console.log('📏 [EVENT] baseScale APRÈS updateConfig:', diceBoxRef.current.baseScale);
+
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
