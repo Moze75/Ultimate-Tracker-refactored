@@ -166,7 +166,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale * 100 / 6,
+          baseScale: (effectiveSettings.baseScale / 10) * 100,  // ✅ CORRIGÉ
           gravity_multiplier: effectiveSettings.gravity * 400,
           
           // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
