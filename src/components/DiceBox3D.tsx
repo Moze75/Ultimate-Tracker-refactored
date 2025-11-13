@@ -124,118 +124,147 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, []);
 
   // ✅ Initialiser UNE SEULE FOIS
-useEffect(() => {
-  let mounted = true;
+  useEffect(() => {
+    let mounted = true;
 
-  const initDiceBox = async () => {
-    // ✅ Détruire si baseScale a changé
-    if (diceBoxRef.current) {
-      const currentScale = diceBoxRef.current.baseScale;
-      const newScale = effectiveSettings.baseScale * 10;
-      
-      if (Math.abs(currentScale - newScale) > 1) {
-        console.log('🔄 BaseScale changé de', currentScale, 'à', newScale);
-        console.log('🔄 Destruction et réinitialisation du DiceBox...');
-        
-        try {
-          if (typeof diceBoxRef.current.clear === 'function') {
-            diceBoxRef.current.clear();
-          }
-        } catch (e) {
-          console.warn('⚠️ Erreur destruction:', e);
-        }
-        
-        diceBoxRef.current = null;
-        setIsInitialized(false);
-      } else {
-        console.log('✓ DiceBox déjà initialisé avec le bon baseScale');
+    const initDiceBox = async () => {
+      if (diceBoxRef.current) {
+        console.log('✓ DiceBox déjà initialisé');
         return;
       }
-    }
 
-    try {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
-      console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
-      console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-      console.log('🎲 [INIT] BaseScale:', effectiveSettings.baseScale, '→', effectiveSettings.baseScale * 10);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      
-      const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-      if (!mounted) return;
-
-      const textureForTheme = effectiveSettings.theme 
-        ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-        : 'none';
-
-      const config = {
-        assetPath: '/assets/dice-box/',
-        theme_colorset: effectiveSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_customColorset: !effectiveSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: effectiveSettings.themeColor,
-          outline: effectiveSettings.themeColor,
-          edge: effectiveSettings.themeColor,
-          texture: 'none',
-          material: effectiveSettings.themeMaterial
-        } : undefined,
-        theme_material: effectiveSettings.themeMaterial || "plastic",
-        baseScale: effectiveSettings.baseScale * 10,
-        gravity_multiplier: effectiveSettings.gravity * 400,
-        strength: effectiveSettings.strength * 1.3,
-        sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-        onRollComplete: (results: any) => {
-          // ... ton code onRollComplete existant ...
-        }
-      };
-
-      console.log('📦 Config complète:', config);
-
-      const box = new DiceBox('#dice-box-overlay', config);
-
-      if (containerRef.current) {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
+      try {
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+        console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
+        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+        console.log('🎲 [INIT] BaseScale:', effectiveSettings.baseScale);
+        console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
+        console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        containerRef.current.style.width = '100vw';
-        containerRef.current.style.height = '100vh';
-        containerRef.current.style.position = 'fixed';
-        containerRef.current.style.top = '0';
-        containerRef.current.style.left = '0';
-      }
-      
-      await box.initialize();
-      
-      if (mounted) {
-        diceBoxRef.current = box;
-        setIsInitialized(true);
-        console.log('✅ DiceBox initialisé !');
-        console.log('📏 BaseScale finale du moteur:', box.baseScale);
-      }
-    } catch (error) {
-      console.error('❌ Erreur init:', error);
-      if (mounted) setIsRolling(false);
-    }
-  };
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
-  initDiceBox();
+        if (!mounted) return; 
 
-  return () => {
-    mounted = false;
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
-      audioManager.stopAll();
-    }
-  };
-}, [effectiveSettings.baseScale, effectiveSettings.theme, effectiveSettings.themeMaterial, effectiveSettings.themeColor, effectiveSettings.soundsEnabled, effectiveSettings.volume, playResultSound, addRoll]);
-//  ^^^^^^^^^^^^^^^^^^^^^^^^^ AJOUTE baseScale dans les dépendances
+        const textureForTheme = effectiveSettings.theme 
+          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
+          : 'none';
+
+        console.log('🎨 Texture sélectionnée:', textureForTheme);
+
+        const config = {
+          assetPath: '/assets/dice-box/',
+          theme_colorset: effectiveSettings.theme || 'custom',
+          theme_texture: textureForTheme,
+          theme_customColorset: !effectiveSettings.theme ? {
+            name: 'custom',
+            foreground: '#ffffff',
+            background: effectiveSettings.themeColor,
+            outline: effectiveSettings.themeColor,
+            edge: effectiveSettings.themeColor,
+            texture: 'none',
+            material: effectiveSettings.themeMaterial
+          } : undefined,
+          theme_material: effectiveSettings.themeMaterial || "plastic",
+          baseScale: effectiveSettings.baseScale * 10,  // ✅ CORRIGÉ : baseScale * 10 (30-100)
+          gravity_multiplier: effectiveSettings.gravity * 400,
+          strength: effectiveSettings.strength * 1.3,
+          sounds: effectiveSettings.soundsEnabled,
+          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+          onRollComplete: (results: any) => {
+            if (!mounted) return;
+            if (hasShownResultRef.current) return;
+
+            let rollValues: number[] = [];
+            let diceTotal = 0;
+            
+            if (Array.isArray(results?.sets)) {
+              results.sets.forEach((set: any) => {
+                if (Array.isArray(set?.rolls)) {
+                  set.rolls.forEach((roll: any) => {
+                    if (typeof roll?.value === 'number') {
+                      rollValues.push(roll.value);
+                    }
+                  });
+                }
+              });
+              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+            }
+
+            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+            hasShownResultRef.current = true;
+            setResult(finalResult);
+            setIsRolling(false);
+            
+            setTimeout(() => {
+              if (mounted) {
+                console.log('📊 [AUTO] Affichage automatique du résultat');
+                setShowResult(true);
+                playResultSound();
+              }
+            }, 50);
+
+            if (rollDataRef.current) {
+              addRoll({
+                attackName: rollDataRef.current.attackName,
+                diceFormula: rollDataRef.current.diceFormula,
+                modifier: rollDataRef.current.modifier,
+                total: finalResult.total,
+                rolls: finalResult.rolls,
+                diceTotal: finalResult.diceTotal,
+              });
+            }
+          }
+        };
+
+        console.log('📦 Config complète:', config);
+
+        const box = new DiceBox('#dice-box-overlay', config);
+
+        if (containerRef.current) {
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+          
+          containerRef.current.style.width = '100vw';
+          containerRef.current.style.height = '100vh';
+          containerRef.current.style.position = 'fixed';
+          containerRef.current.style.top = '0';
+          containerRef.current.style.left = '0';
+        }
+        
+        await box.initialize();
+        
+        if (mounted) {
+          diceBoxRef.current = box;
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé !');
+          console.log('💪 Force finale du moteur:', box.strength);
+          console.log('📏 BaseScale finale du moteur:', box.baseScale);
+        }
+      } catch (error) {
+        console.error('❌ Erreur init:', error);
+        if (mounted) setIsRolling(false);
+      }
+    };
+
+    initDiceBox();
+
+    return () => {
+      mounted = false;
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
+        audioManager.stopAll();
+      }
+    };
+  }, [effectiveSettings, playResultSound, addRoll]);
 
   // ✅ Gérer les changements de settings via useEffect
   useEffect(() => {
