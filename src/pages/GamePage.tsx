@@ -1080,16 +1080,16 @@ return (
   // Settings chargés, monter le DiceBox
   console.log('✅ [GamePage JSX] DiceBox MONTÉ');
   return (
-    <DiceBox3D
-      key="dice-box-gamepage"
-      isOpen={!!diceRollData}
-      onClose={() => {
-        console.log('🎲 [GamePage] DiceBox fermé');
-        setDiceRollData(null);
-      }}
-      rollData={diceRollData}
-      settings={diceSettings}
-    />
+<DiceBox3D
+  key={`dice-box-${diceBoxKey}`}  // ✅ Utilise la key dynamique
+  isOpen={!!diceRollData}
+  onClose={() => {
+    console.log('🎲 [GamePage] DiceBox fermé');
+    setDiceRollData(null);
+  }}
+  rollData={diceRollData}
+  settings={diceSettings}
+/>
   );
 })()}
   </DiceRollContext.Provider>
