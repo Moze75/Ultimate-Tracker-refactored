@@ -113,7 +113,6 @@ const [diceRollData, setDiceRollData] = useState<{
   modifier: number;
 } | null>(null);
 
-  const [diceBoxKey, setDiceBoxKey] = useState(0);
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
 // ✅ AJOUT : Debug du chargement des settings
@@ -130,14 +129,7 @@ useEffect(() => {
   console.log('  - diceRollData:', diceRollData);
 }, [isDiceSettingsLoading, diceRollData]);
   
-// ✅ Forcer le remontage du DiceBox quand baseScale change
-useEffect(() => {
-  if (!isDiceSettingsLoading) {
-    console.log('🔄 [GamePage] baseScale changé, remontage du DiceBox:', diceSettings.baseScale);
-    setDiceBoxKey(prev => prev + 1);
-  }
-}, [diceSettings.baseScale, isDiceSettingsLoading]);
-  
+
 // ✨ Fonction pour lancer les dés (partagée via Context)
 const rollDice = useCallback((data: {
   type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
@@ -1088,16 +1080,16 @@ return (
   // Settings chargés, monter le DiceBox
   console.log('✅ [GamePage JSX] DiceBox MONTÉ');
   return (
-<DiceBox3D
-  key={`dice-box-${diceBoxKey}`}
-  isOpen={!!diceRollData}
-  onClose={() => {
-    console.log('🎲 [GamePage] DiceBox fermé');
-    setDiceRollData(null);
-  }}
-  rollData={diceRollData}
-  settings={diceSettings}
-/>
+    <DiceBox3D
+      key="dice-box-gamepage"
+      isOpen={!!diceRollData}
+      onClose={() => {
+        console.log('🎲 [GamePage] DiceBox fermé');
+        setDiceRollData(null);
+      }}
+      rollData={diceRollData}
+      settings={diceSettings}
+    />
   );
 })()}
   </DiceRollContext.Provider>
