@@ -345,6 +345,13 @@ setTimeout(() => {
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
+
+ // ✅ AJOUTE CE BLOC (NOUVEAU)
+    // Forcer baseScale directement sur l'objet (comme pour strength)
+    if (diceBoxRef.current) {
+      diceBoxRef.current.baseScale = newSettings.baseScale * 10;
+      console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+    }
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
