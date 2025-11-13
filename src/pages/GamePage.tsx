@@ -1089,7 +1089,7 @@ return (
   console.log('✅ [GamePage JSX] DiceBox MONTÉ');
   return (
 <DiceBox3D
-  key={`dice-box-${diceSettings.baseScale}-${diceSettings.theme}`}  // ✅ Force recréation
+  key={`dice-box-${diceBoxKey}`}
   isOpen={!!diceRollData}
   onClose={() => {
     console.log('🎲 [GamePage] DiceBox fermé');
