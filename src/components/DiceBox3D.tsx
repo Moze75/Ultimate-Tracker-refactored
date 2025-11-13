@@ -1,651 +1,669 @@
-/**
- * This component uses @3d-dice/dice-box-threejs
- * Copyright (c) 2022 3D Dice - MIT License
- * https://github.com/3d-dice/dice-box-threejs
- */
-
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Settings, History, Trash2, Image } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
-import { createPortal } from 'react-dom';
-import { useDiceHistory } from '../hooks/useDiceHistory';
-import { audioManager } from '../utils/audioManager';
-
-interface DiceBox3DProps {
-  isOpen: boolean;
+import { useDiceHistory, formatRelativeTime, type DiceRollHistoryEntry } from '../hooks/useDiceHistory';
+ 
+interface DiceSettingsModalProps {
+  open: boolean;
   onClose: () => void;
-  rollData: {
-    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
-    attackName: string;
-    diceFormula: string;
-    modifier: number;
-  } | null;
-  settings?: DiceSettings;
+  settings: DiceSettings;
+  onSave: (settings: DiceSettings) => void;
+  currentBackground?: string;
+  onBackgroundChange?: (backgroundUrl: string) => void;
 }
 
-// Mapping des textures par colorset
-const COLORSET_TEXTURES: Record<string, string> = {
-  'fire': 'fire',
-  'ice': 'ice',
-  'poison': 'cloudy',
-  'acid': 'marble',
-  'thunder': 'cloudy',
-  'lightning': 'ice',
-  'air': 'cloudy',
-  'water': 'water',
-  'earth': 'speckles',
-  'force': 'stars',
-  'psychic': 'speckles',
-  'necrotic': 'skulls',
-  'radiant': 'paper',
-  'bronze': 'bronze01',
-  'dragons': 'dragon',
-  'tigerking': 'tiger',
-  'birdup': 'bird',
-  'astralsea': 'astral',
-  'glitterparty': 'glitter',
-  'starynight': 'stars',
-  'bloodmoon': 'marble',
-  'pinkdreams': 'skulls',
-  'breebaby': 'marble',
-  'inspired': 'none',
-  'black': 'none',
-  'white': 'none',
-  'rainbow': 'stars',
-  'covid': 'skulls',
-};
+type TabType = 'settings' | 'history' | 'background'; 
 
-export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const diceBoxRef = useRef<any>(null);
-  const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
-  const [isRolling, setIsRolling] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isFadingDice, setIsFadingDice] = useState(false);
-  const [isFadingAll, setIsFadingAll] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const currentRollIdRef = useRef<number>(0);
-  const lastRollDataRef = useRef<string>('');
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasShownResultRef = useRef(false);
-  
-  const rollDataRef = useRef(rollData);
-  const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
-  
-  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+export function DiceSettingsModal({ open, onClose, settings, onSave, currentBackground, onBackgroundChange }: DiceSettingsModalProps) {
+  const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
+  const [activeTab, setActiveTab] = useState<TabType>('settings');
+  const { history, clearHistory, removeEntry } = useDiceHistory();
+  const [historySnapshot, setHistorySnapshot] = useState<DiceRollHistoryEntry[]>([]);
 
-  const { addRoll } = useDiceHistory();
+  React.useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
 
-  useEffect(() => {
-    rollDataRef.current = rollData;
-  }, [rollData]);
-
-  const playDiceDropSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      audioManager.unlock();
+  React.useEffect(() => {
+    if (open) {
+      setActiveTab('settings');
     }
-  }, [isOpen]);
+  }, [open]);
 
-  const playResultSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
-  }, []);
-
-  const generateRandomResult = useCallback((formula: string, modifier: number) => {
-    console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
-    
-    const match = formula.match(/(\d+)d(\d+)/i);
-    if (!match) {
-      return {
-        total: Math.floor(Math.random() * 20) + 1 + modifier,
-        rolls: [Math.floor(Math.random() * 20) + 1],
-        diceTotal: Math.floor(Math.random() * 20) + 1
-      };
-    }
-
-    const numDice = parseInt(match[1]);
-    const diceSize = parseInt(match[2]);
-    
-    const rolls: number[] = [];
-    for (let i = 0; i < numDice; i++) {
-      rolls.push(Math.floor(Math.random() * diceSize) + 1);
-    }
-    
-    const diceTotal = rolls.reduce((sum, val) => sum + val, 0);
-    
-    return {
-      total: diceTotal + modifier,
-      rolls,
-      diceTotal
-    };
-  }, []);
-
-  // ✅ Initialiser UNE SEULE FOIS
+  // Mettre à jour le snapshot quand history change
   useEffect(() => {
-    let mounted = true;
+    setHistorySnapshot(history);
+  }, [history]);
 
-    const initDiceBox = async () => {
-      if (diceBoxRef.current) {
-        console.log('✓ DiceBox déjà initialisé');
-        return;
-      }
-
+  // Recharger depuis localStorage quand on ouvre l'onglet historique
+  useEffect(() => {
+    if (open && activeTab === 'history') {
       try {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
-        console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
-        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-        console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
-        console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
-        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-        if (!mounted) return;
-
-        const textureForTheme = effectiveSettings.theme 
-          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-          : 'none';
-
-        console.log('🎨 Texture sélectionnée:', textureForTheme);
-
-        const config = {
-          assetPath: '/assets/dice-box/',
-          theme_colorset: effectiveSettings.theme || 'custom',
-          theme_texture: textureForTheme,
-          theme_customColorset: !effectiveSettings.theme ? {
-            name: 'custom',
-            foreground: '#ffffff',
-            background: effectiveSettings.themeColor,
-            outline: effectiveSettings.themeColor,
-            edge: effectiveSettings.themeColor,
-            texture: 'none',
-            material: effectiveSettings.themeMaterial
-          } : undefined,
-          theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale * 100 / 6,
-          gravity_multiplier: effectiveSettings.gravity * 400,
-          
-          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
-          strength: effectiveSettings.strength * 1.3,
-          
-          sounds: effectiveSettings.soundsEnabled,
-          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-    onRollComplete: (results: any) => {
-  if (!mounted) return;
-  if (hasShownResultRef.current) return;
-
-  let rollValues: number[] = [];
-  let diceTotal = 0;
-  
-  if (Array.isArray(results?.sets)) {
-    results.sets.forEach((set: any) => {
-      if (Array.isArray(set?.rolls)) {
-        set.rolls.forEach((roll: any) => {
-          if (typeof roll?.value === 'number') {
-            rollValues.push(roll.value);
-          }
-        });
-      }
-    });
-    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-  }
-
-  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-  hasShownResultRef.current = true;
-  setResult(finalResult);
-  setIsRolling(false);
-  
-  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
-setTimeout(() => {
-  if (mounted) {
-    console.log('📊 [AUTO] Affichage automatique du résultat');
-    setShowResult(true);
-    playResultSound();
-    // ✅ Plus d'auto-fermeture, le popup reste affiché
-  }
-}, 50);
-
-  if (rollDataRef.current) {
-    addRoll({
-      attackName: rollDataRef.current.attackName,
-      diceFormula: rollDataRef.current.diceFormula,
-      modifier: rollDataRef.current.modifier,
-      total: finalResult.total,
-      rolls: finalResult.rolls,
-      diceTotal: finalResult.diceTotal,
-    });
-  }
-}
-        };
-
-        console.log('📦 Config complète:', config);
-
-        const box = new DiceBox('#dice-box-overlay', config);
-
-        if (containerRef.current) {
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          
-          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
-          
-          containerRef.current.style.width = '100vw';
-          containerRef.current.style.height = '100vh';
-          containerRef.current.style.position = 'fixed';
-          containerRef.current.style.top = '0';
-          containerRef.current.style.left = '0';
-        }
-        
-        await box.initialize();
-        
-        if (mounted) {
-          diceBoxRef.current = box;
-          setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec strength x1.3 !');
-          console.log('💪 Force finale du moteur:', box.strength);
+        const stored = localStorage.getItem('dice-roll-history');
+        if (stored) {
+          const parsed = JSON.parse(stored) as DiceRollHistoryEntry[];
+          setHistorySnapshot(parsed);
         }
       } catch (error) {
-        console.error('❌ Erreur init:', error);
-        if (mounted) setIsRolling(false);
-      }
-    };
-
-    initDiceBox();
-
-    return () => {
-      mounted = false;
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
-      }
-      if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
-        audioManager.stopAll();
-      }
-    };
-  }, [effectiveSettings, playResultSound, addRoll]);
-
-  // ✅ Gérer les changements de settings
-  useEffect(() => {
-    if (!diceBoxRef.current || !isInitialized) return;
-
-    const updateSettings = async () => {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔧 [UPDATE] Mise à jour des settings...');
-      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
-      
-      const textureForTheme = effectiveSettings.theme 
-        ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-        : 'none';
-
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: effectiveSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: effectiveSettings.themeMaterial || "plastic",
-        theme_customColorset: !effectiveSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: effectiveSettings.themeColor,
-          outline: effectiveSettings.themeColor,
-          edge: effectiveSettings.themeColor,
-          texture: 'none',
-          material: effectiveSettings.themeMaterial
-        } : undefined,
-        baseScale: effectiveSettings.baseScale * 100 / 6,
-        gravity_multiplier: effectiveSettings.gravity * 400,
-        strength: effectiveSettings.strength * 1.3,
-        sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-      });
-      
-      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    };
-
-    updateSettings();
-  }, [effectiveSettings, isInitialized]);
-
-  useEffect(() => {
-    const handleSettingsChanged = async (e: CustomEvent) => {
-      if (!diceBoxRef.current || !isInitialized) return;
-      
-      const newSettings = e.detail as DiceSettings;
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔧 [EVENT] Settings changés via événement custom');
-      console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
-      console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
-      
-      const textureForTheme = newSettings.theme 
-        ? (COLORSET_TEXTURES[newSettings.theme] || '')
-        : 'none';
-
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: newSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: newSettings.themeMaterial || "plastic",
-        theme_customColorset: !newSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: newSettings.themeColor,
-          outline: newSettings.themeColor,
-          edge: newSettings.themeColor,
-          texture: 'none',
-          material: newSettings.themeMaterial
-        } : undefined,
-        baseScale: newSettings.baseScale * 100 / 6,
-        gravity_multiplier: newSettings.gravity * 400,
-        strength: newSettings.strength * 1.3,
-        sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-      });
-      
-      // Force directe sur l'objet (double sécurité)
-      if (diceBoxRef.current) {
-        diceBoxRef.current.strength = newSettings.strength * 1.3;
-        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-      }
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    };
-
-    window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    };
-  }, [isInitialized]);
-
-  // ✅ Recalculer les dimensions à chaque ouverture
-  useEffect(() => {
-    if (isOpen && diceBoxRef.current && containerRef.current) {
-      requestAnimationFrame(() => {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
-        
-        if (containerRef.current) {
-          containerRef.current.style.width = '100vw';
-          containerRef.current.style.height = '100vh';
-        }
-        
-        if (typeof diceBoxRef.current.setDimensions === 'function') {
-          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-        }
-      });
-    }
-  }, [isOpen]);
-  
-  // ✅ Lancer les dés
-  useEffect(() => {
-    if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
-
-    const rollSignature = JSON.stringify(rollData);
-    if (rollSignature === lastRollDataRef.current) return;
-
-    lastRollDataRef.current = rollSignature;
-    currentRollIdRef.current += 1;
-    const thisRollId = currentRollIdRef.current;
-
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎲 [ROLL] Lancer #' + thisRollId);
-    console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
-    console.log('⚙️ [ROLL] Settings effectifs:', {
-      strength: effectiveSettings.strength,
-      strengthApplied: effectiveSettings.strength * 1.3,
-      gravity: effectiveSettings.gravity,
-      baseScale: effectiveSettings.baseScale
-    });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    setIsRolling(true);
-    setResult(null);
-    setShowResult(false);
-    setIsFadingDice(false);
-    setIsFadingAll(false);
-    pendingResultRef.current = null;
-    hasShownResultRef.current = false;
-
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
-
-    playDiceDropSound();
-
-    requestAnimationFrame(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🚀 Lancement immédiat du roll !');
-        diceBoxRef.current.roll(notation);
-      }
-    });
-  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings]);
-
-  // Reset à la fermeture
-  useEffect(() => {
-    if (!isOpen) {
-      lastRollDataRef.current = '';
-      setResult(null);
-      setIsRolling(false);
-      setIsFadingDice(false);
-      setIsFadingAll(false);
-      setShowResult(false);
-      pendingResultRef.current = null;
-      hasShownResultRef.current = false;
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
+        console.error('❌ Erreur chargement historique:', error);
       }
     }
-  }, [isOpen]);
+  }, [open, activeTab]);
 
-  const handleClose = useCallback(() => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+  if (!open) return null;
+
+  const handleSave = () => {
+    try {
+      onSave(localSettings);
+      onClose();
+    } catch (error) {
+      console.error('❌ [DiceSettingsModal] Erreur dans handleSave:', error);
     }
-    setIsFadingAll(true);
-    setTimeout(() => onClose(), 300);
-  }, [onClose]);
+  };
 
-  const handleOverlayClick = useCallback(() => {
-  // ✅ Annuler l'auto-fermeture si elle est en cours
-  if (closeTimeoutRef.current) {
-    clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = null;
-  }
+  const handleReset = () => {
+    setLocalSettings(DEFAULT_DICE_SETTINGS);
+  };
 
-  if (isRolling) {
-    // Forcer l'affichage immédiat du résultat
-    hasShownResultRef.current = true;
-    setIsFadingDice(true);
-    setIsRolling(false);
-    
-    if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-      diceBoxRef.current.clearDice();
+  const handleChange = (key: keyof DiceSettings, value: any) => {
+    setLocalSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearHistory = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+      clearHistory();
+      setHistorySnapshot([]);
     }
-    
-    if (rollDataRef.current) {
-      const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
-      setResult(randomResult);
-      setShowResult(true);
+  };
 
-      addRoll({
-        attackName: rollDataRef.current.attackName,
-        diceFormula: rollDataRef.current.diceFormula,
-        modifier: rollDataRef.current.modifier,
-        total: randomResult.total,
-        rolls: randomResult.rolls,
-        diceTotal: randomResult.diceTotal,
-      });
-      
-      playResultSound();
-      
-      console.log('📊 [CLICK] Affichage forcé du résultat');
-      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
-      closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
-    } else {
-      handleClose();
-    }
-  } else if (showResult) {
-    // Si le résultat est déjà affiché, fermer immédiatement
-    console.log('🚪 [CLICK] Fermeture manuelle');
-    handleClose();
-  } else {
-    handleClose();
-  }
-}, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
+  const handleRemoveEntry = (id: string) => {
+    removeEntry(id);
+    setHistorySnapshot(prev => prev.filter(entry => entry.id !== id));
+  };
+ 
+  return ( 
+   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+       <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-700 rounded transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
 
-  return createPortal(
-    <>
-      <div 
-        id="dice-box-overlay"
-        ref={containerRef} 
-        className={`pointer-events-none transition-opacity duration-300 ${
-          isFadingDice ? 'opacity-0' : 'opacity-100'
-        }`}
-        style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          touchAction: 'none',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          opacity: isOpen ? 1 : 0,
-          visibility: isOpen ? 'visible' : 'hidden',
-        }}
-      />
+        {/* Tabs */}
+        <div className="flex border-b border-gray-700">
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === 'settings'
+                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Dés 3D
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === 'history'
+                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            Historique
+            {historySnapshot.length > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
+                {historySnapshot.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('background')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === 'background'
+                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+            }`}
+          >
+            <Image className="w-4 h-4" />
+            Fond
+          </button> 
+        </div>
 
-      {isOpen && (
-        <div 
-          onClick={handleOverlayClick}
-          className={`fixed inset-0 z-[9998] overflow-hidden cursor-pointer transition-opacity duration-300 ${
-            isFadingAll ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{ backgroundColor: 'transparent' }}
-        />
-      )}
+        {/* Content */}
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
+          {activeTab === 'settings' ? (
+            <SettingsTab
+              localSettings={localSettings}
+              handleChange={handleChange}
+            />
+          ) : activeTab === 'history' ? (
+            <HistoryTab
+              history={historySnapshot}
+              onClearHistory={handleClearHistory}
+              onRemoveEntry={handleRemoveEntry}
+            />
+          ) : (
+            <BackgroundTab
+              currentBackground={currentBackground}
+              onBackgroundChange={onBackgroundChange}
+            />
+          )}
+        </div>
 
-      {result && showResult && isOpen && (
-        <div 
-          className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
-            isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform, opacity',
-            filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
-          }}
+        {/* Footer - seulement pour l'onglet paramètres */}
+        {activeTab === 'settings' && (
+          <div className="flex items-center justify-between p-4 border-t border-gray-700">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              🔄 Réinitialiser
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              >
+                💾 Enregistrer
+              </button> 
+            </div> 
+          </div>
+        )}
+      </div>
+    </div>
+     </div>
+  );
+} 
+
+// Composant pour l'onglet Paramètres
+function SettingsTab({
+  localSettings,
+  handleChange,
+}: {
+  localSettings: DiceSettings;
+  handleChange: (key: keyof DiceSettings, value: any) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Style des dés */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Style des dés
+        </label>
+        <select
+          value={localSettings.theme}
+          onChange={(e) => handleChange('theme', e.target.value)}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
         >
-          <div className="absolute inset-0 animate-pulse">
-            <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
-            <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
-          </div>
+          <option value="">💎 Couleur unie personnalisée</option>
+          
+          <optgroup label="🎯 Types de dégâts D&D">
+            <option value="fire">🔥 Feu</option>
+            <option value="ice">❄️ Glace</option>
+            <option value="poison">☠️ Poison</option>
+            <option value="acid">🧪 Acide</option>
+            <option value="thunder">⚡ Tonnerre</option>
+            <option value="lightning">⚡ Foudre</option>
+            <option value="water">💧 Eau</option>
+            <option value="air">💨 Air</option>
+            <option value="earth">🌍 Terre</option>
+            <option value="force">✨ Force</option>
+            <option value="psychic">🧠 Psychique</option>
+            <option value="necrotic">💀 Nécrotique</option>
+            <option value="radiant">☀️ Radiant</option>
+          </optgroup>
+          
+          <optgroup label="🎨 Sets personnalisés">
+            <option value="bronze">⚱️ Bronze Thyléen</option>
+            <option value="dragons">🐉 Dragons</option>
+            <option value="tigerking">🐯 Tigre/Léopard/Guépard</option>
+            <option value="birdup">🦜 Oiseaux</option>
+            <option value="astralsea">🌌 Mer Astrale</option>
+            <option value="glitterparty">✨ Paillettes</option>
+            <option value="starynight">🌃 Nuit Étoilée</option>
+            <option value="bloodmoon">🌙 Lune de Sang</option>
+            <option value="pinkdreams">💖 Rêves Roses</option>
+            <option value="breebaby">🌅 Coucher de Soleil Pastel</option>
+            <option value="inspired">💡 Inspiré</option>
+          </optgroup>
+          
+          <optgroup label="🎨 Couleurs de base">
+            <option value="black">⚫ Noir</option>
+            <option value="white">⚪ Blanc</option>
+            <option value="rainbow">🌈 Arc-en-ciel</option>
+          </optgroup>
+          
+          <optgroup label="🎮 Autres">
+            <option value="covid">🦠 COViD</option>
+            <option value="acleaf">🍃 Animal Crossing</option>
+            <option value="isabelle">🐕 Isabelle</option>
+            <option value="thecage">🎬 Nicolas Cage</option>
+          </optgroup>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          {localSettings.theme 
+            ? "Style prédéfini avec texture et couleurs intégrées" 
+            : "Créez votre propre couleur personnalisée ci-dessous"}
+        </p>
+      </div>
 
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 2}s`,
-                  opacity: 0.3 + Math.random() * 0.7,
-                  boxShadow: '0 0 10px currentColor'
-                }}
-              />
-            ))}
-          </div>
+      {/* Matériau des dés */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Matériau des dés
+        </label>
+        <select
+          value={localSettings.themeMaterial}
+          onChange={(e) => handleChange('themeMaterial', e.target.value)}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+        >
+          <option value="none">Mat (aucun effet)</option>
+          <option value="plastic">🧊 Plastique</option>
+          <option value="metal">⚙️ Métal</option>
+          <option value="wood">🪵 Bois</option>
+          <option value="glass">💎 Verre</option>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          Le matériau affecte la brillance et les reflets
+        </p>
+      </div>
 
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+      {/* Couleur personnalisée */}
+      {!localSettings.theme && (
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Couleur personnalisée : {localSettings.themeColor}
+          </label>
+          <p className="text-xs text-gray-400 mb-3">
+            Choisissez la couleur principale de vos dés
+          </p>
+          
+          {/* Palettes de couleurs prédéfinies */}
+          <div className="grid grid-cols-6 gap-2 mb-3">
+            <button 
+              onClick={() => handleChange('themeColor', '#ff0000')} 
+              className="w-10 h-10 rounded-lg bg-red-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Rouge"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#ff8800')} 
+              className="w-10 h-10 rounded-lg bg-orange-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Orange"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#ffd700')} 
+              className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              style={{backgroundColor: '#ffd700'}}
+              title="Or"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#00ff00')} 
+              className="w-10 h-10 rounded-lg bg-green-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Vert"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#0088ff')} 
+              className="w-10 h-10 rounded-lg bg-blue-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Bleu"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#8800ff')} 
+              className="w-10 h-10 rounded-lg bg-purple-600 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Violet"
+              type="button"
+            />
             
-            <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
-              <div className="relative px-12 py-10 text-center">
-                <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                  {rollDataRef.current?.attackName}
-                </p>
-                
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
-                      {result.total}
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="relative text-8xl font-black tracking-tight"
-                    style={{
-                      background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
-                    }}
-                  >
-                    {result.total}
-                  </div>
-                </div>
-
-                <div className="text-sm text-red-200/80 font-serif">
-                  {result.rolls.length > 0 ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <span className="text-orange-400 font-bold">
-                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                          {Math.abs(rollDataRef.current.modifier)}
-                        </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        {rollDataRef.current?.diceFormula}: {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <span className="text-orange-400 font-bold">
-                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                          {Math.abs(rollDataRef.current.modifier)}
-                        </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
-                  <span>⸎</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>✦</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>⸎</span>
-                </div>
-              </div>
-            </div>
+            <button 
+              onClick={() => handleChange('themeColor', '#ff00ff')} 
+              className="w-10 h-10 rounded-lg bg-pink-500 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Rose"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#00ffff')} 
+              className="w-10 h-10 rounded-lg bg-cyan-400 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Cyan"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#8B4513')} 
+              className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              style={{backgroundColor: '#8B4513'}}
+              title="Marron"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#C0C0C0')} 
+              className="w-10 h-10 rounded-lg hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              style={{backgroundColor: '#C0C0C0'}}
+              title="Argent"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#ffffff')} 
+              className="w-10 h-10 rounded-lg bg-white border border-gray-600 hover:ring-2 ring-purple-500 transition-all shadow-md hover:scale-105" 
+              title="Blanc"
+              type="button"
+            />
+            <button 
+              onClick={() => handleChange('themeColor', '#000000')} 
+              className="w-10 h-10 rounded-lg bg-black border border-gray-600 hover:ring-2 ring-white transition-all shadow-md hover:scale-105" 
+              title="Noir"
+              type="button"
+            />
+          </div>
+          
+          {/* Sélecteur de couleur personnalisé */}
+          <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              value={localSettings.themeColor}
+              onChange={(e) => handleChange('themeColor', e.target.value)}
+              className="w-16 h-10 rounded cursor-pointer border border-gray-600"
+            />
+            <input
+              type="text"
+              value={localSettings.themeColor}
+              onChange={(e) => handleChange('themeColor', e.target.value)}
+              className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500"
+              placeholder="#ff0000"
+            />
           </div>
         </div>
       )}
-    </>,
-    document.body
+
+      {/* Info si colorset sélectionné */}
+      {localSettings.theme && (
+        <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3">
+          <p className="text-xs text-blue-200">
+            ℹ️ <strong>Note :</strong> Les styles prédéfinis ont leurs propres couleurs et textures intégrées. 
+            Pour utiliser une couleur personnalisée, sélectionnez "Couleur unie personnalisée".
+          </p>
+        </div>
+      )}
+
+      {/* Sons activés */}
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-300">🔊 Sons activés</label>
+        <button
+          type="button"
+          onClick={() => handleChange('soundsEnabled', !localSettings.soundsEnabled)}
+          className={`relative w-12 h-6 rounded-full transition-colors ${
+            localSettings.soundsEnabled ? 'bg-purple-600' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+              localSettings.soundsEnabled ? 'translate-x-6' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Taille */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          📏 Taille des dés : {localSettings.baseScale}
+        </label>
+        <input
+          type="range"
+          min="3"
+          max="10"
+          step="0.5"
+          value={localSettings.baseScale}
+          onChange={(e) => handleChange('baseScale', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Petit (3)</span>
+          <span>Grand (10)</span>
+        </div>
+      </div>
+
+      {/* Gravité */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          🌍 Gravité : {localSettings.gravity}x
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="2"
+          step="0.1"
+          value={localSettings.gravity}
+          onChange={(e) => handleChange('gravity', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Faible (0.5x)</span>
+          <span>Forte (2x)</span>
+        </div>
+      </div>
+
+      {/* Force */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          💪 Force de lancer : {localSettings.strength}
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="3"
+          step="0.1"
+          value={localSettings.strength}
+          onChange={(e) => handleChange('strength', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Doux (0.5)</span>
+          <span>Fort (3)</span>
+        </div>
+      </div>
+
+      {/* Volume */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          🔊 Volume des dés : {localSettings.volume}%
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={localSettings.volume}
+          onChange={(e) => handleChange('volume', parseInt(e.target.value))}
+          className="w-full accent-purple-600"
+          disabled={!localSettings.soundsEnabled}
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Muet (0%)</span>
+          <span>Fort (100%)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Composant pour l'onglet Historique
+function HistoryTab({
+  history,
+  onClearHistory,
+  onRemoveEntry,
+}: {
+  history: DiceRollHistoryEntry[];
+  onClearHistory: () => void;
+  onRemoveEntry: (id: string) => void;
+}) {
+  if (history.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <History className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+        <p className="text-gray-400 mb-2">Aucun jet de dés enregistré</p>
+        <p className="text-sm text-gray-500">
+          Lancez des dés pour voir l'historique apparaître ici
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Header avec bouton effacer */}
+      <div className="flex items-center justify-between pb-2 border-b border-gray-700">
+        <p className="text-sm text-gray-400">
+          {history.length} / 20 jets enregistrés
+        </p>
+        <button
+          onClick={onClearHistory}
+          className="px-3 py-1 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors flex items-center gap-1"
+        >
+          <Trash2 className="w-3 h-3" />
+          Tout effacer
+        </button>
+      </div>
+
+      {/* Liste des jets */}
+      <div className="space-y-2">
+        {history.map((entry) => (
+          <div
+            key={entry.id}
+            className="bg-gray-700/50 rounded-lg p-3 border border-gray-600/50 hover:border-purple-500/50 transition-colors"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-200">{entry.attackName}</p>
+                <p className="text-xs text-gray-500">{formatRelativeTime(entry.timestamp)}</p>
+              </div>
+              <button
+                onClick={() => onRemoveEntry(entry.id)}
+                className="p-1 hover:bg-red-600/20 rounded transition-colors text-gray-500 hover:text-red-400"
+                title="Supprimer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-purple-400">{entry.total}</span>
+              <div className="flex-1 text-xs text-gray-400">
+                <p>
+                  {entry.diceFormula} → [{entry.rolls.join(', ')}] = {entry.diceTotal}
+                </p>
+                {entry.modifier !== 0 && (
+                  <p className="text-orange-400">
+                    {entry.modifier >= 0 ? '+' : ''}{entry.modifier}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div> 
+    </div>
+  );
+}
+
+// Composant pour l'onglet Fond d'écran
+function BackgroundTab({
+  currentBackground,
+  onBackgroundChange,
+}: {
+  currentBackground?: string;
+  onBackgroundChange?: (backgroundUrl: string) => void;
+}) {
+  // Liste des fonds d'écran disponibles (basée sur les fichiers réels du dossier public/fondecran)
+  const backgrounds = [
+     { url: '/fondecran/Magic.png', name: 'Magic' },
+    { url: '/fondecran/Table.png', name: 'Table' },
+    { url: '/fondecran/Toits.png', name: 'Toits' },
+    { url: '/fondecran/War.png', name: 'War' },
+    { url: '/fondecran/forest.png', name: 'forest' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-medium text-gray-300 mb-3">
+          Choisissez un fond d'écran
+        </h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Cliquez sur une image pour l'appliquer en arrière-plan ({backgrounds.length} disponible{backgrounds.length > 1 ? 's' : ''})
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {backgrounds.map((bg) => (
+          <button
+            key={bg.url}
+            type="button"
+            onClick={() => onBackgroundChange?.(bg.url)}
+            className={`relative group rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+              currentBackground === bg.url
+                ? 'border-purple-500 ring-2 ring-purple-500/50'
+                : 'border-gray-600 hover:border-purple-400'
+            }`}
+          >
+            <div className="aspect-video relative bg-gray-900">
+              <img
+                src={bg.url}
+                alt={bg.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              
+              {/* Overlay au survol */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                  Sélectionner
+                </span>
+              </div>
+
+              {/* Indicateur de sélection */}
+              {currentBackground === bg.url && (
+                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <div className="p-2 bg-gray-700/50 text-center">
+              <p className="text-xs text-gray-300 truncate">{bg.name}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3 mt-4">
+        <p className="text-xs text-blue-200">
+          ℹ️ <strong>Note :</strong> Le fond d'écran s'applique uniquement en vue bureau (desktop).
+        </p>
+      </div>
+    </div>
   );
 }
