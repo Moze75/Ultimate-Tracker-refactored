@@ -4,12 +4,12 @@
  * https://github.com/3d-dice/dice-box-threejs
  */
 
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
-import { createPortal } from 'react-dom';
+ import { createPortal } from 'react-dom';
 import { useDiceHistory } from '../hooks/useDiceHistory';
-import { audioManager } from '../utils/audioManager';
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -73,25 +73,34 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+  const settingsKeyRef = useRef<string>(''); // ✅ AJOUTER
 
-  const { addRoll } = useDiceHistory();
+   const { addRoll } = useDiceHistory();
 
   useEffect(() => {
     rollDataRef.current = rollData;
   }, [rollData]);
 
+  // ✅ Fonction pour jouer le son du lancement de dés
   const playDiceDropSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
+    try {
+      const audio = new Audio('/assets/dice-box/sounds/dice-drop/dice_drop.mp3');
+      audio.volume = 0.6;
+      audio.play().catch(err => console.warn('Erreur lecture son lancement:', err));
+    } catch (error) {
+      console.warn('Impossible de jouer le son de lancement:', error);
+    }
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      audioManager.unlock();
-    }
-  }, [isOpen]);
-
+  // Fonction pour jouer le son du résultat
   const playResultSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
+    try {
+      const audio = new Audio('/assets/dice-box/sounds/dicepopup/dice_results.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(err => console.warn('Erreur lecture son résultat:', err));
+    } catch (error) {
+      console.warn('Impossible de jouer le son:', error);
+    }
   }, []);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
@@ -123,58 +132,69 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS
-  useEffect(() => {
-    let mounted = true;
+  // Initialiser UNE SEULE FOIS
+ useEffect(() => {
+  // ✅ Calculer une clé unique pour les settings
+  const currentSettingsKey = JSON.stringify(effectiveSettings);
+  
+  // ✅ Si les settings ont changé, réinitialiser
+  if (diceBoxRef.current && isInitialized && settingsKeyRef.current !== currentSettingsKey) {
+    console.log('🔄 Settings changés, réinitialisation du DiceBox...');
+    diceBoxRef.current = null;
+    setIsInitialized(false);
+  }
+  
+  if (diceBoxRef.current && isInitialized) {
+    console.log('✓ DiceBox déjà initialisé');
+    return;
+  }
 
-    const initDiceBox = async () => {
-      if (diceBoxRef.current) {
-        console.log('✓ DiceBox déjà initialisé');
-        return;
-      }
+  let mounted = true;
 
-      try {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
-        console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
-        console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-        console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
-        console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  const initDiceBox = async () => {
+    try {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🎲 [INIT] Initialisation de DiceBox...');
+      console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
+      console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+
+      if (!mounted) return;
+
+      const textureForTheme = effectiveSettings.theme 
+        ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
+        : 'none';
+
+      console.log('🎨 Texture sélectionnée:', textureForTheme);
+
+      const config = {
+        assetPath: '/assets/dice-box/',
         
-        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
-
-        if (!mounted) return;
-
-        const textureForTheme = effectiveSettings.theme 
-          ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-          : 'none';
-
-        console.log('🎨 Texture sélectionnée:', textureForTheme);
-
-        const config = {
-          assetPath: '/assets/dice-box/',
-          theme_colorset: effectiveSettings.theme || 'custom',
-          theme_texture: textureForTheme,
-          theme_customColorset: !effectiveSettings.theme ? {
-            name: 'custom',
-            foreground: '#ffffff',
-            background: effectiveSettings.themeColor,
-            outline: effectiveSettings.themeColor,
-            edge: effectiveSettings.themeColor,
-            texture: 'none',
-            material: effectiveSettings.themeMaterial
-          } : undefined,
-          theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale * 10,
-          gravity_multiplier: effectiveSettings.gravity * 400,
-          
-          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
-          strength: effectiveSettings.strength * 1.3,
-          
-          sounds: effectiveSettings.soundsEnabled,
-          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-    onRollComplete: (results: any) => {
+        theme_colorset: effectiveSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        
+        theme_customColorset: !effectiveSettings.theme ? {
+          name: 'custom',
+          foreground: '#ffffff',
+          background: effectiveSettings.themeColor,
+          outline: effectiveSettings.themeColor,
+          edge: effectiveSettings.themeColor,
+          texture: 'none',
+          material: effectiveSettings.themeMaterial
+        } : undefined,
+        
+        theme_material: effectiveSettings.themeMaterial || "plastic",
+        
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength,
+        
+        sounds: effectiveSettings.soundsEnabled,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+        
+        onRollComplete: (results: any) => {
   if (!mounted) return;
   if (hasShownResultRef.current) return;
 
@@ -200,54 +220,37 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   hasShownResultRef.current = true;
   setResult(finalResult);
   setIsRolling(false);
-  
-  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
-setTimeout(() => {
-  if (mounted) {
-    console.log('📊 [AUTO] Affichage automatique du résultat');
-    setShowResult(true);
-    playResultSound();
-    // ✅ Plus d'auto-fermeture, le popup reste affiché
-  }
-}, 50);
+  setShowResult(true);
 
-  if (rollDataRef.current) {
-    addRoll({
-      attackName: rollDataRef.current.attackName,
-      diceFormula: rollDataRef.current.diceFormula,
-      modifier: rollDataRef.current.modifier,
-      total: finalResult.total,
-      rolls: finalResult.rolls,
-      diceTotal: finalResult.diceTotal,
-    });
-  }
+    // ✅ AJOUTER : Enregistrer dans l'historique
+    if (rollDataRef.current) {
+      addRoll({
+        attackName: rollDataRef.current.attackName,
+        diceFormula: rollDataRef.current.diceFormula,
+        modifier: rollDataRef.current.modifier,
+        total: finalResult.total,
+        rolls: finalResult.rolls,
+        diceTotal: finalResult.diceTotal,
+      });
+    }
+    
+  // Jouer le son du résultat
+  playResultSound();
+
+
 }
         };
 
         console.log('📦 Config complète:', config);
 
         const box = new DiceBox('#dice-box-overlay', config);
-
-        if (containerRef.current) {
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          
-          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
-          
-          containerRef.current.style.width = '100vw';
-          containerRef.current.style.height = '100vh';
-          containerRef.current.style.position = 'fixed';
-          containerRef.current.style.top = '0';
-          containerRef.current.style.left = '0';
-        }
-        
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec strength x1.3 !');
-          console.log('💪 Force finale du moteur:', box.strength);
+           settingsKeyRef.current = currentSettingsKey; // ✅ Sauvegarder la clé
+          console.log('✅ DiceBox initialisé !');
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -263,133 +266,10 @@ setTimeout(() => {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
-        audioManager.stopAll();
-      }
     };
-  }, [effectiveSettings, playResultSound, addRoll]);
+  }, [effectiveSettings, playResultSound]);
 
-  // ✅ Gérer les changements de settings
-  useEffect(() => {
-    if (!diceBoxRef.current || !isInitialized) return;
-
-    const updateSettings = async () => {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔧 [UPDATE] Mise à jour des settings...');
-      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
-      
-      const textureForTheme = effectiveSettings.theme 
-        ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
-        : 'none';
-
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: effectiveSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: effectiveSettings.themeMaterial || "plastic",
-        theme_customColorset: !effectiveSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: effectiveSettings.themeColor,
-          outline: effectiveSettings.themeColor,
-          edge: effectiveSettings.themeColor,
-          texture: 'none',
-          material: effectiveSettings.themeMaterial
-        } : undefined,
-        baseScale: effectiveSettings.baseScale * 10,
-        gravity_multiplier: effectiveSettings.gravity * 400,
-        strength: effectiveSettings.strength * 1.3,
-        sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-      });
-      
-      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    };
-
-    updateSettings();
-  }, [effectiveSettings, isInitialized]);
-
-  useEffect(() => {
-    const handleSettingsChanged = async (e: CustomEvent) => {
-      if (!diceBoxRef.current || !isInitialized) return;
-      
-      const newSettings = e.detail as DiceSettings;
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔧 [EVENT] Settings changés via événement custom');
-      console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
-      console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
-      
-      const textureForTheme = newSettings.theme 
-        ? (COLORSET_TEXTURES[newSettings.theme] || '')
-        : 'none';
-
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: newSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: newSettings.themeMaterial || "plastic",
-        theme_customColorset: !newSettings.theme ? {
-          name: 'custom',
-          foreground: '#ffffff',
-          background: newSettings.themeColor,
-          outline: newSettings.themeColor,
-          edge: newSettings.themeColor,
-          texture: 'none',
-          material: newSettings.themeMaterial
-        } : undefined,
-        baseScale: newSettings.baseScale * 10,
-        gravity_multiplier: newSettings.gravity * 400,
-        strength: newSettings.strength * 1.3,
-        sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-      });
-
- // ✅ AJOUTE CE BLOC (NOUVEAU)
-    // Forcer baseScale directement sur l'objet (comme pour strength)
-    if (diceBoxRef.current) {
-      diceBoxRef.current.baseScale = newSettings.baseScale * 10;
-      console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
-    }
-      
-      // Force directe sur l'objet (double sécurité)
-      if (diceBoxRef.current) {
-        diceBoxRef.current.strength = newSettings.strength * 1.3;
-        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-      }
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    };
-
-    window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    };
-  }, [isInitialized]);
-
-  // ✅ Recalculer les dimensions à chaque ouverture
-  useEffect(() => {
-    if (isOpen && diceBoxRef.current && containerRef.current) {
-      requestAnimationFrame(() => {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
-        
-        if (containerRef.current) {
-          containerRef.current.style.width = '100vw';
-          containerRef.current.style.height = '100vh';
-        }
-        
-        if (typeof diceBoxRef.current.setDimensions === 'function') {
-          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-        }
-      });
-    }
-  }, [isOpen]);
-  
-  // ✅ Lancer les dés
+  // Lancer les dés
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
@@ -400,16 +280,11 @@ setTimeout(() => {
     currentRollIdRef.current += 1;
     const thisRollId = currentRollIdRef.current;
 
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎲 [ROLL] Lancer #' + thisRollId);
-    console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
-    console.log('⚙️ [ROLL] Settings effectifs:', {
-      strength: effectiveSettings.strength,
-      strengthApplied: effectiveSettings.strength * 1.3,
-      gravity: effectiveSettings.gravity,
-      baseScale: effectiveSettings.baseScale
-    });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎲 Lancer #' + thisRollId);
+
+    if (typeof diceBoxRef.current.clear === 'function') {
+      diceBoxRef.current.clear();
+    }
 
     setIsRolling(true);
     setResult(null);
@@ -419,20 +294,22 @@ setTimeout(() => {
     pendingResultRef.current = null;
     hasShownResultRef.current = false;
 
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
+let notation = rollData.diceFormula;
+if (rollData.modifier !== 0) {
+  notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+}
 
-    playDiceDropSound();
+// ✅ Jouer le son IMMÉDIATEMENT (avant requestAnimationFrame)
+playDiceDropSound();
 
-    requestAnimationFrame(() => {
-      if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🚀 Lancement immédiat du roll !');
-        diceBoxRef.current.roll(notation);
-      }
-    });
-  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings]);
+// Lancement des dés juste après
+requestAnimationFrame(() => {
+  if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
+    console.log('🚀 Lancement immédiat !');
+    diceBoxRef.current.roll(notation);
+  }
+});
+  }, [rollData, isInitialized, playDiceDropSound]);
 
   // Reset à la fermeture
   useEffect(() => {
@@ -462,27 +339,25 @@ setTimeout(() => {
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-  // ✅ Annuler l'auto-fermeture si elle est en cours
-  if (closeTimeoutRef.current) {
-    clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = null;
-  }
+    if (isRolling) {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      hasShownResultRef.current = true;
+      setIsFadingDice(true);
+      setIsRolling(false);
+      
+      if (diceBoxRef.current && typeof diceBoxRef.current.clear === 'function') {
+        diceBoxRef.current.clear();
+      }
+      
+      if (rollDataRef.current) {
+        const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
+        setResult(randomResult);
+        setShowResult(true);
 
-  if (isRolling) {
-    // Forcer l'affichage immédiat du résultat
-    hasShownResultRef.current = true;
-    setIsFadingDice(true);
-    setIsRolling(false);
-    
-    if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-      diceBoxRef.current.clearDice();
-    }
-    
-    if (rollDataRef.current) {
-      const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
-      setResult(randomResult);
-      setShowResult(true);
-
+      // ✅ AJOUTER : Sauvegarder le résultat lors de l'interruption
       addRoll({
         attackName: rollDataRef.current.attackName,
         diceFormula: rollDataRef.current.diceFormula,
@@ -491,168 +366,177 @@ setTimeout(() => {
         rolls: randomResult.rolls,
         diceTotal: randomResult.diceTotal,
       });
-      
-      playResultSound();
-      
-      console.log('📊 [CLICK] Affichage forcé du résultat');
-      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
-      closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
+        
+        // Jouer le son aussi lors de l'arrêt forcé
+        playResultSound();
+        
+        closeTimeoutRef.current = setTimeout(() => handleClose(), 2000);
+      } else {
+        handleClose();
+      }
+    } else if (showResult) {
+      handleClose();
     } else {
       handleClose();
     }
-  } else if (showResult) {
-    // Si le résultat est déjà affiché, fermer immédiatement
-    console.log('🚪 [CLICK] Fermeture manuelle');
-    handleClose();
-  } else {
-    handleClose();
-  }
-}, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
+  }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound]);
 
-  return createPortal(
-    <>
+ if (!isOpen) return null;
+
+return createPortal(
+  <>
+    <div 
+      onClick={handleOverlayClick}
+      className={`fixed inset-0 z-40 overflow-hidden cursor-pointer transition-opacity duration-300 ${
+        isFadingAll ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{ backgroundColor: 'transparent' }}
+    >
       <div 
         id="dice-box-overlay"
         ref={containerRef} 
-        className={`pointer-events-none transition-opacity duration-300 ${
+        className={`absolute top-0 left-0 w-screen h-screen pointer-events-none transition-opacity duration-300 ${
           isFadingDice ? 'opacity-0' : 'opacity-100'
         }`}
         style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
           touchAction: 'none',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          opacity: isOpen ? 1 : 0,
-          visibility: isOpen ? 'visible' : 'hidden',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          position: 'fixed',
+          overflow: 'hidden'
         }}
       />
+    </div>
 
-      {isOpen && (
-        <div 
-          onClick={handleOverlayClick}
-          className={`fixed inset-0 z-[9998] overflow-hidden cursor-pointer transition-opacity duration-300 ${
-            isFadingAll ? 'opacity-0' : 'opacity-100'
-          }`}
-          style={{ backgroundColor: 'transparent' }}
-        />
-      )}
+    {result && showResult && (
+      <div 
+        className={`fixed z-50 pointer-events-none transition-all duration-500 ${
+          isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+        }`}
+        style={{
+          position: 'fixed',
+          top: '50vh',
+          left: '50vw',
+          transform: 'translate(-50%, -50%)',
+          willChange: 'transform, opacity',
+          filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+        }}
+      >
+        {/* Aura démoniaque pulsante */}
+        <div className="absolute inset-0 animate-pulse">
+          <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
+          <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
+        </div>
 
-      {result && showResult && isOpen && (
-        <div 
-          className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
-            isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
-          }`}
-          style={{
-            position: 'fixed',
-            top: '50vh',
-            left: '50vw',
-            transform: 'translate(-50%, -50%)',
-            willChange: 'transform, opacity',
-            filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
-          }}
-        >
-          <div className="absolute inset-0 animate-pulse">
-            <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
-            <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
-          </div>
+        {/* Particules de feu flottantes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+                opacity: 0.3 + Math.random() * 0.7,
+                boxShadow: '0 0 10px currentColor'
+              }}
+            />
+          ))}
+        </div>
 
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-orange-500 rounded-full animate-float"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 2}s`,
-                  opacity: 0.3 + Math.random() * 0.7,
-                  boxShadow: '0 0 10px currentColor'
-                }}
-              />
-            ))}
-          </div>
-
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
-            
-            <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
-              <div className="relative px-12 py-10 text-center">
-                <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                  {rollDataRef.current?.attackName}
-                </p>
-                
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
-                      {result.total}
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="relative text-8xl font-black tracking-tight"
-                    style={{
-                      background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
-                    }}
-                  >
+        {/* Conteneur principal */}
+        <div className="relative">
+          {/* Bordure de flammes */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+          
+          {/* Fond noir pur */}
+          <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
+            {/* Contenu */}
+            <div className="relative px-12 py-10 text-center">
+              {/* Titre avec effet gravé */}
+              <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                {rollDataRef.current?.attackName}
+              </p>
+              
+              {/* Résultat principal - style forgé dans les flammes */}
+              <div className="relative mb-4">
+                {/* Lueur derrière le nombre */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
                     {result.total}
                   </div>
                 </div>
+                
+                {/* Nombre principal avec effet métal brûlant */}
+                <div 
+                  className="relative text-8xl font-black tracking-tight"
+                  style={{
+                    background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
+                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
+                  }}
+                >
+                  {result.total}
+                </div>
+              </div>
 
-                <div className="text-sm text-red-200/80 font-serif">
-                  {result.rolls.length > 0 ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+              {/* Détails avec runes */}
+              <div className="text-sm text-red-200/80 font-serif">
+                {result.rolls.length > 0 ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-red-800">⟨</span>
+                    <span className="tracking-wide">
+                      Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
+                    </span>
+                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                      <>
                         <span className="text-orange-400 font-bold">
                           {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
                           {Math.abs(rollDataRef.current.modifier)}
                         </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        {rollDataRef.current?.diceFormula}: {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                      </>
+                    )}
+                    <span className="text-red-800">⟩</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-red-800">⟨</span>
+                    <span className="tracking-wide">
+                      {rollDataRef.current?.diceFormula}: {result.diceTotal}
+                    </span>
+                    {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+                      <>
                         <span className="text-orange-400 font-bold">
                           {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
                           {Math.abs(rollDataRef.current.modifier)}
                         </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  )}
-                </div>
+                      </>
+                    )}
+                    <span className="text-red-800">⟩</span>
+                  </div>
+                )}
+              </div>
 
-                <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
-                  <span>⸎</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>✦</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>⸎</span>
-                </div>
+              {/* Ligne de séparation runique */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
+                <span>⸎</span>
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+                <span>✦</span>
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+                <span>⸎</span>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </>,
-    document.body
-  );
+      </div>
+    )}
+
+
+  </>,
+  document.body
+);
 }
