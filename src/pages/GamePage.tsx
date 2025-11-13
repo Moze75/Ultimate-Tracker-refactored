@@ -130,7 +130,14 @@ useEffect(() => {
   console.log('  - diceRollData:', diceRollData);
 }, [isDiceSettingsLoading, diceRollData]);
   
-
+// ✅ Forcer le remontage du DiceBox quand baseScale change
+useEffect(() => {
+  if (!isDiceSettingsLoading) {
+    console.log('🔄 [GamePage] baseScale changé, remontage du DiceBox:', diceSettings.baseScale);
+    setDiceBoxKey(prev => prev + 1);
+  }
+}, [diceSettings.baseScale, isDiceSettingsLoading]);
+  
 // ✨ Fonction pour lancer les dés (partagée via Context)
 const rollDice = useCallback((data: {
   type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
