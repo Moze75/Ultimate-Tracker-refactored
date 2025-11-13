@@ -115,8 +115,6 @@ const [diceRollData, setDiceRollData] = useState<{
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
-  const [diceBoxKey, setDiceBoxKey] = useState(0);  // ✅ AJOUTE CETTE LIGNE ICI
-
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
   console.log('🔧 [GamePage] isDiceSettingsLoading:', isDiceSettingsLoading);
@@ -715,20 +713,6 @@ useEffect(() => {
     loadInventory();
   }, [selectedCharacter?.id]);
 
-  // ✅ Forcer le remontage du DiceBox quand on sauvegarde les paramètres
-useEffect(() => {
-  const handleRemount = () => {
-    console.log('🔄 [GamePage] Remontage du DiceBox demandé');
-    setDiceBoxKey(prev => prev + 1);
-  };
-
-  window.addEventListener('dice-box-remount', handleRemount);
-  
-  return () => {
-    window.removeEventListener('dice-box-remount', handleRemount);
-  };
-}, []);
-
   /* ---------------- Rendu d'un pane ---------------- */
 
 const renderPane = (key: TabKey | 'profile-details') => { 
@@ -1096,16 +1080,16 @@ return (
   // Settings chargés, monter le DiceBox
   console.log('✅ [GamePage JSX] DiceBox MONTÉ');
   return (
-<DiceBox3D
-  key={`dice-box-${diceBoxKey}`}  // ✅ Utilise la key dynamique
-  isOpen={!!diceRollData}
-  onClose={() => {
-    console.log('🎲 [GamePage] DiceBox fermé');
-    setDiceRollData(null);
-  }}
-  rollData={diceRollData}
-  settings={diceSettings}
-/>
+    <DiceBox3D
+      key="dice-box-gamepage"
+      isOpen={!!diceRollData}
+      onClose={() => {
+        console.log('🎲 [GamePage] DiceBox fermé');
+        setDiceRollData(null);
+      }}
+      rollData={diceRollData}
+      settings={diceSettings}
+    />
   );
 })()}
   </DiceRollContext.Provider>
