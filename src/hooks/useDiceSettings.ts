@@ -202,4 +202,4 @@ export function importDiceSettings(jsonString: string): boolean {
     console.error('❌ Erreur lors de l\'import des paramètres:', error);
     return false;
   }
-}
+} 
