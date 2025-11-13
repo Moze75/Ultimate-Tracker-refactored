@@ -166,7 +166,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale,  // ✅ Utilise la valeur directe
+          baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           
           // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
@@ -297,7 +297,7 @@ setTimeout(() => {
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: effectiveSettings.baseScale,  // ✅ Utilise la valeur directe
+        baseScale: effectiveSettings.baseScale * 100 / 6,
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
@@ -345,43 +345,12 @@ setTimeout(() => {
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
-
-// ✅ Forcer baseScale directement sur l'objet
-if (diceBoxRef.current) {
-  diceBoxRef.current.baseScale = newSettings.baseScale * 10;
-  console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
-  
-  // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
-  if (diceBoxRef.current.DiceFactory) {
-    try {
-      const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-      diceBoxRef.current.DiceFactory = new DiceFactory({
-        baseScale: newSettings.baseScale * 10
-      });
-      // Réappliquer les textures
-      if (diceBoxRef.current.colorData) {
-        diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+      
+      // Force directe sur l'objet (double sécurité)
+      if (diceBoxRef.current) {
+        diceBoxRef.current.strength = newSettings.strength * 1.3;
+        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
       }
-      console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 10);
-    } catch (error) {
-      console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
-    }
-  }
-  
-// ✅ CORRECTION : Forcer la gravité correctement
-if (diceBoxRef.current.world && diceBoxRef.current.world.gravity) {
-  // La gravité du monde doit être : -9.8 * gravity_multiplier
-  const gravityValue = -9.8 * (newSettings.gravity * 400);
-  diceBoxRef.current.world.gravity.set(0, 0, gravityValue);
-  console.log('✅ [EVENT] Gravité forcée:', newSettings.gravity, '→', gravityValue);
-}
-}
-
-// Force directe strength sur l'objet (double sécurité)
-if (diceBoxRef.current) {
-  diceBoxRef.current.strength = newSettings.strength * 1.3;
-  console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-}
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
