@@ -345,6 +345,29 @@ setTimeout(() => {
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
+
+   // ✅ Forcer baseScale directement sur l'objet
+    if (diceBoxRef.current) {
+      diceBoxRef.current.baseScale = newSettings.baseScale * 10;
+      console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+      
+      // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
+      if (diceBoxRef.current.DiceFactory) {
+        try {
+          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+          diceBoxRef.current.DiceFactory = new DiceFactory({
+            baseScale: newSettings.baseScale * 10
+          });
+          // Réappliquer les textures
+          if (diceBoxRef.current.colorData) {
+            diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+          }
+          console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 10);
+        } catch (error) {
+          console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
+        }
+      }
+    }
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
