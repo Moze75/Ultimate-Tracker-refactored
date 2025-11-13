@@ -368,11 +368,13 @@ if (diceBoxRef.current) {
     }
   }
   
-  // ✅ BONUS : Forcer aussi la gravité sur le monde physique
-  if (diceBoxRef.current.world && diceBoxRef.current.world.gravity) {
-    diceBoxRef.current.world.gravity.set(0, 0, -9.8 * newSettings.gravity);
-    console.log('✅ [EVENT] Gravité forcée directement:', newSettings.gravity);
-  }
+// ✅ CORRECTION : Forcer la gravité correctement
+if (diceBoxRef.current.world && diceBoxRef.current.world.gravity) {
+  // La gravité du monde doit être : -9.8 * gravity_multiplier
+  const gravityValue = -9.8 * (newSettings.gravity * 400);
+  diceBoxRef.current.world.gravity.set(0, 0, gravityValue);
+  console.log('✅ [EVENT] Gravité forcée:', newSettings.gravity, '→', gravityValue);
+}
 }
 
 // Force directe strength sur l'objet (double sécurité)
