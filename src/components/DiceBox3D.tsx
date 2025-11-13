@@ -217,7 +217,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
       }, 3000);
     }
-  }, 200); // Délai de 1 seconde pour voir les dés s'arrêter
+  }, 50); // Délai de 1 seconde pour voir les dés s'arrêter
 
   if (rollDataRef.current) {
     addRoll({
