@@ -429,19 +429,19 @@ function SettingsTab({
         <label className="block text-sm font-medium text-gray-300 mb-2">
           📏 Taille des dés : {localSettings.baseScale}
         </label>
-<input
-  type="range"
-  min="50"      // ✅ Petit = 50
-  max="150"     // ✅ Grand = 150
-  step="5"
-  value={localSettings.baseScale}
-  onChange={(e) => handleChange('baseScale', parseFloat(e.target.value))}
-  className="w-full accent-purple-600"
-/>
-<div className="flex justify-between text-xs text-gray-500 mt-1">
-  <span>Petit (50)</span>
-  <span>Grand (150)</span>
-</div>
+        <input
+          type="range"
+          min="3"
+          max="10"
+          step="0.5"
+          value={localSettings.baseScale}
+          onChange={(e) => handleChange('baseScale', parseFloat(e.target.value))}
+          className="w-full accent-purple-600"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Petit (3)</span>
+          <span>Grand (10)</span>
+        </div>
       </div>
 
       {/* Gravité */}
