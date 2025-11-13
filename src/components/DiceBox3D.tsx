@@ -123,7 +123,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS
+// ✅ Initialiser UNE SEULE FOIS ou réinitialiser si baseScale change
 useEffect(() => {
   let mounted = true;
 
@@ -147,6 +147,9 @@ useEffect(() => {
         
         diceBoxRef.current = null;
         setIsInitialized(false);
+        
+        // ✅ Attendre un peu avant de réinitialiser
+        await new Promise(resolve => setTimeout(resolve, 100));
       } else {
         console.log('✓ DiceBox déjà initialisé avec le bon baseScale');
         return;
@@ -155,7 +158,7 @@ useEffect(() => {
 
     try {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+      console.log('🎲 [INIT] Initialisation de DiceBox...');
       console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
       console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
       console.log('🎲 [INIT] BaseScale:', effectiveSettings.baseScale, '→', effectiveSettings.baseScale * 10);
@@ -189,7 +192,50 @@ useEffect(() => {
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
         onRollComplete: (results: any) => {
-          // ... ton code onRollComplete existant ...
+          if (!mounted) return;
+          if (hasShownResultRef.current) return;
+
+          let rollValues: number[] = [];
+          let diceTotal = 0;
+          
+          if (Array.isArray(results?.sets)) {
+            results.sets.forEach((set: any) => {
+              if (Array.isArray(set?.rolls)) {
+                set.rolls.forEach((roll: any) => {
+                  if (typeof roll?.value === 'number') {
+                    rollValues.push(roll.value);
+                  }
+                });
+              }
+            });
+            diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+          }
+
+          const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+          const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+          hasShownResultRef.current = true;
+          setResult(finalResult);
+          setIsRolling(false);
+          
+          setTimeout(() => {
+            if (mounted) {
+              console.log('📊 [AUTO] Affichage automatique du résultat');
+              setShowResult(true);
+              playResultSound();
+            }
+          }, 50);
+
+          if (rollDataRef.current) {
+            addRoll({
+              attackName: rollDataRef.current.attackName,
+              diceFormula: rollDataRef.current.diceFormula,
+              modifier: rollDataRef.current.modifier,
+              total: finalResult.total,
+              rolls: finalResult.rolls,
+              diceTotal: finalResult.diceTotal,
+            });
+          }
         }
       };
 
@@ -234,8 +280,16 @@ useEffect(() => {
       audioManager.stopAll();
     }
   };
-}, [effectiveSettings.baseScale, effectiveSettings.theme, effectiveSettings.themeMaterial, effectiveSettings.themeColor, effectiveSettings.soundsEnabled, effectiveSettings.volume, playResultSound, addRoll]);
-//  ^^^^^^^^^^^^^^^^^^^^^^^^^ AJOUTE baseScale dans les dépendances
+}, [
+  effectiveSettings.baseScale,        // ✅ CRITIQUE : baseScale change
+  effectiveSettings.theme,              // ✅ Texture change
+  effectiveSettings.themeMaterial,      // ✅ Material change
+  effectiveSettings.themeColor,         // ✅ Couleur change
+  effectiveSettings.soundsEnabled,
+  effectiveSettings.volume,
+  playResultSound,
+  addRoll
+]);
 
   // ✅ Gérer les changements de settings via useEffect
   useEffect(() => {
