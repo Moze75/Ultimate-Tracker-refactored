@@ -114,6 +114,21 @@ const [diceRollData, setDiceRollData] = useState<{
 } | null>(null);
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
+  const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
+
+// ✅ AJOUT : Debug du chargement des settings
+useEffect(() => {
+  console.log('🔧 [GamePage] isDiceSettingsLoading:', isDiceSettingsLoading);
+  console.log('🔧 [GamePage] diceSettings:', diceSettings);
+}, [isDiceSettingsLoading, diceSettings]);
+
+// ✅ AJOUT : Debug du montage du DiceBox
+useEffect(() => {
+  console.log('🎲 [GamePage] Condition montage DiceBox:');
+  console.log('  - isDiceSettingsLoading:', isDiceSettingsLoading);
+  console.log('  - Montera DiceBox?', !isDiceSettingsLoading);
+  console.log('  - diceRollData:', diceRollData);
+}, [isDiceSettingsLoading, diceRollData]);
 
 // ✨ Fonction pour lancer les dés (partagée via Context)
 const rollDice = useCallback((data: {
