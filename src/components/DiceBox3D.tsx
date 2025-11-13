@@ -223,9 +223,7 @@ setTimeout(() => {
   }
 }
         };
-console.log('🔍 [DEBUG] baseScale slider:', effectiveSettings.baseScale);
-console.log('🔍 [DEBUG] baseScale converti:', convertBaseScale(effectiveSettings.baseScale));
-console.log('🔍 [DEBUG] baseScale dans config:', config.baseScale);
+
         console.log('📦 Config complète:', config);
 
         const box = new DiceBox('#dice-box-overlay', config);
@@ -275,12 +273,15 @@ console.log('🔍 [DEBUG] baseScale dans config:', config.baseScale);
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-    const updateSettings = async () => {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔧 [UPDATE] Mise à jour des settings...');
-      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
+     const updateSettings = async () => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔧 [UPDATE] Mise à jour des settings...');
+    console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
+    console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
+    console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
+    console.log('📏 [UPDATE] baseScale slider:', effectiveSettings.baseScale);
+    console.log('📏 [UPDATE] baseScale converti:', convertBaseScale(effectiveSettings.baseScale));
+    
       
       const textureForTheme = effectiveSettings.theme 
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
