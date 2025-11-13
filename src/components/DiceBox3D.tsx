@@ -138,6 +138,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
         console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
         console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+        console.log('🎲 [INIT] Strength:', effectiveSettings.strength);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
@@ -164,9 +165,12 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-baseScale: effectiveSettings.baseScale * 100 / 6,
-gravity_multiplier: effectiveSettings.gravity * 400,
-strength: effectiveSettings.strength, 
+          baseScale: effectiveSettings.baseScale * 100 / 6,
+          gravity_multiplier: effectiveSettings.gravity * 400,
+          
+          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
+          strength: effectiveSettings.strength * 1.3,
+          
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
           onRollComplete: (results: any) => {
@@ -216,25 +220,25 @@ strength: effectiveSettings.strength,
 
         const box = new DiceBox('#dice-box-overlay', config);
 
-      if (containerRef.current) {
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  
-  console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
-  
-  // ✅ FORCER les dimensions à 100% de l'écran (pas de calcul JS)
-  containerRef.current.style.width = '100vw';
-  containerRef.current.style.height = '100vh';
-  containerRef.current.style.position = 'fixed';
-  containerRef.current.style.top = '0';
-  containerRef.current.style.left = '0';
-}
+        if (containerRef.current) {
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+          
+          containerRef.current.style.width = '100vw';
+          containerRef.current.style.height = '100vh';
+          containerRef.current.style.position = 'fixed';
+          containerRef.current.style.top = '0';
+          containerRef.current.style.left = '0';
+        }
+        
         await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé !');
+          console.log('✅ DiceBox initialisé avec strength x1.3 !');
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -254,7 +258,7 @@ strength: effectiveSettings.strength,
         audioManager.stopAll();
       }
     };
-  }, []);
+  }, [effectiveSettings, playResultSound, addRoll]);
 
   // ✅ Gérer les changements de settings
   useEffect(() => {
@@ -280,9 +284,9 @@ strength: effectiveSettings.strength,
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-baseScale: effectiveSettings.baseScale * 100 / 6,  // ✅ Pareil que l'init
-gravity_multiplier: effectiveSettings.gravity * 400,  // ✅ Pareil que l'init
-strength: effectiveSettings.strength * 1.3,  // ✅ Pareil que l'init
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
@@ -292,82 +296,70 @@ strength: effectiveSettings.strength * 1.3,  // ✅ Pareil que l'init
   }, [effectiveSettings, isInitialized]);
 
   useEffect(() => {
-  const handleSettingsChanged = async (e: CustomEvent) => {
-    if (!diceBoxRef.current || !isInitialized) return;
-    
-    const newSettings = e.detail as DiceSettings;
-    console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
-    console.log('💪 [DiceBox3D] Nouvelle valeur strength:', newSettings.strength);
-    
-    const textureForTheme = newSettings.theme 
-      ? (COLORSET_TEXTURES[newSettings.theme] || '')
-      : 'none';
+    const handleSettingsChanged = async (e: CustomEvent) => {
+      if (!diceBoxRef.current || !isInitialized) return;
+      
+      const newSettings = e.detail as DiceSettings;
+      console.log('🔧 [DiceBox3D] Settings changés via événement:', newSettings);
+      console.log('💪 [DiceBox3D] Nouvelle valeur strength:', newSettings.strength);
+      
+      const textureForTheme = newSettings.theme 
+        ? (COLORSET_TEXTURES[newSettings.theme] || '')
+        : 'none';
 
-    await diceBoxRef.current.updateConfig({
-      theme_colorset: newSettings.theme || 'custom',
-      theme_texture: textureForTheme,
-      theme_material: newSettings.themeMaterial || "plastic",
-      theme_customColorset: !newSettings.theme ? {
-        name: 'custom',
-        foreground: '#ffffff',
-        background: newSettings.themeColor,
-        outline: newSettings.themeColor,
-        edge: newSettings.themeColor,
-        texture: 'none',
-        material: newSettings.themeMaterial
-      } : undefined,
-      baseScale: newSettings.baseScale * 100 / 6,
-      gravity_multiplier: newSettings.gravity * 400,
-      strength: newSettings.strength,  // ✅ CRITIQUE
-      sounds: newSettings.soundsEnabled,
-      volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-    });
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: newSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: newSettings.themeMaterial || "plastic",
+        theme_customColorset: !newSettings.theme ? {
+          name: 'custom',
+          foreground: '#ffffff',
+          background: newSettings.themeColor,
+          outline: newSettings.themeColor,
+          edge: newSettings.themeColor,
+          texture: 'none',
+          material: newSettings.themeMaterial
+        } : undefined,
+        baseScale: newSettings.baseScale * 100 / 6,
+        gravity_multiplier: newSettings.gravity * 400,
+        strength: newSettings.strength * 1.3,
+        sounds: newSettings.soundsEnabled,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+      });
+      
+      if (diceBoxRef.current) {
+        diceBoxRef.current.strength = newSettings.strength * 1.3;
+        console.log('✅ [DiceBox3D] strength forcé à:', diceBoxRef.current.strength);
+      }
+    };
+
+    window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
     
-    // ✅ FORCER L'APPLICATION DU NOUVEAU STRENGTH
-    // La bibliothèque utilise directement `this.strength` dans startClickThrow()
-    // Donc on force la mise à jour de la propriété
-    if (diceBoxRef.current) {
-      diceBoxRef.current.strength = newSettings.strength;
-      console.log('✅ [DiceBox3D] strength forcé à:', diceBoxRef.current.strength);
+    return () => {
+      window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
+    };
+  }, [isInitialized]);
+
+  // ✅ Recalculer les dimensions à chaque ouverture
+  useEffect(() => {
+    if (isOpen && diceBoxRef.current && containerRef.current) {
+      requestAnimationFrame(() => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
+        
+        if (containerRef.current) {
+          containerRef.current.style.width = '100vw';
+          containerRef.current.style.height = '100vh';
+        }
+        
+        if (typeof diceBoxRef.current.setDimensions === 'function') {
+          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
+        }
+      });
     }
-  };
-
-  window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-  
-  return () => {
-    window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-  };
-}, [isInitialized]);
-
-// ✅ Recalculer les dimensions à chaque ouverture (useEffect existant - continue après)
-useEffect(() => {
-  if (isOpen && diceBoxRef.current && containerRef.current) {
-    // ... code existant ...
-  }
-}, [isOpen]);
-
-// ✅ Recalculer les dimensions à chaque ouverture
-useEffect(() => {
-  if (isOpen && diceBoxRef.current && containerRef.current) {
-    requestAnimationFrame(() => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
-      
-      // Forcer les dimensions
-      if (containerRef.current) {
-        containerRef.current.style.width = '100vw';
-        containerRef.current.style.height = '100vh';
-      }
-      
-      // Forcer la bibliothèque à recalculer son viewport
-      if (typeof diceBoxRef.current.setDimensions === 'function') {
-        diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-      }
-    });
-  }
-}, [isOpen]);
+  }, [isOpen]);
   
   // ✅ Lancer les dés
   useEffect(() => {
@@ -473,58 +465,53 @@ useEffect(() => {
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
-  // ✅ TOUJOURS rendre le container du canvas (jamais de display:none)
-// ✅ TOUJOURS rendre le container du canvas (jamais de display:none)
-return createPortal(
-  <>
-    {/* Container du canvas - TOUJOURS visible */}
-    <div 
-      id="dice-box-overlay"
-      ref={containerRef} 
-      className={`pointer-events-none transition-opacity duration-300 ${
-        isFadingDice ? 'opacity-0' : 'opacity-100'
-      }`}
-      style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        touchAction: 'none',
-        overflow: 'hidden', // ✅ Empêche le débordement
-        pointerEvents: 'none',
-        zIndex: 9999, // ✅ TOUJOURS au-dessus (même si invisible)
-        opacity: isOpen ? 1 : 0, // ✅ Invisible quand fermé
-        visibility: isOpen ? 'visible' : 'hidden', // ✅ Caché mais présent dans le DOM
-      }}
-    />
-
-    {/* Overlay cliquable - Conditionnel */}
-    {isOpen && (
+  return createPortal(
+    <>
       <div 
-        onClick={handleOverlayClick}
-        className={`fixed inset-0 z-[9998] overflow-hidden cursor-pointer transition-opacity duration-300 ${
-          isFadingAll ? 'opacity-0' : 'opacity-100'
+        id="dice-box-overlay"
+        ref={containerRef} 
+        className={`pointer-events-none transition-opacity duration-300 ${
+          isFadingDice ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ backgroundColor: 'transparent' }}
-      />
-    )}
-
-    {/* Résultat - Conditionnel */}
-    {result && showResult && isOpen && (
-      <div 
-        className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
-          isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
-        }`}
-        style={{
+        style={{ 
           position: 'fixed',
-          top: '50vh',
-          left: '50vw',
-          transform: 'translate(-50%, -50%)',
-          willChange: 'transform, opacity',
-          filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          touchAction: 'none',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          opacity: isOpen ? 1 : 0,
+          visibility: isOpen ? 'visible' : 'hidden',
         }}
-      >
+      />
+
+      {isOpen && (
+        <div 
+          onClick={handleOverlayClick}
+          className={`fixed inset-0 z-[9998] overflow-hidden cursor-pointer transition-opacity duration-300 ${
+            isFadingAll ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{ backgroundColor: 'transparent' }}
+        />
+      )}
+
+      {result && showResult && isOpen && (
+        <div 
+          className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
+            isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+          }`}
+          style={{
+            position: 'fixed',
+            top: '50vh',
+            left: '50vw',
+            transform: 'translate(-50%, -50%)',
+            willChange: 'transform, opacity',
+            filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
+          }}
+        >
           <div className="absolute inset-0 animate-pulse">
             <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
             <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
