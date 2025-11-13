@@ -138,6 +138,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
         console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
         console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
+        console.log('🎲 [INIT] BaseScale:', effectiveSettings.baseScale);
         console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
         console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -166,62 +167,57 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-          baseScale: effectiveSettings.baseScale * 100 / 6,
+          baseScale: effectiveSettings.baseScale * 10,  // ✅ CORRIGÉ : baseScale * 10 (30-100)
           gravity_multiplier: effectiveSettings.gravity * 400,
-          
-          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
           strength: effectiveSettings.strength * 1.3,
-          
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-    onRollComplete: (results: any) => {
-  if (!mounted) return;
-  if (hasShownResultRef.current) return;
+          onRollComplete: (results: any) => {
+            if (!mounted) return;
+            if (hasShownResultRef.current) return;
 
-  let rollValues: number[] = [];
-  let diceTotal = 0;
-  
-  if (Array.isArray(results?.sets)) {
-    results.sets.forEach((set: any) => {
-      if (Array.isArray(set?.rolls)) {
-        set.rolls.forEach((roll: any) => {
-          if (typeof roll?.value === 'number') {
-            rollValues.push(roll.value);
+            let rollValues: number[] = [];
+            let diceTotal = 0;
+            
+            if (Array.isArray(results?.sets)) {
+              results.sets.forEach((set: any) => {
+                if (Array.isArray(set?.rolls)) {
+                  set.rolls.forEach((roll: any) => {
+                    if (typeof roll?.value === 'number') {
+                      rollValues.push(roll.value);
+                    }
+                  });
+                }
+              });
+              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+            }
+
+            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+            hasShownResultRef.current = true;
+            setResult(finalResult);
+            setIsRolling(false);
+            
+            setTimeout(() => {
+              if (mounted) {
+                console.log('📊 [AUTO] Affichage automatique du résultat');
+                setShowResult(true);
+                playResultSound();
+              }
+            }, 50);
+
+            if (rollDataRef.current) {
+              addRoll({
+                attackName: rollDataRef.current.attackName,
+                diceFormula: rollDataRef.current.diceFormula,
+                modifier: rollDataRef.current.modifier,
+                total: finalResult.total,
+                rolls: finalResult.rolls,
+                diceTotal: finalResult.diceTotal,
+              });
+            }
           }
-        });
-      }
-    });
-    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-  }
-
-  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-  hasShownResultRef.current = true;
-  setResult(finalResult);
-  setIsRolling(false);
-  
-  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
-setTimeout(() => {
-  if (mounted) {
-    console.log('📊 [AUTO] Affichage automatique du résultat');
-    setShowResult(true);
-    playResultSound();
-    // ✅ Plus d'auto-fermeture, le popup reste affiché
-  }
-}, 50);
-
-  if (rollDataRef.current) {
-    addRoll({
-      attackName: rollDataRef.current.attackName,
-      diceFormula: rollDataRef.current.diceFormula,
-      modifier: rollDataRef.current.modifier,
-      total: finalResult.total,
-      rolls: finalResult.rolls,
-      diceTotal: finalResult.diceTotal,
-    });
-  }
-}
         };
 
         console.log('📦 Config complète:', config);
@@ -246,8 +242,9 @@ setTimeout(() => {
         if (mounted) {
           diceBoxRef.current = box;
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec strength x1.3 !');
+          console.log('✅ DiceBox initialisé !');
           console.log('💪 Force finale du moteur:', box.strength);
+          console.log('📏 BaseScale finale du moteur:', box.baseScale);
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -269,16 +266,15 @@ setTimeout(() => {
     };
   }, [effectiveSettings, playResultSound, addRoll]);
 
-  // ✅ Gérer les changements de settings
+  // ✅ Gérer les changements de settings via useEffect
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
     const updateSettings = async () => {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [UPDATE] Mise à jour des settings...');
-      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
+      console.log('📏 [UPDATE] baseScale slider:', effectiveSettings.baseScale);
+      console.log('📏 [UPDATE] baseScale moteur:', effectiveSettings.baseScale * 10);
       
       const textureForTheme = effectiveSettings.theme 
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
@@ -297,20 +293,21 @@ setTimeout(() => {
           texture: 'none',
           material: effectiveSettings.themeMaterial
         } : undefined,
-        baseScale: effectiveSettings.baseScale * 100 / 6,
+        baseScale: effectiveSettings.baseScale * 10,  // ✅ CORRIGÉ : baseScale * 10
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
       
-      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
+      console.log('✅ [UPDATE] Settings appliqués');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
     updateSettings();
   }, [effectiveSettings, isInitialized]);
 
+  // ✅ Gérer les changements via événement custom
   useEffect(() => {
     const handleSettingsChanged = async (e: CustomEvent) => {
       if (!diceBoxRef.current || !isInitialized) return;
@@ -318,9 +315,8 @@ setTimeout(() => {
       const newSettings = e.detail as DiceSettings;
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [EVENT] Settings changés via événement custom');
-      console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
-      console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
+      console.log('📏 [EVENT] baseScale slider:', newSettings.baseScale);
+      console.log('📏 [EVENT] baseScale moteur:', newSettings.baseScale * 10);
       
       const textureForTheme = newSettings.theme 
         ? (COLORSET_TEXTURES[newSettings.theme] || '')
@@ -339,18 +335,15 @@ setTimeout(() => {
           texture: 'none',
           material: newSettings.themeMaterial
         } : undefined,
-        baseScale: newSettings.baseScale * 100 / 6,
+        baseScale: newSettings.baseScale * 10,  // ✅ CORRIGÉ : baseScale * 10
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
-      
-      // Force directe sur l'objet (double sécurité)
-      if (diceBoxRef.current) {
-        diceBoxRef.current.strength = newSettings.strength * 1.3;
-        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-      }
+
+      console.log('📏 [EVENT] baseScale APRÈS updateConfig:', diceBoxRef.current.baseScale);
+      console.log('✅ [EVENT] Settings appliqués via événement');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
@@ -455,52 +448,48 @@ setTimeout(() => {
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-  // ✅ Annuler l'auto-fermeture si elle est en cours
-  if (closeTimeoutRef.current) {
-    clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = null;
-  }
-
-  if (isRolling) {
-    // Forcer l'affichage immédiat du résultat
-    hasShownResultRef.current = true;
-    setIsFadingDice(true);
-    setIsRolling(false);
-    
-    if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-      diceBoxRef.current.clearDice();
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
     }
-    
-    if (rollDataRef.current) {
-      const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
-      setResult(randomResult);
-      setShowResult(true);
 
-      addRoll({
-        attackName: rollDataRef.current.attackName,
-        diceFormula: rollDataRef.current.diceFormula,
-        modifier: rollDataRef.current.modifier,
-        total: randomResult.total,
-        rolls: randomResult.rolls,
-        diceTotal: randomResult.diceTotal,
-      });
+    if (isRolling) {
+      hasShownResultRef.current = true;
+      setIsFadingDice(true);
+      setIsRolling(false);
       
-      playResultSound();
+      if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
+        diceBoxRef.current.clearDice();
+      }
       
-      console.log('📊 [CLICK] Affichage forcé du résultat');
-      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
-      closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
+      if (rollDataRef.current) {
+        const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
+        setResult(randomResult);
+        setShowResult(true);
+
+        addRoll({
+          attackName: rollDataRef.current.attackName,
+          diceFormula: rollDataRef.current.diceFormula,
+          modifier: rollDataRef.current.modifier,
+          total: randomResult.total,
+          rolls: randomResult.rolls,
+          diceTotal: randomResult.diceTotal,
+        });
+        
+        playResultSound();
+        
+        console.log('📊 [CLICK] Affichage forcé du résultat');
+        closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
+      } else {
+        handleClose();
+      }
+    } else if (showResult) {
+      console.log('🚪 [CLICK] Fermeture manuelle');
+      handleClose();
     } else {
       handleClose();
     }
-  } else if (showResult) {
-    // Si le résultat est déjà affiché, fermer immédiatement
-    console.log('🚪 [CLICK] Fermeture manuelle');
-    handleClose();
-  } else {
-    handleClose();
-  }
-}, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
+  }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
   return createPortal(
     <>
