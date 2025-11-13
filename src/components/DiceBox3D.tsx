@@ -10,6 +10,7 @@ import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
 import { createPortal } from 'react-dom';
 import { useDiceHistory } from '../hooks/useDiceHistory';
 import { audioManager } from '../utils/audioManager';
+import { FireEffect } from './FireEffect';
 
 interface DiceBox3DProps {
   isOpen: boolean;
@@ -64,6 +65,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const [isFadingDice, setIsFadingDice] = useState(false);
   const [isFadingAll, setIsFadingAll] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [popupDimensions, setPopupDimensions] = useState({ width: 0, height: 0 });
+  const popupRef = useRef<HTMLDivElement>(null);
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,6 +78,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
 
   const { addRoll } = useDiceHistory();
+
+  // Mesurer les dimensions du popup
+  useEffect(() => {
+    if (showResult && popupRef.current) {
+      const rect = popupRef.current.getBoundingClientRect();
+      setPopupDimensions({ width: rect.width, height: rect.height });
+    }
+  }, [showResult]);
 
   useEffect(() => {
     rollDataRef.current = rollData;
@@ -169,7 +180,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           
-          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
           strength: effectiveSettings.strength * 1.3,
           
           sounds: effectiveSettings.soundsEnabled,
@@ -201,13 +211,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   setResult(finalResult);
   setIsRolling(false);
   
-  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
 setTimeout(() => {
   if (mounted) {
     console.log('📊 [AUTO] Affichage automatique du résultat');
     setShowResult(true);
     playResultSound();
-    // ✅ Plus d'auto-fermeture, le popup reste affiché
   }
 }, 50);
 
@@ -346,7 +354,6 @@ setTimeout(() => {
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
       
-      // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
         diceBoxRef.current.strength = newSettings.strength * 1.3;
         console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
@@ -361,7 +368,6 @@ setTimeout(() => {
     };
   }, [isInitialized]);
 
-  // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
     if (isOpen && diceBoxRef.current && containerRef.current) {
       requestAnimationFrame(() => {
@@ -382,7 +388,6 @@ setTimeout(() => {
     }
   }, [isOpen]);
   
-  // ✅ Lancer les dés
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
@@ -427,7 +432,6 @@ setTimeout(() => {
     });
   }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings]);
 
-  // Reset à la fermeture
   useEffect(() => {
     if (!isOpen) {
       lastRollDataRef.current = '';
@@ -455,14 +459,12 @@ setTimeout(() => {
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-  // ✅ Annuler l'auto-fermeture si elle est en cours
   if (closeTimeoutRef.current) {
     clearTimeout(closeTimeoutRef.current);
     closeTimeoutRef.current = null;
   }
 
   if (isRolling) {
-    // Forcer l'affichage immédiat du résultat
     hasShownResultRef.current = true;
     setIsFadingDice(true);
     setIsRolling(false);
@@ -488,13 +490,11 @@ setTimeout(() => {
       playResultSound();
       
       console.log('📊 [CLICK] Affichage forcé du résultat');
-      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
       closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
     } else {
       handleClose();
     }
   } else if (showResult) {
-    // Si le résultat est déjà affiché, fermer immédiatement
     console.log('🚪 [CLICK] Fermeture manuelle');
     handleClose();
   } else {
@@ -537,6 +537,7 @@ setTimeout(() => {
 
       {result && showResult && isOpen && (
         <div 
+          ref={popupRef}
           className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
             isFadingAll ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
           }`}
@@ -549,6 +550,24 @@ setTimeout(() => {
             filter: isFadingAll ? 'blur(10px)' : 'blur(0px)'
           }}
         >
+          {/* Fire effect canvas */}
+          {popupDimensions.width > 0 && popupDimensions.height > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: `${popupDimensions.width}px`,
+              height: `${popupDimensions.height}px`,
+              pointerEvents: 'none'
+            }}>
+              <FireEffect 
+                width={popupDimensions.width} 
+                height={popupDimensions.height}
+                isActive={showResult && !isFadingAll}
+              />
+            </div>
+          )}
+
           <div className="absolute inset-0 animate-pulse">
             <div className="absolute inset-0 bg-red-900/30 blur-3xl rounded-full scale-150"></div>
             <div className="absolute inset-0 bg-orange-600/20 blur-2xl rounded-full scale-125 animate-[pulse_2s_ease-in-out_infinite]"></div>
