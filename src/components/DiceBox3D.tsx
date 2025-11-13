@@ -344,7 +344,7 @@ setTimeout(() => {
           texture: 'none',
           material: newSettings.themeMaterial
         } : undefined,
-        baseScale: newSettings.baseScale * 100 / 6,
+      baseScale: convertBaseScale(newSettings.baseScale),
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
