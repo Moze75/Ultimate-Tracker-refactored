@@ -174,47 +174,62 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-          onRollComplete: (results: any) => {
-            if (!mounted) return;
-            if (hasShownResultRef.current) return;
+    onRollComplete: (results: any) => {
+  if (!mounted) return;
+  if (hasShownResultRef.current) return;
 
-            let rollValues: number[] = [];
-            let diceTotal = 0;
-            
-            if (Array.isArray(results?.sets)) {
-              results.sets.forEach((set: any) => {
-                if (Array.isArray(set?.rolls)) {
-                  set.rolls.forEach((roll: any) => {
-                    if (typeof roll?.value === 'number') {
-                      rollValues.push(roll.value);
-                    }
-                  });
-                }
-              });
-              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-            }
-
-            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-            hasShownResultRef.current = true;
-            setResult(finalResult);
-            setIsRolling(false);
-            setShowResult(true);
-
-            if (rollDataRef.current) {
-              addRoll({
-                attackName: rollDataRef.current.attackName,
-                diceFormula: rollDataRef.current.diceFormula,
-                modifier: rollDataRef.current.modifier,
-                total: finalResult.total,
-                rolls: finalResult.rolls,
-                diceTotal: finalResult.diceTotal,
-              });
-            }
-            
-            playResultSound();
+  let rollValues: number[] = [];
+  let diceTotal = 0;
+  
+  if (Array.isArray(results?.sets)) {
+    results.sets.forEach((set: any) => {
+      if (Array.isArray(set?.rolls)) {
+        set.rolls.forEach((roll: any) => {
+          if (typeof roll?.value === 'number') {
+            rollValues.push(roll.value);
           }
+        });
+      }
+    });
+    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+  }
+
+  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+  hasShownResultRef.current = true;
+  setResult(finalResult);
+  setIsRolling(false);
+  
+  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
+  setTimeout(() => {
+    if (mounted) {
+      console.log('📊 [AUTO] Affichage automatique du résultat');
+      setShowResult(true);
+      playResultSound();
+      
+      // ✅ NOUVEAU : Auto-fermeture après 3 secondes
+      closeTimeoutRef.current = setTimeout(() => {
+        if (mounted) {
+          console.log('🚪 [AUTO] Fermeture automatique');
+          setIsFadingAll(true);
+          setTimeout(() => onClose(), 300);
+        }
+      }, 3000);
+    }
+  }, 1000); // Délai de 1 seconde pour voir les dés s'arrêter
+
+  if (rollDataRef.current) {
+    addRoll({
+      attackName: rollDataRef.current.attackName,
+      diceFormula: rollDataRef.current.diceFormula,
+      modifier: rollDataRef.current.modifier,
+      total: finalResult.total,
+      rolls: finalResult.rolls,
+      diceTotal: finalResult.diceTotal,
+    });
+  }
+}
         };
 
         console.log('📦 Config complète:', config);
