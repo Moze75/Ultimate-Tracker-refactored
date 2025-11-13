@@ -463,45 +463,52 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-    if (isRolling) {
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
-      }
-      hasShownResultRef.current = true;
-      setIsFadingDice(true);
-      setIsRolling(false);
-      
-      if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-        diceBoxRef.current.clearDice();
-      }
-      
-      if (rollDataRef.current) {
-        const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
-        setResult(randomResult);
-        setShowResult(true);
+  // ✅ Annuler l'auto-fermeture si elle est en cours
+  if (closeTimeoutRef.current) {
+    clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = null;
+  }
 
-        addRoll({
-          attackName: rollDataRef.current.attackName,
-          diceFormula: rollDataRef.current.diceFormula,
-          modifier: rollDataRef.current.modifier,
-          total: randomResult.total,
-          rolls: randomResult.rolls,
-          diceTotal: randomResult.diceTotal,
-        });
-        
-        playResultSound();
-        
-        closeTimeoutRef.current = setTimeout(() => handleClose(), 2000);
-      } else {
-        handleClose();
-      }
-    } else if (showResult) {
-      handleClose();
+  if (isRolling) {
+    // Forcer l'affichage immédiat du résultat
+    hasShownResultRef.current = true;
+    setIsFadingDice(true);
+    setIsRolling(false);
+    
+    if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
+      diceBoxRef.current.clearDice();
+    }
+    
+    if (rollDataRef.current) {
+      const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
+      setResult(randomResult);
+      setShowResult(true);
+
+      addRoll({
+        attackName: rollDataRef.current.attackName,
+        diceFormula: rollDataRef.current.diceFormula,
+        modifier: rollDataRef.current.modifier,
+        total: randomResult.total,
+        rolls: randomResult.rolls,
+        diceTotal: randomResult.diceTotal,
+      });
+      
+      playResultSound();
+      
+      console.log('📊 [CLICK] Affichage forcé du résultat');
+      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
+      closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
     } else {
       handleClose();
     }
-  }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
+  } else if (showResult) {
+    // Si le résultat est déjà affiché, fermer immédiatement
+    console.log('🚪 [CLICK] Fermeture manuelle');
+    handleClose();
+  } else {
+    handleClose();
+  }
+}, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
   return createPortal(
     <>
