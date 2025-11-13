@@ -346,29 +346,41 @@ setTimeout(() => {
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
-  // ✅ Forcer baseScale directement sur l'objet
-    if (diceBoxRef.current) {
-      diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
-      console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
-      
-      // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
-      if (diceBoxRef.current.DiceFactory) {
-        try {
-          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-          diceBoxRef.current.DiceFactory = new DiceFactory({
-            baseScale: newSettings.baseScale * 100 / 6
-          });
-          // Réappliquer les textures
-          if (diceBoxRef.current.colorData) {
-            diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-          }
-          console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
-        } catch (error) {
-          console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
-        }
+// ✅ Forcer baseScale directement sur l'objet
+if (diceBoxRef.current) {
+  diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
+  console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+  
+  // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
+  if (diceBoxRef.current.DiceFactory) {
+    try {
+      const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+      diceBoxRef.current.DiceFactory = new DiceFactory({
+        baseScale: newSettings.baseScale * 100 / 6
+      });
+      // Réappliquer les textures
+      if (diceBoxRef.current.colorData) {
+        diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
       }
+      console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
+    } catch (error) {
+      console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
     }
-
+  }
+  
+  // ✅ CORRIGÉ : Forcer la gravité du monde physique ET le multiplier
+  if (diceBoxRef.current.world && diceBoxRef.current.world.gravity) {
+    // 1. Mettre à jour le gravity_multiplier
+    diceBoxRef.current.gravity_multiplier = newSettings.gravity * 400;
+    
+    // 2. Mettre à jour la gravité du monde physique
+    const newGravityValue = -9.8 * diceBoxRef.current.gravity_multiplier;
+    diceBoxRef.current.world.gravity.set(0, 0, newGravityValue);
+    
+    console.log('✅ [EVENT] gravity_multiplier forcé:', diceBoxRef.current.gravity_multiplier);
+    console.log('✅ [EVENT] world.gravity forcé:', newGravityValue);
+  }
+}
        
       
       // Force directe sur l'objet (double sécurité)
