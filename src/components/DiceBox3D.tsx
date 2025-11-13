@@ -55,11 +55,6 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
-// 🎯 Helper pour convertir baseScale (3-10) en valeur moteur 3D (30-100)
-const convertBaseScale = (sliderValue: number): number => {
-  return (sliderValue / 10) * 100;
-};
-
 export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
@@ -171,7 +166,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             material: effectiveSettings.themeMaterial
           } : undefined,
           theme_material: effectiveSettings.themeMaterial || "plastic",
-         baseScale: newSettings.baseScale,
+          baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           
           // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
@@ -278,15 +273,12 @@ setTimeout(() => {
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-     const updateSettings = async () => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔧 [UPDATE] Mise à jour des settings...');
-    console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-    console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-    console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
-    console.log('📏 [UPDATE] baseScale slider:', effectiveSettings.baseScale);
-    console.log('📏 [UPDATE] baseScale converti:', convertBaseScale(effectiveSettings.baseScale));
-    
+    const updateSettings = async () => {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔧 [UPDATE] Mise à jour des settings...');
+      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
+      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
+      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
       
       const textureForTheme = effectiveSettings.theme 
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
@@ -347,18 +339,12 @@ setTimeout(() => {
           texture: 'none',
           material: newSettings.themeMaterial
         } : undefined,
-       baseScale: newSettings.baseScale,  // ✅ UTILISE newSettings !
+        baseScale: newSettings.baseScale * 100 / 6,
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
-
-      // ✅ AJOUTER CES 3 LIGNES JUSTE ICI
-console.log('📏 [EVENT] baseScale slider:', newSettings.baseScale);
-console.log('📏 [EVENT] baseScale converti:', convertBaseScale(newSettings.baseScale));
-console.log('📏 [EVENT] baseScale APRÈS updateConfig:', diceBoxRef.current.baseScale);
-
       
       // Force directe sur l'objet (double sécurité)
       if (diceBoxRef.current) {
