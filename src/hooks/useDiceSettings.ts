@@ -17,7 +17,7 @@ export const DEFAULT_DICE_SETTINGS: DiceSettings = {
   themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
-  baseScale: 100,         // Taille moyenne des dés
+  baseScale: 6,         // Taille moyenne des dés
   gravity: 1,           // Gravité normale (1x = 400 dans le module)
   strength: 2,          // Force normale
   volume: 100,          // Volume max des sons intégrés
@@ -36,50 +36,39 @@ export function useDiceSettings() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Charger les paramètres depuis localStorage au montage
- // Charger les paramètres depuis localStorage au montage
-useEffect(() => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<DiceSettings>;
-      
-      // Migration : convertir scale -> baseScale si nécessaire
-      if ('scale' in parsed && !('baseScale' in parsed)) {
-        (parsed as any).baseScale = (parsed as any).scale;
-        delete (parsed as any).scale;
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<DiceSettings>;
+        
+        // Migration : convertir scale -> baseScale si nécessaire
+        if ('scale' in parsed && !('baseScale' in parsed)) {
+          (parsed as any).baseScale = (parsed as any).scale;
+          delete (parsed as any).scale;
+        }
+        
+        // Migration : supprimer friction et restitution obsolètes
+        delete (parsed as any).friction;
+        delete (parsed as any).restitution;
+        
+        // Fusionner avec les valeurs par défaut pour gérer les nouvelles clés
+        setSettings({
+          ...DEFAULT_DICE_SETTINGS,
+          ...parsed,
+        });
+        
+        console.log('✅ Paramètres des dés chargés depuis localStorage:', parsed);
+      } else {
+        console.log('ℹ️ Aucun paramètre sauvegardé, utilisation des valeurs par défaut');
       }
-      
-      // ✅ NOUVEAU : Migration baseScale (ancienne échelle 3-10 → nouvelle 50-150)
-      if (typeof parsed.baseScale === 'number' && parsed.baseScale < 20) {
-        // Si baseScale < 20, c'est l'ancienne échelle, convertir
-        const oldValue = parsed.baseScale;
-        // Formule de conversion : (valeur - 3) / 7 * 100 + 50
-        // 3 → 50, 6.5 → 100, 10 → 150
-        parsed.baseScale = Math.round(((oldValue - 3) / 7) * 100 + 50);
-        console.log(`🔄 Migration baseScale: ${oldValue} → ${parsed.baseScale}`);
-      }
-      
-      // Migration : supprimer friction et restitution obsolètes
-      delete (parsed as any).friction;
-      delete (parsed as any).restitution;
-      
-      // Fusionner avec les valeurs par défaut pour gérer les nouvelles clés
-      setSettings({
-        ...DEFAULT_DICE_SETTINGS,
-        ...parsed,
-      });
-      
-      console.log('✅ Paramètres des dés chargés depuis localStorage:', parsed);
-    } else {
-      console.log('ℹ️ Aucun paramètre sauvegardé, utilisation des valeurs par défaut');
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des paramètres des dés:', error);
+      // En cas d'erreur, on garde les valeurs par défaut
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('❌ Erreur lors du chargement des paramètres des dés:', error);
-    // En cas d'erreur, on garde les valeurs par défaut
-  } finally {
-    setIsLoading(false);
-  }
-}, []);
+  }, []);
 
   // Sauvegarder les paramètres
   const saveSettings = useCallback((newSettings: DiceSettings) => {
