@@ -715,6 +715,20 @@ useEffect(() => {
     loadInventory();
   }, [selectedCharacter?.id]);
 
+  // ✅ Forcer le remontage du DiceBox quand on sauvegarde les paramètres
+useEffect(() => {
+  const handleRemount = () => {
+    console.log('🔄 [GamePage] Remontage du DiceBox demandé');
+    setDiceBoxKey(prev => prev + 1);
+  };
+
+  window.addEventListener('dice-box-remount', handleRemount);
+  
+  return () => {
+    window.removeEventListener('dice-box-remount', handleRemount);
+  };
+}, []);
+
   /* ---------------- Rendu d'un pane ---------------- */
 
 const renderPane = (key: TabKey | 'profile-details') => { 
