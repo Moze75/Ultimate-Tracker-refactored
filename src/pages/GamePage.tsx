@@ -113,6 +113,7 @@ const [diceRollData, setDiceRollData] = useState<{
   modifier: number;
 } | null>(null);
 
+  const [diceBoxKey, setDiceBoxKey] = useState(0);
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
 // ✅ AJOUT : Debug du chargement des settings
