@@ -17,7 +17,7 @@ export const DEFAULT_DICE_SETTINGS: DiceSettings = {
   themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
-  baseScale: 6,         // Taille moyenne des dés
+  baseScale: 100,         // Taille moyenne des dés
   gravity: 1,           // Gravité normale (1x = 400 dans le module)
   strength: 2,          // Force normale
   volume: 100,          // Volume max des sons intégrés
