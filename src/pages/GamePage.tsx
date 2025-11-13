@@ -1047,17 +1047,19 @@ return (
       );
     })()}
 
-    {/* ✨ DiceBox3D centralisé - EN DEHORS de la fonction, mais DANS le Provider */}
-<DiceBox3D
-  key="dice-box-gamepage"
-  isOpen={!!diceRollData}  // ✅ Contrôle uniquement la VISIBILITÉ
-  onClose={() => {
-    console.log('🎲 [GamePage] DiceBox fermé');
-    setDiceRollData(null);
-  }}
-  rollData={diceRollData}
-  settings={diceSettings}
-/>
+{/* ✨ DiceBox3D centralisé - Montage différé après chargement settings */}
+{!isDiceSettingsLoading && (
+  <DiceBox3D
+    key="dice-box-gamepage"
+    isOpen={!!diceRollData}
+    onClose={() => {
+      console.log('🎲 [GamePage] DiceBox fermé');
+      setDiceRollData(null);
+    }}
+    rollData={diceRollData}
+    settings={diceSettings}
+  />
+)}
   </DiceRollContext.Provider>
 );
 }
