@@ -375,20 +375,39 @@ setTimeout(() => {
         diceBoxRef.current.strength = newSettings.strength * 1.3;
         console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
       }
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    };
 
-    window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    
-    return () => {
-      window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
-    };
-  }, [isInitialized]);
+   // Remplacer le bloc "BONUS : Forcer aussi la gravité sur le monde physique" par ceci
+try {
+  if (diceBoxRef.current && diceBoxRef.current.world) {
+    const world: any = diceBoxRef.current.world;
 
+    // Priorité : utiliser la propriété gravity_multiplier si elle existe
+    // Sinon reproduire l'échelle appliquée à l'initialisation : gravity * 400
+    const gravSetting = typeof newSettings.gravity === 'number' ? newSettings.gravity : 1;
+    const expectedMultiplier = (typeof diceBoxRef.current.gravity_multiplier === 'number')
+      ? diceBoxRef.current.gravity_multiplier
+      : gravSetting * 400;
 
+    // Calcule la gravité verticale (axe Z négatif)
+    const gravityValue = -9.8 * expectedMultiplier;
 
+    if (world.gravity && typeof world.gravity.set === 'function') {
+      world.gravity.set(0, 0, gravityValue);
+      console.log('✅ [EVENT] Gravité forcée directement (x,y,z):', 0, 0, gravityValue);
+    } else if (world.gravity && 'z' in world.gravity) {
+      world.gravity.z = gravityValue;
+      console.log('✅ [EVENT] Gravité forcée directement via propriété z:', world.gravity.z);
+    } else {
+      console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
+    }
 
-   
+    // Assurer la cohérence de la valeur stockée côté DiceBox (utile si updateConfig est buggy)
+    diceBoxRef.current.gravity_multiplier = expectedMultiplier;
+  }
+} catch (err) {
+  console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
+}
+
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
     if (isOpen && diceBoxRef.current && containerRef.current) {
