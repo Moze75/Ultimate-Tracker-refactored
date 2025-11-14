@@ -60,7 +60,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
   const handleClearHistory = () => {
     if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
       clearHistory();
-      setHistorySnapshot([]);
+      
     }
   };
 
