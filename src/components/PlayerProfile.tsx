@@ -45,39 +45,40 @@ export function PlayerProfile({
         </SwipeNavigator>
       </div>
 
-      <div className="stat-card w-full">
-        <div className="stat-header flex items-start justify-between"> 
-          <div className="flex flex-col gap-4 w-full">
-            <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
+  <div className="stat-card w-full">
+  <div className="stat-header flex items-start justify-between pb-4">
+    <div className="flex flex-col gap-4 w-full">
+      <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
 
-            <div
-              className="grid items-start gap-3 sm:gap-4"
-              style={{ gridTemplateColumns: 'minmax(0,1fr) 8rem' }}
-            >
-              {/* Passer onOpenDiceSettings */}
-              <PlayerAvatar 
-                player={player} 
-                onEdit={() => setEditing(true)}
-                onOpenDiceSettings={() => setIsDiceSettingsOpen(true)}
-              />
-
-              <PlayerActionsPanel
-                player={player}
-                onUpdate={onUpdate}
-                onOpenCampaigns={() => setShowCampaignModal(true)}
-              />
-            </div>
-          </div>
-          <div></div>
-        </div>
- 
-        <QuickStatsDisplay
+      <div
+        className="grid items-start gap-3 sm:gap-4"
+        style={{ gridTemplateColumns: 'minmax(0,1fr) 8rem' }}
+      >
+        <PlayerAvatar 
           player={player} 
-          inventory={inventory || []}
-          activeTooltip={activeTooltip}
-          setActiveTooltip={setActiveTooltip}
+          onEdit={() => setEditing(true)}
+          onOpenDiceSettings={() => setIsDiceSettingsOpen(true)}
+        />
+
+        <PlayerActionsPanel
+          player={player}
+          onUpdate={onUpdate}
+          onOpenCampaigns={() => setShowCampaignModal(true)}
         />
       </div>
+    </div>
+    <div></div>
+  </div>
+
+  <div className="py-4">
+    <QuickStatsDisplay
+      player={player}
+      inventory={inventory || []}
+      activeTooltip={activeTooltip}
+      setActiveTooltip={setActiveTooltip}
+    />
+  </div>
+</div>
 
       <PlayerProfileSettingsModal
         open={editing}
