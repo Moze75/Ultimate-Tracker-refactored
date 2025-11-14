@@ -46,7 +46,7 @@ export function PlayerProfile({
       </div>
 
       <div className="stat-card w-full">
-             <div className="stat-header flex items-start justify-between pb-4">
+        <div className="stat-header flex items-start justify-between"> 
           <div className="flex flex-col gap-4 w-full">
             <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
 
