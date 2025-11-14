@@ -802,56 +802,15 @@ return (
           overflow: 'hidden',
         }}
       >
-      {backgroundImage.startsWith('color:') ? (
-  <div
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: backgroundImage.replace('color:', ''),
-      pointerEvents: 'none',
-      userSelect: 'none',
-    }}
-  />
-) : backgroundImage.startsWith('gradient:') ? (
-  <div
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: backgroundImage.replace('gradient:', ''),
-      pointerEvents: 'none',
-      userSelect: 'none',
-    }}
-  />
-) : (
-  <img
-    src={backgroundImage}
-    alt="background"
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-      objectPosition: 'center top',
-      pointerEvents: 'none',
-      userSelect: 'none',
-      filter: 'brightness(0.95)',
-    }}
-  />
-)}
+        <img
+          src={backgroundImage}
+          alt="background"
           style={{
             position: 'fixed',
             top: 0,
             left: 0,
             width: '100%',
-            height: '100%', 
+            height: '100%',  
             objectFit: 'cover',
             objectPosition: 'center top',
             pointerEvents: 'none', 
