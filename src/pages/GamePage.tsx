@@ -1042,9 +1042,9 @@ return (
                   <>
                     <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
 
-                    <div
-                      ref={stageRef}
-                      className="relative"
+                  <div
+  ref={stageRef}
+  className="relative bg-gray-900/40 backdrop-blur-sm rounded-lg p-4"
                       onTouchStart={onTouchStart}
                       onTouchMove={onTouchMove}
                       onTouchEnd={onTouchEnd}
