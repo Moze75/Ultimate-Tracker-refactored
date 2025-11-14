@@ -370,39 +370,70 @@ setTimeout(() => {
     } 
 
       
-      // Force directe sur l'objet (double sécurité)
-      if (diceBoxRef.current) {
-        diceBoxRef.current.strength = newSettings.strength * 1.3;
-        console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
-      }
-
+// Remplacer le bloc de forçage de gravité par ceci
 try {
   if (diceBoxRef.current && diceBoxRef.current.world) {
     const world: any = diceBoxRef.current.world;
 
-    // Priorité : utiliser la propriété gravity_multiplier si elle existe
-    // Sinon reproduire l'échelle appliquée à l'initialisation : gravity * 400
+    // newSettings.gravity est le slider (valeur "logique" : ex 0..2 ou 0..1 selon ton UI)
     const gravSetting = typeof newSettings.gravity === 'number' ? newSettings.gravity : 1;
-    const expectedMultiplier = (typeof diceBoxRef.current.gravity_multiplier === 'number')
-      ? diceBoxRef.current.gravity_multiplier
-      : gravSetting * 400;
 
-    // Calcule la gravité verticale (axe Z négatif)
+    // Reproduire l'échelle utilisée dans DiceBox.initialize : gravity_multiplier = gravity * 400
+    const expectedMultiplier = gravSetting * 400;
+
+    // Forcer la propriété sur l'instance DiceBox (si updateConfig est broken, on garde la cohérence)
+    diceBoxRef.current.gravity_multiplier = expectedMultiplier;
+
+    // Calculer la gravité réelle (axe Z négatif utilisé par DiceBox)
     const gravityValue = -9.8 * expectedMultiplier;
 
+    // Appliquer sur le world (compat set() ou propriété z)
     if (world.gravity && typeof world.gravity.set === 'function') {
       world.gravity.set(0, 0, gravityValue);
-      console.log('✅ [EVENT] Gravité forcée directement (x,y,z):', 0, 0, gravityValue);
+      console.log('✅ [EVENT] Gravité forcée (x,y,z):', 0, 0, gravityValue);
     } else if (world.gravity && 'z' in world.gravity) {
       world.gravity.z = gravityValue;
-      console.log('✅ [EVENT] Gravité forcée directement via propriété z:', world.gravity.z);
+      console.log('✅ [EVENT] Gravité forcée via property z:', world.gravity.z);
     } else {
       console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
     }
+
+    // Réveiller tous les bodies pour qu'ils prennent en compte la nouvelle gravité immédiatement
+    try {
+      if (Array.isArray(world.bodies)) {
+        world.bodies.forEach((b: any) => {
+          try {
+            if (typeof b.wakeUp === 'function') b.wakeUp();
+            // au besoin réinitialiser les sleepState pour forcer recalcul
+            if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
+          } catch (err) { /* noop */ }
+        });
+        console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
+      }
+    } catch (err) {
+      console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
+    }
+
+    // Tenter de persister proprement via updateConfig si la méthode existe.
+    // (Attention : upstream DiceBox.updateConfig a un bug Object.apply -> Object.assign,
+    // si c'est présent, updateConfig peut ne pas appliquer gravity_multiplier)
+    if (typeof diceBoxRef.current.updateConfig === 'function') {
+      try {
+        // on ne bloque pas l'exécution si updateConfig est async / throw
+        const maybePromise = diceBoxRef.current.updateConfig({ gravity_multiplier: expectedMultiplier });
+        if (maybePromise && typeof maybePromise.then === 'function') {
+          maybePromise.catch((e: any) => {
+            console.warn('⚠️ updateConfig rejeté :', e);
+          });
         }
       } catch (err) {
-        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
+        console.warn('⚠️ updateConfig a échoué (fallback ok) :', err);
       }
+    }
+  }
+} catch (err) {
+  console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
+}
 
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
