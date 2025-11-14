@@ -576,23 +576,41 @@ function HistoryTab({
 }
 
 // Composant pour l'onglet Fond d'écran
+// Composant pour l'onglet Fond d'écran
 function BackgroundTab({
   currentBackground,
   onBackgroundChange,
-  deviceType, // 🆕
+  deviceType,
 }: {
   currentBackground?: string;
   onBackgroundChange?: (backgroundUrl: string) => void;
-  deviceType?: 'mobile' | 'tablet' | 'desktop'; // 🆕
+  deviceType?: 'mobile' | 'tablet' | 'desktop';
 }) {
-  // Liste des fonds d'écran disponibles
-  const backgrounds = [
-    { url: '/fondecran/Magic.png', name: 'Magic' },
-    { url: '/fondecran/Table.png', name: 'Table' },
-    { url: '/fondecran/Toits.png', name: 'Toits' },
-    { url: '/fondecran/War.png', name: 'War' },
-    { url: '/fondecran/forest.png', name: 'forest' },
+  // 🆕 Liste des fonds d'écran (images)
+  const backgroundImages = [
+    { url: '/fondecran/Magic.png', name: 'Magic', type: 'image' as const },
+    { url: '/fondecran/Table.png', name: 'Table', type: 'image' as const },
+    { url: '/fondecran/Toits.png', name: 'Toits', type: 'image' as const },
+    { url: '/fondecran/War.png', name: 'War', type: 'image' as const },
+    { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const },
   ];
+
+  // 🆕 Liste des fonds de couleur
+  const backgroundColors = [
+    { url: 'color:#1a1a2e', name: 'Nuit Profonde', color: '#1a1a2e', type: 'color' as const },
+    { url: 'color:#0f0f23', name: 'Minuit', color: '#0f0f23', type: 'color' as const },
+    { url: 'color:#2d1b4e', name: 'Violet Sombre', color: '#2d1b4e', type: 'color' as const },
+    { url: 'color:#1a472a', name: 'Forêt Obscure', color: '#1a472a', type: 'color' as const },
+    { url: 'color:#4a1a1a', name: 'Rouge Sang', color: '#4a1a1a', type: 'color' as const },
+    { url: 'color:#1a3a4a', name: 'Océan Profond', color: '#1a3a4a', type: 'color' as const },
+    { url: 'gradient:linear-gradient(135deg, #667eea 0%, #764ba2 100%)', name: 'Crépuscule', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', type: 'gradient' as const },
+    { url: 'gradient:linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', name: 'Aurore', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', type: 'gradient' as const },
+    { url: 'gradient:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', name: 'Glacier', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', type: 'gradient' as const },
+    { url: 'gradient:linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', name: 'Émeraude', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', type: 'gradient' as const },
+  ];
+
+  // Combiner les deux listes
+  const allBackgrounds = [...backgroundImages, ...backgroundColors];
 
   return (
     <div className="space-y-4">
@@ -601,55 +619,105 @@ function BackgroundTab({
           Choisissez un fond d'écran
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Cliquez sur une image pour l'appliquer en arrière-plan ({backgrounds.length} disponible{backgrounds.length > 1 ? 's' : ''})
+          Cliquez sur une image ou une couleur pour l'appliquer ({allBackgrounds.length} disponible{allBackgrounds.length > 1 ? 's' : ''})
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {backgrounds.map((bg) => (
-          <button
-            key={bg.url}
-            type="button"
-            onClick={() => onBackgroundChange?.(bg.url)}
-            className={`relative group rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
-              currentBackground === bg.url
-                ? 'border-purple-500 ring-2 ring-purple-500/50'
-                : 'border-gray-600 hover:border-purple-400'
-            }`}
-          >
-            <div className="aspect-video relative bg-gray-900">
-              <img
-                src={bg.url}
-                alt={bg.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              
-              {/* Overlay au survol */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                  Sélectionner
-                </span>
+      {/* 🆕 Section Images */}
+      <div>
+        <h4 className="text-xs font-medium text-gray-400 mb-2">📸 Images</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {backgroundImages.map((bg) => (
+            <button
+              key={bg.url}
+              type="button"
+              onClick={() => onBackgroundChange?.(bg.url)}
+              className={`relative group rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                currentBackground === bg.url
+                  ? 'border-purple-500 ring-2 ring-purple-500/50'
+                  : 'border-gray-600 hover:border-purple-400'
+              }`}
+            >
+              <div className="aspect-video relative bg-gray-900">
+                <img
+                  src={bg.url}
+                  alt={bg.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                
+                {/* Overlay au survol */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                    Sélectionner
+                  </span>
+                </div>
+
+                {/* Indicateur de sélection */}
+                {currentBackground === bg.url && (
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
-              {/* Indicateur de sélection */}
-              {currentBackground === bg.url && (
-                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-            </div>
-
-            <div className="p-2 bg-gray-700/50 text-center">
-              <p className="text-xs text-gray-300 truncate">{bg.name}</p>
-            </div>
-          </button>
-        ))}
+              <div className="p-2 bg-gray-700/50 text-center">
+                <p className="text-xs text-gray-300 truncate">{bg.name}</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 🆕 Message adapté selon le type d'appareil */}
+      {/* 🆕 Section Couleurs & Gradients */}
+      <div>
+        <h4 className="text-xs font-medium text-gray-400 mb-2">🎨 Couleurs & Dégradés</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {backgroundColors.map((bg) => (
+            <button
+              key={bg.url}
+              type="button"
+              onClick={() => onBackgroundChange?.(bg.url)}
+              className={`relative group rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                currentBackground === bg.url
+                  ? 'border-purple-500 ring-2 ring-purple-500/50'
+                  : 'border-gray-600 hover:border-purple-400'
+              }`}
+            >
+              <div 
+                className="aspect-video relative"
+                style={{ 
+                  background: bg.type === 'gradient' ? bg.gradient : bg.color 
+                }}
+              >
+                {/* Overlay au survol */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium drop-shadow-lg">
+                    Sélectionner
+                  </span>
+                </div>
+
+                {/* Indicateur de sélection */}
+                {currentBackground === bg.url && (
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-2 bg-gray-700/50 text-center">
+                <p className="text-xs text-gray-300 truncate">{bg.name}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Message adapté selon le type d'appareil */}
       <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3 mt-4">
         <p className="text-xs text-blue-200">
           ℹ️ <strong>Note :</strong> Le fond d'écran s'applique sur {
