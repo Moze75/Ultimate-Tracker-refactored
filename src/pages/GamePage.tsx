@@ -365,6 +365,12 @@ useEffect(() => {
     [onUpdateCharacter]
   );
 
+    // 🆕 Fonction pour changer et sauvegarder le fond d'écran
+  const handleBackgroundChange = useCallback((url: string) => {
+    setBackgroundImage(url);
+    localStorage.setItem('desktop-background', url);
+  }, []);
+
   useEffect(() => {
     if (currentPlayer) {
       try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer)); } catch {}
