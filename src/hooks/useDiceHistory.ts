@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 
 export interface DiceRollHistoryEntry {
   id: string;
@@ -13,6 +13,38 @@ export interface DiceRollHistoryEntry {
 
 const HISTORY_KEY = 'dice-roll-history';
 const MAX_HISTORY_SIZE = 20;
+
+// ✅ Interface pour le contexte
+interface DiceHistoryContextType {
+  history: DiceRollHistoryEntry[];
+  addRoll: (entry: Omit<DiceRollHistoryEntry, 'id' | 'timestamp'>) => void;
+  clearHistory: () => void;
+  removeEntry: (id: string) => void;
+  isLoading: boolean;
+}
+
+// ✅ Création du contexte
+const DiceHistoryContext = createContext<DiceHistoryContextType | undefined>(undefined);
+
+// ✅ Provider pour partager l'historique dans toute l'app
+export function DiceHistoryProvider({ children }: { children: ReactNode }) {
+  const diceHistory = useDiceHistory();
+  
+  return (
+    <DiceHistoryContext.Provider value={diceHistory}>
+      {children}
+    </DiceHistoryContext.Provider>
+  );
+}
+
+// ✅ Hook pour utiliser le contexte (à utiliser dans tes composants)
+export function useDiceHistoryContext() {
+  const context = useContext(DiceHistoryContext);
+  if (!context) {
+    throw new Error('useDiceHistoryContext must be used within DiceHistoryProvider');
+  }
+  return context;
+}
 
 /**
  * Hook pour gérer l'historique des jets de dés
@@ -61,16 +93,16 @@ export function useDiceHistory() {
     });
   }, []);
 
-// Effacer tout l'historique
-const clearHistory = useCallback(() => {
-  try {
-    localStorage.removeItem(HISTORY_KEY);
-    setHistory([]); // ✅ Forcer le state à []
-    console.log('✅ Historique des dés effacé');
-  } catch (error) {
-    console.error('❌ Erreur lors de l\'effacement de l\'historique:', error);
-  }
-}, []);
+  // Effacer tout l'historique
+  const clearHistory = useCallback(() => {
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+      setHistory([]);
+      console.log('✅ Historique des dés effacé');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'effacement de l\'historique:', error);
+    }
+  }, []);
 
   // Supprimer une entrée spécifique
   const removeEntry = useCallback((id: string) => {
