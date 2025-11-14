@@ -131,7 +131,7 @@ const handleRemoveEntry = (id: string) => {
             />
           ) : activeTab === 'history' ? (
             <HistoryTab
-              history={historySnapshot}
+              history={history}
               onClearHistory={handleClearHistory}
               onRemoveEntry={handleRemoveEntry}
             />
