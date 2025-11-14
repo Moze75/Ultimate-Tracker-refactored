@@ -12,15 +12,23 @@ interface DiceSettingsModalProps {
   onSave: (settings: DiceSettings) => void;
   currentBackground?: string;
   onBackgroundChange?: (backgroundUrl: string) => void;
+  deviceType?: 'mobile' | 'tablet' | 'desktop'; // 🆕
 }
 
 type TabType = 'settings' | 'history' | 'background'; 
 
-export function DiceSettingsModal({ open, onClose, settings, onSave, currentBackground, onBackgroundChange }: DiceSettingsModalProps) {
+export function DiceSettingsModal({ 
+  open, 
+  onClose, 
+  settings, 
+  onSave, 
+  currentBackground, 
+  onBackgroundChange,
+  deviceType // 🆕
+}: DiceSettingsModalProps) {
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
- const { history, clearHistory, removeEntry } = useDiceHistoryContext();
-
+  const { history, clearHistory, removeEntry } = useDiceHistoryContext();
 
   React.useEffect(() => {
     setLocalSettings(settings);
@@ -32,8 +40,6 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     }
   }, [open]);
 
-
- 
   if (!open) return null;
 
   const handleSave = () => {
@@ -53,129 +59,126 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
 
-// ✅ APRÈS (pareil, juste enlever ligne vide)
-const handleClearHistory = () => {
-  if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
-    clearHistory();
-  }
-};
+  const handleClearHistory = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+      clearHistory();
+    }
+  };
 
-// ✅ APRÈS
-const handleRemoveEntry = (id: string) => {
-  removeEntry(id);
-};
+  const handleRemoveEntry = (id: string) => {
+    removeEntry(id);
+  };
  
   return ( 
-   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
-       <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'settings'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            Dés 3D
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'history'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            Historique 
+          {/* Tabs */}
+          <div className="flex border-b border-gray-700">
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'settings'
+                  ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Dés 3D
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'history'
+                  ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Historique 
+              {history.length > 0 && (
+                <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
+                  {history.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('background')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'background'
+                  ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
+              }`}
+            >
+              <Image className="w-4 h-4" />
+              Fond
+            </button> 
+          </div>
 
-{history.length > 0 && (
-  <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
-    {history.length}
-  </span>
-)}
-          </button>
-          <button
-            onClick={() => setActiveTab('background')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'background'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-700/50'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
-            }`}
-          >
-            <Image className="w-4 h-4" />
-            Fond
-          </button> 
-        </div>
+          {/* Content */}
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            {activeTab === 'settings' ? (
+              <SettingsTab
+                localSettings={localSettings}
+                handleChange={handleChange}
+              />
+            ) : activeTab === 'history' ? (
+              <HistoryTab
+                history={history}
+                onClearHistory={handleClearHistory}
+                onRemoveEntry={handleRemoveEntry}
+              />
+            ) : (
+              <BackgroundTab
+                currentBackground={currentBackground}
+                onBackgroundChange={onBackgroundChange}
+                deviceType={deviceType}
+              />
+            )}
+          </div>
 
-        {/* Content */}
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {activeTab === 'settings' ? (
-            <SettingsTab
-              localSettings={localSettings}
-              handleChange={handleChange}
-            />
-          ) : activeTab === 'history' ? (
-
-<HistoryTab
-  history={history}
-  onClearHistory={handleClearHistory}
-  onRemoveEntry={handleRemoveEntry}
-/>
-          ) : (
-            <BackgroundTab
-              currentBackground={currentBackground}
-              onBackgroundChange={onBackgroundChange}
-            />
+          {/* Footer - seulement pour l'onglet paramètres */}
+          {activeTab === 'settings' && (
+            <div className="flex items-center justify-between p-4 border-t border-gray-700">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                🔄 Réinitialiser
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                >
+                  💾 Enregistrer
+                </button> 
+              </div> 
+            </div>
           )}
         </div>
-
-        {/* Footer - seulement pour l'onglet paramètres */}
-        {activeTab === 'settings' && (
-          <div className="flex items-center justify-between p-4 border-t border-gray-700">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              🔄 Réinitialiser
-            </button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-              >
-                💾 Enregistrer
-              </button> 
-            </div> 
-          </div>
-        )}
       </div>
     </div>
-     </div>
   );
 } 
 
@@ -576,13 +579,15 @@ function HistoryTab({
 function BackgroundTab({
   currentBackground,
   onBackgroundChange,
+  deviceType, // 🆕
 }: {
   currentBackground?: string;
   onBackgroundChange?: (backgroundUrl: string) => void;
+  deviceType?: 'mobile' | 'tablet' | 'desktop'; // 🆕
 }) {
-  // Liste des fonds d'écran disponibles (basée sur les fichiers réels du dossier public/fondecran)
+  // Liste des fonds d'écran disponibles
   const backgrounds = [
-     { url: '/fondecran/Magic.png', name: 'Magic' },
+    { url: '/fondecran/Magic.png', name: 'Magic' },
     { url: '/fondecran/Table.png', name: 'Table' },
     { url: '/fondecran/Toits.png', name: 'Toits' },
     { url: '/fondecran/War.png', name: 'War' },
@@ -644,9 +649,12 @@ function BackgroundTab({
         ))}
       </div>
 
+      {/* 🆕 Message adapté selon le type d'appareil */}
       <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-3 mt-4">
         <p className="text-xs text-blue-200">
-          ℹ️ <strong>Note :</strong> Le fond d'écran s'applique uniquement en vue bureau (desktop).
+          ℹ️ <strong>Note :</strong> Le fond d'écran s'applique sur {
+            deviceType === 'desktop' ? 'la vue bureau' : 'toutes les vues'
+          }. Le même fond est utilisé partout.
         </p>
       </div>
     </div>
