@@ -42,10 +42,10 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
   
-// 🆕 État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
-const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-  return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
-});
+  // État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
+  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
+    return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
+  });
 
   const deviceType = useResponsiveLayout();
   const { rollDice } = React.useContext(DiceRollContext);
@@ -55,37 +55,37 @@ const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     ? player.abilities
     : [];
 
-const handleAbilityClick = (ability: Ability) => {
-  console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
-  rollDice({
-    type: 'ability',
-    attackName: `Test de ${ability.name}`,
-    diceFormula: '1d20',
-    modifier: ability.modifier
-  });
-};
+  const handleAbilityClick = (ability: Ability) => {
+    console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
+    rollDice({
+      type: 'ability',
+      attackName: `Test de ${ability.name}`,
+      diceFormula: '1d20',
+      modifier: ability.modifier
+    });
+  };
 
-const handleSavingThrowClick = (ability: Ability) => {
-  console.log('🎲 [DesktopView] Lancer sauvegarde:', ability.name);
-  rollDice({
-    type: 'saving-throw',
-    attackName: `Sauvegarde de ${ability.name}`,
-    diceFormula: '1d20',
-    modifier: ability.savingThrow
-  });
-};
+  const handleSavingThrowClick = (ability: Ability) => {
+    console.log('🎲 [DesktopView] Lancer sauvegarde:', ability.name);
+    rollDice({
+      type: 'saving-throw',
+      attackName: `Sauvegarde de ${ability.name}`,
+      diceFormula: '1d20',
+      modifier: ability.savingThrow
+    });
+  };
 
-const handleSkillClick = (skillName: string, bonus: number) => {
-  console.log('🎲 [DesktopView] Lancer compétence:', skillName);
-  rollDice({
-    type: 'skill',
-    attackName: `Test de ${skillName}`,
-    diceFormula: '1d20',
-    modifier: bonus
-  });
-};
+  const handleSkillClick = (skillName: string, bonus: number) => {
+    console.log('🎲 [DesktopView] Lancer compétence:', skillName);
+    rollDice({
+      type: 'skill',
+      attackName: `Test de ${skillName}`,
+      diceFormula: '1d20',
+      modifier: bonus
+    });
+  };
 
-  // 🆕 Fonction pour changer et sauvegarder le fond d'écran
+  // Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
@@ -93,7 +93,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
 
   return ( 
     <>
-          {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
+      {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
       {deviceType === 'desktop' && (
         <div 
           className="fixed inset-0 pointer-events-none"
@@ -221,7 +221,6 @@ const handleSkillClick = (skillName: string, bonus: number) => {
 
       {/* 🔥 MODALS EN OVERLAY */}
 
-
       <PlayerProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -247,6 +246,7 @@ const handleSkillClick = (skillName: string, bonus: number) => {
         onSave={saveDiceSettings}
         currentBackground={backgroundImage}
         onBackgroundChange={handleBackgroundChange}
+        deviceType="desktop"
       />
       
       {showConcentrationCheck && (
@@ -259,4 +259,4 @@ const handleSkillClick = (skillName: string, bonus: number) => {
       )}
     </> 
   );
-}  
+}
