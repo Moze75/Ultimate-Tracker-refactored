@@ -597,6 +597,10 @@ function BackgroundTab({
 
   // 🆕 Liste des fonds de couleur
 const backgroundColors = [
+  // Couleurs de base essentielles
+  { url: 'color:#000000', name: 'Noir Absolu', color: '#000000', type: 'color' as const },
+  { url: 'color:#0f0f23', name: 'Bleu Nuit', color: '#0f0f23', type: 'color' as const },
+  
   // Couleurs sombres unies
   { url: 'color:#1a1410', name: 'Caverne Obscure', color: '#1a1410', type: 'color' as const },
   { url: 'color:#2d2416', name: 'Bois Sombre', color: '#2d2416', type: 'color' as const },
