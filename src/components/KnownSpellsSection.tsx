@@ -1122,30 +1122,40 @@ const fetchKnownSpells = async () => {
     }, {} as Record<string, KnownSpell[]>);
   }, [filteredSpells]);
 
-  // DD des sorts + Bonus d'attaque des sorts
-  const spellcastingAbilityName = useMemo(
-    () => getSpellcastingAbilityName(player.class as any),
-    [player.class]
-  );
-  const abilityMod = useMemo(
-    () => (spellcastingAbilityName ? getAbilityModFromPlayer(player, spellcastingAbilityName) : 0),
-    [player, spellcastingAbilityName]
-  );
-  const proficiencyBonus = useMemo(
-    () =>
-      player.stats?.proficiency_bonus && player.stats.proficiency_bonus > 0
-        ? player.stats.proficiency_bonus
-        : getProficiencyBonusForLevel(player.level || 1),
-    [player.stats?.proficiency_bonus, player.level]
-  );
-  const spellSaveDC = useMemo(
-    () => (spellcastingAbilityName ? 8 + proficiencyBonus + abilityMod : null),
-    [spellcastingAbilityName, proficiencyBonus, abilityMod]
-  );
-  const spellAttackBonus = useMemo(
-    () => (spellcastingAbilityName ? proficiencyBonus + abilityMod : null),
-    [spellcastingAbilityName, proficiencyBonus, abilityMod]
-  );
+// DD des sorts + Bonus d'attaque des sorts
+// ✅ MODIFIÉ : Prendre en compte la classe secondaire
+const spellcastingAbilityName = useMemo(() => {
+  const primaryAbility = getSpellcastingAbilityName(player.class as any);
+  const secondaryAbility = player.secondary_class 
+    ? getSpellcastingAbilityName(player.secondary_class as any) 
+    : null;
+  
+  // Retourner la première capacité de lanceur de sorts trouvée
+  return primaryAbility || secondaryAbility;
+}, [player.class, player.secondary_class]);
+
+const abilityMod = useMemo(
+  () => (spellcastingAbilityName ? getAbilityModFromPlayer(player, spellcastingAbilityName) : 0),
+  [player, spellcastingAbilityName]
+);
+
+const proficiencyBonus = useMemo(
+  () =>
+    player.stats?.proficiency_bonus && player.stats.proficiency_bonus > 0
+      ? player.stats.proficiency_bonus
+      : getProficiencyBonusForLevel(player.level || 1),
+  [player.stats?.proficiency_bonus, player.level]
+);
+
+const spellSaveDC = useMemo(
+  () => (spellcastingAbilityName ? 8 + proficiencyBonus + abilityMod : null),
+  [spellcastingAbilityName, proficiencyBonus, abilityMod]
+);
+
+const spellAttackBonus = useMemo(
+  () => (spellcastingAbilityName ? proficiencyBonus + abilityMod : null),
+  [spellcastingAbilityName, proficiencyBonus, abilityMod]
+);
 
   // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
   const casterType = useMemo(() => {
