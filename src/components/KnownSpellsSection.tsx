@@ -627,12 +627,12 @@ function SpellCard({
   };
   const cancelDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDeleteConfirm(false); 
+    setShowDeleteConfirm(false);
   };
 
   return (
     <div
-  className={`bg-gray-800/80 border border-gray-700/70 rounded-lg overflow-hidden transition-all duration-300 relative ${
+      className={`bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden transition-all duration-300 relative ${
         isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
       } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
     >
@@ -1373,12 +1373,12 @@ return (
   >
 <button
   onClick={() => toggleLevelCollapse(levelName)}
- className="w-full flex items-center justify-between text-left bg-gray-800/80 hover:bg-gray-800/90 rounded-lg p-2 transition-all duration-200 group border border-gray-700/70"
+  className="w-full flex items-center justify-between text-left hover:bg-gray-800/30 rounded-lg p-2 transition-all duration-200 group"
 >
       <div className="flex items-center gap-3 flex-1 pr-2">
         <h4 className="text-sm font-semibold text-white group-hover:text-white">
           {levelName} - Niveau {pactLevel} ({pactSpells.length})
-        </h4> 
+        </h4>
         <PactSlotStats
           player={player}
           onUpdate={onUpdate}
@@ -1427,7 +1427,7 @@ return (
   >
 <button
   onClick={() => toggleLevelCollapse(levelName)}
-className="w-full flex items-center justify-between text-left bg-gray-800/80 hover:bg-gray-800/90 rounded-lg p-2 transition-all duration-200 group min-h-[60px] border border-gray-700/70"
+  className="w-full flex items-center justify-between text-left hover:bg-gray-800/30 rounded-lg p-2 transition-all duration-200 group min-h-[60px]"
 >
   <div className="flex items-center gap-3 flex-1 pr-2">
     <h4 className="text-sm font-semibold text-white group-hover:text-white">
