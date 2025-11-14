@@ -61,16 +61,16 @@ export function useDiceHistory() {
     });
   }, []);
 
-  // Effacer tout l'historique
-  const clearHistory = useCallback(() => {
-    try {
-      localStorage.removeItem(HISTORY_KEY);
-      setHistory([]);
-      console.log('✅ Historique des dés effacé');
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'effacement de l\'historique:', error);
-    }
-  }, []);
+// Effacer tout l'historique
+const clearHistory = useCallback(() => {
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+    setHistory([]); // ✅ Forcer le state à []
+    console.log('✅ Historique des dés effacé');
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'effacement de l\'historique:', error);
+  }
+}, []);
 
   // Supprimer une entrée spécifique
   const removeEntry = useCallback((id: string) => {
