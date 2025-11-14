@@ -388,8 +388,7 @@ setTimeout(() => {
 
 
 
-
-  
+   
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
     if (isOpen && diceBoxRef.current && containerRef.current) {
@@ -408,7 +407,7 @@ setTimeout(() => {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
         }
       });
-    } 
+    }
   }, [isOpen]);
   
   // ✅ Lancer les dés
@@ -677,4 +676,4 @@ setTimeout(() => {
     </>,
     document.body
   );
-} 
+}
