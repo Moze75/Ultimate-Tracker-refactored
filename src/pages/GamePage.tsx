@@ -16,7 +16,7 @@ import { PlayerContext } from '../contexts/PlayerContext';
 
 import { ResponsiveGameLayout, DiceRollContext } from '../components/ResponsiveGameLayout';
 import { Grid3x3 } from 'lucide-react';
-
+ 
 import inventoryService from '../services/inventoryService';  // ✅ Utilise l'export par défaut
 import PlayerProfileProfileTab from '../components/PlayerProfileProfileTab';
 import { loadAbilitySections } from '../services/classesContent';
@@ -27,7 +27,6 @@ import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { DiceBox3D } from '../components/DiceBox3D';
 import { DesktopView } from '../components/DesktopView';
-import { DiceSettingsModal } from '../components/DiceSettingsModal';
 
 import '../styles/swipe.css';
 
@@ -105,11 +104,6 @@ export function GamePage({
 
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
-
-    // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
-  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-    return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
-  });
 
   // ✨ État pour le contexte de dés centralisé
 const [diceRollData, setDiceRollData] = useState<{
@@ -364,12 +358,6 @@ useEffect(() => {
     },
     [onUpdateCharacter]
   );
-
-    // 🆕 Fonction pour changer et sauvegarder le fond d'écran
-  const handleBackgroundChange = useCallback((url: string) => {
-    setBackgroundImage(url);
-    localStorage.setItem('desktop-background', url);
-  }, []);
 
   useEffect(() => {
     if (currentPlayer) {
@@ -793,62 +781,6 @@ const renderPane = (key: TabKey | 'profile-details') => {
 /* ---------------- Rendu principal avec Provider ---------------- */
 return (
   <DiceRollContext.Provider value={{ rollDice }}>
-    {/* 🔥 IMAGE DE BACKGROUND - POUR MOBILE/TABLET */}
-    {(deviceType === 'mobile' || deviceType === 'tablet') && (
-      <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          zIndex: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {backgroundImage.startsWith('color:') ? (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: backgroundImage.replace('color:', ''),
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}
-          />
-        ) : backgroundImage.startsWith('gradient:') ? (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: backgroundImage.replace('gradient:', ''),
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}
-          />
-        ) : (
-          <img
-            src={backgroundImage}
-            alt="background"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center top',
-              pointerEvents: 'none',
-              userSelect: 'none',
-              filter: 'brightness(0.95)',
-            }}
-          />
-        )}
-      </div>
-    )}
-
     {(() => {
       /* ---------------- Loading ---------------- */
       if (loading) {
@@ -1008,19 +940,11 @@ return (
             </div>
           )}
 
-                    <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}>
+          <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'}`}>
             {currentPlayer && (
               <PlayerContext.Provider value={currentPlayer}>
                 {/* PlayerProfile visible SEULEMENT en mode onglets */}
-            {!isGridMode && (
-  <PlayerProfile 
-    player={currentPlayer} 
-    onUpdate={applyPlayerUpdate} 
-    inventory={inventory}
-    currentBackground={backgroundImage}
-    onBackgroundChange={handleBackgroundChange}
-  />
-)}
+                {!isGridMode && <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} inventory={inventory} />}
 
                 {/* MODE GRILLE (desktop uniquement) */}
                 {isGridMode && deviceType === 'desktop' ? (
@@ -1042,21 +966,21 @@ return (
                   <>
                     <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
 
-                 <div
-  ref={stageRef}
-  className="relative bg-gray-900/40 backdrop-blur-sm rounded-lg p-4"
-  onTouchStart={onTouchStart}
-  onTouchMove={onTouchMove}
-  onTouchEnd={onTouchEnd}
-  onTouchCancel={() => {
-    fullAbortInteraction();
-  }}
-  style={{
-    touchAction: 'pan-y',
-    height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-    transition: heightLocking ? 'height 280ms ease' : undefined,
-  }}
->
+                    <div
+                      ref={stageRef}
+                      className="relative"
+                      onTouchStart={onTouchStart}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={onTouchEnd}
+                      onTouchCancel={() => {
+                        fullAbortInteraction();
+                      }}
+                      style={{
+                        touchAction: 'pan-y',
+                        height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                        transition: heightLocking ? 'height 280ms ease' : undefined,
+                      }}
+                    >
                       {Array.from(visitedTabs).map((key) => {
                         const isActive = key === activeTab;
                         const isNeighbor =
