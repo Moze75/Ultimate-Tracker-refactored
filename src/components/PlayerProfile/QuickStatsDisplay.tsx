@@ -167,7 +167,7 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
       </div>
 
       {/* Vitesse */}
-      <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center pt-2">
         <div
           className="relative w-16 h-10 -mt-2 -mb-1 group cursor-pointer"
           onClick={() => setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
