@@ -793,52 +793,6 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [player.id]);
 
-// ✅ AJOUTER CE NOUVEAU useEffect ICI :
-useEffect(() => {
-  const initializeSecondarySpellSlots = async () => {
-    // Si pas de classe secondaire ou pas de niveau, rien à faire
-    if (!player.secondary_class || !player.secondary_level || !player.id) return;
-
-    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-    
-    // Si la classe secondaire n'est pas un lanceur de sorts, rien à faire
-    if (!spellcasters.includes(player.secondary_class)) return;
-
-    // Vérifier si secondary_spell_slots existe et a des emplacements
-    const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
-      if (key.startsWith('level') && !key.startsWith('used')) {
-        return (player.secondary_spell_slots as any)[key] > 0;
-      }
-      return false;
-    });
-
-    // Si pas d'emplacements, les initialiser
-    if (!hasSecondarySpellSlots) {
-      try {
-        const newSecondarySpellSlots = getSpellSlotsByLevel(
-          player.secondary_class,
-          player.secondary_level,
-          player.secondary_spell_slots
-        );
-
-        const { error } = await supabase
-          .from('players')
-          .update({ secondary_spell_slots: newSecondarySpellSlots })
-          .eq('id', player.id);
-
-        if (error) throw error;
-
-        onUpdate({ ...player, secondary_spell_slots: newSecondarySpellSlots });
-        console.log('[KnownSpellsSection] Emplacements de sorts secondaires initialisés:', newSecondarySpellSlots);
-      } catch (err) {
-        console.error('[KnownSpellsSection] Erreur initialisation secondary_spell_slots:', err);
-      }
-    }
-  };
-
-  initializeSecondarySpellSlots();
-}, [player.id, player.secondary_class, player.secondary_level, player.secondary_spell_slots, onUpdate]);
-  
   // Initialiser automatiquement les spell_slots si nécessaire
   useEffect(() => {
     const initializeSpellSlots = async () => {
