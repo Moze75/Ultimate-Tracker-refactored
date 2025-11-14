@@ -632,7 +632,7 @@ function SpellCard({
 
   return (
     <div
-      className={`bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 relative ${
+      className={`bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden transition-all duration-300 relative ${
         isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
       } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
     >
