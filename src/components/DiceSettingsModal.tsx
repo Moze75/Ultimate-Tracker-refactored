@@ -19,7 +19,7 @@ type TabType = 'settings' | 'history' | 'background';
 export function DiceSettingsModal({ open, onClose, settings, onSave, currentBackground, onBackgroundChange }: DiceSettingsModalProps) {
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
-  const { history, clearHistory, removeEntry } = useDiceHistory();
+ const { history, clearHistory, removeEntry } = useDiceHistoryContext();
   const [historySnapshot, setHistorySnapshot] = useState<DiceRollHistoryEntry[]>([]);
 
   React.useEffect(() => {
