@@ -264,91 +264,53 @@ const SpellLevelStats = React.memo(
       [isMagicien, player]
     );
 
-const handleSlotUse = useCallback(
-  async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (remainingSlots <= 0) return;
+    const handleSlotUse = useCallback(
+      async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (remainingSlots <= 0) return;
 
-    const button = e.currentTarget as HTMLButtonElement;
-    const rect = button.getBoundingClientRect();
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = `${rect.left}px`;
-    container.style.top = `${rect.top}px`;
-    container.style.width = `${rect.width}px`;
-    container.style.height = `${rect.height}px`;
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '9999';
-    const anim = document.createElement('div');
-    anim.style.position = 'absolute';
-    anim.style.left = '50%';
-    anim.style.top = '50%';
-    anim.style.width = '200px';
-    anim.style.height = '200px';
-    anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
-    container.appendChild(anim);
-    document.body.appendChild(container);
-    setTimeout(() => container.remove(), 600);
+        const button = e.currentTarget as HTMLButtonElement;
+        const rect = button.getBoundingClientRect();
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = `${rect.left}px`;
+        container.style.top = `${rect.top}px`;
+        container.style.width = `${rect.width}px`;
+        container.style.height = `${rect.height}px`;
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '9999';
+        const anim = document.createElement('div');
+        anim.style.position = 'absolute';
+        anim.style.left = '50%';
+        anim.style.top = '50%';
+        anim.style.width = '200px';
+        anim.style.height = '200px';
+        anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
+        container.appendChild(anim);
+        document.body.appendChild(container);
+        setTimeout(() => container.remove(), 600);
 
-    try {
-      // ✅ NOUVEAU : Décrémenter en priorité la classe principale, puis la secondaire
-      const usedKey = `used${level}` as keyof typeof player.spell_slots;
-      const levelKey = `level${level}` as keyof typeof player.spell_slots;
-      
-      // Emplacements disponibles par classe
-      const primaryMax = (player.spell_slots?.[levelKey] || 0) as number;
-      const primaryUsed = (player.spell_slots?.[usedKey] || 0) as number;
-      const primaryRemaining = Math.max(0, primaryMax - primaryUsed);
-      
-      const secondaryMax = (player.secondary_spell_slots?.[levelKey] || 0) as number;
-      const secondaryUsed = (player.secondary_spell_slots?.[usedKey] || 0) as number;
-      const secondaryRemaining = Math.max(0, secondaryMax - secondaryUsed);
+        try {
+          const usedKey = `used${level}` as keyof typeof player.spell_slots;
+          const newSpellSlots = {
+            ...player.spell_slots,
+            [usedKey]: usedSlots + 1,
+          };
+          const { error } = await supabase
+            .from('players')
+            .update({ spell_slots: newSpellSlots })
+            .eq('id', player.id);
+          if (error) throw error;
 
-      // Décider quelle classe décrémenter
-      let newSpellSlots = { ...player.spell_slots };
-      let newSecondarySpellSlots = { ...player.secondary_spell_slots };
-      
-      if (primaryRemaining > 0) {
-        // Décrémenter la classe principale
-        newSpellSlots = {
-          ...player.spell_slots,
-          [usedKey]: primaryUsed + 1,
-        };
-      } else if (secondaryRemaining > 0) {
-        // Décrémenter la classe secondaire
-        newSecondarySpellSlots = {
-          ...player.secondary_spell_slots,
-          [usedKey]: secondaryUsed + 1,
-        };
-      } else {
-        toast.error('Aucun emplacement disponible');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('players')
-        .update({ 
-          spell_slots: newSpellSlots,
-          secondary_spell_slots: newSecondarySpellSlots,
-        })
-        .eq('id', player.id);
-      
-      if (error) throw error;
-
-      onUpdate({ 
-        ...player, 
-        spell_slots: newSpellSlots,
-        secondary_spell_slots: newSecondarySpellSlots,
-      });
-      
-      toast.success(`✨ Emplacement de niveau ${level} utilisé`);
-    } catch (err) {
-      console.error('Erreur slots:', err);
-      toast.error('Erreur lors de la mise à jour');
-    }
-  },
-  [level, remainingSlots, player, onUpdate]
-);
+          onUpdate({ ...player, spell_slots: newSpellSlots });
+          toast.success(`✨ Emplacement de niveau ${level} utilisé`);
+        } catch (err) {
+          console.error('Erreur slots:', err);
+          toast.error('Erreur lors de la mise à jour');
+        }
+      },
+      [level, remainingSlots, usedSlots, player, onUpdate]
+    );
 
     const handleArcaneRecovery = useCallback(
       async (e: React.MouseEvent) => {
@@ -473,87 +435,52 @@ const PactSlotStats = React.memo(
     const pactLevel = player.spell_slots?.pact_level || 1;
     const remainingSlots = Math.max(0, maxSlots - usedSlots);
 
- const handlePactSlotUse = useCallback(
-  async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (remainingSlots <= 0) return;
+    const handlePactSlotUse = useCallback(
+      async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (remainingSlots <= 0) return;
 
-    const button = e.currentTarget as HTMLButtonElement;
-    const rect = button.getBoundingClientRect();
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = `${rect.left}px`;
-    container.style.top = `${rect.top}px`;
-    container.style.width = `${rect.width}px`;
-    container.style.height = `${rect.height}px`;
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '9999';
-    const anim = document.createElement('div');
-    anim.style.position = 'absolute';
-    anim.style.left = '50%';
-    anim.style.top = '50%';
-    anim.style.width = '200px';
-    anim.style.height = '200px';
-    anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
-    container.appendChild(anim);
-    document.body.appendChild(container);
-    setTimeout(() => container.remove(), 600);
+        const button = e.currentTarget as HTMLButtonElement;
+        const rect = button.getBoundingClientRect();
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = `${rect.left}px`;
+        container.style.top = `${rect.top}px`;
+        container.style.width = `${rect.width}px`;
+        container.style.height = `${rect.height}px`;
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '9999';
+        const anim = document.createElement('div');
+        anim.style.position = 'absolute';
+        anim.style.left = '50%';
+        anim.style.top = '50%';
+        anim.style.width = '200px';
+        anim.style.height = '200px';
+        anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
+        container.appendChild(anim);
+        document.body.appendChild(container);
+        setTimeout(() => container.remove(), 600);
 
-    try {
-      // ✅ NOUVEAU : Décrémenter les pact slots de la bonne classe
-      const primaryIsWarlock = player.class === 'Occultiste';
-      const secondaryIsWarlock = player.secondary_class === 'Occultiste';
-      
-      const primaryMax = primaryIsWarlock ? (player.spell_slots?.pact_slots || 0) : 0;
-      const primaryUsed = primaryIsWarlock ? (player.spell_slots?.used_pact_slots || 0) : 0;
-      const primaryRemaining = Math.max(0, primaryMax - primaryUsed);
-      
-      const secondaryMax = secondaryIsWarlock ? (player.secondary_spell_slots?.pact_slots || 0) : 0;
-      const secondaryUsed = secondaryIsWarlock ? (player.secondary_spell_slots?.used_pact_slots || 0) : 0;
-      const secondaryRemaining = Math.max(0, secondaryMax - secondaryUsed);
+        try {
+          const newSpellSlots = {
+            ...player.spell_slots,
+            used_pact_slots: usedSlots + 1,
+          };
+          const { error } = await supabase
+            .from('players')
+            .update({ spell_slots: newSpellSlots })
+            .eq('id', player.id);
+          if (error) throw error;
 
-      let newSpellSlots = { ...player.spell_slots };
-      let newSecondarySpellSlots = { ...player.secondary_spell_slots };
-      
-      if (primaryRemaining > 0) {
-        newSpellSlots = {
-          ...player.spell_slots,
-          used_pact_slots: primaryUsed + 1,
-        };
-      } else if (secondaryRemaining > 0) {
-        newSecondarySpellSlots = {
-          ...player.secondary_spell_slots,
-          used_pact_slots: secondaryUsed + 1,
-        };
-      } else {
-        toast.error('Aucun emplacement de pacte disponible');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('players')
-        .update({ 
-          spell_slots: newSpellSlots,
-          secondary_spell_slots: newSecondarySpellSlots,
-        })
-        .eq('id', player.id);
-      
-      if (error) throw error;
-
-      onUpdate({ 
-        ...player, 
-        spell_slots: newSpellSlots,
-        secondary_spell_slots: newSecondarySpellSlots,
-      });
-      
-      toast.success(`✨ Emplacement de pacte (niveau ${pactLevel}) utilisé`);
-    } catch (err) {
-      console.error('Erreur pact slots:', err);
-      toast.error('Erreur lors de la mise à jour');
-    }
-  },
-  [remainingSlots, player, onUpdate, pactLevel]
-);
+          onUpdate({ ...player, spell_slots: newSpellSlots });
+          toast.success(`✨ Emplacement de pacte (niveau ${pactLevel}) utilisé`);
+        } catch (err) {
+          console.error('Erreur pact slots:', err);
+          toast.error('Erreur lors de la mise à jour');
+        }
+      },
+      [remainingSlots, usedSlots, player, onUpdate, pactLevel]
+    );
 
     if (maxSlots === 0) return null;
 
