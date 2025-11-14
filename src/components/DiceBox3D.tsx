@@ -376,7 +376,6 @@ setTimeout(() => {
         console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
       }
 
-   // Remplacer le bloc "BONUS : Forcer aussi la gravité sur le monde physique" par ceci
 try {
   if (diceBoxRef.current && diceBoxRef.current.world) {
     const world: any = diceBoxRef.current.world;
@@ -400,13 +399,20 @@ try {
     } else {
       console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
     }
+        }
+      } catch (err) {
+        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
+      }
 
-    // Assurer la cohérence de la valeur stockée côté DiceBox (utile si updateConfig est buggy)
-    diceBoxRef.current.gravity_multiplier = expectedMultiplier;
-  }
-} catch (err) {
-  console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
-}
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    };
+
+    window.addEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
+    
+    return () => {
+      window.removeEventListener('dice-settings-changed', handleSettingsChanged as EventListener);
+    };
+  }, [isInitialized]);
 
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
