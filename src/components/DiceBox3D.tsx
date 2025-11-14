@@ -74,7 +74,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
 
-  const { addRoll } = useDiceHistory();
+const { addRoll } = useDiceHistoryContext();
 
   useEffect(() => {
     rollDataRef.current = rollData;
