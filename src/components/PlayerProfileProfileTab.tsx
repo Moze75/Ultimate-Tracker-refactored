@@ -207,7 +207,7 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
   }, [open, children]);
 
   return (
-    <div className="stat-card">
+   <div className="stat-card !bg-gray-800/15 !border-gray-700/30">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
