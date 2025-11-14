@@ -211,7 +211,7 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="stat-header w-full flex items-center justify-between gap-3 cursor-pointer hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+className="stat-header !bg-gray-800/30 w-full flex items-center justify-between gap-3 cursor-pointer hover:bg-gray-800/40 rounded-lg transition-colors duration-200"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
