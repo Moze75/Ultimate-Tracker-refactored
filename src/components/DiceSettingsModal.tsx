@@ -131,11 +131,12 @@ const handleRemoveEntry = (id: string) => {
               handleChange={handleChange}
             />
           ) : activeTab === 'history' ? (
-            <HistoryTab
-              history={history}
-              onClearHistory={handleClearHistory}
-              onRemoveEntry={handleRemoveEntry}
-            />
+// ✅ APRÈS
+<HistoryTab
+  history={history}
+  onClearHistory={handleClearHistory}
+  onRemoveEntry={handleRemoveEntry}
+/>
           ) : (
             <BackgroundTab
               currentBackground={currentBackground}
