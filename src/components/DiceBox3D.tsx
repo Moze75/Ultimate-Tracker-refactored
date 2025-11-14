@@ -74,7 +74,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
 
-const { addRoll } = useDiceHistoryContext();
+  const { addRoll } = useDiceHistoryContext();
 
   useEffect(() => {
     rollDataRef.current = rollData;
@@ -128,8 +128,9 @@ const { addRoll } = useDiceHistoryContext();
     let mounted = true;
 
     const initDiceBox = async () => {
-      if (diceBoxRef.current) {
-        console.log('✓ DiceBox déjà initialisé');
+      // ✅ MODIFIÉ : Vérifier si déjà initialisé
+      if (diceBoxRef.current && isInitialized) {
+        console.log('✓ DiceBox déjà initialisé, skip réinitialisation');
         return;
       }
 
@@ -168,66 +169,53 @@ const { addRoll } = useDiceHistoryContext();
           theme_material: effectiveSettings.themeMaterial || "plastic",
           baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
-          
-          // ✅ SOLUTION : Augmenter strength de 30% pour compenser les collisions
           strength: effectiveSettings.strength * 1.3,
-          
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-  onRollComplete: (results: any) => {
-  if (!mounted) return;
+          onRollComplete: (results: any) => {
+            if (!mounted) return;
 
-  // Si le résultat a déjà été affiché via un click forcé, on ne le ré-affichera pas,
-  // mais on doit s'assurer que l'état de rolling est bien remis à false.
-  if (hasShownResultRef.current) {
-    setIsRolling(false);
-    return;
-  }
+            if (hasShownResultRef.current) {
+              setIsRolling(false);
+              return;
+            }
 
-  let rollValues: number[] = [];
-  let diceTotal = 0;
-  
-  if (Array.isArray(results?.sets)) {
-    results.sets.forEach((set: any) => {
-      if (Array.isArray(set?.rolls)) {
-        set.rolls.forEach((roll: any) => {
-          if (typeof roll?.value === 'number') {
-            rollValues.push(roll.value);
+            let rollValues: number[] = [];
+            let diceTotal = 0;
+            
+            if (Array.isArray(results?.sets)) {
+              results.sets.forEach((set: any) => {
+                if (Array.isArray(set?.rolls)) {
+                  set.rolls.forEach((roll: any) => {
+                    if (typeof roll?.value === 'number') {
+                      rollValues.push(roll.value);
+                    }
+                  });
+                }
+              });
+              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
+            }
+
+            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
+            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
+
+            hasShownResultRef.current = true;
+            setResult(finalResult);
+            setIsRolling(false);
+            setShowResult(true);
+            try { playResultSound(); } catch (e) { /* noop */ }
+
+            if (rollDataRef.current) {
+              addRoll({
+                attackName: rollDataRef.current.attackName,
+                diceFormula: rollDataRef.current.diceFormula,
+                modifier: rollDataRef.current.modifier,
+                total: finalResult.total,
+                rolls: finalResult.rolls,
+                diceTotal: finalResult.diceTotal,
+              });
+            }
           }
-        });
-      }
-    });
-    diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-  }
-
-  const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-  const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-  hasShownResultRef.current = true; // empêche doublons (click + onRollComplete)
-  setResult(finalResult);
-  setIsRolling(false);
-
-  // --- Changement important : afficher IMMÉDIATEMENT le popup résultat ---
-  // On appelle setShowResult(true) tout de suite pour que le popup apparaisse
-  // dès que le résultat est déterminé. Le click forcé reste possible (il met déjà
-  // hasShownResultRef.current = true et affiche le popup avec generateRandomResult).
-  setShowResult(true);
-  try { playResultSound(); } catch (e) { /* noop */ }
-
-  // (Optionnel) si tu veux une micro-latence / animation, tu peux remettre un petit
-  // setTimeout(…, 50) mais ici on choisit l'affichage immédiat comme demandé.
-
-  if (rollDataRef.current) {
-    addRoll({
-      attackName: rollDataRef.current.attackName,
-      diceFormula: rollDataRef.current.diceFormula,
-      modifier: rollDataRef.current.modifier,
-      total: finalResult.total,
-      rolls: finalResult.rolls,
-      diceTotal: finalResult.diceTotal,
-    });
-  }
-}
         };
 
         console.log('📦 Config complète:', config);
@@ -352,94 +340,74 @@ const { addRoll } = useDiceHistoryContext();
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
-  // ✅ Forcer baseScale directement sur l'objet
-    if (diceBoxRef.current) {
-      diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
-      console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
-      
-      // ✅ CRITIQUE : Recréer le DiceFactory avec le nouveau baseScale
-      if (diceBoxRef.current.DiceFactory) {
-        try {
-          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-          diceBoxRef.current.DiceFactory = new DiceFactory({
-            baseScale: newSettings.baseScale * 100 / 6
-          });
-          // Réappliquer les textures
-          if (diceBoxRef.current.colorData) {
-            diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-          }
-          console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
-        } catch (error) {
-          console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
-        }
-      }
-    } 
-
-      
-// Remplacer le bloc de forçage de gravité par ceci
-try {
-  if (diceBoxRef.current && diceBoxRef.current.world) {
-    const world: any = diceBoxRef.current.world;
-
-    // newSettings.gravity est le slider (valeur "logique" : ex 0..2 ou 0..1 selon ton UI)
-    const gravSetting = typeof newSettings.gravity === 'number' ? newSettings.gravity : 1;
-
-    // Reproduire l'échelle utilisée dans DiceBox.initialize : gravity_multiplier = gravity * 400
-    const expectedMultiplier = gravSetting * 400;
-
-    // Forcer la propriété sur l'instance DiceBox (si updateConfig est broken, on garde la cohérence)
-    diceBoxRef.current.gravity_multiplier = expectedMultiplier;
-
-    // Calculer la gravité réelle (axe Z négatif utilisé par DiceBox)
-    const gravityValue = -9.8 * expectedMultiplier;
-
-    // Appliquer sur le world (compat set() ou propriété z)
-    if (world.gravity && typeof world.gravity.set === 'function') {
-      world.gravity.set(0, 0, gravityValue);
-      console.log('✅ [EVENT] Gravité forcée (x,y,z):', 0, 0, gravityValue);
-    } else if (world.gravity && 'z' in world.gravity) {
-      world.gravity.z = gravityValue;
-      console.log('✅ [EVENT] Gravité forcée via property z:', world.gravity.z);
-    } else {
-      console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
-    }
-
-    // Réveiller tous les bodies pour qu'ils prennent en compte la nouvelle gravité immédiatement
-    try {
-      if (Array.isArray(world.bodies)) {
-        world.bodies.forEach((b: any) => {
+      if (diceBoxRef.current) {
+        diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
+        console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+        
+        if (diceBoxRef.current.DiceFactory) {
           try {
-            if (typeof b.wakeUp === 'function') b.wakeUp();
-            // au besoin réinitialiser les sleepState pour forcer recalcul
-            if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
-          } catch (err) { /* noop */ }
-        });
-        console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
-      }
-    } catch (err) {
-      console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
-    }
+            const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+            diceBoxRef.current.DiceFactory = new DiceFactory({
+              baseScale: newSettings.baseScale * 100 / 6
+            });
+            if (diceBoxRef.current.colorData) {
+              diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+            }
+            console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
+          } catch (error) {
+            console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
+          }
+        }
+      } 
 
-    // Tenter de persister proprement via updateConfig si la méthode existe.
-    // (Attention : upstream DiceBox.updateConfig a un bug Object.apply -> Object.assign,
-    // si c'est présent, updateConfig peut ne pas appliquer gravity_multiplier)
-    if (typeof diceBoxRef.current.updateConfig === 'function') {
       try {
-        // on ne bloque pas l'exécution si updateConfig est async / throw
-        const maybePromise = diceBoxRef.current.updateConfig({ gravity_multiplier: expectedMultiplier });
-        if (maybePromise && typeof maybePromise.then === 'function') {
-          maybePromise.catch((e: any) => {
-            console.warn('⚠️ updateConfig rejeté :', e);
-          });
+        if (diceBoxRef.current && diceBoxRef.current.world) {
+          const world: any = diceBoxRef.current.world;
+          const gravSetting = typeof newSettings.gravity === 'number' ? newSettings.gravity : 1;
+          const expectedMultiplier = gravSetting * 400;
+          diceBoxRef.current.gravity_multiplier = expectedMultiplier;
+          const gravityValue = -9.8 * expectedMultiplier;
+
+          if (world.gravity && typeof world.gravity.set === 'function') {
+            world.gravity.set(0, 0, gravityValue);
+            console.log('✅ [EVENT] Gravité forcée (x,y,z):', 0, 0, gravityValue);
+          } else if (world.gravity && 'z' in world.gravity) {
+            world.gravity.z = gravityValue;
+            console.log('✅ [EVENT] Gravité forcée via property z:', world.gravity.z);
+          } else {
+            console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
+          }
+
+          try {
+            if (Array.isArray(world.bodies)) {
+              world.bodies.forEach((b: any) => {
+                try {
+                  if (typeof b.wakeUp === 'function') b.wakeUp();
+                  if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
+                } catch (err) { /* noop */ }
+              });
+              console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
+            }
+          } catch (err) {
+            console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
+          }
+
+          if (typeof diceBoxRef.current.updateConfig === 'function') {
+            try {
+              const maybePromise = diceBoxRef.current.updateConfig({ gravity_multiplier: expectedMultiplier });
+              if (maybePromise && typeof maybePromise.then === 'function') {
+                maybePromise.catch((e: any) => {
+                  console.warn('⚠️ updateConfig rejeté :', e);
+                });
+              }
+            } catch (err) {
+              console.warn('⚠️ updateConfig a échoué (fallback ok) :', err);
+            }
+          }
         }
       } catch (err) {
-        console.warn('⚠️ updateConfig a échoué (fallback ok) :', err);
+        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
       }
-    }
-  }
-} catch (err) {
-  console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
-}
 
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
@@ -472,7 +440,7 @@ try {
     }
   }, [isOpen]);
   
-  // ✅ Lancer les dés
+  // ✅ MODIFIÉ : Lancer les dés avec réveil du moteur
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
@@ -486,6 +454,22 @@ try {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🎲 [ROLL] Lancer #' + thisRollId);
     console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
+    
+    // ✅ NOUVEAU : Vérifier si le DiceBox est "endormi" et le réveiller
+    if (diceBoxRef.current.world && typeof diceBoxRef.current.world.step === 'function') {
+      console.log('✅ [ROLL] DiceBox actif, moteur physique opérationnel');
+    } else {
+      console.warn('⚠️ [ROLL] DiceBox semble inactif, tentative de réveil...');
+      try {
+        if (diceBoxRef.current.world) {
+          diceBoxRef.current.world.step(1 / 60);
+          console.log('✅ [ROLL] Moteur physique réveillé');
+        }
+      } catch (e) {
+        console.error('❌ Impossible de réveiller le moteur:', e);
+      }
+    }
+    
     console.log('⚙️ [ROLL] Settings effectifs:', {
       strength: effectiveSettings.strength,
       strengthApplied: effectiveSettings.strength * 1.3,
@@ -512,10 +496,33 @@ try {
     requestAnimationFrame(() => {
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
         console.log('🚀 Lancement immédiat du roll !');
-        diceBoxRef.current.roll(notation);
+        
+        // ✅ NOUVEAU : Vérification finale avant lancement
+        if (typeof diceBoxRef.current.roll === 'function') {
+          diceBoxRef.current.roll(notation);
+        } else {
+          console.error('❌ [ROLL] Méthode roll() non disponible !');
+          // Fallback : générer un résultat aléatoire
+          const randomResult = generateRandomResult(rollData.diceFormula, rollData.modifier);
+          setResult(randomResult);
+          setShowResult(true);
+          setIsRolling(false);
+          hasShownResultRef.current = true;
+          
+          if (rollDataRef.current) {
+            addRoll({
+              attackName: rollDataRef.current.attackName,
+              diceFormula: rollDataRef.current.diceFormula,
+              modifier: rollDataRef.current.modifier,
+              total: randomResult.total,
+              rolls: randomResult.rolls,
+              diceTotal: randomResult.diceTotal,
+            });
+          }
+        }
       }
     });
-  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings]);
+  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings, generateRandomResult, addRoll]);
 
   // Reset à la fermeture
   useEffect(() => {
@@ -545,52 +552,48 @@ try {
   }, [onClose]);
 
   const handleOverlayClick = useCallback(() => {
-  // ✅ Annuler l'auto-fermeture si elle est en cours
-  if (closeTimeoutRef.current) {
-    clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = null;
-  }
-
-  if (isRolling) {
-    // Forcer l'affichage immédiat du résultat
-    hasShownResultRef.current = true;
-    setIsFadingDice(true);
-    setIsRolling(false);
-    
-    if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-      diceBoxRef.current.clearDice();
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
     }
-    
-    if (rollDataRef.current) {
-      const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
-      setResult(randomResult);
-      setShowResult(true);
 
-      addRoll({
-        attackName: rollDataRef.current.attackName,
-        diceFormula: rollDataRef.current.diceFormula,
-        modifier: rollDataRef.current.modifier,
-        total: randomResult.total,
-        rolls: randomResult.rolls,
-        diceTotal: randomResult.diceTotal,
-      });
+    if (isRolling) {
+      hasShownResultRef.current = true;
+      setIsFadingDice(true);
+      setIsRolling(false);
       
-      playResultSound();
+      if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
+        diceBoxRef.current.clearDice();
+      }
       
-      console.log('📊 [CLICK] Affichage forcé du résultat');
-      // ✅ Réinitialiser l'auto-fermeture avec un nouveau délai
-      closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
+      if (rollDataRef.current) {
+        const randomResult = generateRandomResult(rollDataRef.current.diceFormula, rollDataRef.current.modifier);
+        setResult(randomResult);
+        setShowResult(true);
+
+        addRoll({
+          attackName: rollDataRef.current.attackName,
+          diceFormula: rollDataRef.current.diceFormula,
+          modifier: rollDataRef.current.modifier,
+          total: randomResult.total,
+          rolls: randomResult.rolls,
+          diceTotal: randomResult.diceTotal,
+        });
+        
+        playResultSound();
+        
+        console.log('📊 [CLICK] Affichage forcé du résultat');
+        closeTimeoutRef.current = setTimeout(() => handleClose(), 3000);
+      } else {
+        handleClose();
+      }
+    } else if (showResult) {
+      console.log('🚪 [CLICK] Fermeture manuelle');
+      handleClose();
     } else {
       handleClose();
     }
-  } else if (showResult) {
-    // Si le résultat est déjà affiché, fermer immédiatement
-    console.log('🚪 [CLICK] Fermeture manuelle');
-    handleClose();
-  } else {
-    handleClose();
-  }
-}, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
+  }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
   return createPortal(
     <>
