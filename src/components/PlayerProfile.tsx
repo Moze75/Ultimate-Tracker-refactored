@@ -71,13 +71,14 @@ export function PlayerProfile({
           <div></div>
         </div>
 
-        <QuickStatsDisplay
-          player={player}
-          inventory={inventory || []}
-          activeTooltip={activeTooltip}
-          setActiveTooltip={setActiveTooltip}
-        />
-      </div>
+        <div className="py-4">
+          <QuickStatsDisplay
+            player={player}
+            inventory={inventory || []}
+            activeTooltip={activeTooltip}
+            setActiveTooltip={setActiveTooltip}
+          />
+        </div>
 
       <PlayerProfileSettingsModal
         open={editing}
