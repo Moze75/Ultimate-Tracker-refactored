@@ -363,10 +363,10 @@ useEffect(() => {
 />
   
   // Rendu principal
-  return (
-    <>
-      <Toaster position="top-right" />
-      <InstallPrompt />
+return (
+  <DiceHistoryProvider>
+    <Toaster position="top-right" />
+    <InstallPrompt />
 
       {refreshingSession && (
         <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black text-center py-2 z-50">
