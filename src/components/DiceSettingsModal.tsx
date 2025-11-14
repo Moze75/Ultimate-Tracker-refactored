@@ -60,10 +60,10 @@ const handleClearHistory = () => {
   }
 };
 
-  const handleRemoveEntry = (id: string) => {
-    removeEntry(id);
-    setHistorySnapshot(prev => prev.filter(entry => entry.id !== id));
-  };
+// ✅ APRÈS
+const handleRemoveEntry = (id: string) => {
+  removeEntry(id);
+};
  
   return ( 
    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
