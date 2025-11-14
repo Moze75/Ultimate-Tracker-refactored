@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
 import { createPortal } from 'react-dom';
-import { useDiceHistory } from '../hooks/useDiceHistory';
+import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
 import { audioManager } from '../utils/audioManager';
 
 interface DiceBox3DProps {
