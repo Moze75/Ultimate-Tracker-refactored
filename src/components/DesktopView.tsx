@@ -93,14 +93,15 @@ const handleSkillClick = (skillName: string, bonus: number) => {
 
   return (
     <>
-{/* Fond d'écran pour tous les appareils */}
-<div 
-  className="fixed inset-0 pointer-events-none"
-  style={{
-    zIndex: 0,
-    overflow: 'hidden',
-  }}
->
+          {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
+      {deviceType === 'desktop' && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            zIndex: 0,
+            overflow: 'hidden',
+          }}
+        >
           <img
             src={backgroundImage}
             alt="background"
