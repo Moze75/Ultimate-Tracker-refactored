@@ -601,7 +601,17 @@ const backgroundColors = [
   { url: 'color:#000000', name: 'Noir Absolu', color: '#000000', type: 'color' as const },
   { url: 'color:#0f0f23', name: 'Bleu Nuit', color: '#0f0f23', type: 'color' as const },
   
-  // Couleurs sombres unies
+  // Variations de bleu foncé
+  { url: 'color:#0a1628', name: 'Bleu Minuit', color: '#0a1628', type: 'color' as const },
+  { url: 'color:#0d1b2a', name: 'Bleu Océan Profond', color: '#0d1b2a', type: 'color' as const },
+  { url: 'color:#1b263b', name: 'Bleu Marine', color: '#1b263b', type: 'color' as const },
+  { url: 'color:#15202b', name: 'Bleu Crépuscule', color: '#15202b', type: 'color' as const },
+  { url: 'color:#1a2332', name: 'Bleu Acier Sombre', color: '#1a2332', type: 'color' as const },
+  { url: 'color:#0c1821', name: 'Bleu Abyssal', color: '#0c1821', type: 'color' as const },
+  { url: 'color:#1c2541', name: 'Bleu Nuit Étoilée', color: '#1c2541', type: 'color' as const },
+  { url: 'color:#0b1d2e', name: 'Bleu Glacier', color: '#0b1d2e', type: 'color' as const },
+  
+  // Couleurs sombres neutres (réduites)
   { url: 'color:#1a1410', name: 'Caverne Obscure', color: '#1a1410', type: 'color' as const },
   { url: 'color:#2d2416', name: 'Bois Sombre', color: '#2d2416', type: 'color' as const },
   { url: 'color:#1e1e2e', name: 'Nuit Profonde', color: '#1e1e2e', type: 'color' as const },
@@ -609,20 +619,22 @@ const backgroundColors = [
   { url: 'color:#1a2318', name: 'Forêt Nocturne', color: '#1a2318', type: 'color' as const },
   { url: 'color:#221a2d', name: 'Crypte Violette', color: '#221a2d', type: 'color' as const },
   
-  // Tons sable/ocre sombres
-  { url: 'color:#3d3021', name: 'Sable Ancien', color: '#3d3021', type: 'color' as const },
-  { url: 'color:#4a3728', name: 'Ocre Profond', color: '#4a3728', type: 'color' as const },
+  // Ton ocre minimal (1 seul)
   { url: 'color:#3a2f1f', name: 'Parchemin Vieilli', color: '#3a2f1f', type: 'color' as const },
-  { url: 'color:#332818', name: 'Terre Brûlée', color: '#332818', type: 'color' as const },
   
-  // Gradients sombres et atmosphériques
+  // Gradients bleutés
+  { url: 'gradient:linear-gradient(135deg, #0a1628 0%, #1b263b 100%)', name: 'Mer Nocturne', gradient: 'linear-gradient(135deg, #0a1628 0%, #1b263b 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #0d1b2a 0%, #1c2541 100%)', name: 'Aurore Boréale Sombre', gradient: 'linear-gradient(135deg, #0d1b2a 0%, #1c2541 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #0c1821 0%, #15202b 100%)', name: 'Profondeurs Marines', gradient: 'linear-gradient(135deg, #0c1821 0%, #15202b 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #1a2332 0%, #0a1628 100%)', name: 'Glacier Nocturne', gradient: 'linear-gradient(135deg, #1a2332 0%, #0a1628 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #0b1d2e 0%, #1b263b 100%)', name: 'Tempête Lointaine', gradient: 'linear-gradient(135deg, #0b1d2e 0%, #1b263b 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', name: 'Vagues Nocturnes', gradient: 'linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', type: 'gradient' as const },
+  
+  // Gradients sombres neutres (réduits)
   { url: 'gradient:linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', name: 'Crépuscule de Cendre', gradient: 'linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', type: 'gradient' as const },
   { url: 'gradient:linear-gradient(135deg, #2b1e1e 0%, #1a1410 100%)', name: 'Brume Nocturne', gradient: 'linear-gradient(135deg, #2b1e1e 0%, #1a1410 100%)', type: 'gradient' as const },
   { url: 'gradient:linear-gradient(135deg, #1e1e2e 0%, #2d2440 100%)', name: 'Voile Mystique', gradient: 'linear-gradient(135deg, #1e1e2e 0%, #2d2440 100%)', type: 'gradient' as const },
   { url: 'gradient:linear-gradient(135deg, #1a2318 0%, #2d3a28 100%)', name: 'Sous-bois Profond', gradient: 'linear-gradient(135deg, #1a2318 0%, #2d3a28 100%)', type: 'gradient' as const },
-  { url: 'gradient:linear-gradient(135deg, #3d3021 0%, #5a4a35 100%)', name: 'Dunes au Couchant', gradient: 'linear-gradient(135deg, #3d3021 0%, #5a4a35 100%)', type: 'gradient' as const },
-  { url: 'gradient:linear-gradient(135deg, #2d1b0e 0%, #4a2f1a 100%)', name: 'Ambre Ancien', gradient: 'linear-gradient(135deg, #2d1b0e 0%, #4a2f1a 100%)', type: 'gradient' as const },
-  { url: 'gradient:linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1e1e2e 100%)', name: 'Ombres Mouvantes', gradient: 'linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1e1e2e 100%)', type: 'gradient' as const },
 ];
 
   // Combiner les deux listes
