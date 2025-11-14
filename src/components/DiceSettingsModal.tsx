@@ -36,7 +36,20 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     setHistorySnapshot(history);
   }, [history]);
 
-
+  // Recharger depuis localStorage quand on ouvre l'onglet historique
+  useEffect(() => {
+    if (open && activeTab === 'history') {
+      try {
+        const stored = localStorage.getItem('dice-roll-history');
+        if (stored) {
+          const parsed = JSON.parse(stored) as DiceRollHistoryEntry[];
+          setHistorySnapshot(parsed);
+        }
+      } catch (error) {
+        console.error('❌ Erreur chargement historique:', error);
+      }
+    }
+  }, [open, activeTab]);
  
   if (!open) return null;
 
@@ -55,12 +68,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
 
   const handleChange = (key: keyof DiceSettings, value: any) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
-  }; 
+  };
 
   const handleClearHistory = () => {
     if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
       clearHistory();
-      
+    
     }
   };
 
