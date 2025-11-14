@@ -160,7 +160,7 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
       </div>
 
       <div
-        className="flex flex-col items-center justify-center px-3 py-3 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
+        className="flex flex-col items-center justify-center px-3 py-5 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
         onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
       >
         <div className="text-xl font-bold text-gray-100 mb-1">
