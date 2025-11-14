@@ -375,33 +375,6 @@ setTimeout(() => {
         diceBoxRef.current.strength = newSettings.strength * 1.3;
         console.log('✅ [EVENT] strength forcé directement:', diceBoxRef.current.strength);
       }
-
-      // ✅ BONUS : Forcer aussi la gravité sur le monde physique
-      // Correction: beaucoup de moteurs physiques utilisent l'axe Y comme axe vertical
-      // (avec la valeur négative correspondant à "vers le bas"). Plutôt que
-      // modifier la composante Z on applique la composante Y négative.
-      try {
-        if (diceBoxRef.current && diceBoxRef.current.world) {
-          const world: any = diceBoxRef.current.world;
-          const gravityMultiplier = typeof newSettings.gravity === 'number' ? newSettings.gravity : 1;
-          const gravityValue = -9.8 * gravityMultiplier;
-
-          // Si world.gravity a une méthode set(x,y,z)
-          if (world.gravity && typeof world.gravity.set === 'function') {
-            world.gravity.set(0, gravityValue, 0);
-            console.log('✅ [EVENT] Gravité forcée directement (x,y,z):', 0, gravityValue, 0);
-          } else if (world.gravity && 'y' in world.gravity) {
-            // Si gravity est un objet avec une propriété y
-            world.gravity.y = gravityValue;
-            console.log('✅ [EVENT] Gravité forcée directement via propriété y:', world.gravity.y);
-          } else {
-            console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni y - gravité non forcée');
-          }
-        }
-      } catch (err) {
-        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
-      }
-
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
@@ -412,6 +385,11 @@ setTimeout(() => {
     };
   }, [isInitialized]);
 
+
+
+
+
+  
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
     if (isOpen && diceBoxRef.current && containerRef.current) {
@@ -430,7 +408,7 @@ setTimeout(() => {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
         }
       });
-    }
+    } 
   }, [isOpen]);
   
   // ✅ Lancer les dés
@@ -699,4 +677,4 @@ setTimeout(() => {
     </>,
     document.body
   );
-}
+} 
