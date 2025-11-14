@@ -224,7 +224,7 @@ select {
 }
 
 .spell-slot {
-  @apply bg-gradient-to-br from-purple-900/50 to-purple-800/30 border border-purple-700/30 rounded-lg p-3;
+  @apply bg-gradient-to-br from-purple-900/80 to-purple-800/60 border border-purple-700/50 rounded-lg p-3;
 }
 
 /* Boutons de sorts uniformisés */
