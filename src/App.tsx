@@ -368,53 +368,53 @@ return (
     <Toaster position="top-right" />
     <InstallPrompt />
 
-      {refreshingSession && (
-        <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black text-center py-2 z-50">
-          🔄 Reconnexion en cours...
-        </div>
-      )}
+    {refreshingSession && (
+      <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black text-center py-2 z-50">
+        🔄 Reconnexion en cours...
+      </div>
+    )}
 
-      {!session ? (
-        <LoginPage />
-      ) : !selectedCharacter ? (
-        <CharacterSelectionPage
-          session={session}
-          onCharacterSelect={(p: Player) => {
-            try {
-              sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
-            } catch {
-              // no-op
-            }
-            setSelectedCharacter(p);
-          }}
-        />
-      ) : (
-        <GamePage
-          session={session}
-          selectedCharacter={selectedCharacter}
-          onBackToSelection={() => {
-            try {
-              sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-              appContextService.setContext('selection');
-            } catch {
-              // no-op
-            }
-            setSelectedCharacter(null);
-          }}
-          onUpdateCharacter={(p: Player) => {
-            setSelectedCharacter(p);
-            try {
-              localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
-              appContextService.setContext('game');
-            } catch {
-              // no-op
-            }
-          }}
-        />
-      )}
-    </>
-  );
-    </DiceHistoryProvider>  {/* ✅ Ajoute cette ligne */
+    {!session ? (
+      <LoginPage />
+    ) : !selectedCharacter ? (
+      <CharacterSelectionPage
+        session={session}
+        onCharacterSelect={(p: Player) => {
+          try {
+            sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
+          } catch {
+            // no-op
+          }
+          setSelectedCharacter(p);
+        }}
+      />
+    ) : (
+      <GamePage
+        session={session}
+        selectedCharacter={selectedCharacter}
+        onBackToSelection={() => {
+          try {
+            sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+            appContextService.setContext('selection');
+          } catch {
+            // no-op
+          }
+          setSelectedCharacter(null);
+        }}
+        onUpdateCharacter={(p: Player) => {
+          setSelectedCharacter(p);
+          try {
+            localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
+            appContextService.setContext('game');
+          } catch {
+            // no-op
+          }
+        }}
+      />
+    )}
+  </DiceHistoryProvider>
+);
+  
 }
 
 export default App;
