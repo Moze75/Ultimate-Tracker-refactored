@@ -36,8 +36,21 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     setHistorySnapshot(history);
   }, [history]);
 
-
-
+  // Recharger depuis localStorage quand on ouvre l'onglet historique
+  useEffect(() => {
+    if (open && activeTab === 'history') {
+      try {
+        const stored = localStorage.getItem('dice-roll-history');
+        if (stored) {
+          const parsed = JSON.parse(stored) as DiceRollHistoryEntry[];
+          setHistorySnapshot(parsed);
+        }
+      } catch (error) {
+        console.error('❌ Erreur chargement historique:', error);
+      }
+    }
+  }, [open, activeTab]);
+ 
   if (!open) return null;
 
   const handleSave = () => {
@@ -57,17 +70,17 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
 
-const handleClearHistory = () => {
-  if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
-    clearHistory(); // ✅ Le hook gère déjà localStorage
-    // ❌ ENLEVER : setHistorySnapshot([]);
-  }
-};
+  const handleClearHistory = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+      clearHistory();
+      setHistorySnapshot([]);
+    }
+  };
 
-const handleRemoveEntry = (id: string) => {
-  removeEntry(id); // ✅ Le hook gère déjà localStorage
-  // ❌ ENLEVER : setHistorySnapshot(prev => prev.filter(entry => entry.id !== id));
-};
+  const handleRemoveEntry = (id: string) => {
+    removeEntry(id);
+    setHistorySnapshot(prev => prev.filter(entry => entry.id !== id));
+  };
  
   return ( 
    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
