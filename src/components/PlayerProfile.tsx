@@ -12,7 +12,7 @@ import { useDiceSettings } from '../hooks/useDiceSettings'; // ✅ Ajouter
 
 export interface PlayerProfileProps {
   player: Player;
-  onUpdate: (player: Player) => void;
+  onUpdate: (player: Player) => void; 
   onInventoryAdd?: (item: any) => void;
   inventory?: any[];
 }
