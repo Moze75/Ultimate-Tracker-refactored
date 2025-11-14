@@ -414,6 +414,7 @@ return (
       )}
     </>
   );
+    </DiceHistoryProvider>  {/* ✅ Ajoute cette ligne */
 }
 
 export default App;
