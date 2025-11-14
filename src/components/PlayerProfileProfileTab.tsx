@@ -590,13 +590,12 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
 
       {/* Espèce */}
    {/* Espèce - MODIFIÉ pour supporter les races personnalisées */}
-<SectionContainer
-  icon={<Shield size={18} className="text-emerald-400" />}
-  title="Espèce"
-  subtitle={race || undefined}
-  defaultOpen={false}
-  headerClassName="!bg-transparent"
->
+      <SectionContainer
+        icon={<Shield size={18} className="text-emerald-400" />}
+        title="Espèce"
+        subtitle={race || undefined} 
+        defaultOpen={false}
+      >
         {customRace ? (
           // ✅ NOUVEAU : Affichage pour race personnalisée
           <>
