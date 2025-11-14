@@ -984,7 +984,15 @@ return (
             {currentPlayer && (
               <PlayerContext.Provider value={currentPlayer}>
                 {/* PlayerProfile visible SEULEMENT en mode onglets */}
-                {!isGridMode && <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} inventory={inventory} />}
+            {!isGridMode && (
+  <PlayerProfile 
+    player={currentPlayer} 
+    onUpdate={applyPlayerUpdate} 
+    inventory={inventory}
+    currentBackground={backgroundImage}
+    onBackgroundChange={handleBackgroundChange}
+  />
+)}
 
                 {/* MODE GRILLE (desktop uniquement) */}
                 {isGridMode && deviceType === 'desktop' ? (
