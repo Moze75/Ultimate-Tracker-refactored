@@ -264,53 +264,91 @@ const SpellLevelStats = React.memo(
       [isMagicien, player]
     );
 
-    const handleSlotUse = useCallback(
-      async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (remainingSlots <= 0) return;
+const handleSlotUse = useCallback(
+  async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (remainingSlots <= 0) return;
 
-        const button = e.currentTarget as HTMLButtonElement;
-        const rect = button.getBoundingClientRect();
-        const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.left = `${rect.left}px`;
-        container.style.top = `${rect.top}px`;
-        container.style.width = `${rect.width}px`;
-        container.style.height = `${rect.height}px`;
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '9999';
-        const anim = document.createElement('div');
-        anim.style.position = 'absolute';
-        anim.style.left = '50%';
-        anim.style.top = '50%';
-        anim.style.width = '200px';
-        anim.style.height = '200px';
-        anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
-        container.appendChild(anim);
-        document.body.appendChild(container);
-        setTimeout(() => container.remove(), 600);
+    const button = e.currentTarget as HTMLButtonElement;
+    const rect = button.getBoundingClientRect();
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = `${rect.left}px`;
+    container.style.top = `${rect.top}px`;
+    container.style.width = `${rect.width}px`;
+    container.style.height = `${rect.height}px`;
+    container.style.pointerEvents = 'none';
+    container.style.zIndex = '9999';
+    const anim = document.createElement('div');
+    anim.style.position = 'absolute';
+    anim.style.left = '50%';
+    anim.style.top = '50%';
+    anim.style.width = '200px';
+    anim.style.height = '200px';
+    anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
+    container.appendChild(anim);
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 600);
 
-        try {
-          const usedKey = `used${level}` as keyof typeof player.spell_slots;
-          const newSpellSlots = {
-            ...player.spell_slots,
-            [usedKey]: usedSlots + 1,
-          };
-          const { error } = await supabase
-            .from('players')
-            .update({ spell_slots: newSpellSlots })
-            .eq('id', player.id);
-          if (error) throw error;
+    try {
+      // ✅ NOUVEAU : Décrémenter en priorité la classe principale, puis la secondaire
+      const usedKey = `used${level}` as keyof typeof player.spell_slots;
+      const levelKey = `level${level}` as keyof typeof player.spell_slots;
+      
+      // Emplacements disponibles par classe
+      const primaryMax = (player.spell_slots?.[levelKey] || 0) as number;
+      const primaryUsed = (player.spell_slots?.[usedKey] || 0) as number;
+      const primaryRemaining = Math.max(0, primaryMax - primaryUsed);
+      
+      const secondaryMax = (player.secondary_spell_slots?.[levelKey] || 0) as number;
+      const secondaryUsed = (player.secondary_spell_slots?.[usedKey] || 0) as number;
+      const secondaryRemaining = Math.max(0, secondaryMax - secondaryUsed);
 
-          onUpdate({ ...player, spell_slots: newSpellSlots });
-          toast.success(`✨ Emplacement de niveau ${level} utilisé`);
-        } catch (err) {
-          console.error('Erreur slots:', err);
-          toast.error('Erreur lors de la mise à jour');
-        }
-      },
-      [level, remainingSlots, usedSlots, player, onUpdate]
-    );
+      // Décider quelle classe décrémenter
+      let newSpellSlots = { ...player.spell_slots };
+      let newSecondarySpellSlots = { ...player.secondary_spell_slots };
+      
+      if (primaryRemaining > 0) {
+        // Décrémenter la classe principale
+        newSpellSlots = {
+          ...player.spell_slots,
+          [usedKey]: primaryUsed + 1,
+        };
+      } else if (secondaryRemaining > 0) {
+        // Décrémenter la classe secondaire
+        newSecondarySpellSlots = {
+          ...player.secondary_spell_slots,
+          [usedKey]: secondaryUsed + 1,
+        };
+      } else {
+        toast.error('Aucun emplacement disponible');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('players')
+        .update({ 
+          spell_slots: newSpellSlots,
+          secondary_spell_slots: newSecondarySpellSlots,
+        })
+        .eq('id', player.id);
+      
+      if (error) throw error;
+
+      onUpdate({ 
+        ...player, 
+        spell_slots: newSpellSlots,
+        secondary_spell_slots: newSecondarySpellSlots,
+      });
+      
+      toast.success(`✨ Emplacement de niveau ${level} utilisé`);
+    } catch (err) {
+      console.error('Erreur slots:', err);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  },
+  [level, remainingSlots, player, onUpdate]
+);
 
     const handleArcaneRecovery = useCallback(
       async (e: React.MouseEvent) => {
@@ -435,52 +473,87 @@ const PactSlotStats = React.memo(
     const pactLevel = player.spell_slots?.pact_level || 1;
     const remainingSlots = Math.max(0, maxSlots - usedSlots);
 
-    const handlePactSlotUse = useCallback(
-      async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (remainingSlots <= 0) return;
+ const handlePactSlotUse = useCallback(
+  async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (remainingSlots <= 0) return;
 
-        const button = e.currentTarget as HTMLButtonElement;
-        const rect = button.getBoundingClientRect();
-        const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.left = `${rect.left}px`;
-        container.style.top = `${rect.top}px`;
-        container.style.width = `${rect.width}px`;
-        container.style.height = `${rect.height}px`;
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '9999';
-        const anim = document.createElement('div');
-        anim.style.position = 'absolute';
-        anim.style.left = '50%';
-        anim.style.top = '50%';
-        anim.style.width = '200px';
-        anim.style.height = '200px';
-        anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
-        container.appendChild(anim);
-        document.body.appendChild(container);
-        setTimeout(() => container.remove(), 600);
+    const button = e.currentTarget as HTMLButtonElement;
+    const rect = button.getBoundingClientRect();
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = `${rect.left}px`;
+    container.style.top = `${rect.top}px`;
+    container.style.width = `${rect.width}px`;
+    container.style.height = `${rect.height}px`;
+    container.style.pointerEvents = 'none';
+    container.style.zIndex = '9999';
+    const anim = document.createElement('div');
+    anim.style.position = 'absolute';
+    anim.style.left = '50%';
+    anim.style.top = '50%';
+    anim.style.width = '200px';
+    anim.style.height = '200px';
+    anim.style.animation = 'magical-explosion 0.6s ease-out forwards';
+    container.appendChild(anim);
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 600);
 
-        try {
-          const newSpellSlots = {
-            ...player.spell_slots,
-            used_pact_slots: usedSlots + 1,
-          };
-          const { error } = await supabase
-            .from('players')
-            .update({ spell_slots: newSpellSlots })
-            .eq('id', player.id);
-          if (error) throw error;
+    try {
+      // ✅ NOUVEAU : Décrémenter les pact slots de la bonne classe
+      const primaryIsWarlock = player.class === 'Occultiste';
+      const secondaryIsWarlock = player.secondary_class === 'Occultiste';
+      
+      const primaryMax = primaryIsWarlock ? (player.spell_slots?.pact_slots || 0) : 0;
+      const primaryUsed = primaryIsWarlock ? (player.spell_slots?.used_pact_slots || 0) : 0;
+      const primaryRemaining = Math.max(0, primaryMax - primaryUsed);
+      
+      const secondaryMax = secondaryIsWarlock ? (player.secondary_spell_slots?.pact_slots || 0) : 0;
+      const secondaryUsed = secondaryIsWarlock ? (player.secondary_spell_slots?.used_pact_slots || 0) : 0;
+      const secondaryRemaining = Math.max(0, secondaryMax - secondaryUsed);
 
-          onUpdate({ ...player, spell_slots: newSpellSlots });
-          toast.success(`✨ Emplacement de pacte (niveau ${pactLevel}) utilisé`);
-        } catch (err) {
-          console.error('Erreur pact slots:', err);
-          toast.error('Erreur lors de la mise à jour');
-        }
-      },
-      [remainingSlots, usedSlots, player, onUpdate, pactLevel]
-    );
+      let newSpellSlots = { ...player.spell_slots };
+      let newSecondarySpellSlots = { ...player.secondary_spell_slots };
+      
+      if (primaryRemaining > 0) {
+        newSpellSlots = {
+          ...player.spell_slots,
+          used_pact_slots: primaryUsed + 1,
+        };
+      } else if (secondaryRemaining > 0) {
+        newSecondarySpellSlots = {
+          ...player.secondary_spell_slots,
+          used_pact_slots: secondaryUsed + 1,
+        };
+      } else {
+        toast.error('Aucun emplacement de pacte disponible');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('players')
+        .update({ 
+          spell_slots: newSpellSlots,
+          secondary_spell_slots: newSecondarySpellSlots,
+        })
+        .eq('id', player.id);
+      
+      if (error) throw error;
+
+      onUpdate({ 
+        ...player, 
+        spell_slots: newSpellSlots,
+        secondary_spell_slots: newSecondarySpellSlots,
+      });
+      
+      toast.success(`✨ Emplacement de pacte (niveau ${pactLevel}) utilisé`);
+    } catch (err) {
+      console.error('Erreur pact slots:', err);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  },
+  [remainingSlots, player, onUpdate, pactLevel]
+);
 
     if (maxSlots === 0) return null;
 
@@ -554,12 +627,12 @@ function SpellCard({
   };
   const cancelDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDeleteConfirm(false);
+    setShowDeleteConfirm(false); 
   };
 
   return (
     <div
-      className={`bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden transition-all duration-300 relative ${
+  className={`bg-gray-800/80 border border-gray-700/70 rounded-lg overflow-hidden transition-all duration-300 relative ${
         isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
       } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
     >
@@ -793,14 +866,63 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [player.id]);
 
-  // Initialiser automatiquement les spell_slots si nécessaire
-  useEffect(() => {
-    const initializeSpellSlots = async () => {
-      if (!player.class || !player.id) return;
+// ✅ AJOUTER CE NOUVEAU useEffect ICI :
+useEffect(() => {
+  const initializeSecondarySpellSlots = async () => {
+    // Si pas de classe secondaire ou pas de niveau, rien à faire
+    if (!player.secondary_class || !player.secondary_level || !player.id) return;
 
-      const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-      if (!spellcasters.includes(player.class)) return;
+    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
+    
+    // Si la classe secondaire n'est pas un lanceur de sorts, rien à faire
+    if (!spellcasters.includes(player.secondary_class)) return;
 
+    // Vérifier si secondary_spell_slots existe et a des emplacements
+    const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
+      if (key.startsWith('level') && !key.startsWith('used')) {
+        return (player.secondary_spell_slots as any)[key] > 0;
+      }
+      return false;
+    });
+
+    // Si pas d'emplacements, les initialiser
+    if (!hasSecondarySpellSlots) {
+      try {
+        const newSecondarySpellSlots = getSpellSlotsByLevel(
+          player.secondary_class,
+          player.secondary_level,
+          player.secondary_spell_slots
+        );
+
+        const { error } = await supabase
+          .from('players')
+          .update({ secondary_spell_slots: newSecondarySpellSlots })
+          .eq('id', player.id);
+
+        if (error) throw error;
+
+        onUpdate({ ...player, secondary_spell_slots: newSecondarySpellSlots });
+        console.log('[KnownSpellsSection] Emplacements de sorts secondaires initialisés:', newSecondarySpellSlots);
+      } catch (err) {
+        console.error('[KnownSpellsSection] Erreur initialisation secondary_spell_slots:', err);
+      }
+    }
+  };
+
+  initializeSecondarySpellSlots();
+}, [player.id, player.secondary_class, player.secondary_level, player.secondary_spell_slots, onUpdate]);
+  
+ // Initialiser automatiquement les spell_slots si nécessaire
+useEffect(() => {
+  const initializeAllSpellSlots = async () => {
+    if (!player.id) return;
+
+    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
+    let needsUpdate = false;
+    const updates: any = {};
+
+    // 1️⃣ Initialiser spell_slots pour la classe principale
+    if (player.class && spellcasters.includes(player.class)) {
       const hasSpellSlots = player.spell_slots && Object.keys(player.spell_slots).some(key => {
         if (key.startsWith('level') && !key.startsWith('used')) {
           return (player.spell_slots as any)[key] > 0;
@@ -809,28 +931,56 @@ useEffect(() => {
       });
 
       if (!hasSpellSlots && !spellSlotsInitialized.current) {
-        spellSlotsInitialized.current = true;
-        try {
-          const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
-
-          const { error } = await supabase
-            .from('players')
-            .update({ spell_slots: newSpellSlots })
-            .eq('id', player.id);
-
-          if (error) throw error;
-
-          onUpdate({ ...player, spell_slots: newSpellSlots });
-          console.log('[KnownSpellsSection] Emplacements de sorts initialisés:', newSpellSlots);
-        } catch (err) {
-          console.error('[KnownSpellsSection] Erreur lors de l\'initialisation des spell_slots:', err);
-          spellSlotsInitialized.current = false;
-        }
+        const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
+        updates.spell_slots = newSpellSlots;
+        needsUpdate = true;
+        console.log('[KnownSpellsSection] Initialisation spell_slots:', newSpellSlots);
       }
-    };
+    }
 
-    initializeSpellSlots();
-  }, [player.id, player.class, player.level, player.spell_slots, onUpdate]);
+    // 2️⃣ ✅ NOUVEAU : Initialiser secondary_spell_slots pour la classe secondaire
+    if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
+      const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
+        if (key.startsWith('level') && !key.startsWith('used')) {
+          return (player.secondary_spell_slots as any)[key] > 0;
+        }
+        return false;
+      });
+
+      if (!hasSecondarySpellSlots) {
+        const newSecondarySpellSlots = getSpellSlotsByLevel(
+          player.secondary_class,
+          player.secondary_level || 1,
+          player.secondary_spell_slots
+        );
+        updates.secondary_spell_slots = newSecondarySpellSlots;
+        needsUpdate = true;
+        console.log('[KnownSpellsSection] Initialisation secondary_spell_slots:', newSecondarySpellSlots);
+      }
+    }
+
+    // 3️⃣ Effectuer la mise à jour si nécessaire
+    if (needsUpdate) {
+      spellSlotsInitialized.current = true;
+      try {
+        const { error } = await supabase
+          .from('players')
+          .update(updates)
+          .eq('id', player.id);
+
+        if (error) throw error;
+
+        onUpdate({ ...player, ...updates });
+        toast.success('Emplacements de sorts initialisés');
+      } catch (err) {
+        console.error('[KnownSpellsSection] Erreur initialisation:', err);
+        spellSlotsInitialized.current = false;
+      }
+    }
+  };
+
+  initializeAllSpellSlots();
+}, [player.id, player.class, player.level, player.secondary_class, player.secondary_level, player.spell_slots, player.secondary_spell_slots, onUpdate]);
 
 
 
@@ -997,9 +1147,27 @@ const fetchKnownSpells = async () => {
     [spellcastingAbilityName, proficiencyBonus, abilityMod]
   );
 
-  // BORNAGE D&D 5e + rendu systématique des emplacements
-  const casterType = useMemo(() => getCasterType((player as any).class), [player]);
-  const characterLevel = useMemo(() => getCharacterLevel(player), [player]);
+  // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
+  const casterType = useMemo(() => {
+    const primaryCaster = getCasterType(player.class);
+    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+    
+    // Si l'une des deux classes est un lanceur, retourner ce type
+    if (primaryCaster !== 'none') return primaryCaster;
+    if (secondaryCaster !== 'none') return secondaryCaster;
+    return 'none';
+  }, [player.class, player.secondary_class]);
+
+  // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
+  const characterLevel = useMemo(() => {
+    const primaryCaster = getCasterType(player.class);
+    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+    
+    if (primaryCaster !== 'none') return getCharacterLevel(player);
+    if (secondaryCaster !== 'none') return player.secondary_level || 1;
+    return 1;
+  }, [player.class, player.secondary_class, player.level, player.secondary_level]);
+
   const allowedLevelsSet = useMemo(() => {
     const set = new Set<number>();
     if (casterType === 'none') return set;
@@ -1014,8 +1182,15 @@ const fetchKnownSpells = async () => {
   }, [casterType, characterLevel]);
 
   // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
-  const levelsToRender = useMemo(() => {
-    const levels: string[] = [];
+const levelsToRender = useMemo(() => {
+  console.log('🔍 DEBUG levelsToRender:', {
+    combinedSpellSlots,
+    groupedSpells,
+    allowedLevelsSet: Array.from(allowedLevelsSet),
+    casterType
+  });
+  
+  const levels: string[] = [];
     if (groupedSpells['Tours de magie']?.length) levels.push('Tours de magie');
 
     if (casterType === 'warlock') {
@@ -1198,12 +1373,12 @@ return (
   >
 <button
   onClick={() => toggleLevelCollapse(levelName)}
-  className="w-full flex items-center justify-between text-left hover:bg-gray-800/30 rounded-lg p-2 transition-all duration-200 group"
+ className="w-full flex items-center justify-between text-left bg-gray-800/80 hover:bg-gray-800/90 rounded-lg p-2 transition-all duration-200 group border border-gray-700/70"
 >
       <div className="flex items-center gap-3 flex-1 pr-2">
         <h4 className="text-sm font-semibold text-white group-hover:text-white">
           {levelName} - Niveau {pactLevel} ({pactSpells.length})
-        </h4>
+        </h4> 
         <PactSlotStats
           player={player}
           onUpdate={onUpdate}
@@ -1252,7 +1427,7 @@ return (
   >
 <button
   onClick={() => toggleLevelCollapse(levelName)}
-  className="w-full flex items-center justify-between text-left hover:bg-gray-800/30 rounded-lg p-2 transition-all duration-200 group min-h-[60px]"
+className="w-full flex items-center justify-between text-left bg-gray-800/80 hover:bg-gray-800/90 rounded-lg p-2 transition-all duration-200 group min-h-[60px] border border-gray-700/70"
 >
   <div className="flex items-center gap-3 flex-1 pr-2">
     <h4 className="text-sm font-semibold text-white group-hover:text-white">
