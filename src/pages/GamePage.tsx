@@ -27,6 +27,7 @@ import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { DiceBox3D } from '../components/DiceBox3D';
 import { DesktopView } from '../components/DesktopView';
+import { DiceSettingsModal } from '../components/DiceSettingsModal';
 
 import '../styles/swipe.css';
 
