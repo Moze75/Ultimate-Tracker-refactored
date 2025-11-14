@@ -20,7 +20,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
   const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
  const { history, clearHistory, removeEntry } = useDiceHistoryContext();
-  const [historySnapshot, setHistorySnapshot] = useState<DiceRollHistoryEntry[]>([]);
+
 
   React.useEffect(() => {
     setLocalSettings(settings);
@@ -32,25 +32,7 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     }
   }, [open]);
 
-  // Mettre à jour le snapshot quand history change
-  useEffect(() => {
-    setHistorySnapshot(history);
-  }, [history]);
 
-  // Recharger depuis localStorage quand on ouvre l'onglet historique
-  useEffect(() => {
-    if (open && activeTab === 'history') {
-      try {
-        const stored = localStorage.getItem('dice-roll-history');
-        if (stored) {
-          const parsed = JSON.parse(stored) as DiceRollHistoryEntry[];
-          setHistorySnapshot(parsed);
-        }
-      } catch (error) {
-        console.error('❌ Erreur chargement historique:', error);
-      }
-    }
-  }, [open, activeTab]);
  
   if (!open) return null;
 
