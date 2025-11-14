@@ -814,7 +814,7 @@ return (
             objectFit: 'cover',
             objectPosition: 'center top',
             pointerEvents: 'none', 
-            userSelect: 'none',
+            userSelect: 'none', 
             filter: 'brightness(0.95)',
           }} 
         />
