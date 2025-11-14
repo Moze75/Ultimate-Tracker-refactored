@@ -207,13 +207,7 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
   }, [open, children]);
 
   return (
-<div 
-  className="stat-card" 
-  style={{ 
-    backgroundColor: 'rgba(31, 41, 55, 0.15)',
-    borderColor: 'rgba(55, 65, 81, 0.3)'
-  }}
->
+    <div className="stat-card"> 
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
