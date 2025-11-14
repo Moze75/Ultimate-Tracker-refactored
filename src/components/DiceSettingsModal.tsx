@@ -53,12 +53,12 @@ export function DiceSettingsModal({ open, onClose, settings, onSave, currentBack
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleClearHistory = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
-      clearHistory();
-    
-    }
-  };
+// ✅ APRÈS (pareil, juste enlever ligne vide)
+const handleClearHistory = () => {
+  if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
+    clearHistory();
+  }
+};
 
   const handleRemoveEntry = (id: string) => {
     removeEntry(id);
