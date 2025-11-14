@@ -128,7 +128,7 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
   return (
    <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-3">
       {/* CA */}
-      <div className="flex flex-col items-center">
+     <div className="flex flex-col items-center pt-2">
         <div
           className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
           onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
