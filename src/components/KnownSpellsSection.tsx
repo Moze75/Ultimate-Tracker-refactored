@@ -839,17 +839,14 @@ useEffect(() => {
   initializeSecondarySpellSlots();
 }, [player.id, player.secondary_class, player.secondary_level, player.secondary_spell_slots, onUpdate]);
   
- // Initialiser automatiquement les spell_slots si nécessaire
-useEffect(() => {
-  const initializeAllSpellSlots = async () => {
-    if (!player.id) return;
+  // Initialiser automatiquement les spell_slots si nécessaire
+  useEffect(() => {
+    const initializeSpellSlots = async () => {
+      if (!player.class || !player.id) return;
 
-    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-    let needsUpdate = false;
-    const updates: any = {};
+      const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
+      if (!spellcasters.includes(player.class)) return;
 
-    // 1️⃣ Initialiser spell_slots pour la classe principale
-    if (player.class && spellcasters.includes(player.class)) {
       const hasSpellSlots = player.spell_slots && Object.keys(player.spell_slots).some(key => {
         if (key.startsWith('level') && !key.startsWith('used')) {
           return (player.spell_slots as any)[key] > 0;
@@ -858,56 +855,28 @@ useEffect(() => {
       });
 
       if (!hasSpellSlots && !spellSlotsInitialized.current) {
-        const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
-        updates.spell_slots = newSpellSlots;
-        needsUpdate = true;
-        console.log('[KnownSpellsSection] Initialisation spell_slots:', newSpellSlots);
-      }
-    }
+        spellSlotsInitialized.current = true;
+        try {
+          const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
 
-    // 2️⃣ ✅ NOUVEAU : Initialiser secondary_spell_slots pour la classe secondaire
-    if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
-      const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
-        if (key.startsWith('level') && !key.startsWith('used')) {
-          return (player.secondary_spell_slots as any)[key] > 0;
+          const { error } = await supabase
+            .from('players')
+            .update({ spell_slots: newSpellSlots })
+            .eq('id', player.id);
+
+          if (error) throw error;
+
+          onUpdate({ ...player, spell_slots: newSpellSlots });
+          console.log('[KnownSpellsSection] Emplacements de sorts initialisés:', newSpellSlots);
+        } catch (err) {
+          console.error('[KnownSpellsSection] Erreur lors de l\'initialisation des spell_slots:', err);
+          spellSlotsInitialized.current = false;
         }
-        return false;
-      });
-
-      if (!hasSecondarySpellSlots) {
-        const newSecondarySpellSlots = getSpellSlotsByLevel(
-          player.secondary_class,
-          player.secondary_level || 1,
-          player.secondary_spell_slots
-        );
-        updates.secondary_spell_slots = newSecondarySpellSlots;
-        needsUpdate = true;
-        console.log('[KnownSpellsSection] Initialisation secondary_spell_slots:', newSecondarySpellSlots);
       }
-    }
+    };
 
-    // 3️⃣ Effectuer la mise à jour si nécessaire
-    if (needsUpdate) {
-      spellSlotsInitialized.current = true;
-      try {
-        const { error } = await supabase
-          .from('players')
-          .update(updates)
-          .eq('id', player.id);
-
-        if (error) throw error;
-
-        onUpdate({ ...player, ...updates });
-        toast.success('Emplacements de sorts initialisés');
-      } catch (err) {
-        console.error('[KnownSpellsSection] Erreur initialisation:', err);
-        spellSlotsInitialized.current = false;
-      }
-    }
-  };
-
-  initializeAllSpellSlots();
-}, [player.id, player.class, player.level, player.secondary_class, player.secondary_level, player.spell_slots, player.secondary_spell_slots, onUpdate]);
+    initializeSpellSlots();
+  }, [player.id, player.class, player.level, player.spell_slots, onUpdate]);
 
 
 
@@ -1074,27 +1043,9 @@ const fetchKnownSpells = async () => {
     [spellcastingAbilityName, proficiencyBonus, abilityMod]
   );
 
-  // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
-  const casterType = useMemo(() => {
-    const primaryCaster = getCasterType(player.class);
-    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
-    
-    // Si l'une des deux classes est un lanceur, retourner ce type
-    if (primaryCaster !== 'none') return primaryCaster;
-    if (secondaryCaster !== 'none') return secondaryCaster;
-    return 'none';
-  }, [player.class, player.secondary_class]);
-
-  // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
-  const characterLevel = useMemo(() => {
-    const primaryCaster = getCasterType(player.class);
-    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
-    
-    if (primaryCaster !== 'none') return getCharacterLevel(player);
-    if (secondaryCaster !== 'none') return player.secondary_level || 1;
-    return 1;
-  }, [player.class, player.secondary_class, player.level, player.secondary_level]);
-
+  // BORNAGE D&D 5e + rendu systématique des emplacements
+  const casterType = useMemo(() => getCasterType((player as any).class), [player]);
+  const characterLevel = useMemo(() => getCharacterLevel(player), [player]);
   const allowedLevelsSet = useMemo(() => {
     const set = new Set<number>();
     if (casterType === 'none') return set;
@@ -1109,15 +1060,8 @@ const fetchKnownSpells = async () => {
   }, [casterType, characterLevel]);
 
   // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
-const levelsToRender = useMemo(() => {
-  console.log('🔍 DEBUG levelsToRender:', {
-    combinedSpellSlots,
-    groupedSpells,
-    allowedLevelsSet: Array.from(allowedLevelsSet),
-    casterType
-  });
-  
-  const levels: string[] = [];
+  const levelsToRender = useMemo(() => {
+    const levels: string[] = [];
     if (groupedSpells['Tours de magie']?.length) levels.push('Tours de magie');
 
     if (casterType === 'warlock') {
