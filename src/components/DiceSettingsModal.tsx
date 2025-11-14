@@ -596,18 +596,30 @@ function BackgroundTab({
   ];
 
   // 🆕 Liste des fonds de couleur
-  const backgroundColors = [
-    { url: 'color:#1a1a2e', name: 'Nuit Profonde', color: '#1a1a2e', type: 'color' as const },
-    { url: 'color:#0f0f23', name: 'Minuit', color: '#0f0f23', type: 'color' as const },
-    { url: 'color:#2d1b4e', name: 'Violet Sombre', color: '#2d1b4e', type: 'color' as const },
-    { url: 'color:#1a472a', name: 'Forêt Obscure', color: '#1a472a', type: 'color' as const },
-    { url: 'color:#4a1a1a', name: 'Rouge Sang', color: '#4a1a1a', type: 'color' as const },
-    { url: 'color:#1a3a4a', name: 'Océan Profond', color: '#1a3a4a', type: 'color' as const },
-    { url: 'gradient:linear-gradient(135deg, #667eea 0%, #764ba2 100%)', name: 'Crépuscule', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', type: 'gradient' as const },
-    { url: 'gradient:linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', name: 'Aurore', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', type: 'gradient' as const },
-    { url: 'gradient:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', name: 'Glacier', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', type: 'gradient' as const },
-    { url: 'gradient:linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', name: 'Émeraude', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', type: 'gradient' as const },
-  ];
+const backgroundColors = [
+  // Couleurs sombres unies
+  { url: 'color:#1a1410', name: 'Caverne Obscure', color: '#1a1410', type: 'color' as const },
+  { url: 'color:#2d2416', name: 'Bois Sombre', color: '#2d2416', type: 'color' as const },
+  { url: 'color:#1e1e2e', name: 'Nuit Profonde', color: '#1e1e2e', type: 'color' as const },
+  { url: 'color:#2b1e1e', name: 'Pierre Ancienne', color: '#2b1e1e', type: 'color' as const },
+  { url: 'color:#1a2318', name: 'Forêt Nocturne', color: '#1a2318', type: 'color' as const },
+  { url: 'color:#221a2d', name: 'Crypte Violette', color: '#221a2d', type: 'color' as const },
+  
+  // Tons sable/ocre sombres
+  { url: 'color:#3d3021', name: 'Sable Ancien', color: '#3d3021', type: 'color' as const },
+  { url: 'color:#4a3728', name: 'Ocre Profond', color: '#4a3728', type: 'color' as const },
+  { url: 'color:#3a2f1f', name: 'Parchemin Vieilli', color: '#3a2f1f', type: 'color' as const },
+  { url: 'color:#332818', name: 'Terre Brûlée', color: '#332818', type: 'color' as const },
+  
+  // Gradients sombres et atmosphériques
+  { url: 'gradient:linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', name: 'Crépuscule de Cendre', gradient: 'linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #2b1e1e 0%, #1a1410 100%)', name: 'Brume Nocturne', gradient: 'linear-gradient(135deg, #2b1e1e 0%, #1a1410 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #1e1e2e 0%, #2d2440 100%)', name: 'Voile Mystique', gradient: 'linear-gradient(135deg, #1e1e2e 0%, #2d2440 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #1a2318 0%, #2d3a28 100%)', name: 'Sous-bois Profond', gradient: 'linear-gradient(135deg, #1a2318 0%, #2d3a28 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #3d3021 0%, #5a4a35 100%)', name: 'Dunes au Couchant', gradient: 'linear-gradient(135deg, #3d3021 0%, #5a4a35 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #2d1b0e 0%, #4a2f1a 100%)', name: 'Ambre Ancien', gradient: 'linear-gradient(135deg, #2d1b0e 0%, #4a2f1a 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1e1e2e 100%)', name: 'Ombres Mouvantes', gradient: 'linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1e1e2e 100%)', type: 'gradient' as const },
+];
 
   // Combiner les deux listes
   const allBackgrounds = [...backgroundImages, ...backgroundColors];
