@@ -131,7 +131,7 @@ const handleRemoveEntry = (id: string) => {
               handleChange={handleChange}
             />
           ) : activeTab === 'history' ? (
-// ✅ APRÈS
+
 <HistoryTab
   history={history}
   onClearHistory={handleClearHistory}
