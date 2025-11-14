@@ -1062,29 +1062,22 @@ return (
       );
     })()}
 
-{/* ✨ DiceBox3D centralisé - Montage différé après chargement settings */}
+{/* ✨ DiceBox3D centralisé - TOUJOURS MONTÉ après chargement settings */}
 {(() => {
-  // ✅ Debug : Log de la condition de montage
-  console.log('🎲 [GamePage JSX] Évaluation montage DiceBox:', {
-    isDiceSettingsLoading,
-    willMount: !isDiceSettingsLoading,
-    isOpen: !!diceRollData
-  });
-  
   // Si les settings sont en chargement, ne pas monter
   if (isDiceSettingsLoading) {
-    console.log('⏳ [GamePage JSX] DiceBox PAS MONTÉ - Settings en chargement');
+    console.log('⏳ [GamePage] DiceBox en attente - Settings en chargement');
     return null;
-  } 
+  }
   
-  // Settings chargés, monter le DiceBox
-  console.log('✅ [GamePage JSX] DiceBox MONTÉ');
+  // ✅ Settings chargés, DiceBox MONTÉ EN PERMANENCE
+  console.log('♾️ [GamePage] DiceBox MONTÉ et restera actif');
   return (
     <DiceBox3D
       key="dice-box-gamepage"
-      isOpen={!!diceRollData}
+      isOpen={!!diceRollData}  // ✅ Contrôle seulement la VISIBILITÉ
       onClose={() => {
-        console.log('🎲 [GamePage] DiceBox fermé');
+        console.log('🎲 [GamePage] DiceBox fermé (mais reste monté)');
         setDiceRollData(null);
       }}
       rollData={diceRollData}
