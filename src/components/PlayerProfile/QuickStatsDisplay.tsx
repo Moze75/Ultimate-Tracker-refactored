@@ -126,7 +126,7 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
   const totalAC = baseAC + shieldBonus + acBonus + equipmentBonuses.armor_class;
 
   return (
-   <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-3">
+  <div className="grid grid-cols-4 gap-4 mt-6 bg-gray-800/50 rounded-lg py-4">
       {/* CA */}
       <div className="flex flex-col items-center">
         <div
