@@ -123,12 +123,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, []);
 
-  // ✅ Initialiser UNE SEULE FOIS
+  // ✅ Initialiser UNE SEULE FOIS - Ne jamais détruire
   useEffect(() => {
     let mounted = true;
 
     const initDiceBox = async () => {
-      // ✅ MODIFIÉ : Vérifier si déjà initialisé
       if (diceBoxRef.current && isInitialized) {
         console.log('✓ DiceBox déjà initialisé, skip réinitialisation');
         return;
@@ -136,7 +135,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
       try {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🎲 [INIT] Initialisation UNIQUE de DiceBox...');
+        console.log('🎲 [INIT] Initialisation PERMANENTE de DiceBox...');
         console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
         console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
         console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
@@ -242,6 +241,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           setIsInitialized(true);
           console.log('✅ DiceBox initialisé avec strength x1.3 !');
           console.log('💪 Force finale du moteur:', box.strength);
+          console.log('♾️ Le DiceBox restera monté en permanence');
         }
       } catch (error) {
         console.error('❌ Erreur init:', error);
@@ -253,15 +253,13 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
     return () => {
       mounted = false;
+      // ⚠️ NE PAS détruire le DiceBox - il reste en mémoire
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      if (typeof audioManager !== 'undefined' && audioManager.stopAll) {
-        audioManager.stopAll();
-      }
     };
-  }, [effectiveSettings, playResultSound, addRoll]);
+  }, [effectiveSettings, playResultSound, addRoll]); // ✅ Plus de dépendances inutiles
 
   // ✅ Gérer les changements de settings
   useEffect(() => {
@@ -440,7 +438,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     }
   }, [isOpen]);
   
-  // ✅ MODIFIÉ : Lancer les dés avec réveil du moteur
+  // ✅ Lancer les dés
   useEffect(() => {
     if (!isOpen || !rollData || !diceBoxRef.current || !isInitialized) return;
 
@@ -454,28 +452,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🎲 [ROLL] Lancer #' + thisRollId);
     console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
-    
-    // ✅ NOUVEAU : Vérifier si le DiceBox est "endormi" et le réveiller
-    if (diceBoxRef.current.world && typeof diceBoxRef.current.world.step === 'function') {
-      console.log('✅ [ROLL] DiceBox actif, moteur physique opérationnel');
-    } else {
-      console.warn('⚠️ [ROLL] DiceBox semble inactif, tentative de réveil...');
-      try {
-        if (diceBoxRef.current.world) {
-          diceBoxRef.current.world.step(1 / 60);
-          console.log('✅ [ROLL] Moteur physique réveillé');
-        }
-      } catch (e) {
-        console.error('❌ Impossible de réveiller le moteur:', e);
-      }
-    }
-    
-    console.log('⚙️ [ROLL] Settings effectifs:', {
-      strength: effectiveSettings.strength,
-      strengthApplied: effectiveSettings.strength * 1.3,
-      gravity: effectiveSettings.gravity,
-      baseScale: effectiveSettings.baseScale
-    });
+    console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     setIsRolling(true);
@@ -497,12 +474,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
         console.log('🚀 Lancement immédiat du roll !');
         
-        // ✅ NOUVEAU : Vérification finale avant lancement
         if (typeof diceBoxRef.current.roll === 'function') {
           diceBoxRef.current.roll(notation);
         } else {
           console.error('❌ [ROLL] Méthode roll() non disponible !');
-          // Fallback : générer un résultat aléatoire
           const randomResult = generateRandomResult(rollData.diceFormula, rollData.modifier);
           setResult(randomResult);
           setShowResult(true);
@@ -524,7 +499,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     });
   }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings, generateRandomResult, addRoll]);
 
-  // Reset à la fermeture
+  // ✅ Reset à la fermeture (mais pas démontage)
   useEffect(() => {
     if (!isOpen) {
       lastRollDataRef.current = '';
@@ -538,6 +513,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
+      }
+      
+      // ✅ Nettoyer les dés de la scène (mais garder le moteur actif)
+      if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
+        diceBoxRef.current.clearDice();
       }
     }
   }, [isOpen]);
@@ -595,8 +575,10 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     }
   }, [isRolling, showResult, handleClose, generateRandomResult, playResultSound, addRoll]);
 
+  // ✅ Le composant reste TOUJOURS monté, on contrôle juste la visibilité
   return createPortal(
     <>
+      {/* Canvas DiceBox - TOUJOURS présent, caché quand fermé */}
       <div 
         id="dice-box-overlay"
         ref={containerRef} 
@@ -614,10 +596,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           pointerEvents: 'none',
           zIndex: 9999,
           opacity: isOpen ? 1 : 0,
-          visibility: isOpen ? 'visible' : 'hidden',
+          visibility: isOpen ? 'visible' : 'hidden', // ✅ Au lieu de démonter, on cache
         }}
       />
 
+      {/* Overlay cliquable */}
       {isOpen && (
         <div 
           onClick={handleOverlayClick}
@@ -628,6 +611,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         />
       )}
 
+      {/* Résultat */}
       {result && showResult && isOpen && (
         <div 
           className={`fixed z-[10000] pointer-events-none transition-all duration-500 ${
