@@ -793,6 +793,34 @@ const renderPane = (key: TabKey | 'profile-details') => {
 /* ---------------- Rendu principal avec Provider ---------------- */
 return (
   <DiceRollContext.Provider value={{ rollDice }}>
+    {/* 🔥 IMAGE DE BACKGROUND - POUR MOBILE/TABLET */}
+    {(deviceType === 'mobile' || deviceType === 'tablet') && (
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={backgroundImage}
+          alt="background"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%', 
+            objectFit: 'cover',
+            objectPosition: 'center top',
+            pointerEvents: 'none', 
+            userSelect: 'none',
+            filter: 'brightness(0.95)',
+          }}
+        />
+      </div>
+    )}
+
     {(() => {
       /* ---------------- Loading ---------------- */
       if (loading) {
