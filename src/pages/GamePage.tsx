@@ -1043,20 +1043,20 @@ return (
                     <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
 
                     <div
-                      ref={stageRef}
-                      className="relative"
-                      onTouchStart={onTouchStart}
-                      onTouchMove={onTouchMove}
-                      onTouchEnd={onTouchEnd}
-                      onTouchCancel={() => {
-                        fullAbortInteraction();
-                      }}
-                      style={{
-                        touchAction: 'pan-y',
-                        height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-                        transition: heightLocking ? 'height 280ms ease' : undefined,
-                      }}
-                    >
+  ref={stageRef}
+  className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg p-4"
+  onTouchStart={onTouchStart}
+  onTouchMove={onTouchMove}
+  onTouchEnd={onTouchEnd}
+  onTouchCancel={() => {
+    fullAbortInteraction();
+  }}
+  style={{
+    touchAction: 'pan-y',
+    height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+    transition: heightLocking ? 'height 280ms ease' : undefined,
+  }}
+>
                       {Array.from(visitedTabs).map((key) => {
                         const isActive = key === activeTab;
                         const isNeighbor =
