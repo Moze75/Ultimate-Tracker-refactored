@@ -174,9 +174,15 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           
           sounds: effectiveSettings.soundsEnabled,
           volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-    onRollComplete: (results: any) => {
+  onRollComplete: (results: any) => {
   if (!mounted) return;
-  if (hasShownResultRef.current) return;
+
+  // Si le résultat a déjà été affiché via un click forcé, on ne le ré-affichera pas,
+  // mais on doit s'assurer que l'état de rolling est bien remis à false.
+  if (hasShownResultRef.current) {
+    setIsRolling(false);
+    return;
+  }
 
   let rollValues: number[] = [];
   let diceTotal = 0;
@@ -197,19 +203,19 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
   const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
 
-  hasShownResultRef.current = true;
+  hasShownResultRef.current = true; // empêche doublons (click + onRollComplete)
   setResult(finalResult);
   setIsRolling(false);
-  
-  // ✅ NOUVEAU : Attendre 1 seconde avant d'afficher le popup automatiquement
-setTimeout(() => {
-  if (mounted) {
-    console.log('📊 [AUTO] Affichage automatique du résultat');
-    setShowResult(true);
-    playResultSound();
-    // ✅ Plus d'auto-fermeture, le popup reste affiché
-  }
-}, 50);
+
+  // --- Changement important : afficher IMMÉDIATEMENT le popup résultat ---
+  // On appelle setShowResult(true) tout de suite pour que le popup apparaisse
+  // dès que le résultat est déterminé. Le click forcé reste possible (il met déjà
+  // hasShownResultRef.current = true et affiche le popup avec generateRandomResult).
+  setShowResult(true);
+  try { playResultSound(); } catch (e) { /* noop */ }
+
+  // (Optionnel) si tu veux une micro-latence / animation, tu peux remettre un petit
+  // setTimeout(…, 50) mais ici on choisit l'affichage immédiat comme demandé.
 
   if (rollDataRef.current) {
     addRoll({
