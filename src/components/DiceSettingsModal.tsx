@@ -103,7 +103,7 @@ const handleRemoveEntry = (id: string) => {
           >
             <History className="w-4 h-4" />
             Historique 
-            {historySnapshot.length > 0 && (
+            {history.length > 0 && (
               <span className="px-1.5 py-0.5 text-xs bg-purple-600 text-white rounded-full">
                 {historySnapshot.length}
               </span>
