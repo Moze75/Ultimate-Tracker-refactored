@@ -42,10 +42,10 @@ export function DesktopView({
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
   
-  // 🆕 État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
-  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-    return localStorage.getItem('desktop-background') || '/background/bgfan.png';
-  });
+// 🆕 État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
+const [backgroundImage, setBackgroundImage] = useState<string>(() => {
+  return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
+});
 
   const deviceType = useResponsiveLayout();
   const { rollDice } = React.useContext(DiceRollContext);
