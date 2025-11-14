@@ -106,6 +106,11 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
+    // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
+  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
+    return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
+  });
+
   // ✨ État pour le contexte de dés centralisé
 const [diceRollData, setDiceRollData] = useState<{
   type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
