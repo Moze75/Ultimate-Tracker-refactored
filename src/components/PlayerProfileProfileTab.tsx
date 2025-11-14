@@ -209,10 +209,10 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
 return (
   <div 
     className="stat-card"
-    style={{
-      backgroundColor: 'rgba(31, 41, 55, 0.15)',
-      borderColor: 'rgba(55, 65, 81, 0.3)'
-    }}
+   style={{
+  backgroundColor: 'rgba(31, 41, 55, 0.05)',
+  borderColor: 'rgba(55, 65, 81, 0.15)'
+}}
   >
     <button
         type="button"
