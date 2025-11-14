@@ -1427,7 +1427,7 @@ return (
   >
 <button
   onClick={() => toggleLevelCollapse(levelName)}
-  className="w-full flex items-center justify-between text-left hover:bg-gray-800/30 rounded-lg p-2 transition-all duration-200 group min-h-[60px]"
+className="w-full flex items-center justify-between text-left bg-gray-800/50 hover:bg-gray-800/70 rounded-lg p-2 transition-all duration-200 group min-h-[60px]"
 >
   <div className="flex items-center gap-3 flex-1 pr-2">
     <h4 className="text-sm font-semibold text-white group-hover:text-white">
