@@ -7,24 +7,35 @@ import { ActiveConditionsBadges } from './PlayerProfile/ActiveConditionsBadges';
 import { PlayerAvatar } from './PlayerProfile/PlayerAvatar';
 import { PlayerActionsPanel } from './PlayerProfile/PlayerActionsPanel';
 import { QuickStatsDisplay } from './PlayerProfile/QuickStatsDisplay';
-import { DiceSettingsModal } from './DiceSettingsModal'; // ✅ Ajouter
-import { useDiceSettings } from '../hooks/useDiceSettings'; // ✅ Ajouter
+import { DiceSettingsModal } from './DiceSettingsModal';
+import { useDiceSettings } from '../hooks/useDiceSettings';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // 🆕
 
 export interface PlayerProfileProps {
   player: Player;
-  onUpdate: (player: Player) => void; 
+  onUpdate: (player: Player) => void;
   onInventoryAdd?: (item: any) => void;
   inventory?: any[];
+  currentBackground?: string; // 🆕
+  onBackgroundChange?: (url: string) => void; // 🆕
 }
 
-export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: PlayerProfileProps) {
+export function PlayerProfile({ 
+  player, 
+  onUpdate, 
+  onInventoryAdd, 
+  inventory,
+  currentBackground, // 🆕
+  onBackgroundChange // 🆕
+}: PlayerProfileProps) {
   const [editing, setEditing] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | 'initiative' | 'proficiency' | null>(null);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   
-  // ✅ AJOUTER : State pour les paramètres de dés
+  // State pour les paramètres de dés
   const [isDiceSettingsOpen, setIsDiceSettingsOpen] = useState(false);
   const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
+  const deviceType = useResponsiveLayout(); // 🆕
 
   return (
     <>
@@ -43,7 +54,7 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
               className="grid items-start gap-3 sm:gap-4"
               style={{ gridTemplateColumns: 'minmax(0,1fr) 8rem' }}
             >
-              {/* ✅ Passer onOpenDiceSettings */}
+              {/* Passer onOpenDiceSettings */}
               <PlayerAvatar 
                 player={player} 
                 onEdit={() => setEditing(true)}
@@ -84,12 +95,15 @@ export function PlayerProfile({ player, onUpdate, onInventoryAdd, inventory }: P
         onInventoryAdd={onInventoryAdd}
       />
 
-      {/* ✅ AJOUTER : Modal Paramètres des dés */}
+      {/* ✅ Modal Paramètres des dés avec background */}
       <DiceSettingsModal
         open={isDiceSettingsOpen}
         onClose={() => setIsDiceSettingsOpen(false)}
         settings={diceSettings}
         onSave={saveDiceSettings}
+        currentBackground={currentBackground}
+        onBackgroundChange={onBackgroundChange}
+        deviceType={deviceType}
       />
     </>
   );  
