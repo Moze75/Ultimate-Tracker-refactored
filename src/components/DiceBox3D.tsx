@@ -649,7 +649,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.diagonalWalls) {
             const width = diceBoxRef.current.display.containerWidth;
             const height = diceBoxRef.current.display.containerHeight;
-            const margin = 0.85;
+            const margin = 0.80;
             
             const positions = [
               { x: width * margin, y: height * margin },    // Haut-Gauche
