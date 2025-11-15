@@ -235,52 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
-
-  // ✅ AJOUTER DES CYLINDRES INVISIBLES AUX 4 COINS (vrais coins arrondis)
-        if (box.world && box.box_body && box.dice_body_material) {
-          const CANNON = await import('cannon-es');
-          const cornerRadius = 100; // Rayon des coins arrondis
-          const cornerHeight = 500; // Hauteur des cylindres
-          
-          // Matériau pour les coins (même que les murs)
-          const barrier_body_material = new CANNON.Material();
-          box.world.addContactMaterial(
-            new CANNON.ContactMaterial(barrier_body_material, box.dice_body_material, {
-              mass: 0,
-              friction: 0.6,
-              restitution: 1.0
-            })
-          );
-          
-          // Position des 4 coins
-          const corners = [
-            { x: box.display.containerWidth * 0.85, y: box.display.containerHeight * 0.85 },   // Haut-Gauche
-            { x: -box.display.containerWidth * 0.85, y: box.display.containerHeight * 0.85 },  // Haut-Droite
-            { x: box.display.containerWidth * 0.85, y: -box.display.containerHeight * 0.85 },  // Bas-Gauche
-            { x: -box.display.containerWidth * 0.85, y: -box.display.containerHeight * 0.85 }  // Bas-Droite
-          ];
-          
-          // Créer les 4 cylindres de coin
-          box.box_body.corners = [];
-          corners.forEach((pos, index) => {
-            const cornerBody = new CANNON.Body({
-              allowSleep: false,
-              mass: 0,
-              shape: new CANNON.Cylinder(cornerRadius, cornerRadius, cornerHeight, 16),
-              material: barrier_body_material
-            });
-            
-            // Rotation pour que le cylindre soit vertical (axe Z)
-            cornerBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
-            cornerBody.position.set(pos.x, pos.y, 0);
-            
-            box.world.addBody(cornerBody);
-            box.box_body.corners.push(cornerBody);
-            console.log(`✅ Coin arrondi #${index + 1} ajouté`);
-          });
-          
-          console.log('✅ 4 coins arrondis physiques ajoutés !');
-        }
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -618,29 +572,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
         }
-                if (typeof diceBoxRef.current.setDimensions === 'function') {
-          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-          
-          // ✅ Repositionner les coins arrondis après resize
-          if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.corners) {
-            const corners = [
-              { x: diceBoxRef.current.display.containerWidth * 0.85, y: diceBoxRef.current.display.containerHeight * 0.85 },
-              { x: -diceBoxRef.current.display.containerWidth * 0.85, y: diceBoxRef.current.display.containerHeight * 0.85 },
-              { x: diceBoxRef.current.display.containerWidth * 0.85, y: -diceBoxRef.current.display.containerHeight * 0.85 },
-              { x: -diceBoxRef.current.display.containerWidth * 0.85, y: -diceBoxRef.current.display.containerHeight * 0.85 }
-            ];
-            
-            diceBoxRef.current.box_body.corners.forEach((corner: any, index: number) => {
-              corner.position.set(corners[index].x, corners[index].y, 0);
-            });
-            
-            console.log('✅ [RESIZE] Coins arrondis repositionnés');
-          }
-        }
       });
     }
   }, [isOpen]);
-
   
   // ✅ Lancer les dés
   useEffect(() => {
