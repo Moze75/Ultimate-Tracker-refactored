@@ -418,18 +418,39 @@ if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.Dic
       diceBoxRef.current.theme_material = finalMaterial;
       diceBoxRef.current.theme_customColorset = customColorset;
 
-      // ✅ 3. UpdateConfig
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: newSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: finalMaterial,
-        theme_customColorset: customColorset,
-        baseScale: newSettings.baseScale * 100 / 6,
-        gravity_multiplier: newSettings.gravity * 400,
-        strength: newSettings.strength * 1.3,
-        sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-      });
+// ✅ 3. UpdateConfig
+await diceBoxRef.current.updateConfig({
+  theme_colorset: newSettings.theme || 'custom',
+  theme_texture: textureForTheme,
+  theme_material: finalMaterial,
+  theme_customColorset: customColorset,
+  baseScale: newSettings.baseScale * 100 / 6,
+  gravity_multiplier: newSettings.gravity * 400,
+  strength: newSettings.strength * 1.3,
+  sounds: newSettings.soundsEnabled,
+  volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+});
+
+// ✅ 3b. VIDER LE CACHE DE MATÉRIAUX (solution critique !)
+if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+  // Vider le cache de matériaux
+  diceBoxRef.current.DiceFactory.materials_cache = {};
+  console.log('✅ [EVENT] Cache de matériaux vidé');
+  
+  // Forcer l'application du colorset avec le nouveau matériau
+  if (diceBoxRef.current.colorData) {
+    const updatedColorData = {
+      ...diceBoxRef.current.colorData,
+      texture: {
+        ...(diceBoxRef.current.colorData.texture || {}),
+        material: finalMaterial
+      }
+    };
+    
+    diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
+    console.log('✅ [EVENT] Nouveau matériau appliqué:', finalMaterial);
+  }
+}
 
       // ✅ 3b. FORCER l'application du nouveau colorData au DiceFactory
 if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.DiceFactory) {
