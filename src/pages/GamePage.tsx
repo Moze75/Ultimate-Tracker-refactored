@@ -1065,7 +1065,7 @@ return (
                           (neighborType === 'prev' && key === prevKey);
 
                         if (showAsStatic) {
-                          return (
+                          return ( 
                             <div
                               key={key}
                               ref={(el) => { paneRefs.current[key] = el; }}
