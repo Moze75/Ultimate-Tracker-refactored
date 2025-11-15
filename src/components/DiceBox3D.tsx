@@ -651,74 +651,90 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           <div className="relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-lg blur-sm animate-[pulse_1.5s_ease-in-out_infinite]"></div>
             
-            <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
-              <div className="relative px-12 py-10 text-center">
-                <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                  {rollDataRef.current?.attackName}
-                </p>
-                
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
-                      {result.total}
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="relative text-8xl font-black tracking-tight"
-                    style={{
-                      background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
-                    }}
-                  >
-                    {result.total}
-                  </div>
-                </div>
+      <div className="relative bg-black rounded-lg border-2 border-red-900/50 shadow-2xl overflow-hidden">
+  <div className="relative px-12 py-10 text-center">
+    <p className="text-xs tracking-[0.3em] uppercase text-red-400 mb-3 font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+      {rollDataRef.current?.attackName}
+    </p>
+    
+    <div className="relative mb-4">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-9xl font-black text-red-600/30 blur-xl scale-110">
+          {result.total}
+        </div>
+      </div>
+      
+      <div 
+        className="relative text-8xl font-black tracking-tight"
+        style={{
+          background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 30%, #dc2626 60%, #7f1d1d 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.4)',
+          filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9))'
+        }}
+      >
+        {result.total}
+      </div>
+    </div>
 
-                <div className="text-sm text-red-200/80 font-serif">
-                  {result.rolls.length > 0 ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <span className="text-orange-400 font-bold">
-                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                          {Math.abs(rollDataRef.current.modifier)}
-                        </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-red-800">⟨</span>
-                      <span className="tracking-wide">
-                        {rollDataRef.current?.diceFormula}: {result.diceTotal}
-                      </span>
-                      {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
-                        <span className="text-orange-400 font-bold">
-                          {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
-                          {Math.abs(rollDataRef.current.modifier)}
-                        </span>
-                      )}
-                      <span className="text-red-800">⟩</span>
-                    </div>
-                  )}
-                </div>
+    {/* ✅ AJOUT : Mention critique */}
+    {result.rolls.length === 1 && rollDataRef.current?.diceFormula === '1d20' && (
+      <>
+        {result.rolls[0] === 1 && (
+          <div className="mb-3 text-xl font-bold tracking-wider text-red-500 animate-pulse" style={{ textShadow: '0 0 10px rgba(239, 68, 68, 0.8)' }}>
+            ⚠️ ÉCHEC CRITIQUE ⚠️
+          </div>
+        )}
+        {result.rolls[0] === 20 && (
+          <div className="mb-3 text-xl font-bold tracking-wider text-yellow-400 animate-pulse" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.8)' }}>
+            ✨ SUCCÈS CRITIQUE ✨
+          </div>
+        )}
+      </>
+    )}
 
-                <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
-                  <span>⸎</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>✦</span>
-                  <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
-                  <span>⸎</span>
-                </div>
-              </div>
-            </div>
+    <div className="text-sm text-red-200/80 font-serif">
+      {result.rolls.length > 0 ? (
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-red-800">⟨</span>
+          <span className="tracking-wide">
+            Dés: [{result.rolls.join(' • ')}] = {result.diceTotal}
+          </span>
+          {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+            <span className="text-orange-400 font-bold">
+              {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+              {Math.abs(rollDataRef.current.modifier)}
+            </span>
+          )}
+          <span className="text-red-800">⟩</span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-red-800">⟨</span>
+          <span className="tracking-wide">
+            {rollDataRef.current?.diceFormula}: {result.diceTotal}
+          </span>
+          {rollDataRef.current && rollDataRef.current.modifier !== 0 && (
+            <span className="text-orange-400 font-bold">
+              {rollDataRef.current.modifier >= 0 ? ' + ' : ' − '}
+              {Math.abs(rollDataRef.current.modifier)}
+            </span>
+          )}
+          <span className="text-red-800">⟩</span>
+        </div>
+      )}
+    </div>
+
+    <div className="mt-4 flex items-center justify-center gap-2 text-red-900/50 text-xs">
+      <span>⸎</span>
+      <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+      <span>✦</span>
+      <div className="h-px w-16 bg-gradient-to-r from-transparent via-red-900/50 to-transparent"></div>
+      <span>⸎</span>
+    </div>
+  </div>
+</div>
           </div>
         </div>
       )}
