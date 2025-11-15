@@ -309,6 +309,37 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: effectiveSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: effectiveSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength * 1.3,
+        sounds: effectiveSettings.soundsEnabled,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+      });
+
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        diceBoxRef.current.DiceFactory.materials_cache = {};
+        console.log('✅ [UPDATE] Cache de matériaux vidé');
+        
+        // Forcer la mise à jour du matériau dans colorData
+        if (diceBoxRef.current.colorData) {
+          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+          diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
+          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+          console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
+        }
+      }
+
+      // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        try {
+          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+      
       // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         try {
