@@ -235,33 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
-
-
-        
-        // ✅ Ajuster les murs pour éviter les coins (viewport "arrondi" virtuel)
-        if (box.box_body) {
-          // Réduire légèrement la zone de collision (85% au lieu de 93%)
-          const reductionFactor = 0.85;
-          
-          if (box.box_body.topWall) {
-            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
-            console.log('✅ Mur haut ajusté pour coins arrondis');
-          }
-          if (box.box_body.bottomWall) {
-            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
-            console.log('✅ Mur bas ajusté pour coins arrondis');
-          }
-          if (box.box_body.leftWall) {
-            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
-            console.log('✅ Mur gauche ajusté pour coins arrondis');
-          }
-          if (box.box_body.rightWall) {
-            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
-            console.log('✅ Mur droit ajusté pour coins arrondis');
-          }
-        }
-        
-    
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -762,7 +735,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           zIndex: 9999,
           opacity: isOpen ? 1 : 0,
           visibility: isOpen ? 'visible' : 'hidden',
-          borderRadius: '20px', // ✅ Coins arrondis visuels
         }}
       />
 
