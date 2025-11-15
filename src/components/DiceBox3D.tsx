@@ -735,6 +735,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           zIndex: 9999,
           opacity: isOpen ? 1 : 0,
           visibility: isOpen ? 'visible' : 'hidden',
+          borderRadius: '20px', // ✅ Coins arrondis visuels
         }}
       />
 
