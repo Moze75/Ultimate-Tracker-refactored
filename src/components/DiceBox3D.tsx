@@ -335,10 +335,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
       }
 
-      // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        try {
-          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+
       
       // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
