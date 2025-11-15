@@ -1042,10 +1042,9 @@ return (
                   <>
                     <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
 
-                  <div
-<div
-  ref={stageRef}
-  className="relative"
+                    <div
+                      ref={stageRef}
+                      className="relative"
                       onTouchStart={onTouchStart}
                       onTouchMove={onTouchMove}
                       onTouchEnd={onTouchEnd}
@@ -1065,7 +1064,7 @@ return (
                           (neighborType === 'prev' && key === prevKey);
 
                         if (showAsStatic) {
-                          return ( 
+                          return (
                             <div
                               key={key}
                               ref={(el) => { paneRefs.current[key] = el; }}
@@ -1166,4 +1165,4 @@ return (
 );
 }
 
-export default GamePage;
+export default GamePage; 
