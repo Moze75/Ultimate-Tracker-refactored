@@ -235,25 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
-
-        // ✅ RÉDUIRE LES MURS PRINCIPAUX - Pas de coins du tout (forme ovale)
-        if (box.box_body) {
-          const reductionFactor = 0.70; // Réduire à 70% (laisser beaucoup d'espace dans les coins)
-          
-          if (box.box_body.topWall) {
-            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.bottomWall) {
-            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.leftWall) {
-            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
-          }
-          if (box.box_body.rightWall) {
-            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
-          }
-          console.log('✅ Murs réduits à 70% - Coins complètement ouverts');
-        }
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -590,47 +571,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         
         if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-                      // ✅ Repositionner les murs principaux après resize
-          if (diceBoxRef.current.box_body) {
-            const reductionFactor = 0.80;
-            
-            if (diceBoxRef.current.box_body.topWall) {
-              diceBoxRef.current.box_body.topWall.position.y = diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.bottomWall) {
-              diceBoxRef.current.box_body.bottomWall.position.y = -diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.leftWall) {
-              diceBoxRef.current.box_body.leftWall.position.x = diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.rightWall) {
-              diceBoxRef.current.box_body.rightWall.position.x = -diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-          }
-          
-          // ✅ Repositionner les 12 plans des coins après resize
-          if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.cornerWalls) {
-            const width = diceBoxRef.current.display.containerWidth;
-            const height = diceBoxRef.current.display.containerHeight;
-            
-            const allPositions = [
-              // Coin HAUT-GAUCHE (3 plans)
-              { x: width * 0.90, y: height * 0.82 },
-              { x: width * 0.87, y: height * 0.87 },
-              { x: width * 0.82, y: height * 0.90 },
-              // Coin HAUT-DROITE (3 plans)
-              { x: -width * 0.90, y: height * 0.82 },
-              { x: -width * 0.87, y: height * 0.87 },
-              { x: -width * 0.82, y: height * 0.90 },
-              // Coin BAS-GAUCHE (3 plans)
-              { x: width * 0.90, y: -height * 0.82 },
-              { x: width * 0.87, y: -height * 0.87 },
-              { x: width * 0.82, y: -height * 0.90 },
-              // Coin BAS-DROITE (3 plans)
-              { x: -width * 0.90, y: -height * 0.82 },
-              { x: -width * 0.87, y: -height * 0.87 },
-              { x: -width * 0.82, y: -height * 0.90 }
-            
         }
       });
     }
