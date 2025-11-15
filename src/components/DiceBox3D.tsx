@@ -642,8 +642,28 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           containerRef.current.style.height = '100vh';
         }
         
-        if (typeof diceBoxRef.current.setDimensions === 'function') {
+             if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
+          
+          // ✅ Repositionner les murs diagonaux après resize
+          if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.diagonalWalls) {
+            const width = diceBoxRef.current.display.containerWidth;
+            const height = diceBoxRef.current.display.containerHeight;
+            const margin = 0.85;
+            
+            const positions = [
+              { x: width * margin, y: height * margin },    // Haut-Gauche
+              { x: -width * margin, y: height * margin },   // Haut-Droite
+              { x: width * margin, y: -height * margin },   // Bas-Gauche
+              { x: -width * margin, y: -height * margin }   // Bas-Droite
+            ];
+            
+            diceBoxRef.current.box_body.diagonalWalls.forEach((wall: any, index: number) => {
+              wall.position.set(positions[index].x, positions[index].y, 0);
+            });
+            
+            console.log('✅ [RESIZE] Murs diagonaux repositionnés');
+          }
         }
       });
     }
