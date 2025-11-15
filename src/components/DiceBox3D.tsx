@@ -153,7 +153,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎨 Texture sélectionnée:', textureForTheme);
 
         const config = {
-          assetPath: 'https://unpkg.com/threejs-dice@1.0.5/',
+          assetPath: '/assets/dice-box/',
           theme_colorset: effectiveSettings.theme || 'custom',
           theme_texture: textureForTheme,
           theme_customColorset: !effectiveSettings.theme ? {
