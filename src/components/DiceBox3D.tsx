@@ -235,6 +235,85 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
+
+  
+        
+        // ✅ AJOUTER 4 MURS DIAGONAUX AUX COINS (casser les angles)
+        if (box.world && box.dice_body_material) {
+          const CANNON = await import('cannon-es');
+          
+          // Matériau pour les coins diagonaux
+          const barrier_body_material = new CANNON.Material();
+          box.world.addContactMaterial(
+            new CANNON.ContactMaterial(barrier_body_material, box.dice_body_material, {
+              mass: 0,
+              friction: 0.6,
+              restitution: 1.0
+            })
+          );
+          
+          const width = box.display.containerWidth;
+          const height = box.display.containerHeight;
+          const margin = 0.85; // Position des coins
+          
+          // Créer 4 plans diagonaux (un par coin)
+          box.box_body.diagonalWalls = [];
+          
+          // Coin Haut-Gauche (diagonal: ╲)
+          const topLeftWall = new CANNON.Body({
+            allowSleep: false,
+            mass: 0,
+            shape: new CANNON.Plane(),
+            material: barrier_body_material
+          });
+          topLeftWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 4); // Rotation -45°
+          topLeftWall.position.set(width * margin, height * margin, 0);
+          box.world.addBody(topLeftWall);
+          box.box_body.diagonalWalls.push(topLeftWall);
+          
+          // Coin Haut-Droite (diagonal: ╱)
+          const topRightWall = new CANNON.Body({
+            allowSleep: false,
+            mass: 0,
+            shape: new CANNON.Plane(),
+            material: barrier_body_material
+          });
+          topRightWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 4); // Rotation 45°
+          topRightWall.position.set(-width * margin, height * margin, 0);
+          box.world.addBody(topRightWall);
+          box.box_body.diagonalWalls.push(topRightWall);
+          
+          // Coin Bas-Gauche (diagonal: ╱)
+          const bottomLeftWall = new CANNON.Body({
+            allowSleep: false,
+            mass: 0,
+            shape: new CANNON.Plane(),
+            material: barrier_body_material
+          });
+          bottomLeftWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 4); // Rotation 45°
+          bottomLeftWall.position.set(width * margin, -height * margin, 0);
+          box.world.addBody(bottomLeftWall);
+          box.box_body.diagonalWalls.push(bottomLeftWall);
+          
+          // Coin Bas-Droite (diagonal: ╲)
+          const bottomRightWall = new CANNON.Body({
+            allowSleep: false,
+            mass: 0,
+            shape: new CANNON.Plane(),
+            material: barrier_body_material
+          });
+          bottomRightWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 4); // Rotation -45°
+          bottomRightWall.position.set(-width * margin, -height * margin, 0);
+          box.world.addBody(bottomRightWall);
+          box.box_body.diagonalWalls.push(bottomRightWall);
+          
+          console.log('✅ 4 murs diagonaux ajoutés aux coins !');
+        }
+        
+        if (mounted) {
+          diceBoxRef.current = box;
+          setIsInitialized(true);
+          console.log('✅ DiceBox initialisé avec strength x1.3 !');
         
         if (mounted) {
           diceBoxRef.current = box;
