@@ -628,7 +628,7 @@ const backgroundColors = [
   { url: 'gradient:linear-gradient(135deg, #0c1821 0%, #15202b 100%)', name: 'Profondeurs Marines', gradient: 'linear-gradient(135deg, #0c1821 0%, #15202b 100%)', type: 'gradient' as const },
   { url: 'gradient:linear-gradient(135deg, #1a2332 0%, #0a1628 100%)', name: 'Glacier Nocturne', gradient: 'linear-gradient(135deg, #1a2332 0%, #0a1628 100%)', type: 'gradient' as const },
   { url: 'gradient:linear-gradient(135deg, #0b1d2e 0%, #1b263b 100%)', name: 'Tempête Lointaine', gradient: 'linear-gradient(135deg, #0b1d2e 0%, #1b263b 100%)', type: 'gradient' as const },
-  { url: 'gradient:linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', name: 'Vagues Nocturnes', gradient: 'linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', type: 'gradient' as const },
+  { url: 'gradient:linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', name: 'Vagues Nocturnes', gradient: 'linear-gradient(135deg, #15202b 0%, #0d1b2a 50%, #1c2541 100%)', type: 'gradient' as const }, // ✅ CORRIGÉ ICI
   
   // Gradients sombres neutres (réduits)
   { url: 'gradient:linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', name: 'Crépuscule de Cendre', gradient: 'linear-gradient(135deg, #1a1410 0%, #2d1b0e 100%)', type: 'gradient' as const },
