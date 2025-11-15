@@ -237,11 +237,30 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         await box.initialize();
 
    
-        // ✅ AJOUTER 4 MURS DIAGONAUX AUX COINS (casser les angles)
+       // ✅ RÉDUIRE LES MURS PRINCIPAUX pour éviter les coins
+        if (box.box_body) {
+          const reductionFactor = 0.80; // Réduire à 80% (laisser plus d'espace)
+          
+          if (box.box_body.topWall) {
+            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
+          }
+          if (box.box_body.bottomWall) {
+            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
+          }
+          if (box.box_body.leftWall) {
+            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
+          }
+          if (box.box_body.rightWall) {
+            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
+          }
+          console.log('✅ Murs principaux réduits à 80%');
+        }
+        
+        // ✅ AJOUTER 3 PETITS PLANS PAR COIN (coins en escalier)
         if (box.world && box.dice_body_material) {
           const CANNON = await import('cannon-es');
           
-          // Matériau pour les coins diagonaux
+          // Matériau pour les coins
           const barrier_body_material = new CANNON.Material();
           box.world.addContactMaterial(
             new CANNON.ContactMaterial(barrier_body_material, box.dice_body_material, {
@@ -253,60 +272,58 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           
           const width = box.display.containerWidth;
           const height = box.display.containerHeight;
-          const margin = 0.85; // Position des coins
           
-          // Créer 4 plans diagonaux (un par coin)
-          box.box_body.diagonalWalls = [];
+          box.box_body.cornerWalls = [];
           
-          // Coin Haut-Gauche (diagonal: ╲)
-          const topLeftWall = new CANNON.Body({
-            allowSleep: false,
-            mass: 0,
-            shape: new CANNON.Plane(),
-            material: barrier_body_material
+          // Configuration des 4 coins (3 plans par coin)
+          const corners = [
+            { // Coin HAUT-GAUCHE
+              positions: [
+                { x: width * 0.90, y: height * 0.82, angle: -Math.PI / 6 },    // Plan presque vertical
+                { x: width * 0.87, y: height * 0.87, angle: -Math.PI / 4 },    // Plan à 45°
+                { x: width * 0.82, y: height * 0.90, angle: -Math.PI / 3 }     // Plan presque horizontal
+              ]
+            },
+            { // Coin HAUT-DROITE
+              positions: [
+                { x: -width * 0.90, y: height * 0.82, angle: Math.PI / 6 },
+                { x: -width * 0.87, y: height * 0.87, angle: Math.PI / 4 },
+                { x: -width * 0.82, y: height * 0.90, angle: Math.PI / 3 }
+              ]
+            },
+            { // Coin BAS-GAUCHE
+              positions: [
+                { x: width * 0.90, y: -height * 0.82, angle: Math.PI / 6 },
+                { x: width * 0.87, y: -height * 0.87, angle: Math.PI / 4 },
+                { x: width * 0.82, y: -height * 0.90, angle: Math.PI / 3 }
+              ]
+            },
+            { // Coin BAS-DROITE
+              positions: [
+                { x: -width * 0.90, y: -height * 0.82, angle: -Math.PI / 6 },
+                { x: -width * 0.87, y: -height * 0.87, angle: -Math.PI / 4 },
+                { x: -width * 0.82, y: -height * 0.90, angle: -Math.PI / 3 }
+              ]
+            }
+          ];
+          
+          // Créer les 3 plans pour chaque coin (12 plans au total)
+          corners.forEach((corner, cornerIndex) => {
+            corner.positions.forEach((pos, planeIndex) => {
+              const wall = new CANNON.Body({
+                allowSleep: false,
+                mass: 0,
+                shape: new CANNON.Plane(),
+                material: barrier_body_material
+              });
+              wall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), pos.angle);
+              wall.position.set(pos.x, pos.y, 0);
+              box.world.addBody(wall);
+              box.box_body.cornerWalls.push(wall);
+            });
           });
-          topLeftWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 4); // Rotation -45°
-          topLeftWall.position.set(width * margin, height * margin, 0);
-          box.world.addBody(topLeftWall);
-          box.box_body.diagonalWalls.push(topLeftWall);
           
-          // Coin Haut-Droite (diagonal: ╱)
-          const topRightWall = new CANNON.Body({
-            allowSleep: false,
-            mass: 0,
-            shape: new CANNON.Plane(),
-            material: barrier_body_material
-          });
-          topRightWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 4); // Rotation 45°
-          topRightWall.position.set(-width * margin, height * margin, 0);
-          box.world.addBody(topRightWall);
-          box.box_body.diagonalWalls.push(topRightWall);
-          
-          // Coin Bas-Gauche (diagonal: ╱)
-          const bottomLeftWall = new CANNON.Body({
-            allowSleep: false,
-            mass: 0,
-            shape: new CANNON.Plane(),
-            material: barrier_body_material
-          });
-          bottomLeftWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 4); // Rotation 45°
-          bottomLeftWall.position.set(width * margin, -height * margin, 0);
-          box.world.addBody(bottomLeftWall);
-          box.box_body.diagonalWalls.push(bottomLeftWall);
-          
-          // Coin Bas-Droite (diagonal: ╲)
-          const bottomRightWall = new CANNON.Body({
-            allowSleep: false,
-            mass: 0,
-            shape: new CANNON.Plane(),
-            material: barrier_body_material
-          });
-          bottomRightWall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 4); // Rotation -45°
-          bottomRightWall.position.set(-width * margin, -height * margin, 0);
-          box.world.addBody(bottomRightWall);
-          box.box_body.diagonalWalls.push(bottomRightWall);
-          
-          console.log('✅ 4 murs diagonaux ajoutés aux coins !');
+          console.log('✅ 12 plans ajoutés (3 par coin) pour coins arrondis progressifs');
         }
         
         if (mounted) {
