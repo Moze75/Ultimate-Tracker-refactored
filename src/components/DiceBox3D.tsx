@@ -235,96 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
-
-   
-       // ✅ RÉDUIRE LES MURS PRINCIPAUX pour éviter les coins
-        if (box.box_body) {
-          const reductionFactor = 0.80; // Réduire à 80% (laisser plus d'espace)
-          
-          if (box.box_body.topWall) {
-            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.bottomWall) {
-            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.leftWall) {
-            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
-          }
-          if (box.box_body.rightWall) {
-            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
-          }
-          console.log('✅ Murs principaux réduits à 80%');
-        }
-        
-        // ✅ AJOUTER 3 PETITS PLANS PAR COIN (coins en escalier)
-        if (box.world && box.dice_body_material) {
-          const CANNON = await import('cannon-es');
-          
-          // Matériau pour les coins
-          const barrier_body_material = new CANNON.Material();
-          box.world.addContactMaterial(
-            new CANNON.ContactMaterial(barrier_body_material, box.dice_body_material, {
-              mass: 0,
-              friction: 0.6,
-              restitution: 1.0
-            })
-          );
-          
-          const width = box.display.containerWidth;
-          const height = box.display.containerHeight;
-          
-          box.box_body.cornerWalls = [];
-          
-          // Configuration des 4 coins (3 plans par coin)
-          const corners = [
-            { // Coin HAUT-GAUCHE
-              positions: [
-                { x: width * 0.90, y: height * 0.82, angle: -Math.PI / 6 },    // Plan presque vertical
-                { x: width * 0.87, y: height * 0.87, angle: -Math.PI / 4 },    // Plan à 45°
-                { x: width * 0.82, y: height * 0.90, angle: -Math.PI / 3 }     // Plan presque horizontal
-              ]
-            },
-            { // Coin HAUT-DROITE
-              positions: [
-                { x: -width * 0.90, y: height * 0.82, angle: Math.PI / 6 },
-                { x: -width * 0.87, y: height * 0.87, angle: Math.PI / 4 },
-                { x: -width * 0.82, y: height * 0.90, angle: Math.PI / 3 }
-              ]
-            },
-            { // Coin BAS-GAUCHE
-              positions: [
-                { x: width * 0.90, y: -height * 0.82, angle: Math.PI / 6 },
-                { x: width * 0.87, y: -height * 0.87, angle: Math.PI / 4 },
-                { x: width * 0.82, y: -height * 0.90, angle: Math.PI / 3 }
-              ]
-            },
-            { // Coin BAS-DROITE
-              positions: [
-                { x: -width * 0.90, y: -height * 0.82, angle: -Math.PI / 6 },
-                { x: -width * 0.87, y: -height * 0.87, angle: -Math.PI / 4 },
-                { x: -width * 0.82, y: -height * 0.90, angle: -Math.PI / 3 }
-              ]
-            }
-          ];
-          
-          // Créer les 3 plans pour chaque coin (12 plans au total)
-          corners.forEach((corner, cornerIndex) => {
-            corner.positions.forEach((pos, planeIndex) => {
-              const wall = new CANNON.Body({
-                allowSleep: false,
-                mass: 0,
-                shape: new CANNON.Plane(),
-                material: barrier_body_material
-              });
-              wall.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), pos.angle);
-              wall.position.set(pos.x, pos.y, 0);
-              box.world.addBody(wall);
-              box.box_body.cornerWalls.push(wall);
-            });
-          });
-          
-          console.log('✅ 12 plans ajoutés (3 par coin) pour coins arrondis progressifs');
-        }
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -659,57 +569,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           containerRef.current.style.height = '100vh';
         }
         
-                 if (typeof diceBoxRef.current.setDimensions === 'function') {
+        if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-          
-          // ✅ Repositionner les murs principaux après resize
-          if (diceBoxRef.current.box_body) {
-            const reductionFactor = 0.80;
-            
-            if (diceBoxRef.current.box_body.topWall) {
-              diceBoxRef.current.box_body.topWall.position.y = diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.bottomWall) {
-              diceBoxRef.current.box_body.bottomWall.position.y = -diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.leftWall) {
-              diceBoxRef.current.box_body.leftWall.position.x = diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.rightWall) {
-              diceBoxRef.current.box_body.rightWall.position.x = -diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-          }
-          
-          // ✅ Repositionner les 12 plans des coins après resize
-          if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.cornerWalls) {
-            const width = diceBoxRef.current.display.containerWidth;
-            const height = diceBoxRef.current.display.containerHeight;
-            
-            const allPositions = [
-              // Coin HAUT-GAUCHE (3 plans)
-              { x: width * 0.90, y: height * 0.82 },
-              { x: width * 0.87, y: height * 0.87 },
-              { x: width * 0.82, y: height * 0.90 },
-              // Coin HAUT-DROITE (3 plans)
-              { x: -width * 0.90, y: height * 0.82 },
-              { x: -width * 0.87, y: height * 0.87 },
-              { x: -width * 0.82, y: height * 0.90 },
-              // Coin BAS-GAUCHE (3 plans)
-              { x: width * 0.90, y: -height * 0.82 },
-              { x: width * 0.87, y: -height * 0.87 },
-              { x: width * 0.82, y: -height * 0.90 },
-              // Coin BAS-DROITE (3 plans)
-              { x: -width * 0.90, y: -height * 0.82 },
-              { x: -width * 0.87, y: -height * 0.87 },
-              { x: -width * 0.82, y: -height * 0.90 }
-            ];
-            
-            diceBoxRef.current.box_body.cornerWalls.forEach((wall: any, index: number) => {
-              wall.position.set(allPositions[index].x, allPositions[index].y, 0);
-            });
-            
-            console.log('✅ [RESIZE] Murs principaux + 12 plans de coins repositionnés');
-          }
         }
       });
     }
