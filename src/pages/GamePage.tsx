@@ -1046,18 +1046,18 @@ return (
 <div
   ref={stageRef}
   className="relative"
-  onTouchStart={onTouchStart}
-  onTouchMove={onTouchMove}
-  onTouchEnd={onTouchEnd}
-  onTouchCancel={() => {
-    fullAbortInteraction();
-  }}
-  style={{
-    touchAction: 'pan-y',
-    height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-    transition: heightLocking ? 'height 280ms ease' : undefined,
-  }}
->
+                      onTouchStart={onTouchStart}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={onTouchEnd}
+                      onTouchCancel={() => {
+                        fullAbortInteraction();
+                      }}
+                      style={{
+                        touchAction: 'pan-y',
+                        height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                        transition: heightLocking ? 'height 280ms ease' : undefined,
+                      }}
+                    >
                       {Array.from(visitedTabs).map((key) => {
                         const isActive = key === activeTab;
                         const isNeighbor =
