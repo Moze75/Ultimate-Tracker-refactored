@@ -337,14 +337,24 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
 
       
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        diceBoxRef.current.DiceFactory.materials_cache = {};
+        console.log('✅ [UPDATE] Cache de matériaux vidé');
+        
+        // Forcer la mise à jour du matériau dans colorData
+        if (diceBoxRef.current.colorData) {
+          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+          diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
+          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+          console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
+        }
+      }
+
       // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         try {
           const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-          const newFactory = new DiceFactory({
-            baseScale: effectiveSettings.baseScale * 100 / 6,
-            material: effectiveSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
-          });
           
           // ✅ Appliquer le nouveau colorset
           if (customColorset) {
