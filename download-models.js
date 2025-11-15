@@ -16,7 +16,7 @@ if (!fs.existsSync(modelsDir)) {
 
 // Liste des modèles à télécharger depuis le CDN jsDelivr
 const models = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
-const baseUrl = 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.4/dist/models/';
+const baseUrl = 'https://unpkg.com/@3d-dice/dice-box-threejs@0.0.12/dist/models/';
 
 let completed = 0;
 let failed = 0;
