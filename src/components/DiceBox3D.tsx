@@ -618,6 +618,28 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
         }
+                if (typeof diceBoxRef.current.setDimensions === 'function') {
+          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
+          
+          // ✅ Repositionner les coins arrondis après resize
+          if (diceBoxRef.current.box_body && diceBoxRef.current.box_body.corners) {
+            const corners = [
+              { x: diceBoxRef.current.display.containerWidth * 0.85, y: diceBoxRef.current.display.containerHeight * 0.85 },
+              { x: -diceBoxRef.current.display.containerWidth * 0.85, y: diceBoxRef.current.display.containerHeight * 0.85 },
+              { x: diceBoxRef.current.display.containerWidth * 0.85, y: -diceBoxRef.current.display.containerHeight * 0.85 },
+              { x: -diceBoxRef.current.display.containerWidth * 0.85, y: -diceBoxRef.current.display.containerHeight * 0.85 }
+            ];
+            
+            diceBoxRef.current.box_body.corners.forEach((corner: any, index: number) => {
+              corner.position.set(corners[index].x, corners[index].y, 0);
+            });
+            
+            console.log('✅ [RESIZE] Coins arrondis repositionnés');
+          }
+        }
+      });
+    }
+  }, [isOpen]);
       });
     }
   }, [isOpen]);
