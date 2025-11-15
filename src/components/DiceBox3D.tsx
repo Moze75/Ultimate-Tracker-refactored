@@ -163,9 +163,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             outline: effectiveSettings.themeColor,
             edge: effectiveSettings.themeColor,
             texture: 'none',
-            material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial
+            material: effectiveSettings.themeMaterial
           } : undefined,
-          theme_material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial,
+          theme_material: effectiveSettings.themeMaterial || "plastic",
           baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
@@ -287,7 +287,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         outline: effectiveSettings.themeColor,
         edge: effectiveSettings.themeColor,
         texture: 'none',
-        material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial
+        material: effectiveSettings.themeMaterial || 'plastic'
       } : undefined;
 
       console.log('🎨 [UPDATE] Custom Colorset:', customColorset);
@@ -300,7 +300,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       await diceBoxRef.current.updateConfig({
         theme_colorset: effectiveSettings.theme || 'custom',
         theme_texture: textureForTheme,
-        theme_material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial,
+        theme_material: effectiveSettings.themeMaterial || "plastic",
         theme_customColorset: customColorset,
         baseScale: effectiveSettings.baseScale * 100 / 6,
         gravity_multiplier: effectiveSettings.gravity * 400,
@@ -315,7 +315,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
           const newFactory = new DiceFactory({
             baseScale: effectiveSettings.baseScale * 100 / 6,
-            material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial
+            material: effectiveSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
           });
           
           // ✅ Appliquer le nouveau colorset
@@ -337,7 +337,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
       // ✅ Forcer la mise à jour du matériau dans le moteur
       if (diceBoxRef.current) {
-        diceBoxRef.current.theme_material = effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial;
+        diceBoxRef.current.theme_material = effectiveSettings.themeMaterial || 'plastic';
         console.log('✅ [UPDATE] Matériau forcé sur diceBox:', diceBoxRef.current.theme_material);
       }
       
@@ -374,7 +374,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         outline: newSettings.themeColor,
         edge: newSettings.themeColor,
         texture: 'none',
-        material: newSettings.themeMaterial === 'none' ? 'plastic' : newSettings.themeMaterial
+        material: newSettings.themeMaterial || 'plastic'
       } : undefined;
 
       console.log('🎨 [EVENT] Custom Colorset:', customColorset);
@@ -387,7 +387,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       await diceBoxRef.current.updateConfig({
         theme_colorset: newSettings.theme || 'custom',
         theme_texture: textureForTheme,
-        theme_material: newSettings.themeMaterial === 'none' ? 'plastic' : newSettings.themeMaterial,
+        theme_material: newSettings.themeMaterial || "plastic",
         theme_customColorset: customColorset,
         baseScale: newSettings.baseScale * 100 / 6,
         gravity_multiplier: newSettings.gravity * 400,
@@ -405,7 +405,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
             const newFactory = new DiceFactory({
               baseScale: newSettings.baseScale * 100 / 6,
-              material: newSettings.themeMaterial === 'none' ? 'plastic' : newSettings.themeMaterial
+              material: newSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
             });
             
             // ✅ Appliquer le nouveau colorset
@@ -426,7 +426,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
 
         // ✅ Forcer la mise à jour du matériau dans le moteur
-        diceBoxRef.current.theme_material = newSettings.themeMaterial === 'none' ? 'plastic' : newSettings.themeMaterial;
+        diceBoxRef.current.theme_material = newSettings.themeMaterial || 'plastic';
         console.log('✅ [EVENT] Matériau forcé sur diceBox:', diceBoxRef.current.theme_material);
       }
 
