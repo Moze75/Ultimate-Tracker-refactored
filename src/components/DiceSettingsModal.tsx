@@ -587,13 +587,29 @@ function BackgroundTab({
   deviceType?: 'mobile' | 'tablet' | 'desktop';
 }) {
   // 🆕 Liste des fonds d'écran (images)
-  const backgroundImages = [ 
-    { url: '/fondecran/Magic.png', name: 'Magic', type: 'image' as const },
-    { url: '/fondecran/Table.png', name: 'Table', type: 'image' as const },
-    { url: '/fondecran/Toits.png', name: 'Toits', type: 'image' as const },
-    { url: '/fondecran/War.png', name: 'War', type: 'image' as const },
-    { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const }, 
-  ];
+const backgrounds = [
+  { url: '/fondecran/Averne 1.png', name: 'Averne 1' },
+  { url: '/fondecran/Averne 2.png', name: 'Averne 2' },
+  { url: '/fondecran/Cave.png', name: 'Cave' },
+  { url: '/fondecran/Desert 1.png', name: 'Desert 1' },
+  { url: '/fondecran/Desert 2.png', name: 'Desert 2' },
+  { url: '/fondecran/Dragon 1.png', name: 'Dragon 1' },
+  { url: '/fondecran/Dragon 2.png', name: 'Dragon 2' },
+  { url: '/fondecran/Forest 1.png', name: 'Forest 1' },
+  { url: '/fondecran/Forest 2.png', name: 'Forest 2' },
+  { url: '/fondecran/forest.png', name: 'forest' },
+  { url: '/fondecran/Magic.png', name: 'Magic' },
+  { url: '/fondecran/Mountain 1.png', name: 'Mountain 1' },
+  { url: '/fondecran/Mountain 2.png', name: 'Mountain 2' },
+  { url: '/fondecran/Mountain 3.png', name: 'Mountain 3' },
+  { url: '/fondecran/Table.png', name: 'Table' },
+  { url: '/fondecran/Toits.png', name: 'Toits' },
+  { url: '/fondecran/Toits copy.png', name: 'Toits copy' },
+  { url: '/fondecran/Underwater.png', name: 'Underwater' },
+  { url: '/fondecran/War.png', name: 'War' },
+  { url: '/fondecran/War 2.png', name: 'War 2' },
+  { url: '/fondecran/War 3.png', name: 'War 3' },
+];
 
   // 🆕 Liste des fonds de couleur
 const backgroundColors = [
