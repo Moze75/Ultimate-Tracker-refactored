@@ -1008,7 +1008,7 @@ return (
             </div>
           )}
 
-                    <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}>
+<div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10 ${deviceType === 'mobile' || deviceType === 'tablet' ? 'bg-gray-900/40 backdrop-blur-sm rounded-lg p-4' : ''}`}>
             {currentPlayer && (
               <PlayerContext.Provider value={currentPlayer}>
                 {/* PlayerProfile visible SEULEMENT en mode onglets */}
