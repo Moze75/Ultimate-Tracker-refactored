@@ -853,7 +853,7 @@ return (
     
 {/* ✨ Calque semi-opaque pour améliorer la lisibilité */}
 <div 
-  className="fixed inset-0 pointer-events-none bg-gray-900/90"
+  className="fixed inset-0 pointer-events-none bg-gray-900/70"
   style={{
     zIndex: 1,
   }}
