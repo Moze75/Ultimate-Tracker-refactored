@@ -587,13 +587,33 @@ function BackgroundTab({
   deviceType?: 'mobile' | 'tablet' | 'desktop';
 }) {
   // 🆕 Liste des fonds d'écran (images)
+  function BackgroundTab({ ... }) {
+  // 🆕 Liste des fonds d'écran (images)
   const backgroundImages = [ 
-    { url: '/fondecran/Magic.png', name: 'Magic', type: 'image' as const }, 
+    { url: '/fondecran/Averne 1.png', name: 'Averne 1', type: 'image' as const },
+    { url: '/fondecran/Averne 2.png', name: 'Averne 2', type: 'image' as const },
+    { url: '/fondecran/Cave.png', name: 'Cave', type: 'image' as const },
+    { url: '/fondecran/Desert 1.png', name: 'Desert 1', type: 'image' as const },
+    { url: '/fondecran/Desert 2.png', name: 'Desert 2', type: 'image' as const },
+    { url: '/fondecran/Dragon 1.png', name: 'Dragon 1', type: 'image' as const },
+    { url: '/fondecran/Dragon 2.png', name: 'Dragon 2', type: 'image' as const },
+    { url: '/fondecran/Forest 1.png', name: 'Forest 1', type: 'image' as const },
+    { url: '/fondecran/Forest 2.png', name: 'Forest 2', type: 'image' as const },
+    { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const },
+    { url: '/fondecran/Magic.png', name: 'Magic', type: 'image' as const },
+    { url: '/fondecran/Mountain 1.png', name: 'Mountain 1', type: 'image' as const },
+    { url: '/fondecran/Mountain 2.png', name: 'Mountain 2', type: 'image' as const },
+    { url: '/fondecran/Mountain 3.png', name: 'Mountain 3', type: 'image' as const },
     { url: '/fondecran/Table.png', name: 'Table', type: 'image' as const },
     { url: '/fondecran/Toits.png', name: 'Toits', type: 'image' as const },
+    { url: '/fondecran/Toits copy.png', name: 'Toits copy', type: 'image' as const },
+    { url: '/fondecran/Underwater.png', name: 'Underwater', type: 'image' as const },
     { url: '/fondecran/War.png', name: 'War', type: 'image' as const },
-    { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const }, 
+    { url: '/fondecran/War 2.png', name: 'War 2', type: 'image' as const },
+    { url: '/fondecran/War 3.png', name: 'War 3', type: 'image' as const },
   ];
+  
+  // Le reste du code reste inchangé...
 
   // 🆕 Liste des fonds de couleur
 const backgroundColors = [
