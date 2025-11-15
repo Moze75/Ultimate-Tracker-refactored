@@ -338,37 +338,36 @@ await diceBoxRef.current.updateConfig({
   volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
 });
 
-// ✅ 3b. VIDER LE CACHE DE MATÉRIAUX (c'est LA solution !)
-if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-  // Vider le cache de matériaux
+// ✅ 3. UpdateConfig avec TOUTES les propriétés
+await diceBoxRef.current.updateConfig({
+  theme_colorset: effectiveSettings.theme || 'custom',
+  theme_texture: textureForTheme,
+  theme_material: finalMaterial,
+  theme_customColorset: customColorset,
+  baseScale: effectiveSettings.baseScale * 100 / 6,
+  gravity_multiplier: effectiveSettings.gravity * 400,
+  strength: effectiveSettings.strength * 1.3,
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+});
+
+// ✅ 3b. RE-FORCER les propriétés APRÈS updateConfig (car Object.apply ne marche pas)
+diceBoxRef.current.theme_material = finalMaterial;
+diceBoxRef.current.baseScale = effectiveSettings.baseScale * 100 / 6;
+diceBoxRef.current.strength = effectiveSettings.strength * 1.3;
+
+// ✅ 3c. VIDER LE CACHE DE MATÉRIAUX
+if (diceBoxRef.current.DiceFactory) {
   diceBoxRef.current.DiceFactory.materials_cache = {};
   console.log('✅ [UPDATE] Cache de matériaux vidé');
   
-  // Forcer l'application du colorset avec le nouveau matériau
+  // Re-appliquer le colorset avec le nouveau matériau
   if (diceBoxRef.current.colorData) {
-    const updatedColorData = {
-      ...diceBoxRef.current.colorData,
-      texture: {
-        ...(diceBoxRef.current.colorData.texture || {}),
-        material: finalMaterial
-      }
-    };
-    
-    diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-    console.log('✅ [UPDATE] Nouveau matériau appliqué:', finalMaterial);
+    diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+    diceBoxRef.current.colorData.texture.material = finalMaterial;
+    diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+    console.log('✅ [UPDATE] Colorset réappliqué avec matériau:', finalMaterial);
   }
-}
-
-      // ✅ 3b. FORCER l'application du nouveau colorData au DiceFactory
-// C'est l'étape CRITIQUE que le DiceBox.js ne fait pas automatiquement !
-if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.DiceFactory) {
-  const updatedColorData = {
-    ...diceBoxRef.current.colorData,
-    material: finalMaterial
-  };
-  
-  diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-  console.log('✅ [UPDATE] colorData avec matériau appliqué APRÈS updateConfig:', finalMaterial);
 }
 
       // ✅ 4. FORCER l'application du nouveau colorData au DiceFactory
