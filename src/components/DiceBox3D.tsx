@@ -634,7 +634,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             
             diceBoxRef.current.box_body.cornerWalls.forEach((wall: any, index: number) => {
               wall.position.set(allPositions[index].x, allPositions[index].y, 0);
-     
+          
+        }
       });
     }
   }, [isOpen]);
