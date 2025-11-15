@@ -307,18 +307,39 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       diceBoxRef.current.theme_material = finalMaterial;
       diceBoxRef.current.theme_customColorset = customColorset;
 
-      // ✅ 3. Appeler updateConfig (qui va recharger le thème via loadTheme)
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: effectiveSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: finalMaterial,
-        theme_customColorset: customColorset,
-        baseScale: effectiveSettings.baseScale * 100 / 6,
-        gravity_multiplier: effectiveSettings.gravity * 400,
-        strength: effectiveSettings.strength * 1.3,
-        sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-      });
+     // ✅ 3. UpdateConfig avec TOUTES les propriétés
+await diceBoxRef.current.updateConfig({
+  theme_colorset: effectiveSettings.theme || 'custom',
+  theme_texture: textureForTheme,
+  theme_material: finalMaterial,
+  theme_customColorset: customColorset,
+  baseScale: effectiveSettings.baseScale * 100 / 6,
+  gravity_multiplier: effectiveSettings.gravity * 400,
+  strength: effectiveSettings.strength * 1.3,
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+});
+
+// ✅ 3b. VIDER LE CACHE DE MATÉRIAUX (c'est LA solution !)
+if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+  // Vider le cache de matériaux
+  diceBoxRef.current.DiceFactory.materials_cache = {};
+  console.log('✅ [UPDATE] Cache de matériaux vidé');
+  
+  // Forcer l'application du colorset avec le nouveau matériau
+  if (diceBoxRef.current.colorData) {
+    const updatedColorData = {
+      ...diceBoxRef.current.colorData,
+      texture: {
+        ...(diceBoxRef.current.colorData.texture || {}),
+        material: finalMaterial
+      }
+    };
+    
+    diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
+    console.log('✅ [UPDATE] Nouveau matériau appliqué:', finalMaterial);
+  }
+}
 
       // ✅ 3b. FORCER l'application du nouveau colorData au DiceFactory
 // C'est l'étape CRITIQUE que le DiceBox.js ne fait pas automatiquement !
