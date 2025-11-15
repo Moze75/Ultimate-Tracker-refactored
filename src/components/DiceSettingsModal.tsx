@@ -609,6 +609,7 @@ function BackgroundTab({
     { url: '/fondecran/War.png', name: 'War', type: 'image' as const },
     { url: '/fondecran/War 2.png', name: 'War 2', type: 'image' as const },
     { url: '/fondecran/War 3.png', name: 'War 3', type: 'image' as const },
+    { url: '/fondecran/Ascendance.jpg', name: 'Ascendance', type: 'image' as const },
   ];
 
   // 🆕 Liste des fonds de couleur
