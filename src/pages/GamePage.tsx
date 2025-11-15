@@ -793,73 +793,62 @@ const renderPane = (key: TabKey | 'profile-details') => {
 /* ---------------- Rendu principal avec Provider ---------------- */
 return (
   <DiceRollContext.Provider value={{ rollDice }}>
- {/* 🔥 IMAGE DE BACKGROUND - POUR MOBILE/TABLET */}
-{(deviceType === 'mobile' || deviceType === 'tablet') && (
-  <>
-    <div 
-      className="fixed inset-0 pointer-events-none"
-      style={{
-        zIndex: 0,
-        overflow: 'hidden',
-      }}
-    >
-      {backgroundImage.startsWith('color:') ? (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: backgroundImage.replace('color:', ''),
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        />
-      ) : backgroundImage.startsWith('gradient:') ? (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: backgroundImage.replace('gradient:', ''),
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        />
-      ) : (
-        <img
-          src={backgroundImage}
-          alt="background"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center top',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            filter: 'brightness(0.95)',
-          }}
-        />
-      )}
-    </div>
-    
-    {/* ✨ NOUVEAU : Calque semi-opaque au-dessus du background */}
-    <div 
-      className="fixed inset-0 pointer-events-none bg-gray-900/40 backdrop-blur-sm"
-      style={{
-        zIndex: 1,
-      }}
-    />
-  </>
-)}
+    {/* 🔥 IMAGE DE BACKGROUND - POUR MOBILE/TABLET */}
+    {(deviceType === 'mobile' || deviceType === 'tablet') && (
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        {backgroundImage.startsWith('color:') ? (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: backgroundImage.replace('color:', ''),
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          />
+        ) : backgroundImage.startsWith('gradient:') ? (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: backgroundImage.replace('gradient:', ''),
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          />
+        ) : (
+          <img
+            src={backgroundImage}
+            alt="background"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center top',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              filter: 'brightness(0.95)',
+            }}
+          />
+        )} 
+      </div>
     )}
-
+ 
     {(() => {
       /* ---------------- Loading ---------------- */
       if (loading) {
