@@ -64,7 +64,7 @@ const DEFAULT_ABILITIES: Ability[] = [
       { name: 'Dressage', bonus: 0, isProficient: false, hasExpertise: false },
       { name: 'Médecine', bonus: 0, isProficient: false, hasExpertise: false },
       { name: 'Perception', bonus: 0, isProficient: false, hasExpertise: false },
-      { name: 'Perspicacité', bonus: 0, isProficient: false, hasExpertise: false },
+      { name: 'Intuition', bonus: 0, isProficient: false, hasExpertise: false },
       { name: 'Survie', bonus: 0, isProficient: false, hasExpertise: false }
     ]
   },
