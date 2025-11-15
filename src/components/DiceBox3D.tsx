@@ -464,9 +464,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
         console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
       
-      if (diceBoxRef.current) {
-        diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
-        console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+
         
         if (diceBoxRef.current.DiceFactory) {
           try {
