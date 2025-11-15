@@ -235,25 +235,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
-
-        // ✅ RÉDUIRE LES MURS PRINCIPAUX - Pas de coins du tout (forme ovale)
-        if (box.box_body) {
-          const reductionFactor = 0.70; // Réduire à 70% (laisser beaucoup d'espace dans les coins)
-          
-          if (box.box_body.topWall) {
-            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.bottomWall) {
-            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
-          }
-          if (box.box_body.leftWall) {
-            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
-          }
-          if (box.box_body.rightWall) {
-            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
-          }
-          console.log('✅ Murs réduits à 70% - Coins complètement ouverts');
-        }
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -590,25 +571,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         
         if (typeof diceBoxRef.current.setDimensions === 'function') {
           diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-          
-          // ✅ Repositionner les murs réduits après resize (coins ouverts)
-          if (diceBoxRef.current.box_body) {
-            const reductionFactor = 0.70;
-            
-            if (diceBoxRef.current.box_body.topWall) {
-              diceBoxRef.current.box_body.topWall.position.y = diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.bottomWall) {
-              diceBoxRef.current.box_body.bottomWall.position.y = -diceBoxRef.current.display.containerHeight * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.leftWall) {
-              diceBoxRef.current.box_body.leftWall.position.x = diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-            if (diceBoxRef.current.box_body.rightWall) {
-              diceBoxRef.current.box_body.rightWall.position.x = -diceBoxRef.current.display.containerWidth * reductionFactor;
-            }
-            console.log('✅ [RESIZE] Murs réduits à 70% - Coins ouverts');
-          }
         }
       });
     }
