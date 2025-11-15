@@ -235,6 +235,25 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
         
         await box.initialize();
+
+        // ✅ RÉDUIRE LES MURS PRINCIPAUX - Pas de coins du tout (forme ovale)
+        if (box.box_body) {
+          const reductionFactor = 0.70; // Réduire à 70% (laisser beaucoup d'espace dans les coins)
+          
+          if (box.box_body.topWall) {
+            box.box_body.topWall.position.y = box.display.containerHeight * reductionFactor;
+          }
+          if (box.box_body.bottomWall) {
+            box.box_body.bottomWall.position.y = -box.display.containerHeight * reductionFactor;
+          }
+          if (box.box_body.leftWall) {
+            box.box_body.leftWall.position.x = box.display.containerWidth * reductionFactor;
+          }
+          if (box.box_body.rightWall) {
+            box.box_body.rightWall.position.x = -box.display.containerWidth * reductionFactor;
+          }
+          console.log('✅ Murs réduits à 70% - Coins complètement ouverts');
+        }
         
         if (mounted) {
           diceBoxRef.current = box;
