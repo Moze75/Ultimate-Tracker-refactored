@@ -1,6 +1,12 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 
+// ✅ AJOUT : Fonction de mapping pour l'affichage
+const getDisplaySkillName = (skillName: string): string => {
+  if (skillName === 'Perspicacité') return 'Intuition';
+  return skillName;
+};
+
 interface SkillItem {
   abilityIndex: number;
   skillIndex: number;
@@ -36,14 +42,14 @@ export function SkillsTable({
         <h4 className="text-lg font-semibold text-gray-300 mb-3 text-left">Compétences</h4>
         <div className="space-y-1.5">
           {allSkills.map((skill) => (
-            <div
-              key={`${skill.abilityIndex}-${skill.skillIndex}`}
-              className={`flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded ${
-                !editing ? 'cursor-pointer hover:bg-gray-700/50 transition-colors' : ''
-              }`}
-              onClick={() => !editing && rollSkillCheck(skill.skillName, skill.bonus)}
-              title={!editing ? `Test de ${skill.skillName} 1d20+${skill.bonus}` : ''}
-            >
+    <div
+  key={`${skill.abilityIndex}-${skill.skillIndex}`}
+  className={`flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded ${
+    !editing ? 'cursor-pointer hover:bg-gray-700/50 transition-colors' : ''
+  }`}
+  onClick={() => !editing && rollSkillCheck(skill.skillName, skill.bonus)}
+  title={!editing ? `Test de ${getDisplaySkillName(skill.skillName)} 1d20+${skill.bonus}` : ''}
+>
               <div className="flex items-center gap-3 flex-1">
                 {editing ? (
                   <button
@@ -90,7 +96,7 @@ export function SkillsTable({
 
                 <span className="text-sm text-gray-500 min-w-[40px]">{skill.abilityShort}</span>
                 <span className="text-sm text-gray-300 flex-1">
-                  {skill.skillName}
+                  {getDisplaySkillName(skill.skillName)}  {/* ✅ MODIFIÉ */}
                   {!skill.isProficient && statsJackOfAllTrades && (
                     <span className="text-xs text-blue-400 ml-1" title="Touche-à-tout">
                       (T)
@@ -107,4 +113,4 @@ export function SkillsTable({
       </div>
     </div>
   );
-}  
+}
