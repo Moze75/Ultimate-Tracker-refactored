@@ -427,6 +427,36 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: newSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: newSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: newSettings.baseScale * 100 / 6,
+        gravity_multiplier: newSettings.gravity * 400,
+        strength: newSettings.strength * 1.3,
+        sounds: newSettings.soundsEnabled,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+      });
+
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        diceBoxRef.current.DiceFactory.materials_cache = {};
+        console.log('✅ [EVENT] Cache de matériaux vidé');
+        
+        // Forcer la mise à jour du matériau dans colorData
+        if (diceBoxRef.current.colorData) {
+          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+          diceBoxRef.current.colorData.texture.material = newSettings.themeMaterial || 'plastic';
+          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+          console.log('✅ [EVENT] Matériau réappliqué:', newSettings.themeMaterial || 'plastic');
+        }
+      }
+
+      if (diceBoxRef.current) {
+        diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
+        console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
+      
       if (diceBoxRef.current) {
         diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
         console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
