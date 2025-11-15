@@ -1,4 +1,3 @@
-import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,57 +13,46 @@ if (!fs.existsSync(modelsDir)) {
   console.log('📁 Dossier models/ créé');
 }
 
-// Liste des modèles à télécharger depuis le CDN jsDelivr
+// Liste des modèles à télécharger
 const models = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
 const baseUrl = 'https://unpkg.com/@3d-dice/dice-box-threejs@0.0.12/dist/models/';
 
 let completed = 0;
 let failed = 0;
 
-models.forEach(modelName => {
+console.log('🔍 Début du téléchargement...\n');
+
+// Fonction pour télécharger un fichier
+async function downloadFile(modelName) {
   const fileName = `${modelName}.json`;
   const url = `${baseUrl}${fileName}`;
   const filePath = path.join(modelsDir, fileName);
 
   console.log(`⏳ Téléchargement de ${fileName}...`);
 
-  https.get(url, (response) => {
-    if (response.statusCode === 200) {
-      const fileStream = fs.createWriteStream(filePath);
-      response.pipe(fileStream);
-      
-      fileStream.on('finish', () => {
-        fileStream.close();
-        completed++;
-        console.log(`✅ ${fileName} téléchargé`);
-        
-        if (completed + failed === models.length) {
-          console.log(`\n🎉 Terminé ! ${completed}/${models.length} fichiers téléchargés`);
-          if (failed > 0) {
-            console.log(`⚠️  ${failed} fichiers ont échoué`);
-          }
-        }
-      });
-    } else {
-      failed++;
-      console.error(`❌ ${fileName} - Erreur ${response.statusCode}`);
-      
-      if (completed + failed === models.length) {
-        console.log(`\n🎉 Terminé ! ${completed}/${models.length} fichiers téléchargés`);
-        if (failed > 0) {
-          console.log(`⚠️  ${failed} fichiers ont échoué`);
-        }
-      }
-    }
-  }).on('error', (err) => {
-    failed++;
-    console.error(`❌ ${fileName} - Erreur réseau:`, err.message);
+  try {
+    const response = await fetch(url);
     
-    if (completed + failed === models.length) {
-      console.log(`\n🎉 Terminé ! ${completed}/${models.length} fichiers téléchargés`);
-      if (failed > 0) {
-        console.log(`⚠️  ${failed} fichiers ont échoué`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-  });
+    
+    const data = await response.text();
+    fs.writeFileSync(filePath, data, 'utf8');
+    
+    completed++;
+    console.log(`✅ ${fileName} téléchargé (${data.length} octets)`);
+    
+  } catch (error) {
+    failed++;
+    console.error(`❌ ${fileName} - Erreur: ${error.message}`);
+  }
+}
+
+// Télécharger tous les fichiers en parallèle
+Promise.all(models.map(m => downloadFile(m))).then(() => {
+  console.log(`\n🎉 Terminé ! ${completed}/${models.length} fichiers téléchargés`);
+  if (failed > 0) {
+    console.log(`⚠️  ${failed} fichiers ont échoué`);
+  }
 });
