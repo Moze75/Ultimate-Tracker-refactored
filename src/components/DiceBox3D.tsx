@@ -295,6 +295,24 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       console.log('🎨 [UPDATE] Custom Colorset:', customColorset);
       console.log('🎨 [UPDATE] Matériau final:', finalMaterial);
 
+// ✅ 0. FORCER les propriétés AVANT updateConfig (contourne le bug Object.apply)
+diceBoxRef.current.theme_colorset = effectiveSettings.theme || 'custom';
+diceBoxRef.current.theme_texture = textureForTheme;
+diceBoxRef.current.theme_material = finalMaterial;
+diceBoxRef.current.theme_customColorset = customColorset;
+diceBoxRef.current.baseScale = effectiveSettings.baseScale * 100 / 6;
+diceBoxRef.current.gravity_multiplier = effectiveSettings.gravity * 400;
+diceBoxRef.current.strength = effectiveSettings.strength * 1.3;
+diceBoxRef.current.sounds = effectiveSettings.soundsEnabled;
+diceBoxRef.current.volume = effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0;
+console.log('✅ [UPDATE] Propriétés forcées AVANT updateConfig');
+
+// ✅ 1. Forcer le nettoyage AVANT toute mise à jour
+if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
+  diceBoxRef.current.clearDice();
+  console.log('🧹 [UPDATE] Dés nettoyés');
+}
+      
       // ✅ 1. Nettoyer les dés AVANT toute modification
       if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
         diceBoxRef.current.clearDice();
