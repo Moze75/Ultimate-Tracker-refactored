@@ -752,7 +752,7 @@ const backgroundColors = [
                   </div>
                 )}
               </div>
- 
+
               <div className="p-2 bg-gray-700/50 text-center">
                 <p className="text-xs text-gray-300 truncate">{bg.name}</p>
               </div>
