@@ -370,19 +370,7 @@ if (diceBoxRef.current.DiceFactory) {
   }
 }
 
-      // ✅ 4. FORCER l'application du nouveau colorData au DiceFactory
-      // C'est l'étape CRITIQUE que le DiceBox.js ne fait pas !
-      if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.DiceFactory) {
-        // Mettre à jour le matériau dans le colorData
-        const updatedColorData = {
-          ...diceBoxRef.current.colorData,
-          material: finalMaterial
-        };
-        
-        // Appliquer le colorset mis à jour au factory
-        diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-        console.log('✅ [UPDATE] colorData avec matériau appliqué au DiceFactory:', finalMaterial);
-      }
+
 
       // ✅ 5. Forcer le baseScale directement sur le DiceFactory
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
