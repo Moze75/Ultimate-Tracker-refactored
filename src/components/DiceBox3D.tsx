@@ -163,9 +163,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
             outline: effectiveSettings.themeColor,
             edge: effectiveSettings.themeColor,
             texture: 'none',
-            material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial
+            material: effectiveSettings.themeMaterial
           } : undefined,
-          theme_material: effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial,
+          theme_material: effectiveSettings.themeMaterial || "plastic",
           baseScale: effectiveSettings.baseScale * 100 / 6,
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
@@ -279,8 +279,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
         : 'none';
 
-      const finalMaterial = effectiveSettings.themeMaterial === 'none' ? 'plastic' : effectiveSettings.themeMaterial;
-
       // ✅ Configuration du colorset personnalisé avec matériau
       const customColorset = !effectiveSettings.theme ? {
         name: 'custom',
@@ -289,96 +287,61 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         outline: effectiveSettings.themeColor,
         edge: effectiveSettings.themeColor,
         texture: 'none',
-        material: finalMaterial
+        material: effectiveSettings.themeMaterial || 'plastic'
       } : undefined;
 
       console.log('🎨 [UPDATE] Custom Colorset:', customColorset);
-      console.log('🎨 [UPDATE] Matériau final:', finalMaterial);
 
-// ✅ 0. FORCER les propriétés AVANT updateConfig (contourne le bug Object.apply)
-diceBoxRef.current.theme_colorset = effectiveSettings.theme || 'custom';
-diceBoxRef.current.theme_texture = textureForTheme;
-diceBoxRef.current.theme_material = finalMaterial;
-diceBoxRef.current.theme_customColorset = customColorset;
-diceBoxRef.current.baseScale = effectiveSettings.baseScale * 100 / 6;
-diceBoxRef.current.gravity_multiplier = effectiveSettings.gravity * 400;
-diceBoxRef.current.strength = effectiveSettings.strength * 1.3;
-diceBoxRef.current.sounds = effectiveSettings.soundsEnabled;
-diceBoxRef.current.volume = effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0;
-console.log('✅ [UPDATE] Propriétés forcées AVANT updateConfig');
-
-// ✅ 1. Forcer le nettoyage AVANT toute mise à jour
-if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
-  diceBoxRef.current.clearDice();
-  console.log('🧹 [UPDATE] Dés nettoyés');
-}
-      
-      // ✅ 1. Nettoyer les dés AVANT toute modification
+      // ✅ Forcer le nettoyage avant mise à jour
       if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
         diceBoxRef.current.clearDice();
-        console.log('🧹 [UPDATE] Dés nettoyés');
       }
 
-      // ✅ 2. Mettre à jour les propriétés de thème AVANT updateConfig
-      diceBoxRef.current.theme_colorset = effectiveSettings.theme || 'custom';
-      diceBoxRef.current.theme_texture = textureForTheme;
-      diceBoxRef.current.theme_material = finalMaterial;
-      diceBoxRef.current.theme_customColorset = customColorset;
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: effectiveSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: effectiveSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength * 1.3,
+        sounds: effectiveSettings.soundsEnabled,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+      });
 
-     // ✅ 3. UpdateConfig avec TOUTES les propriétés
-await diceBoxRef.current.updateConfig({
-  theme_colorset: effectiveSettings.theme || 'custom',
-  theme_texture: textureForTheme,
-  theme_material: finalMaterial,
-  theme_customColorset: customColorset,
-  baseScale: effectiveSettings.baseScale * 100 / 6,
-  gravity_multiplier: effectiveSettings.gravity * 400,
-  strength: effectiveSettings.strength * 1.3,
-  sounds: effectiveSettings.soundsEnabled,
-  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-});
-
-// ✅ 3. UpdateConfig avec TOUTES les propriétés
-await diceBoxRef.current.updateConfig({
-  theme_colorset: effectiveSettings.theme || 'custom',
-  theme_texture: textureForTheme,
-  theme_material: finalMaterial,
-  theme_customColorset: customColorset,
-  baseScale: effectiveSettings.baseScale * 100 / 6,
-  gravity_multiplier: effectiveSettings.gravity * 400,
-  strength: effectiveSettings.strength * 1.3,
-  sounds: effectiveSettings.soundsEnabled,
-  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-});
-
-// ✅ 3b. RE-FORCER les propriétés APRÈS updateConfig (car Object.apply ne marche pas)
-diceBoxRef.current.theme_material = finalMaterial;
-diceBoxRef.current.baseScale = effectiveSettings.baseScale * 100 / 6;
-diceBoxRef.current.strength = effectiveSettings.strength * 1.3;
-
-// ✅ 3c. VIDER LE CACHE DE MATÉRIAUX
-if (diceBoxRef.current.DiceFactory) {
-  diceBoxRef.current.DiceFactory.materials_cache = {};
-  console.log('✅ [UPDATE] Cache de matériaux vidé');
-  
-  // Re-appliquer le colorset avec le nouveau matériau
-  if (diceBoxRef.current.colorData) {
-    diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
-    diceBoxRef.current.colorData.texture.material = finalMaterial;
-    diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-    console.log('✅ [UPDATE] Colorset réappliqué avec matériau:', finalMaterial);
-  }
-}
-
-
-
-      // ✅ 5. Forcer le baseScale directement sur le DiceFactory
+      // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.baseScale = effectiveSettings.baseScale * 100 / 6;
-        console.log('✅ [UPDATE] baseScale forcé sur DiceFactory');
+        try {
+          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+          const newFactory = new DiceFactory({
+            baseScale: effectiveSettings.baseScale * 100 / 6,
+            material: effectiveSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
+          });
+          
+          // ✅ Appliquer le nouveau colorset
+          if (customColorset) {
+            newFactory.applyColorSet(customColorset);
+            console.log('✅ [UPDATE] Custom colorset appliqué au factory');
+            console.log('✅ [UPDATE] Matériau appliqué:', effectiveSettings.themeMaterial);
+          } else if (diceBoxRef.current.colorData) {
+            newFactory.applyColorSet(diceBoxRef.current.colorData);
+            console.log('✅ [UPDATE] Colorset existant appliqué au factory');
+          }
+          
+          diceBoxRef.current.DiceFactory = newFactory;
+          console.log('✅ [UPDATE] DiceFactory recréé avec nouveau colorset et matériau');
+        } catch (error) {
+          console.error('❌ [UPDATE] Erreur recréation DiceFactory:', error);
+        }
+      }
+
+      // ✅ Forcer la mise à jour du matériau dans le moteur
+      if (diceBoxRef.current) {
+        diceBoxRef.current.theme_material = effectiveSettings.themeMaterial || 'plastic';
+        console.log('✅ [UPDATE] Matériau forcé sur diceBox:', diceBoxRef.current.theme_material);
       }
       
-      console.log('✅ [UPDATE] Mise à jour terminée');
+      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
@@ -392,16 +355,18 @@ if (diceBoxRef.current.DiceFactory) {
       const newSettings = e.detail as DiceSettings;
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [EVENT] Settings changés via événement custom');
+      console.log('💪 [EVENT] Ancienne force:', diceBoxRef.current.strength);
+      console.log('💪 [EVENT] Nouvelle force (brute):', newSettings.strength);
       console.log('💪 [EVENT] Nouvelle force (x1.3):', newSettings.strength * 1.3);
       console.log('🎨 [EVENT] Theme:', newSettings.theme);
+      console.log('🎨 [EVENT] Theme Color:', newSettings.themeColor);
       console.log('🎨 [EVENT] Theme Material:', newSettings.themeMaterial);
       
       const textureForTheme = newSettings.theme 
         ? (COLORSET_TEXTURES[newSettings.theme] || '')
         : 'none';
 
-      const finalMaterial = newSettings.themeMaterial === 'none' ? 'plastic' : newSettings.themeMaterial;
-
+      // ✅ Configuration du colorset personnalisé avec matériau
       const customColorset = !newSettings.theme ? {
         name: 'custom',
         foreground: '#ffffff',
@@ -409,82 +374,62 @@ if (diceBoxRef.current.DiceFactory) {
         outline: newSettings.themeColor,
         edge: newSettings.themeColor,
         texture: 'none',
-        material: finalMaterial
+        material: newSettings.themeMaterial || 'plastic'
       } : undefined;
 
-      // ✅ 1. Nettoyer les dés
+      console.log('🎨 [EVENT] Custom Colorset:', customColorset);
+
+      // ✅ Forcer le nettoyage avant mise à jour
       if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
         diceBoxRef.current.clearDice();
       }
 
-      // ✅ 2. Mettre à jour les propriétés de thème
-      diceBoxRef.current.theme_colorset = newSettings.theme || 'custom';
-      diceBoxRef.current.theme_texture = textureForTheme;
-      diceBoxRef.current.theme_material = finalMaterial;
-      diceBoxRef.current.theme_customColorset = customColorset;
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: newSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: newSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: newSettings.baseScale * 100 / 6,
+        gravity_multiplier: newSettings.gravity * 400,
+        strength: newSettings.strength * 1.3,
+        sounds: newSettings.soundsEnabled,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+      });
 
-// ✅ 3. UpdateConfig
-await diceBoxRef.current.updateConfig({
-  theme_colorset: newSettings.theme || 'custom',
-  theme_texture: textureForTheme,
-  theme_material: finalMaterial,
-  theme_customColorset: customColorset,
-  baseScale: newSettings.baseScale * 100 / 6,
-  gravity_multiplier: newSettings.gravity * 400,
-  strength: newSettings.strength * 1.3,
-  sounds: newSettings.soundsEnabled,
-  volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-});
-
-// ✅ 3b. VIDER LE CACHE DE MATÉRIAUX (solution critique !)
-if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-  // Vider le cache de matériaux
-  diceBoxRef.current.DiceFactory.materials_cache = {};
-  console.log('✅ [EVENT] Cache de matériaux vidé');
-  
-  // Forcer l'application du colorset avec le nouveau matériau
-  if (diceBoxRef.current.colorData) {
-    const updatedColorData = {
-      ...diceBoxRef.current.colorData,
-      texture: {
-        ...(diceBoxRef.current.colorData.texture || {}),
-        material: finalMaterial
-      }
-    };
-    
-    diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-    console.log('✅ [EVENT] Nouveau matériau appliqué:', finalMaterial);
-  }
-}
-
-      // ✅ 3b. FORCER l'application du nouveau colorData au DiceFactory
-if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.DiceFactory) {
-  const updatedColorData = {
-    ...diceBoxRef.current.colorData,
-    material: finalMaterial
-  };
-  
-  diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-  console.log('✅ [EVENT] colorData avec matériau appliqué APRÈS updateConfig');
-}
-
-      // ✅ 4. FORCER l'application au DiceFactory (étape critique !)
-      if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.DiceFactory) {
-        const updatedColorData = {
-          ...diceBoxRef.current.colorData,
-          material: finalMaterial
-        };
+      if (diceBoxRef.current) {
+        diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
+        console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
         
-        diceBoxRef.current.DiceFactory.applyColorSet(updatedColorData);
-        console.log('✅ [EVENT] colorData avec matériau appliqué au DiceFactory');
+        if (diceBoxRef.current.DiceFactory) {
+          try {
+            const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+            const newFactory = new DiceFactory({
+              baseScale: newSettings.baseScale * 100 / 6,
+              material: newSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
+            });
+            
+            // ✅ Appliquer le nouveau colorset
+            if (customColorset) {
+              newFactory.applyColorSet(customColorset);
+              console.log('✅ [EVENT] Custom colorset appliqué au factory');
+              console.log('✅ [EVENT] Matériau appliqué:', newSettings.themeMaterial);
+            } else if (diceBoxRef.current.colorData) {
+              newFactory.applyColorSet(diceBoxRef.current.colorData);
+              console.log('✅ [EVENT] Colorset existant appliqué au factory');
+            }
+            
+            diceBoxRef.current.DiceFactory = newFactory;
+            console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
+          } catch (error) {
+            console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
+          }
+        }
+
+        // ✅ Forcer la mise à jour du matériau dans le moteur
+        diceBoxRef.current.theme_material = newSettings.themeMaterial || 'plastic';
+        console.log('✅ [EVENT] Matériau forcé sur diceBox:', diceBoxRef.current.theme_material);
       }
 
-      // ✅ 5. Forcer le baseScale
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.baseScale = newSettings.baseScale * 100 / 6;
-      }
-
-      // ✅ 6. Gérer la gravité
       try {
         if (diceBoxRef.current && diceBoxRef.current.world) {
           const world: any = diceBoxRef.current.world;
@@ -499,6 +444,8 @@ if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.Dic
           } else if (world.gravity && 'z' in world.gravity) {
             world.gravity.z = gravityValue;
             console.log('✅ [EVENT] Gravité forcée via property z:', world.gravity.z);
+          } else {
+            console.warn('⚠️ [EVENT] world.gravity présent mais ne possède pas set() ni z - gravité non forcée');
           }
 
           try {
@@ -514,12 +461,24 @@ if (diceBoxRef.current && diceBoxRef.current.colorData && diceBoxRef.current.Dic
           } catch (err) {
             console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
           }
+
+          if (typeof diceBoxRef.current.updateConfig === 'function') {
+            try {
+              const maybePromise = diceBoxRef.current.updateConfig({ gravity_multiplier: expectedMultiplier });
+              if (maybePromise && typeof maybePromise.then === 'function') {
+                maybePromise.catch((e: any) => {
+                  console.warn('⚠️ updateConfig rejeté :', e);
+                });
+              }
+            } catch (err) {
+              console.warn('⚠️ updateConfig a échoué (fallback ok) :', err);
+            }
+          }
         }
       } catch (err) {
         console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
       }
 
-      console.log('✅ [EVENT] Mise à jour terminée');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
