@@ -1126,7 +1126,7 @@ return (
             )}
           </div>
 
-          <div className="w-full max-w-md mx-auto mt-6 px-4">
+            <div className="w-full max-w-md mx-auto mt-6 px-4 relative z-50">
             <button
               onClick={handleBackToSelection}
               className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
