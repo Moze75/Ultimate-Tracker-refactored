@@ -1,6 +1,12 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 
+// ✅ AJOUT : Fonction de mapping pour l'affichage
+const getDisplaySkillName = (skillName: string): string => {
+  if (skillName === 'Perspicacité') return 'Intuition';
+  return skillName;
+};
+
 interface SkillItem {
   abilityIndex: number;
   skillIndex: number;
@@ -42,7 +48,7 @@ export function SkillsTable({
                 !editing ? 'cursor-pointer hover:bg-gray-700/50 transition-colors' : ''
               }`}
               onClick={() => !editing && rollSkillCheck(skill.skillName, skill.bonus)}
-              title={!editing ? `Test de ${skill.skillName} 1d20+${skill.bonus}` : ''}
+              title={!editing ? `Test de ${getDisplaySkillName(skill.skillName)} 1d20+${skill.bonus}` : ''}  {/* ✅ MODIFIÉ */}
             >
               <div className="flex items-center gap-3 flex-1">
                 {editing ? (
@@ -90,7 +96,7 @@ export function SkillsTable({
 
                 <span className="text-sm text-gray-500 min-w-[40px]">{skill.abilityShort}</span>
                 <span className="text-sm text-gray-300 flex-1">
-                  {skill.skillName}
+                  {getDisplaySkillName(skill.skillName)}  {/* ✅ MODIFIÉ */}
                   {!skill.isProficient && statsJackOfAllTrades && (
                     <span className="text-xs text-blue-400 ml-1" title="Touche-à-tout">
                       (T)
@@ -107,4 +113,4 @@ export function SkillsTable({
       </div>
     </div>
   );
-} 
+}
