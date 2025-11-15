@@ -640,9 +640,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       });
     }
   }, [isOpen]);
-      });
-    }
-  }, [isOpen]);
+
   
   // ✅ Lancer les dés
   useEffect(() => {
