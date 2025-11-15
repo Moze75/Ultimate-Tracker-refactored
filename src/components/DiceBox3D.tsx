@@ -679,20 +679,20 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     </div>
 
     {/* ✅ AJOUT : Mention critique */}
-    {result.rolls.length === 1 && rollDataRef.current?.diceFormula === '1d20' && (
-      <>
-        {result.rolls[0] === 1 && (
-          <div className="mb-3 text-xl font-bold tracking-wider text-red-500 animate-pulse" style={{ textShadow: '0 0 10px rgba(239, 68, 68, 0.8)' }}>
-            ⚠️ ÉCHEC CRITIQUE ⚠️
-          </div>
-        )}
-        {result.rolls[0] === 20 && (
-          <div className="mb-3 text-xl font-bold tracking-wider text-yellow-400 animate-pulse" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.8)' }}>
-            ✨ SUCCÈS CRITIQUE ✨
-          </div>
-        )}
-      </>
+{result.rolls.length === 1 && rollDataRef.current?.diceFormula === '1d20' && (
+  <>
+    {result.rolls[0] === 1 && (
+      <div className="text-base font-bold tracking-wider text-red-500 animate-pulse uppercase whitespace-nowrap" style={{ textShadow: '0 0 10px rgba(239, 68, 68, 0.8)' }}>
+        ⚠️ ÉCHEC CRITIQUE ⚠️
+      </div>
     )}
+    {result.rolls[0] === 20 && (
+      <div className="text-base font-bold tracking-wider text-yellow-400 animate-pulse uppercase whitespace-nowrap" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.8)' }}>
+        ✨ SUCCÈS CRITIQUE ✨
+      </div>
+    )}
+  </>
+)}
 
     <div className="text-sm text-red-200/80 font-serif">
       {result.rolls.length > 0 ? (
