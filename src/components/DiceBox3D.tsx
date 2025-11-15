@@ -261,7 +261,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           }
         }
         
-        if (mounted) {
+    
         
         if (mounted) {
           diceBoxRef.current = box;
