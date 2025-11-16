@@ -132,6 +132,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
   const [newCharacter, setNewCharacter] = useState<Player | null>(null);
   const [showSubscription, setShowSubscription] = useState(false);
   const [showCampaigns, setShowCampaigns] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
   const [remainingTrialDays, setRemainingTrialDays] = useState<number | null>(null);
 
