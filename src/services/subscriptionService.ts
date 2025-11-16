@@ -200,31 +200,13 @@ async getCharacterLimit(userId: string): Promise<number> {
       subscriptionId?: string;
     }
   ): Promise<UserSubscription> {
-// Marquer l'ancien abonnement comme inactif
-const now = new Date();
-
-// 1. Annuler les abonnements actifs
-await supabase
-  .from('user_subscriptions')
-  .update({ 
-    status: 'cancelled',
-    end_date: now.toISOString(),
-    updated_at: now.toISOString()
-  })
-  .eq('user_id', userId)
-  .eq('status', 'active');
-
-// 2. Marquer les essais gratuits comme expirés (pas cancelled)
-await supabase
-  .from('user_subscriptions')
-  .update({ 
-    status: 'expired',
-    end_date: now.toISOString(),
-    updated_at: now.toISOString()
-  })
-  .eq('user_id', userId)
-  .eq('status', 'trial');
-
+    // Marquer l'ancien abonnement comme inactif
+    await supabase
+      .from('user_subscriptions') 
+      .update({ status: 'cancelled' })
+      .eq('user_id', userId)
+      .in('status', ['active', 'trial']);
+ 
     // ✅ NOUVEAU : Calculer la date de fin (dans 1 an)
     const now = new Date();
     const subscriptionEndDate = new Date(now);
