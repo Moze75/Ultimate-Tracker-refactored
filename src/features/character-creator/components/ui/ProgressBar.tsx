@@ -58,9 +58,49 @@ export default function ProgressBar({ currentStep, totalSteps, steps }: Progress
   };
 
   return (
-    <div className="w-full mb-4 pt-4">
-      {/* Barre de progression */}
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="w-full mb-8">
+      {/* Bandeau pleine largeur avec image de fond */}
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-1 h-64">
+        {/* Image de fond */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url('/background/ddbground.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 100%',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Overlay blanc transparent */}
+          <div className="absolute inset-0 bg-white/20"></div>
+
+          {/* Dégradé progressif vers le bas */}
+          <div
+            className="absolute inset-x-0 bottom-0 h-24"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0) 0%, rgba(17, 24, 39, 0.5) 40%, rgba(17, 24, 39, 0.8) 70%, rgba(17, 24, 39, 1) 100%)'
+            }}
+          />
+        </div>
+
+        {/* Contenu par-dessus le fond */}
+        <div className="relative z-10 px-4 py-12 max-w-6xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-black mb-2"
+                style={{
+                  textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4)'
+                }}>
+              Créez votre personnage
+            </h1>
+            <p className="text-gray-900 text-base font-bold tracking-wide"
+               style={{
+                 textShadow: '0 0 8px rgba(255, 255, 255, 0.8), 0 0 16px rgba(255, 255, 255, 0.5)'
+               }}>
+              Choisissez vite mais choisissez bien
+            </p>
+          </div> 
+        </div>
+      </div>
 
       {/* Barre de progression */}
       <div className="max-w-6xl mx-auto px-4 mt-6">
