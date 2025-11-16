@@ -296,6 +296,42 @@ select {
   z-index: 1;
 }
 
+/* ========================================
+   Ajustements pour l'onglet Classe en mode desktop
+   ======================================== */
+.desktop-classes-tab .text-base {
+  font-size: 0.875rem; /* 14px au lieu de 16px */
+}
+
+.desktop-classes-tab .text-sm {
+  font-size: 0.8125rem; /* 13px au lieu de 14px */
+}
+
+.desktop-classes-tab .text-xs {
+  font-size: 0.75rem; /* 12px - inchangé */
+}
+
+/* Réduire les titres des cartes de compétences */
+.desktop-classes-tab h4 {
+  font-size: 0.9375rem; /* 15px au lieu de 18px */
+}
+
+/* Réduire le texte dans les descriptions */
+.desktop-classes-tab p {
+  font-size: 0.875rem; /* 14px au lieu de 16px */
+  line-height: 1.5;
+}
+
+/* Réduire les labels/étiquettes */
+.desktop-classes-tab label {
+  font-size: 0.8125rem; /* 13px */
+}
+
+/* Réduire les boutons */
+.desktop-classes-tab button {
+  font-size: 0.875rem; /* 14px */
+}
+
 /* Styles pour le reste des éléments et animations conservés depuis ton CSS précédent */
 
 /* … (tout le reste de ton CSS précédent reste inchangé) … */ 
