@@ -165,6 +165,14 @@ async getCharacterLimit(userId: string): Promise<number> {
     return subscription?.status === 'expired' && subscription?.tier === 'free';
   },
 
+    /**
+   * Vérifie si un abonnement payant est sur le point d'expirer (< 7 jours)
+   */
+  async isSubscriptionExpiringSoon(userId: string): Promise<boolean> {
+    const remainingDays = await this.getRemainingSubscriptionDays(userId);
+    return remainingDays !== null && remainingDays > 0 && remainingDays <= 7;
+  },
+
   /**
    * Crée un lien de paiement Mollie (à implémenter plus tard)
    */
