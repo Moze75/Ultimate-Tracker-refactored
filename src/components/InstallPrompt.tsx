@@ -78,7 +78,7 @@ export function InstallPrompt() {
         
         <div className="flex-1">
           <h3 className="font-bold text-lg mb-1">
-            Installer D&D Ultimate Tracker
+            Installer D&D Compagnon App
           </h3>
           <p className="text-red-100 text-sm mb-3">
             {isIOS 
