@@ -205,9 +205,7 @@ const getPlanColor = (color: string) => {
             <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-2">
               Abonnement annuel avec renouvellement automatique
             </p>
-            <p className="text-sm text-purple-300">
-              ✨ Annulation possible à tout moment • Accès immédiat
-            </p>
+  
 
             {/* Badge du plan actuel */}
             {currentSubscription && (
