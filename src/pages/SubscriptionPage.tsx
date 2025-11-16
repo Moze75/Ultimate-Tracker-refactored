@@ -258,7 +258,7 @@ const getPlanColor = (color: string) => {
                     🔒 Votre période d'essai de 15 jours est terminée
                   </p>
                   <p className="text-red-200 text-sm mt-1">
-                    Pour continuer à utiliser D&D Ultimate Tracker, choisissez un plan ci-dessous
+                    Pour continuer à utiliser D&D Compagnon App, choisissez un plan ci-dessous
                   </p>
                 </div>
               </div>    
