@@ -261,8 +261,23 @@ const getPlanColor = (color: string) => {
                     Pour continuer à utiliser D&D Ultimate Tracker, choisissez un plan ci-dessous
                   </p>
                 </div>
+              </div>    
+            )}
+
+            {/* ✨ NOUVEAU : Alerte si abonnement expire bientôt */}
+            {isSubscriptionExpiringSoon && !isTrialExpired && (
+              <div className="mt-4 max-w-2xl mx-auto">
+                <div className="bg-orange-900/40 border border-orange-500/50 rounded-lg p-4">
+                  <p className="text-orange-300 font-semibold">
+                    ⏰ Votre abonnement expire dans moins de 7 jours
+                  </p>
+                  <p className="text-orange-200 text-sm mt-1">
+                    Pensez à renouveler votre abonnement pour continuer à profiter de l'app !
+                  </p>
+                </div>
               </div>
             )}
+            
           </div>
         </div>
 
