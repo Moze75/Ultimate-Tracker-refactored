@@ -42,10 +42,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
       const expired = await subscriptionService.isTrialExpired(session.user.id);
       setIsTrialExpired(expired);
 
-      // Vérifier si l'abonnement expire bientôt (< 7 jours)
-      const expiringSoon = await subscriptionService.isSubscriptionExpiringSoon(session.user.id);
-      setIsSubscriptionExpiringSoon(expiringSoon);
-    } catch (error) {
+ 
       
     } catch (error) {
       console.error('Erreur lors du chargement de l\'abonnement:', error);
