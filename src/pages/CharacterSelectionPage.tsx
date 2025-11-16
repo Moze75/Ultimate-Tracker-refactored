@@ -16,12 +16,14 @@ import {
   Star,
   Clock,
   Scroll,
+  Settings,
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { authService } from '../services/authService';
 import { subscriptionService } from '../services/subscriptionService';
 import { SubscriptionPage } from './SubscriptionPage';
 import { GameMasterCampaignPage } from './GameMasterCampaignPage';
+import { AccountPage } from './AccountPage';
 import { UserSubscription, SUBSCRIPTION_PLANS } from '../types/subscription';
 
 // Intégration Character Creator (wizard)
