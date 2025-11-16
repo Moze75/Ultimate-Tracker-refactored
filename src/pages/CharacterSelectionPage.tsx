@@ -476,23 +476,13 @@ useEffect(() => {
               href="https://buymeacoffee.com/mewan44"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-[#FFDD00] hover:bg-[#FFED4E] text-gray-900 px-4 py-2.5 rounded-lg font-bold transition-all shadow-lg"
+              className="bg-[#FFDD00] hover:bg-[#FFED4E] px-3 py-1.5 rounded-lg transition-all shadow-lg"
             >
-              {/* Logo officiel Buy Me a Coffee avec la tasse */}
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 28 28"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M25.0493 7.0625H23.625V5.25C23.625 4.83516 23.2898 4.5 22.875 4.5H5.125C4.71016 4.5 4.375 4.83516 4.375 5.25V7.0625H2.95078C1.86484 7.0625 0.979688 7.94766 0.979688 9.03359V11.0977C0.979688 12.1836 1.86484 13.0688 2.95078 13.0688H3.71875C4.08359 15.4547 5.90625 17.332 8.20547 17.6367C9.00547 19.1203 10.6008 20.125 12.4375 20.125H15.5625C17.3992 20.125 18.9945 19.1203 19.7945 17.6367C22.0938 17.332 23.9164 15.4547 24.2812 13.0688H25.0492C26.1352 13.0688 27.0203 12.1836 27.0203 11.0977V9.03359C27.0203 7.94766 26.1352 7.0625 25.0493 7.0625ZM2.95078 11.5938C2.67578 11.5938 2.45469 11.3727 2.45469 11.0977V9.03359C2.45469 8.75859 2.67578 8.5375 2.95078 8.5375H4.375V11.5938H2.95078ZM18.375 15.75C18.375 16.9906 17.3656 18 16.125 18H11.875C10.6344 18 9.625 16.9906 9.625 15.75V6.375H18.375V15.75ZM20.125 13.0688V6.375H22.25V13.0688H20.125ZM25.5453 11.0977C25.5453 11.3727 25.3242 11.5938 25.0492 11.5938H23.625V8.5375H25.0492C25.3242 8.5375 25.5453 8.75859 25.5453 9.03359V11.0977Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="hidden sm:inline">Buy Me a Coffee</span>
-              <span className="sm:hidden">☕</span>
+              <img
+                src="/icons/bmc-full-logo-no-background.png"
+                alt="Buy Me a Coffee"
+                className="h-8 w-auto"
+              />
             </a>
 
             {/* Bouton Mon compte en haut à droite */}
@@ -505,7 +495,7 @@ useEffect(() => {
             </button>
           </div>
 
-          {currentSubscription && ( 
+          {currentSubscription && (
             <div className="text-center mb-4">
               <p className="text-xs text-gray-400">
                 {getSubscriptionText()}
