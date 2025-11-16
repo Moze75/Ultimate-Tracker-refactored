@@ -18,6 +18,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
   const [remainingTrialDays, setRemainingTrialDays] = useState<number | null>(null);
   const [remainingSubscriptionDays, setRemainingSubscriptionDays] = useState<number | null>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
+    const [isSubscriptionExpiringSoon, setIsSubscriptionExpiringSoon] = useState(false);
 
   useEffect(() => {
     loadSubscription();
@@ -40,6 +41,12 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
       // Vérifier si l'essai a expiré
       const expired = await subscriptionService.isTrialExpired(session.user.id);
       setIsTrialExpired(expired);
+
+      // Vérifier si l'abonnement expire bientôt (< 7 jours)
+      const expiringSoon = await subscriptionService.isSubscriptionExpiringSoon(session.user.id);
+      setIsSubscriptionExpiringSoon(expiringSoon);
+    } catch (error) {
+      
     } catch (error) {
       console.error('Erreur lors du chargement de l\'abonnement:', error);
       toast.error('Erreur lors du chargement de l\'abonnement');
