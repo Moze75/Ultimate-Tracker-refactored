@@ -1,6 +1,6 @@
 {
-  "name": "D&D Ultimate Tracker",
-  "short_name": "D&D Tracker",
+  "name": "D&D Compagnon App",
+  "short_name": "D&D Compagnon",
   "description": "Gestionnaire de personnage D&D - Suivez vos PV, sorts, équipement et plus encore !",
   "start_url": "/",
   "display": "standalone",
