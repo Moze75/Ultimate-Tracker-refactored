@@ -346,7 +346,7 @@ const toggleForgotPassword = () => {
               0 0 40px rgba(255, 255, 255, 0.2)
             `
           }}>
-            <div className="leading-tight">La Compagnon</div>
+            <div className="leading-tight">Le Compagnon</div>
             <div className="leading-tight">D&D</div>
           </h1>
           <p className="text-gray-200 mb-2" style={{
