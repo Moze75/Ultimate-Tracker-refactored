@@ -469,28 +469,28 @@ useEffect(() => {
       >
       <div className="min-h-screen py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4"> 
-          {/* En-tête avec Buy Me a Coffee (gauche) et Mon compte (droite) */}
+         {/* En-tête avec Buy Me a Coffee (gauche) et Mon compte (droite) */}
           <div className="flex justify-between items-center mb-4">
             {/* Bouton Buy Me a Coffee en haut à gauche */}
             <a
               href="https://buymeacoffee.com/mewan44"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#FFDD00] hover:bg-[#FFED4E] px-3 py-1.5 rounded-lg transition-all shadow-lg"
+              className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1 rounded-md transition-all shadow-md"
             >
               <img
                 src="/icons/bmc-full-logo-no-background.png"
                 alt="Buy Me a Coffee"
-                className="h-8 w-auto"
+                className="h-6 w-auto"
               />
             </a>
 
             {/* Bouton Mon compte en haut à droite */}
             <button
               onClick={() => setShowAccount(true)}
-              className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg"
+              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all shadow-md"
             >
-              <Settings size={18} />
+              <Settings size={16} />
               Mon compte
             </button>
           </div>
