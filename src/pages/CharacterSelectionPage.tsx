@@ -420,12 +420,16 @@ useEffect(() => {
     return null;
   };
 
-  if (showCampaigns) {
+   if (showCampaigns) {
     return <GameMasterCampaignPage session={session} onBack={() => setShowCampaigns(false)} />;
   }
 
   if (showSubscription) {
     return <SubscriptionPage session={session} onBack={() => setShowSubscription(false)} />;
+  }
+
+  if (showAccount) {
+    return <AccountPage session={session} onBack={() => setShowAccount(false)} />;
   }
 
   if (loading) {
