@@ -469,100 +469,8 @@ useEffect(() => {
       >
       <div className="min-h-screen py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4">
-          {/* En-tête avec Buy Me a Coffee (gauche) et Mon compte (droite) */}
-          <div className="flex justify-between items-center mb-4">
-            {/* Bouton Buy Me a Coffee en haut à gauche */}
-            <a
-              href="https://buymeacoffee.com/mewan44"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-lg font-bold transition-all shadow-lg"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 884 1279"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M791.109 297.518L790.231 297.002L788.201 296.383C789.018 297.072 790.04 297.472 791.109 297.518Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.896 388.891L802.916 389.166L803.896 388.891Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M791.484 297.377C791.359 297.361 791.237 297.332 791.118 297.29C791.111 297.371 791.111 297.453 791.118 297.534C791.252 297.516 791.368 297.468 791.484 297.377Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M791.113 297.529H791.244V297.447L791.113 297.529Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.111 388.726L804.591 387.883L803.111 388.726Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M793.669 299.515L792.223 298.138L793.669 299.515Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M788.658 296.116C788.657 296.116 788.657 296.116 788.658 296.116Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.209 388.638L804.72 387.79L803.209 388.638Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M792.223 298.138L791.243 297.605C791.77 297.846 792.185 298.298 792.223 298.138Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.111 388.726L804.591 387.883L803.111 388.726Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M881.604 203.475C881.031 203.475 880.459 203.475 879.886 203.475C873.651 203.475 867.415 203.475 861.18 203.475C858.755 203.475 857.061 205.169 857.061 207.594C857.061 212.444 857.061 217.294 857.061 222.144C857.061 224.569 858.755 226.263 861.18 226.263C867.415 226.263 873.651 226.263 879.886 226.263C880.459 226.263 881.031 226.263 881.604 226.263V203.475Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M791.113 297.529C791.113 297.529 791.113 297.529 791.113 297.529C791.113 297.529 791.113 297.529 791.113 297.529Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.111 388.726L804.591 387.883L803.111 388.726Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M791.109 297.518C790.04 297.472 789.018 297.072 788.201 296.383L788.658 296.116C789.475 296.805 790.497 297.205 791.566 297.259C791.43 297.277 791.268 297.325 791.109 297.518Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.111 388.726L804.591 387.883L803.111 388.726Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M791.113 297.529H791.244V297.447L791.113 297.529Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M792.223 298.138C792.185 298.298 791.77 297.846 791.243 297.605L791.113 297.529C791.113 297.529 791.113 297.529 791.113 297.529L791.113 297.529C791.252 297.516 791.368 297.468 791.484 297.377C791.359 297.361 791.237 297.332 791.118 297.29C791.43 297.277 791.268 297.325 791.109 297.518L790.231 297.002C790.04 297.472 789.018 297.072 788.201 296.383L788.658 296.116C788.657 296.116 788.657 296.116 788.658 296.116L788.201 296.383C786.777 295.424 785.353 294.465 783.929 293.506L792.223 298.138Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M803.111 388.726L804.591 387.883L803.111 388.726Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="hidden sm:inline">Buy Me a Coffee</span>
-              <span className="sm:hidden">☕</span>
-            </a>
-
-            {/* Bouton Mon compte en haut à droite */}
+          {/* Bouton Mon compte en haut à droite */}
+          <div className="flex justify-end mb-4">
             <button
               onClick={() => setShowAccount(true)}
               className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg"
@@ -571,6 +479,8 @@ useEffect(() => {
               Mon compte
             </button>
           </div>
+
+          {currentSubscription && ( 
             <div className="text-center mb-4">
               <p className="text-xs text-gray-400">
                 {getSubscriptionText()}
