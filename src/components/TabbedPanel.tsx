@@ -85,9 +85,10 @@ export function TabbedPanel({
   )}
 
   {activeTab === 'class' && (
-    <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
+    <div className="desktop-classes-tab">
+      <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
+    </div>
   )}
-
   {activeTab === 'spells' && (
     <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
   )}
