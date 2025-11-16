@@ -469,8 +469,28 @@ useEffect(() => {
       >
       <div className="min-h-screen py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4">
-          {/* Bouton Mon compte en haut à droite */}
-          <div className="flex justify-end mb-4">
+          {/* En-tête avec Buy Me a Coffee (gauche) et Mon compte (droite) */}
+          <div className="flex justify-between items-center mb-4">
+            {/* Bouton Buy Me a Coffee en haut à gauche */}
+            <a
+              href="https://buymeacoffee.com/mewan44"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-yellow-600/80 hover:bg-yellow-500/80 backdrop-blur-sm border border-yellow-500/50 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
+                <path d="M20.216 6.415l-.132-.666c-.119-.598-.388-1.163-.766-1.587a3.427 3.427 0 0 0-1.728-1.057 5.76 5.76 0 0 0-1.423-.124c-1.183.019-2.366.155-3.534.334-1.19.18-2.376.396-3.553.626a16.3 16.3 0 0 0-3.482.93c-.44.162-.87.363-1.27.603-.43.259-.822.584-1.15.975-.328.391-.584.842-.754 1.325-.17.482-.252.99-.242 1.498a7.5 7.5 0 0 0 .446 2.47c.253.753.64 1.451 1.136 2.053.496.602 1.097 1.098 1.772 1.463.675.365 1.416.596 2.182.684.766.089 1.544.065 2.307-.07a11.5 11.5 0 0 0 2.18-.544c.714-.217 1.407-.499 2.062-.839.654-.34 1.263-.753 1.81-1.228.546-.475 1.022-1.01 1.41-1.594.389-.584.685-1.214.878-1.875.193-.66.278-1.347.253-2.03a5.5 5.5 0 0 0-.253-1.447zM9.126 14.738c-.283 0-.557-.06-.81-.177a2.03 2.03 0 0 1-.66-.487 2.26 2.26 0 0 1-.44-.718 2.39 2.39 0 0 1-.16-.867c0-.3.054-.594.16-.867.106-.273.26-.52.44-.718.18-.198.398-.355.66-.487.253-.117.527-.177.81-.177.283 0 .557.06.81.177.262.132.48.289.66.487.18.198.334.445.44.718.106.273.16.567.16.867 0 .3-.054.594-.16.867a2.26 2.26 0 0 1-.44.718 2.03 2.03 0 0 1-.66.487c-.253.117-.527.177-.81.177zm5.25 0c-.283 0-.557-.06-.81-.177a2.03 2.03 0 0 1-.66-.487 2.26 2.26 0 0 1-.44-.718 2.39 2.39 0 0 1-.16-.867c0-.3.054-.594.16-.867.106-.273.26-.52.44-.718.18-.198.398-.355.66-.487.253-.117.527-.177.81-.177.283 0 .557.06.81.177.262.132.48.289.66.487.18.198.334.445.44.718.106.273.16.567.16.867 0 .3-.054.594-.16.867a2.26 2.26 0 0 1-.44.718 2.03 2.03 0 0 1-.66.487c-.253.117-.527.177-.81.177z"/>
+              </svg>
+              <span className="hidden sm:inline">Buy Me a Coffee</span>
+              <span className="sm:hidden">☕</span>
+            </a>
+
+            {/* Bouton Mon compte en haut à droite */}
             <button
               onClick={() => setShowAccount(true)}
               className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg"
