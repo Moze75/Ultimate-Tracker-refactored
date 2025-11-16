@@ -81,7 +81,7 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
 
   const handleUpdateEmail = async () => {
     if (!newEmail || newEmail === session.user.email) {
-      toast.error('Veuillez entrer un nouvel email');
+      toast.error('Veuillez entrer un nouvel email différent de l\'actuel');
       return;
     }
 
@@ -95,17 +95,31 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
     try {
       setSavingEmail(true);
 
+      // Supabase envoie automatiquement 2 emails :
+      // 1. À l'ancienne adresse : notification du changement
+      // 2. À la nouvelle adresse : lien de confirmation
       const { error } = await supabase.auth.updateUser({
         email: newEmail,
       });
 
       if (error) throw error;
 
-      toast.success('Email mis à jour ! Vérifiez votre boîte de réception pour confirmer le changement.');
+      toast.success(
+        `📧 Email de confirmation envoyé !\n\nVérifiez votre boîte de réception (${newEmail}) et cliquez sur le lien pour valider le changement.`,
+        { duration: 8000 }
+      );
       setEditingEmail(false);
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour de l\'email:', error);
-      toast.error(error.message || 'Erreur lors de la mise à jour de l\'email');
+      
+      // Messages d'erreur plus explicites
+      if (error.message?.includes('already registered')) {
+        toast.error('Cette adresse email est déjà utilisée par un autre compte');
+      } else if (error.message?.includes('rate limit')) {
+        toast.error('Trop de tentatives. Veuillez réessayer dans quelques minutes.');
+      } else {
+        toast.error(error.message || 'Erreur lors de la mise à jour de l\'email');
+      }
     } finally {
       setSavingEmail(false);
     }
