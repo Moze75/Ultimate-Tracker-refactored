@@ -1,6 +1,6 @@
 {
-  "name": "D&D Compagnon App",
-  "short_name": "D&D Compagnon",
+  "name": "Le Compagnon D&D",
+  "short_name": "Le Compagnon",
   "description": "Gestionnaire de personnage D&D - Suivez vos PV, sorts, équipement et plus encore !",
   "start_url": "/",
   "display": "standalone",
