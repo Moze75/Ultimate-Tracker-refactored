@@ -189,7 +189,7 @@ async getCharacterLimit(userId: string): Promise<number> {
     return '#mollie-payment-placeholder';
   },
 
-  /**
+   /**
    * ✅ MODIFIÉ : Crée ou met à jour un abonnement annuel (après paiement)
    */
   async updateSubscription(
@@ -200,19 +200,33 @@ async getCharacterLimit(userId: string): Promise<number> {
       subscriptionId?: string;
     }
   ): Promise<UserSubscription> {
-    // Marquer l'ancien abonnement comme inactif
-    await supabase
-      .from('user_subscriptions') 
-      .update({ status: 'cancelled' })
-      .eq('user_id', userId)
-      .in('status', ['active', 'trial']);
- 
-    // ✅ NOUVEAU : Calculer la date de fin (dans 1 an)
     const now = new Date();
     const subscriptionEndDate = new Date(now);
     subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
 
-    // Créer le nouvel abonnement annuel
+    // 1. Annuler les abonnements actifs
+    await supabase
+      .from('user_subscriptions')
+      .update({ 
+        status: 'cancelled',
+        end_date: now.toISOString(),
+        updated_at: now.toISOString()
+      })
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    // 2. Marquer les essais gratuits comme expirés (pas cancelled)
+    await supabase
+      .from('user_subscriptions')
+      .update({ 
+        status: 'expired',
+        end_date: now.toISOString(),
+        updated_at: now.toISOString()
+      })
+      .eq('user_id', userId)
+      .eq('status', 'trial');
+
+    // 3. Créer le nouvel abonnement annuel
     const { data, error } = await supabase
       .from('user_subscriptions')
       .insert({
@@ -220,7 +234,7 @@ async getCharacterLimit(userId: string): Promise<number> {
         tier,
         status: 'active',
         start_date: now.toISOString(),
-        subscription_end_date: subscriptionEndDate.toISOString(), // ✅ NOUVEAU
+        subscription_end_date: subscriptionEndDate.toISOString(),
         mollie_customer_id: mollieData?.customerId,
         mollie_subscription_id: mollieData?.subscriptionId,
       })
