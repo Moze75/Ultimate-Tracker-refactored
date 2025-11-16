@@ -203,7 +203,7 @@ const getPlanColor = (color: string) => {
               Choisissez votre abonnement
             </h1>
             <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-2">
-              Abonnement annuel avec renouvellement automatique
+              Abonnement annuel 
             </p>
   
 
