@@ -267,34 +267,7 @@ select {
   transform: rotate(45deg);
 }
 
-/* ========================================
-   Background pour le créateur de personnage
-   ======================================== */
-.bg-fantasy {
-  background-image: url('/fondecran/Table.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-/* Overlay optionnel pour améliorer la lisibilité du texte */
-.wizard-container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.35); /* Noir semi-transparent pour améliorer la lisibilité */
-  pointer-events: none;
-  z-index: 0;
-}
-
-.wizard-container > * {
-  position: relative;
-  z-index: 1;
-}
+ 
 
 /* Styles pour le reste des éléments et animations conservés depuis ton CSS précédent */
 
