@@ -987,7 +987,7 @@ useEffect(() => {
 const fetchKnownSpells = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await supabase 
         .from('player_spells')
         .select(
           `
