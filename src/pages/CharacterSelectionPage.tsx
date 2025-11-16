@@ -466,9 +466,20 @@ useEffect(() => {
         backgroundAttachment: 'fixed',
         backgroundColor: 'transparent',
       }}
-    >
+      >
       <div className="min-h-screen py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4">
+          {/* Bouton Mon compte en haut à droite */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setShowAccount(true)}
+              className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg"
+            >
+              <Settings size={18} />
+              Mon compte
+            </button>
+          </div>
+
           {currentSubscription && (
             <div className="text-center mb-4">
               <p className="text-xs text-gray-400">
