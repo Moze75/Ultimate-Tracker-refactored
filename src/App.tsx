@@ -15,7 +15,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Player | null>(null);
-  const [refreshingSession, setRefreshingSession] = useState(false);
+
   const [componentLoadError, setComponentLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -179,9 +179,8 @@ useEffect(() => {
       }
 
       if (event === 'TOKEN_REFRESHED') {
-        console.log('[App] 🔄 Token rafraîchi');
-        setRefreshingSession(true);
-        setTimeout(() => setRefreshingSession(false), 1200);
+        console.log('[App] 🔄 Token rafraîchi silencieusement');
+        // Reconnexion silencieuse - pas de bandeau
       }
     });
 
@@ -368,11 +367,7 @@ return (
     <Toaster position="top-right" />
     <InstallPrompt />
 
-    {refreshingSession && (
-      <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black text-center py-2 z-50">
-        🔄 Reconnexion en cours...
-      </div>
-    )}
+
 
     {!session ? (
       <LoginPage />
