@@ -89,9 +89,7 @@ export default function RaceSelection({
     }
     if (raceName === 'Tieffelin') {
       return <Zap className="w-5 h-5 text-purple-500" />;
-    }
-    if (raceName === 'Aasimar') {
-      return <Star className="w-5 h-5 text-blue-300" />;
+
     } 
     if (raceName === 'Goliath') {
       return <Shield className="w-5 h-5 text-gray-400" />;
