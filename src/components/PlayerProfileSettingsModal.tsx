@@ -92,7 +92,6 @@ function toStringArrayMaybe(data: any): string[] {
 
 const DND_RACES: string[] = [
   '',
-  'Aasimar',
   'Drakeide',
   'Elfe sylvestre',
   'Haut-elfe',
