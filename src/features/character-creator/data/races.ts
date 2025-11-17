@@ -165,21 +165,7 @@ export const races: DndRace[] = [
       'Présence d\'outre-monde (thaumaturgie)'
     ]
   },
-  {
-    name: 'Aasimar',
-    description: 'Descendants des plans célestes, porteurs de lumière et de puissance divine.',
-    size: 'Moyen ou Petit',
-    speed: 30,
-    languages: ['Commun', 'Au choix'],
-    proficiencies: [],
-    traits: [
-      'Vision dans le noir (18 m)',
-      'Mains guérisseuses (soins = bonus de maîtrise en d4, repos long)',
-      'Résistance céleste (radiant & nécrotique)',
-      'Porte-lumière (lumière)',
-      'Révélation céleste (niv 3 : ailes, linceul nécrotique ou radiance, 1 min, repos long)'
-    ]
-  },
+
   {
     name: 'Goliath',
     description: 'Descendants des géants, les goliaths possèdent une puissance colossale.',
