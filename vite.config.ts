@@ -35,8 +35,8 @@ export default defineConfig({
         clientsClaim: true
       },
     manifest: {
-      name: 'D&D Ultimate Tracker',
-      short_name: 'Ultimate Tracker',
+      name: 'Le Compagnon - D&D',
+      short_name: 'Le Compagnon',
       description: 'Gestionnaire de personnages D&D 2024',
       theme_color: '#1f2937',
       background_color: '#111827',
