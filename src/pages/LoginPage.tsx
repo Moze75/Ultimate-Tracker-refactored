@@ -15,7 +15,6 @@ export function LoginPage() {
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false); // ✅ NOUVEAU
-  const [failedAttempts, setFailedAttempts] = useState(0); // Nouvelle variable d'état pour les échecs
 
   const BG_URL =
     (import.meta as any)?.env?.VITE_LOGIN_BG_URL ||
@@ -64,31 +63,29 @@ export function LoginPage() {
     checkConnection();
   }, []);
 
-const handleEmailSignIn = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (failedAttempts >= 3) { // Bloquer après 3 tentatives
-    toast.error('Trop de tentatives échouées. Veuillez recharger la page.');
-    return;
-  }
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setConnectionError(null);
 
-  setIsLoading(true);
-  setConnectionError(null);
+    try {
+      const { error } = await authService.signInWithEmail(email, password);
 
-  try {
-    const { error } = await authService.signInWithEmail(email, password);
-
-    if (error) {
-      throw error;
+      if (error) throw error;
+      toast.success('Connexion réussie');
+    } catch (error: any) {
+      console.error('Erreur de connexion:', error);
+      const errorMessage = error.message === 'Failed to fetch' 
+        ? 'Impossible de se connecter au serveur. Vérifiez votre connexion Internet.'
+        : error.message?.includes('Veuillez confirmer votre adresse email')
+        ? 'Veuillez confirmer votre adresse email avant de vous connecter. Vérifiez votre boîte de réception et le dossier spam.'
+        : error.message || 'Erreur de connexion';
+      setConnectionError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-    toast.success('Connexion réussie');
-    setFailedAttempts(0); // Réinitialiser le compteur en cas de succès
-  } catch (error: any) {
-    toast.error(error.message || 'Erreur de connexion');
-    setFailedAttempts((prev) => prev + 1); // Incrémente le compteur en cas d'échec
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -406,13 +403,14 @@ const toggleForgotPassword = () => {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
                       </div>
-<input
-  type="email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-  disabled={failedAttempts >= 3} // Désactiver après 3 tentatives échouées
-  required
-/>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="input-dark w-full pl-10 pr-3 py-2 rounded-lg"
+                        placeholder="••••••••"
+                        required
+                      />
                     </div>
                   </div>
                   
@@ -425,13 +423,14 @@ const toggleForgotPassword = () => {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Lock className="h-5 w-5 text-gray-400" />
                         </div>
-<input
-  type="password"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  disabled={failedAttempts >= 3} // Désactiver après 3 tentatives échouées
-  required
-/>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="input-dark w-full pl-10 pr-3 py-2 rounded-lg"
+                          placeholder="••••••••"
+                          required={isSignUp}
+                        />
                       </div>
                     </div>
                   )}
@@ -439,35 +438,28 @@ const toggleForgotPassword = () => {
               )}
 
               <div className="space-y-3">
- <button
-  type="submit"
-  disabled={isLoading || !!connectionError}
-  className="btn-primary w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
->
-  {isForgotPassword ? (
-    <>
-      <Mail size={20} />
-      Envoyer le lien
-    </>
-  ) : isSignUp ? (
-    <>
-      <UserPlus size={20} />
-      Créer le compte
-    </>
-  ) : (
-    <>
-      <LogIn size={20} />
-      Se connecter
-    </>
-  )}
-</button>
-
-{failedAttempts > 0 && failedAttempts < 3 && (
-  <p>Attention : Il vous reste {3 - failedAttempts} tentative(s).</p>
-)}
-{failedAttempts >= 3 && (
-  <p>Vous avez atteint la limite de tentatives. Veuillez recharger la page.</p>
-)}
+                <button
+                  type="submit"
+                  disabled={isLoading || !!connectionError}
+                  className="btn-primary w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isForgotPassword ? (
+                    <>
+                      <Mail size={20} />
+                      Envoyer le lien
+                    </>
+                  ) : isSignUp ? (
+                    <>
+                      <UserPlus size={20} />
+                      Créer le compte
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={20} />
+                      Se connecter
+                    </>
+                  )}
+                </button>
                 
                 <div className="text-center space-y-2">
                   {/* ✅ NOUVEAU - Lien "Mot de passe oublié" */}
