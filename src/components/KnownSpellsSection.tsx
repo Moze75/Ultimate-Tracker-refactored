@@ -635,12 +635,23 @@ function SpellCard({
   
   // ✅ NOUVEAU : Analyser les dégâts du sort
   const damageInfo = useMemo(() => {
-    return analyzeSpellDamage(
+    const result = analyzeSpellDamage(
       spell.spell_description,
       spell.spell_higher_levels,
       spell.spell_level
     );
-  }, [spell.spell_description, spell.spell_higher_levels, spell.spell_level]);
+    
+    // ✅ DEBUG : Afficher l'analyse du sort
+    console.log(`[SpellCard] Analyse de "${spell.spell_name}":`, {
+      isDamageSpell: result.isDamageSpell,
+      baseDamage: result.baseDamage,
+      upgradeType: result.upgradeType,
+      upgradePattern: result.upgradePattern,
+      characterLevelThresholds: result.characterLevelThresholds,
+    });
+    
+    return result;
+  }, [spell.spell_description, spell.spell_higher_levels, spell.spell_level, spell.spell_name]);
   
   // ✅ NOUVEAU : Calculer les dégâts totaux selon le niveau sélectionné
   const totalDamage = useMemo(() => {
