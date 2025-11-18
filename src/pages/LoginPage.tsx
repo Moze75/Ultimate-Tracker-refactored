@@ -6,6 +6,8 @@ import { authService } from '../services/authService';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
+  const [loginAttempts, setLoginAttempts] = useState(0);
+const MAX_LOGIN_ATTEMPTS = 3;
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
