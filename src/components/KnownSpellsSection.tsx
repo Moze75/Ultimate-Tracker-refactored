@@ -796,37 +796,31 @@ function SpellCard({
     </button>
   )}
   
-  {/* Badge dégâts avec sélecteur de niveau */}
+   {/* Badge dégâts avec sélecteur de niveau */}
   {damageInfo.isDamageSpell && totalDamage && (
     <>
-       {availableLevels.length > 1 && spell.spell_level > 0 ? (
+      {availableLevels.length > 1 && spell.spell_level > 0 ? (
         // Wrapper pour stabiliser la position du select
         <div className="inline-block">
           <select
             value={selectedCastLevel}
-            // ✅ onChange : ne fait que changer de niveau, sans lancer
             onChange={(e) => {
               e.stopPropagation();
               const newLevel = Number(e.target.value);
               setSelectedCastLevel(newLevel);
-            }}
-            // ✅ onClick : lance les dégâts pour le niveau actuellement sélectionné
-            onClick={(e) => {
-              e.stopPropagation();
+
+              // Recalculer les dégâts pour ce niveau
               const lvlDamage = calculateSlotDamage(
                 damageInfo,
                 spell.spell_level,
-                selectedCastLevel,
+                newLevel,
                 abilityModifier
               );
+
               const { diceFormula, modifier } = parseDamageFormula(lvlDamage);
-              onRoll(
-                'damage',
-                `${spell.spell_name} (Niv. ${selectedCastLevel})`,
-                diceFormula,
-                modifier
-              );
+              onRoll('damage', `${spell.spell_name} (Niv. ${newLevel})`, diceFormula, modifier);
             }}
+            onClick={(e) => e.stopPropagation()}
             // Champ fermé : fond transparent, texte blanc
             className="
               text-xs
@@ -860,6 +854,21 @@ function SpellCard({
           </select>
         </div>
       ) : (
+        <button
+          type="button"
+          className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+          title="Lancer les dégâts du sort"
+          onClick={(e) => {
+            e.stopPropagation();
+            const { diceFormula, modifier } = parseDamageFormula(totalDamage);
+            onRoll('damage', spell.spell_name, diceFormula, modifier);
+          }}
+        >
+          {totalDamage}
+        </button>
+      )}
+    </>
+  )}
         <button
           type="button"
           className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
