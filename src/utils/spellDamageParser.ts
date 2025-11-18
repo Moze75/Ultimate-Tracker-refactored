@@ -398,6 +398,30 @@ let result = parts.join(' + ');
   return result;
 }
 
+
+/**
+ * Consolide les composantes de dégâts identiques
+ * Ex: [1d6 feu, 1d6 feu] → [2d6 feu]
+ */
+function consolidateDamageComponents(components: DamageComponent[]): DamageComponent[] {
+  const consolidated = new Map<string, DamageComponent>();
+  
+  components.forEach(comp => {
+    // Clé unique : type de dé + type de dégât
+    const key = `${comp.diceType}-${comp.damageType || 'none'}`;
+    
+    if (consolidated.has(key)) {
+      const existing = consolidated.get(key)!;
+      existing.diceCount += comp.diceCount;
+      existing.formula = `${existing.diceCount}d${existing.diceType}`;
+    } else {
+      consolidated.set(key, { ...comp });
+    }
+  });
+  
+  return Array.from(consolidated.values());
+}
+
 /**
  * 9. Calcule les dégâts totaux pour un tour de magie selon le niveau du personnage
  */
