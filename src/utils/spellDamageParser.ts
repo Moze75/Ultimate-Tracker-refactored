@@ -342,18 +342,20 @@ export function parseCantripUpgrade(higherLevels: string): {
     // ✅ DEBUG : Afficher l'incrément détecté
   console.log('[parseCantripUpgrade] Incrément détecté:', incrementMatch ? incrementMatch[1] : 'aucun');
   
-  if (!incrementMatch) {
+   if (!incrementMatch) {
     // Fallback : extraire toutes les formules et prendre la première (hors parenthèses)
     const textWithoutParens = higherLevels.replace(/\([^)]+\)/g, ''); // Retirer "(2d6)", "(3d6)", etc.
     const components = extractDamageComponents(textWithoutParens);
     
     if (components.length > 0) {
       // Prendre seulement la première formule
+      console.log('[parseCantripUpgrade] Fallback - composante trouvée:', components[0]);
       return {
         components: [components[0]],
-       thresholds: uniqueThresholds,
+        thresholds: uniqueThresholds,
       };
     }
+    console.log('[parseCantripUpgrade] Aucun incrément trouvé');
     return null;
   }
   
