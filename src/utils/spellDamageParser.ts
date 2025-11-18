@@ -152,7 +152,7 @@ export function extractDamageComponents(text: string): DamageComponent[] {
   
   return components;
 }
- 
+
 /**
  * 4. Détecte si le sort utilise un modificateur de caractéristique
  * Ex: "2d8 + votre modificateur de Charisme"
@@ -219,7 +219,7 @@ export function parseSlotUpgrade(higherLevels: string): {
   return null;
 }
 
-/** 
+/**
  * 6. Parse les règles d'amélioration pour tours de magie (basées sur niveau de personnage)
  * Ex: "Les dégâts augmentent de 1d10 lorsque vous atteignez le niveau 5"
  * Retourne: { components: [{1d10}], thresholds: [5, 11, 17] }
@@ -244,11 +244,11 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (thresholds.length === 0) {
     // Pattern : "aux niveaux 5, 11, et 17"
     const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
-    const altMatch = higherLevels.match(altPattern); 
+    const altMatch = higherLevels.match(altPattern);
     
-    if (altMatch) { 
+    if (altMatch) {
       const numbers = altMatch[1].match(/\d+/g);
-      if (numbers) { 
+      if (numbers) {
         numbers.forEach(n => thresholds.push(parseInt(n, 10)));
       }
     }
@@ -272,7 +272,7 @@ export function parseCantripUpgrade(higherLevels: string): {
           thresholds,
         };
       }
-    } 
+    }
     return null;
   }
   
@@ -373,21 +373,18 @@ export function calculateSlotDamage(
     });
   }
   
-// ✅ Consolider les dés identiques avant de construire la formule
-const consolidated = consolidateDamageComponents(totalComponents);
-
-// Construire la formule finale
-const parts: string[] = [];
-
-consolidated.forEach(comp => {
-  if (comp.damageType) {
-    parts.push(`${comp.formula} ${comp.damageType}`);
-  } else {
-    parts.push(comp.formula);
-  }
-});
-
-let result = parts.join(' + ');
+  // Construire la formule finale
+  const parts: string[] = [];
+  
+  totalComponents.forEach(comp => {
+    if (comp.damageType) {
+      parts.push(`${comp.formula} ${comp.damageType}`);
+    } else {
+      parts.push(comp.formula);
+    }
+  });
+  
+  let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
   if (info.hasModifier && abilityModifier !== undefined) {
@@ -396,30 +393,6 @@ let result = parts.join(' + ');
   }
   
   return result;
-}
-
-
-/**
- * Consolide les composantes de dégâts identiques
- * Ex: [1d6 feu, 1d6 feu] → [2d6 feu]
- */
-function consolidateDamageComponents(components: DamageComponent[]): DamageComponent[] {
-  const consolidated = new Map<string, DamageComponent>();
-  
-  components.forEach(comp => {
-    // Clé unique : type de dé + type de dégât
-    const key = `${comp.diceType}-${comp.damageType || 'none'}`;
-    
-    if (consolidated.has(key)) {
-      const existing = consolidated.get(key)!;
-      existing.diceCount += comp.diceCount;
-      existing.formula = `${existing.diceCount}d${existing.diceType}`;
-    } else {
-      consolidated.set(key, { ...comp });
-    }
-  });
-  
-  return Array.from(consolidated.values());
 }
 
 /**
@@ -465,21 +438,18 @@ export function calculateCantripDamage(
     }
   }
   
- // ✅ Consolider les dés identiques avant de construire la formule
-const consolidated = consolidateDamageComponents(totalComponents);
-
-// Construire la formule finale
-const parts: string[] = [];
-
-consolidated.forEach(comp => {
-  if (comp.damageType) {
-    parts.push(`${comp.formula} ${comp.damageType}`);
-  } else {
-    parts.push(comp.formula);
-  }
-});
-
-let result = parts.join(' + ');
+  // Construire la formule finale
+  const parts: string[] = [];
+  
+  totalComponents.forEach(comp => {
+    if (comp.damageType) {
+      parts.push(`${comp.formula} ${comp.damageType}`);
+    } else {
+      parts.push(comp.formula);
+    }
+  });
+  
+  let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
   if (info.hasModifier && abilityModifier !== undefined) {
