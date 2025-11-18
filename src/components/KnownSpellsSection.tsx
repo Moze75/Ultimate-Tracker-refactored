@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   Zap,
+  FaDice,
 } from 'lucide-react';
 import {
   analyzeSpellDamage,
@@ -864,7 +865,7 @@ function SpellCard({
               );
             }}
           >
-            o 
+            <FaDice /> 
           </button>
         </div>
       ) : (
