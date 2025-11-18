@@ -538,21 +538,30 @@ export function calculateCantripDamage(
     // ✅ DEBUG : Afficher le calcul du multiplier
     console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
     
-    if (multiplier > 0) {
+      if (multiplier > 0) {
       // Ajouter les dégâts supplémentaires
       info.upgradePattern.forEach(upgrade => {
-        const existing = totalComponents.find(c => c.diceType === upgrade.diceType && c.damageType === upgrade.damageType);
+        // ✅ Chercher un dé existant avec le même type ET le même type de dégât (ou les deux undefined)
+        const existing = totalComponents.find(c => 
+          c.diceType === upgrade.diceType && 
+          (c.damageType || 'none') === (upgrade.damageType || 'none')
+        );
         
         if (existing) {
+          // ✅ Mettre à jour le composant existant
           existing.diceCount += upgrade.diceCount * multiplier;
           existing.formula = `${existing.diceCount}d${existing.diceType}`;
+          console.log('[calculateCantripDamage] Fusionné avec existant:', existing);
         } else {
-          totalComponents.push({
+          // ✅ Ajouter comme nouveau composant
+          const newComponent = {
             diceCount: upgrade.diceCount * multiplier,
             diceType: upgrade.diceType,
             formula: `${upgrade.diceCount * multiplier}d${upgrade.diceType}`,
             damageType: upgrade.damageType,
-          });
+          };
+          totalComponents.push(newComponent);
+          console.log('[calculateCantripDamage] Nouveau composant ajouté:', newComponent);
         }
       });
        // ✅ DEBUG : Afficher les composantes après amélioration
