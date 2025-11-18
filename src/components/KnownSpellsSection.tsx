@@ -691,7 +691,7 @@ function SpellCard({
         isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
       } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
     >
-       <button
+      <button
         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
         className="w-full text-left p-2 transition-all duration-200"
       >
@@ -701,57 +701,6 @@ function SpellCard({
               {spell.spell_name}
             </h4>
             {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />}
-            
-            {/* ✅ NOUVEAU : Badges pour sorts d'attaque */}
-            {damageInfo.isAttackRoll && spellAttackBonus !== null && (
-              <div 
-                className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium flex-shrink-0"
-                title="Bonus d'attaque de sort"
-              >
-                att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
-              </div>
-            )}
-            
-            {/* ✅ NOUVEAU : Badge dégâts avec sélecteur de niveau */}
-            {damageInfo.isDamageSpell && totalDamage && (
-              <>
-                {availableLevels.length > 1 && spell.spell_level > 0 ? (
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <select
-                      value={selectedCastLevel}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setSelectedCastLevel(Number(e.target.value));
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold cursor-pointer hover:bg-orange-500/30 transition-colors"
-                      title={`Lancer au niveau ${selectedCastLevel}`}
-                    >
-                      {availableLevels.map(lvl => {
-                        const lvlDamage = calculateSlotDamage(
-                          damageInfo,
-                          spell.spell_level,
-                          lvl,
-                          abilityModifier
-                        );
-                        return (
-                          <option key={lvl} value={lvl}>
-                            {lvlDamage} (Niv. {lvl})
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                ) : (
-                  <div 
-                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold flex-shrink-0"
-                    title="Dégâts du sort"
-                  >
-                    {totalDamage}
-                  </div>
-                )}
-              </>
-            )}
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -774,11 +723,66 @@ function SpellCard({
           </div>
         </div>
         
+        {/* Ligne école + portée */}
         <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
           <span className="capitalize">{spell.spell_school}</span>
           <span>•</span>
           <span>{spell.spell_range}</span>
         </div>
+        
+        {/* ✅ NOUVEAU : Badges déplacés ici (sous école/portée) */}
+        {(damageInfo.isDamageSpell || damageInfo.isAttackRoll) && (
+          <div className="flex items-center gap-2 flex-wrap mt-2">
+            {/* Badge bonus d'attaque */}
+            {damageInfo.isAttackRoll && spellAttackBonus !== null && (
+              <div 
+                className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium"
+                title="Bonus d'attaque de sort"
+              >
+                att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
+              </div>
+            )}
+            
+            {/* Badge dégâts avec sélecteur de niveau */}
+            {damageInfo.isDamageSpell && totalDamage && (
+              <>
+                {availableLevels.length > 1 && spell.spell_level > 0 ? (
+                  <select
+                    value={selectedCastLevel}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setSelectedCastLevel(Number(e.target.value));
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold cursor-pointer hover:bg-orange-500/30 transition-colors"
+                    title={`Lancer au niveau ${selectedCastLevel}`}
+                  >
+                    {availableLevels.map(lvl => {
+                      const lvlDamage = calculateSlotDamage(
+                        damageInfo,
+                        spell.spell_level,
+                        lvl,
+                        abilityModifier
+                      );
+                      return (
+                        <option key={lvl} value={lvl}>
+                          {lvlDamage} (Niv. {lvl})
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <div 
+                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
+                    title="Dégâts du sort"
+                  >
+                    {totalDamage}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </button>
 
       <div className="px-2 pb-2 flex items-center justify-end gap-3">
