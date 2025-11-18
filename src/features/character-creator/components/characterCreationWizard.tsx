@@ -312,21 +312,22 @@ if (loadingEquipment) {
       const racialLanguages = raceData?.languages || [];
       const allLanguages = Array.from(new Set([...racialLanguages, ...selectedLanguages]));
 
-      // MODE INTÉGRÉ
-      if (typeof onFinish === 'function') {
-        setLoadingEquipment(true);
+     // MODE INTÉGRÉ
+if (typeof onFinish === 'function') {
+  setLoadingEquipment(true);
 
-        let equipmentDetails;
-        try {
-          const enriched = await enrichEquipmentList(equipment);
-          equipmentDetails = determineAutoEquip(enriched);
-        } catch (error) {
-          console.error('Erreur lors de l\'enrichissement des équipements:', error);
-          toast.error('Impossible de charger les équipements. Création sans équipement.');
-          equipmentDetails = [];
-        } finally {
-          setLoadingEquipment(false);
-        }
+  let equipmentDetails;
+  try {
+    const enriched = await enrichEquipmentList(equipment);
+    equipmentDetails = determineAutoEquip(enriched);
+  } catch (error) {
+    console.error('Erreur lors de l\'enrichissement des équipements:', error);
+    toast.error('Impossible de charger les équipements. Création sans équipement.');
+    equipmentDetails = [];
+    setLoadingEquipment(false); // ✅ Désactiver uniquement en cas d'erreur
+    return; // ✅ Arrêter le processus
+  }
+  // ⚠️ NE PAS mettre finally ici - le loading reste actif
 
 const payload: CharacterExportPayload = {
   characterName: characterName.trim() || 'Héros sans nom',
