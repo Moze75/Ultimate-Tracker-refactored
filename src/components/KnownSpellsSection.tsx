@@ -630,6 +630,47 @@ function SpellCard({
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+ // ✅ NOUVEAU : État pour le niveau de lancement sélectionné
+  const [selectedCastLevel, setSelectedCastLevel] = useState<number>(spell.spell_level);
+  
+  // ✅ NOUVEAU : Analyser les dégâts du sort
+  const damageInfo = useMemo(() => {
+    return analyzeSpellDamage(
+      spell.spell_description,
+      spell.spell_higher_levels,
+      spell.spell_level
+    );
+  }, [spell.spell_description, spell.spell_higher_levels, spell.spell_level]);
+  
+  // ✅ NOUVEAU : Calculer les dégâts totaux selon le niveau sélectionné
+  const totalDamage = useMemo(() => {
+    if (!damageInfo.isDamageSpell) return null;
+    
+    // Tours de magie : basé sur niveau du personnage
+    if (spell.spell_level === 0) {
+      return calculateCantripDamage(damageInfo, characterLevel, abilityModifier);
+    }
+    
+    // Sorts à emplacements : basé sur niveau de lancement
+    return calculateSlotDamage(
+      damageInfo,
+      spell.spell_level,
+      selectedCastLevel,
+      abilityModifier
+    );
+  }, [damageInfo, spell.spell_level, selectedCastLevel, characterLevel, abilityModifier]);
+  
+  // ✅ NOUVEAU : Niveaux de lancement disponibles
+  const availableLevels = useMemo(() => {
+    const hasUpgrade = damageInfo.upgradeType === 'per_slot_level';
+    return getAvailableCastLevels(spell.spell_level, maxPlayerSpellLevel, hasUpgrade);
+  }, [spell.spell_level, maxPlayerSpellLevel, damageInfo.upgradeType]);
+  
+  // ✅ NOUVEAU : Réinitialiser le niveau sélectionné si le sort change
+  useEffect(() => {
+    setSelectedCastLevel(spell.spell_level);
+  }, [spell.spell_level]);
+  
   const handleRemoveSpell = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowDeleteConfirm(true);
