@@ -28,6 +28,8 @@ interface SpellbookModalProps {
   onClose: () => void;
   playerClass?: DndClass | null | undefined;
   playerClasses?: (DndClass | null | undefined)[];
+  /** Niveau du personnage pour limiter les niveaux de sorts disponibles */
+  playerLevel?: number;
   selectionMode?: boolean;
   onSpellSelect?: (spell: any) => void;
   selectedSpells?: any[];
