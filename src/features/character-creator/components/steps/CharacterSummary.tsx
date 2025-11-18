@@ -146,7 +146,7 @@ export default function CharacterSummary({
 }: CharacterSummaryProps) {
   const [nameError, setNameError] = useState('');
   const [showToast, setShowToast] = useState(false);
-    const [isCreating, setIsCreating] = useState(false); // ✅ NOUVEAU
+    const [isCreating, setIsCreating] = useState(false); // ✅ NOUVEAU 
 
   // Auto-masquer le toast après 4 secondes
   useEffect(() => {
@@ -220,18 +220,10 @@ export default function CharacterSummary({
       });
       return;
     }
-setNameError('');
-  setShowToast(false);
-  setIsCreating(true); // ✅ Bloquer immédiatement
-  
-  try {
-    await onFinish(); // ✅ Attendre la fin complète
-  } catch (error) {
-    console.error('[CharacterSummary] Erreur lors de la création:', error);
-    setIsCreating(false); // ✅ Réactiver en cas d'erreur
-  }
-  // Note: Ne pas setIsCreating(false) en cas de succès car le composant sera démonté
-};
+    setNameError('');
+    setShowToast(false);
+    onFinish();
+  };
 
   // Calcul du bonus de compétence
   const getSkillBonus = (skillLabel: SkillName): number => {
