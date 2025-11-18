@@ -21,7 +21,7 @@ import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { SpellbookModal } from './SpellbookModal';
-import { DiceBox3D } from './DiceBox3D';
+import { DiceRollContext } from './ResponsiveGameLayout'; // ✨ comme dans StatsTab
 import { getSpellSlotsByLevel } from '../utils/spellSlots2024';
 import {
   getArcaneRecoveryInfo,
