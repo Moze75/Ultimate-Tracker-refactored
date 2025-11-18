@@ -146,6 +146,7 @@ export default function CharacterSummary({
 }: CharacterSummaryProps) {
   const [nameError, setNameError] = useState('');
   const [showToast, setShowToast] = useState(false);
+    const [isCreating, setIsCreating] = useState(false); // ✅ NOUVEAU
 
   // Auto-masquer le toast après 4 secondes
   useEffect(() => {
