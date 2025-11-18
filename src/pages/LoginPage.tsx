@@ -439,28 +439,35 @@ const toggleForgotPassword = () => {
               )}
 
               <div className="space-y-3">
-                <button
-                  type="submit"
-                  disabled={isLoading || !!connectionError}
-                  className="btn-primary w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isForgotPassword ? (
-                    <>
-                      <Mail size={20} />
-                      Envoyer le lien
-                    </>
-                  ) : isSignUp ? (
-                    <>
-                      <UserPlus size={20} />
-                      Créer le compte
-                    </>
-                  ) : (
-                    <>
-                      <LogIn size={20} />
-                      Se connecter
-                    </>
-                  )}
-                </button>
+ <button
+  type="submit"
+  disabled={isLoading || !!connectionError}
+  className="btn-primary w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+>
+  {isForgotPassword ? (
+    <>
+      <Mail size={20} />
+      Envoyer le lien
+    </>
+  ) : isSignUp ? (
+    <>
+      <UserPlus size={20} />
+      Créer le compte
+    </>
+  ) : (
+    <>
+      <LogIn size={20} />
+      Se connecter
+    </>
+  )}
+</button>
+
+{failedAttempts > 0 && failedAttempts < 3 && (
+  <p>Attention : Il vous reste {3 - failedAttempts} tentative(s).</p>
+)}
+{failedAttempts >= 3 && (
+  <p>Vous avez atteint la limite de tentatives. Veuillez recharger la page.</p>
+)}
                 
                 <div className="text-center space-y-2">
                   {/* ✅ NOUVEAU - Lien "Mot de passe oublié" */}
