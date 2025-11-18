@@ -864,7 +864,7 @@ function SpellCard({
               );
             }}
           >
-            d
+            o
           </button>
         </div>
       ) : (
