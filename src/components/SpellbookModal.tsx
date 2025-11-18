@@ -98,6 +98,7 @@ export function SpellbookModal({
   onClose,
   playerClass,
   playerClasses,
+  playerLevel,
   selectionMode = false,
   onSpellSelect,
   selectedSpells = [],
