@@ -321,6 +321,9 @@ export function parseCantripUpgrade(higherLevels: string): {
   // Pattern : "augmentent de XdY" ou "augmente de XdY"
   const incrementPattern = /(?:augmentent?|gagne(?:nt)?)\s+(?:de\s+)?(\d+d\d+)/i;
   const incrementMatch = higherLevels.match(incrementPattern);
+
+    // ✅ DEBUG : Afficher l'incrément détecté
+  console.log('[parseCantripUpgrade] Incrément détecté:', incrementMatch ? incrementMatch[1] : 'aucun');
   
   if (!incrementMatch) {
     // Fallback : extraire toutes les formules et prendre la première (hors parenthèses)
