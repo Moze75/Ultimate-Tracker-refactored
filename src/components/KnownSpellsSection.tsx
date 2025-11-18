@@ -799,28 +799,34 @@ function SpellCard({
   {/* Badge dégâts avec sélecteur de niveau */}
   {damageInfo.isDamageSpell && totalDamage && (
     <>
-      {availableLevels.length > 1 && spell.spell_level > 0 ? (
+       {availableLevels.length > 1 && spell.spell_level > 0 ? (
         // Wrapper pour stabiliser la position du select
         <div className="inline-block">
           <select
             value={selectedCastLevel}
+            // ✅ onChange : ne fait que changer de niveau, sans lancer
             onChange={(e) => {
               e.stopPropagation();
               const newLevel = Number(e.target.value);
               setSelectedCastLevel(newLevel);
-
-              // Recalculer les dégâts pour ce niveau
+            }}
+            // ✅ onClick : lance les dégâts pour le niveau actuellement sélectionné
+            onClick={(e) => {
+              e.stopPropagation();
               const lvlDamage = calculateSlotDamage(
                 damageInfo,
                 spell.spell_level,
-                newLevel,
+                selectedCastLevel,
                 abilityModifier
               );
-
               const { diceFormula, modifier } = parseDamageFormula(lvlDamage);
-              onRoll('damage', `${spell.spell_name} (Niv. ${newLevel})`, diceFormula, modifier);
+              onRoll(
+                'damage',
+                `${spell.spell_name} (Niv. ${selectedCastLevel})`,
+                diceFormula,
+                modifier
+              );
             }}
-            onClick={(e) => e.stopPropagation()}
             // Champ fermé : fond transparent, texte blanc
             className="
               text-xs
