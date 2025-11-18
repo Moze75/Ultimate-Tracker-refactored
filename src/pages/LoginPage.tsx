@@ -15,6 +15,7 @@ export function LoginPage() {
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false); // ✅ NOUVEAU
+  const [failedAttempts, setFailedAttempts] = useState(0); // Nouvelle variable d'état pour les échecs
 
   const BG_URL =
     (import.meta as any)?.env?.VITE_LOGIN_BG_URL ||
