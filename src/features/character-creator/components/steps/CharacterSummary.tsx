@@ -208,22 +208,36 @@ export default function CharacterSummary({
         ? backgroundData?.equipmentOptions?.optionB ?? []
         : [];
 
-  const handleFinish = () => {
-    if (!characterName.trim()) {
-      setNameError('Le nom du personnage est requis');
-      setShowToast(true);
-      
-      // Faire défiler vers le haut pour montrer l'erreur
-      window.scrollTo({ 
-        top: 0, 
-        behavior: 'smooth' 
-      });
-      return;
-    }
-    setNameError('');
-    setShowToast(false);
-    onFinish();
-  };
+  const handleFinish = async () => {
+  // ✅ Protection contre double-clic
+  if (isCreating) {
+    console.warn('[CharacterSummary] Création déjà en cours, clic ignoré');
+    return;
+  }
+
+  if (!characterName.trim()) {
+    setNameError('Le nom du personnage est requis');
+    setShowToast(true);
+    
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    });
+    return;
+  }
+
+  setNameError('');
+  setShowToast(false);
+  setIsCreating(true); // ✅ Bloquer immédiatement
+  
+  try {
+    await onFinish(); // ✅ Attendre la fin complète
+  } catch (error) {
+    console.error('[CharacterSummary] Erreur lors de la création:', error);
+    setIsCreating(false); // ✅ Réactiver en cas d'erreur
+  }
+  // Note: Ne pas setIsCreating(false) en cas de succès car le composant sera démonté
+};
 
   // Calcul du bonus de compétence
   const getSkillBonus = (skillLabel: SkillName): number => {
