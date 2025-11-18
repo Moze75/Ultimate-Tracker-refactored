@@ -691,17 +691,69 @@ function SpellCard({
         isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
       } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
     >
-      <button
+       <button
         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
         className="w-full text-left p-2 transition-all duration-200"
       >
         <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'}`}>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'} truncate`}>
               {spell.spell_name}
             </h4>
-            {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
+            {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />}
+            
+            {/* ✅ NOUVEAU : Badges pour sorts d'attaque */}
+            {damageInfo.isAttackRoll && spellAttackBonus !== null && (
+              <div 
+                className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium flex-shrink-0"
+                title="Bonus d'attaque de sort"
+              >
+                {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus} att.
+              </div>
+            )}
+            
+            {/* ✅ NOUVEAU : Badge dégâts avec sélecteur de niveau */}
+            {damageInfo.isDamageSpell && totalDamage && (
+              <>
+                {availableLevels.length > 1 && spell.spell_level > 0 ? (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <select
+                      value={selectedCastLevel}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSelectedCastLevel(Number(e.target.value));
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold cursor-pointer hover:bg-orange-500/30 transition-colors"
+                      title={`Lancer au niveau ${selectedCastLevel}`}
+                    >
+                      {availableLevels.map(lvl => {
+                        const lvlDamage = calculateSlotDamage(
+                          damageInfo,
+                          spell.spell_level,
+                          lvl,
+                          abilityModifier
+                        );
+                        return (
+                          <option key={lvl} value={lvl}>
+                            {lvlDamage} (Niv. {lvl})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                ) : (
+                  <div 
+                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold flex-shrink-0"
+                    title="Dégâts du sort"
+                  >
+                    {totalDamage}
+                  </div>
+                )}
+              </>
+            )}
           </div>
+          
           <div className="flex items-center gap-2 flex-shrink-0">
             <div
               className={`text-xs px-2 py-1 rounded-full ${
@@ -716,11 +768,12 @@ function SpellCard({
                 Préparé
               </span>
             )}
-<div className={`chevron-icon ${isExpanded ? 'rotated' : ''}`}>
-  <ChevronDown className="w-5 h-5 text-gray-400" />
-</div>
+            <div className={`chevron-icon ${isExpanded ? 'rotated' : ''}`}>
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            </div>
           </div>
         </div>
+        
         <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
           <span className="capitalize">{spell.spell_school}</span>
           <span>•</span>
