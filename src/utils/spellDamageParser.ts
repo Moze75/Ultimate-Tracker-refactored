@@ -174,7 +174,7 @@ export function parseSlotUpgrade(higherLevels: string): {
 
 /**
  * 6. Parse les règles d'amélioration pour tours de magie (basées sur niveau de personnage)
- * Ex: "Les dégâts du sort augmentent de 1d10 lorsque vous atteignez le niveau 5"
+ * Ex: "Les dégâts augmentent de 1d10 lorsque vous atteignez le niveau 5"
  * Retourne: { components: [{1d10}], thresholds: [5, 11, 17] }
  */
 export function parseCantripUpgrade(higherLevels: string): {
@@ -183,8 +183,9 @@ export function parseCantripUpgrade(higherLevels: string): {
 } | null {
   if (!higherLevels) return null;
   
-  // Détection des seuils de niveau (5, 11, 17)
-  const levelPattern = /niveau (\d+)/gi;
+  // 1️⃣ Détection des seuils de niveau
+  // Pattern amélioré : chercher "niveau X" ou "niveaux X" mais PAS "X (YdZ)"
+  const levelPattern = /niveaux?\s+(\d+)(?!\s*\()/gi;
   const thresholds: number[] = [];
   
   let match;
@@ -192,10 +193,44 @@ export function parseCantripUpgrade(higherLevels: string): {
     thresholds.push(parseInt(match[1], 10));
   }
   
+  // Si aucun seuil trouvé, chercher les patterns alternatifs
+  if (thresholds.length === 0) {
+    // Pattern : "aux niveaux 5, 11, et 17"
+    const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
+    const altMatch = higherLevels.match(altPattern);
+    
+    if (altMatch) {
+      const numbers = altMatch[1].match(/\d+/g);
+      if (numbers) {
+        numbers.forEach(n => thresholds.push(parseInt(n, 10)));
+      }
+    }
+  }
+  
   if (thresholds.length === 0) return null;
   
-  // Extraire les dégâts supplémentaires
-  const components = extractDamageComponents(higherLevels);
+  // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
+  // Pattern : "augmentent de XdY" ou "augmente de XdY" ou "gagne XdY"
+  const incrementPattern = /(?:augmentent?|gagne(?:nt)?)\s+(?:de\s+)?(\d+d\d+)/i;
+  const incrementMatch = higherLevels.match(incrementPattern);
+  
+  if (!incrementMatch) {
+    // Fallback : prendre la PREMIÈRE formule de dés (ignorer celles entre parenthèses)
+    const allFormulas = higherLevels.match(/(?<!\()\d+d\d+(?!\))/g);
+    if (allFormulas && allFormulas.length > 0) {
+      const components = extractDamageComponents(allFormulas[0]);
+      if (components.length > 0) {
+        return {
+          components,
+          thresholds,
+        };
+      }
+    }
+    return null;
+  }
+  
+  // Extraire les composantes de l'incrément
+  const components = extractDamageComponents(incrementMatch[1]);
   
   if (components.length === 0) return null;
   
