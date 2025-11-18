@@ -106,6 +106,15 @@ export function SpellbookModal({
 }: SpellbookModalProps) {
   // Utiliser playerClasses si fourni, sinon fallback sur playerClass
   const effectivePlayerClasses = playerClasses || (playerClass ? [playerClass] : []);
+    // Déterminer le niveau max de sort accessible pour limiter l'UI
+  const highestAllowedLevel = React.useMemo(() => {
+    if (!playerLevel || playerLevel <= 0) return 9; // fallback permissif si pas de niveau
+    // On prend la première classe non nulle
+    const mainClass = (playerClasses && playerClasses.find(Boolean)) || playerClass || null;
+    const casterType = getCasterType(mainClass as string | null);
+    if (casterType === 'none') return 0;
+    return getHighestAllowedSlotLevel(casterType, playerLevel);
+  }, [playerLevel, playerClasses, playerClass]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<Spell[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
