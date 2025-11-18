@@ -425,14 +425,13 @@ const toggleForgotPassword = () => {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Lock className="h-5 w-5 text-gray-400" />
                         </div>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input-dark w-full pl-10 pr-3 py-2 rounded-lg"
-                          placeholder="••••••••"
-                          required={isSignUp}
-                        />
+<input
+  type="password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  disabled={failedAttempts >= 3} // Désactiver après 3 tentatives échouées
+  required
+/>
                       </div>
                     </div>
                   )}
