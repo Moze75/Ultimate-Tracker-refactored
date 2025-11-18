@@ -866,7 +866,7 @@ function SpellCard({
               );
             }}
           >
-            <FaDice /> 
+            <FaDice className="w-3 h-3" /> 
           </button>
         </div>
       ) : (
