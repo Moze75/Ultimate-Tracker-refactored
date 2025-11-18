@@ -1324,6 +1324,22 @@ const spellAttackBonus = useMemo(
   [spellcastingAbilityName, proficiencyBonus, abilityMod]
 );
 
+    // ✅ Helper : déclencher un lancer de dés 3D
+  const triggerDiceRoll = useCallback((
+    type: 'attack' | 'damage',
+    attackName: string,
+    diceFormula: string,
+    modifier: number
+  ) => {
+    setCurrentRollData({
+      type,
+      attackName,
+      diceFormula,
+      modifier,
+    });
+    setDiceModalOpen(true);
+  }, []);
+
   // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
   const casterType = useMemo(() => {
     const primaryCaster = getCasterType(player.class);
