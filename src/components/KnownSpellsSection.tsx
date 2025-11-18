@@ -1705,7 +1705,14 @@ return (
           selectedSpells={selectedSpells}
           onConfirm={handleSpellsSelected}
         />
-      )} 
+      )}
+
+      {/* ✅ Intégration du DiceBox3D */}
+      <DiceBox3D
+        isOpen={diceModalOpen && !!currentRollData}
+        onClose={() => setDiceModalOpen(false)}
+        rollData={currentRollData}
+      />
     </div>
   );
-} 
+}
