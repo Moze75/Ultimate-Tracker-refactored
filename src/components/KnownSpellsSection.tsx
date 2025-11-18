@@ -1001,7 +1001,7 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
   const [selectedSpells, setSelectedSpells] = useState<Spell[]>([]);
   const [expandedSpell, setExpandedSpell] = useState<string | null>(null);
 
-  const [collapsedLevels, setCollapsedLevels] = useState<Set<string>>(() => {
+   const [collapsedLevels, setCollapsedLevels] = useState<Set<string>>(() => {
     const saved = localStorage.getItem(`spell-levels-state-${player.id}`);
     if (saved) {
       try {
@@ -1014,7 +1014,10 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
     return new Set();
   });
 
-const [searchTerm, setSearchTerm] = useState('');
+  // ✨ Utiliser le même contexte que StatsTab pour lancer les dés
+  const { rollDice } = React.useContext(DiceRollContext);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
 const [filterPrepared, setFilterPrepared] = useState<'all' | 'prepared' | 'unprepared'>('all');
 const spellSlotsInitialized = useRef(false);
