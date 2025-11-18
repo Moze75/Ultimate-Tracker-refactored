@@ -695,6 +695,7 @@ function SpellCard({
         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
         className="w-full text-left p-2 transition-all duration-200"
       >
+        {/* Ligne 1 : Nom + badges niveau/préparé + chevron */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'} truncate`}>
@@ -723,21 +724,23 @@ function SpellCard({
           </div>
         </div>
         
-        {/* Ligne école + portée */}
+        {/* Ligne 2 : École + Portée */}
         <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
           <span className="capitalize">{spell.spell_school}</span>
           <span>•</span>
           <span>{spell.spell_range}</span>
         </div>
         
-        {/* ✅ NOUVEAU : Badges déplacés ici (sous école/portée) */}
-        {(damageInfo.isDamageSpell || damageInfo.isAttackRoll) && (
-          <div className="flex items-center gap-2 flex-wrap mt-2">
+        {/* Ligne 3 : Badges attaque/dégâts + Boutons préparation/poubelle */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Partie gauche : Badges */}
+          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
             {/* Badge bonus d'attaque */}
             {damageInfo.isAttackRoll && spellAttackBonus !== null && (
               <div 
                 className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium"
                 title="Bonus d'attaque de sort"
+                onClick={(e) => e.stopPropagation()}
               >
                 att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
               </div>
@@ -775,6 +778,7 @@ function SpellCard({
                   <div 
                     className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
                     title="Dégâts du sort"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {totalDamage}
                   </div>
@@ -782,33 +786,34 @@ function SpellCard({
               </>
             )}
           </div>
-        )}
+          
+          {/* Partie droite : Boutons préparation + poubelle */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePrepared(spell.id, spell.is_prepared);
+              }}
+              className={`w-6 h-6 rounded-lg ${
+                spell.is_prepared
+                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
+              } flex items-center justify-center transition-colors`}
+              title={spell.is_prepared ? 'Dépréparer' : 'Préparer'}
+            >
+              <Check size={16} />
+            </button>
+
+            <button
+              onClick={handleRemoveSpell}
+              className="w-6 h-6 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg flex items-center justify-center transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
       </button>
-
-      <div className="px-2 pb-2 flex items-center justify-end gap-3">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePrepared(spell.id, spell.is_prepared);
-          }}
-          className={`w-6 h-6 rounded-lg ${
-            spell.is_prepared
-              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-              : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
-          } flex items-center justify-center`}
-          title={spell.is_prepared ? 'Dépréparer' : 'Préparer'}
-        >
-          <Check size={16} />
-        </button>
-
-        <button
-          onClick={handleRemoveSpell}
-          className="w-6 h-6 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg flex items-center justify-center"
-          title="Supprimer"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
 
       {showDeleteConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm rounded-lg">
