@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Zap,
   } from 'lucide-react';
-import { FaDice } from 'react-icons/fa';
+ 
 import {
   analyzeSpellDamage,
   calculateSlotDamage,
