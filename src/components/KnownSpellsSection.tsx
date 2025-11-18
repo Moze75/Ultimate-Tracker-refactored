@@ -638,7 +638,7 @@ function SpellCard({
     const result = analyzeSpellDamage(
       spell.spell_description,
       spell.spell_higher_levels,
-      spell.spell_level
+      spell.spell_level  
     );
     
     // ✅ DEBUG : Afficher l'analyse du sort
