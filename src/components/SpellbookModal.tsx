@@ -622,29 +622,60 @@ if (
                        `${selectedLevels.size} niveaux sélectionnés`
                     }
                   </div>
-                  <div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    {SPELL_LEVELS.map(level => (
-                      <label key={level} className="flex items-center px-3 py-2 hover:bg-gray-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedLevels.has(level)}
-                          onChange={(e) => {
-                            const newLevels = new Set(selectedLevels);
-                            if (e.target.checked) {
-                              newLevels.add(level);
-                            } else {
-                              newLevels.delete(level);
-                            }
-                            setSelectedLevels(newLevels);
-                          }}
-                          className="mr-2 text-purple-500 focus:ring-purple-500"
-                        />
-                        <span className="text-gray-300">
-                          {level === 0 ? 'Tours de magie' : `Niveau ${level}`}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+    <div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+    {SPELL_LEVELS.map(level => {
+      // On autorise toujours les tours de magie (0), mais on bloque les niveaux > highestAllowedLevel
+      const isDisabled = level > 0 && level > highestAllowedLevel;
+
+      if (isDisabled) {
+        // Option 1 : ne PAS afficher du tout les niveaux inaccessibles
+        return null;
+
+        // Option 2 (si tu préfères les voir en grisé mais non cliquables) :
+        // return (
+        //   <label
+        //     key={level}
+        //     className="flex items-center px-3 py-2 cursor-not-allowed opacity-40"
+        //   >
+        //     <input
+        //       type="checkbox"
+        //       disabled
+        //       checked={false}
+        //       className="mr-2 text-purple-500 focus:ring-purple-500"
+        //     />
+        //     <span className="text-gray-500">
+        //       {level === 0 ? 'Tours de magie' : `Niveau ${level} (indisponible)`}
+        //     </span>
+        //   </label>
+        // );
+      }
+
+      return (
+        <label
+          key={level}
+          className="flex items-center px-3 py-2 hover:bg-gray-700 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            checked={selectedLevels.has(level)}
+            onChange={(e) => {
+              const newLevels = new Set(selectedLevels);
+              if (e.target.checked) {
+                newLevels.add(level);
+              } else {
+                newLevels.delete(level);
+              }
+              setSelectedLevels(newLevels);
+            }}
+            className="mr-2 text-purple-500 focus:ring-purple-500"
+          />
+          <span className="text-gray-300">
+            {level === 0 ? 'Tours de magie' : `Niveau ${level}`}
+          </span>
+        </label>
+      );
+    })}
+  </div>
                 </div>
 
                 {/* School Filter */}
