@@ -508,6 +508,10 @@ export function calculateCantripDamage(
         multiplier++;
       }
     });
+
+     
+    // ✅ DEBUG : Afficher le calcul du multiplier
+    console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
     
     if (multiplier > 0) {
       // Ajouter les dégâts supplémentaires
