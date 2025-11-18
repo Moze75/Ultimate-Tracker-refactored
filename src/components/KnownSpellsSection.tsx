@@ -694,6 +694,22 @@ function SpellCard({
   useEffect(() => {
     setSelectedCastLevel(spell.spell_level);
   }, [spell.spell_level]);
+
+  // ✅ Helper pour convertir totalDamage ("2d6 + 3") en (diceFormula, modifier)
+  const parseDamageFormula = (damageString: string): { diceFormula: string; modifier: number } => {
+    // Extraire la première occurrence de XdY
+    const diceMatch = damageString.match(/(\d+d\d+)/i);
+    const baseFormula = diceMatch ? diceMatch[1] : '1d6';
+
+    // Extraire un éventuel modificateur numérique global, ex: "+ 3" ou "-2"
+    const modMatch = damageString.match(/([+-]\s*\d+)\s*$/);
+    const modifier = modMatch ? parseInt(modMatch[1].replace(/\s+/g, ''), 10) : 0;
+
+    return {
+      diceFormula: baseFormula,
+      modifier,
+    };
+  };
   
   const handleRemoveSpell = (e: React.MouseEvent) => {
     e.stopPropagation();
