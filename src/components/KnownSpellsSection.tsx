@@ -606,12 +606,20 @@ function SpellCard({
   setExpandedSpell,
   onTogglePrepared,
   onRemoveSpell,
+  spellAttackBonus,          // ✅ NOUVEAU
+  maxPlayerSpellLevel,       // ✅ NOUVEAU
+  characterLevel,            // ✅ NOUVEAU
+  abilityModifier,           // ✅ NOUVEAU
 }: {
   spell: KnownSpell;
   expandedSpell: string | null;
   setExpandedSpell: (id: string | null) => void;
   onTogglePrepared: (id: string, isPrepared: boolean) => void;
   onRemoveSpell: (id: string) => void;
+  spellAttackBonus: number | null;    // ✅ NOUVEAU
+  maxPlayerSpellLevel: number;        // ✅ NOUVEAU
+  characterLevel: number;             // ✅ NOUVEAU
+  abilityModifier: number;            // ✅ NOUVEAU
 }) {
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
