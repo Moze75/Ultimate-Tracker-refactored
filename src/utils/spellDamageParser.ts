@@ -357,8 +357,9 @@ export function parseCantripUpgrade(higherLevels: string): {
     return null;
   }
   
-  // Extraire les composantes de l'incrément
-  const components = extractDamageComponents(incrementMatch[1]);
+   // Extraire les composantes de l'incrément
+  // ⚠️ extractDamageComponents nécessite un contexte de "dégâts", on l'ajoute artificiellement
+  const components = extractDamageComponents(`augmentent de ${incrementMatch[1]} dégâts`);
   
   if (components.length === 0) {
     console.log('[parseCantripUpgrade] Aucune composante extraite');
@@ -372,7 +373,7 @@ export function parseCantripUpgrade(higherLevels: string): {
   
   return {
     components: [components[0]], // Prendre seulement la première formule
-    thresholds,
+    thresholds: uniqueThresholds,
   };
 }
 
