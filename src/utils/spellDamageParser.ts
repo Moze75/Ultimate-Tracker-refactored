@@ -286,7 +286,8 @@ export function parseCantripUpgrade(higherLevels: string): {
     thresholds,
   };
 }
-    
+    }
+}
     return null;
   }
   
