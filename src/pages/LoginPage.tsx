@@ -195,14 +195,16 @@ const MAX_LOGIN_ATTEMPTS = 3;
     }
   };
 
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setSignUpSuccess(false);
-    setResetPasswordSuccess(false);
-    setIsForgotPassword(false);
-  };
+const resetForm = () => {
+  setEmail('');
+  setPassword('');
+  setConfirmPassword('');
+  setSignUpSuccess(false);
+  setResetPasswordSuccess(false);
+  setIsForgotPassword(false);
+  setLoginAttempts(0); // ✅ NOUVEAU : Réinitialiser le compteur
+  setConnectionError(null); // ✅ NOUVEAU : Réinitialiser l'erreur
+};
 
   const switchMode = () => {
     setIsSignUp(!isSignUp);
