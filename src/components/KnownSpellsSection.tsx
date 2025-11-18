@@ -837,13 +837,18 @@ function SpellCard({
           </select>
         </div>
       ) : (
-        <div
-          className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
-          title="Dégâts du sort"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          type="button"
+          className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+          title="Lancer les dégâts du sort"
+          onClick={(e) => {
+            e.stopPropagation();
+            const { diceFormula, modifier } = parseDamageFormula(totalDamage);
+            onRoll('damage', spell.spell_name, diceFormula, modifier);
+          }}
         >
           {totalDamage}
-        </div>
+        </button>
       )}
     </>
   )}
