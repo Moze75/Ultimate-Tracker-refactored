@@ -1743,20 +1743,25 @@ return (
         )}
       </div>
 
-       <SpellbookModal
-      isOpen={showSpellbook}
-      onClose={() => {
-        setShowSpellbook(false);
-        setSelectedSpells([]);
-      }}
-      playerClasses={player.secondary_class ? [player.class, player.secondary_class] : [player.class]}
-      // 🔁 NOUVEAU : niveau réel du personnage
-      playerLevel={player.level || 1}
-      selectionMode={true}
-      onSpellSelect={(spell) => { /* ... */ }}
-      selectedSpells={selectedSpells}
-      onConfirm={handleSpellsSelected}
-    />
+           {showSpellbook && (
+        <SpellbookModal
+          isOpen={showSpellbook}
+          onClose={() => {
+            setShowSpellbook(false);
+            setSelectedSpells([]);
+          }}
+          playerClasses={player.secondary_class ? [player.class, player.secondary_class] : [player.class]}
+          selectionMode={true}
+          onSpellSelect={(spell) => {
+            setSelectedSpells((prev) => {
+              const exists = prev.find((s) => s.id === spell.id);
+              return exists ? prev.filter((s) => s.id !== spell.id) : [...prev, spell];
+            });
+          }}
+          selectedSpells={selectedSpells}
+          onConfirm={handleSpellsSelected}
+        />
+      )}
     </div>
   );
 }
