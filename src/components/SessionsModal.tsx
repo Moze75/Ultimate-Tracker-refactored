@@ -379,29 +379,29 @@ export function SpellbookModal({
   const [showAllClasses, setShowAllClasses] = useState(false);
   const [totalSpellsCount, setTotalSpellsCount] = useState(0);
 
-  // Charger les sorts depuis Supabase Storage
+   // Charger les sorts depuis le Markdown 2024 hébergé sur GitHub
   useEffect(() => {
     const loadSpells = async () => {
       if (!isOpen) return;
       
       setLoading(true);
       try {
-        // Essayer de charger depuis le bucket public
-        const { data, error } = await supabase.storage
-          .from('sorts')
-          .download('Sorts 2024.md');
+        // ⚠️ Utiliser l'URL RAW du fichier, pas l'URL HTML
+        const res = await fetch(
+          'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Sorts/Sorts%202024.md'
+        );
 
-        if (error) {
-          // Fallback en cas d'accès impossible
-          throw new Error('Fichier de sorts non accessible');
+        if (!res.ok) {
+          throw new Error(`Échec du chargement du fichier de sorts: ${res.status}`);
         }
 
-        const text = await data.text();
+        const text = await res.text();
         const parsedSpells = parseSpellsFromMarkdown(text);
-        
+
         setTotalSpellsCount(parsedSpells.length);
         setSpells(parsedSpells);
       } catch (error) {
+        console.error('[SessionsModal] Erreur chargement sorts depuis GitHub, fallback local:', error);
         // Fallback local
         setTotalSpellsCount(SAMPLE_SPELLS.length);
         setSpells(SAMPLE_SPELLS);
