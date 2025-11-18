@@ -33,21 +33,7 @@ import {
 import { combineSpellSlots } from '../utils/multiclassUtils';
 
 
-// Fonction pour jouer le son de consommation d'emplacement de sort
-const playSpellSlotSound = () => {
-  try {
-    const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
-    audio.volume = 0.5; // Volume à 50% pour ne pas être trop fort
-    audio.play().catch(err => {
-      console.warn('[KnownSpellsSection] Impossible de jouer le son:', err);
-    });
-  } catch (err) {
-    console.warn('[KnownSpellsSection] Erreur création audio:', err);
-  }
-};
-
-// Hook pour mesurer et animer la hauteur du contenu
-const useMeasuredHeight = (ref: React.RefObject<HTMLDivElement>, isExpanded: boolean) => {
+ 
 
 // Hook pour mesurer et animer la hauteur du contenu
 const useMeasuredHeight = (ref: React.RefObject<HTMLDivElement>, isExpanded: boolean) => {
