@@ -782,16 +782,16 @@ function SpellCard({
               setSelectedCastLevel(Number(e.target.value));
             }}
             onClick={(e) => e.stopPropagation()}
-            // ✅ Style simple, lisible, et cohérent
+            // ✅ Style : fond transparent, texte blanc, cohérent avec le thème sombre
             className="
               text-xs
               px-2 py-1
               rounded
-              border border-gray-400
-              bg-white text-gray-900
+              border border-orange-400/60
+              bg-transparent text-white
               font-sans
               cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
+              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
             "
             title={`Lancer au niveau ${selectedCastLevel}`}
           >
@@ -819,7 +819,7 @@ function SpellCard({
           {totalDamage}
         </div>
       )}
-    </> 
+    </>
   )}
 </div>
           
