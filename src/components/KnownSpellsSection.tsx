@@ -11,6 +11,12 @@ import {
   ChevronRight,
   Zap,
 } from 'lucide-react';
+import {
+  analyzeSpellDamage,
+  calculateSlotDamage,
+  calculateCantripDamage,
+  getAvailableCastLevels,
+} from '../utils/spellDamageParser';
 import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -606,16 +612,88 @@ function SpellCard({
   setExpandedSpell,
   onTogglePrepared,
   onRemoveSpell,
+  spellAttackBonus,          // ✅ NOUVEAU
+  maxPlayerSpellLevel,       // ✅ NOUVEAU
+  characterLevel,            // ✅ NOUVEAU
+  abilityModifier,           // ✅ NOUVEAU
 }: {
   spell: KnownSpell;
   expandedSpell: string | null;
   setExpandedSpell: (id: string | null) => void;
   onTogglePrepared: (id: string, isPrepared: boolean) => void;
   onRemoveSpell: (id: string) => void;
+  spellAttackBonus: number | null;    // ✅ NOUVEAU
+  maxPlayerSpellLevel: number;        // ✅ NOUVEAU
+  characterLevel: number;             // ✅ NOUVEAU
+  abilityModifier: number;            // ✅ NOUVEAU
 }) {
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+ // ✅ NOUVEAU : État pour le niveau de lancement sélectionné
+  const [selectedCastLevel, setSelectedCastLevel] = useState<number>(spell.spell_level);
+  
+  // ✅ NOUVEAU : Analyser les dégâts du sort
+  const damageInfo = useMemo(() => {
+    const result = analyzeSpellDamage(
+      spell.spell_description,
+      spell.spell_higher_levels,
+      spell.spell_level  
+    );
+    
+    // ✅ DEBUG : Afficher l'analyse du sort
+    console.log(`[SpellCard] Analyse de "${spell.spell_name}":`, {
+      isDamageSpell: result.isDamageSpell,
+      baseDamage: result.baseDamage,
+      upgradeType: result.upgradeType,
+      upgradePattern: result.upgradePattern,
+      characterLevelThresholds: result.characterLevelThresholds,
+    });
+    
+    return result;
+  }, [spell.spell_description, spell.spell_higher_levels, spell.spell_level, spell.spell_name]);
+  
+  // ✅ NOUVEAU : Calculer les dégâts totaux selon le niveau sélectionné
+  const totalDamage = useMemo(() => {
+    if (!damageInfo.isDamageSpell) return null;
+    
+    let result = '';
+    
+    // Tours de magie : basé sur niveau du personnage
+    if (spell.spell_level === 0) {
+      result = calculateCantripDamage(damageInfo, characterLevel, abilityModifier);
+      
+      // ✅ DEBUG : Afficher le calcul pour tours de magie
+      console.log(`[SpellCard] Calcul dégâts tour de magie "${spell.spell_name}":`, {
+        characterLevel,
+        result,
+        upgradePattern: damageInfo.upgradePattern,
+        thresholds: damageInfo.characterLevelThresholds,
+      });
+    } else {
+      // Sorts à emplacements : basé sur niveau de lancement
+      result = calculateSlotDamage(
+        damageInfo,
+        spell.spell_level,
+        selectedCastLevel,
+        abilityModifier 
+      );
+    }
+    
+    return result;
+  }, [damageInfo, spell.spell_level, selectedCastLevel, characterLevel, abilityModifier, spell.spell_name]);
+  
+  // ✅ NOUVEAU : Niveaux de lancement disponibles
+  const availableLevels = useMemo(() => {
+    const hasUpgrade = damageInfo.upgradeType === 'per_slot_level';
+    return getAvailableCastLevels(spell.spell_level, maxPlayerSpellLevel, hasUpgrade);
+  }, [spell.spell_level, maxPlayerSpellLevel, damageInfo.upgradeType]);
+  
+  // ✅ NOUVEAU : Réinitialiser le niveau sélectionné si le sort change
+  useEffect(() => {
+    setSelectedCastLevel(spell.spell_level);
+  }, [spell.spell_level]);
+  
   const handleRemoveSpell = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowDeleteConfirm(true);
@@ -640,13 +718,15 @@ function SpellCard({
         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
         className="w-full text-left p-2 transition-all duration-200"
       >
+        {/* Ligne 1 : Nom + badges niveau/préparé + chevron */}
         <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'}`}>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'} truncate`}>
               {spell.spell_name}
             </h4>
-            {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
+            {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />}
           </div>
+          
           <div className="flex items-center gap-2 flex-shrink-0">
             <div
               className={`text-xs px-2 py-1 rounded-full ${
@@ -661,42 +741,102 @@ function SpellCard({
                 Préparé
               </span>
             )}
-<div className={`chevron-icon ${isExpanded ? 'rotated' : ''}`}>
-  <ChevronDown className="w-5 h-5 text-gray-400" />
-</div>
+            <div className={`chevron-icon ${isExpanded ? 'rotated' : ''}`}>
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            </div>
           </div>
         </div>
+        
+        {/* Ligne 2 : École + Portée */}
         <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
           <span className="capitalize">{spell.spell_school}</span>
           <span>•</span>
           <span>{spell.spell_range}</span>
         </div>
+        
+        {/* Ligne 3 : Badges attaque/dégâts + Boutons préparation/poubelle */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Partie gauche : Badges */}
+          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+            {/* Badge bonus d'attaque */}
+            {damageInfo.isAttackRoll && spellAttackBonus !== null && (
+              <div 
+                className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium"
+                title="Bonus d'attaque de sort"
+                onClick={(e) => e.stopPropagation()}
+              >
+                att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
+              </div>
+            )}
+            
+            {/* Badge dégâts avec sélecteur de niveau */}
+            {damageInfo.isDamageSpell && totalDamage && (
+              <>
+                {availableLevels.length > 1 && spell.spell_level > 0 ? (
+                  <select
+                    value={selectedCastLevel}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setSelectedCastLevel(Number(e.target.value));
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold cursor-pointer hover:bg-orange-500/30 transition-colors"
+                    title={`Lancer au niveau ${selectedCastLevel}`}
+                  >
+                    {availableLevels.map(lvl => {
+                      const lvlDamage = calculateSlotDamage(
+                        damageInfo,
+                        spell.spell_level,
+                        lvl,
+                        abilityModifier
+                      );
+                      return (
+                        <option key={lvl} value={lvl}>
+                          {lvlDamage} (Niv. {lvl})
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <div 
+                    className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
+                    title="Dégâts du sort"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {totalDamage}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* Partie droite : Boutons préparation + poubelle */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePrepared(spell.id, spell.is_prepared);
+              }}
+              className={`w-6 h-6 rounded-lg ${
+                spell.is_prepared
+                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
+              } flex items-center justify-center transition-colors`}
+              title={spell.is_prepared ? 'Dépréparer' : 'Préparer'}
+            >
+              <Check size={16} />
+            </button>
+
+            <button
+              onClick={handleRemoveSpell}
+              className="w-6 h-6 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg flex items-center justify-center transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
       </button>
-
-      <div className="px-2 pb-2 flex items-center justify-end gap-3">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePrepared(spell.id, spell.is_prepared);
-          }}
-          className={`w-6 h-6 rounded-lg ${
-            spell.is_prepared
-              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-              : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
-          } flex items-center justify-center`}
-          title={spell.is_prepared ? 'Dépréparer' : 'Préparer'}
-        >
-          <Check size={16} />
-        </button>
-
-        <button
-          onClick={handleRemoveSpell}
-          className="w-6 h-6 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg flex items-center justify-center"
-          title="Supprimer"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
 
       {showDeleteConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm rounded-lg">
@@ -1169,14 +1309,22 @@ const spellAttackBonus = useMemo(
   }, [player.class, player.secondary_class]);
 
   // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
-  const characterLevel = useMemo(() => {
-    const primaryCaster = getCasterType(player.class);
-    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
-    
-    if (primaryCaster !== 'none') return getCharacterLevel(player);
-    if (secondaryCaster !== 'none') return player.secondary_level || 1;
-    return 1;
-  }, [player.class, player.secondary_class, player.level, player.secondary_level]);
+const characterLevel = useMemo(() => {
+  const primaryCaster = getCasterType(player.class);
+  const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+  
+  let level = 1;
+  if (primaryCaster !== 'none') {
+    level = getCharacterLevel(player);
+  } else if (secondaryCaster !== 'none') {
+    level = player.secondary_level || 1;
+  }
+  
+  // ✅ DEBUG : Afficher le niveau du personnage
+  console.log('[KnownSpellsSection] Niveau du personnage:', level, '| Classe:', player.class, '| player.level:', player.level);
+  
+  return level;
+}, [player.class, player.secondary_class, player.level, player.secondary_level]);
 
   const allowedLevelsSet = useMemo(() => {
     const set = new Set<number>();
@@ -1413,6 +1561,10 @@ return (
             setExpandedSpell={setExpandedSpell}
             onTogglePrepared={togglePrepared}
             onRemoveSpell={removeKnownSpell}
+            spellAttackBonus={spellAttackBonus}
+            maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
+            characterLevel={characterLevel}
+            abilityModifier={abilityMod}
           />
         ))}
       </div>
@@ -1472,6 +1624,10 @@ return (
             setExpandedSpell={setExpandedSpell}
             onTogglePrepared={togglePrepared}
             onRemoveSpell={removeKnownSpell}
+            spellAttackBonus={spellAttackBonus}
+            maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
+            characterLevel={characterLevel}
+            abilityModifier={abilityMod}
           />
         ))}
       </div>
