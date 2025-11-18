@@ -769,7 +769,7 @@ function SpellCard({
     </div>
   )}
   
-   {/* Badge dégâts avec sélecteur de niveau */}
+  {/* Badge dégâts avec sélecteur de niveau */}
   {damageInfo.isDamageSpell && totalDamage && (
     <>
       {availableLevels.length > 1 && spell.spell_level > 0 ? (
@@ -780,21 +780,10 @@ function SpellCard({
             setSelectedCastLevel(Number(e.target.value));
           }}
           onClick={(e) => e.stopPropagation()}
-          // ✅ Nouveau style : texte sombre sur fond clair
-          className="
-            text-xs
-            px-2 py-1
-            rounded
-            border border-gray-400
-            bg-white text-gray-900
-            font-mono font-semibold
-            cursor-pointer
-            shadow-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400
-          "
+          className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold cursor-pointer hover:bg-orange-500/30 transition-colors"
           title={`Lancer au niveau ${selectedCastLevel}`}
         >
-          {availableLevels.map((lvl) => {
+          {availableLevels.map(lvl => {
             const lvlDamage = calculateSlotDamage(
               damageInfo,
               spell.spell_level,
@@ -809,8 +798,7 @@ function SpellCard({
           })}
         </select>
       ) : (
-        <div
-          // On peut garder le badge orange pour l’affichage simple (un seul niveau)
+        <div 
           className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
           title="Dégâts du sort"
           onClick={(e) => e.stopPropagation()}
@@ -819,7 +807,8 @@ function SpellCard({
         </div>
       )}
     </>
-  )}
+  )} 
+</div>
           
           {/* Partie droite : Boutons préparation + poubelle */}
           <div className="flex items-center gap-2 flex-shrink-0">
