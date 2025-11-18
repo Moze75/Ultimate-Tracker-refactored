@@ -208,7 +208,7 @@ export function extractDamageComponents(text: string): DamageComponent[] {
     });
   } 
   
-  return components;
+  return components; 
 }
  
 /**
