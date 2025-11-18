@@ -799,10 +799,22 @@ function SpellCard({
             value={selectedCastLevel}
             onChange={(e) => {
               e.stopPropagation();
-              setSelectedCastLevel(Number(e.target.value));
+              const newLevel = Number(e.target.value);
+              setSelectedCastLevel(newLevel);
+
+              // Recalculer les dégâts pour ce niveau
+              const lvlDamage = calculateSlotDamage(
+                damageInfo,
+                spell.spell_level,
+                newLevel,
+                abilityModifier
+              );
+
+              const { diceFormula, modifier } = parseDamageFormula(lvlDamage);
+              onRoll('damage', `${spell.spell_name} (Niv. ${newLevel})`, diceFormula, modifier);
             }}
             onClick={(e) => e.stopPropagation()}
-            // ✅ Champ fermé : fond transparent, texte blanc
+            // Champ fermé : fond transparent, texte blanc
             className="
               text-xs
               px-2 py-1
@@ -813,7 +825,7 @@ function SpellCard({
               cursor-pointer
               focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
             "
-            title={`Lancer au niveau ${selectedCastLevel}`}
+            title={`Lancer les dégâts au niveau ${selectedCastLevel}`}
           >
             {availableLevels.map((lvl) => {
               const lvlDamage = calculateSlotDamage(
@@ -826,8 +838,6 @@ function SpellCard({
                 <option
                   key={lvl}
                   value={lvl}
-                  // ✅ Effet visuel souhaité sur beaucoup de navigateurs :
-                  // liste déroulante fond blanc + texte sombre
                   className="bg-white text-gray-900"
                 >
                   {lvlDamage} (Niv. {lvl})
