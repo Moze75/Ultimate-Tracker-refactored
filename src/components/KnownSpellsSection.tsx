@@ -965,6 +965,14 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
   const [showSpellbook, setShowSpellbook] = useState(false);
   const [selectedSpells, setSelectedSpells] = useState<Spell[]>([]);
   const [expandedSpell, setExpandedSpell] = useState<string | null>(null);
+    // ✅ État global pour le DiceBox3D
+  const [diceModalOpen, setDiceModalOpen] = useState(false);
+  const [currentRollData, setCurrentRollData] = useState<{
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  } | null>(null);
 const [collapsedLevels, setCollapsedLevels] = useState<Set<string>>(() => {
   const saved = localStorage.getItem(`spell-levels-state-${player.id}`);
   if (saved) {
