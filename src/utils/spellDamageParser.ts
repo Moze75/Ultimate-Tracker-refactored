@@ -351,7 +351,7 @@ export function parseCantripUpgrade(higherLevels: string): {
       // Prendre seulement la première formule
       return {
         components: [components[0]],
-        thresholds,
+       thresholds: uniqueThresholds,
       };
     }
     return null;
