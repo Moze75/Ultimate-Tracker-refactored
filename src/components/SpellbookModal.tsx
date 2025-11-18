@@ -47,7 +47,49 @@ const MAGIC_SCHOOLS = [
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
+// ===== Helpers pour limiter les niveaux de sorts affichés en fonction du joueur =====
+type CasterType = 'full' | 'half' | 'warlock' | 'none';
 
+const normalize = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const getCasterType = (cls?: string | null): CasterType => {
+  if (!cls) return 'none';
+  const c = normalize(cls);
+  if (['wizard', 'magicien', 'mage'].some((k) => c.includes(k))) return 'full';
+  if (['sorcerer', 'ensorceleur'].some((k) => c.includes(k))) return 'full';
+  if (['cleric', 'clerc'].some((k) => c.includes(k))) return 'full';
+  if (['druid', 'druide'].some((k) => c.includes(k))) return 'full';
+  if (['bard', 'barde'].some((k) => c.includes(k))) return 'full';
+  if (['paladin'].some((k) => c.includes(k))) return 'half';
+  if (['ranger', 'rodeur', 'rôdeur'].some((k) => c.includes(k))) return 'half';
+  if (['artificer', 'artificier'].some((k) => c.includes(k))) return 'half';
+  if (['warlock', 'occultiste'].some((k) => c.includes(k))) return 'warlock';
+  return 'none';
+};
+
+const getWarlockPactSlotLevel = (level: number): number => {
+  if (level <= 2) return 1;
+  if (level <= 4) return 2;
+  if (level <= 6) return 3;
+  if (level <= 8) return 4;
+  return 5;
+};
+
+const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): number => {
+  if (casterType === 'warlock') return getWarlockPactSlotLevel(level);
+  if (casterType === 'full') return Math.min(9, Math.ceil(level / 2));
+  if (casterType === 'half') {
+    // Règles 2024 pour semi-lanceurs
+    if (level < 1) return 0;
+    if (level <= 4) return 1;
+    if (level <= 8) return 2;
+    if (level <= 12) return 3;
+    if (level <= 16) return 4;
+    return 5;
+  }
+  return 0;
+};
 
 export function SpellbookModal({
   isOpen,
