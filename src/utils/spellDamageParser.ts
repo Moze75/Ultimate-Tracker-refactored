@@ -373,18 +373,21 @@ export function calculateSlotDamage(
     });
   }
   
-  // Construire la formule finale
-  const parts: string[] = [];
-  
-  totalComponents.forEach(comp => {
-    if (comp.damageType) {
-      parts.push(`${comp.formula} ${comp.damageType}`);
-    } else {
-      parts.push(comp.formula);
-    }
-  });
-  
-  let result = parts.join(' + ');
+// ✅ Consolider les dés identiques avant de construire la formule
+const consolidated = consolidateDamageComponents(totalComponents);
+
+// Construire la formule finale
+const parts: string[] = [];
+
+consolidated.forEach(comp => {
+  if (comp.damageType) {
+    parts.push(`${comp.formula} ${comp.damageType}`);
+  } else {
+    parts.push(comp.formula);
+  }
+});
+
+let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
   if (info.hasModifier && abilityModifier !== undefined) {
