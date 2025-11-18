@@ -676,7 +676,7 @@ function SpellCard({
         damageInfo,
         spell.spell_level,
         selectedCastLevel,
-        abilityModifier
+        abilityModifier 
       );
     }
     
