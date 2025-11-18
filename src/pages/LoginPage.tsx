@@ -64,29 +64,31 @@ export function LoginPage() {
     checkConnection();
   }, []);
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setConnectionError(null);
+const handleEmailSignIn = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (failedAttempts >= 3) { // Bloquer après 3 tentatives
+    toast.error('Trop de tentatives échouées. Veuillez recharger la page.');
+    return;
+  }
 
-    try {
-      const { error } = await authService.signInWithEmail(email, password);
+  setIsLoading(true);
+  setConnectionError(null);
 
-      if (error) throw error;
-      toast.success('Connexion réussie');
-    } catch (error: any) {
-      console.error('Erreur de connexion:', error);
-      const errorMessage = error.message === 'Failed to fetch' 
-        ? 'Impossible de se connecter au serveur. Vérifiez votre connexion Internet.'
-        : error.message?.includes('Veuillez confirmer votre adresse email')
-        ? 'Veuillez confirmer votre adresse email avant de vous connecter. Vérifiez votre boîte de réception et le dossier spam.'
-        : error.message || 'Erreur de connexion';
-      setConnectionError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+  try {
+    const { error } = await authService.signInWithEmail(email, password);
+
+    if (error) {
+      throw error;
     }
-  };
+    toast.success('Connexion réussie');
+    setFailedAttempts(0); // Réinitialiser le compteur en cas de succès
+  } catch (error: any) {
+    toast.error(error.message || 'Erreur de connexion');
+    setFailedAttempts((prev) => prev + 1); // Incrémente le compteur en cas d'échec
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
