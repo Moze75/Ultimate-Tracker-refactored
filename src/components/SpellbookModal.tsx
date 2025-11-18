@@ -459,32 +459,38 @@ if (
       }
     }
 
-    // Limiter aux niveaux de sorts accessibles par le joueur (règles 2024)
-    if (!showAllClasses && effectivePlayerClasses.length > 0 && effectivePlayerClasses.some(Boolean)) {
+      // Limiter aux niveaux de sorts accessibles par le joueur (règles 2024)
+    if (
+      !showAllClasses &&
+      effectivePlayerClasses.length > 0 &&
+      effectivePlayerClasses.some(Boolean)
+    ) {
       // On prend la première classe non nulle comme référence
       const mainClass = effectivePlayerClasses.find(Boolean) as string | undefined;
       const casterType = getCasterType(mainClass);
-      
-      // TODO: idéalement passer le niveau réel du personnage en prop
-      const characterLevel = playerLevel && playerLevel > 0 ? playerLevel : 1;
-      const highestLevel = getHighestAllowedSlotLevel(casterType, characterLevel);
 
-      console.log('[SpellbookModal] Limitation des niveaux de sorts:', {
-        mainClass,
-        casterType,
-        characterLevel,
-        highestLevel,
-      });
+      // Si on n'a pas de niveau max cohérent ou pas de lanceur de sorts, ne pas filtrer plus
+      if (casterType === 'none' || highestAllowedLevel <= 0) {
+        console.log(
+          '[SpellbookModal] Pas de filtrage par niveau (casterType=none ou highestAllowedLevel<=0)',
+          { mainClass, casterType, highestAllowedLevel }
+        );
+      } else {
+        console.log('[SpellbookModal] Limitation des niveaux de sorts:', {
+          mainClass,
+          casterType,
+          highestAllowedLevel,
+        });
 
-      filtered = filtered.filter((spell) => {
-        if (spell.level === 0) return true; // toujours autoriser les tours de magie
-        if (casterType === 'none') return false; // classe non lanceuse -> aucun sort (sauf cantrips si tu veux)
-        return spell.level <= highestLevel;
-      });
+        filtered = filtered.filter((spell) => {
+          if (spell.level === 0) return true; // toujours autoriser les tours de magie
+          return spell.level <= highestAllowedLevel;
+        });
 
-      console.log(
-        `Après filtrage par niveau max (${highestLevel}) : ${filtered.length} sorts`
-      );
+        console.log(
+          `Après filtrage par niveau max (${highestAllowedLevel}) : ${filtered.length} sorts`
+        );
+      }
     }
     
     // Filtrer par terme de recherche
