@@ -10,8 +10,8 @@ import {
   ChevronDown,
   ChevronRight,
   Zap,
-  FaDice,
-} from 'lucide-react';
+  } from 'lucide-react';
+import { FaDice } from 'react-icons/fa';
 import {
   analyzeSpellDamage,
   calculateSlotDamage,
