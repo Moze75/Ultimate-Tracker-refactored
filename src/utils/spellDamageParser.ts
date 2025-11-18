@@ -475,7 +475,7 @@ export function calculateSlotDamage(
   let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
-  if (info.hasModifier && abilityModifier !== undefined) { 
+  if (info.hasModifier && abilityModifier !== undefined) {
     const sign = abilityModifier >= 0 ? '+' : '';
     result += ` ${sign}${abilityModifier}`;
   }
