@@ -320,8 +320,9 @@ if (
           }
         } 
                
-        // Si ce n'est pas un champ spécial et qu'on a déjà le nom, c'est la description
-        if (!trimmedLine.startsWith('**') && !trimmedLine.startsWith('#') && spell.name && !inHigherLevelsSection) {
+        // Si ce n'est pas un titre de sort ni une ligne "niveaux supérieurs", c'est de la description
+        // (les champs structurés ont déjà été filtrés plus haut)
+        if (!trimmedLine.startsWith('#') && spell.name && !inHigherLevelsSection) {
           descriptionLines.push(trimmedLine);
           foundFirstDescription = true;
         }
