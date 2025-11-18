@@ -152,7 +152,7 @@ export function extractDamageComponents(text: string): DamageComponent[] {
   
   return components;
 }
-
+ 
 /**
  * 4. Détecte si le sort utilise un modificateur de caractéristique
  * Ex: "2d8 + votre modificateur de Charisme"
