@@ -708,7 +708,7 @@ function SpellCard({
                 className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium flex-shrink-0"
                 title="Bonus d'attaque de sort"
               >
-                {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus} att.
+                att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
               </div>
             )}
             
