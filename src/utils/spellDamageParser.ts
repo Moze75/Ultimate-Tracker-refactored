@@ -244,7 +244,7 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (thresholds.length === 0) {
     // Pattern : "aux niveaux 5, 11, et 17"
     const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
-    const altMatch = higherLevels.match(altPattern);
+    const altMatch = higherLevels.match(altPattern); 
     
     if (altMatch) { 
       const numbers = altMatch[1].match(/\d+/g);
