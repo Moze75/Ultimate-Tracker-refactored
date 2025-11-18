@@ -277,6 +277,11 @@ export function parseSlotUpgrade(higherLevels: string): {
   return null;
 }
 
+/** 
+ * 7. Parse les règles d'amélioration pour tours de magie (basées sur niveau de personnage)
+ * Ex: "Les dégâts augmentent de 1d10 lorsque vous atteignez le niveau 5"
+ * Retourne: { components: [{1d10}], thresholds: [5, 11, 17] }
+ */
 export function parseCantripUpgrade(higherLevels: string): {
   components: DamageComponent[];
   thresholds: number[];
@@ -284,95 +289,33 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (!higherLevels) return null;
   
   // 1️⃣ Détection des seuils de niveau
-  // Pattern principal : "niveaux 5 (2d6), 11 (3d6) et 17 (4d6)"
-  // On cherche TOUS les nombres après "niveau" ou "niveaux", même s'ils sont suivis de parenthèses
-  const levelPattern = /niveaux?\s+(\d+)/gi;
+  // Pattern amélioré : chercher "niveau X" ou "niveaux X" mais PAS "X (YdZ)"
+  const levelPattern = /niveaux?\s+(\d+)(?!\s*\()/gi;
   const thresholds: number[] = [];
   
-  let match;
+    let match;
   while ((match = levelPattern.exec(higherLevels)) !== null) {
-    const level = parseInt(match[1], 10);
-    // On ne garde que les seuils typiques de cantrips (5, 11, 17)
-    if ([5, 11, 17].includes(level)) {
-      thresholds.push(level);
-    }
+    thresholds.push(parseInt(match[1], 10));
   }
   
   // ✅ DEBUG : Afficher les seuils détectés
   console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
   
-  // Si aucun seuil trouvé avec le pattern principal, chercher les patterns alternatifs
+  // Si aucun seuil trouvé, chercher les patterns alternatifs
   if (thresholds.length === 0) {
-    // Pattern alternatif : "aux niveaux 5, 11, et 17" (sans parenthèses)
+    // Pattern : "aux niveaux 5, 11, et 17"
     const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
     const altMatch = higherLevels.match(altPattern); 
     
     if (altMatch) { 
       const numbers = altMatch[1].match(/\d+/g);
       if (numbers) { 
-        numbers.forEach(n => {
-          const level = parseInt(n, 10);
-          if ([5, 11, 17].includes(level)) {
-            thresholds.push(level);
-          }
-        });
+        numbers.forEach(n => thresholds.push(parseInt(n, 10)));
       }
     }
-  }
+  } 
   
-  // Si toujours aucun seuil, utiliser les valeurs par défaut
-  if (thresholds.length === 0) {
-    console.log('[parseCantripUpgrade] Aucun seuil trouvé, utilisation des valeurs par défaut');
-    thresholds.push(5, 11, 17);
-  }
-  
-  // Dédoublonner et trier
-  const uniqueThresholds = [...new Set(thresholds)].sort((a, b) => a - b);
-  
-  // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
-  // Pattern : "augmentent de XdY" ou "augmente de XdY"
-  const incrementPattern = /(?:augmentent?|gagne(?:nt)?)\s+(?:de\s+)?(\d+d\d+)/i;
-  const incrementMatch = higherLevels.match(incrementPattern);
- 
-  // ✅ DEBUG : Afficher l'incrément détecté
-  console.log('[parseCantripUpgrade] Incrément détecté:', incrementMatch ? incrementMatch[1] : 'aucun');
-  
-  if (!incrementMatch) {
-    // Fallback : extraire toutes les formules et prendre la première (hors parenthèses)
-    const textWithoutParens = higherLevels.replace(/\([^)]+\)/g, ''); // Retirer "(2d6)", "(3d6)", etc.
-    const components = extractDamageComponents(textWithoutParens);
-    
-    if (components.length > 0) {
-      // Prendre seulement la première formule
-      console.log('[parseCantripUpgrade] Fallback - composante trouvée:', components[0]);
-      return {
-        components: [components[0]],
-        thresholds: uniqueThresholds,
-      };
-    }
-    
-    console.log('[parseCantripUpgrade] Aucun incrément trouvé');
-    return null;
-  }
-  
-  // Extraire les composantes de l'incrément
-  const components = extractDamageComponents(incrementMatch[1]);
-  
-  if (components.length === 0) {
-    console.log('[parseCantripUpgrade] Aucune composante extraite');
-    return null;
-  }
-  
-  console.log('[parseCantripUpgrade] Résultat final:', {
-    components: [components[0]],
-    thresholds: uniqueThresholds
-  });
-  
-  return {
-    components: [components[0]], // Prendre seulement la première formule
-    thresholds: uniqueThresholds,
-  };
-}
+  if (thresholds.length === 0) return null;
   
   // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
   // Pattern : "augmentent de XdY" ou "augmente de XdY"
