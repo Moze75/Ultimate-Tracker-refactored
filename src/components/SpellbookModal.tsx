@@ -457,7 +457,7 @@ if (
       const casterType = getCasterType(mainClass);
       
       // TODO: idéalement passer le niveau réel du personnage en prop
-      const characterLevel = 1; // 🔴 À remplacer par le vrai niveau (ex: props.playerLevel)
+      const characterLevel = playerLevel && playerLevel > 0 ? playerLevel : 1;
       const highestLevel = getHighestAllowedSlotLevel(casterType, characterLevel);
 
       console.log('[SpellbookModal] Limitation des niveaux de sorts:', {
