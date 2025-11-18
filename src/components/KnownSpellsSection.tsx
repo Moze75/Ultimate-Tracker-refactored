@@ -759,15 +759,18 @@ function SpellCard({
         <div className="flex items-center justify-between gap-3">
  {/* Partie gauche : Badges */}
 <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-  {/* Badge bonus d'attaque */}
   {damageInfo.isAttackRoll && spellAttackBonus !== null && (
-    <div 
-      className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium"
-      title="Bonus d'attaque de sort"
-      onClick={(e) => e.stopPropagation()}
+    <button
+      type="button"
+      className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium hover:bg-red-500/30 transition-colors"
+      title="Lancer un jet d'attaque de sort (1d20 + bonus)"
+      onClick={(e) => {
+        e.stopPropagation();
+        onRoll('attack', spell.spell_name, '1d20', spellAttackBonus);
+      }}
     >
       att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
-    </div>
+    </button>
   )}
   
   {/* Badge dégâts avec sélecteur de niveau */}
