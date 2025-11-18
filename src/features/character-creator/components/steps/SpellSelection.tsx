@@ -106,21 +106,24 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
   const cantripsNeeded = spellInfo.kind === 'prepared' ? (spellInfo.cantrips || 0) : 0;
   const level1SpellsNeeded = spellInfo.kind === 'prepared' ? spellInfo.prepared : 0;
 
-  useEffect(() => {
+    useEffect(() => {
     const loadSpells = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.storage
-          .from('sorts')
-          .download('Sorts 2024.md');
+        // ⚠️ Charger le Markdown directement depuis GitHub (URL RAW)
+        const res = await fetch(
+          'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Sorts/Sorts%202024.md'
+        );
 
-        if (error) throw error;
+        if (!res.ok) {
+          throw new Error(`Échec du chargement du fichier de sorts: ${res.status}`);
+        }
 
-        const text = await data.text();
+        const text = await res.text();
         const parsedSpells = parseSpellsFromMarkdown(text);
         setAllSpells(parsedSpells);
       } catch (error) {
-        console.error('Erreur lors du chargement des sorts:', error);
+        console.error('[SpellSelection] Erreur chargement sorts depuis GitHub:', error);
         setAllSpells([]);
       } finally {
         setLoading(false);
