@@ -447,6 +447,34 @@ if (
       }
     }
 
+    // Limiter aux niveaux de sorts accessibles par le joueur (règles 2024)
+    if (!showAllClasses && effectivePlayerClasses.length > 0 && effectivePlayerClasses.some(Boolean)) {
+      // On prend la première classe non nulle comme référence
+      const mainClass = effectivePlayerClasses.find(Boolean) as string | undefined;
+      const casterType = getCasterType(mainClass);
+      
+      // TODO: idéalement passer le niveau réel du personnage en prop
+      const characterLevel = 1; // 🔴 À remplacer par le vrai niveau (ex: props.playerLevel)
+      const highestLevel = getHighestAllowedSlotLevel(casterType, characterLevel);
+
+      console.log('[SpellbookModal] Limitation des niveaux de sorts:', {
+        mainClass,
+        casterType,
+        characterLevel,
+        highestLevel,
+      });
+
+      filtered = filtered.filter((spell) => {
+        if (spell.level === 0) return true; // toujours autoriser les tours de magie
+        if (casterType === 'none') return false; // classe non lanceuse -> aucun sort (sauf cantrips si tu veux)
+        return spell.level <= highestLevel;
+      });
+
+      console.log(
+        `Après filtrage par niveau max (${highestLevel}) : ${filtered.length} sorts`
+      );
+    }
+    
     // Filtrer par terme de recherche
     if (searchTerm) {
       filtered = filtered.filter(spell =>
