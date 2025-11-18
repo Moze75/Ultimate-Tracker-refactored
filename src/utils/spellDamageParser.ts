@@ -360,7 +360,15 @@ export function parseCantripUpgrade(higherLevels: string): {
   // Extraire les composantes de l'incrément
   const components = extractDamageComponents(incrementMatch[1]);
   
-  if (components.length === 0) return null;
+  if (components.length === 0) {
+    console.log('[parseCantripUpgrade] Aucune composante extraite');
+    return null;
+  }
+  
+  console.log('[parseCantripUpgrade] Résultat final:', {
+    components: [components[0]],
+    thresholds: uniqueThresholds
+  });
   
   return {
     components: [components[0]], // Prendre seulement la première formule
