@@ -238,6 +238,12 @@ useEffect(() => {
   try {
     stopWizardMusic();
 
+    // ✅ Vérifier qu'une création n'est pas déjà en cours
+if (loadingEquipment) {
+  console.warn('[Wizard] Création déjà en cours');
+  return;
+}
+
     // ✅ Utiliser customRaceData si la race sélectionnée est personnalisée
     const raceData = customRaceData && customRaceData.name === selectedRace
       ? customRaceData
