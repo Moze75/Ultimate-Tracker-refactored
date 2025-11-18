@@ -46,17 +46,36 @@ export function isDamageSpell(description: string): boolean {
 
 /**
  * 2. Détecte si le sort nécessite un jet d'attaque
+ * IMPORTANT : Ne doit matcher que si le LANCEUR doit faire un jet d'attaque,
+ * pas si c'est une condition de rupture du sort ou un effet secondaire.
  */
 export function isAttackRoll(description: string): boolean {
   if (!description) return false;
   
-  const attackKeywords = [
-    /jet d'attaque/i,
-    /attaque.*sorts?/i,
-    /attaque de sort/i,
-    /effectuez une attaque/i,
+  // Patterns négatifs : exclusions (vérifier en PREMIER)
+  const exclusionKeywords = [
+    /si vous effectuez un jet d'attaque/i,     // Condition de rupture (ex: Amis)
+    /lorsque vous effectuez un jet d'attaque/i, // Condition temporelle
+    /quand vous effectuez un jet d'attaque/i,   // Variante
+    /après avoir effectué un jet d'attaque/i,   // Variante
   ];
   
+  // Si une exclusion matche, ce n'est PAS un sort d'attaque
+  if (exclusionKeywords.some(regex => regex.test(description))) {
+    return false;
+  }
+  
+  // Patterns positifs : le sort nécessite un jet d'attaque
+  const attackKeywords = [
+    /effectuez une attaque.*de sort/i,         // "effectuez une attaque de sort à distance"
+    /faites un jet d'attaque.*de sort/i,       // "faites un jet d'attaque de sort"
+    /réalisez une attaque.*de sort/i,          // "réalisez une attaque de sort"
+    /attaque de sort.*distance/i,              // "attaque de sort à distance contre"
+    /attaque de sort.*au corps à corps/i,      // "attaque de sort au corps à corps"
+    /jet d'attaque de sort/i,                  // "nécessite un jet d'attaque de sort"
+  ];
+  
+  // Vérifier les patterns positifs
   return attackKeywords.some(regex => regex.test(description));
 }
 
