@@ -11,6 +11,12 @@ import {
   ChevronRight,
   Zap,
 } from 'lucide-react';
+import {
+  analyzeSpellDamage,
+  calculateSlotDamage,
+  calculateCantripDamage,
+  getAvailableCastLevels,
+} from '../utils/spellDamageParser';
 import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
