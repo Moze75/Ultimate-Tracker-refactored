@@ -293,10 +293,13 @@ export function parseCantripUpgrade(higherLevels: string): {
   const levelPattern = /niveaux?\s+(\d+)(?!\s*\()/gi;
   const thresholds: number[] = [];
   
-  let match;
+    let match;
   while ((match = levelPattern.exec(higherLevels)) !== null) {
     thresholds.push(parseInt(match[1], 10));
   }
+  
+  // ✅ DEBUG : Afficher les seuils détectés
+  console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
   
   // Si aucun seuil trouvé, chercher les patterns alternatifs
   if (thresholds.length === 0) {
