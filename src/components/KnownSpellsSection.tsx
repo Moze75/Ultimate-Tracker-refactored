@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   Zap,
+  Dice5,
   } from 'lucide-react';
   
 import {
