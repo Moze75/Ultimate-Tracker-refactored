@@ -289,33 +289,50 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (!higherLevels) return null;
   
   // 1️⃣ Détection des seuils de niveau
-  // Pattern amélioré : chercher "niveau X" ou "niveaux X" mais PAS "X (YdZ)"
-  const levelPattern = /niveaux?\s+(\d+)(?!\s*\()/gi;
+  // Pattern principal : "niveaux 5 (2d6), 11 (3d6) et 17 (4d6)"
+  // On cherche TOUS les nombres après "niveau" ou "niveaux", même s'ils sont suivis de parenthèses
+  const levelPattern = /niveaux?\s+(\d+)/gi;
   const thresholds: number[] = [];
   
-    let match;
+  let match;
   while ((match = levelPattern.exec(higherLevels)) !== null) {
-    thresholds.push(parseInt(match[1], 10));
+    const level = parseInt(match[1], 10);
+    // On ne garde que les seuils typiques de cantrips (5, 11, 17)
+    if ([5, 11, 17].includes(level)) {
+      thresholds.push(level);
+    }
   }
   
   // ✅ DEBUG : Afficher les seuils détectés
   console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
   
-  // Si aucun seuil trouvé, chercher les patterns alternatifs
+  // Si aucun seuil trouvé avec le pattern principal, chercher les patterns alternatifs
   if (thresholds.length === 0) {
-    // Pattern : "aux niveaux 5, 11, et 17"
+    // Pattern alternatif : "aux niveaux 5, 11, et 17" (sans parenthèses)
     const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
     const altMatch = higherLevels.match(altPattern); 
     
     if (altMatch) { 
       const numbers = altMatch[1].match(/\d+/g);
       if (numbers) { 
-        numbers.forEach(n => thresholds.push(parseInt(n, 10)));
+        numbers.forEach(n => {
+          const level = parseInt(n, 10);
+          if ([5, 11, 17].includes(level)) {
+            thresholds.push(level);
+          }
+        });
       }
     }
-  } 
+  }
   
-  if (thresholds.length === 0) return null;
+  // Si toujours aucun seuil, utiliser les valeurs par défaut
+  if (thresholds.length === 0) {
+    console.log('[parseCantripUpgrade] Aucun seuil trouvé, utilisation des valeurs par défaut');
+    thresholds.push(5, 11, 17);
+  }
+  
+  // Dédoublonner et trier
+  const uniqueThresholds = [...new Set(thresholds)].sort((a, b) => a - b);
   
   // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
   // Pattern : "augmentent de XdY" ou "augmente de XdY"
