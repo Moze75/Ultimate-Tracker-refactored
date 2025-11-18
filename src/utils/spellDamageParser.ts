@@ -468,11 +468,8 @@ export function calculateSlotDamage(
   const parts: string[] = [];
 
   consolidated.forEach(comp => {
-    if (comp.damageType) {
-      parts.push(`${comp.formula} ${comp.damageType}`);
-    } else {
-      parts.push(comp.formula);
-    }
+    // ✅ Ne pas afficher le type de dégât dans le badge (visible dans la description)
+    parts.push(comp.formula);
   });
 
   let result = parts.join(' + ');
