@@ -534,11 +534,10 @@ export function calculateCantripDamage(
       }
     });
 
-     
     // ✅ DEBUG : Afficher le calcul du multiplier
     console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
     
-      if (multiplier > 0) {
+    if (multiplier > 0) {
       // Ajouter les dégâts supplémentaires
       info.upgradePattern.forEach(upgrade => {
         // ✅ Chercher un dé existant avec le même type ET le même type de dégât (ou les deux undefined)
@@ -564,8 +563,26 @@ export function calculateCantripDamage(
           console.log('[calculateCantripDamage] Nouveau composant ajouté:', newComponent);
         }
       });
-       // ✅ DEBUG : Afficher les composantes après amélioration
+      // ✅ DEBUG : Afficher les composantes après amélioration
       console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
+    }
+  }
+
+  // ✅ Harmoniser le type de dégâts entre baseDamage et les upgrades
+  if (info.baseDamage.length > 0) {
+    const mainType = info.baseDamage[0].damageType || null;
+
+    if (mainType) {
+      totalComponents = totalComponents.map(comp => {
+        // Si un composant n'a pas de type, on lui applique le type principal (ex: "tonnerre")
+        if (!comp.damageType || comp.damageType === 'none') {
+          return {
+            ...comp,
+            damageType: mainType,
+          };
+        }
+        return comp;
+      });
     }
   }
   
