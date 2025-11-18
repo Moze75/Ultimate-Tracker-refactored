@@ -28,8 +28,6 @@ interface SpellbookModalProps {
   onClose: () => void;
   playerClass?: DndClass | null | undefined;
   playerClasses?: (DndClass | null | undefined)[];
-  /** Niveau du personnage pour limiter les niveaux de sorts disponibles */
-  playerLevel?: number;
   selectionMode?: boolean;
   onSpellSelect?: (spell: any) => void;
   selectedSpells?: any[];
@@ -49,56 +47,13 @@ const MAGIC_SCHOOLS = [
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-// ===== Helpers pour limiter les niveaux de sorts affichés en fonction du joueur =====
-type CasterType = 'full' | 'half' | 'warlock' | 'none';
 
-const normalize = (s: string) =>
-  s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-const getCasterType = (cls?: string | null): CasterType => {
-  if (!cls) return 'none';
-  const c = normalize(cls);
-  if (['wizard', 'magicien', 'mage'].some((k) => c.includes(k))) return 'full';
-  if (['sorcerer', 'ensorceleur'].some((k) => c.includes(k))) return 'full';
-  if (['cleric', 'clerc'].some((k) => c.includes(k))) return 'full';
-  if (['druid', 'druide'].some((k) => c.includes(k))) return 'full';
-  if (['bard', 'barde'].some((k) => c.includes(k))) return 'full';
-  if (['paladin'].some((k) => c.includes(k))) return 'half';
-  if (['ranger', 'rodeur', 'rôdeur'].some((k) => c.includes(k))) return 'half';
-  if (['artificer', 'artificier'].some((k) => c.includes(k))) return 'half';
-  if (['warlock', 'occultiste'].some((k) => c.includes(k))) return 'warlock';
-  return 'none';
-};
-
-const getWarlockPactSlotLevel = (level: number): number => {
-  if (level <= 2) return 1;
-  if (level <= 4) return 2;
-  if (level <= 6) return 3;
-  if (level <= 8) return 4;
-  return 5;
-};
-
-const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): number => {
-  if (casterType === 'warlock') return getWarlockPactSlotLevel(level);
-  if (casterType === 'full') return Math.min(9, Math.ceil(level / 2));
-  if (casterType === 'half') {
-    // Règles 2024 pour semi-lanceurs
-    if (level < 1) return 0;
-    if (level <= 4) return 1;
-    if (level <= 8) return 2;
-    if (level <= 12) return 3;
-    if (level <= 16) return 4;
-    return 5;
-  }
-  return 0;
-};
 
 export function SpellbookModal({
   isOpen,
   onClose,
   playerClass,
   playerClasses,
-  playerLevel,
   selectionMode = false,
   onSpellSelect,
   selectedSpells = [],
@@ -106,15 +61,6 @@ export function SpellbookModal({
 }: SpellbookModalProps) {
   // Utiliser playerClasses si fourni, sinon fallback sur playerClass
   const effectivePlayerClasses = playerClasses || (playerClass ? [playerClass] : []);
-    // Déterminer le niveau max de sort accessible pour limiter l'UI
-  const highestAllowedLevel = React.useMemo(() => {
-    if (!playerLevel || playerLevel <= 0) return 9; // fallback permissif si pas de niveau
-    // On prend la première classe non nulle
-    const mainClass = (playerClasses && playerClasses.find(Boolean)) || playerClass || null;
-    const casterType = getCasterType(mainClass as string | null);
-    if (casterType === 'none') return 0;
-    return getHighestAllowedSlotLevel(casterType, playerLevel);
-  }, [playerLevel, playerClasses, playerClass]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<Spell[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -459,40 +405,6 @@ if (
       }
     }
 
-      // Limiter aux niveaux de sorts accessibles par le joueur (règles 2024)
-    if (
-      !showAllClasses &&
-      effectivePlayerClasses.length > 0 &&
-      effectivePlayerClasses.some(Boolean)
-    ) {
-      // On prend la première classe non nulle comme référence
-      const mainClass = effectivePlayerClasses.find(Boolean) as string | undefined;
-      const casterType = getCasterType(mainClass);
-
-      // Si on n'a pas de niveau max cohérent ou pas de lanceur de sorts, ne pas filtrer plus
-      if (casterType === 'none' || highestAllowedLevel <= 0) {
-        console.log(
-          '[SpellbookModal] Pas de filtrage par niveau (casterType=none ou highestAllowedLevel<=0)',
-          { mainClass, casterType, highestAllowedLevel }
-        );
-      } else {
-        console.log('[SpellbookModal] Limitation des niveaux de sorts:', {
-          mainClass,
-          casterType,
-          highestAllowedLevel,
-        });
-
-        filtered = filtered.filter((spell) => {
-          if (spell.level === 0) return true; // toujours autoriser les tours de magie
-          return spell.level <= highestAllowedLevel;
-        });
-
-        console.log(
-          `Après filtrage par niveau max (${highestAllowedLevel}) : ${filtered.length} sorts`
-        );
-      }
-    }
-    
     // Filtrer par terme de recherche
     if (searchTerm) {
       filtered = filtered.filter(spell =>
@@ -628,60 +540,29 @@ if (
                        `${selectedLevels.size} niveaux sélectionnés`
                     }
                   </div>
-    <div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-    {SPELL_LEVELS.map(level => {
-      // On autorise toujours les tours de magie (0), mais on bloque les niveaux > highestAllowedLevel
-      const isDisabled = level > 0 && level > highestAllowedLevel;
-
-      if (isDisabled) {
-        // Option 1 : ne PAS afficher du tout les niveaux inaccessibles
-        return null;
-
-        // Option 2 (si tu préfères les voir en grisé mais non cliquables) :
-        // return (
-        //   <label
-        //     key={level}
-        //     className="flex items-center px-3 py-2 cursor-not-allowed opacity-40"
-        //   >
-        //     <input
-        //       type="checkbox"
-        //       disabled
-        //       checked={false}
-        //       className="mr-2 text-purple-500 focus:ring-purple-500"
-        //     />
-        //     <span className="text-gray-500">
-        //       {level === 0 ? 'Tours de magie' : `Niveau ${level} (indisponible)`}
-        //     </span>
-        //   </label>
-        // );
-      }
-
-      return (
-        <label
-          key={level}
-          className="flex items-center px-3 py-2 hover:bg-gray-700 cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            checked={selectedLevels.has(level)}
-            onChange={(e) => {
-              const newLevels = new Set(selectedLevels);
-              if (e.target.checked) {
-                newLevels.add(level);
-              } else {
-                newLevels.delete(level);
-              }
-              setSelectedLevels(newLevels);
-            }}
-            className="mr-2 text-purple-500 focus:ring-purple-500"
-          />
-          <span className="text-gray-300">
-            {level === 0 ? 'Tours de magie' : `Niveau ${level}`}
-          </span>
-        </label>
-      );
-    })}
-  </div>
+                  <div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    {SPELL_LEVELS.map(level => (
+                      <label key={level} className="flex items-center px-3 py-2 hover:bg-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedLevels.has(level)}
+                          onChange={(e) => {
+                            const newLevels = new Set(selectedLevels);
+                            if (e.target.checked) {
+                              newLevels.add(level);
+                            } else {
+                              newLevels.delete(level);
+                            }
+                            setSelectedLevels(newLevels);
+                          }}
+                          className="mr-2 text-purple-500 focus:ring-purple-500"
+                        />
+                        <span className="text-gray-300">
+                          {level === 0 ? 'Tours de magie' : `Niveau ${level}`}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 {/* School Filter */}
