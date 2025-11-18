@@ -1662,18 +1662,20 @@ return (
 <SpellLevelSection isExpanded={!collapsedLevels.has(levelName)}>
       <div className="space-y-2 mx-0 py-2">
         {spells.map((spell) => (
-          <SpellCard
-            key={spell.id}
-            spell={spell}
-            expandedSpell={expandedSpell}
-            setExpandedSpell={setExpandedSpell}
-            onTogglePrepared={togglePrepared}
-            onRemoveSpell={removeKnownSpell}
-            spellAttackBonus={spellAttackBonus}
-            maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
-            characterLevel={characterLevel}
-            abilityModifier={abilityMod}
-          />
+<SpellCard
+  key={spell.id}
+  spell={spell}
+  expandedSpell={expandedSpell}
+  setExpandedSpell={setExpandedSpell}
+  onTogglePrepared={togglePrepared}
+  onRemoveSpell={removeKnownSpell}
+  spellAttackBonus={spellAttackBonus}
+  maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
+  characterLevel={characterLevel}
+  abilityModifier={abilityMod}
+  onRoll={triggerDiceRoll}   // ✅ nouvelle prop
+/>
+
         ))}
       </div>
     </SpellLevelSection>
