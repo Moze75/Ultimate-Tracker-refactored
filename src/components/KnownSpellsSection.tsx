@@ -773,45 +773,44 @@ function SpellCard({
   {damageInfo.isDamageSpell && totalDamage && (
     <>
       {availableLevels.length > 1 && spell.spell_level > 0 ? (
-        // ✅ Wrapper pour stabiliser la position du select
-        <div className="inline-block">
-          <select
-            value={selectedCastLevel}
-            onChange={(e) => {
-              e.stopPropagation();
-              setSelectedCastLevel(Number(e.target.value));
-            }}
-            onClick={(e) => e.stopPropagation()}
-            // ✅ Style simple, lisible, et cohérent
-            className="
-              text-xs
-              px-2 py-1
-              rounded
-              border border-gray-400
-              bg-white text-gray-900
-              font-sans
-              cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
-            "
-            title={`Lancer au niveau ${selectedCastLevel}`}
-          >
-            {availableLevels.map((lvl) => {
-              const lvlDamage = calculateSlotDamage(
-                damageInfo,
-                spell.spell_level,
-                lvl,
-                abilityModifier
-              );
-              return (
-                <option key={lvl} value={lvl}>
-                  {lvlDamage} (Niv. {lvl})
-                </option>
-              );
-            })}
-          </select>
-        </div>
+        <select
+          value={selectedCastLevel}
+          onChange={(e) => {
+            e.stopPropagation();
+            setSelectedCastLevel(Number(e.target.value));
+          }}
+          onClick={(e) => e.stopPropagation()} 
+          // ✅ Nouveau style : texte sombre sur fond clair
+          className="
+            text-xs
+            px-2 py-1
+            rounded
+            border border-gray-400
+            bg-white text-gray-900
+            font-mono font-semibold
+            cursor-pointer
+            shadow-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400
+          "
+          title={`Lancer au niveau ${selectedCastLevel}`}
+        >
+          {availableLevels.map((lvl) => {
+            const lvlDamage = calculateSlotDamage(
+              damageInfo,
+              spell.spell_level,
+              lvl,
+              abilityModifier
+            );
+            return (
+              <option key={lvl} value={lvl}>
+                {lvlDamage} (Niv. {lvl})
+              </option>
+            );
+          })}
+        </select>
       ) : (
         <div
+          // On peut garder le badge orange pour l’affichage simple (un seul niveau)
           className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold"
           title="Dégâts du sort"
           onClick={(e) => e.stopPropagation()}
