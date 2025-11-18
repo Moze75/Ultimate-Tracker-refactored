@@ -866,7 +866,7 @@ function SpellCard({
               );
             }}
           >
-            o  
+             <Dice5 className="w-3 h-3" /> 
           </button>
         </div>
       ) : (
