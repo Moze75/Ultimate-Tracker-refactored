@@ -773,7 +773,7 @@ function SpellCard({
   {damageInfo.isDamageSpell && totalDamage && (
     <>
       {availableLevels.length > 1 && spell.spell_level > 0 ? (
-        // ✅ Wrapper pour stabiliser la position du select
+        // Wrapper pour stabiliser la position du select
         <div className="inline-block">
           <select
             value={selectedCastLevel}
@@ -782,16 +782,16 @@ function SpellCard({
               setSelectedCastLevel(Number(e.target.value));
             }}
             onClick={(e) => e.stopPropagation()}
-            // ✅ Style : fond transparent, texte blanc, cohérent avec le thème sombre
+            // ✅ Style classique : fond blanc, texte sombre
             className="
               text-xs
               px-2 py-1
               rounded
-              border border-orange-400/60
-              bg-transparent text-white
+              border border-gray-400
+              bg-white text-gray-900
               font-sans
               cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
+              focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
             "
             title={`Lancer au niveau ${selectedCastLevel}`}
           >
