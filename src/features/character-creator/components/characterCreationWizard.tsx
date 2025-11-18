@@ -374,14 +374,18 @@ const payload: CharacterExportPayload = {
   customRaceData: customRaceData || undefined, // ✅ AJOUTER CETTE LIGNE
 };
 
-        // ✅ Nettoyer le snapshot et marquer le contexte "game"
-        appContextService.clearWizardSnapshot();
-        appContextService.setContext('game');
-        console.log('[Wizard] Snapshot nettoyé, contexte = game');
+     // ✅ Nettoyer le snapshot et marquer le contexte "game"
+  appContextService.clearWizardSnapshot();
+  appContextService.setContext('game');
+  console.log('[Wizard] Snapshot nettoyé, contexte = game');
 
-        onFinish(payload);
-        return;
-      }
+  onFinish(payload);
+  
+  // ✅ Désactiver le loading APRÈS l'appel à onFinish
+  // (le parent gérera la suite)
+  setLoadingEquipment(false);
+  return;
+}
 
       // FALLBACK AUTONOME
       const { data: auth, error: authErr } = await supabase.auth.getUser();
