@@ -782,16 +782,16 @@ function SpellCard({
               setSelectedCastLevel(Number(e.target.value));
             }}
             onClick={(e) => e.stopPropagation()}
-            // ✅ Style classique : fond blanc, texte sombre
+            // ✅ Champ fermé : fond transparent, texte blanc
             className="
               text-xs
               px-2 py-1
               rounded
-              border border-gray-400
-              bg-white text-gray-900
+              border border-orange-400/60
+              bg-transparent text-white
               font-sans
               cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400
+              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
             "
             title={`Lancer au niveau ${selectedCastLevel}`}
           >
@@ -803,7 +803,13 @@ function SpellCard({
                 abilityModifier
               );
               return (
-                <option key={lvl} value={lvl}>
+                <option
+                  key={lvl}
+                  value={lvl}
+                  // ✅ Effet visuel souhaité sur beaucoup de navigateurs :
+                  // liste déroulante fond blanc + texte sombre
+                  className="bg-white text-gray-900"
+                >
                   {lvlDamage} (Niv. {lvl})
                 </option>
               );
