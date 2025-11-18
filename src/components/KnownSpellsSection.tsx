@@ -1240,6 +1240,10 @@ const fetchKnownSpells = async () => {
         is_prepared: item.is_prepared,
         created_at: item.created_at,
       }));
+
+   // 👉 AJOUTE CE LOG
+    console.log('[fetchKnownSpells] Sorts chargés:', transformed);
+      
       setKnownSpells(transformed);
     } catch (err) {
       console.error('Erreur sorts connus:', err);
