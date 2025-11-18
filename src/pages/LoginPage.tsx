@@ -65,29 +65,41 @@ const MAX_LOGIN_ATTEMPTS = 3;
     checkConnection();
   }, []);
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setConnectionError(null);
+ const handleEmailSignIn = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setConnectionError(null); // Réinitialiser l'erreur à chaque tentative
 
-    try {
-      const { error } = await authService.signInWithEmail(email, password);
+  try {
+    const { error } = await authService.signInWithEmail(email, password);
 
-      if (error) throw error;
-      toast.success('Connexion réussie');
-    } catch (error: any) {
-      console.error('Erreur de connexion:', error);
-      const errorMessage = error.message === 'Failed to fetch' 
-        ? 'Impossible de se connecter au serveur. Vérifiez votre connexion Internet.'
-        : error.message?.includes('Veuillez confirmer votre adresse email')
-        ? 'Veuillez confirmer votre adresse email avant de vous connecter. Vérifiez votre boîte de réception et le dossier spam.'
-        : error.message || 'Erreur de connexion';
-      setConnectionError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+    if (error) throw error;
+    toast.success('Connexion réussie');
+    setLoginAttempts(0); // Réinitialiser le compteur en cas de succès
+  } catch (error: any) {
+    console.error('Erreur de connexion:', error);
+    
+    const newAttempts = loginAttempts + 1;
+    setLoginAttempts(newAttempts);
+    
+    const errorMessage = error.message === 'Failed to fetch' 
+      ? 'Impossible de se connecter au serveur. Vérifiez votre connexion Internet.'
+      : error.message?.includes('Veuillez confirmer votre adresse email')
+      ? 'Veuillez confirmer votre adresse email avant de vous connecter. Vérifiez votre boîte de réception et le dossier spam.'
+      : error.message || 'Erreur de connexion';
+    
+    // Ne bloquer qu'après MAX_LOGIN_ATTEMPTS tentatives
+    if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+      setConnectionError(`Trop de tentatives échouées (${newAttempts}/${MAX_LOGIN_ATTEMPTS}). Veuillez rafraîchir la page.`);
+      toast.error(`Trop de tentatives échouées. Veuillez rafraîchir la page.`);
+    } else {
+      // Afficher l'erreur mais ne pas bloquer le formulaire
+      toast.error(`${errorMessage} (Tentative ${newAttempts}/${MAX_LOGIN_ATTEMPTS})`);
     }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
