@@ -613,20 +613,27 @@ function SpellCard({
   setExpandedSpell,
   onTogglePrepared,
   onRemoveSpell,
-  spellAttackBonus,          // ✅ NOUVEAU
-  maxPlayerSpellLevel,       // ✅ NOUVEAU
-  characterLevel,            // ✅ NOUVEAU
-  abilityModifier,           // ✅ NOUVEAU
+  spellAttackBonus,
+  maxPlayerSpellLevel,
+  characterLevel,
+  abilityModifier,
+  onRoll, // ✅ nouveau
 }: {
   spell: KnownSpell;
   expandedSpell: string | null;
   setExpandedSpell: (id: string | null) => void;
   onTogglePrepared: (id: string, isPrepared: boolean) => void;
   onRemoveSpell: (id: string) => void;
-  spellAttackBonus: number | null;    // ✅ NOUVEAU
-  maxPlayerSpellLevel: number;        // ✅ NOUVEAU
-  characterLevel: number;             // ✅ NOUVEAU
-  abilityModifier: number;            // ✅ NOUVEAU
+  spellAttackBonus: number | null;
+  maxPlayerSpellLevel: number;
+  characterLevel: number;
+  abilityModifier: number;
+  onRoll: (
+    type: 'attack' | 'damage',
+    attackName: string,
+    diceFormula: string,
+    modifier: number
+  ) => void;
 }) {
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
