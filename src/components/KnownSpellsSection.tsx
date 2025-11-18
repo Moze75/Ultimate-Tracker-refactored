@@ -1286,14 +1286,22 @@ const spellAttackBonus = useMemo(
   }, [player.class, player.secondary_class]);
 
   // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
-  const characterLevel = useMemo(() => {
-    const primaryCaster = getCasterType(player.class);
-    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
-    
-    if (primaryCaster !== 'none') return getCharacterLevel(player);
-    if (secondaryCaster !== 'none') return player.secondary_level || 1;
-    return 1;
-  }, [player.class, player.secondary_class, player.level, player.secondary_level]);
+const characterLevel = useMemo(() => {
+  const primaryCaster = getCasterType(player.class);
+  const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+  
+  let level = 1;
+  if (primaryCaster !== 'none') {
+    level = getCharacterLevel(player);
+  } else if (secondaryCaster !== 'none') {
+    level = player.secondary_level || 1;
+  }
+  
+  // ✅ DEBUG : Afficher le niveau du personnage
+  console.log('[KnownSpellsSection] Niveau du personnage:', level, '| Classe:', player.class, '| player.level:', player.level);
+  
+  return level;
+}, [player.class, player.secondary_class, player.level, player.secondary_level]);
 
   const allowedLevelsSet = useMemo(() => {
     const set = new Set<number>();
