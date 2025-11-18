@@ -657,19 +657,31 @@ function SpellCard({
   const totalDamage = useMemo(() => {
     if (!damageInfo.isDamageSpell) return null;
     
+    let result = '';
+    
     // Tours de magie : basé sur niveau du personnage
     if (spell.spell_level === 0) {
-      return calculateCantripDamage(damageInfo, characterLevel, abilityModifier);
+      result = calculateCantripDamage(damageInfo, characterLevel, abilityModifier);
+      
+      // ✅ DEBUG : Afficher le calcul pour tours de magie
+      console.log(`[SpellCard] Calcul dégâts tour de magie "${spell.spell_name}":`, {
+        characterLevel,
+        result,
+        upgradePattern: damageInfo.upgradePattern,
+        thresholds: damageInfo.characterLevelThresholds,
+      });
+    } else {
+      // Sorts à emplacements : basé sur niveau de lancement
+      result = calculateSlotDamage(
+        damageInfo,
+        spell.spell_level,
+        selectedCastLevel,
+        abilityModifier
+      );
     }
     
-    // Sorts à emplacements : basé sur niveau de lancement
-    return calculateSlotDamage(
-      damageInfo,
-      spell.spell_level,
-      selectedCastLevel,
-      abilityModifier
-    );
-  }, [damageInfo, spell.spell_level, selectedCastLevel, characterLevel, abilityModifier]);
+    return result;
+  }, [damageInfo, spell.spell_level, selectedCastLevel, characterLevel, abilityModifier, spell.spell_name]);
   
   // ✅ NOUVEAU : Niveaux de lancement disponibles
   const availableLevels = useMemo(() => {
