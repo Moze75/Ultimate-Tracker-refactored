@@ -1584,6 +1584,10 @@ return (
             setExpandedSpell={setExpandedSpell}
             onTogglePrepared={togglePrepared}
             onRemoveSpell={removeKnownSpell}
+            spellAttackBonus={spellAttackBonus}
+            maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
+            characterLevel={characterLevel}
+            abilityModifier={abilityMod}
           />
         ))}
       </div>
