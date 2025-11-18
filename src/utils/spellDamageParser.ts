@@ -118,48 +118,84 @@ export function extractDamageComponents(text: string): DamageComponent[] {
     'tonnerre', 'tranchant',
   ]);
   
-  // Regex pour capturer: "2d8 dégâts de feu" ou "2d8 de feu" ou "2d8 feu" ou juste "2d8"
-  // Capture aussi le contexte avant pour vérifier si c'est bien un dégât
-  const damageRegex = /(\d+)d(\d+)\s*(?:dégâts?\s+)?(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)?/gi;
+  // Regex améliorée : capturer formule + type de dégât éventuel APRÈS
+  // Ex: "1d6 dégâts de tonnerre" → capture "1d6", puis cherche "tonnerre" après
+  const damageRegex = /(\d+)d(\d+)/gi;
   
   let match;
   while ((match = damageRegex.exec(text)) !== null) {
-    const [fullMatch, diceCount, diceType, possibleDamageType] = match;
+    const [fullMatch, diceCount, diceType] = match;
     
-    // Vérifier le contexte : doit contenir "dégât" ou "subir" à proximité
-    const contextStart = Math.max(0, match.index - 50);
-    const contextEnd = Math.min(text.length, match.index + fullMatch.length + 20);
+    // Vérifier le contexte dans une fenêtre plus large (100 caractères avant/après)
+    const contextStart = Math.max(0, match.index - 100);
+    const contextEnd = Math.min(text.length, match.index + fullMatch.length + 100);
     const context = text.substring(contextStart, contextEnd).toLowerCase();
     
-    // Exclusions : ne pas extraire si c'est un malus/bonus de jet
-    const isNotDamage = /soustraire|ajouter|bonus|malus|jet de|prochain|suivant/.test(context);
+    // Exclusions strictes : patterns de non-dégâts
+    const exclusionPatterns = [
+      /soustraire\s+\d+d\d+/i,           // "soustraire 1d4"
+      /\d+d\d+\s+du\s+prochain/i,        // "1d4 du prochain jet"
+      /\d+d\d+\s+au\s+(?:prochain|suivant)/i, // "1d4 au prochain"
+    ];
     
-    if (isNotDamage) {
+    // Vérifier si c'est un pattern exclu
+    const textAroundMatch = text.substring(
+      Math.max(0, match.index - 20),
+      Math.min(text.length, match.index + fullMatch.length + 30)
+    );
+    
+    const isExcluded = exclusionPatterns.some(pattern => pattern.test(textAroundMatch));
+    
+    if (isExcluded) {
       continue; // Ignorer ce match
     }
     
     // Vérifier que le contexte mentionne bien des dégâts
-    const isDamageContext = /dégâts?|subir|subit|inflige|perd/.test(context);
+    const isDamageContext = /dégâts?|subir|subit|inflige|infligeant|perd|perdant|blessure/i.test(context);
     
     if (!isDamageContext) {
       continue; // Ignorer si pas de contexte de dégât
     }
     
-    // Valider le type de dégât
+    // Extraire le type de dégât après la formule
+    // Chercher dans les 50 caractères après la formule
+    const afterText = text.substring(match.index, match.index + 50);
     let damageType: string | undefined = undefined;
     
-    if (possibleDamageType) {
-      const normalized = possibleDamageType.toLowerCase().trim();
+    // Pattern 1 : "1d6 dégâts de tonnerre" ou "1d6 de tonnerre"
+    const typePattern1 = /\d+d\d+\s+(?:dégâts?\s+)?de\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+    const typeMatch1 = afterText.match(typePattern1);
+    
+    if (typeMatch1) {
+      const candidate = typeMatch1[1].toLowerCase().trim();
+      if (validDamageTypes.has(candidate)) {
+        damageType = candidate;
+      }
+    }
+    
+    // Pattern 2 : "1d6 tonnerre" (type juste après, sans "de")
+    if (!damageType) {
+      const typePattern2 = /\d+d\d+\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+      const typeMatch2 = afterText.match(typePattern2);
       
-      if (validDamageTypes.has(normalized)) {
-        damageType = normalized;
-      } else if (normalized === 'dégâts' || normalized === 'dégât') {
-        // Chercher le type après "dégâts de X"
-        const afterMatch = text.substring(match.index + fullMatch.length, match.index + fullMatch.length + 30);
-        const typeMatch = afterMatch.match(/(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)/i);
-        
-        if (typeMatch && validDamageTypes.has(typeMatch[1].toLowerCase())) {
-          damageType = typeMatch[1].toLowerCase();
+      if (typeMatch2) {
+        const candidate = typeMatch2[1].toLowerCase().trim();
+        // Vérifier que ce n'est pas un mot-clé non pertinent
+        if (validDamageTypes.has(candidate) && candidate !== 'dégâts' && candidate !== 'dégât') {
+          damageType = candidate;
+        }
+      }
+    }
+    
+    // Pattern 3 : "subir 1d6 dégâts psychiques" (chercher après "dégâts")
+    if (!damageType) {
+      const typePattern3 = /dégâts?\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+      const typeMatch3 = afterText.match(typePattern3);
+      
+      if (typeMatch3) {
+        const candidate = typeMatch3[1].toLowerCase().trim();
+        if (validDamageTypes.has(candidate)) {
+          damageType = candidate;
         }
       }
     }
