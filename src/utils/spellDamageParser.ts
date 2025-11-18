@@ -148,7 +148,7 @@ export function extractDamageComponents(text: string): DamageComponent[] {
       formula: `${diceCount}d${diceType}`,
       damageType,
     });
-  }
+  } 
   
   return components;
 }
