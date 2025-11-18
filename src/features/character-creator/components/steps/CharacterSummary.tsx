@@ -220,10 +220,18 @@ export default function CharacterSummary({
       });
       return;
     }
-    setNameError('');
-    setShowToast(false);
-    onFinish();
-  };
+setNameError('');
+  setShowToast(false);
+  setIsCreating(true); // ✅ Bloquer immédiatement
+  
+  try {
+    await onFinish(); // ✅ Attendre la fin complète
+  } catch (error) {
+    console.error('[CharacterSummary] Erreur lors de la création:', error);
+    setIsCreating(false); // ✅ Réactiver en cas d'erreur
+  }
+  // Note: Ne pas setIsCreating(false) en cas de succès car le composant sera démonté
+};
 
   // Calcul du bonus de compétence
   const getSkillBonus = (skillLabel: SkillName): number => {
