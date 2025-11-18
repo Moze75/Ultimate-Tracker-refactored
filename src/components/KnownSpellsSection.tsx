@@ -799,18 +799,54 @@ function SpellCard({
   {/* Badge dégâts avec sélecteur de niveau */}
   {damageInfo.isDamageSpell && totalDamage && (
     <>
-       {availableLevels.length > 1 && spell.spell_level > 0 ? (
-        // Wrapper pour stabiliser la position du select
-        <div className="inline-block">
+      {availableLevels.length > 1 && spell.spell_level > 0 ? (
+        // Wrapper : select + bouton dé
+        <div className="inline-flex items-center gap-1">
           <select
             value={selectedCastLevel}
-            // ✅ onChange : ne fait que changer de niveau, sans lancer
+            // ✅ onChange : on choisit juste le niveau, sans lancer
             onChange={(e) => {
               e.stopPropagation();
               const newLevel = Number(e.target.value);
               setSelectedCastLevel(newLevel);
             }}
-            // ✅ onClick : lance les dégâts pour le niveau actuellement sélectionné
+            onClick={(e) => e.stopPropagation()}
+            className="
+              text-xs
+              px-2 py-1
+              rounded
+              border border-orange-400/60
+              bg-transparent text-white
+              font-sans
+              cursor-pointer
+              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
+            "
+            title={`Niveau de lancement (actuel : ${selectedCastLevel})`}
+          >
+            {availableLevels.map((lvl) => {
+              const lvlDamage = calculateSlotDamage(
+                damageInfo,
+                spell.spell_level,
+                lvl,
+                abilityModifier
+              );
+              return (
+                <option
+                  key={lvl}
+                  value={lvl}
+                  className="bg-white text-gray-900"
+                >
+                  {lvlDamage} (Niv. {lvl})
+                </option>
+              );
+            })}
+          </select>
+
+          {/* Petit bouton dé pour lancer au niveau sélectionné */}
+          <button
+            type="button"
+            className="w-6 h-6 flex items-center justify-center rounded border border-orange-400/60 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 hover:border-orange-400 transition-colors text-[10px] font-mono"
+            title={`Lancer les dégâts au niveau ${selectedCastLevel}`}
             onClick={(e) => {
               e.stopPropagation();
               const lvlDamage = calculateSlotDamage(
@@ -827,37 +863,9 @@ function SpellCard({
                 modifier
               );
             }}
-            // Champ fermé : fond transparent, texte blanc
-            className="
-              text-xs
-              px-2 py-1
-              rounded
-              border border-orange-400/60
-              bg-transparent text-white
-              font-sans
-              cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
-            "
-            title={`Lancer les dégâts au niveau ${selectedCastLevel}`}
           >
-            {availableLevels.map((lvl) => {
-              const lvlDamage = calculateSlotDamage(
-                damageInfo,
-                spell.spell_level,
-                lvl,
-                abilityModifier
-              );
-              return (
-                <option
-                  key={lvl}
-                  value={lvl}
-                  className="bg-white text-gray-900"
-                >
-                  {lvlDamage} (Niv. {lvl})
-                </option> 
-              );
-            })}
-          </select>
+            d
+          </button>
         </div>
       ) : (
         <button
