@@ -530,6 +530,8 @@ export function calculateCantripDamage(
           });
         }
       });
+       // ✅ DEBUG : Afficher les composantes après amélioration
+      console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
     }
   }
   
