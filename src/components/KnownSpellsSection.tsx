@@ -819,7 +819,7 @@ function SpellCard({
           {totalDamage}
         </div>
       )}
-    </>
+    </> 
   )}
 </div>
           
