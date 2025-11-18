@@ -15,7 +15,8 @@ export interface DamageComponent {
  */
 export interface SpellDamageInfo {
   isDamageSpell: boolean;
-  isAttackRoll: boolean;        // true si "jet d'attaque" dans description
+  isAttackRoll: boolean;        // true si le LANCEUR doit faire un jet d'attaque
+  isSavingThrow: boolean;       // true si la CIBLE doit faire un jet de sauvegarde
   baseDamage: DamageComponent[];  // Ex: [{2d8 feu}, {1d6 radiant}]
   hasModifier: boolean;         // true si "+ modificateur" trouvé
   modifierAbility?: string;     // Ex: "Charisme", "Sagesse"
@@ -33,12 +34,17 @@ export interface SpellDamageInfo {
 export function isDamageSpell(description: string): boolean {
   if (!description) return false;
   
+  // Un sort inflige des dégâts s'il contient une formule de dés ET un mot-clé de dégâts
+  const hasDiceFormula = /\d+d\d+/i.test(description);
+  
+  if (!hasDiceFormula) return false;
+  
   const damageKeywords = [
-    /\d+d\d+/i,                    // Formule de dés
-    /dégâts?/i,
-    /inflige/i,
-    /subit/i,
-    /perd.*points? de vie/i,
+    /dégâts?/i,                    // "8d6 dégâts de feu"
+    /inflige/i,                    // "inflige 2d8"
+    /subit/i,                      // "subit 1d10"
+    /perd.*points? de vie/i,       // "perd 3d6 points de vie"
+    /subissant/i,                  // "subissant 8d6 dégâts"
   ];
   
   return damageKeywords.some(regex => regex.test(description));
@@ -80,7 +86,23 @@ export function isAttackRoll(description: string): boolean {
 }
 
 /**
- * 3. Extrait toutes les composantes de dégâts d'un texte
+ * 3. Détecte si le sort nécessite un jet de sauvegarde
+ * Utile pour l'affichage futur du DD de sauvegarde sur la carte
+ */
+export function isSavingThrowSpell(description: string): boolean {
+  if (!description) return false;
+  
+  const savingThrowKeywords = [
+    /jet de sauvegarde/i,
+    /effectue.*sauvegarde/i,
+    /réussit.*sauvegarde/i,
+  ];
+  
+  return savingThrowKeywords.some(regex => regex.test(description));
+}
+
+/**
+ * 4. Extrait toutes les composantes de dégâts d'un texte
  * Ex: "2d8 de feu et 1d6 de radiant" → [{2d8, feu}, {1d6, radiant}]
  * IMPORTANT : Filtre les faux positifs (ex: "1d4 du prochain jet")
  */
@@ -96,48 +118,84 @@ export function extractDamageComponents(text: string): DamageComponent[] {
     'tonnerre', 'tranchant',
   ]);
   
-  // Regex pour capturer: "2d8 dégâts de feu" ou "2d8 de feu" ou "2d8 feu" ou juste "2d8"
-  // Capture aussi le contexte avant pour vérifier si c'est bien un dégât
-  const damageRegex = /(\d+)d(\d+)\s*(?:dégâts?\s+)?(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)?/gi;
+  // Regex améliorée : capturer formule + type de dégât éventuel APRÈS
+  // Ex: "1d6 dégâts de tonnerre" → capture "1d6", puis cherche "tonnerre" après
+  const damageRegex = /(\d+)d(\d+)/gi;
   
   let match;
   while ((match = damageRegex.exec(text)) !== null) {
-    const [fullMatch, diceCount, diceType, possibleDamageType] = match;
+    const [fullMatch, diceCount, diceType] = match;
     
-    // Vérifier le contexte : doit contenir "dégât" ou "subir" à proximité
-    const contextStart = Math.max(0, match.index - 50);
-    const contextEnd = Math.min(text.length, match.index + fullMatch.length + 20);
+    // Vérifier le contexte dans une fenêtre plus large (100 caractères avant/après)
+    const contextStart = Math.max(0, match.index - 100);
+    const contextEnd = Math.min(text.length, match.index + fullMatch.length + 100);
     const context = text.substring(contextStart, contextEnd).toLowerCase();
     
-    // Exclusions : ne pas extraire si c'est un malus/bonus de jet
-    const isNotDamage = /soustraire|ajouter|bonus|malus|jet de|prochain|suivant/.test(context);
+    // Exclusions strictes : patterns de non-dégâts
+    const exclusionPatterns = [
+      /soustraire\s+\d+d\d+/i,           // "soustraire 1d4"
+      /\d+d\d+\s+du\s+prochain/i,        // "1d4 du prochain jet"
+      /\d+d\d+\s+au\s+(?:prochain|suivant)/i, // "1d4 au prochain"
+    ];
     
-    if (isNotDamage) {
+    // Vérifier si c'est un pattern exclu
+    const textAroundMatch = text.substring(
+      Math.max(0, match.index - 20),
+      Math.min(text.length, match.index + fullMatch.length + 30)
+    );
+    
+    const isExcluded = exclusionPatterns.some(pattern => pattern.test(textAroundMatch));
+    
+    if (isExcluded) {
       continue; // Ignorer ce match
     }
     
     // Vérifier que le contexte mentionne bien des dégâts
-    const isDamageContext = /dégâts?|subir|subit|inflige|perd/.test(context);
+    const isDamageContext = /dégâts?|subir|subit|inflige|infligeant|perd|perdant|blessure/i.test(context);
     
     if (!isDamageContext) {
       continue; // Ignorer si pas de contexte de dégât
     }
     
-    // Valider le type de dégât
+    // Extraire le type de dégât après la formule
+    // Chercher dans les 50 caractères après la formule
+    const afterText = text.substring(match.index, match.index + 50);
     let damageType: string | undefined = undefined;
     
-    if (possibleDamageType) {
-      const normalized = possibleDamageType.toLowerCase().trim();
+    // Pattern 1 : "1d6 dégâts de tonnerre" ou "1d6 de tonnerre"
+    const typePattern1 = /\d+d\d+\s+(?:dégâts?\s+)?de\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+    const typeMatch1 = afterText.match(typePattern1);
+    
+    if (typeMatch1) {
+      const candidate = typeMatch1[1].toLowerCase().trim();
+      if (validDamageTypes.has(candidate)) {
+        damageType = candidate;
+      }
+    }
+    
+    // Pattern 2 : "1d6 tonnerre" (type juste après, sans "de")
+    if (!damageType) {
+      const typePattern2 = /\d+d\d+\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+      const typeMatch2 = afterText.match(typePattern2);
       
-      if (validDamageTypes.has(normalized)) {
-        damageType = normalized;
-      } else if (normalized === 'dégâts' || normalized === 'dégât') {
-        // Chercher le type après "dégâts de X"
-        const afterMatch = text.substring(match.index + fullMatch.length, match.index + fullMatch.length + 30);
-        const typeMatch = afterMatch.match(/(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)/i);
-        
-        if (typeMatch && validDamageTypes.has(typeMatch[1].toLowerCase())) {
-          damageType = typeMatch[1].toLowerCase();
+      if (typeMatch2) {
+        const candidate = typeMatch2[1].toLowerCase().trim();
+        // Vérifier que ce n'est pas un mot-clé non pertinent
+        if (validDamageTypes.has(candidate) && candidate !== 'dégâts' && candidate !== 'dégât') {
+          damageType = candidate;
+        }
+      }
+    }
+    
+    // Pattern 3 : "subir 1d6 dégâts psychiques" (chercher après "dégâts")
+    if (!damageType) {
+      const typePattern3 = /dégâts?\s+([a-zàâçéèêëîïôûùüÿñæœ]+)/i;
+      const typeMatch3 = afterText.match(typePattern3);
+      
+      if (typeMatch3) {
+        const candidate = typeMatch3[1].toLowerCase().trim();
+        if (validDamageTypes.has(candidate)) {
+          damageType = candidate;
         }
       }
     }
@@ -150,11 +208,11 @@ export function extractDamageComponents(text: string): DamageComponent[] {
     });
   } 
   
-  return components;
+  return components; 
 }
-
+ 
 /**
- * 4. Détecte si le sort utilise un modificateur de caractéristique
+ * 5. Détecte si le sort utilise un modificateur de caractéristique
  * Ex: "2d8 + votre modificateur de Charisme"
  * Retourne: { hasModifier: true, ability: "Charisme" }
  */
@@ -194,7 +252,7 @@ export function detectModifier(description: string): { hasModifier: boolean; abi
 }
 
 /**
- * 5. Parse les règles d'amélioration pour sorts à emplacements
+ * 6. Parse les règles d'amélioration pour sorts à emplacements
  * Ex: "+1d8 par niveau d'emplacement supérieur à 1"
  * Retourne: { components: [{1d8}], perLevels: 1 }
  */
@@ -219,8 +277,8 @@ export function parseSlotUpgrade(higherLevels: string): {
   return null;
 }
 
-/**
- * 6. Parse les règles d'amélioration pour tours de magie (basées sur niveau de personnage)
+/** 
+ * 7. Parse les règles d'amélioration pour tours de magie (basées sur niveau de personnage)
  * Ex: "Les dégâts augmentent de 1d10 lorsque vous atteignez le niveau 5"
  * Retourne: { components: [{1d10}], thresholds: [5, 11, 17] }
  */
@@ -235,20 +293,23 @@ export function parseCantripUpgrade(higherLevels: string): {
   const levelPattern = /niveaux?\s+(\d+)(?!\s*\()/gi;
   const thresholds: number[] = [];
   
-  let match;
+    let match;
   while ((match = levelPattern.exec(higherLevels)) !== null) {
     thresholds.push(parseInt(match[1], 10));
   }
+  
+  // ✅ DEBUG : Afficher les seuils détectés
+  console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
   
   // Si aucun seuil trouvé, chercher les patterns alternatifs
   if (thresholds.length === 0) {
     // Pattern : "aux niveaux 5, 11, et 17"
     const altPattern = /niveaux?\s+([\d,\s]+(?:et\s+\d+)?)/i;
-    const altMatch = higherLevels.match(altPattern);
+    const altMatch = higherLevels.match(altPattern); 
     
-    if (altMatch) {
+    if (altMatch) { 
       const numbers = altMatch[1].match(/\d+/g);
-      if (numbers) {
+      if (numbers) { 
         numbers.forEach(n => thresholds.push(parseInt(n, 10)));
       }
     }
@@ -257,21 +318,24 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (thresholds.length === 0) return null;
   
   // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
-  // Pattern : "augmentent de XdY" ou "augmente de XdY" ou "gagne XdY"
+  // Pattern : "augmentent de XdY" ou "augmente de XdY"
   const incrementPattern = /(?:augmentent?|gagne(?:nt)?)\s+(?:de\s+)?(\d+d\d+)/i;
   const incrementMatch = higherLevels.match(incrementPattern);
+ 
+    // ✅ DEBUG : Afficher l'incrément détecté
+  console.log('[parseCantripUpgrade] Incrément détecté:', incrementMatch ? incrementMatch[1] : 'aucun');
   
   if (!incrementMatch) {
-    // Fallback : prendre la PREMIÈRE formule de dés (ignorer celles entre parenthèses)
-    const allFormulas = higherLevels.match(/(?<!\()\d+d\d+(?!\))/g);
-    if (allFormulas && allFormulas.length > 0) {
-      const components = extractDamageComponents(allFormulas[0]);
-      if (components.length > 0) {
-        return {
-          components,
-          thresholds,
-        };
-      }
+    // Fallback : extraire toutes les formules et prendre la première (hors parenthèses)
+    const textWithoutParens = higherLevels.replace(/\([^)]+\)/g, ''); // Retirer "(2d6)", "(3d6)", etc.
+    const components = extractDamageComponents(textWithoutParens);
+    
+    if (components.length > 0) {
+      // Prendre seulement la première formule
+      return {
+        components: [components[0]],
+        thresholds,
+      };
     }
     return null;
   }
@@ -282,13 +346,36 @@ export function parseCantripUpgrade(higherLevels: string): {
   if (components.length === 0) return null;
   
   return {
-    components,
+    components: [components[0]], // Prendre seulement la première formule
     thresholds,
   };
 }
 
 /**
- * 7. Fonction principale : analyse complète d'un sort
+ * 8. Consolide les composantes de dégâts identiques
+ * Ex: [1d6 feu, 1d6 feu] → [2d6 feu]
+ */
+function consolidateDamageComponents(components: DamageComponent[]): DamageComponent[] {
+  const consolidated = new Map<string, DamageComponent>();
+  
+  components.forEach(comp => {
+    // Clé unique : type de dé + type de dégât
+    const key = `${comp.diceType}-${comp.damageType || 'none'}`;
+    
+    if (consolidated.has(key)) {
+      const existing = consolidated.get(key)!;
+      existing.diceCount += comp.diceCount;
+      existing.formula = `${existing.diceCount}d${existing.diceType}`;
+    } else {
+      consolidated.set(key, { ...comp });
+    }
+  });
+  
+  return Array.from(consolidated.values());
+}
+
+/**
+ * 9. Fonction principale : analyse complète d'un sort
  */
 export function analyzeSpellDamage(
   description: string,
@@ -323,8 +410,9 @@ export function analyzeSpellDamage(
   }
   
   return {
-    isDamageSpell: baseDamage.length > 0,
+    isDamageSpell: isDamageSpell(description),
     isAttackRoll: isAttackRoll(description),
+    isSavingThrow: isSavingThrowSpell(description),
     baseDamage,
     hasModifier: modifier.hasModifier,
     modifierAbility: modifier.ability,
@@ -336,7 +424,7 @@ export function analyzeSpellDamage(
 }
 
 /**
- * 8. Calcule les dégâts totaux pour un niveau donné (sorts à emplacements)
+ * 10. Calcule les dégâts totaux pour un niveau donné (sorts à emplacements)
  */
 export function calculateSlotDamage(
   info: SpellDamageInfo,
@@ -373,17 +461,17 @@ export function calculateSlotDamage(
     });
   }
   
+  // ✅ Consolider les dés identiques avant de construire la formule
+  const consolidated = consolidateDamageComponents(totalComponents);
+
   // Construire la formule finale
   const parts: string[] = [];
-  
-  totalComponents.forEach(comp => {
-    if (comp.damageType) {
-      parts.push(`${comp.formula} ${comp.damageType}`);
-    } else {
-      parts.push(comp.formula);
-    }
+
+  consolidated.forEach(comp => {
+    // ✅ Ne pas afficher le type de dégât dans le badge (visible dans la description)
+    parts.push(comp.formula);
   });
-  
+
   let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
@@ -396,7 +484,7 @@ export function calculateSlotDamage(
 }
 
 /**
- * 9. Calcule les dégâts totaux pour un tour de magie selon le niveau du personnage
+ * 11. Calcule les dégâts totaux pour un tour de magie selon le niveau du personnage
  */
 export function calculateCantripDamage(
   info: SpellDamageInfo,
@@ -417,6 +505,10 @@ export function calculateCantripDamage(
         multiplier++;
       }
     });
+
+     
+    // ✅ DEBUG : Afficher le calcul du multiplier
+    console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
     
     if (multiplier > 0) {
       // Ajouter les dégâts supplémentaires
@@ -435,20 +527,22 @@ export function calculateCantripDamage(
           });
         }
       });
+       // ✅ DEBUG : Afficher les composantes après amélioration
+      console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
     }
   }
   
+  // ✅ Consolider les dés identiques avant de construire la formule
+  const consolidated = consolidateDamageComponents(totalComponents);
+
   // Construire la formule finale
   const parts: string[] = [];
-  
-  totalComponents.forEach(comp => {
-    if (comp.damageType) {
-      parts.push(`${comp.formula} ${comp.damageType}`);
-    } else {
-      parts.push(comp.formula);
-    }
+
+  consolidated.forEach(comp => {
+    // ✅ Ne pas afficher le type de dégât dans le badge (visible dans la description)
+    parts.push(comp.formula);
   });
-  
+
   let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
@@ -461,7 +555,7 @@ export function calculateCantripDamage(
 }
 
 /**
- * 10. Obtient les niveaux de lancement disponibles pour un sort
+ * 12. Obtient les niveaux de lancement disponibles pour un sort
  */
 export function getAvailableCastLevels(
   spellLevel: number,
