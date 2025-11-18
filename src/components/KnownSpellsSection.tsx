@@ -499,10 +499,13 @@ const PactSlotStats = React.memo(
     const pactLevel = player.spell_slots?.pact_level || 1;
     const remainingSlots = Math.max(0, maxSlots - usedSlots);
 
- const handlePactSlotUse = useCallback(
+  const handlePactSlotUse = useCallback(
   async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (remainingSlots <= 0) return;
+
+    // ✅ NOUVEAU : Jouer le son de consommation
+    playSpellSlotSound();
 
     const button = e.currentTarget as HTMLButtonElement;
     const rect = button.getBoundingClientRect();
