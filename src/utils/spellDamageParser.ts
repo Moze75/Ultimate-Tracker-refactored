@@ -248,13 +248,44 @@ export function parseCantripUpgrade(higherLevels: string): {
     
     if (altMatch) {
       const numbers = altMatch[1].match(/\d+/g);
-      if (numbers) { 
+      if (numbers) {
         numbers.forEach(n => thresholds.push(parseInt(n, 10)));
       }
     }
   }
   
   if (thresholds.length === 0) return null;
+  
+  // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
+  // Pattern : "augmentent de XdY" ou "augmente de XdY"
+  const incrementPattern = /(?:augmentent?|gagne(?:nt)?)\s+(?:de\s+)?(\d+d\d+)/i;
+  const incrementMatch = higherLevels.match(incrementPattern);
+  
+  if (!incrementMatch) {
+    // Fallback : extraire toutes les formules et prendre la première (hors parenthèses)
+    const textWithoutParens = higherLevels.replace(/\([^)]+\)/g, ''); // Retirer "(2d6)", "(3d6)", etc.
+    const components = extractDamageComponents(textWithoutParens);
+    
+    if (components.length > 0) {
+      // Prendre seulement la première formule
+      return {
+        components: [components[0]],
+        thresholds,
+      };
+    }
+    return null;
+  }
+  
+  // Extraire les composantes de l'incrément
+  const components = extractDamageComponents(incrementMatch[1]);
+  
+  if (components.length === 0) return null;
+  
+  return {
+    components: [components[0]], // Prendre seulement la première formule
+    thresholds,
+  };
+}
   
   // 2️⃣ Extraire UNIQUEMENT l'incrément de dégâts
   // Pattern : "augmentent de XdY" ou "augmente de XdY" ou "gagne XdY"
