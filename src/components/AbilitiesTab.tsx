@@ -948,8 +948,18 @@ case 'Magicien':
       {showSpellbook && (
         <SpellbookModal
           isOpen={showSpellbook}
-          onClose={() => setShowSpellbook(false)}
-          playerClass={player.class}
+          onClose={() => {
+            setShowSpellbook(false);
+          }}
+          // Utiliser la même logique que dans KnownSpellsSection :
+          // - classes principale + secondaire si présente
+          // - niveau réel du personnage pour limiter les niveaux de sorts
+          playerClasses={
+            player.secondary_class
+              ? [player.class, player.secondary_class]
+              : [player.class]
+          }
+          playerLevel={player.level || 1}
         />
       )}
 
