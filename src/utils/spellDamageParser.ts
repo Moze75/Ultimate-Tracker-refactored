@@ -1,4 +1,142 @@
-if (typeMatch && validDamageTypes.has(typeMatch[1].toLowerCase())) {
+// src/utils/spellDamageParser.ts
+
+/**
+ * Structure pour un groupe de dégâts (ex: "2d8 feu")
+ */
+export interface DamageComponent {
+  diceCount: number;      // Ex: 2
+  diceType: number;       // Ex: 8
+  formula: string;        // Ex: "2d8"
+  damageType?: string;    // Ex: "feu", "radiant", null
+}
+
+/**
+ * Information complète sur les dégâts d'un sort
+ */
+export interface SpellDamageInfo {
+  isDamageSpell: boolean;
+  isAttackRoll: boolean;        // true si "jet d'attaque" dans description
+  baseDamage: DamageComponent[];  // Ex: [{2d8 feu}, {1d6 radiant}]
+  hasModifier: boolean;         // true si "+ modificateur" trouvé
+  modifierAbility?: string;     // Ex: "Charisme", "Sagesse"
+  
+  // Pour les améliorations
+  upgradeType: 'per_slot_level' | 'character_level' | 'none';
+  upgradePattern: DamageComponent[] | null;  // Ex: [{1d8 feu}]
+  upgradePerLevels?: number;    // Ex: 1 (chaque niveau), ou 4 (tous les 4 niveaux pour cantrips)
+  characterLevelThresholds?: number[];  // Ex: [5, 11, 17] pour cantrips
+}
+
+/**
+ * 1. Détecte si un sort inflige des dégâts
+ */
+export function isDamageSpell(description: string): boolean {
+  if (!description) return false;
+  
+  const damageKeywords = [
+    /\d+d\d+/i,                    // Formule de dés
+    /dégâts?/i,
+    /inflige/i,
+    /subit/i,
+    /perd.*points? de vie/i,
+  ];
+  
+  return damageKeywords.some(regex => regex.test(description));
+}
+
+/**
+ * 2. Détecte si le sort nécessite un jet d'attaque
+ * IMPORTANT : Ne doit matcher que si le LANCEUR doit faire un jet d'attaque,
+ * pas si c'est une condition de rupture du sort ou un effet secondaire.
+ */
+export function isAttackRoll(description: string): boolean {
+  if (!description) return false;
+  
+  // Patterns négatifs : exclusions (vérifier en PREMIER)
+  const exclusionKeywords = [
+    /si vous effectuez un jet d'attaque/i,     // Condition de rupture (ex: Amis)
+    /lorsque vous effectuez un jet d'attaque/i, // Condition temporelle
+    /quand vous effectuez un jet d'attaque/i,   // Variante
+    /après avoir effectué un jet d'attaque/i,   // Variante
+  ];
+  
+  // Si une exclusion matche, ce n'est PAS un sort d'attaque
+  if (exclusionKeywords.some(regex => regex.test(description))) {
+    return false;
+  }
+  
+  // Patterns positifs : le sort nécessite un jet d'attaque
+  const attackKeywords = [
+    /effectuez une attaque.*de sort/i,         // "effectuez une attaque de sort à distance"
+    /faites un jet d'attaque.*de sort/i,       // "faites un jet d'attaque de sort"
+    /réalisez une attaque.*de sort/i,          // "réalisez une attaque de sort"
+    /attaque de sort.*distance/i,              // "attaque de sort à distance contre"
+    /attaque de sort.*au corps à corps/i,      // "attaque de sort au corps à corps"
+    /jet d'attaque de sort/i,                  // "nécessite un jet d'attaque de sort"
+  ];
+  
+  // Vérifier les patterns positifs
+  return attackKeywords.some(regex => regex.test(description));
+}
+
+/**
+ * 3. Extrait toutes les composantes de dégâts d'un texte
+ * Ex: "2d8 de feu et 1d6 de radiant" → [{2d8, feu}, {1d6, radiant}]
+ * IMPORTANT : Filtre les faux positifs (ex: "1d4 du prochain jet")
+ */
+export function extractDamageComponents(text: string): DamageComponent[] {
+  if (!text) return [];
+  
+  const components: DamageComponent[] = [];
+  
+  // Liste des types de dégâts valides en français
+  const validDamageTypes = new Set([
+    'acide', 'contondant', 'feu', 'froid', 'force', 'foudre',
+    'nécrotique', 'perçant', 'poison', 'psychique', 'radiant',
+    'tonnerre', 'tranchant',
+  ]);
+  
+  // Regex pour capturer: "2d8 dégâts de feu" ou "2d8 de feu" ou "2d8 feu" ou juste "2d8"
+  // Capture aussi le contexte avant pour vérifier si c'est bien un dégât
+  const damageRegex = /(\d+)d(\d+)\s*(?:dégâts?\s+)?(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)?/gi;
+  
+  let match;
+  while ((match = damageRegex.exec(text)) !== null) {
+    const [fullMatch, diceCount, diceType, possibleDamageType] = match;
+    
+    // Vérifier le contexte : doit contenir "dégât" ou "subir" à proximité
+    const contextStart = Math.max(0, match.index - 50);
+    const contextEnd = Math.min(text.length, match.index + fullMatch.length + 20);
+    const context = text.substring(contextStart, contextEnd).toLowerCase();
+    
+    // Exclusions : ne pas extraire si c'est un malus/bonus de jet
+    const isNotDamage = /soustraire|ajouter|bonus|malus|jet de|prochain|suivant/.test(context);
+    
+    if (isNotDamage) {
+      continue; // Ignorer ce match
+    }
+    
+    // Vérifier que le contexte mentionne bien des dégâts
+    const isDamageContext = /dégâts?|subir|subit|inflige|perd/.test(context);
+    
+    if (!isDamageContext) {
+      continue; // Ignorer si pas de contexte de dégât
+    }
+    
+    // Valider le type de dégât
+    let damageType: string | undefined = undefined;
+    
+    if (possibleDamageType) {
+      const normalized = possibleDamageType.toLowerCase().trim();
+      
+      if (validDamageTypes.has(normalized)) {
+        damageType = normalized;
+      } else if (normalized === 'dégâts' || normalized === 'dégât') {
+        // Chercher le type après "dégâts de X"
+        const afterMatch = text.substring(match.index + fullMatch.length, match.index + fullMatch.length + 30);
+        const typeMatch = afterMatch.match(/(?:de\s+)?([a-zàâçéèêëîïôûùüÿñæœ]+)/i);
+        
+        if (typeMatch && validDamageTypes.has(typeMatch[1].toLowerCase())) {
           damageType = typeMatch[1].toLowerCase();
         }
       }
@@ -340,4 +478,4 @@ export function getAvailableCastLevels(
   }
   
   return levels;
-} 
+}
