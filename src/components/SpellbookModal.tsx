@@ -71,36 +71,32 @@ export function SpellbookModal({
   const [showAllClasses, setShowAllClasses] = useState(false);
   const [totalSpellsCount, setTotalSpellsCount] = useState(0);
  
-  // Charger les sorts depuis Supabase Storage
+   // Charger les sorts depuis le Markdown 2024 hébergé sur GitHub
   useEffect(() => {
     const loadSpells = async () => {
       if (!isOpen) return;
       
       setLoading(true);
       try {
-        console.log('Tentative de chargement des sorts depuis Supabase Storage...');
-        
-        // Essayer de charger depuis le bucket public
-        const { data, error } = await supabase.storage
-          .from('sorts')
-          .download('Sorts 2024.md');
+        console.log('[SpellbookModal] Chargement des sorts depuis GitHub RAW...');
+        const res = await fetch(
+          'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Sorts/Sorts%202024.md'
+        );
 
-        if (error) {
-          console.error('Erreur Supabase Storage:', error);
-          throw new Error('Fichier de sorts non accessible');
+        if (!res.ok) {
+          throw new Error(`Échec du chargement du fichier de sorts: ${res.status}`);
         }
 
-        const text = await data.text();
-        console.log(`Fichier chargé, taille: ${text.length} caractères`);
+        const text = await res.text();
+        console.log(`[SpellbookModal] Fichier chargé, taille: ${text.length} caractères`);
         
         const parsedSpells = parseSpellsFromMarkdown(text);
-        console.log(`Sorts parsés: ${parsedSpells.length}`);
+        console.log(`[SpellbookModal] Sorts parsés: ${parsedSpells.length}`);
         
         setTotalSpellsCount(parsedSpells.length);
         setSpells(parsedSpells);
       } catch (error) {
-        console.error('Erreur lors du chargement des sorts:', error);
-        console.log('Utilisation des sorts d\'exemple en fallback');
+        console.error('[SpellbookModal] Erreur chargement sorts depuis GitHub, fallback SAMPLE_SPELLS:', error);
         setTotalSpellsCount(SAMPLE_SPELLS.length);
         setSpells(SAMPLE_SPELLS);
       } finally {
