@@ -645,8 +645,10 @@ export function calculateCantripDamage(
       }
     });
 
-    // ✅ DEBUG : Afficher le calcul du multiplier
-    console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds); 
+    // ✅ DEBUG : Afficher le calcul du multiplier (dev uniquement)
+    if ((import.meta as any)?.env?.DEV) {
+      console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
+    }
       if (multiplier > 0) {
       // ✅ Clone upgradePattern pour éviter les mutations
       const upgradeClones = info.upgradePattern.map(upgrade => ({
