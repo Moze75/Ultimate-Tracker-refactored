@@ -527,10 +527,12 @@ export function calculateSlotDamage(
   castLevel: number,
   abilityModifier?: number
 ): string {
-  // ✅ DEBUG : Afficher les entrées
-  console.log(`[calculateSlotDamage] Appelé avec castLevel=${castLevel}, baseSpellLevel=${baseSpellLevel}`);
-  console.log(`[calculateSlotDamage] baseDamage:`, JSON.stringify(info.baseDamage));
-  console.log(`[calculateSlotDamage] upgradePattern:`, JSON.stringify(info.upgradePattern));
+  // ✅ DEBUG : Afficher les entrées (dev uniquement)
+  if ((import.meta as any)?.env?.DEV) {
+    console.log(`[calculateSlotDamage] Appelé avec castLevel=${castLevel}, baseSpellLevel=${baseSpellLevel}`);
+    console.log(`[calculateSlotDamage] baseDamage:`, JSON.stringify(info.baseDamage));
+    console.log(`[calculateSlotDamage] upgradePattern:`, JSON.stringify(info.upgradePattern));
+  }
   
   if (!info.isDamageSpell) return '';
   
