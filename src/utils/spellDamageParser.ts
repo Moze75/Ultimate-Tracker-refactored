@@ -71,18 +71,32 @@ export function isAttackRoll(description: string): boolean {
     return false;
   }
   
-  // Patterns positifs : le sort nécessite un jet d'attaque
+  // ✅ NOUVEAU : Patterns positifs élargis pour détecter toutes les formulations d'attaque
   const attackKeywords = [
+    // Patterns existants (avec "de sort" explicite)
     /effectuez une attaque.*de sort/i,         // "effectuez une attaque de sort à distance"
     /faites un jet d'attaque.*de sort/i,       // "faites un jet d'attaque de sort"
     /réalisez une attaque.*de sort/i,          // "réalisez une attaque de sort"
     /attaque de sort.*distance/i,              // "attaque de sort à distance contre"
     /attaque de sort.*au corps à corps/i,      // "attaque de sort au corps à corps"
     /jet d'attaque de sort/i,                  // "nécessite un jet d'attaque de sort"
+    
+    // ✅ NOUVEAUX : Variantes sans "de sort" explicite (règles 2024)
+    /effectuez une attaque.*avec un sort/i,    // "effectuez une attaque de corps à corps avec un sort"
+    /effectuez un jet d'attaque/i,             // "Effectuez un jet d'attaque à distance"
+    /faites un jet d'attaque.*contre/i,        // "faites un jet d'attaque contre"
+    /réalisez un jet d'attaque/i,              // "réalisez un jet d'attaque"
   ];
   
   // Vérifier les patterns positifs
-  return attackKeywords.some(regex => regex.test(description));
+  const hasAttack = attackKeywords.some(regex => regex.test(description));
+  
+  // ✅ DEBUG optionnel (à commenter après validation)
+  // if (hasAttack) {
+  //   console.log('🎯 Attaque détectée:', description.substring(0, 100));
+  // }
+  
+  return hasAttack;
 }
 
 /**
