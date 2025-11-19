@@ -521,9 +521,16 @@ export function calculateSlotDamage(
     
     // Multiplier chaque composante d'amélioration
     upgradeClones.forEach(upgrade => {
+      // ✅ DEBUG : Afficher la recherche
+      console.log(`[calculateSlotDamage] Recherche d'un composant existant pour upgrade:`, upgrade);
+      console.log(`[calculateSlotDamage] totalComponents avant fusion:`, JSON.stringify(totalComponents));
+      
       const existingIndex = totalComponents.findIndex(
         c => c.diceType === upgrade.diceType && c.damageType === upgrade.damageType
       );
+      
+      // ✅ DEBUG : Résultat de la recherche
+      console.log(`[calculateSlotDamage] existingIndex trouvé: ${existingIndex}`);
       
       if (existingIndex !== -1) {
         // ✅ Créer un NOUVEAU composant au lieu de muter l'existant
