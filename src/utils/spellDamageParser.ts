@@ -491,6 +491,11 @@ export function calculateSlotDamage(
   castLevel: number,
   abilityModifier?: number
 ): string {
+  // ✅ DEBUG : Afficher les entrées
+  console.log(`[calculateSlotDamage] Appelé avec castLevel=${castLevel}, baseSpellLevel=${baseSpellLevel}`);
+  console.log(`[calculateSlotDamage] baseDamage:`, JSON.stringify(info.baseDamage));
+  console.log(`[calculateSlotDamage] upgradePattern:`, JSON.stringify(info.upgradePattern));
+  
   if (!info.isDamageSpell) return '';
   
   // ✅ CORRECTION : Deep copy STRICTE pour éviter toute mutation
