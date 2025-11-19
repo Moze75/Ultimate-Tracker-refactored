@@ -40,7 +40,7 @@ export const authService = {
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://d-d-ultimate-tracker-7ni7.bolt.host',
+        redirectTo: 'https://le-compagnon-dnd.fr',
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
