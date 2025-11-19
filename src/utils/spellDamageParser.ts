@@ -476,33 +476,42 @@ export function calculateSlotDamage(
 ): string {
   if (!info.isDamageSpell) return '';
   
-  // ✅ CORRECTION : Deep copy pour éviter de modifier les objets partagés
-  let totalComponents = info.baseDamage.map(comp => ({ ...comp }));
+  // ✅ CORRECTION : Deep copy STRICTE pour éviter toute mutation
+  let totalComponents: DamageComponent[] = info.baseDamage.map(comp => ({
+    diceCount: comp.diceCount,
+    diceType: comp.diceType,
+    formula: comp.formula,
+    damageType: comp.damageType,
+  }));
   
   // Ajouter les dégâts d'amélioration
   if (info.upgradeType === 'per_slot_level' && info.upgradePattern && castLevel > baseSpellLevel) {
     const levelDiff = castLevel - baseSpellLevel;
     const multiplier = Math.floor(levelDiff / (info.upgradePerLevels || 1));
     
+    // ✅ NOUVEAU : Clone aussi upgradePattern pour éviter les mutations
+    const upgradeClones = info.upgradePattern.map(upgrade => ({
+      diceCount: upgrade.diceCount,
+      diceType: upgrade.diceType,
+      formula: upgrade.formula,
+      damageType: upgrade.damageType,
+    }));
+    
     // Multiplier chaque composante d'amélioration
-    info.upgradePattern.forEach(upgrade => {
-      const existing = totalComponents.find(c => c.diceType === upgrade.diceType && c.damageType === upgrade.damageType);
+    upgradeClones.forEach(upgrade => {
+      const existingIndex = totalComponents.findIndex(
+        c => c.diceType === upgrade.diceType && c.damageType === upgrade.damageType
+      );
       
-      if (existing) {
-        // Ajouter aux dégâts existants du même type
-        existing.diceCount += upgrade.diceCount * multiplier;
-        existing.formula = `${existing.diceCount}d${existing.diceType}`;
+      if (existingIndex !== -1) {
+        // ✅ Créer un NOUVEAU composant au lieu de muter l'existant
+        totalComponents[existingIndex] = {
+          diceCount: totalComponents[existingIndex].diceCount + (upgrade.diceCount * multiplier),
+          diceType: totalComponents[existingIndex].diceType,
+          formula: `${totalComponents[existingIndex].diceCount + (upgrade.diceCount * multiplier)}d${totalComponents[existingIndex].diceType}`,
+          damageType: totalComponents[existingIndex].damageType,
+        };
       } else {
-        // Ajouter comme nouvelle composante
-        totalComponents.push({
-          diceCount: upgrade.diceCount * multiplier,
-          diceType: upgrade.diceType,
-          formula: `${upgrade.diceCount * multiplier}d${upgrade.diceType}`,
-          damageType: upgrade.damageType,
-        });
-      }
-    });
-  }
   
   // ✅ Consolider les dés identiques avant de construire la formule
   const consolidated = consolidateDamageComponents(totalComponents);
