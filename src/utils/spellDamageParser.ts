@@ -676,17 +676,13 @@ export function calculateCantripDamage(
     parts.push(comp.formula);
   });
 
-   let result = parts.join(' + ');
+  let result = parts.join(' + ');
   
   // Ajouter le modificateur si applicable
-  if (info.hasModifier && abilityModifier !== undefined) {
+  if (info.hasModifier && abilityModifier !== undefined) { 
     const sign = abilityModifier >= 0 ? '+' : '';
     result += ` ${sign}${abilityModifier}`;
   }
-  
-  // ✅ DEBUG : Afficher le résultat final
-  console.log(`[calculateSlotDamage] Résultat final pour niveau ${castLevel}: "${result}"`);
-  console.log('---');
   
   return result;
 }
