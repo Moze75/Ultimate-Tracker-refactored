@@ -1446,18 +1446,38 @@ const characterLevel = useMemo(() => {
   return level;
 }, [player.class, player.secondary_class, player.level, player.secondary_level]);
 
-  const allowedLevelsSet = useMemo(() => {
-    const set = new Set<number>();
-    if (casterType === 'none') return set;
-    if (casterType === 'warlock') {
-      const pact = getWarlockPactSlotLevel(characterLevel);
-      if (pact > 0) set.add(pact);
-      return set;
-    }
-    const highest = getHighestAllowedSlotLevel(casterType, characterLevel);
-    for (let l = 1; l <= highest; l++) set.add(l);
+ const allowedLevelsSet = useMemo(() => {
+  const set = new Set<number>();
+
+  if (casterType === 'none') {
+    console.log('[KnownSpellsSection] casterType=none, aucun niveau autorisé');
     return set;
-  }, [casterType, characterLevel]);
+  }
+
+  if (casterType === 'warlock') {
+    const pact = getWarlockPactSlotLevel(characterLevel);
+    if (pact > 0) set.add(pact);
+    console.log('[KnownSpellsSection] allowedLevelsSet (warlock):', {
+      casterType,
+      characterLevel,
+      pactLevel: pact,
+      allowed: Array.from(set),
+    });
+    return set;
+  }
+
+  const highest = getHighestAllowedSlotLevel(casterType, characterLevel);
+  for (let l = 1; l <= highest; l++) set.add(l);
+
+  console.log('[KnownSpellsSection] allowedLevelsSet:', {
+    casterType,
+    characterLevel,
+    highestAllowed: highest,
+    allowed: Array.from(set),
+  });
+
+  return set;
+}, [casterType, characterLevel]);
 
   // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
 const levelsToRender = useMemo(() => {
