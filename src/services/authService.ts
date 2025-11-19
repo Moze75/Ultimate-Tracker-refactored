@@ -47,7 +47,7 @@ export const authService = {
         }
       }
     });
-  },
+  }, 
 
     // ✅ AJOUTEZ ICI - Demander la réinitialisation du mot de passe
   async resetPassword(email: string) {
