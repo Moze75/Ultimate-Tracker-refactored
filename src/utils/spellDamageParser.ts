@@ -451,6 +451,23 @@ export function analyzeSpellDamage(
     }
   }
   
+  // ✅ NOUVEAU : Enrichir upgradePattern avec le type de dégât de baseDamage
+  if (upgradePattern && baseDamage.length > 0) {
+    upgradePattern = upgradePattern.map(upgrade => {
+      // Si l'upgrade n'a pas de damageType, hériter du premier baseDamage qui matche le diceType
+      if (!upgrade.damageType) {
+        const matchingBase = baseDamage.find(base => base.diceType === upgrade.diceType);
+        if (matchingBase && matchingBase.damageType) {
+          return {
+            ...upgrade,
+            damageType: matchingBase.damageType,
+          };
+        }
+      }
+      return upgrade;
+    });
+  }
+  
   return {
     isDamageSpell: isDamageSpell(description),
     isAttackRoll: isAttackRoll(description),
