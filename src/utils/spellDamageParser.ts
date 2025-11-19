@@ -536,7 +536,8 @@ export function calculateCantripDamage(
 ): string {
   if (!info.isDamageSpell) return '';
   
-  let totalComponents = [...info.baseDamage];
+  // ✅ CORRECTION : Deep copy pour éviter de modifier les objets partagés
+  let totalComponents = info.baseDamage.map(comp => ({ ...comp }));
   
   // Déterminer combien de fois appliquer l'amélioration
   if (info.upgradeType === 'character_level' && info.upgradePattern && info.characterLevelThresholds) {
