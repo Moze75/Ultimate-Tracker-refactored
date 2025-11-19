@@ -52,7 +52,7 @@ export const authService = {
     // ✅ AJOUTEZ ICI - Demander la réinitialisation du mot de passe
   async resetPassword(email: string) {
     return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://d-d-ultimate-tracker-7ni7.bolt.host'
+      redirectTo: 'https://le-compagnon-dnd.fr'
     });
   },
 
