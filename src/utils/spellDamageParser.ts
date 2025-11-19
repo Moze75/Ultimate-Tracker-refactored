@@ -512,6 +512,16 @@ export function calculateSlotDamage(
           damageType: totalComponents[existingIndex].damageType,
         };
       } else {
+        // Ajouter comme nouvelle composante
+        totalComponents.push({
+          diceCount: upgrade.diceCount * multiplier,
+          diceType: upgrade.diceType,
+          formula: `${upgrade.diceCount * multiplier}d${upgrade.diceType}`,
+          damageType: upgrade.damageType,
+        });
+      }
+    });
+  }
   
   // ✅ Consolider les dés identiques avant de construire la formule
   const consolidated = consolidateDamageComponents(totalComponents);
