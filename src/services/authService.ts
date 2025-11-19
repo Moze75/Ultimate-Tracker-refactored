@@ -11,7 +11,7 @@ export const authService = {
       email,
       password,
       options: {
-        emailRedirectTo: 'https://d-d-ultimate-tracker-7ni7.bolt.host'
+        emailRedirectTo: 'https://le-compagnon-dnd.fr'
       }
     });
   },
