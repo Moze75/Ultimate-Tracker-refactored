@@ -675,18 +675,22 @@ export function calculateCantripDamage(
           };
         } else {
           // ✅ Ajouter comme nouveau composant
-          const newComponent = {
+             const newComponent = {
             diceCount: upgrade.diceCount * multiplier,
             diceType: upgrade.diceType,
             formula: `${upgrade.diceCount * multiplier}d${upgrade.diceType}`,
             damageType: upgrade.damageType,
           };
           totalComponents.push(newComponent);
-          console.log('[calculateCantripDamage] Nouveau composant ajouté:', newComponent);
+          if ((import.meta as any)?.env?.DEV) {
+            console.log('[calculateCantripDamage] Nouveau composant ajouté:', newComponent);
+          }
         }
       });
-      // ✅ DEBUG : Afficher les composantes après amélioration
-      console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
+      // ✅ DEBUG : Afficher les composantes après amélioration (dev uniquement)
+      if ((import.meta as any)?.env?.DEV) {
+        console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
+      }
     }
   }
 
