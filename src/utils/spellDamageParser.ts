@@ -577,20 +577,30 @@ export function calculateCantripDamage(
     // ✅ DEBUG : Afficher le calcul du multiplier
     console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
     
-    if (multiplier > 0) {
+      if (multiplier > 0) {
+      // ✅ Clone upgradePattern pour éviter les mutations
+      const upgradeClones = info.upgradePattern.map(upgrade => ({
+        diceCount: upgrade.diceCount,
+        diceType: upgrade.diceType,
+        formula: upgrade.formula,
+        damageType: upgrade.damageType,
+      }));
+      
       // Ajouter les dégâts supplémentaires
-      info.upgradePattern.forEach(upgrade => {
-        // ✅ Chercher un dé existant avec le même type ET le même type de dégât (ou les deux undefined)
-        const existing = totalComponents.find(c => 
+      upgradeClones.forEach(upgrade => {
+        const existingIndex = totalComponents.findIndex(c => 
           c.diceType === upgrade.diceType && 
           (c.damageType || 'none') === (upgrade.damageType || 'none')
         );
-         
-        if (existing) {
-          // ✅ Mettre à jour le composant existant
-          existing.diceCount += upgrade.diceCount * multiplier;
-          existing.formula = `${existing.diceCount}d${existing.diceType}`;
-          console.log('[calculateCantripDamage] Fusionné avec existant:', existing);
+        
+        if (existingIndex !== -1) {
+          // ✅ Créer un NOUVEAU composant au lieu de muter
+          totalComponents[existingIndex] = {
+            diceCount: totalComponents[existingIndex].diceCount + (upgrade.diceCount * multiplier),
+            diceType: totalComponents[existingIndex].diceType,
+            formula: `${totalComponents[existingIndex].diceCount + (upgrade.diceCount * multiplier)}d${totalComponents[existingIndex].diceType}`,
+            damageType: totalComponents[existingIndex].damageType,
+          };
         } else {
           // ✅ Ajouter comme nouveau composant
           const newComponent = {
