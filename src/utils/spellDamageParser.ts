@@ -410,14 +410,18 @@ export function parseCantripUpgrade(higherLevels: string): {
   const components = extractDamageComponents(`augmentent de ${incrementMatch[1]} dégâts`);
   
   if (components.length === 0) {
-    console.log('[parseCantripUpgrade] Aucune composante extraite');
+    if ((import.meta as any)?.env?.DEV) {
+      console.log('[parseCantripUpgrade] Aucune composante extraite');
+    }
     return null;
   }
   
-  console.log('[parseCantripUpgrade] Résultat final:', {
-    components: [components[0]],
-    thresholds: uniqueThresholds
-  });
+  if ((import.meta as any)?.env?.DEV) {
+    console.log('[parseCantripUpgrade] Résultat final:', {
+      components: [components[0]],
+      thresholds: uniqueThresholds
+    });
+  }
   
   return {
     components: [components[0]], // Prendre seulement la première formule
