@@ -684,6 +684,10 @@ export function calculateCantripDamage(
     result += ` ${sign}${abilityModifier}`;
   }
   
+  // ✅ DEBUG : Afficher le résultat final
+  console.log(`[calculateSlotDamage] Résultat final pour niveau ${castLevel}: "${result}"`);
+  console.log('---');
+  
   return result;
 }
 
