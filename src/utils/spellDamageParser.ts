@@ -555,8 +555,13 @@ export function calculateCantripDamage(
 ): string {
   if (!info.isDamageSpell) return '';
   
-  // ✅ CORRECTION : Deep copy pour éviter de modifier les objets partagés
-  let totalComponents = info.baseDamage.map(comp => ({ ...comp }));
+  // ✅ CORRECTION : Deep copy STRICTE pour éviter toute mutation
+  let totalComponents: DamageComponent[] = info.baseDamage.map(comp => ({
+    diceCount: comp.diceCount,
+    diceType: comp.diceType,
+    formula: comp.formula,
+    damageType: comp.damageType,
+  }));
   
   // Déterminer combien de fois appliquer l'amélioration
   if (info.upgradeType === 'character_level' && info.upgradePattern && info.characterLevelThresholds) {
