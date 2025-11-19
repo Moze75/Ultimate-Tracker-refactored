@@ -367,7 +367,9 @@ export function parseCantripUpgrade(higherLevels: string): {
   
   // Si toujours aucun seuil, utiliser les valeurs par défaut
   if (thresholds.length === 0) {
-    console.log('[parseCantripUpgrade] Aucun seuil trouvé, utilisation des valeurs par défaut');
+        if ((import.meta as any)?.env?.DEV) {
+      console.log('[parseCantripUpgrade] Aucun seuil trouvé, utilisation des valeurs par défaut');
+    }
     thresholds.push(5, 11, 17);
   }
   
