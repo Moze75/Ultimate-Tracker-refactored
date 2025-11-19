@@ -646,7 +646,18 @@ export function calculateCantripDamage(
     });
 
     // ✅ DEBUG : Afficher le calcul du multiplier
-    console.log('[calculateCantripDamage] Multiplier:', multiplier, '| Niveau perso:', characterLevel, '| Seuils:', info.characterLevelThresholds);
+          const newComponent = {
+            diceCount: upgrade.diceCount * multiplier,
+            diceType: upgrade.diceType,
+            formula: `${upgrade.diceCount * multiplier}d${upgrade.diceType}`,
+            damageType: upgrade.damageType,
+          };
+          totalComponents.push(newComponent);
+          console.log('[calculateCantripDamage] Nouveau composant ajouté:', newComponent);
+        }
+      });
+      // ✅ DEBUG : Afficher les composantes après amélioration
+      console.log('[calculateCantripDamage] Composantes après amélioration:', totalComponents);
     
       if (multiplier > 0) {
       // ✅ Clone upgradePattern pour éviter les mutations
