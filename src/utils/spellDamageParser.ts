@@ -391,13 +391,17 @@ export function parseCantripUpgrade(higherLevels: string): {
     
     if (components.length > 0) {
       // Prendre seulement la première formule
-      console.log('[parseCantripUpgrade] Fallback - composante trouvée:', components[0]);
+      if ((import.meta as any)?.env?.DEV) {
+        console.log('[parseCantripUpgrade] Fallback - composante trouvée:', components[0]);
+      }
       return {
         components: [components[0]],
         thresholds: uniqueThresholds,
       };
     }
-    console.log('[parseCantripUpgrade] Aucun incrément trouvé');
+    if ((import.meta as any)?.env?.DEV) {
+      console.log('[parseCantripUpgrade] Aucun incrément trouvé');
+    }
     return null;
   }
   
