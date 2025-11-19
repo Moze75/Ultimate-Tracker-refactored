@@ -476,7 +476,8 @@ export function calculateSlotDamage(
 ): string {
   if (!info.isDamageSpell) return '';
   
-  let totalComponents = [...info.baseDamage];
+  // ✅ CORRECTION : Deep copy pour éviter de modifier les objets partagés
+  let totalComponents = info.baseDamage.map(comp => ({ ...comp }));
   
   // Ajouter les dégâts d'amélioration
   if (info.upgradeType === 'per_slot_level' && info.upgradePattern && castLevel > baseSpellLevel) {
