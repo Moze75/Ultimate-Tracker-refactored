@@ -341,8 +341,10 @@ export function parseCantripUpgrade(higherLevels: string): {
     }
   }
   
-  // ✅ DEBUG : Afficher les seuils détectés
-  console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
+  // ✅ DEBUG : Afficher les seuils détectés (dev uniquement)
+  if ((import.meta as any)?.env?.DEV) {
+    console.log('[parseCantripUpgrade] Seuils détectés:', thresholds, '| Texte:', higherLevels);
+  }
   
   // Si aucun seuil trouvé avec le pattern principal, chercher les patterns alternatifs
   if (thresholds.length === 0) {
