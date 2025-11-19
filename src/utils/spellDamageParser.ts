@@ -281,10 +281,34 @@ export function parseSlotUpgrade(higherLevels: string): {
   const match = higherLevels.match(upgradeRegex);
   
   if (match) {
-    const components = extractDamageComponents(match[1]);
+    const diceFormula = match[1]; // ex: "1d8"
+    
+    // ⚠️ IMPORTANT : donner un contexte de dégâts à extractDamageComponents
+    const fakeContext = `inflige ${diceFormula} dégâts`;
+    const components = extractDamageComponents(fakeContext);
+    
+    if (components.length === 0) {
+      // En dernier recours, construire à la main
+      const [countStr, typeStr] = diceFormula.split('d');
+      const diceCount = parseInt(countStr, 10);
+      const diceType = parseInt(typeStr, 10);
+      if (!isNaN(diceCount) && !isNaN(diceType)) {
+        return {
+          components: [{
+            diceCount,
+            diceType,
+            formula: diceFormula,
+            damageType: undefined, // sera éventuellement complété par analyzeSpellDamage
+          }],
+          perLevels: 1,
+        };
+      }
+      return null;
+    }
+
     return {
       components,
-      perLevels: 1,  // Par défaut, +1 niveau = +1 fois les dégâts
+      perLevels: 1,
     };
   }
   
