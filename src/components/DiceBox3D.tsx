@@ -63,7 +63,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const [isInitialized, setIsInitialized] = useState(false);
   const [isFadingDice, setIsFadingDice] = useState(false);
   const [isFadingAll, setIsFadingAll] = useState(false);
-    const [showReadyPopup, setShowReadyPopup] = useState(false);
+  const [showReadyPopup, setShowReadyPopup] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const currentRollIdRef = useRef<number>(0);
   const lastRollDataRef = useRef<string>('');
