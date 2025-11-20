@@ -40,7 +40,7 @@ export function AbilityScoreGrid({
           const displayModifier = baseModifier + equipmentBonus;
 
           return (
-            <div key={ability.name} className="flex flex-col items-center mt-4">
+            <div key={ability.name} className="flex flex-col items-center mt-10">
               {/* Carte principale avec le PNG en fond */}
 <div
   className={`relative w-40 h-52 flex flex-col items-center justify-start ${
