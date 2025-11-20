@@ -93,7 +93,7 @@ export function HorizontalAbilityScores({
                   </div>
                 )}
 
-                <div className="absolute top-[48%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="absolute top-[46%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                   <div className="text-2xl font-normal text-gray-100">
                     {displayModifier >= 0 ? '+' : ''}{displayModifier}
                   </div>
