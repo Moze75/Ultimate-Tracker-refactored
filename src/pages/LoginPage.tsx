@@ -515,30 +515,7 @@ const toggleForgotPassword = () => {
               )}
             </form>
 
-            </form>
-
-            {/* Liens légaux : Politique de confidentialité / Conditions */}
-            <div className="mt-4 text-center text-xs text-gray-500 space-x-2">
-              <a
-                href="https://le-compagnon-dnd.fr/confidentialite.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gray-300 underline"
-              >
-                Politique de confidentialité
-              </a>
-              <span>·</span>
-              <a
-                href="https://le-compagnon-dnd.fr/conditions.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gray-300 underline"
-              >
-                Conditions d'utilisation
-              </a>
-            </div>
-
-            {!isSignUp && !isForgotPassword && (
+ 
             
             {!isSignUp && !isForgotPassword && (
               <>
