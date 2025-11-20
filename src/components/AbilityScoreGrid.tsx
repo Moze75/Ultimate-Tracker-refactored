@@ -43,7 +43,7 @@ export function AbilityScoreGrid({
             <div key={ability.name} className="flex flex-col items-center">
               {/* Carte principale avec le PNG en fond */}
 <div
-  className={`relative w-32 h-40 flex flex-col items-center justify-start ${
+  className={`relative w-40 h-52 flex flex-col items-center justify-start ${
     !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
   }`}
                 style={{
