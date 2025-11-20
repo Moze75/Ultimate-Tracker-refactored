@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ability } from '../types/dnd'; 
+import { Ability } from '../types/dnd';
 
 interface AbilityScoreGridProps {
   abilities: Ability[];
@@ -32,7 +32,7 @@ export function AbilityScoreGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-4 mb-6"> 
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {abilities.map((ability, abilityIndex) => {
           const equipmentBonuses = calculateEquipmentBonuses();
           const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
@@ -40,12 +40,11 @@ export function AbilityScoreGrid({
           const displayModifier = baseModifier + equipmentBonus;
 
           return (
-            <div key={ability.name} className="flex flex-col items-center mt-10">
-              {/* Carte principale avec le PNG en fond */}
-<div
-  className={`relative w-40 h-52 flex flex-col items-center justify-start ${
-    !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-  }`}
+            <div key={ability.name} className="flex flex-col items-center">
+              <div
+                className={`relative w-28 h-36 flex flex-col items-center justify-start ${
+                  !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                }`}
                 style={{
                   backgroundImage: 'url(/background/contenant_stats.png)',
                   backgroundSize: 'contain',
@@ -55,32 +54,28 @@ export function AbilityScoreGrid({
                 onClick={() => !editing && rollAbilityCheck(ability)}
                 title={!editing ? `Cliquer pour lancer 1d20+${ability.modifier}` : ''}
               >
-                {/* Nom de la caractéristique : en haut, centré dans la zone texte prévue */}
-                <div className="absolute top-12 left-0 right-0 flex flex-col items-center pointer-events-none">
-                  <h4 className="text-[9px] font-normal text-gray-100 uppercase tracking-wide">
-                    {ability.name}
-                  </h4>
+                <div className="absolute top-7 left-0 right-0 flex flex-col items-center pointer-events-none">
+<h4 className="text-[9px] font-normal text-gray-100 uppercase tracking-wide">
+  {ability.name}
+</h4>
                 </div>
 
-                {/* Bonus d’équipement, si présent : petit bandeau par-dessus */}
                 {equipmentBonus !== 0 && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 pointer-events-none">
+                  <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 pointer-events-none">
                     <div className="text-[10px] text-green-400 leading-none whitespace-nowrap bg-gray-900/80 px-2 py-0.5 rounded">
                       ({baseModifier >= 0 ? '+' : ''}{baseModifier} {equipmentBonus > 0 ? '+' : ''}{equipmentBonus})
                     </div>
                   </div>
                 )}
 
-                {/* Modificateur (+0, +3, etc.) : centré dans le cadre principal */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="absolute top-[48%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                   <div className="text-3xl font-normal text-gray-100">
                     {displayModifier >= 0 ? '+' : ''}{displayModifier}
                   </div>
                 </div>
 
-                {/* Valeur de caractéristique (10, 16, etc.) : dans l’ovale du bas */}
                 <div
-                  className="absolute bottom-4 left-1/2 transform -translate-x-1/2"
+                  className="absolute bottom-4 left-[48%] transform -translate-x-1/2"
                   onClick={(e) => editing && e.stopPropagation()}
                 >
                   {editing ? (
@@ -100,7 +95,6 @@ export function AbilityScoreGrid({
                 </div>
               </div>
 
-              {/* Bloc "Jet de sauvegarde" en dessous – inchangé */}
               <div className="mt-2 w-full max-w-[130px]">
                 <div
                   className={`flex items-center justify-between px-2 py-1.5 bg-gray-800/50 rounded-md border border-gray-700/50 ${
