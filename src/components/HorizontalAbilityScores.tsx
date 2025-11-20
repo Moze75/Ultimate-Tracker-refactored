@@ -79,7 +79,7 @@ export function HorizontalAbilityScores({
                 onClick={() => onAbilityClick && onAbilityClick(ability)}
                 title={`Cliquer pour lancer 1d20+${ability.modifier}`}
               >
-                <div className="absolute top-4 left-0 right-0 flex flex-col items-center pointer-events-none">
+                <div className="absolute top-5 left-0 right-0 flex flex-col items-center pointer-events-none">
   <h4 className="text-xs font-semibold text-gray-100 capitalize tracking-wide">
   {ability.name}
 </h4>
