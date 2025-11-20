@@ -99,7 +99,7 @@ export function HorizontalAbilityScores({
                   </div>
                 </div>
 
-                <div className="absolute bottom-4 left-[48%] transform -translate-x-1/2 pointer-events-none">
+                <div className="absolute bottom-4 left-[50%] transform -translate-x-1/2 pointer-events-none">
                   <div className="w-8 h-8 flex items-center justify-center text-sm font-normal text-gray-100">
                     {ability.score}
                   </div>
