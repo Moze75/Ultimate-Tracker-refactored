@@ -244,11 +244,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           console.log('💪 Force finale du moteur:', box.strength);
           console.log('♾️ Le DiceBox restera monté en permanence');
         }
-
-                  // ▶️ Afficher le popup "Dice Roller prêt" au lancement
-          setShowReadyPopup(true);
-          setTimeout(() => setShowReadyPopup(false), 2500);
-        }
+ 
+        
       } catch (error) {
         console.error('❌ Erreur init:', error);
         if (mounted) setIsRolling(false);
