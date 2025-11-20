@@ -30,7 +30,6 @@ export function AbilityScoreGrid({
 }: AbilityScoreGridProps) {
   const getModifier = (score: number) => Math.floor((score - 10) / 2);
 
-  return (
 <div
   className={`relative w-28 h-36 flex flex-col items-center justify-start ${
     !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
