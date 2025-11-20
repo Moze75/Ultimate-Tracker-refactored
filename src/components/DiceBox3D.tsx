@@ -881,6 +881,23 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           </div>
         </div>
       )}
+
+      {/* Popup "Dice Roller prêt" au chargement */}
+      {showReadyPopup && (
+        <div
+          className="fixed top-6 right-6 z-[10001] px-4 py-3 rounded-lg bg-black/80 border border-emerald-500/60 shadow-lg text-sm text-emerald-100 flex items-center gap-2 animate-[fadeInOut_2.5s_ease-in-out_forwards]"
+          style={{
+            pointerEvents: 'none',
+          }}
+        >
+          <span className="text-emerald-400 font-bold tracking-wide uppercase text-xs">
+            Dice Roller prêt
+          </span>
+          <span className="text-emerald-200 ml-2">
+            Let&apos;s roll !
+          </span>
+        </div>
+      )}
     </>,
     document.body
   );
