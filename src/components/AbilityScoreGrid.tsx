@@ -32,7 +32,7 @@ export function AbilityScoreGrid({
 
   return (
     <div>
-   <div key={ability.name} className="flex flex-col items-center mt-4"> 
+      <div className="grid grid-cols-3 gap-4 mb-6"> 
         {abilities.map((ability, abilityIndex) => {
           const equipmentBonuses = calculateEquipmentBonuses();
           const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
