@@ -69,7 +69,7 @@ export function HorizontalAbilityScores({
           return (
             <div key={ability.name} className="flex flex-col items-center">
               <div
-                className="relative w-28 h-36 flex flex-col items-center justify-start cursor-pointer hover:opacity-80 transition-opacity"
+                className="relative w-24 h-32 flex flex-col items-center justify-start cursor-pointer hover:opacity-80 transition-opacity" 
                 style={{
                   backgroundImage: 'url(/background/contenant_stats.png)',
                   backgroundSize: 'contain',
