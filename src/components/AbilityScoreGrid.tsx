@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ability } from '../types/dnd';
+import { Ability } from '../types/dnd'; 
 
 interface AbilityScoreGridProps {
   abilities: Ability[];
@@ -42,14 +42,14 @@ export function AbilityScoreGrid({
           return (
             <div key={ability.name} className="flex flex-col items-center">
               <div
-                className={`relative w-48 h-56 flex flex-col items-center justify-start ${
+                className={`relative w-28 h-36 flex flex-col items-center justify-start ${
                   !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
                 }`}
                 style={{
                   backgroundImage: 'url(/background/contenant_stats.png)',
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center' 
+                  backgroundPosition: 'center'
                 }}
                 onClick={() => !editing && rollAbilityCheck(ability)}
                 title={!editing ? `Cliquer pour lancer 1d20+${ability.modifier}` : ''}
@@ -57,7 +57,7 @@ export function AbilityScoreGrid({
                 <div className="absolute top-7 left-0 right-0 flex flex-col items-center pointer-events-none">
 <h4 className="text-[9px] font-normal text-gray-100 uppercase tracking-wide">
   {ability.name}
-</h4> 
+</h4>
                 </div>
 
                 {equipmentBonus !== 0 && (
@@ -92,7 +92,7 @@ export function AbilityScoreGrid({
                       {ability.score}
                     </div>
                   )}
-                </div> 
+                </div>
               </div>
 
               <div className="mt-2 w-full max-w-[130px]">
