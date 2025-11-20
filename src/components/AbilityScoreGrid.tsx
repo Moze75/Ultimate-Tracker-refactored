@@ -42,9 +42,9 @@ export function AbilityScoreGrid({
           return (
             <div key={ability.name} className="flex flex-col items-center">
               <div
-                className={`relative w-28 h-36 flex flex-col items-center justify-start ${
-                  !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                }`}
+className={`relative w-32 h-44 flex flex-col items-center justify-start ${
+  !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+}`}
                 style={{
                   backgroundImage: 'url(/background/contenant_stats.png)',
                   backgroundSize: 'contain',
@@ -54,11 +54,11 @@ export function AbilityScoreGrid({
                 onClick={() => !editing && rollAbilityCheck(ability)}
                 title={!editing ? `Cliquer pour lancer 1d20+${ability.modifier}` : ''}
               >
-                <div className="absolute top-7 left-0 right-0 flex flex-col items-center pointer-events-none">
-<h4 className="text-[9px] font-normal text-gray-100 uppercase tracking-wide">
-  {ability.name}
-</h4>
-                </div>
+      <div className="absolute top-6 left-0 right-0 flex flex-col items-center pointer-events-none">
+  <h4 className="text-[9px] font-normal text-gray-100 uppercase tracking-wide">
+    {ability.name}
+  </h4>
+</div>
 
                 {equipmentBonus !== 0 && (
                   <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 pointer-events-none">
