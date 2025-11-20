@@ -75,7 +75,7 @@ export function AbilityScoreGrid({
                 </div>
 
                 <div
-                  className="absolute bottom-4 left-[50%] transform -translate-x-1/2"
+                  className="absolute bottom-4 left-[49%] transform -translate-x-1/2"
                   onClick={(e) => editing && e.stopPropagation()}
                 >
                   {editing ? (
