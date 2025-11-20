@@ -42,7 +42,7 @@ export function AbilityScoreGrid({
           return (
             <div key={ability.name} className="flex flex-col items-center">
               <div
-                className={`relative w-28 h-36 flex flex-col items-center justify-start ${
+                className={`relative w-36 h-44 flex flex-col items-center justify-start ${
                   !editing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
                 }`}
                 style={{
