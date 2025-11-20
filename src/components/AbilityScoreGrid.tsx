@@ -68,11 +68,11 @@ className={`relative w-32 h-44 flex flex-col items-center justify-start ${
                   </div>
                 )}
 
-                <div className="absolute top-[48%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <div className="text-3xl font-normal text-gray-100">
-                    {displayModifier >= 0 ? '+' : ''}{displayModifier}
-                  </div>
-                </div>
+<div className="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+  <div className="text-3xl font-normal text-gray-100">
+    {displayModifier >= 0 ? '+' : ''}{displayModifier}
+  </div>
+</div>
 
                 <div
                   className="absolute bottom-4 left-[48%] transform -translate-x-1/2"
