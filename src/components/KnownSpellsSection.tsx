@@ -920,7 +920,47 @@ function SpellCard({
              <Dice5 className="w-3 h-3" /> 
           </button>
         </div>
-      ) : ( 
+          ) : glasDamageAlternatives ? (
+        // 🛎️ CAS SPÉCIAL GLAS : deux badges 1d8 / 1d12 séparés
+        <div className="inline-flex items-center gap-1">
+          <button
+            type="button"
+            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+            title="Lancer les dégâts (cible à PV max)"
+            onClick={(e) => {
+              e.stopPropagation();
+              const { diceFormula, modifier } = parseDamageFormula(glasDamageAlternatives.d8);
+              onRoll(
+                'damage',
+                `${spell.spell_name} (cible à PV max)`,
+                diceFormula,
+                modifier
+              );
+            }}
+          >
+            {glasDamageAlternatives.d8}
+          </button>
+          <span className="text-xs text-gray-400">/</span>
+          <button
+            type="button"
+            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+            title="Lancer les dégâts (cible déjà blessée)"
+            onClick={(e) => {
+              e.stopPropagation();
+              const { diceFormula, modifier } = parseDamageFormula(glasDamageAlternatives.d12);
+              onRoll(
+                'damage',
+                `${spell.spell_name} (cible blessée)`,
+                diceFormula,
+                modifier
+              );
+            }}
+          >
+            {glasDamageAlternatives.d12}
+          </button>
+        </div>
+      ) : (
+        // Cas général : un seul badge avec la formule totale
         <button
           type="button"
           className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
