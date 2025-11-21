@@ -1378,38 +1378,48 @@ const characterLevel = useMemo(() => {
 }, [casterType, characterLevel]);
 
   // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
-const levelsToRender = useMemo(() => {
-  console.log('🔍 DEBUG levelsToRender:', {
-    combinedSpellSlots,
-    groupedSpells,
-    allowedLevelsSet: Array.from(allowedLevelsSet),
-    casterType
-  });
-  
-  const levels: string[] = [];
-    if (groupedSpells['Tours de magie']?.length) levels.push('Tours de magie');
+  const levelsToRender = useMemo(() => {
+    console.log('🔍 DEBUG levelsToRender:', {
+      combinedSpellSlots,
+      groupedSpells,
+      allowedLevelsSet: Array.from(allowedLevelsSet),
+      casterType,
+    });
 
-    if (casterType === 'warlock') {
-      const hasPactSlots = (combinedSpellSlots?.pact_slots || 0) > 0;
-      const pactLevel = combinedSpellSlots?.pact_level || 1;
-      const hasSpellsAtPactLevel = Object.keys(groupedSpells).some(key => {
-        if (key === 'Tours de magie') return false;
-        const lvl = parseInt(key.split(' ')[1]);
-        return lvl <= pactLevel && groupedSpells[key]?.length > 0;
-      });
+    const levels: string[] = [];
 
-      if (hasPactSlots || hasSpellsAtPactLevel) {
-        levels.push('Emplacements de Pacte');
-      }
-    } else {
-      for (let lvl = 1; lvl <= 9; lvl++) {
-        if (!allowedLevelsSet.has(lvl)) continue;
-        const key = `level${lvl}`;
-        const hasSlots = (combinedSpellSlots?.[key] || 0) > 0;
-        const hasSpells = !!groupedSpells[`Niveau ${lvl}`];
-        if (hasSlots || hasSpells) levels.push(`Niveau ${lvl}`);
+    // 1️⃣ Toujours : tours de magie s'il y en a
+    if (groupedSpells['Tours de magie']?.length) {
+      levels.push('Tours de magie');
+    }
+
+    // 2️⃣ Emplacements de pacte (si des pact slots existent, qu'ils soient primaires ou secondaires)
+    const hasPactSlots = (combinedSpellSlots?.pact_slots || 0) > 0;
+    const pactLevel = combinedSpellSlots?.pact_level || 1;
+
+    const hasSpellsAtPactLevel = Object.keys(groupedSpells).some((key) => {
+      if (key === 'Tours de magie') return false;
+      const lvl = parseInt(key.split(' ')[1], 10);
+      if (Number.isNaN(lvl)) return false;
+      return lvl <= pactLevel && (groupedSpells[key]?.length || 0) > 0;
+    });
+
+    if (hasPactSlots || hasSpellsAtPactLevel) {
+      levels.push('Emplacements de Pacte');
+    }
+
+    // 3️⃣ Emplacements "classiques" pilotés par casterType / allowedLevelsSet
+    for (let lvl = 1; lvl <= 9; lvl++) {
+      if (!allowedLevelsSet.has(lvl)) continue;
+      const key = `level${lvl}`;
+      const hasSlots = (combinedSpellSlots?.[key] || 0) > 0;
+      const hasSpells = !!groupedSpells[`Niveau ${lvl}`];
+
+      if (hasSlots || hasSpells) {
+        levels.push(`Niveau ${lvl}`);
       }
     }
+
     return levels;
   }, [combinedSpellSlots, groupedSpells, allowedLevelsSet, casterType]);
 
