@@ -22,6 +22,7 @@ function App() {
   const [LoginPage, setLoginPage] = useState<React.ComponentType<any> | null>(null);
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
   const [GamePage, setGamePage] = useState<React.ComponentType<any> | null>(null);
+    const [hardLoggedOut, setHardLoggedOut] = useState(false);
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
