@@ -100,6 +100,7 @@ export function GamePage({
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(selectedCharacter);
+  const [isExiting, setIsExiting] = useState(false);
   const [inventory, setInventory] = useState<any[]>([]);
   const [classSections, setClassSections] = useState<any[] | null>(null);
 
