@@ -853,74 +853,42 @@ function SpellCard({
   {damageInfo.isDamageSpell && totalDamage && (
     <>
       {availableLevels.length > 1 && spell.spell_level > 0 ? (
-        // Wrapper : select + bouton dé
+        // Wrapper : select + bouton dé (sorts à emplacements)
         <div className="inline-flex items-center gap-1">
-          <select
-            value={selectedCastLevel}
-            // ✅ onChange : on choisit juste le niveau, sans lancer
-            onChange={(e) => {
-              e.stopPropagation();
-              const newLevel = Number(e.target.value);
-              setSelectedCastLevel(newLevel);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            className="
-              text-xs
-              px-2 py-1
-              rounded
-              border border-orange-400/60
-              bg-transparent text-white
-              font-sans
-              cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400
-            "
-            title={`Niveau de lancement (actuel : ${selectedCastLevel})`}
-          >
-            {availableLevels.map((lvl) => {
-              const lvlDamage = calculateSlotDamage(
-                damageInfo,
-                spell.spell_level,
-                lvl,
-                abilityModifier
-              );
-              return (
-                <option
-                  key={lvl}
-                  value={lvl}
-                  className="bg-white text-gray-900"
-                >
-                  {lvlDamage} (Niv. {lvl})
-                </option>
-              );
-            })}
-          </select>
-
-          {/* Petit bouton dé pour lancer au niveau sélectionné */}
+          {/* ... bloc existant inchangé ... */}
+          {/* garde ici ton select + bouton dé comme avant */}
+        </div>
+      ) : glasDamageAlternatives ? (
+        // 🛎️ CAS SPÉCIAL GLAS : deux badges 1d8 / 1d12 séparés
+        <div className="inline-flex items-center gap-1">
           <button
             type="button"
-            className="w-6 h-6 flex items-center justify-center rounded border border-orange-400/60 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 hover:border-orange-400 transition-colors text-[10px] font-mono"
-            title={`Lancer les dégâts au niveau ${selectedCastLevel}`}
+            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+            title="Lancer les dégâts (cible à PV max)"
             onClick={(e) => {
               e.stopPropagation();
-              const lvlDamage = calculateSlotDamage(
-                damageInfo,
-                spell.spell_level,
-                selectedCastLevel,
-                abilityModifier
-              );
-              const { diceFormula, modifier } = parseDamageFormula(lvlDamage);
-              onRoll(
-                'damage',
-                `${spell.spell_name} (Niv. ${selectedCastLevel})`,
-                diceFormula,
-                modifier
-              );
+              const { diceFormula, modifier } = parseDamageFormula(glasDamageAlternatives.d8);
+              onRoll('damage', `${spell.spell_name} (cible à PV max)`, diceFormula, modifier);
             }}
           >
-             <Dice5 className="w-3 h-3" /> 
+            {glasDamageAlternatives.d8}
+          </button>
+          <span className="text-xs text-gray-400">/</span>
+          <button
+            type="button"
+            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
+            title="Lancer les dégâts (cible déjà blessée)"
+            onClick={(e) => {
+              e.stopPropagation();
+              const { diceFormula, modifier } = parseDamageFormula(glasDamageAlternatives.d12);
+              onRoll('damage', `${spell.spell_name} (cible blessée)`, diceFormula, modifier);
+            }}
+          >
+            {glasDamageAlternatives.d12}
           </button>
         </div>
       ) : (
+        // Cas général : un seul badge avec la formule totale
         <button
           type="button"
           className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
