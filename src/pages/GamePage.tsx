@@ -711,23 +711,36 @@ useEffect(() => {
     try { localStorage.setItem(lastTabKeyFor(selectedCharacter.id), tab); } catch {}
   }, [activeTab, selectedCharacter.id, measureActiveHeight, measurePaneHeight, resetGestureState, safeUnfreeze]);
 
-/* ---------------- Bouton retour ---------------- */
-const handleBackToSelection = () => {
-  console.log('[GamePage] handleBackToSelection called', {
-    freezeActive: freezeActiveRef.current,
-    currentPlayerId: currentPlayer?.id,
-  });
-  if (freezeActiveRef.current) safeUnfreeze(true);
-  try {
-    sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-    console.log('[GamePage] SKIP_AUTO_RESUME_ONCE=1 enregistré');
-  } catch (err) {
-    console.warn('[GamePage] Impossible d\'écrire SKIP_AUTO_RESUME_ONCE', err);
-  }
-  onBackToSelection?.();
-  console.log('[GamePage] onBackToSelection() déclenché');
-  toast.success('Retour à la sélection des personnages');
-};
+  /* ---------------- Bouton retour ---------------- */
+  const handleBackToSelection = () => {
+    // Empêcher les doubles clics / rebonds
+    if (isExiting) {
+      console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
+      return;
+    }
+    setIsExiting(true);
+
+    console.log('[GamePage] handleBackToSelection called', {
+      freezeActive: freezeActiveRef.current,
+      currentPlayerId: currentPlayer?.id,
+    });
+
+    if (freezeActiveRef.current) {
+      console.log('[GamePage] safeUnfreeze(true) avant retour');
+      safeUnfreeze(true);
+    }
+
+    try {
+      sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+      console.log('[GamePage] SKIP_AUTO_RESUME_ONCE=1 enregistré');
+    } catch (err) {
+      console.warn('[GamePage] Impossible d\'écrire SKIP_AUTO_RESUME_ONCE', err);
+    }
+
+    console.log('[GamePage] onBackToSelection() déclenché');
+    onBackToSelection?.();
+    toast.success('Retour à la sélection des personnages');
+  };
    
 
   /* ---------------- Reload inventaire (sécurité) ---------------- */
