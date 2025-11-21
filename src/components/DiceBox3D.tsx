@@ -326,7 +326,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+         // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         diceBoxRef.current.DiceFactory.materials_cache = {};
         console.log('✅ [UPDATE] Cache de matériaux vidé');
@@ -337,44 +337,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
           diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
           console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
-        }
-      }
-
-
-      
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [UPDATE] Cache de matériaux vidé');
-        
-        // Forcer la mise à jour du matériau dans colorData
-        if (diceBoxRef.current.colorData) {
-          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
-          diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
-          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-          console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
-        }
-      }
-
-      // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        try {
-          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-          
-          // ✅ Appliquer le nouveau colorset
-          if (customColorset) {
-            newFactory.applyColorSet(customColorset);
-            console.log('✅ [UPDATE] Custom colorset appliqué au factory');
-            console.log('✅ [UPDATE] Matériau appliqué:', effectiveSettings.themeMaterial);
-          } else if (diceBoxRef.current.colorData) {
-            newFactory.applyColorSet(diceBoxRef.current.colorData);
-            console.log('✅ [UPDATE] Colorset existant appliqué au factory');
-          }
-          
-          diceBoxRef.current.DiceFactory = newFactory;
-          console.log('✅ [UPDATE] DiceFactory recréé avec nouveau colorset et matériau');
-        } catch (error) {
-          console.error('❌ [UPDATE] Erreur recréation DiceFactory:', error);
         }
       }
 
