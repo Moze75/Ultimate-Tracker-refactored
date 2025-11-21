@@ -107,7 +107,7 @@ export function HPManager({
                 onClick={applyDamage}
                 disabled={!damageValue || parseInt(damageValue) <= 0}
                 className={`
-                  flex items-center justify-start gap-1 text-sm mt-1 pl-6
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-0
                   ${(!damageValue || parseInt(damageValue) <= 0)
                     ? 'text-red-500/40 cursor-not-allowed'
                     : 'text-red-500 hover:text-red-400'}
