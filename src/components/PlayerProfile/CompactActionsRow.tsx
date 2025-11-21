@@ -58,13 +58,47 @@ export function CompactActionsRow({ player, onUpdate, onOpenCampaigns }: Compact
   nextSecondaryCR.used_innate_sorcery = 0;
   nextSecondaryCR.used_supernatural_metabolism = 0;
 
-  const updateData: any = {
+   const updateData: any = {
     current_hp: maxHp,
     temp_hp: 0,
     hit_dice_used: 0,
     class_resources: nextCR,
-    stats: { ...player.stats, inspirations: 0 }
+    stats: { ...player.stats, inspirations: 0 },
   };
+
+  // 🔹 Reset des emplacements de sorts principaux
+  if (player.spell_slots) {
+    updateData.spell_slots = {
+      ...player.spell_slots,
+      used1: 0,
+      used2: 0,
+      used3: 0,
+      used4: 0,
+      used5: 0,
+      used6: 0,
+      used7: 0,
+      used8: 0,
+      used9: 0,
+      used_pact_slots: 0,
+    };
+  }
+
+  // 🔹 Reset des emplacements de sorts secondaires (y compris pact slots secondaires)
+  if (player.secondary_spell_slots) {
+    updateData.secondary_spell_slots = {
+      ...player.secondary_spell_slots,
+      used1: 0,
+      used2: 0,
+      used3: 0,
+      used4: 0,
+      used5: 0,
+      used6: 0,
+      used7: 0,
+      used8: 0,
+      used9: 0,
+      used_pact_slots: 0,
+    };
+  }
 
   // Ajouter secondary_class_resources si présent
   if (player.secondary_class) {
@@ -73,7 +107,7 @@ export function CompactActionsRow({ player, onUpdate, onOpenCampaigns }: Compact
 
   onUpdate({
     ...player,
-    ...updateData
+    ...updateData,
   });
   
   toast.success('Repos long effectué');
