@@ -89,8 +89,7 @@ export function HPManager({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-start space-y-2">
               <div className="flex items-center">
                 <input
                   type="number"
