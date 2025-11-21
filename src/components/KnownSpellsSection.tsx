@@ -494,9 +494,19 @@ const PactSlotStats = React.memo(
     player: Player;
     onUpdate: (player: Player) => void;
   }) => {
-    const maxSlots = player.spell_slots?.pact_slots || 0;
-    const usedSlots = player.spell_slots?.used_pact_slots || 0;
-    const pactLevel = player.spell_slots?.pact_level || 1;
+    // 🔍 Déterminer où se trouvent réellement les pact slots (classe principale ou secondaire)
+    const primaryIsWarlock = player.class === 'Occultiste';
+    const secondaryIsWarlock = player.secondary_class === 'Occultiste';
+
+    const warlockSlots = primaryIsWarlock
+      ? player.spell_slots
+      : secondaryIsWarlock
+      ? player.secondary_spell_slots
+      : null;
+
+    const maxSlots = warlockSlots?.pact_slots || 0;
+    const usedSlots = warlockSlots?.used_pact_slots || 0;
+    const pactLevel = warlockSlots?.pact_level || 1;
     const remainingSlots = Math.max(0, maxSlots - usedSlots);
 
   const handlePactSlotUse = useCallback(
