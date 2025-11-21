@@ -90,7 +90,7 @@ export function HPManager({
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-                     <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center">
                 <input
                   type="number"
@@ -102,10 +102,20 @@ export function HPManager({
                   min="0"
                 />
               </div>
-              <div className="flex items-center justify-center gap-1 text-sm text-red-500 mt-1">
+              <button
+                type="button"
+                onClick={applyDamage}
+                disabled={!damageValue || parseInt(damageValue) <= 0}
+                className={`
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-1
+                  ${(!damageValue || parseInt(damageValue) <= 0)
+                    ? 'text-red-500/40 cursor-not-allowed'
+                    : 'text-red-500 hover:text-red-400'}
+                `}
+              >
                 <Sword size={16} />
                 <span>Dégâts</span>
-              </div>
+              </button>
             </div>
 
             <div className="flex flex-col items-center space-y-2">
