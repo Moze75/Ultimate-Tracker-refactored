@@ -1101,6 +1101,17 @@ function ResourceBlock({
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState<string>('');
 
+    // 🔊 Son lors de la consommation d'une ressource de classe
+  const playClassResourceSound = () => {
+    try {
+      const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
+      audio.volume = 0.5;
+      void audio.play();
+    } catch (e) {
+      console.warn('[ResourceBlock] Impossible de jouer le son de ressource de classe:', e);
+    }
+  };
+
   const colorClasses = {
     red: 'text-red-500 hover:bg-red-900/30',
     purple: 'text-purple-500 hover:bg-purple-900/30',
