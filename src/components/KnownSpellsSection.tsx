@@ -1438,7 +1438,7 @@ const characterLevel = useMemo(() => {
   return set;
 }, [casterType, characterLevel]);
 
-  // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
+    // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
   const levelsToRender = useMemo(() => {
     console.log('🔍 DEBUG levelsToRender:', {
       combinedSpellSlots,
@@ -1454,19 +1454,24 @@ const characterLevel = useMemo(() => {
       levels.push('Tours de magie');
     }
 
-    // 2️⃣ Emplacements de pacte (si des pact slots existent, qu'ils soient primaires ou secondaires)
-    const hasPactSlots = (combinedSpellSlots?.pact_slots || 0) > 0;
-    const pactLevel = combinedSpellSlots?.pact_level || 1;
+    // 2️⃣ Emplacements de pacte (UNIQUEMENT si le personnage a un Occultiste)
+    const hasWarlock =
+      player.class === 'Occultiste' || player.secondary_class === 'Occultiste';
 
-    const hasSpellsAtPactLevel = Object.keys(groupedSpells).some((key) => {
-      if (key === 'Tours de magie') return false;
-      const lvl = parseInt(key.split(' ')[1], 10);
-      if (Number.isNaN(lvl)) return false;
-      return lvl <= pactLevel && (groupedSpells[key]?.length || 0) > 0;
-    });
+    if (hasWarlock) {
+      const hasPactSlots = (combinedSpellSlots?.pact_slots || 0) > 0;
+      const pactLevel = combinedSpellSlots?.pact_level || 1;
 
-    if (hasPactSlots || hasSpellsAtPactLevel) {
-      levels.push('Emplacements de Pacte');
+      const hasSpellsAtPactLevel = Object.keys(groupedSpells).some((key) => {
+        if (key === 'Tours de magie') return false;
+        const lvl = parseInt(key.split(' ')[1], 10);
+        if (Number.isNaN(lvl)) return false;
+        return lvl <= pactLevel && (groupedSpells[key]?.length || 0) > 0;
+      });
+
+      if (hasPactSlots || hasSpellsAtPactLevel) {
+        levels.push('Emplacements de Pacte');
+      }
     }
 
     // 3️⃣ Emplacements "classiques" pilotés par casterType / allowedLevelsSet
@@ -1482,7 +1487,7 @@ const characterLevel = useMemo(() => {
     }
 
     return levels;
-  }, [combinedSpellSlots, groupedSpells, allowedLevelsSet, casterType]);
+  }, [combinedSpellSlots, groupedSpells, allowedLevelsSet, casterType, player.class, player.secondary_class]);
 
 
   
