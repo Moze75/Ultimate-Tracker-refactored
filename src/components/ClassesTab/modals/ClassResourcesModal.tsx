@@ -106,6 +106,17 @@ export function ResourceBlock({
     window.setTimeout(() => setPulse(false), 260);
   };
 
+    // 🔊 Son lors de la consommation d'une ressource de classe (modale ClassesTab)
+  const playClassResourceSound = () => {
+    try {
+      const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
+      audio.volume = 0.5;
+      void audio.play();
+    } catch (e) {
+      console.warn('[ClassResourcesModal.ResourceBlock] Impossible de jouer le son de ressource de classe:', e);
+    }
+  };
+
   const ringColorClasses: Record<NonNullable<typeof color>, string> = {
     red: 'ring-red-400/60',
     purple: 'ring-purple-400/60',
