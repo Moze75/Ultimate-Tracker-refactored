@@ -141,7 +141,7 @@ useEffect(() => {
     initSession();
   }, []);
 
-  // Écoute des changements d'état d'authentification
+    // Écoute des changements d'état d'authentification
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       console.log('[App] 🔄 Auth state change:', event);
@@ -153,7 +153,11 @@ useEffect(() => {
         localStorage.removeItem(LAST_SELECTED_CHARACTER_SNAPSHOT);
         appContextService.clearContext();
         appContextService.clearWizardSnapshot();
+        setHardLoggedOut(true); // ✅ Cette instance considère qu'on est vraiment sorti
       } else {
+        // Nouvelle session non nulle : on peut à nouveau autoriser l'auto-resume
+        setHardLoggedOut(false);
+
         if (!selectedCharacter) {
           const context = appContextService.getContext();
           
