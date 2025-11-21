@@ -90,24 +90,17 @@ export function HPManager({
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col items-center space-y-2">
+                     <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center">
                 <input
                   type="number"
                   value={damageValue}
                   onChange={(e) => setDamageValue(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && applyDamage()}
-                  className="input-dark w-16 px-2 py-2 rounded-l-md text-center text-sm"
+                  className="input-dark w-16 px-2 py-2 rounded-md text-center text-sm"
                   placeholder="0"
                   min="0"
                 />
-                <button
-                  onClick={applyDamage}
-                  disabled={!damageValue || parseInt(damageValue) <= 0}
-                  className="px-3 py-2 bg-transparent hover:bg-gray-600/30 disabled:bg-transparent disabled:cursor-not-allowed text-red-500 rounded-r-md text-sm font-medium transition-colors"
-                >
-                  OK
-                </button>
               </div>
               <div className="flex items-center justify-center gap-1 text-sm text-red-500 mt-1">
                 <Sword size={16} />
