@@ -146,7 +146,7 @@ export function HPManager({
               </button>
             </div>
 
-            <div className="flex flex-col items-center space-y-2">
+                      <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center">
                 <input
                   type="number"
@@ -158,10 +158,20 @@ export function HPManager({
                   min="0"
                 />
               </div>
-              <div className="flex items-center justify-center gap-1 text-sm text-blue-400 mt-1">
+              <button
+                type="button"
+                onClick={applyTempHP}
+                disabled={!tempHpValue || parseInt(tempHpValue) <= 0}
+                className={`
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-1
+                  ${(!tempHpValue || parseInt(tempHpValue) <= 0)
+                    ? 'text-blue-400/40 cursor-not-allowed'
+                    : 'text-blue-400 hover:text-blue-300'}
+                `}
+              >
                 <Shield size={16} />
                 <span>PV Temp</span>
-              </div>
+              </button>
             </div>
           </div>
         </div>
