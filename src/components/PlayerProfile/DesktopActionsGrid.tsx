@@ -76,9 +76,7 @@ if (player.secondary_class === 'Moine') {
   }
 }
 
-        const nextSpellSlots = { ...(player.spell_slots || {}) };
-
-      // 🔹 Pact slots pour Occultiste PRINCIPAL (classe principale)
+      const nextSpellSlots = { ...(player.spell_slots || {}) };
       if (player.class === 'Occultiste' && typeof nextSpellSlots.used_pact_slots === 'number') {
         const pactSlots = nextSpellSlots.pact_slots || 0;
         if (nextSpellSlots.used_pact_slots > 0 && pactSlots > 0) {
@@ -87,41 +85,16 @@ if (player.secondary_class === 'Moine') {
         }
       }
 
-      // 🔹 Pact slots pour Occultiste SECONDAIRE (classe secondaire)
-      const nextSecondarySpellSlots: any = { ...(player.secondary_spell_slots || {}) };
-      if (player.secondary_class === 'Occultiste' && typeof nextSecondarySpellSlots.used_pact_slots === 'number') {
-        const pactSlots = nextSecondarySpellSlots.pact_slots || 0;
-        if (nextSecondarySpellSlots.used_pact_slots > 0 && pactSlots > 0) {
-          nextSecondarySpellSlots.used_pact_slots = 0;
-          recoveredLabel += ` (+${pactSlots} emplacement${pactSlots > 1 ? 's' : ''} de pacte (classe secondaire) récupéré${pactSlots > 1 ? 's' : ''})`;
-        }
-      }
-
-      // 🔧 Construire l'objet de mise à jour
-      const updateData: any = {
-        current_hp: Math.min(player.max_hp, player.current_hp + healing),
-        hit_dice: {
-          ...player.hit_dice,
-          used: player.hit_dice.used + 1,
-        },
-        class_resources: nextCR,
-        spell_slots: nextSpellSlots,
-      };
-
-      // 🔧 Ajouter secondary_class_resources si classe secondaire existe
-      if (player.secondary_class) {
-        updateData.secondary_class_resources = nextSecondaryCR;
-      }
-
-      // 🔧 Ajouter secondary_spell_slots si classe secondaire existe
-      if (player.secondary_class) {
-        updateData.secondary_spell_slots = nextSecondarySpellSlots;
-      }
-
-      const { error } = await supabase
-        .from('players')
-        .update(updateData)
-        .eq('id', player.id);
+// 🔧 Construire l'objet de mise à jour
+const updateData: any = {
+  current_hp: Math.min(player.max_hp, player.current_hp + healing),
+  hit_dice: {
+    ...player.hit_dice,
+    used: player.hit_dice.used + 1
+  },
+  class_resources: nextCR,
+  spell_slots: nextSpellSlots
+};   
 
 // 🔧 Ajouter secondary_class_resources si classe secondaire existe
 if (player.secondary_class) {
