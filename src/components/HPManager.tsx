@@ -118,7 +118,7 @@ export function HPManager({
               </button>
             </div>
 
-            <div className="flex flex-col items-center space-y-2">
+                    <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center">
                 <input
                   type="number"
@@ -130,10 +130,20 @@ export function HPManager({
                   min="0"
                 />
               </div>
-              <div className="flex items-center justify-center gap-1 text-sm text-green-400 mt-1">
+              <button
+                type="button"
+                onClick={applyHealing}
+                disabled={!healValue || parseInt(healValue) <= 0}
+                className={`
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-1
+                  ${(!healValue || parseInt(healValue) <= 0)
+                    ? 'text-green-400/40 cursor-not-allowed'
+                    : 'text-green-400 hover:text-green-300'}
+                `}
+              >
                 <Heart size={16} />
                 <span>Soins</span>
-              </div>
+              </button>
             </div>
 
             <div className="flex flex-col items-center space-y-2">
