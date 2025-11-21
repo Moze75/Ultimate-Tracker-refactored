@@ -427,34 +427,28 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
       }
 
-      if (diceBoxRef.current) {
+          if (diceBoxRef.current) {
+        // Mettre à jour baseScale directement
         diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
         console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
-      
 
-        
+        // Vider le cache de matériaux et réappliquer le colorset
         if (diceBoxRef.current.DiceFactory) {
           try {
-            const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-            const newFactory = new DiceFactory({
-              baseScale: newSettings.baseScale * 100 / 6,
-              material: newSettings.themeMaterial || 'plastic' // ✅ AJOUT matériau
-            });
-            
-            // ✅ Appliquer le nouveau colorset
-            if (customColorset) {
-              newFactory.applyColorSet(customColorset);
-              console.log('✅ [EVENT] Custom colorset appliqué au factory');
-              console.log('✅ [EVENT] Matériau appliqué:', newSettings.themeMaterial);
-            } else if (diceBoxRef.current.colorData) {
-              newFactory.applyColorSet(diceBoxRef.current.colorData);
-              console.log('✅ [EVENT] Colorset existant appliqué au factory');
+            diceBoxRef.current.DiceFactory.materials_cache = {};
+            console.log('✅ [EVENT] Cache de matériaux vidé');
+
+            if (diceBoxRef.current.colorData) {
+              diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+              diceBoxRef.current.colorData.texture.material = newSettings.themeMaterial || 'plastic';
+              diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+              console.log('✅ [EVENT] Matériau réappliqué via colorData:', newSettings.themeMaterial || 'plastic');
+            } else if (customColorset) {
+              diceBoxRef.current.DiceFactory.applyColorSet(customColorset);
+              console.log('✅ [EVENT] Custom colorset appliqué via factory');
             }
-            
-            diceBoxRef.current.DiceFactory = newFactory;
-            console.log('✅ [EVENT] DiceFactory recréé avec baseScale:', newSettings.baseScale * 100 / 6);
           } catch (error) {
-            console.error('❌ [EVENT] Erreur recréation DiceFactory:', error);
+            console.error('❌ [EVENT] Erreur lors de la mise à jour du DiceFactory:', error);
           }
         }
 
