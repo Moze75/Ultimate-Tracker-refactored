@@ -203,6 +203,7 @@ export function ResourceBlock({
             onClick={(e) => {
               const remainingNow = Math.max(0, total - used);
               if (remainingNow <= 0) return;
+              playClassResourceSound();
               onUse();
               triggerLocalPulse();
               onGlobalPulse?.(e);
