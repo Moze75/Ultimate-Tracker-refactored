@@ -163,7 +163,7 @@ export function HPManager({
                 onClick={applyTempHP}
                 disabled={!tempHpValue || parseInt(tempHpValue) <= 0}
                 className={`
-                  flex items-center justify-start gap-1 text-sm mt-1 pl-1
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-0
                   ${(!tempHpValue || parseInt(tempHpValue) <= 0)
                     ? 'text-blue-400/40 cursor-not-allowed'
                     : 'text-blue-400 hover:text-blue-300'}
