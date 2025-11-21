@@ -72,7 +72,7 @@ export function isAttackRoll(description: string): boolean {
   }
   
   // ✅ NOUVEAU : Patterns positifs élargis pour détecter toutes les formulations d'attaque
-  const attackKeywords = [
+    const attackKeywords = [
     // Patterns existants (avec "de sort" explicite)
     /effectuez une attaque.*de sort/i,         // "effectuez une attaque de sort à distance"
     /faites un jet d'attaque.*de sort/i,       // "faites un jet d'attaque de sort"
@@ -81,11 +81,17 @@ export function isAttackRoll(description: string): boolean {
     /attaque de sort.*au corps à corps/i,      // "attaque de sort au corps à corps"
     /jet d'attaque de sort/i,                  // "nécessite un jet d'attaque de sort"
     
-    // ✅ NOUVEAUX : Variantes sans "de sort" explicite (règles 2024)
+    // Variantes sans "de sort" explicite (règles 2024)
     /effectuez une attaque.*avec un sort/i,    // "effectuez une attaque de corps à corps avec un sort"
     /effectuez un jet d'attaque/i,             // "Effectuez un jet d'attaque à distance"
     /faites un jet d'attaque.*contre/i,        // "faites un jet d'attaque contre"
     /réalisez un jet d'attaque/i,              // "réalisez un jet d'attaque"
+    
+    // 🔹 Variantes simplifiées : "attaque à distance / au corps à corps contre ... "
+    // On reste prudent en exigeant "contre" (cible explicite).
+    /effectuez une attaque\s+(?:à distance|au corps à corps)\s+contre/i,
+    /réalisez une attaque\s+(?:à distance|au corps à corps)\s+contre/i,
+    /attaque\s+(?:à distance|au corps à corps)\s+contre/i,
   ];
   
   // Vérifier les patterns positifs
