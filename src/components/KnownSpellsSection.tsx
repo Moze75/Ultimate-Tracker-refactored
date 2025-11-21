@@ -722,7 +722,28 @@ function SpellCard({
     
     return result;
   }, [damageInfo, spell.spell_level, selectedCastLevel, characterLevel, abilityModifier, spell.spell_name]);
-   
+
+  // 🛎️ CAS SPÉCIAL : Glas (1d8 OU 1d12, pas cumulatif)
+  const glasDamageAlternatives = useMemo(() => {
+    // On limite au sort qui s'appelle exactement "Glas"
+    if (spell.spell_name.toLowerCase() !== 'glas') return null;
+    if (!damageInfo.isDamageSpell) return null;
+
+    // Récupérer les composantes de dégâts de base (1d8 + 1d12)
+    const components = damageInfo.baseDamage;
+    if (!components || components.length < 2) return null;
+
+    // On cherche explicitement un d8 et un d12 (dégâts nécrotiques dans ta description)
+    const d8 = components.find(c => c.diceType === 8);
+    const d12 = components.find(c => c.diceType === 12);
+    if (!d8 || !d12) return null;
+
+    return {
+      d8: `${d8.diceCount}d${d8.diceType}`,
+      d12: `${d12.diceCount}d${d12.diceType}`,
+    };
+  }, [spell.spell_name, damageInfo]);
+  
   // ✅ NOUVEAU : Niveaux de lancement disponibles
   const availableLevels = useMemo(() => {
     const hasUpgrade = damageInfo.upgradeType === 'per_slot_level';
