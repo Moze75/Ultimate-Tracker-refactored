@@ -90,7 +90,7 @@ export function HPManager({
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col items-start space-y-2">
+            <div className="flex flex-col items-center space-y-2"> 
               <div className="flex items-center">
                 <input
                   type="number"
@@ -99,7 +99,7 @@ export function HPManager({
                   onKeyPress={(e) => e.key === 'Enter' && applyDamage()}
                   className="input-dark w-16 px-2 py-2 rounded-md text-center text-sm"
                   placeholder="0"
-                  min="0"
+                  min="0" 
                 />
               </div>
               <button
