@@ -357,14 +357,18 @@ useEffect(() => {
   }, []);
 
   /* ---------------- Update player ---------------- */
-  const applyPlayerUpdate = useCallback(
-    (updated: Player) => {
-      setCurrentPlayer(updated);
-      try { onUpdateCharacter?.(updated); } catch {}
-      try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated)); } catch {}
-    },
-    [onUpdateCharacter]
-  );
+const applyPlayerUpdate = useCallback(
+  (updated: Player) => {
+    if (isExiting) {
+      console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
+      return;
+    }
+    setCurrentPlayer(updated);
+    try { onUpdateCharacter?.(updated); } catch {}
+    try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated)); } catch {}
+  },
+  [onUpdateCharacter, isExiting]
+);
 
     // 🆕 Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = useCallback((url: string) => {
