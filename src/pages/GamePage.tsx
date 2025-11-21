@@ -376,11 +376,12 @@ const applyPlayerUpdate = useCallback(
     localStorage.setItem('desktop-background', url);
   }, []);
 
-  useEffect(() => {
-    if (currentPlayer) {
-      try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer)); } catch {}
-    }
-  }, [currentPlayer]);
+useEffect(() => {
+  if (!currentPlayer || isExiting) return;
+  try {
+    localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
+  } catch {}
+}, [currentPlayer, isExiting]);
 
   /* ---------------- Persistance snapshot & tab ---------------- */
   useEffect(() => {
