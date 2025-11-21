@@ -135,7 +135,7 @@ export function HPManager({
                 onClick={applyHealing}
                 disabled={!healValue || parseInt(healValue) <= 0}
                 className={`
-                  flex items-center justify-start gap-1 text-sm mt-1 pl-1
+                  flex items-center justify-start gap-1 text-sm mt-1 pl-0
                   ${(!healValue || parseInt(healValue) <= 0)
                     ? 'text-green-400/40 cursor-not-allowed'
                     : 'text-green-400 hover:text-green-300'}
