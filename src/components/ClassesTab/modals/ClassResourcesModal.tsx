@@ -171,6 +171,7 @@ export function ResourceBlock({
             onClick={(e) => {
               const value = parseInt(amount) || 0;
               if (value > 0) {
+                playClassResourceSound();
                 onUpdateUsed?.(used + value);
                 setAmount('');
                 triggerLocalPulse();
