@@ -115,17 +115,10 @@ export function HPManager({
                   value={healValue}
                   onChange={(e) => setHealValue(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && applyHealing()}
-                  className="input-dark w-16 px-2 py-2 rounded-l-md text-center text-sm"
+                  className="input-dark w-16 px-2 py-2 rounded-md text-center text-sm"
                   placeholder="0"
                   min="0"
                 />
-                <button
-                  onClick={applyHealing}
-                  disabled={!healValue || parseInt(healValue) <= 0}
-                  className="px-3 py-2 bg-transparent hover:bg-gray-600/30 disabled:bg-transparent disabled:cursor-not-allowed text-green-400 rounded-r-md text-sm font-medium transition-colors"
-                >
-                  OK
-                </button>
               </div>
               <div className="flex items-center justify-center gap-1 text-sm text-green-400 mt-1">
                 <Heart size={16} />
