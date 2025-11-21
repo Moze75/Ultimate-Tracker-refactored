@@ -1192,10 +1192,14 @@ function ResourceBlock({
             </button>
           )}
         </div>
-      ) : (
+          ) : (
         <div className="flex gap-2">
           <button
-            onClick={onUse}
+            onClick={() => {
+              if (remaining <= 0) return;
+              playClassResourceSound();
+              onUse?.();
+            }}
             disabled={remaining <= 0}
             className={`flex-1 h-8 flex items-center justify-center rounded-md transition-colors ${
               remaining > 0 ? colorClasses[color] : 'text-gray-600 bg-gray-800/50 cursor-not-allowed'
