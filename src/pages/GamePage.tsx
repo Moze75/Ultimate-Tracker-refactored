@@ -705,14 +705,23 @@ useEffect(() => {
     try { localStorage.setItem(lastTabKeyFor(selectedCharacter.id), tab); } catch {}
   }, [activeTab, selectedCharacter.id, measureActiveHeight, measurePaneHeight, resetGestureState, safeUnfreeze]);
 
-  /* ---------------- Bouton retour ---------------- */
-  const handleBackToSelection = () => {
-    if (freezeActiveRef.current) safeUnfreeze(true);
-    try { sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1'); } catch {}
-    onBackToSelection?.();
-    toast.success('Retour à la sélection des personnages');
-  };
-
+/* ---------------- Bouton retour ---------------- */
+const handleBackToSelection = () => {
+  console.log('[GamePage] handleBackToSelection called', {
+    freezeActive: freezeActiveRef.current,
+    currentPlayerId: currentPlayer?.id,
+  });
+  if (freezeActiveRef.current) safeUnfreeze(true);
+  try {
+    sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+    console.log('[GamePage] SKIP_AUTO_RESUME_ONCE=1 enregistré');
+  } catch (err) {
+    console.warn('[GamePage] Impossible d\'écrire SKIP_AUTO_RESUME_ONCE', err);
+  }
+  onBackToSelection?.();
+  console.log('[GamePage] onBackToSelection() déclenché');
+  toast.success('Retour à la sélection des personnages');
+};
    
 
   /* ---------------- Reload inventaire (sécurité) ---------------- */
