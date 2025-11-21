@@ -105,7 +105,11 @@ useEffect(() => {
           const context = appContextService.getContext();
           console.log('[App] 📍 Contexte détecté:', context);
 
-          if (context === 'wizard') {
+          // ✅ Important : si cette instance a fait un hard logout,
+          // ne pas auto-reprendre de personnage même si une session existe encore.
+          if (hardLoggedOut) {
+            console.log('[App] 🚫 hardLoggedOut=true -> pas d\'auto-resume malgré session présente');
+          } else if (context === 'wizard') {
             console.log('[App] 🧙 Contexte wizard - pas de restauration de personnage');
           } else {
             if (sessionStorage.getItem(SKIP_AUTO_RESUME_ONCE) === '1') {
@@ -139,7 +143,7 @@ useEffect(() => {
     };
 
     initSession();
-  }, []);
+  }, [hardLoggedOut]);
 
     // Écoute des changements d'état d'authentification
   useEffect(() => {
