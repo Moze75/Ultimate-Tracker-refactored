@@ -1063,7 +1063,7 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
   const [searchTerm, setSearchTerm] = useState('');
 
 const [filterPrepared, setFilterPrepared] = useState<'all' | 'prepared' | 'unprepared'>('all');
-const spellSlotsInitialized = useRef(false);
+
 
 const combinedSpellSlots = useMemo(() => combineSpellSlots(player), [player]);
 
@@ -1109,98 +1109,7 @@ useEffect(() => {
 
 
   
-// Initialiser automatiquement les spell_slots si nécessaire (une seule fois par joueur)
-useEffect(() => {
-  const initializeAllSpellSlots = async () => {
-    if (!player.id) return;
 
-    // Garde global : si on a déjà tenté une init pour ce joueur, ne pas recommencer
-    if (spellSlotsInitialized.current) {
-      return;
-    }
-
-    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-    let needsUpdate = false;
-    const updates: any = {};
-
-    // 1️⃣ Initialiser spell_slots pour la classe principale
-    if (player.class && spellcasters.includes(player.class)) {
-      const hasSpellSlots =
-        player.spell_slots &&
-        Object.keys(player.spell_slots).some((key) => {
-          if (key.startsWith('level') && !key.startsWith('used')) {
-            return (player.spell_slots as any)[key] > 0;
-          }
-          return false;
-        });
-
-      if (!hasSpellSlots) {
-        const newSpellSlots = getSpellSlotsByLevel(
-          player.class,
-          player.level || 1,
-          player.spell_slots
-        );
-        updates.spell_slots = newSpellSlots;
-        needsUpdate = true;
-        console.log('[KnownSpellsSection] Initialisation spell_slots:', newSpellSlots);
-      }
-    }
-
-    // 2️⃣ Initialiser secondary_spell_slots pour la classe secondaire
-    if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
-      const hasSecondarySpellSlots =
-        player.secondary_spell_slots &&
-        Object.keys(player.secondary_spell_slots).some((key) => {
-          if (key.startsWith('level') && !key.startsWith('used')) {
-            return (player.secondary_spell_slots as any)[key] > 0;
-          }
-          return false;
-        });
-
-      if (!hasSecondarySpellSlots) {
-        const newSecondarySpellSlots = getSpellSlotsByLevel(
-          player.secondary_class,
-          player.secondary_level || 1,
-          player.secondary_spell_slots
-        );
-        updates.secondary_spell_slots = newSecondarySpellSlots;
-        needsUpdate = true;
-        console.log(
-          '[KnownSpellsSection] Initialisation secondary_spell_slots:',
-          newSecondarySpellSlots
-        );
-      }
-    }
-
-    // 3️⃣ Effectuer la mise à jour si nécessaire
-    if (needsUpdate) {
-      try {
-        spellSlotsInitialized.current = true;
-
-        const { error } = await supabase
-          .from('players')
-          .update(updates)
-          .eq('id', player.id);
-
-        if (error) throw error;
-
-        onUpdate({ ...player, ...updates });
-        toast.success('Emplacements de sorts initialisés');
-      } catch (err) {
-        console.error('[KnownSpellsSection] Erreur initialisation:', err);
-        // En cas d’erreur, on laisse la possibilité de réessayer plus tard
-        spellSlotsInitialized.current = false;
-      }
-    } else {
-      // Rien à initialiser : on marque comme fait pour éviter des reruns inutiles
-      spellSlotsInitialized.current = true;
-    }
-  };
-
-  initializeAllSpellSlots();
-  // On ne dépend que de player.id pour éviter les boucles
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [player.id]);
 
 
 
