@@ -203,6 +203,7 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
   } | null>(null);
 
 const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
+   const secondarySpellSlotsInitialized = useRef(false);
 
    useEffect(() => {
   const initializeSpellSlots = async () => {
