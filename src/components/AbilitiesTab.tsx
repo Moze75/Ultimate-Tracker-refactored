@@ -205,77 +205,130 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
 const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
    const secondarySpellSlotsInitialized = useRef(false);
 
-   useEffect(() => {
-  const initializeSpellSlots = async () => {
-    if (!player.id) return;
+    useEffect(() => {
+    const initializeSpellSlots = async () => {
+      if (!player.id) return;
 
-    // 1️⃣ Initialiser spell_slots pour la classe principale si c'est un lanceur
-    const spellcasters = ['Magicien', 'Ensorceleur', 'Barde', 'Clerc', 'Druide', 'Paladin', 'Rôdeur', 'Occultiste'];
-    
-    if (player.class && spellcasters.includes(player.class)) {
-      const hasSpellSlots = player.spell_slots && Object.keys(player.spell_slots).some(key => {
-        if (key.startsWith('level') && !key.startsWith('used')) {
-          return (player.spell_slots as any)[key] > 0;
-        }
-        return false;
-      });
+      const spellcasters = [
+        'Magicien',
+        'Ensorceleur',
+        'Barde',
+        'Clerc',
+        'Druide',
+        'Paladin',
+        'Rôdeur',
+        'Occultiste',
+      ];
 
-      if (!hasSpellSlots && !spellSlotsInitialized.current) {
-        spellSlotsInitialized.current = true;
-        try {
-          const newSpellSlots = getSpellSlotsByLevel(player.class, player.level || 1, player.spell_slots);
+      /* 1️⃣ Classe principale : initialiser une seule fois par personnage */
+      if (player.class && spellcasters.includes(player.class)) {
+        const hasSpellSlots =
+          player.spell_slots &&
+          Object.keys(player.spell_slots).some((key) => {
+            if (key.startsWith('level') && !key.startsWith('used')) {
+              return (player.spell_slots as any)[key] > 0;
+            }
+            return false;
+          });
 
-          const { error } = await supabase
-            .from('players')
-            .update({ spell_slots: newSpellSlots })
-            .eq('id', player.id);
+        // Considérer aussi les pact slots principaux comme "déjà initialisés"
+        const hasPrimaryPactSlots =
+          !!player.spell_slots &&
+          (player.spell_slots as any).pact_slots &&
+          (player.spell_slots as any).pact_slots! > 0;
 
-          if (error) throw error;
+        if (!hasSpellSlots && !hasPrimaryPactSlots && !spellSlotsInitialized.current) {
+          spellSlotsInitialized.current = true;
+          try {
+            const newSpellSlots = getSpellSlotsByLevel(
+              player.class,
+              player.level || 1,
+              player.spell_slots
+            );
 
-          onUpdate({ ...player, spell_slots: newSpellSlots });
-          console.log('[AbilitiesTab] Emplacements de sorts initialisés:', newSpellSlots);
-        } catch (err) {
-          console.error('[AbilitiesTab] Erreur lors de l\'initialisation des spell_slots:', err);
-          spellSlotsInitialized.current = false;
-        }
-      }
-    }
+            const { error } = await supabase
+              .from('players')
+              .update({ spell_slots: newSpellSlots })
+              .eq('id', player.id);
 
-    // 2️⃣ ✅ NOUVEAU : Initialiser secondary_spell_slots pour la classe secondaire si c'est un lanceur
-    if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
-      const hasSecondarySpellSlots = player.secondary_spell_slots && Object.keys(player.secondary_spell_slots).some(key => {
-        if (key.startsWith('level') && !key.startsWith('used')) {
-          return (player.secondary_spell_slots as any)[key] > 0;
-        }
-        return false;
-      });
+            if (error) throw error;
 
-      if (!hasSecondarySpellSlots) {
-        try {
-          const newSecondarySpellSlots = getSpellSlotsByLevel(
-            player.secondary_class, 
-            player.secondary_level || 1, 
-            player.secondary_spell_slots
-          );
-
-          const { error } = await supabase
-            .from('players')
-            .update({ secondary_spell_slots: newSecondarySpellSlots })
-            .eq('id', player.id);
-
-          if (error) throw error;
-
-          onUpdate({ ...player, secondary_spell_slots: newSecondarySpellSlots });
-          console.log('[AbilitiesTab] Emplacements de sorts secondaires initialisés:', newSecondarySpellSlots);
-        } catch (err) {
-          console.error('[AbilitiesTab] Erreur lors de l\'initialisation des secondary_spell_slots:', err);
+            onUpdate({ ...player, spell_slots: newSpellSlots });
+            console.log('[AbilitiesTab] Emplacements de sorts initialisés (principal):', newSpellSlots);
+          } catch (err) {
+            console.error(
+              "[AbilitiesTab] Erreur lors de l'initialisation des spell_slots:",
+              err
+            );
+            spellSlotsInitialized.current = false;
+          }
         }
       }
-    }
-  };
 
-  initializeSpellSlots();
-}, [player.id, player.class, player.level, player.secondary_class, player.secondary_level, player.spell_slots, player.secondary_spell_slots, onUpdate]);
+      /* 2️⃣ Classe secondaire : initialiser une seule fois, et respecter les pact slots déjà présents */
+      if (player.secondary_class && spellcasters.includes(player.secondary_class)) {
+        const hasSecondarySpellSlots =
+          player.secondary_spell_slots &&
+          Object.keys(player.secondary_spell_slots).some((key) => {
+            if (key.startsWith('level') && !key.startsWith('used')) {
+              return (player.secondary_spell_slots as any)[key] > 0;
+            }
+            return false;
+          });
+
+        // 🔑 IMPORTANT : si des pact_slots existent en secondaire, on considère que c'est déjà initialisé
+        const hasSecondaryPactSlots =
+          !!player.secondary_spell_slots &&
+          (player.secondary_spell_slots as any).pact_slots &&
+          (player.secondary_spell_slots as any).pact_slots! > 0;
+
+        if (
+          !hasSecondarySpellSlots &&
+          !hasSecondaryPactSlots &&
+          !secondarySpellSlotsInitialized.current
+        ) {
+          secondarySpellSlotsInitialized.current = true;
+          try {
+            const newSecondarySpellSlots = getSpellSlotsByLevel(
+              player.secondary_class,
+              player.secondary_level || 1,
+              player.secondary_spell_slots
+            );
+
+            const { error } = await supabase
+              .from('players')
+              .update({ secondary_spell_slots: newSecondarySpellSlots })
+              .eq('id', player.id);
+
+            if (error) throw error;
+
+            onUpdate({ ...player, secondary_spell_slots: newSecondarySpellSlots });
+            console.log(
+              '[AbilitiesTab] Emplacements de sorts secondaires initialisés:',
+              newSecondarySpellSlots
+            );
+          } catch (err) {
+            console.error(
+              "[AbilitiesTab] Erreur lors de l'initialisation des secondary_spell_slots:",
+              err
+            );
+            secondarySpellSlotsInitialized.current = false;
+          }
+        }
+      }
+    };
+
+    initializeSpellSlots();
+  }, [
+    player.id,
+    player.class,
+    player.level,
+    player.secondary_class,
+    player.secondary_level,
+    player.spell_slots,
+    player.secondary_spell_slots,
+    onUpdate,
+  ]);
    
   
 useEffect(() => {
