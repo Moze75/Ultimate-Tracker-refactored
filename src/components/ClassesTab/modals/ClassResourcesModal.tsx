@@ -525,41 +525,77 @@ case 'Magicien':
         break;
       }
 
-    case 'Occultiste': {
+        case 'Occultiste': {
       if ((resources as any)?.pact_magic && player) {
-        const spellSlots = (player as any).spell_slots || {};
-        const pactSlots = spellSlots.pact_slots || 0;
-        const usedPactSlots = spellSlots.used_pact_slots || 0;
-        const pactLevel = spellSlots.pact_level || 1;
+        // 🔍 Déterminer si on édite l'occultiste principal ou secondaire
+        const isPrimaryWarlock = player.class === playerClass;
+        const isSecondaryWarlock = player.secondary_class === playerClass;
 
-        if (pactSlots > 0) {
-          items.push(
-            <ResourceBlock
-              key="pact_slots"
-              icon={<Sparkles size={20} />}
-              label={`Emplacements de pacte (Niv. ${pactLevel})`}
-              total={pactSlots}
-              used={usedPactSlots}
-              onUse={() => {
-                const nextSlots = {
-                  ...spellSlots,
-                  used_pact_slots: Math.min(usedPactSlots + 1, pactSlots)
-                };
-                onUpdateResource('pact_slots' as any, nextSlots);
-              }}
-              onRestore={() => {
-                const nextSlots = {
-                  ...spellSlots,
-                  used_pact_slots: Math.max(0, usedPactSlots - 1)
-                };
-                onUpdateResource('pact_slots' as any, nextSlots);
-              }}
-              onUpdateTotal={() => { /* no-op: géré par le niveau */ }}
-              color="purple"
-              hideEdit
-              onGlobalPulse={onPulseScreen}
-            />
-          );
+        // Choisir la bonne source de slots
+        const warlockSlots = isPrimaryWarlock
+          ? ((player as any).spell_slots || {})
+          : isSecondaryWarlock
+          ? ((player as any).secondary_spell_slots || {})
+          : null;
+
+        if (warlockSlots) {
+          const pactSlots = warlockSlots.pact_slots || 0;
+          const usedPactSlots = warlockSlots.used_pact_slots || 0;
+          const pactLevel = warlockSlots.pact_level || 1;
+
+          if (pactSlots > 0) {
+            items.push(
+              <ResourceBlock
+                key="pact_slots"
+                icon={<Sparkles size={20} />}
+                label={`Emplacements de pacte (Niv. ${pactLevel})`}
+                total={pactSlots}
+                used={usedPactSlots}
+                onUse={() => {
+                  const nextSlots = {
+                    ...warlockSlots,
+                    used_pact_slots: Math.min(usedPactSlots + 1, pactSlots),
+                  };
+
+                  if (isPrimaryWarlock) {
+                    onUpdateResource('pact_slots' as any, {
+                      ...(player as any).spell_slots,
+                      ...nextSlots,
+                    });
+                  } else if (isSecondaryWarlock) {
+                    onUpdateResource('pact_slots' as any, {
+                      ...(player as any).secondary_spell_slots,
+                      ...nextSlots,
+                    });
+                  }
+                }}
+                onRestore={() => {
+                  const nextSlots = {
+                    ...warlockSlots,
+                    used_pact_slots: Math.max(0, usedPactSlots - 1),
+                  };
+
+                  if (isPrimaryWarlock) {
+                    onUpdateResource('pact_slots' as any, {
+                      ...(player as any).spell_slots,
+                      ...nextSlots,
+                    });
+                  } else if (isSecondaryWarlock) {
+                    onUpdateResource('pact_slots' as any, {
+                      ...(player as any).secondary_spell_slots,
+                      ...nextSlots,
+                    });
+                  }
+                }}
+                onUpdateTotal={() => {
+                  /* no-op: total géré par le niveau d'occultiste */
+                }}
+                color="purple"
+                hideEdit
+                onGlobalPulse={onPulseScreen}
+              />
+            );
+          }
         }
       }
       break;
