@@ -95,27 +95,40 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
     const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
-    if (damage <= 0) return;
+    console.log('[HPManagerConnected] applyDamage called, damageValue=', damageValue, 'parsed=', damage);
+    if (damage <= 0) {
+      console.log('[HPManagerConnected] applyDamage aborted: damage <= 0');
+      return;
+    }
 
     // ✅ Jouer le son AVANT les effets visuels
     playSwordSliceSound();
     triggerBloodSplash(damage);
 
-    // 1) Calcul local des nouveaux HP (même logique que avant, mais dans un helper)
+    console.log('[HPManagerConnected] BEFORE computeDamage', {
+      current_hp: player.current_hp,
+      temporary_hp: player.temporary_hp,
+    });
+
     const { current_hp, temporary_hp } = computeDamage(player, damage);
 
+    console.log('[HPManagerConnected] AFTER computeDamage', { current_hp, temporary_hp });
+
     try {
-      // 2) Mise à jour offline-first (snapshot + queue) + player optimistic
       const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
         current_hp,
         temporary_hp,
       });
 
-      // 3) Mise à jour immédiate de l'UI
-      onUpdate(optimisticPlayer);
+      console.log('[HPManagerConnected] onUpdate (damage)', {
+        before: { current_hp: player.current_hp, temporary_hp: player.temporary_hp },
+        after: { current_hp, temporary_hp },
+      });
 
-      // 4) Synchro Supabase en arrière-plan (sans bloquer l'UX)
+      onUpdate(optimisticPlayer);
+      console.log('[HPManagerConnected] onUpdate finished');
       updateHP(current_hp, temporary_hp);
+      console.log('[HPManagerConnected] updateHP fired');
     } catch (e) {
       console.error('[HPManagerConnected] Erreur applyDamage offline:', e);
     }
@@ -129,11 +142,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
 
     toast.success(`${damage} dégâts appliqués`);
-
-    if (player.is_concentrating) {
-      const dc = Math.max(10, Math.floor(damage / 2));
-      onConcentrationCheck(dc);
-    }
   };
 
   const applyHealing = async () => {
