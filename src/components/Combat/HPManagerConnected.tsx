@@ -177,11 +177,28 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const tempHP = parseInt(tempHpValue) || 0;
     if (tempHP <= 0) return;
 
-    const newTempHP = Math.max(player.temporary_hp, tempHP);
-    await updateHP(player.current_hp, newTempHP);
+    // 1) Calcul local des PV temporaires
+    const { current_hp, temporary_hp } = computeTempHP(player, tempHP);
+
+    try {
+      // 2) Mise à jour offline-first + player optimistic
+      const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
+        current_hp,
+        temporary_hp,
+      });
+
+      // 3) Mise à jour immédiate de l'UI
+      onUpdate(optimisticPlayer);
+
+      // 4) Synchro Supabase en arrière-plan
+      updateHP(current_hp, temporary_hp);
+    } catch (e) {
+      console.error('[HPManagerConnected] Erreur applyTempHP offline:', e);
+    }
+
     setTempHpValue('');
 
-    toast.success(`${newTempHP} PV temporaires appliqués`);
+    toast.success(`${temporary_hp} PV temporaires appliqués`);
   };
 
   return (
