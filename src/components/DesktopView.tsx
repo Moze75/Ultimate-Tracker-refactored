@@ -3,10 +3,10 @@ import { LogOut } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
-import { DiceSettingsModal } from './DiceSettingsModal';
+import { DiceSettingsModal } from './DiceSettingsModal'; 
 import { DesktopHeader } from './PlayerProfile/DesktopHeader';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
-import { Horizont  alAbilityScores } from './HorizontalAbilityScores';
+import { HorizontalAbilityScores } from './HorizontalAbilityScores';
 import { StandaloneSkillsSection } from './StandaloneSkillsSection';
 import { TabbedPanel } from './TabbedPanel';
 import { DiceRollContext } from './ResponsiveGameLayout';
@@ -159,7 +159,7 @@ export function DesktopView({
             scrollbarGutter: 'stable',
           }}
         >
-          <div className="max-w-[1280px] mx-auto space-y-4"> 
+          <div className="max-w-[1280px] mx-auto space-y-4">
 
             {/* Header */}
             <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
