@@ -93,7 +93,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
   };
 
-  const applyDamage = async () => {
+    const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
     if (damage <= 0) return;
 
@@ -101,22 +101,25 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     playSwordSliceSound();
     triggerBloodSplash(damage);
 
-    let newCurrentHP = player.current_hp;
-    let newTempHP = player.temporary_hp;
+    // 1) Calcul local des nouveaux HP (même logique que avant, mais dans un helper)
+    const { current_hp, temporary_hp } = computeDamage(player, damage);
 
-    if (newTempHP > 0) {
-      if (damage >= newTempHP) {
-        const remainingDamage = damage - newTempHP;
-        newTempHP = 0;
-        newCurrentHP = Math.max(0, newCurrentHP - remainingDamage);
-      } else {
-        newTempHP = newTempHP - damage;
-      }
-    } else {
-      newCurrentHP = Math.max(0, newCurrentHP - damage);
+    try {
+      // 2) Mise à jour offline-first (snapshot + queue) + player optimistic
+      const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
+        current_hp,
+        temporary_hp,
+      });
+
+      // 3) Mise à jour immédiate de l'UI
+      onUpdate(optimisticPlayer);
+
+      // 4) Synchro Supabase en arrière-plan (sans bloquer l'UX)
+      updateHP(current_hp, temporary_hp);
+    } catch (e) {
+      console.error('[HPManagerConnected] Erreur applyDamage offline:', e);
     }
 
-    await updateHP(newCurrentHP, newTempHP);
     setDamageValue('');
 
     const hpElement = document.querySelector('.hp-bar');
