@@ -194,11 +194,16 @@ export function ResponsiveGameLayout({
         </div>
       </div>
 
-      {/* Grille responsive */}
+         {/* Grille responsive */}
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+        // 🔧 Breakpoints abaissés pour garder le layout "desktop view" sur PC + tablettes
+        // - lg : dès que la largeur >= 1200
+        // - md : entre 996 et 1199
+        // - sm : entre 480 et 995
+        // - en-dessous de 480 : considéré comme "très petit" (vrais téléphones)
+        breakpoints={{ lg: 1200, md: 996, sm: 480 }}
         cols={{ lg: 12, md: 10, sm: 6 }}
         rowHeight={60}
         isDraggable={!isLocked}
@@ -209,7 +214,7 @@ export function ResponsiveGameLayout({
         preventCollision={false}
         margin={[16, 16]}
         containerPadding={[0, 0]}
-      > 
+      >
         {/* Les autres blocs */}
         {['profile', 'combat', 'class', 'abilities', 'stats', 'equipment'].map((key) => (
           <div
