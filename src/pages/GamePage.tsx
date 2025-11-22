@@ -363,11 +363,33 @@ const applyPlayerUpdate = useCallback(
       console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
       return;
     }
+
+    console.log('[GamePage] applyPlayerUpdate', {
+      before: {
+        current_hp: currentPlayer?.current_hp,
+        temporary_hp: currentPlayer?.temporary_hp,
+      },
+      after: {
+        current_hp: updated.current_hp,
+        temporary_hp: updated.temporary_hp,
+      },
+    });
+
     setCurrentPlayer(updated);
-    try { onUpdateCharacter?.(updated); } catch {}
-    try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated)); } catch {}
+
+    try {
+      onUpdateCharacter?.(updated);
+    } catch (e) {
+      console.warn('[GamePage] onUpdateCharacter threw', e);
+    }
+
+    try {
+      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('[GamePage] localStorage snapshot failed', e);
+    }
   },
-  [onUpdateCharacter, isExiting]
+  [onUpdateCharacter, isExiting, currentPlayer]
 );
 
     // 🆕 Fonction pour changer et sauvegarder le fond d'écran
