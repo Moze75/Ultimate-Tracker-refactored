@@ -6,6 +6,14 @@ import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
 import { audioManager } from '../../utils/audioManager';
 
+// 🔁 NOUVEAU : service offline-first HP
+import {
+  applyHPUpdateOfflineFirst,
+  computeDamage,
+  computeHealing,
+  computeTempHP,
+} from '../../services/hpOfflineService';
+
 interface HPManagerConnectedProps {
   player: Player;
   onUpdate: (player: Player) => void;
@@ -28,7 +36,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
   const playHealingSound = () => {
     audioManager.play('/Sounds/Healing/Healing.mp3', 0.5);
   };
-
 
   const getWoundLevel = () => {
     const percentage = (totalHP / player.max_hp) * 100;
@@ -63,33 +70,51 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     return 'from-green-500 to-green-600';
   };
 
+  /**
+   * 🔁 updateHP : conserve la logique existante,
+   * mais ajoute une mise à jour offline/queue AVANT l’appel Supabase.
+   */
   const updateHP = async (newCurrentHP: number, newTempHP?: number) => {
     const clampedHP = Math.max(0, Math.min(player.max_hp, newCurrentHP));
     const clampedTempHP = Math.max(0, newTempHP ?? player.temporary_hp);
 
     try {
+      // 1) Mise à jour offline-first (optimistic + queue persistante)
+      const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
+        current_hp: clampedHP,
+        temporary_hp: clampedTempHP,
+      });
+
+      // On notifie tout de suite le parent avec la version optimistic
+      onUpdate(optimisticPlayer);
+
+      // 2) Appel Supabase existant (synchro directe si réseau OK)
       const updateData: any = { current_hp: clampedHP };
       if (newTempHP !== undefined) updateData.temporary_hp = clampedTempHP;
 
       const { error } = await supabase.from('players').update(updateData).eq('id', player.id);
       if (error) throw error;
 
-      onUpdate({ ...player, current_hp: clampedHP, temporary_hp: clampedTempHP });
+      // Optionnel : si tu veux forcer le player renvoyé par Supabase, tu peux faire un select ici
+      // et rappeler onUpdate, mais c'est souvent inutile pour ce cas.
+
     } catch (error) {
       console.error('Erreur lors de la mise à jour des PV:', error);
-      toast.error('Erreur lors de la mise à jour des PV');
+      // On évite d’effrayer l’utilisateur si c’est juste du offline :
+      // le service offline a déjà mis à jour localement + queue.
+      toast.error('Erreur lors de la synchronisation des PV (les valeurs locales sont sauvegardées).');
     }
   };
 
-    const applyDamage = async () => {
+  const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
     if (damage <= 0) return;
 
     // ✅ Jouer le son AVANT les effets visuels
     playSwordSliceSound();
-    
     triggerBloodSplash(damage);
 
+    // On garde ta logique de calcul, mais on pourrait aussi utiliser computeDamage(player, damage)
     let newCurrentHP = player.current_hp;
     let newTempHP = player.temporary_hp;
 
@@ -126,9 +151,10 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
-  // ✅ Jouer le son de guérison
+    // ✅ Jouer le son de guérison
     playHealingSound();
-    
+
+    // On garde ta logique, on pourrait aussi appeler computeHealing(player, healing)
     const newCurrentHP = Math.min(player.max_hp, player.current_hp + healing);
     await updateHP(newCurrentHP);
     setHealValue('');
@@ -146,6 +172,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const tempHP = parseInt(tempHpValue) || 0;
     if (tempHP <= 0) return;
 
+    // On garde ta logique, on pourrait aussi appeler computeTempHP(player, tempHP)
     const newTempHP = Math.max(player.temporary_hp, tempHP);
     await updateHP(player.current_hp, newTempHP);
     setTempHpValue('');
@@ -171,4 +198,4 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
       getHPBarColor={getHPBarColor}
     />
   );
-}  
+}
