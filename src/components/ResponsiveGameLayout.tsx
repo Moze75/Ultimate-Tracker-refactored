@@ -9,6 +9,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
+const FixedGridLayout = WidthProvider(ReactGridLayout);
 
 interface ResponsiveGameLayoutProps {
   player: Player;
