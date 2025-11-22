@@ -16,15 +16,13 @@ return 'desktop';
   useEffect(() => {
    const handleResize = () => {
       const width = window.innerWidth;
-      let newDeviceType: DeviceType;
+    let newDeviceType: DeviceType;
 
-      if (width < MOBILE_BREAKPOINT) {
-        newDeviceType = 'mobile';
-      } else if (width < DESKTOP_BREAKPOINT) {
-        newDeviceType = 'tablet';
-      } else {
-        newDeviceType = 'desktop';
-      }
+if (width < MOBILE_BREAKPOINT) {
+  newDeviceType = 'mobile';
+} else {
+  newDeviceType = 'desktop';
+}
 
       setDeviceType((prev) => (prev === newDeviceType ? prev : newDeviceType));
     };
