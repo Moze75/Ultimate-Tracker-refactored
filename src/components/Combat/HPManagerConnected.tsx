@@ -136,7 +136,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
   };
 
-    const applyHealing = async () => {
+  const applyHealing = async () => {
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
@@ -171,6 +171,17 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
 
     toast.success(`${healing} PV récupérés`);
+  };
+
+  const applyTempHP = async () => {
+    const tempHP = parseInt(tempHpValue) || 0;
+    if (tempHP <= 0) return;
+
+    const newTempHP = Math.max(player.temporary_hp, tempHP);
+    await updateHP(player.current_hp, newTempHP);
+    setTempHpValue('');
+
+    toast.success(`${newTempHP} PV temporaires appliqués`);
   };
 
   return (
