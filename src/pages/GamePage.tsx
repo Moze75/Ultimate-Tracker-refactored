@@ -1006,7 +1006,7 @@ return (
       const showAsStatic = !isInteracting && !animating;
 
       /* ---------------- Mode Desktop (sans grille) ---------------- */
-      if (deviceType === 'desktop' && !isGridMode && currentPlayer) {
+      if ((deviceType === 'desktop' || deviceType === 'tablet') && !isGridMode && currentPlayer) {
         return (
           <>
             <div className="fixed top-4 right-4 z-50"></div>
