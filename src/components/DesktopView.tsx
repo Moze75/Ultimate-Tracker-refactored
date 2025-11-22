@@ -162,7 +162,7 @@ export function DesktopView({
   <div className="max-w-[1800px] mx-auto space-y-4">
 
             {/* Header */}
-// APRÈS
+
 <div className="col-span-8 flex">
   <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[1200px]">
     <TabbedPanel
