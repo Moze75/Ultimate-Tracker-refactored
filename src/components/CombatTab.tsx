@@ -631,16 +631,22 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 
   return (
     <div className="space-y-6">
-      {deviceType !== 'desktop' && (
-        <HPManagerConnected
-          player={player}
-          onUpdate={onUpdate}
-          onConcentrationCheck={(dc) => {
-            setConcentrationDC(dc);
-            setShowConcentrationCheck(true);
-          }}
-        />
-      )}
+  {deviceType !== 'desktop' && (
+  <HPManagerConnected
+    player={player}
+    onUpdate={(updatedPlayer) => {
+      console.log('[CombatTab] onUpdate from HPManagerConnected', {
+        before: { current_hp: player.current_hp, temporary_hp: player.temporary_hp },
+        after: { current_hp: updatedPlayer.current_hp, temporary_hp: updatedPlayer.temporary_hp },
+      });
+      onUpdate(updatedPlayer);
+    }}
+    onConcentrationCheck={(dc) => {
+      setConcentrationDC(dc);
+      setShowConcentrationCheck(true);
+    }}
+  />
+)}
 
       <AttackSection
         attacks={attacks}
