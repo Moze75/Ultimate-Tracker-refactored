@@ -69,20 +69,23 @@ export function DiceSettingsModal({
     removeEntry(id);
   };
  
-  return ( 
-    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+return ( 
+  <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div>
             <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-700 rounded transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
+            <p className="text-xs text-gray-500 mt-1">Version 1.1</p>
           </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-700 rounded transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
 
           {/* Tabs */}
           <div className="flex border-b border-gray-700">
