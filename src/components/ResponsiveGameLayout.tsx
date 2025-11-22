@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
+import { Responsive, WidthProvider, Layout, ReactGridLayout } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, Grid3x3, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Player } from '../types/dnd';
