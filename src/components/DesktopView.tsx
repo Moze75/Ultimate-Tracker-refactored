@@ -159,7 +159,7 @@ export function DesktopView({
     scrollbarGutter: 'stable',
   }}
 >
-  <div className="max-w-[1600px] mx-auto space-y-4">
+  <div className="max-w-[1800px] mx-auto space-y-4">
 
             {/* Header */}
             <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
