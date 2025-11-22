@@ -201,21 +201,17 @@ export function ResponsiveGameLayout({
         </div>
       </div>
 
-         {/* Grille responsive */}
-      <ResponsiveGridLayout
+           {/* Grille FIXE (non responsive) */}
+      <FixedGridLayout
         className="layout"
-        layouts={layouts}
-        // 🔧 Breakpoints abaissés pour garder le layout "desktop view" sur PC + tablettes
-        // - lg : dès que la largeur >= 1200
-        // - md : entre 996 et 1199
-        // - sm : entre 480 et 995
-        // - en-dessous de 480 : considéré comme "très petit" (vrais téléphones)
-        breakpoints={{ lg: 1200, md: 996, sm: 480 }}
-        cols={{ lg: 12, md: 10, sm: 6 }}
+        // 🧱 On n'utilise plus de breakpoints : un seul layout, quelle que soit la taille de la fenêtre
+        layout={layouts.lg || layouts.md || layouts.sm || []}
+        cols={12}
         rowHeight={60}
+        width={1200} // largeur de référence pour calculer les colonnes
         isDraggable={!isLocked}
         isResizable={!isLocked}
-        onLayoutChange={handleLayoutChange}
+        onLayoutChange={(layout) => handleLayoutChange(layout, { lg: layout })}
         draggableHandle=".drag-handle"
         compactionType="vertical"
         preventCollision={false}
@@ -265,7 +261,7 @@ export function ResponsiveGameLayout({
             </div>
           </div>
         ))}
-      </ResponsiveGridLayout>
+      </FixedGridLayout>
 
       {/* Styles pour la scrollbar personnalisée */}
       <style>{`
