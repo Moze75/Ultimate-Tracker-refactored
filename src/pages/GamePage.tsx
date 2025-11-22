@@ -165,17 +165,18 @@ useEffect(() => {
 
   console.log('🔄 Mode polling activé pour player:', currentPlayer.id);
 
-  const checkForNewItems = async () => {
-  if (!navigator.onLine) {
-    // offline: ne spamme pas Supabase
-    return;
-  }
-  try {
-    const { data, error } = await supabase
-      .from('inventory_items')
-      .select('*')
-      .eq('player_id', currentPlayer.id)
-      .order('created_at', { ascending: false });
+   const checkForNewItems = async () => {
+    // 🔇 Offline : ne pas spammer Supabase
+    if (!navigator.onLine) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('*')
+        .eq('player_id', currentPlayer.id)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('❌ Erreur fetch inventory:', error);
