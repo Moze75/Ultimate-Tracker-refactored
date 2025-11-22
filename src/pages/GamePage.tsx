@@ -367,7 +367,7 @@ useEffect(() => {
   }, []);
 
   /* ---------------- Update player ---------------- */
-const applyPlayerUpdate = useCallback( 
+const applyPlayerUpdate = useCallback(
   (updated: Player) => {
     if (isExiting) {
       console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
@@ -387,6 +387,11 @@ const applyPlayerUpdate = useCallback(
 
     setCurrentPlayer(updated);
 
+    // 🧩 Forcer un petit re-render global pour "réveiller" l'UI sur mobile/PWA
+    try {
+      bumpRefreshTick();
+    } catch {}
+
     try {
       onUpdateCharacter?.(updated);
     } catch (e) {
@@ -399,7 +404,7 @@ const applyPlayerUpdate = useCallback(
       console.warn('[GamePage] localStorage snapshot failed', e);
     }
   },
-  [onUpdateCharacter, isExiting, currentPlayer]
+  [onUpdateCharacter, isExiting, currentPlayer, bumpRefreshTick]
 );
 
     // 🆕 Fonction pour changer et sauvegarder le fond d'écran
