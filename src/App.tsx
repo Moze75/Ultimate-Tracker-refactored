@@ -204,6 +204,38 @@ useEffect(() => {
     };
   }, [selectedCharacter]);
 
+  // ✅ HP offline : appliquer snapshot local + flush de la queue quand un perso est sélectionné / restauré
+  useEffect(() => {
+    if (!selectedCharacter) return;
+
+    try {
+      const localSnapshot = getPlayerSnapshot(selectedCharacter.id);
+      if (localSnapshot) {
+        const merged: Player = {
+          ...selectedCharacter,
+          current_hp: localSnapshot.current_hp,
+          temporary_hp: localSnapshot.temporary_hp,
+          max_hp: (localSnapshot as any).max_hp ?? selectedCharacter.max_hp,
+        };
+        setSelectedCharacter(merged);
+        console.log('[App] 💾 HP restaurés depuis snapshot local pour', merged.name);
+      }
+    } catch (e) {
+      console.warn('[App] Erreur application snapshot HP local:', e);
+    }
+
+    const sync = async () => {
+      try {
+        if (navigator.onLine) {
+          await flushHPQueue();
+        }
+      } catch (e) {
+        console.warn('[App] Erreur flushHPQueue init:', e);
+      }
+    };
+    sync();
+  }, [selectedCharacter?.id]);
+  
   // Sauvegarder le personnage sélectionné
   useEffect(() => {
     if (selectedCharacter) {
