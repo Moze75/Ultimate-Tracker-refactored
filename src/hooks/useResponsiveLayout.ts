@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export type DeviceType = 'mobile' | 'desktop';
 
-const MOBILE_BREAKPOINT = 700;
+const MOBILE_BREAKPOINT = 1024;
 const DESKTOP_BREAKPOINT = 1024;
 
 export function useResponsiveLayout(): DeviceType {
