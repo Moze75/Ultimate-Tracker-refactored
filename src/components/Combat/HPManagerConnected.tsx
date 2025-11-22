@@ -74,7 +74,12 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
    * 🔁 updateHP : NE gère plus l'UI ni la queue, uniquement la synchro Supabase.
    * L'update locale est faite dans applyDamage/applyHealing/applyTempHP via applyHPUpdateOfflineFirst.
    */
-  const updateHP = async (newCurrentHP: number, newTempHP?: number) => {
+   const updateHP = async (newCurrentHP: number, newTempHP?: number) => {
+    // 🔇 Offline : la queue + applyHPUpdateOfflineFirst suffisent, pas de patch direct
+    if (!navigator.onLine) {
+      return;
+    }
+
     const clampedHP = Math.max(0, Math.min(player.max_hp, newCurrentHP));
     const clampedTempHP = Math.max(0, newTempHP ?? player.temporary_hp);
 
