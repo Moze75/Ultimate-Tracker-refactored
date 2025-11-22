@@ -297,6 +297,17 @@ useEffect(() => {
     };
   }, []);
 
+    // ✅ HP offline : flush de la queue HP quand le réseau revient
+  useEffect(() => {
+    const handleOnline = () => {
+      flushHPQueue().catch((e) => {
+        console.warn('[App] Erreur flushHPQueue (online event):', e);
+      });
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
   // ✅ MODIFIÉ : Écran d'erreur de chargement
   if (componentLoadError) {
     return (
