@@ -159,22 +159,21 @@ export function DesktopView({
     scrollbarGutter: 'stable',
   }}
 >
-  <div className="max-w-[1800px] mx-auto space-y-4">
+  <div className="max-w-[1600px] mx-auto space-y-4"> 
 
             {/* Header */}
-
-<div className="col-span-8 flex">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full flex flex-col max-h-[1200px]">
-    <TabbedPanel
-      player={player}
-      inventory={inventory}
-      onPlayerUpdate={onPlayerUpdate}
-      onInventoryUpdate={onInventoryUpdate}
-      classSections={classSections}
-      hiddenTabs={['bag']}
-    />
-  </div>
-</div>
+            <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
+              <DesktopHeader
+                player={player}
+                inventory={inventory}
+                onUpdate={onPlayerUpdate}
+                onEdit={() => setSettingsOpen(true)}
+                onOpenCampaigns={() => setShowCampaignModal(true)}
+                onOpenDiceSettings={() => setShowDiceSettings(true)}
+                activeTooltip={activeTooltip}
+                setActiveTooltip={setActiveTooltip}
+              />
+            </div>
             
             {/* Grille HP + Abilities */}
             <div className="grid grid-cols-12 gap-4">
