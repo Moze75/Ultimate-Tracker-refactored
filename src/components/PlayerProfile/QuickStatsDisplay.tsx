@@ -192,7 +192,7 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
             </>
           )}
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-1 text-center -ml-7">VIT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-7">VIT</div>
       </div>
 
       {/* Initiative */}
@@ -205,7 +205,7 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
             {stats.initiative >= 0 ? '+' : ''}{stats.initiative}
           </div>
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-1 text-center -ml-4">INIT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-4">INIT</div>
       </div>
 
       {/* Maîtrise */}
