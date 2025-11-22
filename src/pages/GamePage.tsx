@@ -1030,7 +1030,10 @@ return (
 
       /* ---------------- Mode normal (onglets/grille) ---------------- */
       return (
-        <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
+        <div
+          key={refreshTick} // 🧩 force un rafraîchissement discret quand refreshTick change
+          className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor"
+        >
           {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
           {deviceType === 'desktop' && !isGridMode && (
             <div className="fixed top-4 right-4 z-50">
