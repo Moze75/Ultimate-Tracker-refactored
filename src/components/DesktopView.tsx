@@ -153,13 +153,13 @@ export function DesktopView({
       <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-        <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
-          style={{
-            scrollbarGutter: 'stable',
-          }}
-        >
-          <div className="max-w-[1280px] mx-auto space-y-4">
+<div 
+  className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
+  style={{
+    scrollbarGutter: 'stable',
+  }}
+>
+  <div className="max-w-[1600px] mx-auto space-y-4">
 
             {/* Header */}
             <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
