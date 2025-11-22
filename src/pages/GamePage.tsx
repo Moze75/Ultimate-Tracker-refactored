@@ -357,7 +357,7 @@ useEffect(() => {
   }, []);
 
   /* ---------------- Update player ---------------- */
-const applyPlayerUpdate = useCallback(
+const applyPlayerUpdate = useCallback( 
   (updated: Player) => {
     if (isExiting) {
       console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
