@@ -1,37 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
-type DeviceType = 'mobile' | 'tablet' | 'desktop';
+export type DeviceType = 'mobile' | 'desktop';
+
+const DESKTOP_BREAKPOINT = 1024;
 
 export function useResponsiveLayout(): DeviceType {
   const [deviceType, setDeviceType] = useState<DeviceType>(() => {
-    if (typeof window === 'undefined') {
-      return 'desktop';
-    }
-    const width = window.innerWidth;
-    if (width < 480) return 'mobile';
-    if (width < 1024) return 'tablet';
-    return 'desktop';
+    if (typeof window === 'undefined') return 'mobile';
+    return window.innerWidth >= DESKTOP_BREAKPOINT ? 'desktop' : 'mobile';
   });
 
   useEffect(() => {
     const handleResize = () => {
-      const width = window.innerWidth;
-
-      let next: DeviceType;
-      if (width < 480) next = 'mobile';
-      else if (width < 1024) next = 'tablet';
-      else next = 'desktop';
-
-      setDeviceType((prev) => (prev === next ? prev : next));
+      const newDeviceType = window.innerWidth >= DESKTOP_BREAKPOINT ? 'desktop' : 'mobile';
+      setDeviceType(newDeviceType);
     };
-
-    // Appel immédiat pour être sûr de coller à la largeur actuelle
-    handleResize();
 
     window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return deviceType;
