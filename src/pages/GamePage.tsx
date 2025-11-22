@@ -107,6 +107,12 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
+    // 🧩 Petit tick utilisé pour forcer un re-render silencieux (surtout utile sur mobile/PWA)
+  const [refreshTick, setRefreshTick] = useState(0);
+  const bumpRefreshTick = useCallback(() => {
+    setRefreshTick((t) => t + 1);
+  }, []);
+
     // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
