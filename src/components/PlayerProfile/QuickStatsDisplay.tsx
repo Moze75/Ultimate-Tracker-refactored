@@ -216,9 +216,9 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
         >
           <div className="text-lg font-bold text-gray-100">
             +{calculatedProficiencyBonus}
-          </div>
+          </div> 
         </div>
-        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-1 text-center -ml-4">MAÎT</div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-1 text-center -ml-6">MAÎT</div>
       </div>
     </div>
   );
