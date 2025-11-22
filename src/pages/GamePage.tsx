@@ -107,12 +107,6 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
-    // 🧩 Petit tick utilisé pour forcer un re-render silencieux (surtout utile sur mobile/PWA)
-  const [refreshTick, setRefreshTick] = useState(0);
-  const bumpRefreshTick = useCallback(() => {
-    setRefreshTick((t) => t + 1);
-  }, []);
-
     // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
@@ -165,18 +159,17 @@ useEffect(() => {
 
   console.log('🔄 Mode polling activé pour player:', currentPlayer.id);
 
-   const checkForNewItems = async () => {
-    // 🔇 Offline : ne pas spammer Supabase
-    if (!navigator.onLine) {
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select('*')
-        .eq('player_id', currentPlayer.id)
-        .order('created_at', { ascending: false });
+  const checkForNewItems = async () => {
+  if (!navigator.onLine) {
+    // offline: ne spamme pas Supabase
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .eq('player_id', currentPlayer.id)
+      .order('created_at', { ascending: false });
 
       if (error) {
         console.error('❌ Erreur fetch inventory:', error);
@@ -368,7 +361,7 @@ useEffect(() => {
   }, []);
 
   /* ---------------- Update player ---------------- */
-const applyPlayerUpdate = useCallback(
+const applyPlayerUpdate = useCallback( 
   (updated: Player) => {
     if (isExiting) {
       console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
@@ -388,11 +381,6 @@ const applyPlayerUpdate = useCallback(
 
     setCurrentPlayer(updated);
 
-    // 🧩 Forcer un petit re-render global pour "réveiller" l'UI sur mobile/PWA
-    try {
-      bumpRefreshTick();
-    } catch {}
-
     try {
       onUpdateCharacter?.(updated);
     } catch (e) {
@@ -405,7 +393,7 @@ const applyPlayerUpdate = useCallback(
       console.warn('[GamePage] localStorage snapshot failed', e);
     }
   },
-  [onUpdateCharacter, isExiting, currentPlayer, bumpRefreshTick]
+  [onUpdateCharacter, isExiting, currentPlayer]
 );
 
     // 🆕 Fonction pour changer et sauvegarder le fond d'écran
@@ -1006,7 +994,7 @@ return (
       const showAsStatic = !isInteracting && !animating;
 
       /* ---------------- Mode Desktop (sans grille) ---------------- */
-      if ((deviceType === 'desktop' || deviceType === 'tablet') && !isGridMode && currentPlayer) {
+      if (deviceType === 'desktop' && !isGridMode && currentPlayer) {
         return (
           <>
             <div className="fixed top-4 right-4 z-50"></div>
@@ -1036,15 +1024,7 @@ return (
 
       /* ---------------- Mode normal (onglets/grille) ---------------- */
       return (
-        <div
-          key={refreshTick} // 🧩 force un rafraîchissement discret quand refreshTick change
-          className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor overflow-x-auto"
-          style={{
-            // 🔧 Largeur minimale "desktop" incompressible
-            // Si la fenêtre est plus petite, un scroll horizontal apparaîtra
-            minWidth: 1024,
-          }}
-        >
+        <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
           {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
           {deviceType === 'desktop' && !isGridMode && (
             <div className="fixed top-4 right-4 z-50">
@@ -1249,7 +1229,7 @@ return (
     />
   );
 })()}
-  </DiceRollContext.Provider> 
+  </DiceRollContext.Provider>
 );
 }
 
