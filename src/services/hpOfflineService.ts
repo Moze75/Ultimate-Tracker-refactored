@@ -1,7 +1,7 @@
 import type { Player } from '../types/dnd';
 import { enqueueHPUpdate, flushHPQueue, type HPUpdateAction } from './hpSyncQueue';
 import { setPlayerSnapshot } from './playerLocalStore';
-import { v4 as uuidv4 } from 'uuid';
+const uuidv4 = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 /**
  * Applique un changement de HP en local + l’enfile dans la queue pour synchro.
