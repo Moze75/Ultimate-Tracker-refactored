@@ -356,10 +356,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
       }
 
-      // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
+          // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         try {
           const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
+          const newFactory = new DiceFactory({
+            baseScale: effectiveSettings.baseScale * 100 / 6,
+            material: effectiveSettings.themeMaterial || 'plastic',
+          });
           
           // ✅ Appliquer le nouveau colorset
           if (customColorset) {
