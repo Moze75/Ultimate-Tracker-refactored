@@ -8,10 +8,9 @@ const DESKTOP_BREAKPOINT = 1024;
 export function useResponsiveLayout(): DeviceType {
   const [deviceType, setDeviceType] = useState<DeviceType>(() => {
     if (typeof window === 'undefined') return 'desktop';
-    const width = window.innerWidth;
-    if (width < MOBILE_BREAKPOINT) return 'mobile';
-    if (width < DESKTOP_BREAKPOINT) return 'tablet';
-    return 'desktop';
+const width = window.innerWidth;
+if (width < MOBILE_BREAKPOINT) return 'mobile';
+return 'desktop';
   });
 
   useEffect(() => {
