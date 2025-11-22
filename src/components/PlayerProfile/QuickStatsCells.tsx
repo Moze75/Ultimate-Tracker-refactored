@@ -193,7 +193,7 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
       </div>
 
       <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
-        <div className="text-xl font-bold text-gray-100 mb-10">
+        <div className="text-xl font-bold text-gray-100 mb-1"> 
           +{calculatedProficiencyBonus}
         </div>
         <div className="text-xs uppercase tracking-wide text-gray-500">Maîtrise</div>
