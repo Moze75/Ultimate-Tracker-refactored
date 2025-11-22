@@ -5,6 +5,8 @@ import type { Player } from './types/dnd';
 import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
+import { flushHPQueue } from './services/hpSyncQueue';
+import { getPlayerSnapshot } from './services/playerLocalStore';
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
 const SKIP_AUTO_RESUME_ONCE = 'ut:skipAutoResumeOnce';
