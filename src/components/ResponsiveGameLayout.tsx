@@ -149,7 +149,7 @@ export function ResponsiveGameLayout({
       //   mais la grille gardera une structure "desktop".
       style={{ minWidth: 768 }}
     >
-      {/* Barre d'outils sticky */}
+      {/* Barre d'outils sticky */} 
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 p-3 mb-4 rounded-lg flex flex-wrap items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2">
           <button
