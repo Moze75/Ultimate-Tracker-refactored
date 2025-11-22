@@ -71,34 +71,25 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
   };
 
   /**
-   * 🔁 updateHP : conserve ta logique actuelle,
-   * mais ajoute une mise à jour offline/queue AVANT la synchro Supabase.
+   * 🔁 updateHP : NE gère plus l'UI ni la queue, uniquement la synchro Supabase.
+   * L'update locale est faite dans applyDamage/applyHealing/applyTempHP via applyHPUpdateOfflineFirst.
    */
   const updateHP = async (newCurrentHP: number, newTempHP?: number) => {
     const clampedHP = Math.max(0, Math.min(player.max_hp, newCurrentHP));
     const clampedTempHP = Math.max(0, newTempHP ?? player.temporary_hp);
 
     try {
-      // 1) Mise à jour offline-first (snapshot + queue)
-      const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
-        current_hp: clampedHP,
-        temporary_hp: clampedTempHP,
-      });
-
-      // On notifie tout de suite le parent avec la version optimistic
-      onUpdate(optimisticPlayer);
-
-      // 2) Logique Supabase existante (synchro immédiate si le réseau est OK)
       const updateData: any = { current_hp: clampedHP };
       if (newTempHP !== undefined) updateData.temporary_hp = clampedTempHP;
 
-      const { error } = await supabase.from('players').update(updateData).eq('id', player.id);
-      if (error) throw error;
+      const { error } = await supabase.from('players')
+        .update(updateData)
+        .eq('id', player.id);
 
+      if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des PV:', error);
-      // Ici, même en cas d’erreur Supabase, l’état local + queue sont déjà à jour.
-      toast.error("Erreur lors de la synchronisation des PV (les valeurs locales sont sauvegardées).");
+      console.warn('[HPManagerConnected] Erreur synchro Supabase (HP):', error);
+      // On ne rollback pas l'UI : les valeurs locales + la queue offline sont déjà correctes.
     }
   };
 
