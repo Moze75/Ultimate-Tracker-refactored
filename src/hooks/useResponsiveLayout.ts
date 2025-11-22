@@ -15,9 +15,19 @@ export function useResponsiveLayout(): DeviceType {
   });
 
   useEffect(() => {
-    const handleResize = () => {
-      const newDeviceType = window.innerWidth >= DESKTOP_BREAKPOINT ? 'desktop' : 'mobile';
-      setDeviceType(newDeviceType);
+   const handleResize = () => {
+      const width = window.innerWidth;
+      let newDeviceType: DeviceType;
+
+      if (width < MOBILE_BREAKPOINT) {
+        newDeviceType = 'mobile';
+      } else if (width < DESKTOP_BREAKPOINT) {
+        newDeviceType = 'tablet';
+      } else {
+        newDeviceType = 'desktop';
+      }
+
+      setDeviceType((prev) => (prev === newDeviceType ? prev : newDeviceType));
     };
 
     window.addEventListener('resize', handleResize);
