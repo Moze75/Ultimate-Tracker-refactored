@@ -87,7 +87,7 @@ export async function flushHPQueue(): Promise<void> {
         setPlayerSnapshot(data as Player);
       }
     } catch (e) {
-      console.warn('[hpSyncQueue] Exception pendant flush, arrêt:', e);
+      console.warn('[hpSyncQueue] Exception pendant flush, arrêt:', e); 
       newQueue.push(action, ...queue.slice(queue.indexOf(action) + 1));
       break;
     }
