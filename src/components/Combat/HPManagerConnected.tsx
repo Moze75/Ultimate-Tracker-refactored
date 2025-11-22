@@ -6,8 +6,13 @@ import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
 import { audioManager } from '../../utils/audioManager';
 
-// 🔁 NOUVEAU : service offline-first HP
-import { applyHPUpdateOfflineFirst } from '../../services/hpOfflineService';
+// 🔁 service offline-first HP
+import {
+  applyHPUpdateOfflineFirst,
+  computeDamage,
+  computeHealing,
+  computeTempHP,
+} from '../../services/hpOfflineService';
 
 interface HPManagerConnectedProps {
   player: Player;
