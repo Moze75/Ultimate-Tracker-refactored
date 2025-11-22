@@ -136,15 +136,32 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
   };
 
-  const applyHealing = async () => {
+    const applyHealing = async () => {
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
     // ✅ Jouer le son de guérison
     playHealingSound();
 
-    const newCurrentHP = Math.min(player.max_hp, player.current_hp + healing);
-    await updateHP(newCurrentHP);
+    // 1) Calcul local des nouveaux HP
+    const { current_hp, temporary_hp } = computeHealing(player, healing);
+
+    try {
+      // 2) Mise à jour offline-first + player optimistic
+      const optimisticPlayer = await applyHPUpdateOfflineFirst(player, {
+        current_hp,
+        temporary_hp,
+      });
+
+      // 3) Mise à jour immédiate de l'UI
+      onUpdate(optimisticPlayer);
+
+      // 4) Synchro Supabase en arrière-plan
+      updateHP(current_hp, temporary_hp);
+    } catch (e) {
+      console.error('[HPManagerConnected] Erreur applyHealing offline:', e);
+    }
+
     setHealValue('');
 
     const hpElement = document.querySelector('.hp-bar');
@@ -154,17 +171,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
 
     toast.success(`${healing} PV récupérés`);
-  };
-
-  const applyTempHP = async () => {
-    const tempHP = parseInt(tempHpValue) || 0;
-    if (tempHP <= 0) return;
-
-    const newTempHP = Math.max(player.temporary_hp, tempHP);
-    await updateHP(player.current_hp, newTempHP);
-    setTempHpValue('');
-
-    toast.success(`${newTempHP} PV temporaires appliqués`);
   };
 
   return (
