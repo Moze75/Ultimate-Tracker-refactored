@@ -1006,7 +1006,7 @@ return (
       const showAsStatic = !isInteracting && !animating;
 
       /* ---------------- Mode Desktop (sans grille) ---------------- */
-      if (deviceType === 'desktop' && !isGridMode && currentPlayer) {
+      if ((deviceType === 'desktop' || deviceType === 'tablet') && !isGridMode && currentPlayer) {
         return (
           <>
             <div className="fixed top-4 right-4 z-50"></div>
@@ -1038,7 +1038,12 @@ return (
       return (
         <div
           key={refreshTick} // 🧩 force un rafraîchissement discret quand refreshTick change
-          className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor"
+          className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor overflow-x-auto"
+          style={{
+            // 🔧 Largeur minimale "desktop" incompressible
+            // Si la fenêtre est plus petite, un scroll horizontal apparaîtra
+            minWidth: 1024,
+          }}
         >
           {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
           {deviceType === 'desktop' && !isGridMode && (
@@ -1230,7 +1235,7 @@ return (
   }
   
   // ✅ Settings chargés, DiceBox MONTÉ EN PERMANENCE
-  console.log(♾️ [GamePage] DiceBox MONTÉ et restera actif');
+  console.log('♾️ [GamePage] DiceBox MONTÉ et restera actif');
   return (
     <DiceBox3D
       key="dice-box-gamepage"
@@ -1244,7 +1249,7 @@ return (
     />
   );
 })()}
-  </DiceRollContext.Provider>
+  </DiceRollContext.Provider> 
 );
 }
 
