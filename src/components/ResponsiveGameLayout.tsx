@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Responsive, WidthProvider, Layout, ReactGridLayout } from 'react-grid-layout';
+import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, Grid3x3, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Player } from '../types/dnd';
@@ -9,7 +9,6 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
-const FixedGridLayout = WidthProvider(ReactGridLayout);
 
 interface ResponsiveGameLayoutProps {
   player: Player;
@@ -143,14 +142,8 @@ export function ResponsiveGameLayout({
   }
 
   return (
-    <div
-      className="relative"
-      // 🔧 Largeur minimale pour éviter que le layout ne se comprime à l'extrême :
-      // - si la fenêtre est plus petite, elle recouvrira le layout (scroll ou débordement),
-      //   mais la grille gardera une structure "desktop".
-      style={{ minWidth: 768 }}
-    >
-      {/* Barre d'outils sticky */} 
+    <div className="relative">
+      {/* Barre d'outils sticky */}
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 p-3 mb-4 rounded-lg flex flex-wrap items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2">
           <button
@@ -201,23 +194,22 @@ export function ResponsiveGameLayout({
         </div>
       </div>
 
-           {/* Grille FIXE (non responsive) */}
-      <FixedGridLayout
+      {/* Grille responsive */}
+      <ResponsiveGridLayout
         className="layout"
-        // 🧱 On n'utilise plus de breakpoints : un seul layout, quelle que soit la taille de la fenêtre
-        layout={layouts.lg || layouts.md || layouts.sm || []}
-        cols={12}
+        layouts={layouts}
+        breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+        cols={{ lg: 12, md: 10, sm: 6 }}
         rowHeight={60}
-        width={1200} // largeur de référence pour calculer les colonnes
         isDraggable={!isLocked}
         isResizable={!isLocked}
-        onLayoutChange={(layout) => handleLayoutChange(layout, { lg: layout })}
+        onLayoutChange={handleLayoutChange}
         draggableHandle=".drag-handle"
         compactionType="vertical"
         preventCollision={false}
         margin={[16, 16]}
         containerPadding={[0, 0]}
-      >
+      > 
         {/* Les autres blocs */}
         {['profile', 'combat', 'class', 'abilities', 'stats', 'equipment'].map((key) => (
           <div
@@ -261,7 +253,7 @@ export function ResponsiveGameLayout({
             </div>
           </div>
         ))}
-      </FixedGridLayout>
+      </ResponsiveGridLayout>
 
       {/* Styles pour la scrollbar personnalisée */}
       <style>{`
