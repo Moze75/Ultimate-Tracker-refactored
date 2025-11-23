@@ -99,12 +99,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
-        {/* Features Section */}
+            {/* Features Section */}
         <div className="mb-20">
-          <h2 className="text-4xl font-bold text-white text-center mb-12" style={{
-            textShadow: '0 0 15px rgba(255, 255, 255, 0.7)'
-          }}>
-            <Sparkles className="inline-block mr-2 mb-1" />
+          <h2 className="text-3xl font-bold text-white text-center mb-12 opacity-90">
             Fonctionnalités
           </h2>
           
