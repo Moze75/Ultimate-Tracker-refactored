@@ -172,23 +172,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             
             <div className="text-gray-300 text-center space-y-4 leading-relaxed">
               <p className="text-base">
-                Un grand merci à mes joueurs pour leur aide précieuse dans le développement de cette application, coeur sur vous les copains :
+                Un grand merci à mes incroyables joueur·euse·s pour leur aide précieuse dans le développement de cette application, coeur sur vous les copains :
               </p>
               
-              <div className="flex justify-center gap-3 flex-wrap my-6">
-                <span className="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-300 font-semibold">
-                  Grut
-                </span>
-                <span className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-semibold">
-                  Mhuggen
-                </span>
-                <span className="px-4 py-2 bg-pink-500/10 border border-pink-500/30 rounded-lg text-pink-300 font-semibold">
-                  Philomène
-                </span>
-                <span className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-300 font-semibold">
-                  Riane
-                </span>
-              </div>
+              <p className="text-lg text-gray-100 font-medium my-4">
+                Grut, Mhuggen, Philomène et Riane
+              </p>
               
               <p className="text-sm text-gray-400">
                Merci égalements aux précieux retours de Draniak et Bluemoown du discord Nantais (meilleure commu dnd btw) ! 🎲
