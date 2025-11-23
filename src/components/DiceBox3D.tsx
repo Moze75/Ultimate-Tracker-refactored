@@ -573,19 +573,20 @@ useEffect(() => {
       
       console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
       
-      // 🎯 On garde le canvas plein écran pour l'affichage
+      // Canvas plein écran pour l'affichage
       if (containerRef.current) {
         containerRef.current.style.width = '100vw';
         containerRef.current.style.height = '100vh';
       }
       
-      // 🎯 Mais on réduit la "hauteur utile" de la table pour que tout se passe en haut
+      // Zone de table réduite en hauteur pour concentrer l'action en haut
       if (typeof diceBoxRef.current.setDimensions === 'function') {
-        const tableHeight = viewportHeight * 0.4; // par ex. 40% de l'écran en haut
+        const tableHeight = viewportHeight * 0.4; // 40% de la hauteur en haut
         diceBoxRef.current.setDimensions({ 
           x: viewportWidth, 
           y: tableHeight 
         });
+        console.log('📐 [RESIZE] Table dimensions:', viewportWidth, 'x', tableHeight);
       }
     });
   }
