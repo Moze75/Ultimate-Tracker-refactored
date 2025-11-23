@@ -134,33 +134,30 @@ export class VolumetricFireSystem {
   /**
    * Crée un mesh de feu volumétrique pour un dé
    */
-   attachToDice(
+    attachToDice(
     diceMesh: THREE.Mesh,
     diceId: string,
     options: VolumetricFireOptions = {}
   ): THREE.Mesh {
-    // Configuration avec valeurs adaptées à l'échelle DiceBox
     const config: Required<VolumetricFireOptions> = {
-      height: options.height ?? 120,           // flamme bien visible
-      radius: options.radius ?? 40,            // largeur correcte
+      height: options.height ?? 120,
+      radius: options.radius ?? 40,
       segments: options.segments ?? 32,
-      color1: options.color1 ?? new THREE.Color(0xffffaa), // Jaune clair
-      color2: options.color2 ?? new THREE.Color(0xffaa33), // Orange vif
-      color3: options.color3 ?? new THREE.Color(0xff3300), // Rouge
+      color1: options.color1 ?? new THREE.Color(0xffffaa),
+      color2: options.color2 ?? new THREE.Color(0xffaa33),
+      color3: options.color3 ?? new THREE.Color(0xff3300),
       scale: options.scale ?? 1.0,
     };
 
-    // Géométrie cylindrique à la sandbox, mais échelle DiceBox
     const geometry = new THREE.CylinderGeometry(
-      config.radius * 0.3,   // plus étroit en haut
-      config.radius,         // plus large en bas
+      config.radius * 0.3,
+      config.radius,
       config.height,
       config.segments,
       20,
       true
     );
 
-    // ShaderMaterial basé sur la version initiale de VolumetricFireSystem
     const material = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -179,7 +176,6 @@ export class VolumetricFireSystem {
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
-    // Position : centre de la flamme au-dessus du dé
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
     fireMesh.position.y += config.height * 0.6;
 
