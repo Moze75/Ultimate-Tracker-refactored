@@ -81,9 +81,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             et vivre des aventures épiques dans l'univers de Donjons & Dragons.
           </p>
           
-          <div className="flex gap-4 justify-center">
+               <div className="flex gap-4 justify-center flex-wrap">
             <button
-              onClick={() => navigate('/login')}
+              onClick={onGetStarted}
               className="btn-primary px-8 py-3 rounded-lg flex items-center gap-2 text-lg font-semibold hover:scale-105 transition-transform"
             >
               Commencer l'aventure
