@@ -101,6 +101,13 @@ useEffect(() => {
     const initSession = async () => {
       try {
         console.log('[App] 🔑 Initialisation de la session...');
+        
+        // ✅ NOUVEAU : Vérifier si on vient directement sur /login ou /app
+        const currentPath = window.location.pathname;
+        if (currentPath === '/login' || currentPath === '/app' || currentPath.startsWith('/app/')) {
+          setShowHomePage(false);
+          console.log('[App] 🏠 Navigation directe vers', currentPath, '- skip homepage');
+        }
         const { data } = await supabase.auth.getSession();
         const current = data?.session ?? null;
         setSession(current);
