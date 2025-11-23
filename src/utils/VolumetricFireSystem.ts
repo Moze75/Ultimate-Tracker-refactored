@@ -140,13 +140,14 @@ export class VolumetricFireSystem {
     options: VolumetricFireOptions = {}
   ): THREE.Mesh {
     const config: Required<VolumetricFireOptions> = {
-      height: options.height ?? 4.0,        // ↑ flamme plus haute
-      radius: options.radius ?? 1.2,        // ↑ flamme plus large
+      // 🧪 DEBUG: flamme très grande pour être sûre de la voir
+      height: options.height ?? 8.0,        // beaucoup plus haute
+      radius: options.radius ?? 3.0,        // beaucoup plus large
       segments: options.segments ?? 32,
-      color1: options.color1 ?? new THREE.Color(0xffffaa), // Jaune plus clair
+      color1: options.color1 ?? new THREE.Color(0xffffaa), // Jaune clair
       color2: options.color2 ?? new THREE.Color(0xffaa33), // Orange vif
       color3: options.color3 ?? new THREE.Color(0xff3300), // Rouge
-      scale: options.scale ?? 1.5,          // ↑ échelle globale
+      scale: options.scale ?? 2.0,          // échelle globale augmentée
     };
 
     const geometry = new THREE.CylinderGeometry(
