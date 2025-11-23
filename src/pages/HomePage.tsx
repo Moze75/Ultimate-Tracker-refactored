@@ -137,10 +137,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </h2>
           
           <div className="max-w-3xl mx-auto space-y-4">
-            {news.map((item, index) => (
+               {news.map((item, index) => (
               <div key={index} className="stat-card p-6">
-                <div className="flex items-start gap-4">
-                  <div className="text-blue-400 text-sm font-semibold min-w-[120px]">
+                <div className="flex items-start gap-4 flex-col sm:flex-row">
+                  <div className="text-blue-400 text-sm font-semibold sm:min-w-[120px]">
                     {item.date}
                   </div>
                   <div>
