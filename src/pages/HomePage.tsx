@@ -32,7 +32,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     },
       {
       icon: <Dice6 className="w-8 h-8" />,
-      title: "Dés 3D Interactifs",
+      title: "Dés 3D",
       description: "Lancez vos dés avec des animations 3D réalistes pour une immersion totale."
     },
     {
