@@ -20,10 +20,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Gestion de Personnages",
       description: "Créez et gérez vos personnages D&D avec un système complet de fiches détaillées."
     },
-    {
+     {
       icon: <Users className="w-8 h-8" />,
-      title: "Parties Multijoueurs",
-      description: "Organisez vos sessions de jeu, invitez vos amis et suivez vos campagnes."
+      title: "Mode Maître du Jeu",
+      description: "Envoyez des items à vos joueurs et gérez vos campagnes en temps réel."
     },
     {
       icon: <BookOpen className="w-8 h-8" />,
