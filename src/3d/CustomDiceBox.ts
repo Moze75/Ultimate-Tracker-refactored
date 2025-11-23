@@ -233,9 +233,15 @@ export class CustomDiceBox {
 
     this.core.roll(notation);
 
-    // Si pas d'effet feu, on s'arrête là
+        // Si pas d'effet feu, on s'arrête là
     if (!this.fireEnabled || !this.volumetricFire) {
-      console.log('[CustomDiceBox] Feu volumétrique désactivé ou non initialisé, on ne fait rien après roll.');
+      console.log(
+        '[CustomDiceBox] Feu volumétrique désactivé ou non initialisé, on ne fait rien après roll.',
+        'fireEnabled =',
+        this.fireEnabled,
+        'volumetricFire =',
+        this.volumetricFire
+      );
       return;
     }
 
