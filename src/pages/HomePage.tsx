@@ -1,9 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Sword, Users, BookOpen, Sparkles, ArrowRight, Shield, Dice6 } from 'lucide-react';
 
-export function HomePage() {
-  const navigate = useNavigate();
+interface HomePageProps {
+  onGetStarted: () => void;
+}
+
+export function HomePage({ onGetStarted }: HomePageProps) {
 
   const bgStyle: React.CSSProperties = {
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(/fondecran/Table.png)`,
