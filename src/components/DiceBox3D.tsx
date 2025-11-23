@@ -143,8 +143,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-             console.log('🎲 [INIT] Chargement du CustomDiceBox avec effet feu éventuel...');
-        const { CustomDiceBox } = await import('../3d/CustomDiceBox');
+        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
         if (!mounted) return;
 
@@ -221,8 +220,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         console.log('📦 Config complète:', config);
 
-                  const box = new CustomDiceBox('#dice-box-overlay', config, effectiveSettings);
-        console.log('🎲 [INIT] CustomDiceBox instancié avec config:', config);
+        const box = new DiceBox('#dice-box-overlay', config);
 
         if (containerRef.current) {
           const viewportWidth = window.innerWidth;
@@ -237,7 +235,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           containerRef.current.style.left = '0';
         }
         
-              await box.initialize();
+        await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -245,28 +243,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           console.log('✅ DiceBox initialisé avec strength x1.3 !');
           console.log('💪 Force finale du moteur:', box.strength);
           console.log('♾️ Le DiceBox restera monté en permanence');
-
-          // 🔍 DEBUG: inspecter l'instance pour trouver comment patcher le feu
-          console.log('🔍 [DEBUG] Instance DiceBox:', box);
-          console.log('🔍 [DEBUG] Propriétés clés:', Object.keys(box));
-          if ((box as any).scene) {
-            console.log('🔍 [DEBUG] Scene détectée sur box.scene');
-          }
-          if ((box as any).diceList) {
-            console.log('🔍 [DEBUG] diceList détecté avec longueur:', (box as any).diceList.length);
-          }
-          if ((box as any).meshes) {
-            console.log('🔍 [DEBUG] meshes détecté avec longueur:', (box as any).meshes.length);
-          }
-          if ((box as any).add) {
-            console.log('🔍 [DEBUG] Méthode add() détectée');
-          }
-          if ((box as any).addDice) {
-            console.log('🔍 [DEBUG] Méthode addDice() détectée');
-          }
-          if ((box as any).spawnDice) {
-            console.log('🔍 [DEBUG] Méthode spawnDice() détectée');
-          }
         }
  
                   // ▶️ Afficher le popup "Dice Roller prêt" au lancement
