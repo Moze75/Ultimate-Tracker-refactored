@@ -564,132 +564,26 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, [isInitialized]);
 
-// ✅ Recalculer les dimensions à chaque ouverture
-useEffect(() => {
-  if (isOpen && diceBoxRef.current && containerRef.current) {
-    requestAnimationFrame(() => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
-      
-      // Canvas plein écran pour l'affichage
-      if (containerRef.current) {
-        containerRef.current.style.width = '100vw';
-        containerRef.current.style.height = '100vh';
-      }
-      
-      // Zone de table réduite en hauteur pour concentrer l'action en haut
-      if (typeof diceBoxRef.current.setDimensions === 'function') {
-        const tableHeight = viewportHeight * 0.4; // 40% de la hauteur en haut
-        diceBoxRef.current.setDimensions({ 
-          x: viewportWidth, 
-          y: tableHeight 
-        });
-        console.log('📐 [RESIZE] Table dimensions:', viewportWidth, 'x', tableHeight);
-      }
-    });
-  }
-}, [isOpen]);
-
-  // ✅ Forcer les lancers à partir du haut de l'écran
-  const rollFromTop = useCallback(
-    (notation: string) => {
-      const box = diceBoxRef.current;
-      if (!box) return;
-
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Zone de lancement : une bande horizontale tout en haut de l'écran
-      const launchArea = {
-        xMin: viewportWidth * 0.15,
-        xMax: viewportWidth * 0.85,
-        yMin: viewportHeight * 0.05, // 5% depuis le haut
-        yMax: viewportHeight * 0.15, // 15% depuis le haut
-      };
-
-      // Hook "propre" si la lib expose la génération des données de lancer
-      // (beaucoup de versions internes ont un _generateRollData, on teste prudemment)
-      const proto: any = Object.getPrototypeOf(box);
-      if (proto && typeof proto._generateRollData === 'function') {
-        const originalGenerateRollData = proto._generateRollData;
-
-        proto._generateRollData = function (...args: any[]) {
-          const data = originalGenerateRollData.apply(this, args);
-
-          try {
-            if (Array.isArray(data?.dice)) {
-              data.dice.forEach((d: any) => {
-                // Position de départ centrée sur la bande en haut
-                const randX = launchArea.xMin + Math.random() * (launchArea.xMax - launchArea.xMin);
-                const randY = launchArea.yMin + Math.random() * (launchArea.yMax - launchArea.yMin);
-
-                // On travaille en “pixels → monde” : la lib refait la conversion,
-                // donc on stocke les coords dans les champs d’entrée si dispo.
-                d.x = randX;
-                d.y = randY;
-
-                // Vitesse initiale vers le bas principalement
-                if (!d.vector) d.vector = {};
-                d.vector.x = (Math.random() - 0.5) * 2;  // léger écart latéral
-                d.vector.y = 8 + Math.random() * 4;      // vers le bas
-                d.vector.z = (Math.random() - 0.5) * 2;  // petite rotation
-              });
-            }
-          } catch (err) {
-            console.warn('⚠️ [ROLL-FROM-TOP] Impossible de modifier rollData :', err);
-          }
-
-          return data;
-        };
-
-        // Lancer “normalement” : notre hook modifie ensuite les données
-        box.roll(notation);
-
-        // Important : on restaure la méthode d’origine pour éviter des effets de bord
-        proto._generateRollData = originalGenerateRollData;
-        return;
-      }
-
-      // Fallback si pas de _generateRollData : lancer puis corriger les bodies physiques
-      if (typeof box.roll === 'function') {
-        box.roll(notation);
-
-        try {
-          const world: any = box.world;
-          if (world && Array.isArray(world.bodies)) {
-            const centerX = (launchArea.xMin + launchArea.xMax) / 2;
-
-            world.bodies.forEach((body: any) => {
-              // On suppose un repère où +Y va vers le bas, adapter si besoin
-              if (body.position) {
-                body.position.x = (centerX - viewportWidth / 2) / 10; // conversion approximative
-                body.position.y = (viewportHeight / 2 - launchArea.yMin) / 10;
-                body.position.z = 0.5;
-              }
-
-              if (body.velocity) {
-                body.velocity.x = (Math.random() - 0.5) * 2;
-                body.velocity.y = -10 - Math.random() * 5; // vers le bas dans le monde
-                body.velocity.z = (Math.random() - 0.5) * 5;
-              }
-
-              if (typeof body.wakeUp === 'function') {
-                body.wakeUp();
-              } else if ('sleepState' in body) {
-                body.sleepState = 0;
-              }
-            });
-          }
-        } catch (err) {
-          console.warn('⚠️ [ROLL-FROM-TOP] Fallback sur bodies impossible :', err);
+  // ✅ Recalculer les dimensions à chaque ouverture
+  useEffect(() => {
+    if (isOpen && diceBoxRef.current && containerRef.current) {
+      requestAnimationFrame(() => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
+        
+        if (containerRef.current) {
+          containerRef.current.style.width = '100vw';
+          containerRef.current.style.height = '100vh';
         }
-      }
-    },
-    []
-  );
-
+        
+        if (typeof diceBoxRef.current.setDimensions === 'function') {
+          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
+        }
+      });
+    }
+  }, [isOpen]);
   
   // ✅ Lancer les dés
   useEffect(() => {
@@ -728,8 +622,7 @@ useEffect(() => {
         console.log('🚀 Lancement immédiat du roll !');
         
         if (typeof diceBoxRef.current.roll === 'function') {
-          // 🧭 Lancer forcé depuis le haut de l'écran
-          rollFromTop(notation);
+          diceBoxRef.current.roll(notation);
         } else {
           console.error('❌ [ROLL] Méthode roll() non disponible !');
           const randomResult = generateRandomResult(rollData.diceFormula, rollData.modifier);
