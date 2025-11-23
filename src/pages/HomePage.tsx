@@ -35,11 +35,6 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Dés 3D",
       description: "Lancez vos dés avec des animations 3D réalistes pour une immersion totale."
     },
-    {
-      icon: <BookOpen className="w-8 h-8" />,
-      title: "Gestion Automatique",
-      description: "Mise à jour automatique des statistiques en équipant des objets et équipements."
-    }
   ];
 
   const news = [
