@@ -267,23 +267,25 @@ export class VolumetricFireSystem {
   }
 
   /** Mise à jour (à appeler dans la boucle d’animation) */
+    /** Mise à jour (à appeler dans la boucle d’animation) */
   update(): void {
     const elapsed = this.clock.getElapsedTime();
 
     this.fireMeshes.forEach((fireMesh) => {
-      const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
-      if (!diceMesh) return;
-
-      // Suivre la position du dé
-      fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-      fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
-
-      // Animation du feu via uniform time
+      // Animation du feu via uniform time (pour tous les meshes, zone + dés)
       const mat = fireMesh.material as THREE.ShaderMaterial;
       if (mat && mat.uniforms && mat.uniforms.time) {
-        // On accélère le temps pour rendre l’animation plus visible
         mat.uniforms.time.value = elapsed * 2.5;
       }
+
+      const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
+
+      // Si c'est un feu "attaché à un dé", on suit sa position
+      if (diceMesh) {
+        fireMesh.position.copy(diceMesh.position as THREE.Vector3);
+        fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
+      }
+      // Si c'est un feu de zone (diceMesh null), on ne touche pas à sa position
     });
   }
 
