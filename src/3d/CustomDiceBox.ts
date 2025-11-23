@@ -91,6 +91,13 @@ export class CustomDiceBox {
     this.volumetricFire = new VolumetricFireSystem(rawScene as any);
     console.log('[CustomDiceBox] VolumetricFireSystem créé', this.volumetricFire);
 
+        // 🧪 Feu de zone "type sandbox" centré sous la zone de dés
+    try {
+      this.volumetricFire.attachAreaFire('dicebox_area_fire');
+    } catch (e) {
+      console.warn('[CustomDiceBox] Impossible d\'attacher le feu de zone:', e);
+    }
+
     // Hook léger sur la boucle d'animation si possible
       const originalAnimate = (this.core as any).animate?.bind(this.core);
 
