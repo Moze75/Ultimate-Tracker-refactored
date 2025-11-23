@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sword, Users, BookOpen, Sparkles, ArrowRight, Shield, Dice6 } from 'lucide-react';
+import { Sword, Users, BookOpen, ArrowRight, Dice6 } from 'lucide-react';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -39,7 +39,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
   const news = [
     {
-      date: "Novembre 2025",
+      date: "Janvier 2025",
       title: "Lancement de la version Beta",
       content: "Bienvenue sur Le Compagnon D&D ! Nous sommes ravis de vous présenter notre outil de gestion de parties."
     },
@@ -81,7 +81,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             et vivre des aventures épiques dans l'univers de Donjons & Dragons.
           </p>
           
-               <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-4 justify-center flex-wrap">
             <button
               onClick={onGetStarted}
               className="btn-primary px-8 py-3 rounded-lg flex items-center gap-2 text-lg font-semibold hover:scale-105 transition-transform"
@@ -101,10 +101,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
         {/* Features Section */}
         <div className="mb-20">
-          <h2 className="text-4xl font-bold text-white text-center mb-12" style={{
-            textShadow: '0 0 15px rgba(255, 255, 255, 0.7)'
-          }}>
-            <Sparkles className="inline-block mr-2 mb-1" />
+          <h2 className="text-3xl font-bold text-white text-center mb-12 opacity-90">
             Fonctionnalités
           </h2>
           
@@ -112,15 +109,15 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="stat-card p-6 hover:scale-105 transition-transform" 
+                className="stat-card p-6 hover:border-blue-500/50 transition-colors"
               >
-                <div className="text-blue-400 mb-4">
+                <div className="text-blue-400 mb-4 opacity-80">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-100 mb-2">
+                <h3 className="text-lg font-semibold text-gray-100 mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-300 text-sm">
+                <p className="text-gray-400 text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -130,17 +127,15 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
         {/* News Section */}
         <div className="mb-20">
-          <h2 className="text-4xl font-bold text-white text-center mb-12" style={{
-            textShadow: '0 0 15px rgba(255, 255, 255, 0.7)'
-          }}>
+          <h2 className="text-3xl font-bold text-white text-center mb-12 opacity-90">
             Actualités
           </h2>
           
           <div className="max-w-3xl mx-auto space-y-4">
-               {news.map((item, index) => (
-              <div key={index} className="stat-card p-6">
+            {news.map((item, index) => (
+              <div key={index} className="stat-card p-6 border-l-4 border-blue-500/30">
                 <div className="flex items-start gap-4 flex-col sm:flex-row">
-                  <div className="text-blue-400 text-sm font-semibold sm:min-w-[120px]">
+                  <div className="text-blue-400 text-xs font-mono uppercase tracking-wider sm:min-w-[120px]">
                     {item.date}
                   </div>
                   <div>
@@ -159,16 +154,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
         {/* About Section */}
         <div id="about" className="mb-20">
-          <div className="stat-card p-8 max-w-4xl mx-auto">
-            <div className="flex items-center justify-center mb-6">
-              <Shield className="w-12 h-12 text-blue-400" />
-            </div>
-            
-            <h2 className="text-3xl font-bold text-white text-center mb-6">
-              À propos du Compagnon D&D
+          <div className="stat-card p-8 max-w-4xl mx-auto border-t-2 border-blue-500/20">
+            <h2 className="text-2xl font-bold text-white text-center mb-6 opacity-90">
+              À propos
             </h2>
             
-            <div className="text-gray-300 space-y-4 leading-relaxed">
+            <div className="text-gray-300 space-y-4 leading-relaxed text-sm">
               <p>
                 <strong className="text-gray-100">Le Compagnon D&D</strong> est une application web 
                 conçue pour faciliter la gestion de vos parties de Donjons & Dragons. 
@@ -201,7 +192,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
-          {/* Footer */}
+        {/* Footer */}
         <footer className="text-center text-gray-400 text-sm space-y-4 pb-8">
           <div className="flex justify-center gap-6 flex-wrap">
             <a
@@ -230,4 +221,4 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       </div>
     </div>
   );
-} 
+}
