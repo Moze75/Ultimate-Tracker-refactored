@@ -139,53 +139,66 @@ export class VolumetricFireSystem {
     diceId: string,
     options: VolumetricFireOptions = {}
   ): THREE.Mesh {
-    // Flamme cylindrique simplifiée (géométrie + matériau basique orange)
-     // 🧪 DEBUG : flamme bien plus grande pour qu'elle soit impossible à rater
-    // 🧪 DEBUG : flamme GÉANTE pour être sûr qu'elle soit visible
-    const height = options.height ?? 300;   // très haute
-    const radius = options.radius ?? 120;   // très large
+    // Configuration avec valeurs adaptées à l'échelle DiceBox
+    const config: Required<VolumetricFireOptions> = {
+      height: options.height ?? 120,           // flamme bien visible
+      radius: options.radius ?? 40,            // largeur correcte
+      segments: options.segments ?? 32,
+      color1: options.color1 ?? new THREE.Color(0xffffaa), // Jaune clair
+      color2: options.color2 ?? new THREE.Color(0xffaa33), // Orange vif
+      color3: options.color3 ?? new THREE.Color(0xff3300), // Rouge
+      scale: options.scale ?? 1.0,
+    };
 
+    // Géométrie cylindrique à la sandbox, mais échelle DiceBox
     const geometry = new THREE.CylinderGeometry(
-      radius * 0.3,   // haut plus fin
-      radius,         // bas plus large
-      height,
-      16,             // segments
-      1,
+      config.radius * 0.3,   // plus étroit en haut
+      config.radius,         // plus large en bas
+      config.height,
+      config.segments,
+      20,
       true
     );
 
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xff8800,    // orange vif
+    // ShaderMaterial basé sur la version initiale de VolumetricFireSystem
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        scale: { value: config.scale },
+        color1: { value: config.color1 },
+        color2: { value: config.color2 },
+        color3: { value: config.color3 },
+      },
+      vertexShader: VolumetricFireSystem.getVertexShader(),
+      fragmentShader: VolumetricFireSystem.getFragmentShader(),
       transparent: true,
-      opacity: 0.7,
       depthWrite: false,
-      wireframe: false,
+      blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
     });
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
-    // Position de départ : on copie la position du dé et on monte au-dessus
+    // Position : centre de la flamme au-dessus du dé
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-    // On place la flamme franchement AU-DESSUS du dé
-    fireMesh.position.y += height; // une hauteur complète au-dessus
+    fireMesh.position.y += config.height * 0.6;
 
-    // Offset pour suivre le dé pendant le roll
     fireMesh.userData = {
       diceId,
       diceMesh,
-      offset: new THREE.Vector3(0, height, 0),
+      offset: new THREE.Vector3(0, config.height * 0.6, 0),
     };
 
     this.scene.add(fireMesh);
+    this.fireMeshes.set(diceId, fireMesh);
+
     console.log(
-      '[VolumetricFireSystem] Flamme cylindrique ajoutée sur le dé',
+      '[VolumetricFireSystem] Flamme shader ajoutée sur le dé',
       diceId,
       'position =',
       fireMesh.position
     );
 
-    this.fireMeshes.set(diceId, fireMesh);
     return fireMesh;
   }
 
