@@ -108,11 +108,11 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             Fonctionnalités
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="stat-card p-6 hover:scale-105 transition-transform"
+                className="stat-card p-6 hover:border-blue-500/50 transition-colors"
               >
                 <div className="text-blue-400 mb-4">
                   {feature.icon}
