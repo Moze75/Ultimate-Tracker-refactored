@@ -43,11 +43,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Lancement de la version Beta",
       content: "Bienvenue sur Le Compagnon D&D ! Nous sommes ravis de vous présenter notre outil de gestion de parties."
     },
-    {
-      date: "À venir",
-      title: "Mode Hors-ligne",
-      content: "Bientôt disponible : accédez à vos personnages même sans connexion Internet."
-    }
+
   ];
 
   return (
