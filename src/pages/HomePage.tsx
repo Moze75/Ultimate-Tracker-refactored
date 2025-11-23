@@ -25,10 +25,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Mode Maître du Jeu",
       description: "Envoyez des items à vos joueurs et gérez vos campagnes en temps réel."
     },
-    {
-      icon: <BookOpen className="w-8 h-8" />,
-      title: "Journal de Bord",
-      description: "Notez vos aventures, quêtes et moments mémorables de vos parties."
+       {
+      icon: <Zap className="w-8 h-8" />,
+      title: "Gestion Automatique",
+      description: "Mise à jour automatique des statistiques en équipant des objets et équipements."
     },
       {
       icon: <Dice6 className="w-8 h-8" />,
