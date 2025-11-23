@@ -425,7 +425,7 @@ useEffect(() => {
     {showHomePage && !session ? (
       <HomePage onGetStarted={() => setShowHomePage(false)} />
     ) : !session ? (
-      <LoginPage />
+      <LoginPage onBackToHome={() => setShowHomePage(true)} />
     ) : !selectedCharacter ? (
       <CharacterSelectionPage
         session={session}
