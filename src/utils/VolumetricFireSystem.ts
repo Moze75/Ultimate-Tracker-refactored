@@ -150,32 +150,25 @@ export class VolumetricFireSystem {
       scale: options.scale ?? 2.0,          // échelle globale augmentée
     };
 
-    const geometry = new THREE.CylinderGeometry(
-      config.radius * 0.3,
-      config.radius,
-      config.height,
-      config.segments,
-      20,
-      true
-    );
+     // 🧪 DEBUG TOTAL : au lieu d'une flamme, on met un GROS CUBE VERT fluo
 
-    // 🧪 DEBUG: utiliser un matériau basique rouge ultra-visible
+    const size = 6; // Taille très grande pour être sûr de le voir
+    const geometry = new THREE.BoxGeometry(size, size, size);
+
     const material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
+      color: 0x00ff00,    // Vert fluo
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.8,
       depthWrite: false,
       wireframe: false,
     });
 
-    // Pour repasser au shader plus tard, on remettra le ShaderMaterial ci-dessous.
-    // const material = new THREE.ShaderMaterial({ ... });
-
     const fireMesh = new THREE.Mesh(geometry, material);
 
+    // On place le cube juste au-dessus et légèrement à côté du dé
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-    // 🧪 DEBUG: on place la flamme franchement AU-DESSUS du dé
-    fireMesh.position.y += config.height * 1.0; // une hauteur complète au-dessus
+    fireMesh.position.y += size * 1.5;   // bien au-dessus
+    fireMesh.position.x += size * 0.5;   // décalé sur le côté pour ne pas être "dans" le dé
 
     fireMesh.userData = {
       diceId,
