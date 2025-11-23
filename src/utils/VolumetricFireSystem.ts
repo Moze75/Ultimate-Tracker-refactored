@@ -141,8 +141,9 @@ export class VolumetricFireSystem {
   ): THREE.Mesh {
     // Flamme cylindrique simplifiée (géométrie + matériau basique orange)
      // 🧪 DEBUG : flamme bien plus grande pour qu'elle soit impossible à rater
-    const height = options.height ?? 140;   // deux fois plus haute
-    const radius = options.radius ?? 40;    // deux fois plus large
+    // 🧪 DEBUG : flamme GÉANTE pour être sûr qu'elle soit visible
+    const height = options.height ?? 300;   // très haute
+    const radius = options.radius ?? 120;   // très large
 
     const geometry = new THREE.CylinderGeometry(
       radius * 0.3,   // haut plus fin
