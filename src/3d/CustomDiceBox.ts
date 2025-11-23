@@ -1,0 +1,220 @@
+import type { DiceSettings } from '../hooks/useDiceSettings';
+import { VolumetricFireSystem } from '../utils/VolumetricFireSystem';
+
+// On importe la DiceBox de la lib
+// (nom exact à confirmer : tu utilises déjà `import('@3d-dice/dice-box-threejs')` dans DiceBox3D.tsx)
+import DiceBoxCore from '@3d-dice/dice-box-threejs';
+
+type DiceBoxInstance = any;
+
+interface CustomDiceBoxConfig {
+  assetPath: string;
+  theme_colorset?: string;
+  theme_texture?: string;
+  theme_material?: string;
+  theme_customColorset?: any;
+  baseScale?: number;
+  gravity_multiplier?: number;
+  strength?: number;
+  sounds?: boolean;
+  volume?: number;
+  onRollComplete?: (results: any) => void;
+}
+
+/**
+ * Wrapper autour de DiceBox qui ajoute :
+ * - un système de feu volumétrique pour les dés de feu
+ * - l'accès aux settings pour savoir si l'effet est activé
+ */
+export class CustomDiceBox {
+  private core: DiceBoxInstance;
+  private volumetricFire?: VolumetricFireSystem;
+  private fireEnabled: boolean;
+
+  constructor(containerSelector: string, config: CustomDiceBoxConfig, settings: DiceSettings) {
+    // On garde une trace du fait que l'effet feu volumétrique est activé
+    this.fireEnabled = settings.fireVolumetricEnabled === true && config.theme_texture === 'fire';
+
+    // Instanciation de la DiceBox originale
+    this.core = new DiceBoxCore(containerSelector, config);
+
+    // On va initialiser le feu plus tard, quand la scène sera prête
+    // (après `initialize`)
+  }
+
+  /**
+   * Wrap d'initialize : une fois la scène prête, on installe VolumetricFireSystem
+   */
+  async initialize() {
+    await this.core.initialize();
+
+    // Si l'effet feu n'est pas activé, on ne fait rien de plus
+    if (!this.fireEnabled) return;
+
+    // Protection : certaines versions exposent `scene` directement, d'autres via `world.scene`
+    const scene = this.core.scene || this.core.scn || null;
+
+    if (!scene) {
+      console.warn('[CustomDiceBox] Impossible de trouver la scene Three.js pour le feu volumétrique.');
+      return;
+    }
+
+    this.volumetricFire = new VolumetricFireSystem(scene);
+
+    // Hook léger sur la boucle d'animation si possible
+    // La DiceBox appelle déjà renderer.render(scene, camera) dans sa propre loop,
+    // donc nous n'avons besoin que d'un "update" régulier.
+    const originalAnimate = this.core.animate?.bind(this.core);
+
+    if (originalAnimate && typeof originalAnimate === 'function') {
+      const self = this;
+      this.core.animate = function (...args: any[]) {
+        if (self.volumetricFire) {
+          try {
+            self.volumetricFire.update();
+          } catch (e) {
+            console.warn('[CustomDiceBox] Erreur update feu volumétrique:', e);
+          }
+        }
+        return originalAnimate(...args);
+      };
+    } else {
+      console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
+    }
+
+    // Hook sur la création des dés si la lib expose un point d'entrée
+    this.patchSpawnDiceForFire();
+  }
+
+  /**
+   * On intercepte la création des dés pour attacher le feu aux dés de feu.
+   */
+  private patchSpawnDiceForFire() {
+    if (!this.fireEnabled || !this.volumetricFire) return;
+
+    const core = this.core;
+
+    // Suivant les versions, le point d'entrée est `spawnDice`, `add`, ou similaire.
+    // On commence par `spawnDice` qui est présent dans le code source.
+    const originalSpawnDice = core.spawnDice?.bind(core);
+    if (!originalSpawnDice) {
+      console.warn('[CustomDiceBox] spawnDice() introuvable, impossible d\'attacher le feu aux dés.');
+      return;
+    }
+
+    const volumetricFire = this.volumetricFire;
+
+    core.spawnDice = function (vectorData: any, reset = false) {
+      const result = originalSpawnDice(vectorData, reset);
+
+      try {
+        // result peut être un seul mesh ou rien ; dans le code source, spawnDice
+        // crée un mesh et l'ajoute à this.scene + this.diceList.
+        // On va parcourir this.diceList pour les nouveaux dés.
+        if (Array.isArray(core.diceList)) {
+          core.diceList.forEach((diceMesh: any) => {
+            if (!diceMesh || !diceMesh.notation) return;
+
+            // On ne cible que les dés de feu (texture fire)
+            const isFireTexture =
+              core.theme_texture === 'fire' ||
+              (core.colorData && core.colorData.texture && core.colorData.texture.name === 'fire');
+
+            if (!isFireTexture) return;
+
+            // On donne un id unique
+            const diceId =
+              diceMesh.userData?.id ||
+              `dice_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+
+            diceMesh.userData = {
+              ...(diceMesh.userData || {}),
+              id: diceId,
+            };
+
+            volumetricFire.attachToDice(diceMesh, diceId, {
+              height: 1.8,
+              radius: 0.6,
+            });
+          });
+        }
+      } catch (e) {
+        console.warn('[CustomDiceBox] Erreur lors de l\'attachement du feu volumétrique:', e);
+      }
+
+      return result;
+    };
+  }
+
+  /**
+   * Proxies vers les méthodes utilisées dans DiceBox3D.tsx
+   */
+
+  get strength() {
+    return this.core.strength;
+  }
+
+  set strength(val: number) {
+    this.core.strength = val;
+  }
+
+  get world() {
+    return this.core.world;
+  }
+
+  get DiceFactory() {
+    return this.core.DiceFactory;
+  }
+
+  set DiceFactory(v: any) {
+    this.core.DiceFactory = v;
+  }
+
+  get colorData() {
+    return this.core.colorData;
+  }
+
+  set colorData(v: any) {
+    this.core.colorData = v;
+  }
+
+  get theme_material() {
+    return this.core.theme_material;
+  }
+
+  set theme_material(v: any) {
+    this.core.theme_material = v;
+  }
+
+  get gravity_multiplier() {
+    return this.core.gravity_multiplier;
+  }
+
+  set gravity_multiplier(v: number) {
+    this.core.gravity_multiplier = v;
+  }
+
+  async updateConfig(opts: any) {
+    if (this.core.updateConfig) {
+      return this.core.updateConfig(opts);
+    }
+  }
+
+  setDimensions(dim: { x: number; y: number }) {
+    if (this.core.setDimensions) {
+      this.core.setDimensions(dim);
+    }
+  }
+
+  roll(notation: string) {
+    if (this.core.roll) {
+      this.core.roll(notation);
+    }
+  }
+
+  clearDice() {
+    if (this.core.clearDice) {
+      this.core.clearDice();
+    }
+  }
+}
