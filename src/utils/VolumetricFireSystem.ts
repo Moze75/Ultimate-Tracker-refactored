@@ -106,9 +106,9 @@ export class VolumetricFireSystem {
         flameShape *= (1.0 - uv.y);
         flameShape = pow(flameShape, 2.0);
         
-        // Intensité basée sur la turbulence et la forme
-        float intensity = turbulence * flameShape;
-        intensity = smoothstep(0.2, 0.8, intensity);
+         // Intensité basée sur la turbulence et la forme
+        float intensity = turbulence * flameShape * 1.8;   // boost de l’intensité
+        intensity = smoothstep(0.25, 0.9, intensity);      // plage légèrement resserrée
         
         // Dégradé de couleur basé sur la hauteur
         vec3 color;
