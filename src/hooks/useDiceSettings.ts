@@ -10,6 +10,9 @@ export interface DiceSettings {
   gravity: number;       // ✅ Multiplicateur de gravité (0.5-2)
   strength: number;      // ✅ Force de lancer (0.5-3)
   volume: number;        // ✅ Volume sons module (0-100)
+
+  // ✅ Effets spéciaux
+  fireVolumetricEnabled?: boolean; // Active l'effet de feu volumétrique pour les dés de feu
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
