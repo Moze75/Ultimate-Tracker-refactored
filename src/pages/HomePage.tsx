@@ -35,7 +35,18 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Dés 3D",
       description: "Lancez vos dés avec des animations 3D réalistes pour une immersion totale."
     },
+     {
+      icon: <Package className="w-8 h-8" />,
+      title: "Objets Personnalisés",
+      description: "Créez vos propres objets avec des images personnalisables et des effets uniques."
+    },
+    {
+      icon: <Heart className="w-8 h-8" />,
+      title: "Gestion Complète",
+      description: "Points de vie, sorts, attaques et de nombreuses autres fonctionnalités pour vos personnages."
+    }
   ];
+
 
   const news = [
     {
