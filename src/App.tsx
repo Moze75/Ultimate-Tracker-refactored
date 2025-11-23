@@ -421,7 +421,7 @@ useEffect(() => {
     <Toaster position="top-right" />
     <InstallPrompt />
 
-    {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
+     {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
     {showHomePage && !session ? (
       <HomePage onGetStarted={() => setShowHomePage(false)} />
     ) : !session ? (
