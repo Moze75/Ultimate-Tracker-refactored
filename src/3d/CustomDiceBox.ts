@@ -54,10 +54,13 @@ export class CustomDiceBox {
    /**
    * Wrap d'initialize : une fois la scène prête, on installe VolumetricFireSystem
    */
-  async initialize() {
+   async initialize() {
     console.log('[CustomDiceBox] initialize() appelé');
     await this.core.initialize();
     console.log('[CustomDiceBox] core.initialize() terminé');
+
+    // Debug: voir les clés principales de l'instance DiceBoxCore
+    console.log('[CustomDiceBox] core keys =', Object.keys(this.core));
 
     // Si l'effet feu n'est pas activé, on ne fait rien de plus
     console.log('[CustomDiceBox] fireEnabled ?', this.fireEnabled);
@@ -65,20 +68,25 @@ export class CustomDiceBox {
       return;
     }
 
-    // Protection : certaines versions exposent `scene` directement
-    const scene: any =
-      (this.core as any).scene ||
-      (this.core as any).scn ||
+    // Essayer plusieurs chemins possibles pour la scene
+    const rawScene: any =
+      (this.core as any).scene ||                         // certaines versions
+      ((this.core as any).scn && (this.core as any).scn.scene) || // éventuel wrapper
+      ((this.core as any).world && (this.core as any).world.scene) || // si world contient scene
       null;
 
-    console.log('[CustomDiceBox] scene détectée ?', !!scene);
+    console.log(
+      '[CustomDiceBox] scene brute détectée ?',
+      !!rawScene,
+      rawScene ? 'children = ' + rawScene.children?.length : ''
+    );
 
-    if (!scene) {
+    if (!rawScene) {
       console.warn('[CustomDiceBox] Impossible de trouver la scene Three.js pour le feu volumétrique.');
       return;
     }
 
-    this.volumetricFire = new VolumetricFireSystem(scene);
+    this.volumetricFire = new VolumetricFireSystem(rawScene as any);
     console.log('[CustomDiceBox] VolumetricFireSystem créé', this.volumetricFire);
 
     // Hook léger sur la boucle d'animation si possible
@@ -101,7 +109,19 @@ export class CustomDiceBox {
       console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
     }
 
-    // ⛔ On ne patch plus spawnDice ici : on va gérer les flammes dans roll()
+    // 🧪 DEBUG: ajout d'un cube de test directement dans la scene à l'init
+    try {
+      const THREE = await import('three');
+      const size = 10;
+      const geo = new THREE.BoxGeometry(size, size, size);
+      const mat = new THREE.MeshBasicMaterial({ color: 0x0000ff, opacity: 0.8, transparent: true });
+      const testCube = new THREE.Mesh(geo, mat);
+      testCube.position.set(0, 0, 0);
+      (rawScene as any).add(testCube);
+      console.log('[CustomDiceBox] Cube bleu de test ajouté à la scene à (0,0,0)');
+    } catch (e) {
+      console.warn('[CustomDiceBox] Impossible d\'ajouter un cube de test:', e);
+    }
   }
 
   /**
