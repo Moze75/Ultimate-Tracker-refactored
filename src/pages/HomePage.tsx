@@ -27,7 +27,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     },
        {
       icon: <Zap className="w-8 h-8" />,
-      title: "Gestion Automatique",
+      title: "Equipement Automatique",
       description: "Mise à jour automatique des statistiques en équipant des objets et équipements."
     },
       {
