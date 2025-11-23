@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase';
 import type { Player } from './types/dnd';
 import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
+import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore';
