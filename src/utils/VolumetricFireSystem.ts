@@ -178,8 +178,8 @@ export class VolumetricFireSystem {
     const fireMesh = new THREE.Mesh(geometry, material);
 
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-    // On place la flamme clairement AU-DESSUS du dé
-    fireMesh.position.y += config.height * 0.75;
+    // 🧪 DEBUG: on place la flamme franchement AU-DESSUS du dé
+    fireMesh.position.y += config.height * 1.0; // une hauteur complète au-dessus
 
     fireMesh.userData = {
       diceId,
