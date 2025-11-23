@@ -721,7 +721,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🚀 Lancement immédiat du roll !');
         
         if (typeof diceBoxRef.current.roll === 'function') {
-          diceBoxRef.current.roll(notation);
+          // 🧭 Lancer forcé depuis le haut de l'écran
+          rollFromTop(notation);
         } else {
           console.error('❌ [ROLL] Méthode roll() non disponible !');
           const randomResult = generateRandomResult(rollData.diceFormula, rollData.modifier);
