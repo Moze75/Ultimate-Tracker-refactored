@@ -235,7 +235,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           containerRef.current.style.left = '0';
         }
         
-        await box.initialize();
+              await box.initialize();
         
         if (mounted) {
           diceBoxRef.current = box;
@@ -243,6 +243,28 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           console.log('✅ DiceBox initialisé avec strength x1.3 !');
           console.log('💪 Force finale du moteur:', box.strength);
           console.log('♾️ Le DiceBox restera monté en permanence');
+
+          // 🔍 DEBUG: inspecter l'instance pour trouver comment patcher le feu
+          console.log('🔍 [DEBUG] Instance DiceBox:', box);
+          console.log('🔍 [DEBUG] Propriétés clés:', Object.keys(box));
+          if ((box as any).scene) {
+            console.log('🔍 [DEBUG] Scene détectée sur box.scene');
+          }
+          if ((box as any).diceList) {
+            console.log('🔍 [DEBUG] diceList détecté avec longueur:', (box as any).diceList.length);
+          }
+          if ((box as any).meshes) {
+            console.log('🔍 [DEBUG] meshes détecté avec longueur:', (box as any).meshes.length);
+          }
+          if ((box as any).add) {
+            console.log('🔍 [DEBUG] Méthode add() détectée');
+          }
+          if ((box as any).addDice) {
+            console.log('🔍 [DEBUG] Méthode addDice() détectée');
+          }
+          if ((box as any).spawnDice) {
+            console.log('🔍 [DEBUG] Méthode spawnDice() détectée');
+          }
         }
  
                   // ▶️ Afficher le popup "Dice Roller prêt" au lancement
