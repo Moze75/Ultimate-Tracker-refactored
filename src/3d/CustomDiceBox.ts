@@ -51,17 +51,27 @@ export class CustomDiceBox {
     // (après `initialize`)
   }
 
-  /**
+   /**
    * Wrap d'initialize : une fois la scène prête, on installe VolumetricFireSystem
    */
   async initialize() {
+    console.log('[CustomDiceBox] initialize() appelé');
     await this.core.initialize();
+    console.log('[CustomDiceBox] core.initialize() terminé');
 
     // Si l'effet feu n'est pas activé, on ne fait rien de plus
-    if (!this.fireEnabled) return;
+    console.log('[CustomDiceBox] fireEnabled ?', this.fireEnabled);
+    if (!this.fireEnabled) {
+      return;
+    }
 
-    // Protection : certaines versions exposent `scene` directement, d'autres via `world.scene`
-    const scene = this.core.scene || this.core.scn || null;
+    // Protection : certaines versions exposent `scene` directement
+    const scene: any =
+      (this.core as any).scene ||
+      (this.core as any).scn ||
+      null;
+
+    console.log('[CustomDiceBox] scene détectée ?', !!scene);
 
     if (!scene) {
       console.warn('[CustomDiceBox] Impossible de trouver la scene Three.js pour le feu volumétrique.');
@@ -69,15 +79,14 @@ export class CustomDiceBox {
     }
 
     this.volumetricFire = new VolumetricFireSystem(scene);
+    console.log('[CustomDiceBox] VolumetricFireSystem créé', this.volumetricFire);
 
     // Hook léger sur la boucle d'animation si possible
-    // La DiceBox appelle déjà renderer.render(scene, camera) dans sa propre loop,
-    // donc nous n'avons besoin que d'un "update" régulier.
-    const originalAnimate = this.core.animate?.bind(this.core);
+    const originalAnimate = (this.core as any).animate?.bind(this.core);
 
     if (originalAnimate && typeof originalAnimate === 'function') {
       const self = this;
-      this.core.animate = function (...args: any[]) {
+      (this.core as any).animate = function (...args: any[]) {
         if (self.volumetricFire) {
           try {
             self.volumetricFire.update();
@@ -87,12 +96,12 @@ export class CustomDiceBox {
         }
         return originalAnimate(...args);
       };
+      console.log('[CustomDiceBox] animate() patché pour appeler update() du feu');
     } else {
       console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
     }
 
-    // Hook sur la création des dés si la lib expose un point d'entrée
-    this.patchSpawnDiceForFire();
+    // ⛔ On ne patch plus spawnDice ici : on va gérer les flammes dans roll()
   }
 
   /**
