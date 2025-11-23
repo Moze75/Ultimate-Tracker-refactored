@@ -109,19 +109,7 @@ export class CustomDiceBox {
       console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
     }
 
-    // 🧪 DEBUG: ajout d'un cube de test directement dans la scene à l'init
-    try {
-      const THREE = await import('three');
-      const size = 10;
-      const geo = new THREE.BoxGeometry(size, size, size);
-      const mat = new THREE.MeshBasicMaterial({ color: 0x0000ff, opacity: 0.8, transparent: true });
-      const testCube = new THREE.Mesh(geo, mat);
-      testCube.position.set(0, 0, 0);
-      (rawScene as any).add(testCube);
-      console.log('[CustomDiceBox] Cube bleu de test ajouté à la scene à (0,0,0)');
-    } catch (e) {
-      console.warn('[CustomDiceBox] Impossible d\'ajouter un cube de test:', e);
-    }
+
   }
 
   /**
