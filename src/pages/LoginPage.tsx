@@ -4,7 +4,11 @@ import { LogIn, Mail, Lock, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
 
-export function LoginPage() {
+interface LoginPageProps {
+  onBackToHome?: () => void; // ✅ NOUVEAU : Callback optionnel pour retourner à l'accueil
+}
+
+export function LoginPage({ onBackToHome }: LoginPageProps = {}) {
   const [email, setEmail] = useState('');
   const [loginAttempts, setLoginAttempts] = useState(0);
 const MAX_LOGIN_ATTEMPTS = 3;
