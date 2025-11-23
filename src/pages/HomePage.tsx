@@ -125,11 +125,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
-        {/* News Section */}
+              {/* News Section */}
         <div className="mb-20">
-          <h2 className="text-4xl font-bold text-white text-center mb-12" style={{
-            textShadow: '0 0 15px rgba(255, 255, 255, 0.7)'
-          }}>
+          <h2 className="text-3xl font-bold text-white text-center mb-12 opacity-90">
             Actualités
           </h2>
           
