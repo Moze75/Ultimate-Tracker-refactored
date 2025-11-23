@@ -284,11 +284,9 @@ export class CustomDiceBox {
             id: diceId,
           };
 
-          console.log('[CustomDiceBox] Attachement feu sur dé', diceId);
-          this.volumetricFire!.attachToDice(diceMesh, diceId, {
-            height: 1.8,
-            radius: 0.6,
-          });
+          console.log('[CustomDiceBox] Attachement feu (shader) sur dé', diceId);
+          // On laisse VolumetricFireSystem gérer height/radius par défaut (adaptés à DiceBox)
+          this.volumetricFire!.attachToDice(diceMesh, diceId);
         });
       } catch (e) {
         console.warn('[CustomDiceBox] Erreur lors de l\'attachement du feu après roll:', e);
