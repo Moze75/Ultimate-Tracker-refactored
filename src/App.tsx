@@ -4,7 +4,6 @@ import { supabase } from './lib/supabase';
 import type { Player } from './types/dnd';
 import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
-import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore';
@@ -25,8 +24,7 @@ function App() {
   const [LoginPage, setLoginPage] = useState<React.ComponentType<any> | null>(null);
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
   const [GamePage, setGamePage] = useState<React.ComponentType<any> | null>(null);
-  const [hardLoggedOut, setHardLoggedOut] = useState(false);
-  const [showHomePage, setShowHomePage] = useState(true); // ✅ NOUVEAU : État pour afficher la homepage
+    const [hardLoggedOut, setHardLoggedOut] = useState(false);
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
@@ -101,13 +99,6 @@ useEffect(() => {
     const initSession = async () => {
       try {
         console.log('[App] 🔑 Initialisation de la session...');
-        
-        // ✅ NOUVEAU : Vérifier si on vient directement sur /login ou /app
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/app' || currentPath.startsWith('/app/')) {
-          setShowHomePage(false);
-          console.log('[App] 🏠 Navigation directe vers', currentPath, '- skip homepage');
-        }
         const { data } = await supabase.auth.getSession();
         const current = data?.session ?? null;
         setSession(current);
@@ -421,10 +412,9 @@ useEffect(() => {
     <Toaster position="top-right" />
     <InstallPrompt />
 
-    {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
-    {showHomePage && !session ? (
-      <HomePage onGetStarted={() => setShowHomePage(false)} />
-    ) : !session ? (
+
+
+    {!session ? (
       <LoginPage />
     ) : !selectedCharacter ? (
       <CharacterSelectionPage
