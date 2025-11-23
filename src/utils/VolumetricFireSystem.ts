@@ -214,7 +214,8 @@ export class VolumetricFireSystem {
       // Animation du feu via uniform time
       const mat = fireMesh.material as THREE.ShaderMaterial;
       if (mat && mat.uniforms && mat.uniforms.time) {
-        mat.uniforms.time.value = elapsed;
+        // On accélère le temps pour rendre l’animation plus visible
+        mat.uniforms.time.value = elapsed * 2.5;
       }
     });
   }
