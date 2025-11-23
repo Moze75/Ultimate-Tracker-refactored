@@ -564,26 +564,32 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, [isInitialized]);
 
-  // ✅ Recalculer les dimensions à chaque ouverture
-  useEffect(() => {
-    if (isOpen && diceBoxRef.current && containerRef.current) {
-      requestAnimationFrame(() => {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
-        
-        if (containerRef.current) {
-          containerRef.current.style.width = '100vw';
-          containerRef.current.style.height = '100vh';
-        }
-        
-        if (typeof diceBoxRef.current.setDimensions === 'function') {
-          diceBoxRef.current.setDimensions({ x: viewportWidth, y: viewportHeight });
-        }
-      });
-    }
-  }, [isOpen]);
+// ✅ Recalculer les dimensions à chaque ouverture
+useEffect(() => {
+  if (isOpen && diceBoxRef.current && containerRef.current) {
+    requestAnimationFrame(() => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
+      
+      // 🎯 On garde le canvas plein écran pour l'affichage
+      if (containerRef.current) {
+        containerRef.current.style.width = '100vw';
+        containerRef.current.style.height = '100vh';
+      }
+      
+      // 🎯 Mais on réduit la "hauteur utile" de la table pour que tout se passe en haut
+      if (typeof diceBoxRef.current.setDimensions === 'function') {
+        const tableHeight = viewportHeight * 0.4; // par ex. 40% de l'écran en haut
+        diceBoxRef.current.setDimensions({ 
+          x: viewportWidth, 
+          y: tableHeight 
+        });
+      }
+    });
+  }
+}, [isOpen]);
 
   // ✅ Forcer les lancers à partir du haut de l'écran
   const rollFromTop = useCallback(
