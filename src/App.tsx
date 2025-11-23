@@ -421,11 +421,12 @@ useEffect(() => {
     <Toaster position="top-right" />
     <InstallPrompt />
 
-
-
-    {!session ? (
+    {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
+    {showHomePage && !session ? (
+      <HomePage onGetStarted={() => setShowHomePage(false)} />
+    ) : !session ? (
       <LoginPage />
-    ) : !selectedCharacter ? ( 
+    ) : !selectedCharacter ? (
       <CharacterSelectionPage
         session={session}
         onCharacterSelect={(p: Player) => {
