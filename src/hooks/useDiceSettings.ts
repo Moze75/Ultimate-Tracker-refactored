@@ -182,16 +182,17 @@ export function importDiceSettings(jsonString: string): boolean {
     const parsed = JSON.parse(jsonString) as Partial<DiceSettings>;
     
     // Valider que les clés sont valides
-    const validKeys: (keyof DiceSettings)[] = [
-      'theme',
-      'themeMaterial',
-      'themeColor',
-      'soundsEnabled',
-      'baseScale',
-      'gravity',
-      'strength',
-      'volume',
-    ];
+const validKeys: (keyof DiceSettings)[] = [
+  'theme',
+  'themeMaterial',
+  'themeColor',
+  'soundsEnabled',
+  'baseScale',
+  'gravity',
+  'strength',
+  'volume',
+  'fireVolumetricEnabled',
+];
     
     const settings: DiceSettings = {
       ...DEFAULT_DICE_SETTINGS,
