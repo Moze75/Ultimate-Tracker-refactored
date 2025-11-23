@@ -152,14 +152,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
-        {/* About Section */}
+             {/* About Section */}
         <div id="about" className="mb-20">
-          <div className="stat-card p-8 max-w-4xl mx-auto">
-            <div className="flex items-center justify-center mb-6">
-              <Shield className="w-12 h-12 text-blue-400" />
-            </div>
-            
-            <h2 className="text-3xl font-bold text-white text-center mb-6">
+          <div className="stat-card p-8 max-w-4xl mx-auto border-t-2 border-blue-500/20">
+            <h2 className="text-2xl font-bold text-white text-center mb-6 opacity-90">
               À propos du Compagnon D&D
             </h2>
             
