@@ -166,13 +166,14 @@ export class VolumetricFireSystem {
 
     // Position de départ : on copie la position du dé et on monte au-dessus
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-    fireMesh.position.y += height * 0.6; // légèrement au-dessus du dé
+    // On place la flamme franchement AU-DESSUS du dé
+    fireMesh.position.y += height; // une hauteur complète au-dessus
 
     // Offset pour suivre le dé pendant le roll
     fireMesh.userData = {
       diceId,
       diceMesh,
-      offset: new THREE.Vector3(0, height * 0.6, 0),
+      offset: new THREE.Vector3(0, height, 0),
     };
 
     this.scene.add(fireMesh);
