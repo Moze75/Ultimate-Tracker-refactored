@@ -159,6 +159,45 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
+        {/* Thanks Section */}
+        <div className="mb-20">
+          <div className="stat-card p-8 max-w-4xl mx-auto border-l-4 border-yellow-500/30">
+            <div className="flex items-center justify-center mb-6">
+              <Stars className="w-10 h-10 text-yellow-400" />
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white text-center mb-6 opacity-90">
+              Remerciements
+            </h2>
+            
+            <div className="text-gray-300 text-center space-y-4 leading-relaxed">
+              <p className="text-base">
+                Un grand merci à mes joueurs pour leur aide précieuse dans le développement de cette application, coeur sur vous les copains :
+              </p>
+              
+              <div className="flex justify-center gap-3 flex-wrap my-6">
+                <span className="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-300 font-semibold">
+                  Grut
+                </span>
+                <span className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-semibold">
+                  Mhuggen
+                </span>
+                <span className="px-4 py-2 bg-pink-500/10 border border-pink-500/30 rounded-lg text-pink-300 font-semibold">
+                  Philomène
+                </span>
+                <span className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-300 font-semibold">
+                  Riane
+                </span>
+              </div>
+              
+              <p className="text-sm text-gray-400">
+               Merci égalements aux précieux retours de Draniak et Bluemoown du discord Nantais (meilleure commu dnd btw) ! 🎲
+              </p>
+            </div>
+          </div>
+        </div>
+
+        
         {/* About Section */}
         <div id="about" className="mb-20">
           <div className="stat-card p-8 max-w-4xl mx-auto border-t-2 border-blue-500/20">
