@@ -198,6 +198,73 @@ export class VolumetricFireSystem {
     return fireMesh;
   }
 
+    /**
+   * Crée un grand volume de feu "de zone" au centre de la scène,
+   * similaire au rendu du sandbox (un seul bloc de feu).
+   */
+  attachAreaFire(areaId: string = 'dicebox_area_fire', options: VolumetricFireOptions = {}): THREE.Mesh {
+    // Si déjà présent, on le renvoie
+    if (this.fireMeshes.has(areaId)) {
+      return this.fireMeshes.get(areaId)!;
+    }
+
+    const config: Required<VolumetricFireOptions> = {
+      height: options.height ?? 200,   // feu assez haut
+      radius: options.radius ?? 300,   // très large, couvre la zone de dés
+      segments: options.segments ?? 48,
+      color1: options.color1 ?? new THREE.Color(0xffffaa),
+      color2: options.color2 ?? new THREE.Color(0xffaa33),
+      color3: options.color3 ?? new THREE.Color(0xff3300),
+      scale: options.scale ?? 1.0,
+    };
+
+    const geometry = new THREE.CylinderGeometry(
+      config.radius * 0.3,
+      config.radius,
+      config.height,
+      config.segments,
+      16,
+      true
+    );
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        scale: { value: config.scale },
+        color1: { value: config.color1 },
+        color2: { value: config.color2 },
+        color3: { value: config.color3 },
+      },
+      vertexShader: VolumetricFireSystem.getVertexShader(),
+      fragmentShader: VolumetricFireSystem.getFragmentShader(),
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+
+    const fireMesh = new THREE.Mesh(geometry, material);
+
+    // On centre le feu dans la scène, légèrement en dessous des dés
+    fireMesh.position.set(0, -config.height * 0.25, 0);
+
+    fireMesh.userData = {
+      diceId: areaId,
+      diceMesh: null,
+      offset: new THREE.Vector3(0, 0, 0),
+      isAreaFire: true,
+    };
+
+    this.scene.add(fireMesh);
+    this.fireMeshes.set(areaId, fireMesh);
+
+    console.log(
+      '[VolumetricFireSystem] Feu de zone attaché (areaFire) position =',
+      fireMesh.position
+    );
+
+    return fireMesh;
+  }
 
   /** Mise à jour (à appeler dans la boucle d’animation) */
   update(): void {
