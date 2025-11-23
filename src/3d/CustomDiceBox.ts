@@ -31,12 +31,21 @@ export class CustomDiceBox {
   private volumetricFire?: VolumetricFireSystem;
   private fireEnabled: boolean;
 
-  constructor(containerSelector: string, config: CustomDiceBoxConfig, settings: DiceSettings) {
+   constructor(containerSelector: string, config: CustomDiceBoxConfig, settings: DiceSettings) {
     // On garde une trace du fait que l'effet feu volumétrique est activé
     this.fireEnabled = settings.fireVolumetricEnabled === true && config.theme_texture === 'fire';
+    console.log(
+      '[CustomDiceBox] constructor fireEnabled =',
+      this.fireEnabled,
+      'theme_texture =',
+      config.theme_texture,
+      'settings.fireVolumetricEnabled =',
+      settings.fireVolumetricEnabled
+    );
 
     // Instanciation de la DiceBox originale
     this.core = new DiceBoxCore(containerSelector, config);
+    console.log('[CustomDiceBox] core instance créée, clés =', Object.keys(this.core));
 
     // On va initialiser le feu plus tard, quand la scène sera prête
     // (après `initialize`)
