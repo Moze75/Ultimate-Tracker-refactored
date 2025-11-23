@@ -139,47 +139,35 @@ export class VolumetricFireSystem {
     diceId: string,
     options: VolumetricFireOptions = {}
   ): THREE.Mesh {
-    const config: Required<VolumetricFireOptions> = {
-      // 🧪 DEBUG: flamme très grande pour être sûre de la voir
-      height: options.height ?? 8.0,        // beaucoup plus haute
-      radius: options.radius ?? 3.0,        // beaucoup plus large
-      segments: options.segments ?? 32,
-      color1: options.color1 ?? new THREE.Color(0xffffaa), // Jaune clair
-      color2: options.color2 ?? new THREE.Color(0xffaa33), // Orange vif
-      color3: options.color3 ?? new THREE.Color(0xff3300), // Rouge
-      scale: options.scale ?? 2.0,          // échelle globale augmentée
-    };
+    // 🧪 DEBUG : ignorer les options, mettre un GROS CUBE BLEU exactement sur le dé
 
-     // 🧪 DEBUG TOTAL : au lieu d'une flamme, on met un GROS CUBE VERT fluo
-
-    const size = 6; // Taille très grande pour être sûr de le voir
+    const size = 10;
     const geometry = new THREE.BoxGeometry(size, size, size);
 
     const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,    // Vert fluo
+      color: 0x0000ff,    // Bleu vif
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.6,
       depthWrite: false,
       wireframe: false,
     });
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
-    // On place le cube juste au-dessus et légèrement à côté du dé
+    // On copie la position actuelle du dé, sans offset : le cube recouvre le dé
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
-    fireMesh.position.y += size * 1.5;   // bien au-dessus
-    fireMesh.position.x += size * 0.5;   // décalé sur le côté pour ne pas être "dans" le dé
 
-     fireMesh.userData = {
+    // On garde un offset nul pour l'instant
+    fireMesh.userData = {
       diceId,
       diceMesh,
-      // 🧪 DEBUG : offset cohérent avec la position utilisée juste au-dessus
-      offset: new THREE.Vector3(size * 0.5, size * 1.5, 0),
+      offset: new THREE.Vector3(0, 0, 0),
     };
 
     this.scene.add(fireMesh);
-    this.fireMeshes.set(diceId, fireMesh);
+    console.log('[VolumetricFireSystem] Cube bleu ajouté sur le dé', diceId, 'position =', fireMesh.position);
 
+    this.fireMeshes.set(diceId, fireMesh);
     return fireMesh;
   }
 
