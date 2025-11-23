@@ -143,7 +143,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
+             console.log('🎲 [INIT] Chargement du CustomDiceBox avec effet feu éventuel...');
+        const { CustomDiceBox } = await import('../3d/CustomDiceBox');
 
         if (!mounted) return;
 
