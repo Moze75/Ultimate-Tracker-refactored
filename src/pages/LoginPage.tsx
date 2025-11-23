@@ -347,30 +347,17 @@ const toggleForgotPassword = () => {
       </div>
     );
   }
-
+ 
   return (
     <div className="login-page min-h-screen flex items-center justify-center p-4" style={bgStyle}>
       <div className="w-full max-w-md space-y-8">
-        {/* ✅ NOUVEAU : Bouton retour vers l'accueil (version visible) */}
-        {onBackToHome && (
-          <button
-            onClick={onBackToHome}
-            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Retour à l'accueil
-          </button>
-        )}
-        
         {connectionError && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
             <p className="text-red-500 text-sm">{connectionError}</p>
           </div>
         )}
 
-        <div className="text-center">
+           <div className="text-center relative">
           {/* ✅ NOUVEAU : Bouton retour vers l'accueil */}
           {onBackToHome && (
             <button
