@@ -187,12 +187,8 @@ export class VolumetricFireSystem {
   }
 
   /** Mise à jour (à appeler dans la boucle d’animation) */
-   update(): void {
+  update(): void {
     const elapsed = this.clock.getElapsedTime();
-
-    // 🧪 DEBUG : voir si on est bien appelé et combien de cubes sont actifs
-    // (ne laisse pas ce log en prod, ça spamme, mais pour 1–2 lancers ça va)
-    // console.log('[VolumetricFireSystem] update, fireMeshes =', this.fireMeshes.size);
 
     this.fireMeshes.forEach((fireMesh) => {
       const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
@@ -200,6 +196,12 @@ export class VolumetricFireSystem {
 
       fireMesh.position.copy(diceMesh.position as THREE.Vector3);
       fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
+
+      // Pas de shader pour l'instant (MeshBasicMaterial), donc pas d'uniforms.time
+      // Quand on repassera au ShaderMaterial, on réactivera un truc comme :
+      // (fireMesh.material as THREE.ShaderMaterial).uniforms.time.value = elapsed;
+    });
+  }
 
       // Avec le matériau MeshBasicMaterial, on n'a plus de uniforms.time
       // On commente donc la ligne suivante pour éviter toute erreur.
