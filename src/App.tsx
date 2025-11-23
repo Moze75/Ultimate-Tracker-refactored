@@ -25,7 +25,8 @@ function App() {
   const [LoginPage, setLoginPage] = useState<React.ComponentType<any> | null>(null);
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
   const [GamePage, setGamePage] = useState<React.ComponentType<any> | null>(null);
-    const [hardLoggedOut, setHardLoggedOut] = useState(false);
+  const [hardLoggedOut, setHardLoggedOut] = useState(false);
+  const [showHomePage, setShowHomePage] = useState(true); // ✅ NOUVEAU : État pour afficher la homepage
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
