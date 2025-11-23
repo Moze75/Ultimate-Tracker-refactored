@@ -30,10 +30,15 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       title: "Journal de Bord",
       description: "Notez vos aventures, quêtes et moments mémorables de vos parties."
     },
-    {
+      {
       icon: <Dice6 className="w-8 h-8" />,
-      title: "Outils de Jeu",
-      description: "Lanceurs de dés, calculateurs de combat et bien plus pour faciliter vos parties."
+      title: "Dés 3D Interactifs",
+      description: "Lancez vos dés avec des animations 3D réalistes pour une immersion totale."
+    },
+    {
+      icon: <BookOpen className="w-8 h-8" />,
+      title: "Gestion Automatique",
+      description: "Mise à jour automatique des statistiques en équipant des objets et équipements."
     }
   ];
 
