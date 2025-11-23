@@ -224,10 +224,62 @@ export class CustomDiceBox {
     }
   }
 
-  roll(notation: string) {
-    if (this.core.roll) {
-      this.core.roll(notation);
+   roll(notation: string) {
+    console.log('[CustomDiceBox] roll() appelé avec', notation);
+    if (!this.core.roll) {
+      console.warn('[CustomDiceBox] core.roll() introuvable');
+      return;
     }
+
+    this.core.roll(notation);
+
+    // Si pas d'effet feu, on s'arrête là
+    if (!this.fireEnabled || !this.volumetricFire) {
+      console.log('[CustomDiceBox] Feu volumétrique désactivé ou non initialisé, on ne fait rien après roll.');
+      return;
+    }
+
+    // Après un court délai, on tente d'attacher des flammes aux dés existants
+    setTimeout(() => {
+      try {
+        const core: any = this.core;
+        const diceList = core.diceList || core.meshes || [];
+        console.log('[CustomDiceBox] Tentative d\'attacher le feu. diceList length =', diceList.length);
+
+        diceList.forEach((diceMesh: any, index: number) => {
+          if (!diceMesh) return;
+
+          // On ne cible que les dés de feu : theme_texture === 'fire'
+          const isFireTexture =
+            core.theme_texture === 'fire' ||
+            (core.colorData && core.colorData.texture && core.colorData.texture.name === 'fire');
+
+          console.log(
+            `[CustomDiceBox] Dice index=${index}, isFireTexture=${isFireTexture}`,
+            diceMesh
+          );
+
+          if (!isFireTexture) return;
+
+          const diceId =
+            diceMesh.userData?.id ||
+            `dice_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+
+          diceMesh.userData = {
+            ...(diceMesh.userData || {}),
+            id: diceId,
+          };
+
+          console.log('[CustomDiceBox] Attachement feu sur dé', diceId);
+          this.volumetricFire!.attachToDice(diceMesh, diceId, {
+            height: 1.8,
+            radius: 0.6,
+          });
+        });
+      } catch (e) {
+        console.warn('[CustomDiceBox] Erreur lors de l\'attachement du feu après roll:', e);
+      }
+    }, 300);
   }
 
   clearDice() {
