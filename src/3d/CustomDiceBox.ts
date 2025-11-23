@@ -31,7 +31,7 @@ export class CustomDiceBox {
   private volumetricFire?: VolumetricFireSystem;
   private fireEnabled: boolean;
 
-   constructor(containerSelector: string, config: CustomDiceBoxConfig, settings: DiceSettings) {
+  constructor(containerSelector: string, config: CustomDiceBoxConfig, settings: DiceSettings) {
     // On garde une trace du fait que l'effet feu volumétrique est activé
     this.fireEnabled = settings.fireVolumetricEnabled === true && config.theme_texture === 'fire';
     console.log(
@@ -51,10 +51,10 @@ export class CustomDiceBox {
     // (après `initialize`)
   }
 
-   /**
+  /**
    * Wrap d'initialize : une fois la scène prête, on installe VolumetricFireSystem
    */
-   async initialize() {
+  async initialize() {
     console.log('[CustomDiceBox] initialize() appelé');
     await this.core.initialize();
     console.log('[CustomDiceBox] core.initialize() terminé');
@@ -70,7 +70,7 @@ export class CustomDiceBox {
 
     // Essayer plusieurs chemins possibles pour la scene
     const rawScene: any =
-      (this.core as any).scene ||                         // certaines versions
+      (this.core as any).scene || // certaines versions
       ((this.core as any).scn && (this.core as any).scn.scene) || // éventuel wrapper
       ((this.core as any).world && (this.core as any).world.scene) || // si world contient scene
       null;
@@ -82,7 +82,9 @@ export class CustomDiceBox {
     );
 
     if (!rawScene) {
-      console.warn('[CustomDiceBox] Impossible de trouver la scene Three.js pour le feu volumétrique.');
+      console.warn(
+        '[CustomDiceBox] Impossible de trouver la scene Three.js pour le feu volumétrique.'
+      );
       return;
     }
 
@@ -106,25 +108,26 @@ export class CustomDiceBox {
       };
       console.log('[CustomDiceBox] animate() patché pour appeler update() du feu');
     } else {
-      console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
+      console.warn(
+        '[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.'
+      );
     }
-
-
   }
 
   /**
    * On intercepte la création des dés pour attacher le feu aux dés de feu.
+   * (Actuellement inutilisé, la logique d'attache est gérée dans roll()).
    */
   private patchSpawnDiceForFire() {
     if (!this.fireEnabled || !this.volumetricFire) return;
 
     const core = this.core;
 
-    // Suivant les versions, le point d'entrée est `spawnDice`, `add`, ou similaire.
-    // On commence par `spawnDice` qui est présent dans le code source.
     const originalSpawnDice = core.spawnDice?.bind(core);
     if (!originalSpawnDice) {
-      console.warn('[CustomDiceBox] spawnDice() introuvable, impossible d\'attacher le feu aux dés.');
+      console.warn(
+        '[CustomDiceBox] spawnDice() introuvable, impossible d\'attacher le feu aux dés.'
+      );
       return;
     }
 
@@ -134,21 +137,18 @@ export class CustomDiceBox {
       const result = originalSpawnDice(vectorData, reset);
 
       try {
-        // result peut être un seul mesh ou rien ; dans le code source, spawnDice
-        // crée un mesh et l'ajoute à this.scene + this.diceList.
-        // On va parcourir this.diceList pour les nouveaux dés.
         if (Array.isArray(core.diceList)) {
           core.diceList.forEach((diceMesh: any) => {
             if (!diceMesh || !diceMesh.notation) return;
 
-            // On ne cible que les dés de feu (texture fire)
             const isFireTexture =
               core.theme_texture === 'fire' ||
-              (core.colorData && core.colorData.texture && core.colorData.texture.name === 'fire');
+              (core.colorData &&
+                core.colorData.texture &&
+                core.colorData.texture.name === 'fire');
 
             if (!isFireTexture) return;
 
-            // On donne un id unique
             const diceId =
               diceMesh.userData?.id ||
               `dice_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
@@ -158,14 +158,14 @@ export class CustomDiceBox {
               id: diceId,
             };
 
-            volumetricFire.attachToDice(diceMesh, diceId, {
-              height: 1.8,
-              radius: 0.6,
-            });
+            volumetricFire.attachToDice(diceMesh, diceId);
           });
         }
       } catch (e) {
-        console.warn('[CustomDiceBox] Erreur lors de l\'attachement du feu volumétrique:', e);
+        console.warn(
+          "[CustomDiceBox] Erreur lors de l'attachement du feu volumétrique:",
+          e
+        );
       }
 
       return result;
@@ -232,7 +232,7 @@ export class CustomDiceBox {
     }
   }
 
-   roll(notation: string) {
+  roll(notation: string) {
     console.log('[CustomDiceBox] roll() appelé avec', notation);
     if (!this.core.roll) {
       console.warn('[CustomDiceBox] core.roll() introuvable');
@@ -241,7 +241,7 @@ export class CustomDiceBox {
 
     this.core.roll(notation);
 
-        // Si pas d'effet feu, on s'arrête là
+    // Si pas d'effet feu, on s'arrête là
     if (!this.fireEnabled || !this.volumetricFire) {
       console.log(
         '[CustomDiceBox] Feu volumétrique désactivé ou non initialisé, on ne fait rien après roll.',
@@ -258,7 +258,10 @@ export class CustomDiceBox {
       try {
         const core: any = this.core;
         const diceList = core.diceList || core.meshes || [];
-        console.log('[CustomDiceBox] Tentative d\'attacher le feu. diceList length =', diceList.length);
+        console.log(
+          "[CustomDiceBox] Tentative d'attacher le feu. diceList length =",
+          diceList.length
+        );
 
         diceList.forEach((diceMesh: any, index: number) => {
           if (!diceMesh) return;
@@ -266,7 +269,9 @@ export class CustomDiceBox {
           // On ne cible que les dés de feu : theme_texture === 'fire'
           const isFireTexture =
             core.theme_texture === 'fire' ||
-            (core.colorData && core.colorData.texture && core.colorData.texture.name === 'fire');
+            (core.colorData &&
+              core.colorData.texture &&
+              core.colorData.texture.name === 'fire');
 
           console.log(
             `[CustomDiceBox] Dice index=${index}, isFireTexture=${isFireTexture}`,
@@ -284,12 +289,18 @@ export class CustomDiceBox {
             id: diceId,
           };
 
-          console.log('[CustomDiceBox] Attachement feu (shader) sur dé', diceId);
-          // On laisse VolumetricFireSystem gérer height/radius par défaut (adaptés à DiceBox)
+          console.log(
+            '[CustomDiceBox] Attachement feu (shader) sur dé',
+            diceId
+          );
+          // On laisse VolumetricFireSystem gérer height/radius (defaults adaptés)
           this.volumetricFire!.attachToDice(diceMesh, diceId);
         });
       } catch (e) {
-        console.warn('[CustomDiceBox] Erreur lors de l\'attachement du feu après roll:', e);
+        console.warn(
+          "[CustomDiceBox] Erreur lors de l'attachement du feu après roll:",
+          e
+        );
       }
     }, 300);
   }
