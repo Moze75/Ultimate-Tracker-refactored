@@ -187,6 +187,7 @@ export class VolumetricFireSystem {
   }
 
   /** Mise à jour (à appeler dans la boucle d’animation) */
+   /** Mise à jour (à appeler dans la boucle d’animation) */
   update(): void {
     const elapsed = this.clock.getElapsedTime();
 
@@ -194,17 +195,12 @@ export class VolumetricFireSystem {
       const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
       if (!diceMesh) return;
 
+      // Suivre la position du dé
       fireMesh.position.copy(diceMesh.position as THREE.Vector3);
       fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
 
       // Pas de shader pour l'instant (MeshBasicMaterial), donc pas d'uniforms.time
       // Quand on repassera au ShaderMaterial, on réactivera un truc comme :
-      // (fireMesh.material as THREE.ShaderMaterial).uniforms.time.value = elapsed;
-    });
-  }
-
-      // Avec le matériau MeshBasicMaterial, on n'a plus de uniforms.time
-      // On commente donc la ligne suivante pour éviter toute erreur.
       // const mat = fireMesh.material as THREE.ShaderMaterial;
       // mat.uniforms.time.value = elapsed;
     });
@@ -217,7 +213,7 @@ export class VolumetricFireSystem {
 
     this.scene.remove(fireMesh);
     fireMesh.geometry.dispose();
-    (fireMesh.material as THREE.ShaderMaterial).dispose();
+    (fireMesh.material as THREE.Material).dispose();
     this.fireMeshes.delete(diceId);
   }
 
