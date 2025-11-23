@@ -24,6 +24,8 @@ export const DEFAULT_DICE_SETTINGS: DiceSettings = {
   gravity: 1,           // Gravité normale (1x = 400 dans le module)
   strength: 2,          // Force normale
   volume: 100,          // Volume max des sons intégrés
+
+  fireVolumetricEnabled: false, // Effet de feu désactivé par défaut
 };
 
 const STORAGE_KEY = 'dice-settings';
