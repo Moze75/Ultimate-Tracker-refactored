@@ -154,12 +154,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
              {/* About Section */}
         <div id="about" className="mb-20">
-          <div className="stat-card p-8 max-w-4xl mx-auto border-t-2 border-blue-500/20">
+                <div className="stat-card p-8 max-w-4xl mx-auto border-t-2 border-blue-500/20">
             <h2 className="text-2xl font-bold text-white text-center mb-6 opacity-90">
-              À propos du Compagnon D&D
+              À propos
             </h2>
             
-            <div className="text-gray-300 space-y-4 leading-relaxed">
+            <div className="text-gray-300 space-y-4 leading-relaxed text-sm">
               <p>
                 <strong className="text-gray-100">Le Compagnon D&D</strong> est une application web 
                 conçue pour faciliter la gestion de vos parties de Donjons & Dragons. 
