@@ -1033,7 +1033,7 @@ return (
     <div className="fixed inset-0 z-[11000]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
       <div 
-        className="fixed inset-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[min(42rem,95vw)] sm:max-h-[90vh] sm:rounded-xl overflow-hidden border-0 sm:border sm:border-gray-700 shadow-2xl" 
+     className="fixed inset-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[min(56rem,95vw)] sm:max-h-[90vh] sm:rounded-xl overflow-hidden border-0 sm:border sm:border-gray-700 shadow-2xl"
         style={{
           backgroundImage: 'url(/background/ddbground.png)',
           backgroundSize: 'cover',
