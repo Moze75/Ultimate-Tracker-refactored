@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sword, Users, BookOpen, ArrowRight, Dice6, Zap } from 'lucide-react';
+import { Sword, Users, BookOpen, ArrowRight, Dice6, Zap, Package, Heart } from 'lucide-react';
 
 interface HomePageProps {
   onGetStarted: () => void;
