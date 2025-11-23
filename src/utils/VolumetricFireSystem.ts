@@ -170,10 +170,11 @@ export class VolumetricFireSystem {
     fireMesh.position.y += size * 1.5;   // bien au-dessus
     fireMesh.position.x += size * 0.5;   // décalé sur le côté pour ne pas être "dans" le dé
 
-    fireMesh.userData = {
+     fireMesh.userData = {
       diceId,
       diceMesh,
-      offset: new THREE.Vector3(0, config.height / 2, 0),
+      // 🧪 DEBUG : offset cohérent avec la position utilisée juste au-dessus
+      offset: new THREE.Vector3(size * 0.5, size * 1.5, 0),
     };
 
     this.scene.add(fireMesh);
