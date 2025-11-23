@@ -193,8 +193,12 @@ export class VolumetricFireSystem {
   }
 
   /** Mise à jour (à appeler dans la boucle d’animation) */
-  update(): void {
+   update(): void {
     const elapsed = this.clock.getElapsedTime();
+
+    // Debug léger : on ne log pas à chaque frame, mais on peut log
+    // de temps en temps si besoin. Pour l'instant, on laisse sans log
+    // pour ne pas spammer. Tu peux mettre un console.log ici juste pour test.
 
     this.fireMeshes.forEach((fireMesh) => {
       const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
