@@ -1,7 +1,3 @@
-// VolumetricFireSystem.ts
-// Système de feu volumétrique avec shaders pour three.js
-// Conçu pour être utilisé avec dice-box-threejs (via accès à la scene & aux meshes)
-
 import * as THREE from 'three';
 
 export interface VolumetricFireOptions {
@@ -14,6 +10,10 @@ export interface VolumetricFireOptions {
   scale?: number;
 }
 
+/**
+ * Système de feu volumétrique basé sur des shaders custom.
+ * À intégrer avec une scène three.js (par ex. celle de dice-box-threejs).
+ */
 export class VolumetricFireSystem {
   private scene: THREE.Scene;
   private fireMeshes: Map<string, THREE.Mesh>;
@@ -25,9 +25,7 @@ export class VolumetricFireSystem {
     this.clock = new THREE.Clock();
   }
 
-  /**
-   * Vertex Shader pour le feu volumétrique
-   */
+  /** Vertex Shader pour le feu volumétrique */
   static getVertexShader(): string {
     return `
       varying vec2 vUv;
@@ -64,9 +62,7 @@ export class VolumetricFireSystem {
     `;
   }
 
-  /**
-   * Fragment Shader pour le feu volumétrique
-   */
+  /** Fragment Shader pour le feu volumétrique */
   static getFragmentShader(): string {
     return `
       varying vec2 vUv;
@@ -137,9 +133,6 @@ export class VolumetricFireSystem {
 
   /**
    * Crée un mesh de feu volumétrique pour un dé
-   * @param diceMesh - Le mesh du dé
-   * @param diceId - L'ID unique du dé
-   * @param options - Options de personnalisation
    */
   attachToDice(
     diceMesh: THREE.Mesh,
@@ -156,17 +149,15 @@ export class VolumetricFireSystem {
       scale: options.scale ?? 1.0,
     };
 
-    // Géométrie cylindrique pour la flamme
     const geometry = new THREE.CylinderGeometry(
-      config.radius * 0.3, // rayon haut (plus petit)
-      config.radius,        // rayon bas
+      config.radius * 0.3,
+      config.radius,
       config.height,
       config.segments,
       20,
-      true // open ended
+      true
     );
 
-    // Matériau avec shader personnalisé
     const material = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -185,11 +176,9 @@ export class VolumetricFireSystem {
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
-    // Position au-dessus du dé
-    fireMesh.position.copy((diceMesh as any).position);
+    fireMesh.position.copy(diceMesh.position as THREE.Vector3);
     fireMesh.position.y += config.height / 2;
 
-    // Lien avec le dé
     fireMesh.userData = {
       diceId,
       diceMesh,
@@ -202,45 +191,33 @@ export class VolumetricFireSystem {
     return fireMesh;
   }
 
-  /**
-   * Met à jour tous les feux (à appeler dans la boucle d'animation)
-   */
+  /** Mise à jour (à appeler dans la boucle d’animation) */
   update(): void {
     const elapsed = this.clock.getElapsedTime();
 
     this.fireMeshes.forEach((fireMesh) => {
       const diceMesh: THREE.Mesh | undefined = fireMesh.userData.diceMesh;
-
       if (!diceMesh) return;
 
-      // Suivre la position du dé
       fireMesh.position.copy(diceMesh.position as THREE.Vector3);
       fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
 
-      // Mettre à jour le temps dans le shader
-      (fireMesh.material as THREE.ShaderMaterial).uniforms.time.value = elapsed;
+      const mat = fireMesh.material as THREE.ShaderMaterial;
+      mat.uniforms.time.value = elapsed;
     });
   }
 
-  /**
-   * Supprime le feu d'un dé
-   * @param diceId - L'ID du dé
-   */
+  /** Supprime le feu d’un dé */
   removeDiceFire(diceId: string): void {
     const fireMesh = this.fireMeshes.get(diceId);
-    if (fireMesh) {
-      this.scene.remove(fireMesh);
-      fireMesh.geometry.dispose();
-      (fireMesh.material as THREE.ShaderMaterial).dispose();
-      this.fireMeshes.delete(diceId);
-    }
+    if (!fireMesh) return;
+
+    this.scene.remove(fireMesh);
+    fireMesh.geometry.dispose();
+    (fireMesh.material as THREE.ShaderMaterial).dispose();
+    this.fireMeshes.delete(diceId);
   }
 
-  /**
-   * Active/désactive le feu pour un dé
-   * @param diceId - L'ID du dé
-   * @param visible - Visibilité
-   */
   setVisible(diceId: string, visible: boolean): void {
     const fireMesh = this.fireMeshes.get(diceId);
     if (fireMesh) {
@@ -248,9 +225,7 @@ export class VolumetricFireSystem {
     }
   }
 
-  /**
-   * Nettoie tous les feux
-   */
+  /** Nettoie tout */
   dispose(): void {
     this.fireMeshes.forEach((_fireMesh, diceId) => {
       this.removeDiceFire(diceId);
