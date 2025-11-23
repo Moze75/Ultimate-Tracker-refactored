@@ -202,8 +202,8 @@ export class VolumetricFireSystem {
     return fireMesh;
   }
 
+
   /** Mise à jour (à appeler dans la boucle d’animation) */
-   /** Mise à jour (à appeler dans la boucle d’animation) */
   update(): void {
     const elapsed = this.clock.getElapsedTime();
 
@@ -215,10 +215,11 @@ export class VolumetricFireSystem {
       fireMesh.position.copy(diceMesh.position as THREE.Vector3);
       fireMesh.position.add(fireMesh.userData.offset as THREE.Vector3);
 
-      // Pas de shader pour l'instant (MeshBasicMaterial), donc pas d'uniforms.time
-      // Quand on repassera au ShaderMaterial, on réactivera un truc comme :
-      // const mat = fireMesh.material as THREE.ShaderMaterial;
-      // mat.uniforms.time.value = elapsed;
+      // Animation du feu via uniform time
+      const mat = fireMesh.material as THREE.ShaderMaterial;
+      if (mat && mat.uniforms && mat.uniforms.time) {
+        mat.uniforms.time.value = elapsed;
+      }
     });
   }
 
