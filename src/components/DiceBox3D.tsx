@@ -221,7 +221,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
         console.log('📦 Config complète:', config);
 
-        const box = new DiceBox('#dice-box-overlay', config);
+               const box = new CustomDiceBox('#dice-box-overlay', config, effectiveSettings);
 
         if (containerRef.current) {
           const viewportWidth = window.innerWidth;
