@@ -159,21 +159,17 @@ export class VolumetricFireSystem {
       true
     );
 
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        scale: { value: config.scale },
-        color1: { value: config.color1 },
-        color2: { value: config.color2 },
-        color3: { value: config.color3 },
-      },
-      vertexShader: VolumetricFireSystem.getVertexShader(),
-      fragmentShader: VolumetricFireSystem.getFragmentShader(),
+    // 🧪 DEBUG: utiliser un matériau basique rouge ultra-visible
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
       transparent: true,
+      opacity: 0.7,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
+      wireframe: false,
     });
+
+    // Pour repasser au shader plus tard, on remettra le ShaderMaterial ci-dessous.
+    // const material = new THREE.ShaderMaterial({ ... });
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
