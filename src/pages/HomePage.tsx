@@ -201,9 +201,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           </div>
         </div>
 
-        {/* Footer */}
+          {/* Footer */}
         <footer className="text-center text-gray-400 text-sm space-y-4 pb-8">
-          <div className="flex justify-center gap-6">
+          <div className="flex justify-center gap-6 flex-wrap">
             <a
               href="https://le-compagnon-dnd.fr/confidentialite.html"
               target="_blank"
@@ -212,7 +212,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             >
               Politique de confidentialité
             </a>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <a
               href="https://le-compagnon-dnd.fr/conditions.html"
               target="_blank"
