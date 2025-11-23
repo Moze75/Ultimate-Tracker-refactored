@@ -120,11 +120,11 @@ export class VolumetricFireSystem {
           color = mix(color3, vec3(0.1, 0.0, 0.0), (uv.y - 0.6) / 0.4); // Rouge -> Noir
         }
         
-        // Luminosité
-        float brightness = intensity * (1.0 - uv.y * 0.7);
+        // Luminosité (boostée pour debug)
+        float brightness = intensity * (1.5 - uv.y * 0.5);
         
-        // Transparence
-        float alpha = intensity * flameShape * (1.0 - uv.y);
+        // Transparence (un peu plus opaque)
+        float alpha = intensity * flameShape * (1.2 - uv.y);
         
         gl_FragColor = vec4(color * brightness, alpha);
       }
