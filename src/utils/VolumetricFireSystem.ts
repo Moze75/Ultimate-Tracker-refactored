@@ -153,8 +153,8 @@ export class VolumetricFireSystem {
       config.radius * 0.3,
       config.radius,
       config.height,
-      config.segments,
-      20,
+      config.segments * 2, // plus de segments angulaires pour adoucir les facettes
+      8,                   // moins d’anneaux verticaux (suffisant pour un volume)
       true
     );
 
