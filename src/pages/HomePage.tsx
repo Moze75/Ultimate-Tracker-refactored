@@ -139,10 +139,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                     {item.date}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-100 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-300">
+                             <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-400 text-sm leading-relaxed">
                       {item.content}
                     </p>
                   </div>
