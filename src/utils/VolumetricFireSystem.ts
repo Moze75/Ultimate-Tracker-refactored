@@ -134,38 +134,53 @@ export class VolumetricFireSystem {
   /**
    * Crée un mesh de feu volumétrique pour un dé
    */
-  attachToDice(
+   attachToDice(
     diceMesh: THREE.Mesh,
     diceId: string,
     options: VolumetricFireOptions = {}
   ): THREE.Mesh {
-    // 🧪 DEBUG : ignorer les options, mettre un GROS CUBE BLEU exactement sur le dé
+    // Flamme cylindrique simplifiée (géométrie + matériau basique orange)
+    const height = options.height ?? 70;   // taille adaptée à l'échelle de la scène
+    const radius = options.radius ?? 20;   // rayon assez large pour bien voir
 
-    const size = 10;
-    const geometry = new THREE.BoxGeometry(size, size, size);
+    const geometry = new THREE.CylinderGeometry(
+      radius * 0.3,   // haut plus fin
+      radius,         // bas plus large
+      height,
+      16,             // segments
+      1,
+      true
+    );
 
     const material = new THREE.MeshBasicMaterial({
-      color: 0x0000ff,    // Bleu vif
+      color: 0xff8800,    // orange vif
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.7,
       depthWrite: false,
       wireframe: false,
+      side: THREE.DoubleSide,
     });
 
     const fireMesh = new THREE.Mesh(geometry, material);
 
-    // On copie la position actuelle du dé, sans offset : le cube recouvre le dé
+    // Position de départ : on copie la position du dé et on monte au-dessus
     fireMesh.position.copy(diceMesh.position as THREE.Vector3);
+    fireMesh.position.y += height * 0.6; // légèrement au-dessus du dé
 
-    // On garde un offset nul pour l'instant
+    // Offset pour suivre le dé pendant le roll
     fireMesh.userData = {
       diceId,
       diceMesh,
-      offset: new THREE.Vector3(0, 0, 0),
+      offset: new THREE.Vector3(0, height * 0.6, 0),
     };
 
     this.scene.add(fireMesh);
-    console.log('[VolumetricFireSystem] Cube bleu ajouté sur le dé', diceId, 'position =', fireMesh.position);
+    console.log(
+      '[VolumetricFireSystem] Flamme cylindrique ajoutée sur le dé',
+      diceId,
+      'position =',
+      fireMesh.position
+    );
 
     this.fireMeshes.set(diceId, fireMesh);
     return fireMesh;
