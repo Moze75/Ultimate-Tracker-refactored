@@ -92,7 +92,7 @@ export class CustomDiceBox {
     console.log('[CustomDiceBox] VolumetricFireSystem créé', this.volumetricFire);
 
     // Hook léger sur la boucle d'animation si possible
-    const originalAnimate = (this.core as any).animate?.bind(this.core);
+      const originalAnimate = (this.core as any).animate?.bind(this.core);
 
     if (originalAnimate && typeof originalAnimate === 'function') {
       const self = this;
@@ -104,13 +104,13 @@ export class CustomDiceBox {
             console.warn('[CustomDiceBox] Erreur update feu volumétrique:', e);
           }
         }
+        // Debug minimal pour vérifier que animate tourne bien
+        // console.log('[CustomDiceBox] animate() tick');
         return originalAnimate(...args);
       };
       console.log('[CustomDiceBox] animate() patché pour appeler update() du feu');
     } else {
-      console.warn(
-        '[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.'
-      );
+      console.warn('[CustomDiceBox] Pas de animate() accessible, le feu ne sera pas animé.');
     }
   }
 
