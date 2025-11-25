@@ -7,7 +7,11 @@ async function createMolliePayment(userId: string, tier: string): Promise<string
     const baseUrl = (import.meta as any).env?.VITE_SUPABASE_FUNCTIONS_URL 
       || `https://${(import.meta as any).env?.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co`;
 
-    const response = await fetch(`${baseUrl}/mollie-create-payment`, {
+   const netlifyBase =
+  (import.meta as any).env?.VITE_NETLIFY_FUNCTIONS_URL ||
+  'https://www.le-compagnon-dnd.fr/.netlify/functions';
+
+const response = await fetch(`${netlifyBase}/create-mollie-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
