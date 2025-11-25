@@ -67,25 +67,24 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
 
     try {
       setProcessingPayment(true);
-      
-      // TODO: Intégrer Mollie ici
-      toast.loading('Redirection vers le paiement...', { duration: 2000 });
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const plan = SUBSCRIPTION_PLANS.find(p => p.id === tier);
-      toast.error(
-        `Le paiement Mollie n'est pas encore configuré.\nMontant : ${plan?.priceLabel}\nCette fonctionnalité sera bientôt disponible !`,
-        { duration: 5000 }
-      );
 
-      // Exemple à implémenter :
-      // const paymentUrl = await subscriptionService.createMolliePayment(session.user.id, tier);
-      // window.location.href = paymentUrl;
+      toast.loading('Redirection vers la page de paiement sécurisée...', { duration: 2000 });
+
+      // ✅ Appel au service qui parle à ton backend
+      const checkoutUrl = await subscriptionService.createMolliePayment(session.user.id, tier);
+
+      if (!checkoutUrl) {
+        toast.error('Impossible de créer le paiement. Veuillez réessayer.');
+        return;
+      }
+
+      // Redirection vers Mollie
+      window.location.href = checkoutUrl;
       
     } catch (error: any) {
       console.error('Erreur lors de la souscription:', error);
-      toast.error('Erreur lors de la création du paiement');
+      toast.error(error?.message || 'Erreur lors de la création du paiement');
     } finally {
       setProcessingPayment(false);
     }
