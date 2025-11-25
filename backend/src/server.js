@@ -43,20 +43,20 @@ app.post('/api/create-payment', async (req, res) => {
       return res.status(400).json({ error: 'Tier invalide' });
     }
 
-    const payment = await mollieClient.payments.create({
-      amount: {
-        currency: 'EUR',
-        value: amount,
-      },
-      description: `Abonnement ${tier} - Le Compagnon D&D`,
-      redirectUrl: `${process.env. FRONTEND_URL}/payment-success? userId=${userId}&tier=${tier}`,
-      webhookUrl: `${process.env.BACKEND_URL}/api/webhook`,
-      metadata: {
-        userId,
-        tier,
-        email,
-      },
-    });
+const payment = await mollieClient.payments.create({
+  amount: {
+    currency: 'EUR',
+    value: amount,
+  },
+  description: `Abonnement ${tier} - Le Compagnon D&D`,
+  redirectUrl: `${process. env.FRONTEND_URL}/payment-success?userId=${userId}&tier=${tier}`,
+  // webhookUrl: `${process. env.BACKEND_URL}/api/webhook`,  // ⚠️ Désactivé pour les tests locaux
+  metadata: {
+    userId,
+    tier,
+    email,
+  },
+});
 
     console.log('✅ Paiement créé:', payment. id);
 
