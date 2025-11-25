@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
 "scripts": {
-  "dev": "npx nodemon --exec node_modules/.bin/ts-node src/server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js",
+  "dev": "node src/server.js",
+  "start": "node src/server.js",
   "test": "echo \"Error: no test specified\" && exit 1"
 },
   "keywords": [],
