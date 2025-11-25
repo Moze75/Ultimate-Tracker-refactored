@@ -54,7 +54,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
     }
   };
 
-  const handleSubscribe = async (tier: string) => {
+    const handleSubscribe = async (tier: string) => {
     if (tier === 'free') {
       toast.error('Vous êtes en période d\'essai gratuit');
       return;
