@@ -1,12 +1,35 @@
 import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
-async function createMolliePayment(userId: string, tier: string): Promise<string | null> {
-  console.log(
-    '[subscriptionService] createMolliePayment appelé mais Mollie n\'est pas encore configuré.',
-    { userId, tier }
-  );
-  return null;
+async function createMolliePayment(userId: string, tier: string, email: string): Promise<string | null> {
+  try {
+    const backendUrl = import.meta.env.PROD 
+      ? 'https://ton-backend-deploye.railway.app'  // ⚠️ À changer après déploiement
+      : 'http://localhost:3001';
+
+    console. log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, backendUrl });
+
+    const response = await fetch(`${backendUrl}/api/create-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, tier, email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la création du paiement');
+    }
+
+    const data = await response.json();
+    console.log('[subscriptionService] ✅ Paiement créé:', data);
+    return data.checkoutUrl;
+
+  } catch (error) {
+    console.error('[subscriptionService] ❌ Erreur createMolliePayment:', error);
+    throw error;
+  }
 }
 
 export const subscriptionService = {
