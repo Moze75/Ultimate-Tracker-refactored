@@ -1,9 +1,13 @@
 import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
-async function createMolliePayment(userId: string, tier: SubscriptionTier): Promise<string | null> {
+async function createMolliePayment(userId: string, tier: string): Promise<string | null> {
   try {
-    const response = await fetch('/api/mollie/create-payment', {
+    // URL de la Edge Function Supabase
+    const baseUrl = (import.meta as any).env?.VITE_SUPABASE_FUNCTIONS_URL 
+      || `https://${(import.meta as any).env?.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co`;
+
+    const response = await fetch(`${baseUrl}/mollie-create-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
