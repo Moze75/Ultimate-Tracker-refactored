@@ -84,7 +84,7 @@ app.post('/api/webhook', async (req, res) => {
     console.log('📬 Webhook reçu:', payment.id, payment.status);
 
     if (payment.status === 'paid') {
-      const { userId, tier } = payment.metadata;
+     const { userId, tier } = payment.metadata as { userId: string; tier: string; email: string };
 
       console.log('✅ Paiement confirmé pour:', userId, tier);
 
