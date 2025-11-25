@@ -72,7 +72,11 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
       toast.loading('Redirection vers la page de paiement sécurisée...', { duration: 2000 });
 
       // ✅ Appel au service qui parle à ton backend
-      const checkoutUrl = await subscriptionService.createMolliePayment(session.user.id, tier);
+      const checkoutUrl = await subscriptionService. createMolliePayment(
+  session.user.id, 
+  tier, 
+  session.user.email || ''
+);
 
       if (!checkoutUrl) {
         toast.error('Impossible de créer le paiement. Veuillez réessayer.');
