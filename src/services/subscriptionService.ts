@@ -2,18 +2,12 @@ import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
 async function createMolliePayment(userId: string, tier: string): Promise<string | null> {
-  try {
-    const netlifyBase =
-      (import.meta as any).env?.VITE_NETLIFY_FUNCTIONS_URL ||
-      'https://www.le-compagnon-dnd.fr/.netlify/functions';
-
-    const response = await fetch(`${netlifyBase}/create-mollie-payment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId, tier }),
-    });
+  console.log('[subscriptionService] createMolliePayment appelé mais Mollie n\'est pas encore configuré.', {
+    userId,
+    tier,
+  });
+  return null;
+}
 
     if (!response.ok) {
       console.error('[subscriptionService] Erreur HTTP createMolliePayment:', response.status);
