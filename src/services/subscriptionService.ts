@@ -207,10 +207,10 @@ async getCharacterLimit(userId: string): Promise<number> {
    /**
    * Crée un lien de paiement Mollie via le backend
    */
-  async createMolliePayment(userId: string, tier: SubscriptionTier): Promise<string> {
-    console.log('[subscriptionService] Création du paiement Mollie pour:', userId, tier);
+async createMolliePayment(userId: string, tier: SubscriptionTier, email: string): Promise<string> {
+  console.log('[subscriptionService] Création du paiement Mollie pour:', userId, tier, email);
 
-    const checkoutUrl = await createMolliePayment(userId, tier);
+  const checkoutUrl = await createMolliePayment(userId, tier, email);
 
     if (!checkoutUrl) {
       throw new Error('Impossible de créer le paiement Mollie');
