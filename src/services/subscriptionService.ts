@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
-async function createMolliePayment(userId: string, tier: string): Promise<string | null> {
+async function createMolliePayment(userId: string, tier: SubscriptionTier): Promise<string | null> {
   try {
     const response = await fetch('/api/mollie/create-payment', {
       method: 'POST',
