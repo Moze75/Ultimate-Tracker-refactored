@@ -83,7 +83,7 @@ export const handler = async (event, context) => {
       },
       description: plan.description,
       redirectUrl: `${publicBaseUrl}/subscription/confirmation?status=paid&tier=${tier}`,
-      // Tu pourras ajouter un webhook plus tard si tu fais une autre function :
+      // Tu pourras ajouter un webhook plus tard si tu crées une autre function Netlify :
       // webhookUrl: `${publicBaseUrl}/.netlify/functions/mollie-webhook`,
       metadata: {
         userId,
