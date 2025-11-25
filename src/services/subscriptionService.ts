@@ -197,28 +197,19 @@ async getCharacterLimit(userId: string): Promise<number> {
     return remainingDays !== null && remainingDays > 0 && remainingDays <= 7;
   },
 
-  /**
-   * Crée un lien de paiement Mollie (à implémenter plus tard)
+   /**
+   * Crée un lien de paiement Mollie via le backend
    */
   async createMolliePayment(userId: string, tier: SubscriptionTier): Promise<string> {
-    // TODO: Implémenter l'appel à Mollie via votre backend
-    console.log('Création du paiement Mollie pour:', userId, tier);
-    
-    const plan = SUBSCRIPTION_PLANS.find(p => p.id === tier);
-    console.log('Montant:', plan?.price, '€/an');
-    
-    /* 
-    Exemple de structure pour plus tard :
-    const response = await fetch('/api/create-mollie-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, tier, amount: plan?.price }),
-    });
-    const { checkoutUrl } = await response.json();
-    return checkoutUrl;
-    */
+    console.log('[subscriptionService] Création du paiement Mollie pour:', userId, tier);
 
-    return '#mollie-payment-placeholder';
+    const checkoutUrl = await createMolliePayment(userId, tier);
+
+    if (!checkoutUrl) {
+      throw new Error('Impossible de créer le paiement Mollie');
+    }
+
+    return checkoutUrl;
   },
 
    /**
