@@ -1,6 +1,30 @@
 import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
+async function createMolliePayment(userId: string, tier: string): Promise<string | null> {
+  try {
+    const response = await fetch('/api/mollie/create-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, tier }),
+    });
+
+    if (!response.ok) {
+      console.error('[subscriptionService] Erreur HTTP createMolliePayment:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    // On s’attend à { checkoutUrl: string }
+    return data.checkoutUrl || null;
+  } catch (error) {
+    console.error('[subscriptionService] Erreur createMolliePayment:', error);
+    return null;
+  }
+}
+
 export const subscriptionService = {
   /**
    * Récupère l'abonnement actuel de l'utilisateur
