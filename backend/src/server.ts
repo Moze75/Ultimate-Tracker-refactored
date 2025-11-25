@@ -4,22 +4,22 @@ import dotenv from 'dotenv';
 import { createMollieClient } from '@mollie/api-client';
 import { createClient } from '@supabase/supabase-js';
 
-dotenv. config();
+dotenv.config();
 
 const app = express();
-const PORT = process.env. PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 const mollieClient = createMollieClient({
   apiKey: process.env.MOLLIE_API_KEY! ,
 });
 
 const supabase = createClient(
-  process. env.SUPABASE_URL!,
-  process.env. SUPABASE_SERVICE_KEY!
+  process.env. SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
 );
 
 app.use(cors({
-  origin: process. env.FRONTEND_URL,
+  origin: process.env. FRONTEND_URL,
   credentials: true,
 }));
 app.use(express.json());
@@ -28,13 +28,13 @@ app.post('/api/create-payment', async (req, res) => {
   try {
     const { userId, tier, email } = req.body;
 
-    if (! userId || !tier || !email) {
+    if (!userId || !tier || !email) {
       return res.status(400).json({ error: 'Paramètres manquants' });
     }
 
     const tierPrices: { [key: string]: string } = {
       hero: '4.99',
-      game_master: '9. 99',
+      game_master: '9.99',
       celestial: '24.99',
     };
 
@@ -43,7 +43,7 @@ app.post('/api/create-payment', async (req, res) => {
       return res.status(400).json({ error: 'Tier invalide' });
     }
 
-    const payment = await mollieClient.payments.create({
+    const payment = await mollieClient.payments. create({
       amount: {
         currency: 'EUR',
         value: amount,
@@ -79,12 +79,13 @@ app.post('/api/webhook', async (req, res) => {
       return res.status(400).send('No payment ID');
     }
 
-    const payment = await mollieClient. payments.get(paymentId);
+    const payment = await mollieClient.payments.get(paymentId);
 
     console.log('📬 Webhook reçu:', payment.id, payment.status);
 
     if (payment.status === 'paid') {
-     const { userId, tier } = payment.metadata as { userId: string; tier: string; email: string };
+      // ✅ CORRECTION ICI
+      const { userId, tier } = payment.metadata as { userId: string; tier: string; email: string };
 
       console.log('✅ Paiement confirmé pour:', userId, tier);
 
@@ -106,10 +107,10 @@ app.post('/api/webhook', async (req, res) => {
         .from('user_subscriptions')
         .update({ 
           status: 'expired',
-          end_date: now. toISOString(),
+          end_date: now.toISOString(),
           updated_at: now.toISOString()
         })
-        . eq('user_id', userId)
+        .eq('user_id', userId)
         .eq('status', 'trial');
 
       const { data, error } = await supabase
@@ -120,20 +121,20 @@ app.post('/api/webhook', async (req, res) => {
           status: 'active',
           start_date: now.toISOString(),
           subscription_end_date: subscriptionEndDate.toISOString(),
-          mollie_payment_id: payment.id,
+          mollie_payment_id: payment. id,
         })
-        .select()
+        . select()
         .single();
 
       if (error) {
-        console.error('❌ Erreur Supabase:', error);
+        console. error('❌ Erreur Supabase:', error);
         throw error;
       }
 
       console.log('✅ Abonnement créé dans Supabase:', data);
     }
 
-    res.status(200). send('OK');
+    res.status(200).send('OK');
   } catch (error: any) {
     console.error('❌ Erreur webhook:', error);
     res.status(500).send('Webhook error');
@@ -146,5 +147,5 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend Mollie démarré sur le port ${PORT}`);
-  console.log(`📡 Webhook URL: ${process.env.BACKEND_URL}/api/webhook`);
+  console.log(`📡 Webhook URL: ${process.env. BACKEND_URL}/api/webhook`);
 });
