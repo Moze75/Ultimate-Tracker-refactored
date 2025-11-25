@@ -10,12 +10,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const mollieClient = createMollieClient({
-  apiKey: process.env.MOLLIE_API_KEY! ,
+  apiKey: process.env.MOLLIE_API_KEY,
 });
 
 const supabase = createClient(
-  process.env. SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_URL,
+  process. env.SUPABASE_SERVICE_KEY
 );
 
 app.use(cors({
@@ -32,8 +32,8 @@ app.post('/api/create-payment', async (req, res) => {
       return res.status(400).json({ error: 'Paramètres manquants' });
     }
 
-    const tierPrices: { [key: string]: string } = {
-      hero: '4.99',
+    const tierPrices = {
+      hero: '4. 99',
       game_master: '9.99',
       celestial: '24.99',
     };
@@ -43,7 +43,7 @@ app.post('/api/create-payment', async (req, res) => {
       return res.status(400).json({ error: 'Tier invalide' });
     }
 
-    const payment = await mollieClient.payments. create({
+    const payment = await mollieClient.payments.create({
       amount: {
         currency: 'EUR',
         value: amount,
@@ -58,14 +58,14 @@ app.post('/api/create-payment', async (req, res) => {
       },
     });
 
-    console.log('✅ Paiement créé:', payment.id);
+    console.log('✅ Paiement créé:', payment. id);
 
     res.json({
       checkoutUrl: payment.getCheckoutUrl(),
       paymentId: payment.id,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Erreur création paiement:', error);
     res.status(500).json({ error: error.message });
   }
@@ -81,11 +81,10 @@ app.post('/api/webhook', async (req, res) => {
 
     const payment = await mollieClient.payments.get(paymentId);
 
-    console.log('📬 Webhook reçu:', payment.id, payment.status);
+    console.log('📬 Webhook reçu:', payment. id, payment.status);
 
     if (payment.status === 'paid') {
-      // ✅ CORRECTION ICI
-      const { userId, tier } = payment.metadata as { userId: string; tier: string; email: string };
+      const { userId, tier } = payment.metadata;
 
       console.log('✅ Paiement confirmé pour:', userId, tier);
 
@@ -97,7 +96,7 @@ app.post('/api/webhook', async (req, res) => {
         .from('user_subscriptions')
         .update({ 
           status: 'cancelled',
-          end_date: now.toISOString(),
+          end_date: now. toISOString(),
           updated_at: now.toISOString()
         })
         .eq('user_id', userId)
@@ -105,7 +104,7 @@ app.post('/api/webhook', async (req, res) => {
 
       await supabase
         .from('user_subscriptions')
-        .update({ 
+        . update({ 
           status: 'expired',
           end_date: now.toISOString(),
           updated_at: now.toISOString()
@@ -121,9 +120,9 @@ app.post('/api/webhook', async (req, res) => {
           status: 'active',
           start_date: now.toISOString(),
           subscription_end_date: subscriptionEndDate.toISOString(),
-          mollie_payment_id: payment. id,
+          mollie_payment_id: payment.id,
         })
-        . select()
+        .select()
         .single();
 
       if (error) {
@@ -135,17 +134,17 @@ app.post('/api/webhook', async (req, res) => {
     }
 
     res.status(200).send('OK');
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Erreur webhook:', error);
     res.status(500).send('Webhook error');
   }
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date(). toISOString() });
+  res. json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
+app. listen(PORT, () => {
   console.log(`🚀 Backend Mollie démarré sur le port ${PORT}`);
-  console.log(`📡 Webhook URL: ${process.env. BACKEND_URL}/api/webhook`);
+  console.log(`📡 Webhook URL: ${process.env.BACKEND_URL}/api/webhook`);
 });
