@@ -110,7 +110,7 @@ app.post('/api/webhook', async (req, res) => {
           updated_at: now.toISOString()
         })
         .eq('user_id', userId)
-        .eq('status', 'trial');
+        .eq('status', 'trial'); 
 
       const { data, error } = await supabase
         .from('user_subscriptions')
