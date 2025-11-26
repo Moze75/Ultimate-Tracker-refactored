@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Crown, Shield, Sparkles, Users, Coins, Zap, Clock, Calendar, Star } from 'lucide-react';
+import { ArrowLeft, Crown, Shield, Sparkles, Star, CheckCircle2, Calendar, Loader2 } from 'lucide-react';
 import { subscriptionService } from '../services/subscriptionService';
 import { SUBSCRIPTION_PLANS, UserSubscription } from '../types/subscription';
 import toast from 'react-hot-toast';
@@ -18,7 +18,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
   const [remainingTrialDays, setRemainingTrialDays] = useState<number | null>(null);
   const [remainingSubscriptionDays, setRemainingSubscriptionDays] = useState<number | null>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
-    const [isSubscriptionExpiringSoon, setIsSubscriptionExpiringSoon] = useState(false);
+  const [isSubscriptionExpiringSoon, setIsSubscriptionExpiringSoon] = useState(false);
 
   useEffect(() => {
     loadSubscription();
@@ -46,7 +46,6 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
       const expiringSoon = await subscriptionService.isSubscriptionExpiringSoon(session.user.id);
       setIsSubscriptionExpiringSoon(expiringSoon);
     } catch (error) {
-      
       console.error('Erreur lors du chargement de l\'abonnement:', error);
       toast.error('Erreur lors du chargement de l\'abonnement');
     } finally {
@@ -54,7 +53,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
     }
   };
 
-    const handleSubscribe = async (tier: string) => {
+  const handleSubscribe = async (tier: string) => {
     if (tier === 'free') {
       toast.error('Vous êtes en période d\'essai gratuit');
       return;
@@ -67,16 +66,14 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
 
     try {
       setProcessingPayment(true);
-      const plan = SUBSCRIPTION_PLANS.find(p => p.id === tier);
-
+      
       toast.loading('Redirection vers la page de paiement sécurisée...', { duration: 2000 });
 
-      // ✅ Appel au service qui parle à ton backend
-      const checkoutUrl = await subscriptionService. createMolliePayment(
-  session.user.id, 
-  tier, 
-  session.user.email || ''
-);
+      const checkoutUrl = await subscriptionService.createMolliePayment(
+        session.user.id, 
+        tier, 
+        session.user.email || ''
+      );
 
       if (!checkoutUrl) {
         toast.error('Impossible de créer le paiement. Veuillez réessayer.');
@@ -95,64 +92,113 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
   };
 
   const getPlanIcon = (planId: string) => {
-  switch (planId) {
-    case 'free':
-      return <Clock className="w-8 h-8" />;
-    case 'hero':
-      return <Sparkles className="w-8 h-8" />;
-    case 'game_master':
-      return <Crown className="w-8 h-8" />;
-    case 'celestial':
-      return <Star className="w-8 h-8" />; // ✅ Nouveau
-    default:
-      return <Shield className="w-8 h-8" />;
-  }
-};
+    switch (planId) {
+      case 'hero': return <Sparkles className="w-10 h-10" />;
+      case 'game_master': return <Crown className="w-10 h-10" />;
+      case 'celestial': return <Star className="w-10 h-10" />;
+      default: return <Shield className="w-10 h-10" />;
+    }
+  };
 
-const getPlanColor = (color: string) => {
-  switch (color) {
-    case 'gray':
-      return {
-        border: 'border-gray-500/30',
-        bg: 'bg-gray-500/10',
-        text: 'text-gray-400',
-        button: 'bg-gray-600 hover:bg-gray-700',
-        iconBg: 'bg-gray-500/20',
-      };
-    case 'blue':
-      return {
-        border: 'border-blue-500/50',
-        bg: 'bg-blue-500/10',
-        text: 'text-blue-400',
-        button: 'bg-blue-600 hover:bg-blue-700',
-        iconBg: 'bg-blue-500/20',
-      };
-    case 'purple':
-      return {
-        border: 'border-purple-500/50',
-        bg: 'bg-purple-500/10',
-        text: 'text-purple-400',
-        button: 'bg-purple-600 hover:bg-purple-700',
-        iconBg: 'bg-purple-500/20',
-      };
-    case 'gold': // ✅ Nouveau
-      return {
-        border: 'border-yellow-500/50',
-        bg: 'bg-yellow-500/10',
-        text: 'text-yellow-400',
-        button: 'bg-yellow-600 hover:bg-yellow-700',
-        iconBg: 'bg-yellow-500/20',
-      };
-    default:
-      return {
-        border: 'border-gray-500/30',
-        bg: 'bg-gray-500/10',
-        text: 'text-gray-400',
-        button: 'bg-gray-600 hover:bg-gray-700',
-        iconBg: 'bg-gray-500/20',
-      };
-  }
-};
+  // Helper pour rendre le contenu spécifique (features) selon le plan pour correspondre au wording HomePage
+  const renderPlanFeatures = (planId: string) => {
+    switch (planId) {
+      case 'free':
+        return (
+          <ul className="space-y-3 mb-8">
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> 1 personnage max</li>
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités disponibles</li>
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Test complet sans CB</li>
+          </ul>
+        );
+      case 'hero':
+        return (
+          <ul className="space-y-3 mb-8">
+             <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Jusqu’à 5 personnages</li>
+             <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Création d’objets personnalisés</li>
+             <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Suivi de l’état, de la concentration</li>
+             <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Dice Roller & Character Wizard</li>
+             <li className="flex items-start gap-3 text-gray-300 italic text-sm"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Tous les outils pour le joueur régulier</li>
+          </ul>
+        );
+      case 'game_master':
+        return (
+          <ul className="space-y-3 mb-8">
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Jusqu’à 15 personnages</li>
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> <strong>Accès complet outils MJ</strong></li>
+            <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Campagnes, Envois d'objets, Gestion Joueurs</li>
+            <li className="flex items-start gap-3 text-gray-300 italic text-sm"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités Héros incluses</li>
+          </ul>
+        );
+      case 'celestial':
+        return (
+          <>
+            <ul className="space-y-3 mb-6">
+              <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> <strong>Personnages illimités</strong></li>
+              <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Support ultra-prioritaire</li>
+              <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Accès anticipé aux nouveautés</li>
+              <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Toutes fonctionnalités Héros + MJ</li>
+            </ul>
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-6">
+              <p className="text-xs text-yellow-200 italic leading-relaxed">
+                En choisissant Céleste, vous devenez un pilier du projet. Votre soutien nous aide à maintenir l’app et à la faire évoluer. Merci de faire partie de cette aventure.
+              </p>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Helper pour le style des cartes
+  const getCardStyle = (planId: string) => {
+     switch(planId) {
+        case 'free': 
+           return "bg-gray-900/80 border-gray-700 hover:scale-[1.02]";
+        case 'hero': 
+           return "bg-blue-900/20 border-blue-500/30 hover:scale-[1.02]";
+        case 'game_master': 
+           return "bg-purple-900/20 border-purple-500/30 hover:scale-[1.02]";
+        case 'celestial': 
+           return "bg-yellow-900/10 border-yellow-500/50 ring-1 ring-yellow-500/20 hover:scale-[1.02]";
+        default: 
+           return "bg-gray-900 border-gray-700";
+     }
+  };
+
+  // Helper pour le header des cartes
+  const getHeaderStyle = (planId: string) => {
+    switch(planId) {
+       case 'free': return "bg-gray-800/50 border-gray-700 text-gray-400";
+       case 'hero': return "bg-blue-900/30 border-blue-500/30 text-blue-400";
+       case 'game_master': return "bg-purple-900/30 border-purple-500/30 text-purple-400";
+       case 'celestial': return "bg-yellow-900/20 border-yellow-500/30 text-yellow-400";
+       default: return "bg-gray-800 text-gray-400";
+    }
+  };
+
+  // Helper pour le texte du bouton
+  const getButtonLabel = (planId: string) => {
+     switch(planId) {
+        case 'free': return "→ Je teste gratuitement";
+        case 'hero': return "→ Je deviens Héros";
+        case 'game_master': return "→ Je prends le contrôle";
+        case 'celestial': return "→ Je rejoins les Célestes";
+        default: return "Choisir";
+     }
+  };
+
+  // Helper pour le style du bouton
+  const getButtonStyle = (planId: string) => {
+    switch(planId) {
+       case 'free': return "border border-gray-500 text-gray-300 hover:bg-gray-700";
+       case 'hero': return "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-900/20";
+       case 'game_master': return "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-900/20";
+       case 'celestial': return "bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 shadow-lg shadow-yellow-900/20 border border-yellow-400/20";
+       default: return "bg-gray-700";
+    }
+  };
 
   if (loading) {
     return (
@@ -188,61 +234,58 @@ const getPlanColor = (color: string) => {
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-black/60" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-12">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6"
+            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-8"
           >
             <ArrowLeft size={20} />
             Retour
           </button>
 
           <div className="text-center">
-            <h1
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
-              style={{
-                textShadow:
-                  '0 0 15px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4)',
-              }}
-            >
-              Choisissez votre abonnement
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4"
+              style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>
+              Choisissez votre équipement avant d’entrer dans l’arène
             </h1>
-            <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-2">
-              Abonnement annuel 
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+               Quel que soit votre niveau, il y a un plan pour vous accompagner dans vos aventures.
             </p>
-  
 
-            {/* Badge du plan actuel */}
+            {/* STATUS DU COMPTE ACTUEL */}
             {currentSubscription && (
-              <div className="mt-6 inline-block">
-                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2">
+              <div className="inline-block animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="bg-gray-900/90 backdrop-blur border border-gray-600 rounded-xl px-6 py-4 shadow-2xl">
                   {currentSubscription.status === 'trial' && remainingTrialDays !== null ? (
-                    <p className="text-sm text-gray-400">
-                      Essai gratuit :{' '}
+                    <p className="text-base text-gray-300 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
+                      Essai gratuit en cours :{' '}
                       <span className={`font-bold ${remainingTrialDays <= 3 ? 'text-red-400' : 'text-white'}`}>
                         {remainingTrialDays} jour{remainingTrialDays > 1 ? 's' : ''} restant{remainingTrialDays > 1 ? 's' : ''}
                       </span>
                     </p>
                   ) : currentSubscription.status === 'expired' ? (
-                    <p className="text-sm text-red-400">
+                    <p className="text-base text-red-400 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500"/>
                       ⚠️ Abonnement expiré - Choisissez un plan pour continuer
                     </p>
                   ) : currentSubscription.status === 'active' && remainingSubscriptionDays !== null ? (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-base text-gray-300 flex items-center gap-2">
+                      <CheckCircle2 className="text-green-400 w-5 h-5"/>
                       Plan actuel :{' '}
-                      <span className="font-bold text-white">
+                      <span className="font-bold text-white uppercase tracking-wider">
                         {SUBSCRIPTION_PLANS.find(p => p.id === currentSubscription.tier)?.name || 'Gratuit'}
                       </span>
-                      <span className="ml-2 text-green-400">
-                        • Renouvellement dans {remainingSubscriptionDays} jour{remainingSubscriptionDays > 1 ? 's' : ''}
+                      <span className="text-gray-400 text-sm ml-2">
+                         (Renouvellement dans {remainingSubscriptionDays} jours)
                       </span>
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-base text-gray-400">
                       Plan actuel :{' '}
                       <span className="font-bold text-white">
                         {SUBSCRIPTION_PLANS.find(p => p.id === currentSubscription.tier)?.name || 'Gratuit'}
@@ -253,126 +296,61 @@ const getPlanColor = (color: string) => {
               </div>
             )}
 
-            {/* Alerte si essai expiré */}
+            {/* ALERTES */}
             {isTrialExpired && (
-              <div className="mt-4 max-w-2xl mx-auto">
-                <div className="bg-red-900/40 border border-red-500/50 rounded-lg p-4">
-                  <p className="text-red-300 font-semibold">
-                    🔒 Votre période d'essai de 15 jours est terminée
-                  </p>
-                  <p className="text-red-200 text-sm mt-1">
-                    Pour continuer à utiliser Le Compagnon - D&D, choisissez un plan ci-dessous
-                  </p>
-                </div>
-              </div>    
+               <div className="mt-6 max-w-xl mx-auto bg-red-950/50 border border-red-500/50 rounded-lg p-4 animate-pulse">
+                 <p className="text-red-200 font-semibold">🔒 Votre période d'essai est terminée</p>
+               </div>    
             )}
 
-            {/* ✨ NOUVEAU : Alerte si abonnement expire bientôt */}
             {isSubscriptionExpiringSoon && !isTrialExpired && (
-              <div className="mt-4 max-w-2xl mx-auto">
-                <div className="bg-orange-900/40 border border-orange-500/50 rounded-lg p-4">
-                  <p className="text-orange-300 font-semibold">
-                    ⏰ Votre abonnement expire dans moins de 7 jours
-                  </p>
-                  <p className="text-orange-200 text-sm mt-1">
-                    Pensez à renouveler votre abonnement pour continuer à profiter de l'app !
-                  </p>
-                </div>
-              </div>
+               <div className="mt-6 max-w-xl mx-auto bg-orange-950/50 border border-orange-500/50 rounded-lg p-4">
+                  <p className="text-orange-200 font-semibold">⏰ Votre abonnement expire bientôt</p>
+               </div>
             )}
-            
           </div>
         </div>
 
-     {/* Plans d'abonnement */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-  {SUBSCRIPTION_PLANS.map((plan) => {
-            const colors = getPlanColor(plan.color);
+        {/* Plans d'abonnement */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {SUBSCRIPTION_PLANS.map((plan) => {
             const isCurrentPlan = currentSubscription?.tier === plan.id && currentSubscription?.status === 'active';
             const isExpiredTrial = plan.id === 'free' && isTrialExpired;
-
+            
             return (
               <div
                 key={plan.id}
-                className={`relative bg-gray-900/80 backdrop-blur-sm border-2 ${colors.border} rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 ${
-                  plan.popular ? 'ring-2 ring-yellow-500/50' : ''
-                } ${isExpiredTrial ? 'opacity-60' : ''}`}
+                className={`relative backdrop-blur-sm border rounded-xl overflow-hidden flex flex-col transition-all duration-300 ${getCardStyle(plan.id)} ${isExpiredTrial ? 'opacity-60 grayscale' : ''}`}
               >
                 {plan.popular && (
-                  <div className="absolute top-4 right-4 bg-yellow-500 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
-                    ⭐ POPULAIRE
+                  <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
+                    POPULAIRE
                   </div>
                 )}
 
-                <div className="p-8">
-                  <div className={`w-16 h-16 ${colors.iconBg} rounded-full flex items-center justify-center mb-6 ${colors.text}`}>
+                <div className={`p-6 border-b ${getHeaderStyle(plan.id).split(' ')[1]} ${getHeaderStyle(plan.id).split(' ')[0]}`}>
+                  <div className={`${getHeaderStyle(plan.id).split(' ')[2]} mb-4`}>
                     {getPlanIcon(plan.id)}
                   </div>
-
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className="mb-6">
-                    {plan.price === 0 ? (
-                      <>
-                        <span className="text-4xl font-bold text-white">Gratuit</span>
-                        <span className="text-gray-400 ml-2 text-sm">15 jours</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-4xl font-bold text-white">{plan.price}€</span>
-                        <span className="text-gray-400 ml-2 text-sm">/an</span>
-                      </>
-                    )}
+                  <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
+                  <div className="mt-2">
+                     <span className="text-3xl font-bold text-white">{plan.price}€</span>
+                     <span className="text-gray-300 text-sm ml-1">{plan.price === 0 ? "/ 15 jours" : "/ an"}</span>
                   </div>
+                </div>
 
-{/* Limite de personnages */}
-{plan.maxCharacters === Infinity ? (
-  <div className={`${colors.bg} border ${colors.border} rounded-lg p-4 mb-6`}>
-    <p className="text-center">
-      <span className="text-4xl font-bold text-yellow-300">∞</span>
-      <div className="text-gray-300 mt-2 text-sm">
-        Personnages illimités
-      </div>
-    </p>
-  </div>
-) : (
-  <div className={`${colors.bg} border ${colors.border} rounded-lg p-4 mb-6`}>
-    <p className="text-center">
-      <span className="text-2xl font-bold text-white">{plan.maxCharacters}</span>
-      <span className="text-gray-300 ml-2">
-        personnage{plan.maxCharacters > 1 ? 's' : ''} max
-      </span>
-    </p>
-  </div>
-)}
-                  
+                <div className="p-6 flex-grow">
+                   {/* Rendu des features spécifiques */}
+                   {renderPlanFeatures(plan.id)}
+                </div>
 
-{/* Fonctionnalités */}
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className={`w-5 h-5 ${colors.text} flex-shrink-0 mt-0.5`} />
-                        <span className="text-gray-300 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-{/* ✅ COLLEZ ICI LE BLOC "Message personnalisé pour Céleste" */}
-{plan.id === 'celestial' && (
-  <div className="mb-6 p-4 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-lg">
-    <p className="text-sm text-yellow-200 text-center leading-relaxed">
-      <span className="font-semibold">✨ En choisissant Céleste</span>, vous soutenez directement le développement du Compagnon - D&D. 
-      Votre contribution permet d'ajouter de nouvelles fonctionnalités, d'améliorer l'expérience utilisateur et de maintenir l'application à jour. 
-      <span className="block mt-2 font-semibold text-yellow-100">Merci de faire partie de cette aventure ! 🙏</span>
-    </p>
-  </div>
-)}
-                  
-                  {isCurrentPlan ? (
+                <div className="p-6 pt-0 mt-auto">
+                   {isCurrentPlan ? (
                     <button
                       disabled
-                      className="w-full bg-green-700 text-white py-3 px-6 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full bg-green-800/50 text-green-200 border border-green-500/50 py-3 px-6 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      <Check size={20} />
+                      <CheckCircle2 size={20} />
                       Abonnement actif
                     </button>
                   ) : isExpiredTrial ? (
@@ -385,26 +363,24 @@ const getPlanColor = (color: string) => {
                   ) : plan.id === 'free' ? (
                     <button
                       disabled
-                      className="w-full bg-gray-700 text-gray-400 py-3 px-6 rounded-lg font-semibold cursor-not-allowed"
+                      className="w-full bg-gray-700 text-gray-400 py-3 px-6 rounded-lg font-semibold cursor-not-allowed border border-gray-600"
                     >
-                      Plan actuel
+                      {/* On masque le bouton free si on est déjà loggé/inscrit (ce qui est le cas ici) sauf si c'est pour info */}
+                      Plan de démarrage
                     </button>
                   ) : (
                     <button
                       onClick={() => handleSubscribe(plan.id)}
                       disabled={processingPayment}
-                      className={`w-full ${colors.button} text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                      className={`w-full py-3 px-6 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${getButtonStyle(plan.id)}`}
                     >
                       {processingPayment ? (
                         <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                          <Loader2 className="animate-spin" size={20}/>
                           Traitement...
                         </>
                       ) : (
-                        <>
-                          <Calendar size={20} />
-                          S'abonner ({plan.priceLabel})
-                        </>
+                         getButtonLabel(plan.id)
                       )}
                     </button>
                   )}
@@ -413,19 +389,15 @@ const getPlanColor = (color: string) => {
             );
           })}
         </div>
-
-
-
         
-{/* Note de paiement sécurisé */}
-<div className="mt-8 text-center">
-  <p className="text-sm text-gray-400">
-    🔒 Paiements sécurisés via <span className="font-semibold text-white">Mollie</span>
-  </p>
-  <p className="text-xs text-gray-500 mt-2">
-    Abonnement annuel • Annulation possible à tout moment
-  </p>
-</div>
+        <div className="mt-12 text-center pb-8">
+          <p className="text-sm text-gray-400 flex items-center justify-center gap-2">
+             <Shield size={14} /> Paiements sécurisés via <span className="font-semibold text-white">Mollie</span>
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Annulation possible à tout moment depuis votre compte.
+          </p>
+        </div>
       </div>
     </div>
   );
