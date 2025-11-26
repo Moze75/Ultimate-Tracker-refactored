@@ -1101,12 +1101,15 @@ function ResourceBlock({
   const remaining = Math.max(0, total - used);
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState<string>('');
+  
+  const { settings } = useDiceSettings();
 
     // 🔊 Son lors de la consommation d'une ressource de classe
   const playClassResourceSound = () => {
+    if (!settings.soundsEnabled) return;
     try {
       const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
-      audio.volume = 0.5;
+      audio.volume = (settings.fxVolume ?? 50) / 100;
       void audio.play();
     } catch (e) {
       console.warn('[ResourceBlock] Impossible de jouer le son de ressource de classe:', e);
