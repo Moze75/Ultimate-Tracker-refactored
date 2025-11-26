@@ -521,7 +521,7 @@ const PactSlotStats = React.memo(
     if (remainingSlots <= 0) return;
 
     // ✅ NOUVEAU : Jouer le son de consommation
-    playSpellSlotSound();
+    playSpellSlotSound(fxVolume, settings.soundsEnabled);
 
     const button = e.currentTarget as HTMLButtonElement;
     const rect = button.getBoundingClientRect();
