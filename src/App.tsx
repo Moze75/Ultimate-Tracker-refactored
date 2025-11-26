@@ -6,7 +6,6 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
 import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
-import { DiceSettingsProvider } from './hooks/useDiceSettings'; // ✅ AJOUT
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore'; 
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
@@ -419,81 +418,79 @@ useEffect(() => {
 
   // Rendu principal
   return (
-    <DiceSettingsProvider> {/* ✅ AJOUT DU PROVIDER ICI */}
-      <DiceHistoryProvider>
-        <Toaster position="top-right" />
-        <InstallPrompt />
+  <DiceHistoryProvider>
+    <Toaster position="top-right" />
+    <InstallPrompt />
 
-         {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
-      {(() => {
-      // Détecter si on est sur /payment-success
-      const urlParams = new URLSearchParams(window.location.search);
-      const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
+     {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
+  {(() => {
+  // Détecter si on est sur /payment-success
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
 
-      if (isPaymentSuccess && session) {
-        return (
-          <PaymentSuccessPage
-            onBackToDashboard={() => {
-              setShowHomePage(false);
-              // L'utilisateur revient au dashboard (sélection de personnage)
-            }}
-          />
-        );
-      }
+  if (isPaymentSuccess && session) {
+    return (
+      <PaymentSuccessPage
+        onBackToDashboard={() => {
+          setShowHomePage(false);
+          // L'utilisateur revient au dashboard (sélection de personnage)
+        }}
+      />
+    );
+  }
 
-      if (showHomePage && !session) {
-        return <HomePage onGetStarted={() => setShowHomePage(false)} />;
-      }
+  if (showHomePage && !session) {
+    return <HomePage onGetStarted={() => setShowHomePage(false)} />;
+  }
 
-      if (!session) {
-        return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
-      }
+  if (!session) {
+    return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+  }
 
-      if (! selectedCharacter) {
-        return (
-          <CharacterSelectionPage
-            session={session}
-            onCharacterSelect={(p: Player) => {
-              try {
-                sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
-              } catch {
-                // no-op
-              }
-              setSelectedCharacter(p);
-            }}
-          />
-        );
-      }
+  if (! selectedCharacter) {
+    return (
+      <CharacterSelectionPage
+        session={session}
+        onCharacterSelect={(p: Player) => {
+          try {
+            sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
+          } catch {
+            // no-op
+          }
+          setSelectedCharacter(p);
+        }}
+      />
+    );
+  }
 
-      return (
-        <GamePage
-          session={session}
-          selectedCharacter={selectedCharacter}
-          onBackToSelection={() => {
-            try {
-              sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-              appContextService.setContext('selection');
-            } catch {
-              // no-op
-            }
-            setSelectedCharacter(null);
-          }}
-          onUpdateCharacter={(p: Player) => {
-            setSelectedCharacter(p);
-            try {
-              localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
-              appContextService.setContext('game');
-            } catch {
-              // no-op
-            }
-          }}
-        />
-      );
-    })()}
-      </DiceHistoryProvider>
-    </DiceSettingsProvider>
+  return (
+    <GamePage
+      session={session}
+      selectedCharacter={selectedCharacter}
+      onBackToSelection={() => {
+        try {
+          sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+          appContextService.setContext('selection');
+        } catch {
+          // no-op
+        }
+        setSelectedCharacter(null);
+      }}
+      onUpdateCharacter={(p: Player) => {
+        setSelectedCharacter(p);
+        try {
+          localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
+          appContextService.setContext('game');
+        } catch {
+          // no-op
+        }
+      }}
+    />
   );
-  
+})()}
+  </DiceHistoryProvider>
+);
+   
 }
 
 export default App;
