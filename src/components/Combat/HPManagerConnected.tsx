@@ -26,6 +26,10 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
   const [healValue, setHealValue] = useState('');
   const [tempHpValue, setTempHpValue] = useState('');
 
+  const { settings } = useDiceSettings();
+  // Normalisation du volume 0-100 vers 0-1
+  const fxVolume = (settings.fxVolume ?? 50) / 100;
+
   const totalHP = player.current_hp + player.temporary_hp;
 
   // ✅ Fonction pour jouer le son de dégâts
