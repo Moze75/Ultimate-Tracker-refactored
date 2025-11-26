@@ -597,7 +597,7 @@ const PactSlotStats = React.memo(
       toast.error('Erreur lors de la mise à jour');
     }
   },
-  [remainingSlots, player, onUpdate, pactLevel]
+  [remainingSlots, player, onUpdate, pactLevel, fxVolume, settings.soundsEnabled]
 );
 
     if (maxSlots === 0) return null;
