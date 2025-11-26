@@ -34,12 +34,16 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
   // ✅ Fonction pour jouer le son de dégâts
   const playSwordSliceSound = () => {
-    audioManager.play('/Sounds/Damage-sounds/sword-slice.mp3', 0.5);
+    if (settings.soundsEnabled) {
+      audioManager.play('/Sounds/Damage-sounds/sword-slice.mp3', fxVolume);
+    }
   };
 
   // ✅ Fonction pour jouer le son de guérison
   const playHealingSound = () => {
-    audioManager.play('/Sounds/Healing/Healing.mp3', 0.5);
+    if (settings.soundsEnabled) {
+      audioManager.play('/Sounds/Healing/Healing.mp3', fxVolume);
+    }
   };
 
   const getWoundLevel = () => {
