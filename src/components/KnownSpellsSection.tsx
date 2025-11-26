@@ -282,6 +282,8 @@ const SpellLevelStats = React.memo(
     maxSlots: number;
   }) => {
     const level = parseInt(levelName.split(' ')[1]);
+        const { settings } = useDiceSettings();
+    const fxVolume = (settings.fxVolume ?? 50) / 100;
     const remainingSlots = Math.max(0, maxSlots - usedSlots);
     const isMagicien = player.class === 'Magicien';
     const arcaneRecoveryInfo = useMemo(() =>
