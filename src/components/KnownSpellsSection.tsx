@@ -31,6 +31,7 @@ import {
   updateArcaneRecoveryUsage,
 } from '../utils/arcaneRecovery';
 import { combineSpellSlots } from '../utils/multiclassUtils';
+import { useDiceSettings } from '../hooks/useDiceSettings';
 
 
  // Fonction pour jouer le son de consommation d'emplacement de sort
