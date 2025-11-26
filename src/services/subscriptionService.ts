@@ -38,63 +38,69 @@ export const subscriptionService = {
   /**
    * Récupère l'abonnement actuel de l'utilisateur
    */
-  async getCurrentSubscription(userId: string): Promise<UserSubscription | null> {
-    try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+async getCurrentSubscription(userId: string): Promise<UserSubscription | null> {
+  try {
+    const { data, error } = await supabase
+      . from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-      if (error) {
-        // Si pas d'abonnement trouvé, créer un essai gratuit
-        if (error.code === 'PGRST116') {
-          return await this.createTrialSubscription(userId);
-        }
-        throw error;
+    if (error) {
+      // Si pas d'abonnement trouvé, créer un essai gratuit
+      if (error.code === 'PGRST116') {
+        return await this.createTrialSubscription(userId);
       }
-
-      // Vérifier si l'essai gratuit a expiré
-      if (data.tier === 'free' && data.trial_end_date) {
-        const trialEndDate = new Date(data.trial_end_date);
-        const now = new Date();
-        
-        if (now > trialEndDate && data.status === 'trial') {
-          // Marquer l'essai comme expiré
-          await supabase
-            .from('user_subscriptions')
-            .update({ status: 'expired' })
-            .eq('id', data.id);
-          
-          return { ...data, status: 'expired' };
-        }
-      }
-
-      // ✅ NOUVEAU : Vérifier si l'abonnement annuel a expiré
-      if (data.status === 'active' && data.subscription_end_date) {
-        const subscriptionEndDate = new Date(data.subscription_end_date);
-        const now = new Date();
-        
-        if (now > subscriptionEndDate) {
-          // Marquer l'abonnement comme expiré
-          await supabase
-            .from('user_subscriptions')
-            .update({ status: 'expired' })
-            .eq('id', data.id);
-          
-          return { ...data, status: 'expired' };
-        }
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'abonnement:', error);
-      // En cas d'erreur, créer un essai gratuit
-      return await this.createTrialSubscription(userId);
+      throw error;
     }
-  },
+
+    // Vérifier si l'essai gratuit a expiré
+    if (data. tier === 'free' && data. trial_end_date) {
+      const trialEndDate = new Date(data.trial_end_date);
+      const now = new Date();
+      
+      if (now > trialEndDate && data.status === 'trial') {
+        // Marquer l'essai comme expiré
+        await supabase
+          .from('user_subscriptions')
+          .update({ status: 'expired' })
+          .eq('id', data.id);
+        
+        return { ...data, status: 'expired' };
+      }
+    }
+
+    // ✅ NOUVEAU : Vérifier si l'abonnement annuel a expiré
+    if (data.status === 'active' && data.subscription_end_date) {
+      const subscriptionEndDate = new Date(data. subscription_end_date);
+      const now = new Date();
+      
+      if (now > subscriptionEndDate) {
+        // Marquer l'abonnement comme expiré
+        await supabase
+          .from('user_subscriptions')
+          .update({ status: 'expired' })
+          .eq('id', data.id);
+        
+        return { ...data, status: 'expired' };
+      }
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Erreur chargement abonnement:', error);
+    
+    // Si c'est juste "pas d'abonnement trouvé", créer un trial
+    if (error.code === 'PGRST116') {
+      return await this. createTrialSubscription(userId);
+    }
+    
+    // Sinon, informer l'utilisateur
+    throw new Error(error?. message || 'Impossible de charger votre abonnement.  Vérifiez votre connexion.');
+  }
+},
 
   /**
    * Crée un abonnement d'essai gratuit de 15 jours
