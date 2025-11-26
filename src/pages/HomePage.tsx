@@ -3,7 +3,7 @@ import {
   Sword, Users, ArrowRight, Zap, Heart, 
   CheckCircle2, Shield, Sparkles, Crown, Star,
   HelpCircle, ChevronDown, ChevronUp, Lock,
-  X, ChevronLeft, ChevronRight // Nouveaux imports pour le viewer
+  X, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -13,8 +13,6 @@ interface HomePageProps {
 export function HomePage({ onGetStarted }: HomePageProps) {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-  
-  // --- NOUVEAU STATE POUR LE VIEWER ---
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   // Gestion du scroll pour le bouton flottant
@@ -35,6 +33,14 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
   const scrollToSubscription = () => {
     document.getElementById('abonnements')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Fonction pour sauvegarder l'intention de souscription avant le login
+  const handlePlanSelection = (planId: string) => {
+    if (planId && planId !== 'free') {
+      localStorage.setItem('pending_plan_selection', planId);
+    }
+    onGetStarted();
   };
 
   const galleryImages = [
@@ -351,7 +357,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={onGetStarted} className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-900/20">
+                 <button onClick={() => handlePlanSelection('hero')} className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-900/20">
                   → Je deviens Héros
                 </button>
               </div>
@@ -377,7 +383,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={onGetStarted} className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold shadow-lg shadow-purple-900/20">
+                 <button onClick={() => handlePlanSelection('game_master')} className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold shadow-lg shadow-purple-900/20">
                   → Je prends le contrôle
                 </button>
               </div>
@@ -408,7 +414,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </div>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={onGetStarted} className="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 transition-all font-semibold shadow-lg shadow-yellow-900/20 border border-yellow-400/20">
+                 <button onClick={() => handlePlanSelection('celestial')} className="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 transition-all font-semibold shadow-lg shadow-yellow-900/20 border border-yellow-400/20">
                   → Je rejoins les Célestes
                 </button>
               </div>
