@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Mail, Lock, Calendar, Crown, User, Check, X, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Calendar, Crown, User, Check, X, Eye, EyeOff, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { subscriptionService } from '../services/subscriptionService';
 import { SUBSCRIPTION_PLANS, UserSubscription } from '../types/subscription';
