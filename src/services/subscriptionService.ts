@@ -32,6 +32,11 @@ const backendUrl = import. meta.env. PROD
   }
 }
 
+} catch (error: any) {
+  console.error('Erreur chargement abonnement:', error);
+  toast.error(error?. message || 'Impossible de charger votre abonnement.  Vérifiez votre connexion.');
+}
+
 export const subscriptionService = {
   /**
    * Récupère l'abonnement actuel de l'utilisateur
