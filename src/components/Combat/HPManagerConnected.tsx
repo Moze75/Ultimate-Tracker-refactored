@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
 import { audioManager } from '../../utils/audioManager';
+import { useDiceSettings } from '../../hooks/useDiceSettings';
 
 // 🔁 service offline-first HP
 import {
