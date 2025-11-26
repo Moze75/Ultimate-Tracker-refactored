@@ -35,10 +35,11 @@ import { useDiceSettings } from '../hooks/useDiceSettings';
 
 
  // Fonction pour jouer le son de consommation d'emplacement de sort
-const playSpellSlotSound = () => {
+const playSpellSlotSound = (volume: number = 0.5, enabled: boolean = true) => {
+  if (!enabled) return;
   try {
     const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
-    audio.volume = 0.5; // Volume à 50% pour ne pas être trop fort
+    audio.volume = volume;
     audio.play().catch(err => {
       console.warn('[KnownSpellsSection] Impossible de jouer le son:', err);
     });
