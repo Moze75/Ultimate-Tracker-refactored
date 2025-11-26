@@ -475,10 +475,10 @@ function SettingsTab({
         </div>
       </div>
 
-      {/* Volume */}
+      {/* Volume Physique (Dés) */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          🔊 Volume des dés : {localSettings.volume}%
+          🎲 Volume physique des dés : {localSettings.volume}%
         </label>
         <input
           type="range"
@@ -487,6 +487,27 @@ function SettingsTab({
           step="5"
           value={localSettings.volume}
           onChange={(e) => handleChange('volume', parseInt(e.target.value))}
+          className="w-full accent-purple-600"
+          disabled={!localSettings.soundsEnabled}
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Muet (0%)</span>
+          <span>Fort (100%)</span>
+        </div>
+      </div>
+
+      {/* Volume FX (Sons d'ambiance/UI) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          🔊 Volume des effets sonores : {localSettings.fxVolume ?? 50}%
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={localSettings.fxVolume ?? 50}
+          onChange={(e) => handleChange('fxVolume', parseInt(e.target.value))}
           className="w-full accent-purple-600"
           disabled={!localSettings.soundsEnabled}
         />
