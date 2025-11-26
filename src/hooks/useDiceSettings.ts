@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+
+const STORAGE_KEY = 'dice-settings';
 
 export interface DiceSettings {
   theme: string;
@@ -9,129 +11,147 @@ export interface DiceSettings {
   baseScale: number;     // ✅ Taille des dés (3-10)
   gravity: number;       // ✅ Multiplicateur de gravité (0.5-2)
   strength: number;      // ✅ Force de lancer (0.5-3)
-  volume: number;        // ✅ Volume sons module (0-100)
-
-  // ✅ Effets spéciaux
-  fireVolumetricEnabled?: boolean; // Active l'effet de feu volumétrique pour les dés de feu
+  volume: number;        // ✅ Volume sons physique dés (0-100)
+  fxVolume: number;      // 🆕 Volume effets sonores UI/Magie (0-100)
+  
+  // ✅ Effets spéciaux (Gardé pour compatibilité types, même si on ne l'utilise plus dans l'UI)
+  fireVolumetricEnabled?: boolean; 
 }
 
 export const DEFAULT_DICE_SETTINGS: DiceSettings = {
-  theme: 'bronze', // ⚱️ Bronze Thyléen par défaut pour les nouveaux utilisateurs
+  theme: 'bronze', 
   themeMaterial: 'plastic',
   themeColor: '#8b5cf6',
   soundsEnabled: true,
-  baseScale: 6,         // Taille moyenne des dés
-  gravity: 1,           // Gravité normale (1x = 400 dans le module)
-  strength: 2,          // Force normale
-  volume: 100,          // Volume max des sons intégrés
-
-  fireVolumetricEnabled: false, // Effet de feu désactivé par défaut
+  baseScale: 6,
+  gravity: 1,
+  strength: 2,
+  volume: 100,
+  fxVolume: 50, // Valeur par défaut
+  fireVolumetricEnabled: false,
 };
 
-const STORAGE_KEY = 'dice-settings';
+// --- DÉFINITION DU CONTEXTE ---
 
-/**
- * Hook pour gérer les paramètres des dés 3D
- * - Charge les paramètres depuis localStorage au montage
- * - Sauvegarde automatiquement les changements
- * - Fournit une fonction de reset
- */
-export function useDiceSettings() {
+interface DiceSettingsContextType {
+  settings: DiceSettings;
+  isLoading: boolean;
+  saveSettings: (newSettings: DiceSettings) => void; // Alias pour updateSettings global
+  updateSettings: (newSettings: DiceSettings) => void;
+  resetSettings: () => void;
+  updateSetting: <K extends keyof DiceSettings>(key: K, value: DiceSettings[K]) => void;
+}
+
+const DiceSettingsContext = createContext<DiceSettingsContextType | undefined>(undefined);
+
+// --- PROVIDER ---
+
+export function DiceSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<DiceSettings>(DEFAULT_DICE_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Charger les paramètres depuis localStorage au montage
+  // Chargement initial
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<DiceSettings>;
         
-        // Migration : convertir scale -> baseScale si nécessaire
+        // Migrations (conserver la logique du fichier original)
         if ('scale' in parsed && !('baseScale' in parsed)) {
           (parsed as any).baseScale = (parsed as any).scale;
           delete (parsed as any).scale;
         }
-        
-        // Migration : supprimer friction et restitution obsolètes
         delete (parsed as any).friction;
         delete (parsed as any).restitution;
         
-        // Fusionner avec les valeurs par défaut pour gérer les nouvelles clés
+        // Fusion avec les défauts
         setSettings({
           ...DEFAULT_DICE_SETTINGS,
           ...parsed,
         });
-        
-        console.log('✅ Paramètres des dés chargés depuis localStorage:', parsed);
-      } else {
-        console.log('ℹ️ Aucun paramètre sauvegardé, utilisation des valeurs par défaut');
       }
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des paramètres des dés:', error);
-      // En cas d'erreur, on garde les valeurs par défaut
+      console.error('❌ Erreur chargement settings:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Sauvegarder les paramètres
-  const saveSettings = useCallback((newSettings: DiceSettings) => {
+  // Fonction centrale de sauvegarde + notification
+  const persistAndNotify = (newSettings: DiceSettings) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
-      setSettings(newSettings);
-      console.log('✅ Paramètres des dés sauvegardés:', newSettings);
-      
-      // 🔧 Émettre un événement pour notifier les composants du changement
+      // Dispatch event pour les composants non-React (ex: moteur DiceBox3D)
       window.dispatchEvent(new CustomEvent('dice-settings-changed', { 
         detail: newSettings 
       }));
     } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde des paramètres des dés:', error);
-      throw error;
+      console.error('❌ Erreur sauvegarde settings:', error);
     }
+  };
+
+  // Mise à jour globale (remplace tout l'objet)
+  const updateSettings = useCallback((newSettings: DiceSettings) => {
+    setSettings(newSettings);
+    persistAndNotify(newSettings);
   }, []);
 
-  // Réinitialiser aux valeurs par défaut
+  // Reset
   const resetSettings = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      setSettings(DEFAULT_DICE_SETTINGS);
-      console.log('✅ Paramètres des dés réinitialisés');
-    } catch (error) {
-      console.error('❌ Erreur lors de la réinitialisation des paramètres des dés:', error);
-      throw error;
-    }
+    const reset = DEFAULT_DICE_SETTINGS;
+    setSettings(reset);
+    persistAndNotify(reset);
   }, []);
 
-  // Mettre à jour un paramètre spécifique
+  // Mise à jour d'une seule clé (Restauré du fichier original)
   const updateSetting = useCallback(<K extends keyof DiceSettings>(
     key: K,
     value: DiceSettings[K]
   ) => {
     setSettings(prev => {
       const updated = { ...prev, [key]: value };
-      
-      // Sauvegarder automatiquement
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        console.log(`✅ Paramètre "${key}" mis à jour:`, value);
-      } catch (error) {
-        console.error(`❌ Erreur lors de la sauvegarde du paramètre "${key}":`, error);
-      }
-      
+      persistAndNotify(updated);
       return updated;
     });
   }, []);
 
-  return {
-    settings, 
-    saveSettings,
-    resetSettings,
-    updateSetting,
-    isLoading,
-  };
+  return (
+    <DiceSettingsContext.Provider value={{ 
+      settings, 
+      isLoading, 
+      saveSettings: updateSettings, // Alias pour compatibilité
+      updateSettings, 
+      resetSettings, 
+      updateSetting 
+    }}>
+      {children}
+    </DiceSettingsContext.Provider>
+  );
 }
+
+// --- HOOK ---
+
+export function useDiceSettings() {
+  const context = useContext(DiceSettingsContext);
+  
+  if (!context) {
+    console.warn('⚠️ useDiceSettings utilisé hors du DiceSettingsProvider !');
+    // Fallback pour éviter le crash complet si le provider manque
+    return {
+      settings: DEFAULT_DICE_SETTINGS,
+      isLoading: false,
+      saveSettings: () => {},
+      updateSettings: () => {},
+      resetSettings: () => {},
+      updateSetting: () => {},
+    };
+  }
+
+  return context;
+}
+
+// --- UTILITAIRES (Restaurés du fichier original) ---
 
 /**
  * Hook pour vérifier si les paramètres ont été modifiés
@@ -162,7 +182,7 @@ export function useIsDiceSettingsDirty(current: DiceSettings): boolean {
 }
 
 /**
- * Utilitaire pour exporter les paramètres (pour debug ou partage)
+ * Utilitaire pour exporter les paramètres
  */
 export function exportDiceSettings(): string {
   try {
@@ -175,24 +195,24 @@ export function exportDiceSettings(): string {
 }
 
 /**
- * Utilitaire pour importer des paramètres (pour debug ou partage)
+ * Utilitaire pour importer des paramètres
  */
 export function importDiceSettings(jsonString: string): boolean {
   try {
     const parsed = JSON.parse(jsonString) as Partial<DiceSettings>;
     
-    // Valider que les clés sont valides
-const validKeys: (keyof DiceSettings)[] = [
-  'theme',
-  'themeMaterial',
-  'themeColor',
-  'soundsEnabled',
-  'baseScale',
-  'gravity',
-  'strength', 
-  'volume',
-  'fireVolumetricEnabled',
-];
+    const validKeys: (keyof DiceSettings)[] = [
+      'theme',
+      'themeMaterial',
+      'themeColor',
+      'soundsEnabled',
+      'baseScale',
+      'gravity',
+      'strength',
+      'volume',
+      'fxVolume',
+      'fireVolumetricEnabled',
+    ];
     
     const settings: DiceSettings = {
       ...DEFAULT_DICE_SETTINGS,
@@ -202,6 +222,14 @@ const validKeys: (keyof DiceSettings)[] = [
     };
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    // Dispatch event pour mise à jour immédiate
+    window.dispatchEvent(new CustomEvent('dice-settings-changed', { detail: settings }));
+    
+    // Note: Pour que l'UI React se mette à jour immédiatement après un import externe,
+    // idéalement on devrait appeler updateSettings via le context, mais comme c'est une fonction statique,
+    // on compte sur le reload ou le prochain montage pour rafraîchir l'état React complet si nécessaire,
+    // ou sur l'event window pour le moteur 3D.
+    
     console.log('✅ Paramètres importés avec succès:', settings);
     return true;
   } catch (error) {
