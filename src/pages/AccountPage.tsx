@@ -54,19 +54,8 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
         setRemainingDays(days);
       }
 
-      // Récupérer la date de création du compte 
-      const { data: userData, error } = await supabase
-        .from('auth.users')
-        .select('created_at')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!error && userData) {
-        setAccountCreatedAt(userData.created_at);
-      } else {
-        // Fallback : utiliser session.user.created_at si disponible
-        setAccountCreatedAt(session.user.created_at || '');
-      }
+// ✅ Utiliser directement session.user.created_at
+setAccountCreatedAt(session.user.created_at || '');
 
       setNewEmail(session.user.email || '');
     } catch (error) {
