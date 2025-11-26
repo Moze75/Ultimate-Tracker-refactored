@@ -23,8 +23,6 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
   const [savingEmail, setSavingEmail] = useState(false);
   
   // États pour la modification du mot de passe
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [editingPassword, setEditingPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
