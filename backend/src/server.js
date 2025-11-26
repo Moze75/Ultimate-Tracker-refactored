@@ -49,7 +49,7 @@ app.post('/api/create-payment', async (req, res) => {
         value: amount,
       },
       description: `Abonnement ${tier} - Le Compagnon D&D`,
-      redirectUrl: `${process.env. FRONTEND_URL}/payment-success? userId=${userId}&tier=${tier}`,
+      redirectUrl: `${process.env.FRONTEND_URL}/payment-success?userId=${userId}&tier=${tier}`,
       webhookUrl: `${process.env.BACKEND_URL}/api/webhook`,
       metadata: {
         userId,
