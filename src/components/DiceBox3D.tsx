@@ -95,8 +95,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   }, [isOpen]);
 
   const playResultSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', 0.5);
-  }, []);
+    if (effectiveSettings.soundsEnabled) {
+      const vol = (effectiveSettings.fxVolume ?? 50) / 100;
+      audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', vol);
+    }
+  }, [effectiveSettings]);
 
   const generateRandomResult = useCallback((formula: string, modifier: number) => {
     console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
