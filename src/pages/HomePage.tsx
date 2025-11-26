@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Sword, Users, ArrowRight, Zap, Heart, 
   CheckCircle2, Shield, Sparkles, Crown, Star,
-  HelpCircle, ChevronDown, ChevronUp, Lock
+  HelpCircle, ChevronDown, ChevronUp, Lock,
+  X, ChevronLeft, ChevronRight // Nouveaux imports pour le viewer
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -12,6 +13,9 @@ interface HomePageProps {
 export function HomePage({ onGetStarted }: HomePageProps) {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  
+  // --- NOUVEAU STATE POUR LE VIEWER ---
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   // Gestion du scroll pour le bouton flottant
   useEffect(() => {
@@ -33,7 +37,6 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     document.getElementById('abonnements')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // URLs corrigées en RAW pour l'affichage direct
   const galleryImages = [
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Classes.png", alt: "Classes et Personnages" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/fiche_perso.png", alt: "Fiche Personnage Complète" },
@@ -42,6 +45,44 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_sorts.png", alt: "Gestion des Sorts" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/choix_fond-%C3%A9cran.png", alt: "Personnalisation" }
   ];
+
+  // --- LOGIQUE DU VIEWER ---
+  
+  const closeViewer = () => setSelectedImageIndex(null);
+
+  const nextImage = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (selectedImageIndex === null) return;
+    setSelectedImageIndex((prev) => (prev === null ? null : (prev + 1) % galleryImages.length));
+  }, [selectedImageIndex, galleryImages.length]);
+
+  const prevImage = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (selectedImageIndex === null) return;
+    setSelectedImageIndex((prev) => (prev === null ? null : (prev - 1 + galleryImages.length) % galleryImages.length));
+  }, [selectedImageIndex, galleryImages.length]);
+
+  // Gestion du clavier (Echap, Gauche, Droite)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedImageIndex === null) return;
+      if (e.key === 'Escape') closeViewer();
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    // Bloquer le scroll du body quand le viewer est ouvert
+    if (selectedImageIndex !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedImageIndex, nextImage, prevImage]);
+
 
   const faqs = [
     {
@@ -80,14 +121,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           />
         </div>
         
-        {/* Titre Principal Remis en avant */}
         <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight" style={{
           textShadow: `0 0 30px rgba(255, 255, 255, 0.4)`
         }}>
           Le Compagnon - D&D
         </h1>
 
-        {/* Sous-titre réduit */}
         <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
           Le Compagnon ultime pour D&D 5e, pensé pour les francophones
         </h2>
@@ -219,24 +258,33 @@ export function HomePage({ onGetStarted }: HomePageProps) {
         </div>
       </div>
 
-      {/* --- SECTION 5 : VISUELS & DÉMO (Remontée avant abonnements) --- */}
+      {/* --- SECTION 5 : VISUELS & DÉMO (Avec Viewer) --- */}
       <div className="py-24 bg-black/20 border-y border-white/5">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
             À quoi ça ressemble ?
           </h2>
-          <p className="text-gray-400 text-center mb-12">Jetez un coup d'œil à l'interface</p>
+          <p className="text-gray-400 text-center mb-12">Jetez un coup d'œil à l'interface (Cliquez pour agrandir)</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {galleryImages.map((img, index) => (
-              <div key={index} className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900 cursor-pointer">
+              <div 
+                key={index} 
+                onClick={() => setSelectedImageIndex(index)}
+                className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900 cursor-pointer transform hover:scale-[1.02] transition-all duration-300"
+              >
                 <img 
                   src={img.src} 
                   alt={img.alt} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                  <span className="text-white font-medium text-lg">{img.alt}</span>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                   <div className="bg-black/60 p-3 rounded-full text-white border border-white/20">
+                      <Sparkles size={24} />
+                   </div>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-white font-medium text-sm">{img.alt}</span>
                 </div>
               </div>
             ))}
@@ -467,7 +515,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
       {/* --- CTA FLOTTANT --- */}
       <div 
-        className={`fixed bottom-8 right-8 z-50 transition-all duration-500 ${
+        className={`fixed bottom-8 right-8 z-40 transition-all duration-500 ${
           showFloatingCTA ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
         }`}
       >
@@ -478,6 +526,71 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           Commencer <ArrowRight size={18} />
         </button>
       </div>
+
+      {/* --- IMAGE VIEWER OVERLAY --- */}
+      {selectedImageIndex !== null && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
+          onClick={closeViewer}
+        >
+          {/* Bouton Fermer */}
+          <button 
+            onClick={closeViewer}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+          >
+            <X size={32} />
+          </button>
+
+          {/* Bouton Précédent */}
+          <button 
+            onClick={prevImage}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10"
+          >
+            <ChevronLeft size={32} />
+          </button>
+
+          {/* Image */}
+          <div 
+            className="relative max-w-full max-h-full overflow-hidden rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur l'image
+          >
+            <img 
+              src={galleryImages[selectedImageIndex].src} 
+              alt={galleryImages[selectedImageIndex].alt}
+              className="max-h-[85vh] max-w-[90vw] object-contain"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-center">
+              <p className="text-white font-medium text-lg">
+                {galleryImages[selectedImageIndex].alt}
+              </p>
+            </div>
+          </div>
+
+          {/* Bouton Suivant */}
+          <button 
+            onClick={nextImage}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10"
+          >
+            <ChevronRight size={32} />
+          </button>
+
+          {/* Indicateur de position (points en bas) */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+            {galleryImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImageIndex(idx);
+                }}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  selectedImageIndex === idx ? 'bg-white w-6' : 'bg-white/30 hover:bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );
