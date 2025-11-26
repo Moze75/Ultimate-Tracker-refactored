@@ -498,6 +498,8 @@ const PactSlotStats = React.memo(
     player: Player;
     onUpdate: (player: Player) => void;
   }) => {
+        const { settings } = useDiceSettings();
+    const fxVolume = (settings.fxVolume ?? 50) / 100;
     // 🔍 Déterminer où se trouvent réellement les pact slots (classe principale ou secondaire)
     const primaryIsWarlock = player.class === 'Occultiste';
     const secondaryIsWarlock = player.secondary_class === 'Occultiste';
