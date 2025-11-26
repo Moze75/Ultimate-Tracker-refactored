@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { ClassResources, Player } from '../../../types/dnd';
 import { canonicalClass, getChaModFromPlayerLike } from './ClassUtilsModal';
+import { useDiceSettings } from '../../../hooks/useDiceSettings';
 
 // Utiliser le type Player du fichier types/dnd.ts au lieu de créer PlayerLike
 type PlayerLike = Player;
