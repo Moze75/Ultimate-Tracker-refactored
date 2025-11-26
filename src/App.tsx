@@ -419,8 +419,9 @@ useEffect(() => {
 
   // Rendu principal
   return (
-  <DiceHistoryProvider>
-    <Toaster position="top-right" />
+  <DiceSettingsProvider>
+    <DiceHistoryProvider>
+      <Toaster position="top-right" />
     <InstallPrompt />
 
      {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
