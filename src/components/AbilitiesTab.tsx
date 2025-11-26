@@ -27,6 +27,7 @@ import { KnownSpellsSection } from './KnownSpellsSection';
 import { SpellSlotSelectionModal } from './SpellSlotSelectionModal';
 import type { Player, SpellSlots, ClassResources, DndClass } from '../types/dnd';
 import { getSpellSlotsByLevel } from '../utils/spellSlots2024';
+import { useDiceSettings } from '../hooks/useDiceSettings';
 
 /* ============================ Helpers ============================ */
 
