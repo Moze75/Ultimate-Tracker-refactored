@@ -26,10 +26,16 @@ const backendUrl = import. meta.env. PROD
     console.log('[subscriptionService] ✅ Paiement créé:', data);
     return data.checkoutUrl;
 
-  } catch (error) {
-    console.error('[subscriptionService] ❌ Erreur createMolliePayment:', error);
-    throw error;
+} catch (error: any) {
+  console.error('Erreur chargement abonnement:', error);
+  
+  // Si c'est juste "pas d'abonnement trouvé", créer un trial
+  if (error.code === 'PGRST116') {
+    return await this. createTrialSubscription(userId);
   }
+  
+  // Sinon, informer l'utilisateur
+  throw new Error(error?. message || 'Impossible de charger votre abonnement.  Vérifiez votre connexion.');
 }
    
 
