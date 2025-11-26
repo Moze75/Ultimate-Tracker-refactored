@@ -13,8 +13,6 @@ import {
   Trash2,
   Dices,
   Crown,
-  Star,
-  Clock,
   Scroll,
   Settings,
 } from 'lucide-react';
@@ -24,7 +22,7 @@ import { subscriptionService } from '../services/subscriptionService';
 import { SubscriptionPage } from './SubscriptionPage';
 import { GameMasterCampaignPage } from './GameMasterCampaignPage';
 import { AccountPage } from './AccountPage';
-import { UserSubscription, SUBSCRIPTION_PLANS } from '../types/subscription';
+import { UserSubscription } from '../types/subscription';
 
 // Intégration Character Creator (wizard)
 import { CharacterExportPayload } from '../types/characterCreator';
@@ -37,6 +35,7 @@ interface CharacterSelectionPageProps {
 }
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'lastSelectedCharacterSnapshot';
+const PENDING_PLAN_KEY = 'pending_plan_selection'; // Clé utilisée dans la HomePage
 
 const BG_URL =
   (import.meta as any)?.env?.VITE_SELECTION_BG_URL ||
@@ -140,41 +139,42 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
   const hasInitializedRef = useRef(false);
   const playersLoadedRef = useRef(false);
 
-useEffect(() => {
-  if (hasInitializedRef.current) {
-    console.log('[CharacterSelection] ⏭️ Déjà initialisé, skip');
-    return;
-  }
-
-  console.log('[CharacterSelection] 🚀 Initialisation...');
-  hasInitializedRef.current = true;
-
-  // ✅ Vérifier le snapshot wizard mais NE PAS le rouvrir automatiquement
-  const context = appContextService.getContext();
-  const wizardSnapshot = appContextService.getWizardSnapshot();
-  
-  if (wizardSnapshot) {
-    if (context === 'wizard') {
-      console.log('[CharacterSelection] 📋 Snapshot wizard détecté avec contexte wizard, mais pas de réouverture auto');
-      // ❌ NE PLUS FAIRE : setShowCreator(true);
-      // L'utilisateur devra cliquer sur "Nouveau Personnage" pour reprendre
-    } else {
-      console.log('[CharacterSelection] 🗑️ Snapshot orphelin détecté (contexte:', context, '), nettoyage');
-      appContextService.clearWizardSnapshot();
+  useEffect(() => {
+    if (hasInitializedRef.current) {
+      return;
     }
-  } else {
-    console.log('[CharacterSelection] ℹ️ Pas de snapshot détecté');
-  }
+    hasInitializedRef.current = true;
 
-  // S'assurer que le contexte est "selection" si on est sur cette page
-  appContextService.setContext('selection');
+    // ✅ GESTION DE LA REDIRECTION APRÈS LOGIN
+    // On vérifie si l'utilisateur avait cliqué sur un plan avant de se loguer
+    const pendingPlan = localStorage.getItem(PENDING_PLAN_KEY);
+    if (pendingPlan) {
+      console.log('[CharacterSelection] 🎯 Intention de souscription détectée:', pendingPlan);
+      localStorage.removeItem(PENDING_PLAN_KEY); // On nettoie pour ne pas rouvrir à chaque fois
+      setShowSubscription(true);
+      // Optionnel : On pourrait aussi passer 'pendingPlan' à SubscriptionPage pour scroller/highlighter
+      toast('Veuillez confirmer votre choix d\'abonnement', { icon: '👋' });
+    }
 
-  // Charger les personnages et l'abonnement
-  fetchPlayers();
-  loadSubscription();
-  
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+    // Check context wizard
+    const context = appContextService.getContext();
+    const wizardSnapshot = appContextService.getWizardSnapshot();
+    
+    if (wizardSnapshot) {
+      if (context === 'wizard') {
+        // Logique wizard existante...
+      } else {
+        appContextService.clearWizardSnapshot();
+      }
+    }
+
+    appContextService.setContext('selection');
+
+    fetchPlayers();
+    loadSubscription();
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadSubscription = async () => {
     try {
@@ -191,16 +191,13 @@ useEffect(() => {
   };
 
   const fetchPlayers = async () => {
-    // ✅ Éviter de recharger si déjà chargé
     if (playersLoadedRef.current) {
-      console.log('[CharacterSelection] ⏭️ Personnages déjà chargés, skip');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('[CharacterSelection] 📥 Chargement des personnages...');
       
       const { data, error } = await supabase
         .from('players')
@@ -212,7 +209,6 @@ useEffect(() => {
       
       setPlayers(data || []);
       playersLoadedRef.current = true;
-      console.log('[CharacterSelection] ✅ Personnages chargés:', data?.length || 0);
     } catch (error: any) {
       console.error('Erreur lors de la récupération des personnages:', error);
       toast.error('Erreur lors de la récupération des personnages');
@@ -224,13 +220,12 @@ useEffect(() => {
   const handleCreatorComplete = async (payload: CharacterExportPayload) => {
     if (creating) return;
 
-  // ✅ Arrêter et détruire la musique immédiatement
-  try {
-    const { stopWizardMusic } = await import('../features/character-creator/components/ui/musicControl');
-    stopWizardMusic();
-  } catch (e) {
-    console.warn('[CharacterSelection] Impossible d\'arrêter la musique:', e);
-  }
+    try {
+      const { stopWizardMusic } = await import('../features/character-creator/components/ui/musicControl');
+      stopWizardMusic();
+    } catch (e) {
+      console.warn('[CharacterSelection] Impossible d\'arrêter la musique:', e);
+    }
 
     const canCreate = await subscriptionService.canCreateCharacter(session.user.id, players.length);
     if (!canCreate) {
@@ -290,8 +285,6 @@ useEffect(() => {
 
   const clearServiceWorkerCache = async () => {
     try {
-      console.log('[CharacterSelection] 🧹 Nettoyage du Service Worker...');
-      
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
@@ -301,12 +294,9 @@ useEffect(() => {
       
       if ('caches' in window) {
         const cacheNames = await caches.keys();
-        console.log('[CharacterSelection] 🗑️ Caches trouvés:', cacheNames);
-        
         for (const name of cacheNames) {
           if (name.includes('js-cache') || name.includes('workbox')) {
             await caches.delete(name);
-            console.log('[CharacterSelection] ✅ Cache supprimé:', name);
           }
         }
       }
@@ -317,8 +307,6 @@ useEffect(() => {
 
   const handleSignOut = async () => {
     try {
-      console.log('[CharacterSelection] 🚪 Déconnexion en cours...');
-      
       await clearServiceWorkerCache();
       
       const { error } = await authService.signOut();
@@ -331,10 +319,10 @@ useEffect(() => {
       
       try {
         localStorage.removeItem(LAST_SELECTED_CHARACTER_SNAPSHOT);
+        localStorage.removeItem(PENDING_PLAN_KEY); // Nettoyage de sécurité
         sessionStorage.clear();
       } catch {}
 
-      console.log('[CharacterSelection] 🔄 Rechargement...');
       window.location.href = window.location.origin;
       
     } catch (error: any) {
@@ -424,6 +412,7 @@ useEffect(() => {
     return <GameMasterCampaignPage session={session} onBack={() => setShowCampaigns(false)} />;
   }
 
+  // Si showSubscription est activé (via le bouton ou via la redirection auto), on affiche la page
   if (showSubscription) {
     return <SubscriptionPage session={session} onBack={() => setShowSubscription(false)} />;
   }
@@ -488,7 +477,7 @@ useEffect(() => {
             {/* Bouton Mon compte en haut à droite */}
             <button
               onClick={() => setShowAccount(true)}
-              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all shadow-md"
+              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
             >
               <Settings size={16} />
               Mon compte
@@ -528,7 +517,7 @@ useEffect(() => {
             <div className="flex justify-center gap-3 pt-2 flex-wrap">
               <button
                 onClick={() => setShowSubscription(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
               >
                 <Crown size={20} />
                 {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
@@ -540,7 +529,7 @@ useEffect(() => {
               {currentSubscription?.tier === 'game_master' && (
                 <button
                   onClick={() => setShowCampaigns(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
+                  className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
                 >
                   <Scroll size={20} />
                   Mes Campagnes
@@ -700,7 +689,7 @@ useEffect(() => {
 
               <div
                 onClick={() => setShowCreator(true)}
-                className="w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-slate-800/40 backdrop-blur-sm border-dashed border-2 border-slate-600/50 hover:border-green-500/70 rounded-xl shadow-lg"
+                className="w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-slate-800/40 backdrop-blur-sm border-dashed border-2 border-slate-600/50 hover:border-green-500/50 group rounded-xl overflow-hidden"
               >
                 <div className="p-6 flex items-center justify-center gap-6 min-h-[140px]">
                   <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center">
@@ -731,24 +720,21 @@ useEffect(() => {
         </div>
       </div>
 
-<CreatorModal
-  open={showCreator}
-  onClose={() => {
-    console.log('[CharacterSelection] 🚪 Fermeture du wizard');
-
- 
-// ✅ Arrêter et détruire la musique
-  import('../features/character-creator/components/ui/musicControl').then(({ stopWizardMusic }) => {
-    stopWizardMusic();
-  });
-  
-  setShowCreator(false);
-  appContextService.clearWizardSnapshot();
-  appContextService.setContext('selection');
-}}
-  onComplete={handleCreatorComplete}
-  initialSnapshot={appContextService.getWizardSnapshot()}
-/>
+      <CreatorModal
+        open={showCreator}
+        onClose={() => {
+          console.log('[CharacterSelection] 🚪 Fermeture du wizard');
+          import('../features/character-creator/components/ui/musicControl').then(({ stopWizardMusic }) => {
+            stopWizardMusic();
+          });
+          
+          setShowCreator(false);
+          appContextService.clearWizardSnapshot();
+          appContextService.setContext('selection');
+        }}
+        onComplete={handleCreatorComplete}
+        initialSnapshot={appContextService.getWizardSnapshot()}
+      />
 
       {creating && (
         <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center">
