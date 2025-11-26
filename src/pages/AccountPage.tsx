@@ -22,13 +22,15 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
   const [editingEmail, setEditingEmail] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   
-  // États pour la modification du mot de passe
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [editingPassword, setEditingPassword] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+// États pour la modification du mot de passe
+const [currentPassword, setCurrentPassword] = useState('');
+const [newPassword, setNewPassword] = useState('');
+const [confirmPassword, setConfirmPassword] = useState('');
+const [editingPassword, setEditingPassword] = useState(false);
+const [savingPassword, setSavingPassword] = useState(false);
+const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+const [showNewPassword, setShowNewPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Informations du compte
   const [accountCreatedAt, setAccountCreatedAt] = useState<string>('');
