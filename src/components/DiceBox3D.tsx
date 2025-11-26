@@ -81,9 +81,12 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     rollDataRef.current = rollData;
   }, [rollData]);
 
-  const playDiceDropSound = useCallback(() => {
-    audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', 0.6);
-  }, []);
+   const playDiceDropSound = useCallback(() => {
+    if (effectiveSettings.soundsEnabled) {
+      const vol = (effectiveSettings.fxVolume ?? 50) / 100;
+      audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', vol);
+    }
+  }, [effectiveSettings]);
 
   useEffect(() => {
     if (isOpen) {
