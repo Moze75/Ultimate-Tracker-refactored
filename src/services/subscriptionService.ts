@@ -3,9 +3,9 @@ import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types
 
 async function createMolliePayment(userId: string, tier: string, email: string): Promise<string | null> {
   try {
-    const backendUrl = import.meta.env.PROD 
-      ? 'https://ton-backend-deploye.railway.app'  // ⚠️ À changer après déploiement
-      : 'http://localhost:3001';
+const backendUrl = import. meta.env. PROD 
+  ? 'https://ultimate-tracker-refactored-production.up.railway. app'
+  : 'http://localhost:3001';
 
     console. log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, backendUrl });
 
