@@ -115,6 +115,14 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
       return;
     }
 
+    // ✅ RESTAURATION : Vérification de la concentration
+    if (player.is_concentrating) {
+      // Règle D&D 5e : DD = max(10, dégâts / 2)
+      const dc = Math.max(10, Math.floor(damage / 2));
+      console.log('🧠 Test de concentration déclenché, DD:', dc);
+      onConcentrationCheck(dc);
+    }
+
     // ✅ Jouer le son AVANT les effets visuels
     playSwordSliceSound();
     triggerBloodSplash(damage);
