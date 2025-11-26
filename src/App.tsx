@@ -6,6 +6,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
 import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
+import { DiceSettingsProvider } from './hooks/useDiceSettings';
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore'; 
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
