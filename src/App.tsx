@@ -423,11 +423,32 @@ useEffect(() => {
     <InstallPrompt />
 
      {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
-    {showHomePage && !session ? (
-      <HomePage onGetStarted={() => setShowHomePage(false)} />
-    ) : !session ? (
-      <LoginPage onBackToHome={() => setShowHomePage(true)} />
-    ) : !selectedCharacter ? (
+  {(() => {
+  // Détecter si on est sur /payment-success
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
+
+  if (isPaymentSuccess && session) {
+    return (
+      <PaymentSuccessPage
+        onBackToDashboard={() => {
+          setShowHomePage(false);
+          // L'utilisateur revient au dashboard (sélection de personnage)
+        }}
+      />
+    );
+  }
+
+  if (showHomePage && !session) {
+    return <HomePage onGetStarted={() => setShowHomePage(false)} />;
+  }
+
+  if (!session) {
+    return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+  }
+
+  if (! selectedCharacter) {
+    return (
       <CharacterSelectionPage
         session={session}
         onCharacterSelect={(p: Player) => {
@@ -439,30 +460,34 @@ useEffect(() => {
           setSelectedCharacter(p);
         }}
       />
-    ) : (
-      <GamePage
-        session={session}
-        selectedCharacter={selectedCharacter}
-        onBackToSelection={() => {
-          try {
-            sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-            appContextService.setContext('selection');
-          } catch {
-            // no-op
-          }
-          setSelectedCharacter(null);
-        }}
-        onUpdateCharacter={(p: Player) => {
-          setSelectedCharacter(p);
-          try {
-            localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
-            appContextService.setContext('game');
-          } catch {
-            // no-op
-          }
-        }}
-      />
-    )}
+    );
+  }
+
+  return (
+    <GamePage
+      session={session}
+      selectedCharacter={selectedCharacter}
+      onBackToSelection={() => {
+        try {
+          sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+          appContextService.setContext('selection');
+        } catch {
+          // no-op
+        }
+        setSelectedCharacter(null);
+      }}
+      onUpdateCharacter={(p: Player) => {
+        setSelectedCharacter(p);
+        try {
+          localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
+          appContextService.setContext('game');
+        } catch {
+          // no-op
+        }
+      }}
+    />
+  );
+})()}
   </DiceHistoryProvider>
 );
   
