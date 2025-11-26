@@ -101,6 +101,9 @@ export function ResourceBlock({
   const [amount, setAmount] = useState<string>('');
 
   // Etat pour l'effet pulse local
+   const { settings } = useDiceSettings();
+
+  // Etat pour l'effet pulse local
   const [pulse, setPulse] = useState(false);
   const triggerLocalPulse = () => {
     setPulse(true);
@@ -109,9 +112,10 @@ export function ResourceBlock({
 
     // 🔊 Son lors de la consommation d'une ressource de classe (modale ClassesTab)
   const playClassResourceSound = () => {
+    if (!settings.soundsEnabled) return;
     try {
       const audio = new Audio('/Sounds/soundeffects/spell_slot_court.mp3');
-      audio.volume = 0.5;
+      audio.volume = (settings.fxVolume ?? 50) / 100;
       void audio.play();
     } catch (e) {
       console.warn('[ClassResourcesModal.ResourceBlock] Impossible de jouer le son de ressource de classe:', e);
