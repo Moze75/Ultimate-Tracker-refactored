@@ -6,7 +6,6 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { appContextService } from './services/appContextService';
 import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
-import { DiceSettingsProvider } from './hooks/useDiceSettings';
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore'; 
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
@@ -419,9 +418,8 @@ useEffect(() => {
 
   // Rendu principal
   return (
-  <DiceSettingsProvider>
-    <DiceHistoryProvider>
-      <Toaster position="top-right" />
+  <DiceHistoryProvider>
+    <Toaster position="top-right" />
     <InstallPrompt />
 
      {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
@@ -490,8 +488,7 @@ useEffect(() => {
     />
   );
 })()}
-    </DiceHistoryProvider>
-  </DiceSettingsProvider>
+  </DiceHistoryProvider>
 );
   
 }
