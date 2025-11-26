@@ -377,7 +377,7 @@ const handleSlotUse = useCallback(
       toast.error('Erreur lors de la mise à jour');
     }
   },
-  [level, remainingSlots, player, onUpdate]
+  [level, remainingSlots, player, onUpdate, fxVolume, settings.soundsEnabled]
 );
 
     const handleArcaneRecovery = useCallback(
