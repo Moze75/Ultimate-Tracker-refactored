@@ -154,67 +154,6 @@ app.post('/api/webhook', async (req, res) => {
   }
 });
 
-    const payment = await mollieClient.payments.get(paymentId);
-
-    console.log('📬 Webhook reçu:', payment. id, payment.status);
-
-    if (payment.status === 'paid') {
-      const { userId, tier } = payment.metadata;
-
-      console.log('✅ Paiement confirmé pour:', userId, tier);
-
-      const now = new Date();
-      const subscriptionEndDate = new Date(now);
-      subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
-
-      await supabase
-        .from('user_subscriptions')
-        .update({ 
-          status: 'cancelled',
-          end_date: now. toISOString(),
-          updated_at: now.toISOString()
-        })
-        .eq('user_id', userId)
-        .eq('status', 'active');
-
-      await supabase
-        .from('user_subscriptions')
-        . update({ 
-          status: 'expired',
-          end_date: now.toISOString(),
-          updated_at: now.toISOString()
-        })
-        .eq('user_id', userId)
-        .eq('status', 'trial');
-
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .insert({
-          user_id: userId,
-          tier,
-          status: 'active',
-          start_date: now.toISOString(),
-          subscription_end_date: subscriptionEndDate.toISOString(),
-          mollie_payment_id: payment.id,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console. error('❌ Erreur Supabase:', error);
-        throw error;
-      }
-
-      console.log('✅ Abonnement créé dans Supabase:', data);
-    }
-
-    res.status(200).send('OK');
-  } catch (error) {
-    console.error('❌ Erreur webhook:', error);
-    res.status(500).send('Webhook error');
-  }
-});
-
 app.get('/health', (req, res) => {
   res. json({ status: 'OK', timestamp: new Date().toISOString() });
 });
