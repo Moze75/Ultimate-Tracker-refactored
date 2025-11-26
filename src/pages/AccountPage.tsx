@@ -56,7 +56,7 @@ export function AccountPage({ session, onBack }: AccountPageProps) {
         setRemainingDays(days);
       }
 
-      // Récupérer la date de création du compte
+      // Récupérer la date de création du compte 
       const { data: userData, error } = await supabase
         .from('auth.users')
         .select('created_at')
