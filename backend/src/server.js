@@ -73,11 +73,86 @@ app.post('/api/create-payment', async (req, res) => {
 
 app.post('/api/webhook', async (req, res) => {
   try {
-    const paymentId = req.body.id;
+    console.log('📬 Webhook reçu:', JSON.stringify(req.body, null, 2));
+    
+    const paymentId = req. body.id;
 
+    // Si pas de payment ID (test Mollie), répondre OK quand même
     if (!paymentId) {
-      return res.status(400).send('No payment ID');
+      console.log('⚠️ Webhook de test (pas de payment ID), réponse OK');
+      return res.status(200).send('OK');
     }
+
+    const payment = await mollieClient.payments.get(paymentId);
+
+    console.log('📬 Paiement:', payment.id, 'Statut:', payment.status);
+
+    if (payment.status === 'paid') {
+      const { userId, tier } = payment.metadata;
+
+      if (! userId || !tier) {
+        console.error('❌ Metadata manquante dans le paiement');
+        return res.status(200).send('OK'); // Répondre 200 quand même
+      }
+
+      console.log('✅ Paiement confirmé pour:', userId, tier);
+
+      const now = new Date();
+      const subscriptionEndDate = new Date(now);
+      subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+
+      // Annuler les anciens abonnements actifs
+      await supabase
+        .from('user_subscriptions')
+        .update({ 
+          status: 'cancelled',
+          end_date: now.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('user_id', userId)
+        .eq('status', 'active');
+
+      // Expirer les trials
+      await supabase
+        .from('user_subscriptions')
+        .update({ 
+          status: 'expired',
+          end_date: now.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('user_id', userId)
+        .eq('status', 'trial');
+
+      // Créer le nouvel abonnement
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .insert({
+          user_id: userId,
+          tier,
+          status: 'active',
+          start_date: now.toISOString(),
+          subscription_end_date: subscriptionEndDate.toISOString(),
+          mollie_payment_id: payment.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur Supabase:', error);
+        // Répondre 200 quand même pour éviter les retry Mollie
+        return res.status(200).send('OK');
+      }
+
+      console.log('✅ Abonnement créé dans Supabase:', data);
+    }
+
+    res. status(200).send('OK');
+  } catch (error) {
+    console.error('❌ Erreur webhook:', error);
+    // IMPORTANT : Répondre 200 même en cas d'erreur pour éviter les retry infinis
+    res.status(200).send('OK');
+  }
+});
 
     const payment = await mollieClient.payments.get(paymentId);
 
