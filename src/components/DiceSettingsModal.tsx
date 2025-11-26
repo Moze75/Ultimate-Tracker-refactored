@@ -517,33 +517,7 @@ function SettingsTab({
         </div>
       </div>
 
-      {/* Effet spécial : Feu volumétrique */}
-      {localSettings.theme === 'fire' && (
-        <div className="mt-4 border border-orange-600/40 bg-orange-900/10 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              🔥 Feu volumétrique sur les dés de feu
-            </label>
-            <button
-              type="button"
-              onClick={() => handleChange('fireVolumetricEnabled', !localSettings.fireVolumetricEnabled)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
-                localSettings.fireVolumetricEnabled ? 'bg-orange-500' : 'bg-gray-600'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                  localSettings.fireVolumetricEnabled ? 'translate-x-6' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-          <p className="text-xs text-gray-400">
-            Active un effet de flamme animée au-dessus des dés lorsque le style <strong>🔥 Feu</strong> est sélectionné.
-            (Nécessite une intégration côté moteur 3D dans DiceBox.)
-          </p>
-        </div>
-      )}
+
       
     </div>
   );
