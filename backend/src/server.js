@@ -42,6 +42,23 @@ const VALID_PROMO_CODES = {
 
 };
 
+// 👇 NOUVELLE ROUTE POUR VÉRIFIER UN CODE
+app.post('/api/check-promo', (req, res) => {
+  const { promoCode } = req.body;
+  
+  if (promoCode && VALID_PROMO_CODES[promoCode]) {
+    const discount = VALID_PROMO_CODES[promoCode];
+    // On renvoie les détails de la réduction
+    return res.json({ 
+      valid: true, 
+      type: discount.type, 
+      value: discount.value 
+    });
+  }
+  
+  return res.json({ valid: false });
+});
+
 // ---------------------------------------------------------
 // 2. ROUTE DE PAIEMENT (NE PAS TOUCHER À LA LOGIQUE CI-DESSOUS)
 // ---------------------------------------------------------
