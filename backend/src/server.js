@@ -29,16 +29,17 @@ app.use(express.json());
 // ---------------------------------------------------------
 const VALID_PROMO_CODES = {
   // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
-  'BIENVENUE': { type: 'percentage', value: 10 }, 
+  'LBA10': { type: 'percentage', value: 10 }, 
+
+    // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
+  'MJM10': { type: 'percentage', value: 10 }, 
+
+      // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
+  'Naeth10': { type: 'percentage', value: 10 }, 
 
   // Exemple 2 : -5€ de réduction immédiate (code 'VIP')
-  'VIP': { type: 'fixed', value: 5.00 },
+  'ioifhzofoh156551651$$$$dedzedf': { type: 'fixed', value: 5.00 },
 
-  // Exemple 3 : -50% pour les amis (code 'AMIS50')
-  'AMIS50': { type: 'percentage', value: 50 },
-
-  // Exemple 4 : Gratuit (100% de réduction) - Utile pour tester
-  'TESTGRATUIT': { type: 'percentage', value: 100 }
 };
 
 // ---------------------------------------------------------
