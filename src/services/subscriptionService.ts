@@ -214,6 +214,30 @@ async getCharacterLimit(userId: string): Promise<number> {
     return remainingDays !== null && remainingDays > 0 && remainingDays <= 7;
   },
 
+
+  /**
+   * Vérifie si un code promo est valide
+   */
+  async checkPromoCode(code: string): Promise<{ valid: boolean; type?: string; value?: number }> {
+    try {
+      const backendUrl = import.meta.env.PROD 
+        ? 'https://ultimate-tracker-refactored-production.up.railway.app'
+        : 'http://localhost:3001';
+
+      const response = await fetch(`${backendUrl}/api/check-promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promoCode: code }),
+      });
+
+      if (!response.ok) return { valid: false };
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur checkPromoCode:', error);
+      return { valid: false };
+    }
+  },
+  
    /**
    * Crée un lien de paiement Mollie via le backend
    */
