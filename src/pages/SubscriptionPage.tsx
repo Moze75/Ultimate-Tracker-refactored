@@ -336,25 +336,50 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
           </div>
         </div>
 
-  {/* 👇👇 COLLE TON BLOC ICI 👇👇 */}
+    {/* 👇 COLLEZ LE BLOC "Zone Code Promo avec Bouton" ICI 👇 */}
         <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
-             <input
-              type="text"
-              placeholder="Avez-vous un code promo ?"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase().trim())}
-              className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center uppercase tracking-wider"
-            />
-            {promoCode && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-in fade-in zoom-in duration-300">
-                <CheckCircle2 size={20} />
-              </div>
-            )}
+          <div className="flex gap-2">
+             <div className="relative flex-grow">
+               <input
+                type="text"
+                placeholder="Code promo ?"
+                value={promoCode}
+                onChange={(e) => {
+                  setPromoCode(e.target.value.toUpperCase().trim());
+                  setPromoStatus('idle'); // Reset quand on tape
+                  setPromoMessage('');
+                }}
+                disabled={promoStatus === 'valid'}
+                className={`w-full bg-gray-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all uppercase tracking-wider
+                  ${promoStatus === 'valid' ? 'border-green-500 text-green-400' : promoStatus === 'invalid' ? 'border-red-500' : 'border-gray-700 focus:border-blue-500'}
+                `}
+              />
+              {promoStatus === 'valid' && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                  <CheckCircle2 size={20} />
+                </div>
+              )}
+             </div>
+             
+             <button
+               onClick={handleCheckPromo}
+               disabled={!promoCode || promoStatus === 'checking' || promoStatus === 'valid'}
+               className={`px-6 rounded-lg font-semibold transition-all whitespace-nowrap
+                 ${promoStatus === 'valid' 
+                   ? 'bg-green-900/30 text-green-500 border border-green-900 cursor-default'
+                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20'}
+               `}
+             >
+               {promoStatus === 'checking' ? <Loader2 className="animate-spin" size={20} /> : 
+                promoStatus === 'valid' ? 'Appliqué' : 'Appliquer'}
+             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            La réduction sera appliquée et visible sur la page de paiement Mollie.
-          </p>
+          
+          {promoMessage && (
+            <p className={`text-xs mt-2 text-center ${promoStatus === 'valid' ? 'text-green-400' : 'text-red-400'}`}>
+              {promoMessage}
+            </p>
+          )}
         </div>
         
         {/* Plans d'abonnement */}
