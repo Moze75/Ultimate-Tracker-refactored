@@ -315,29 +315,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
           </div>
         </div>
 
-        {/* 👇 AJOUTE LE BLOC CODE PROMO ICI 👇 */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
-             <input
-              type="text"
-              placeholder="Avez-vous un code promo ?"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase().trim())}
-              className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center uppercase tracking-wider"
-            />
-            {promoCode && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-in fade-in zoom-in duration-300">
-                <CheckCircle2 size={20} />
-              </div>
-            )}
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            La réduction sera appliquée et visible sur la page de paiement Mollie.
-          </p>
-        </div>
-
-        {/* Plans d'abonnement */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+ 
         
         {/* Plans d'abonnement */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
