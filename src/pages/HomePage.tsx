@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Sword, Users, ArrowRight, Zap, Heart, 
   CheckCircle2, Shield, Sparkles, Crown, Star,
   HelpCircle, ChevronDown, ChevronUp, Lock,
-  X, ChevronLeft, ChevronRight
+  X, ChevronLeft, ChevronRight, Download
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -14,6 +14,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  
+  // Ref pour le carrousel
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Gestion du scroll pour le bouton flottant
   useEffect(() => {
@@ -68,6 +71,17 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     setSelectedImageIndex((prev) => (prev === null ? null : (prev - 1 + galleryImages.length) % galleryImages.length));
   }, [selectedImageIndex, galleryImages.length]);
 
+  // --- LOGIQUE DU CARROUSEL (Scroll) ---
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = carouselRef.current.clientWidth * 0.8; // Scroll 80% de la largeur
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // Gestion du clavier (Echap, Gauche, Droite)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,24 +111,24 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     },
     {
       question: "Est-ce que c’est comme Roll20 ou Foundry ?",
-      answer: "Non. Le Compagnon n’est pas une table virtuelle. C’est un assistant intelligent pour vos parties en présentiel mais il offre aussi des outils puissants aux MJ pour organiser et suivre une campagne à distance, sans s’encombrer de plateformes complexes."
+      answer: "Non. Le Compagnon n’est pas une table virtuelle (VTT). C’est un assistant intelligent pour vos parties en présentiel ou en vocal, conçu pour fluidifier le jeu, pas pour gérer des cartes tactiques complexes."
     },
     {
       question: "Est-ce que ça fonctionne hors ligne ?",
-      answer: "Non. L’app est 100% en ligne, pour garantir une navigation rapide, fluide, et à jour. Plus besoin de mises à jour manuelles, tout est prêt à jouer."
+      answer: "Non. L’app est 100% en ligne, pour garantir une navigation rapide, fluide, et à jour. Cependant, une fois installée en tant qu'App (PWA), elle offre une expérience très proche du natif."
     },
     {
       question: "Est-ce compatible mobile/tablette/PC ?",
-      answer: "Oui. Vous pouvez y accéder depuis n’importe quel appareil connecté."
+      answer: "Oui. Vous pouvez y accéder depuis n’importe quel appareil connecté. L'interface s'adapte automatiquement."
     },
     {
       question: "Et si j’ai un bug ou un souci ?",
-      answer: "Une équipe réactive est disponible via le support et les Célestes ont un support prioritaire."
+      answer: "Une équipe réactive est disponible via le support et les Célestes bénéficient d'un support prioritaire."
     }
   ];
 
   return (
-    <div className="min-h-screen text-gray-100" style={bgStyle}>
+    <div className="min-h-screen text-gray-100 font-sans" style={bgStyle}>
       
       {/* --- SECTION 1 : ACCROCHE --- */}
       <div className="container mx-auto px-4 pt-24 pb-16 text-center relative z-10">
@@ -127,14 +141,13 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           />
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight" style={{
-          textShadow: `0 0 30px rgba(255, 255, 255, 0.4)`
-        }}>
-          Le Compagnon - D&D
+        {/* 1. TITRE MODIFIÉ */}
+        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]">
+          Le Compagnon
         </h1>
 
         <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
-          Le Compagnon ultime pour D&D 5e, pensé pour les francophones
+          L'outil ultime pour D&D 5e, pensé pour les francophones
         </h2>
         
         <p className="text-lg text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
@@ -176,7 +189,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             
             <div className="mt-12 p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-500/20">
               <p className="text-xl md:text-2xl font-semibold text-blue-200">
-                C’est exactement pour ça que Le Compagnon D&D a été créé.
+                C’est exactement pour ça que Le Compagnon a été créé.
               </p>
               <p className="mt-4 text-blue-100/80">
                 Une appli 100% en ligne, légère, et toujours à jour pensée pour le plaisir de jeu, pas pour la prise de tête.
@@ -199,7 +212,8 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             { icon: <Heart className="w-6 h-6" />, text: "Gagnez du temps à chaque session, restez dans l’immersion" },
             { icon: <Zap className="w-6 h-6" />, text: "Un vrai assistant pour vos parties autour de la table… ou à distance" },
             { icon: <CheckCircle2 className="w-6 h-6" />, text: "Suivi des objets, des états, des sorts, tout centralisé" },
-            { icon: <Sparkles className="w-6 h-6" />, text: "Système 100% connecté : toujours à jour, aucune installation" }
+            /* 2. CARTE MODIFIÉE */
+            { icon: <Download className="w-6 h-6" />, text: "Système 100% connecté : toujours à jour, installable en App (PWA)" }
           ].map((benefit, idx) => (
             <div key={idx} className="flex items-start gap-4 p-6 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/30 transition-all duration-300">
               <div className="p-3 rounded-lg bg-blue-500/20 text-blue-400 shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -223,7 +237,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-24">
             {/* Carte Joueurs */}
-            <div className="p-8 rounded-2xl bg-black/40 border border-blue-500/30 relative overflow-hidden group hover:border-blue-500/60 transition-all hover:-translate-y-1 duration-300 shadow-lg hover:shadow-blue-500/10">
+            <div className="p-8 rounded-2xl bg-black/40 border border-blue-500/30 relative overflow-hidden group hover:border-blue-500/60 transition-all hover:-translate-y-1 duration-300 shadow-lg hover:shadow-blue-900/20">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Sword size={120} />
               </div>
@@ -231,7 +245,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 <Users /> Pour les Joueurs
               </h3>
               <ul className="space-y-4 text-gray-300">
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 perso en plan héro</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 persos en plan héro</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Accès rapide aux stats, jets, inventaire</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Dice roller 3D intégré</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Suivi de la concentration et des états</li>
@@ -242,7 +256,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             </div>
 
             {/* Carte MJ */}
-            <div className="p-8 rounded-2xl bg-black/40 border border-purple-500/30 relative overflow-hidden group hover:border-purple-500/60 transition-all hover:-translate-y-1 duration-300 shadow-lg hover:shadow-purple-500/10">
+            <div className="p-8 rounded-2xl bg-black/40 border border-purple-500/30 relative overflow-hidden group hover:border-purple-500/60 transition-all hover:-translate-y-1 duration-300 shadow-lg hover:shadow-purple-900/20">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Crown size={120} />
               </div>
@@ -264,37 +278,82 @@ export function HomePage({ onGetStarted }: HomePageProps) {
         </div>
       </div>
 
-      {/* --- SECTION 5 : VISUELS & DÉMO (Avec Viewer) --- */}
-      <div className="py-24 bg-black/20 border-y border-white/5">
+      {/* --- SECTION 5 : VISUELS & DÉMO (CARROUSEL) --- */}
+      <div className="py-24 bg-black/20 border-y border-white/5 overflow-hidden">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
             À quoi ça ressemble ?
           </h2>
-          <p className="text-gray-400 text-center mb-12">Jetez un coup d'œil à l'interface (Cliquez pour agrandir)</p>
+          <p className="text-gray-400 text-center mb-12">
+            Glissez pour explorer (Cliquez pour agrandir)
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleryImages.map((img, index) => (
-              <div 
-                key={index} 
-                onClick={() => setSelectedImageIndex(index)}
-                className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900 cursor-pointer transform hover:scale-[1.02] transition-all duration-300"
-              >
-                <img 
-                  src={img.src} 
-                  alt={img.alt} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <div className="bg-black/60 p-3 rounded-full text-white border border-white/20">
-                      <Sparkles size={24} />
-                   </div>
+          {/* Conteneur Carrousel avec flèches */}
+          <div className="relative group max-w-7xl mx-auto">
+            
+            {/* Bouton Gauche (Desktop) */}
+            <button 
+              onClick={() => scrollCarousel('left')}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 p-3 bg-black/70 text-white rounded-full border border-white/10 hover:bg-blue-600 transition-colors shadow-xl"
+            >
+              <ChevronLeft size={24} />
+            </button>
+
+            {/* Zone de scroll (Scroll Snap) */}
+            {/* 3. NOUVELLE GALERIE TYPE CARROUSEL */}
+            <div 
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide px-4 md:px-0"
+              style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
+            >
+              {galleryImages.map((img, index) => (
+                <div 
+                  key={index} 
+                  className="snap-center shrink-0 w-[85vw] md:w-[450px] lg:w-[550px] first:pl-0 last:pr-4"
+                >
+                  <div 
+                    onClick={() => setSelectedImageIndex(index)}
+                    className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900 cursor-pointer transform transition-all duration-300 hover:border-blue-500/50"
+                  >
+                    <img 
+                      src={img.src} 
+                      alt={img.alt} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    {/* Overlay au survol */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <div className="bg-black/60 p-3 rounded-full text-white border border-white/20 backdrop-blur-sm">
+                          <Sparkles size={24} />
+                       </div>
+                    </div>
+                    {/* Légende */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
+                      <span className="text-white font-bold text-lg drop-shadow-md">{img.alt}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-white font-medium text-sm">{img.alt}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Bouton Droite (Desktop) */}
+            <button 
+              onClick={() => scrollCarousel('right')}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 p-3 bg-black/70 text-white rounded-full border border-white/10 hover:bg-blue-600 transition-colors shadow-xl"
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
+          
+          {/* Indicateur de swipe pour mobile */}
+          <div className="md:hidden flex justify-center gap-2 mt-2">
+            <div className="flex gap-1">
+              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+              <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -357,7 +416,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={() => handlePlanSelection('hero')} className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-900/20">
+                 <button onClick={() => handlePlanSelection('hero')} className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-900/30">
                   → Je deviens Héros
                 </button>
               </div>
@@ -383,14 +442,14 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={() => handlePlanSelection('game_master')} className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold shadow-lg shadow-purple-900/20">
+                 <button onClick={() => handlePlanSelection('game_master')} className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold shadow-lg shadow-purple-900/30">
                   → Je prends le contrôle
                 </button>
               </div>
             </div>
 
             {/* Plan Céleste */}
-            <div className="relative bg-yellow-900/10 backdrop-blur-sm border border-yellow-500/50 rounded-xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02] ring-1 ring-yellow-500/20">
+            <div className="relative bg-yellow-900/10 backdrop-blur-sm border border-yellow-500/50 rounded-xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02] ring-1 ring-yellow-500/30">
               <div className="p-6 bg-yellow-900/20 border-b border-yellow-500/30">
                 <Star className="w-10 h-10 text-yellow-400 mb-4" />
                 <h3 className="text-2xl font-bold text-white">Céleste</h3>
@@ -414,7 +473,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </div>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 <button onClick={() => handlePlanSelection('celestial')} className="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 transition-all font-semibold shadow-lg shadow-yellow-900/20 border border-yellow-400/20">
+                 <button onClick={() => handlePlanSelection('celestial')} className="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 transition-colors font-semibold shadow-lg shadow-yellow-900/30">
                   → Je rejoins les Célestes
                 </button>
               </div>
@@ -485,11 +544,16 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             Merci d’avoir lu jusqu’ici. Si vous êtes encore là, c’est probablement que vous aimez autant que nous l’univers du jeu de rôle.
             On vous souhaite des parties mémorables, des jets de dés chanceux, et des aventures épiques.
           </p>
+          
+          {/* 4. CRÉDITS MODIFIÉS */}
           <div className="p-6 bg-white/5 rounded-xl border border-yellow-500/20 inline-block">
-             <p className="text-gray-400 text-sm mb-3">Un grand merci à mes incroyables joueur·euse·s pour leur aide précieuse :</p>
-             <p className="text-yellow-400 font-medium mb-2">Grut, Mhuggen, Philomène et Riane</p>
-             <p className="text-gray-500 text-xs">Et aux retours de Draniak et Bluemoown du discord Nantais ! 🎲</p>
+             <p className="text-gray-400 text-sm mb-3">Un grand merci à mes incroyables joueur·euse·s et testeurs :</p>
+             <p className="text-yellow-400 font-medium mb-2 text-lg">
+               Grut, Mhuggen, Philomène, Riane, Draniak et Bluemoown
+             </p>
+             <p className="text-gray-500 text-xs">Et à toute la communauté du discord Nantais ! 🎲</p>
           </div>
+          
           <p className="mt-8 text-blue-400 italic font-medium">
             À bientôt dans le multivers du Compagnon DnD
           </p>
@@ -503,10 +567,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
              <div className="flex items-center gap-2 text-gray-400 text-sm">
                 <Lock size={14} /> Paiements 100% sécurisés via Mollie
              </div>
-             <div className="flex gap-6 text-sm text-gray-500">
-                <a href="https://le-compagnon-dnd.fr/mentions-legales" className="hover:text-white transition-colors">Mentions légales</a>
-                <a href="https://le-compagnon-dnd.fr/cgu" className="hover:text-white transition-colors">CGU</a>
-                <a href="mailto:contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact</a>
+             
+             {/* 5. LIENS MIS À JOUR */}
+             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+                <a href="https://le-compagnon-dnd.fr/confidentialite.html" className="hover:text-white transition-colors">Mentions légales & Confidentialité</a>
+                <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
+                <a href="mailto:Mewan@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Mewan@le-compagnon-dnd.fr</a>
              </div>
           </div>
           
@@ -542,7 +608,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           {/* Bouton Fermer */}
           <button 
             onClick={closeViewer}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors z-50"
           >
             <X size={32} />
           </button>
@@ -550,7 +616,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           {/* Bouton Précédent */}
           <button 
             onClick={prevImage}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10"
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10 z-50"
           >
             <ChevronLeft size={32} />
           </button>
@@ -575,13 +641,13 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           {/* Bouton Suivant */}
           <button 
             onClick={nextImage}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10"
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10 z-50"
           >
             <ChevronRight size={32} />
           </button>
 
           {/* Indicateur de position (points en bas) */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-50">
             {galleryImages.map((_, idx) => (
               <button
                 key={idx}
