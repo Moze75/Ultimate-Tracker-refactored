@@ -21,6 +21,8 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
   const [isSubscriptionExpiringSoon, setIsSubscriptionExpiringSoon] = useState(false);
 
     const [promoCode, setPromoCode] = useState(''); 
+   const [promoStatus, setPromoStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [promoMessage, setPromoMessage] = useState('');
 
   useEffect(() => {
     loadSubscription();
