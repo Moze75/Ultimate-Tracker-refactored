@@ -28,17 +28,19 @@ app.use(express.json());
 // 1. DÉFINITION DES CODES PROMOS (À MODIFIER SELON VOS BESOINS)
 // ---------------------------------------------------------
 const VALID_PROMO_CODES = {
-  // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
+  // Exemple 1 : -10% pour tout le monde 
   'LBA10': { type: 'percentage', value: 10 }, 
 
-    // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
+    // Exemple 1 : -10% pour tout le monde 
   'MJM10': { type: 'percentage', value: 10 }, 
 
-      // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
+      // Exemple 1 : -10% pour tout le monde 
+  'DDNANTAIS10': { type: 'percentage', value: 10 }, 
+
+      // Exemple 1 : -10% pour tout le monde 
   'Naeth10': { type: 'percentage', value: 10 }, 
 
-  // Exemple 2 : -5€ de réduction immédiate (code 'VIP')
-  'ioifhzofoh156551651$$$$dedzedf': { type: 'fixed', value: 5.00 },
+
 
 };
 
