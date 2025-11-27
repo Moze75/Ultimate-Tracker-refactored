@@ -3,23 +3,19 @@ import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types
 
 async function createMolliePayment(userId: string, tier: string, email: string): Promise<string | null> {
   try {
-const backendUrl = import. meta.env. PROD 
-  ? 'https://ultimate-tracker-refactored-production.up.railway.app'
-  : 'http://localhost:3001';
+    const backendUrl = import.meta.env.PROD 
+      ? 'https://ultimate-tracker-refactored-production.up.railway.app'
+      : 'http://localhost:3001';
 
-       // Récupération du prix officiel depuis la config frontend
-    const selectedPlan = SUBSCRIPTION_PLANS.find(p => p.id === tier);
-    const amount = selectedPlan ? selectedPlan.price : null;
-
-    console.log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, amount, backendUrl });
+    console.log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, backendUrl });
 
     const response = await fetch(`${backendUrl}/api/create-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      // On ajoute 'amount' pour dire au backend quel prix utiliser
-      body: JSON.stringify({ userId, tier, email, amount }),
+      // ON N'ENVOIE QUE CES 3 INFOS (pas de 'amount')
+      body: JSON.stringify({ userId, tier, email }),
     });
 
     if (!response.ok) {
