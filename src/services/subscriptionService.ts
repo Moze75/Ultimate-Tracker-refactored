@@ -1,21 +1,22 @@
 import { supabase } from '../lib/supabase';
 import { UserSubscription, SubscriptionTier, SUBSCRIPTION_PLANS } from '../types/subscription';
 
-async function createMolliePayment(userId: string, tier: string, email: string): Promise<string | null> {
+// Remplace toute la fonction createMolliePayment existante par celle-ci :
+async function createMolliePayment(userId: string, tier: string, email: string, promoCode?: string): Promise<string | null> {
   try {
     const backendUrl = import.meta.env.PROD 
       ? 'https://ultimate-tracker-refactored-production.up.railway.app'
       : 'http://localhost:3001';
 
-    console.log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, backendUrl });
+    console.log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, promoCode, backendUrl });
 
     const response = await fetch(`${backendUrl}/api/create-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      // ON N'ENVOIE QUE CES 3 INFOS (pas de 'amount')
-      body: JSON.stringify({ userId, tier, email }),
+      // ✅ On envoie maintenant le promoCode s'il existe
+      body: JSON.stringify({ userId, tier, email, promoCode }),
     });
 
     if (!response.ok) {
