@@ -94,3 +94,9 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   },
   
 ]; 
+// 👇 COLLE CECI JUSTE APRÈS LA FIN DU TABLEAU SUBSCRIPTION_PLANS 👇
+export interface PromoCode {
+  code: string;
+  discountType: 'percentage' | 'fixed_amount';
+  value: number;
+}
