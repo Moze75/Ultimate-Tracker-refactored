@@ -71,10 +71,12 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
       
       toast.loading('Redirection vers la page de paiement sécurisée...', { duration: 2000 });
 
+          // 👇 REMPLACE L'APPEL EXISTANT PAR CELUI-CI 👇
       const checkoutUrl = await subscriptionService.createMolliePayment(
         session.user.id, 
         tier, 
-        session.user.email || ''
+        session.user.email || '',
+        promoCode // ✅ On passe le code promo saisi
       );
 
       if (!checkoutUrl) {
