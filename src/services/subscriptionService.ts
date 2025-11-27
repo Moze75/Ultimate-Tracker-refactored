@@ -7,14 +7,19 @@ const backendUrl = import. meta.env. PROD
   ? 'https://ultimate-tracker-refactored-production.up.railway.app'
   : 'http://localhost:3001';
 
-    console. log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, backendUrl });
+       // Récupération du prix officiel depuis la config frontend
+    const selectedPlan = SUBSCRIPTION_PLANS.find(p => p.id === tier);
+    const amount = selectedPlan ? selectedPlan.price : null;
+
+    console.log('[subscriptionService] Appel backend Mollie... ', { userId, tier, email, amount, backendUrl });
 
     const response = await fetch(`${backendUrl}/api/create-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, tier, email }),
+      // On ajoute 'amount' pour dire au backend quel prix utiliser
+      body: JSON.stringify({ userId, tier, email, amount }),
     });
 
     if (!response.ok) {
