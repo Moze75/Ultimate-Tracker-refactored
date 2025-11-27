@@ -57,6 +57,25 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
     }
   };
 
+    // 👇 COLLEZ handleCheckPromo ICI 👇
+  const handleCheckPromo = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoStatus('checking');
+    const result = await subscriptionService.checkPromoCode(promoCode);
+    
+    if (result.valid) {
+      setPromoStatus('valid');
+      const label = result.type === 'percentage' ? `-${result.value}%` : `-${result.value}€`;
+      setPromoMessage(`Code appliqué : ${label} de réduction !`);
+      toast.success('Code promo validé !');
+    } else {
+      setPromoStatus('invalid');
+      setPromoMessage('Ce code n\'est pas valide.');
+      toast.error('Code promo inconnu');
+    }
+  };
+
   const handleSubscribe = async (tier: string) => {
     if (tier === 'free') {
       toast.error('Vous êtes en période d\'essai gratuit');
