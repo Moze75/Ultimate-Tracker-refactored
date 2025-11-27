@@ -20,6 +20,8 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [isSubscriptionExpiringSoon, setIsSubscriptionExpiringSoon] = useState(false);
 
+    const [promoCode, setPromoCode] = useState(''); 
+
   useEffect(() => {
     loadSubscription();
   }, [session]);
