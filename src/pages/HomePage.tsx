@@ -572,7 +572,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
              <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                 <a href="https://le-compagnon-dnd.fr/confidentialite.html" className="hover:text-white transition-colors">Mentions légales & Confidentialité</a>
                 <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
-                <a href="mailto:Mewan@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Mewan@le-compagnon-dnd.fr</a>
+                <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
              </div>
           </div>
           
