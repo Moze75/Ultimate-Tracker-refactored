@@ -91,11 +91,12 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       'Participez à l\'évolution du projet',
       'Toutes les fonctionnalités MJ',
     ],
-  },
-  // Ajoutez ceci à la fin du fichier
+    // Ajoutez ceci à la fin du fichier
 export interface PromoCode {
   code: string;
   discountType: 'percentage' | 'fixed_amount';
   value: number; // ex: 10 pour 10% ou 10€
 }
+  },
+  
 ];
