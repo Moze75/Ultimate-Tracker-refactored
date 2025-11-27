@@ -24,12 +24,26 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ---------------------------------------------------------
+// 1. DÉFINITION DES CODES PROMOS (À MODIFIER SELON VOS BESOINS)
+// ---------------------------------------------------------
 const VALID_PROMO_CODES = {
+  // Exemple 1 : -10% pour tout le monde (code 'BIENVENUE')
   'BIENVENUE': { type: 'percentage', value: 10 }, 
-  'VIP': { type: 'fixed', value: 5.00 }
+
+  // Exemple 2 : -5€ de réduction immédiate (code 'VIP')
+  'VIP': { type: 'fixed', value: 5.00 },
+
+  // Exemple 3 : -50% pour les amis (code 'AMIS50')
+  'AMIS50': { type: 'percentage', value: 50 },
+
+  // Exemple 4 : Gratuit (100% de réduction) - Utile pour tester
+  'TESTGRATUIT': { type: 'percentage', value: 100 }
 };
 
-// 👇 2. COLLE CECI À LA PLACE DE L'ANCIENNE ROUTE create-payment 👇
+// ---------------------------------------------------------
+// 2. ROUTE DE PAIEMENT (NE PAS TOUCHER À LA LOGIQUE CI-DESSOUS)
+// ---------------------------------------------------------
 app.post('/api/create-payment', async (req, res) => {
   try {
     const { userId, tier, email, promoCode } = req.body;
@@ -52,23 +66,29 @@ app.post('/api/create-payment', async (req, res) => {
     let finalAmount = parseFloat(basePriceString);
     let description = `Abonnement ${tier} - Le Compagnon D&D`;
 
-    // Logique Promo
+    // --- DÉBUT LOGIQUE PROMO ---
     if (promoCode && VALID_PROMO_CODES[promoCode]) {
       const discount = VALID_PROMO_CODES[promoCode];
+      
+      // Cas pourcentage (ex: -10%)
       if (discount.type === 'percentage') {
         finalAmount = finalAmount * (1 - discount.value / 100);
         description += ` (Code ${promoCode}: -${discount.value}%)`;
-      } else if (discount.type === 'fixed') {
+      } 
+      // Cas montant fixe (ex: -5€)
+      else if (discount.type === 'fixed') {
         finalAmount = Math.max(0, finalAmount - discount.value);
         description += ` (Code ${promoCode}: -${discount.value}€)`;
       }
-      console.log(`🎟️ Code promo appliqué : ${promoCode}. Nouveau prix : ${finalAmount}€`);
+      
+      console.log(`🎟️ Code promo appliqué : ${promoCode}. Ancien prix: ${basePriceString}€ -> Nouveau prix : ${finalAmount.toFixed(2)}€`);
     }
+    // --- FIN LOGIQUE PROMO ---
 
     const payment = await mollieClient.payments.create({
       amount: {
         currency: 'EUR',
-        value: finalAmount.toFixed(2),
+        value: finalAmount.toFixed(2), // Important: 2 décimales
       },
       description: description,
       redirectUrl: `${process.env.FRONTEND_URL}/payment-success?userId=${userId}&tier=${tier}`,
