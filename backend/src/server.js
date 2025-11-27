@@ -33,9 +33,9 @@ app.post('/api/create-payment', async (req, res) => {
     }
 
     const tierPrices = {
-      hero: '4. 99',
-      game_master: '9.99',
-      celestial: '24.99',
+      hero: '10.00',
+      game_master: '15.00',
+      celestial: '30.00',
     };
 
     const amount = tierPrices[tier];
