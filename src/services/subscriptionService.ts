@@ -217,10 +217,11 @@ async getCharacterLimit(userId: string): Promise<number> {
    /**
    * Crée un lien de paiement Mollie via le backend
    */
-async createMolliePayment(userId: string, tier: SubscriptionTier, email: string): Promise<string> {
-  console.log('[subscriptionService] Création du paiement Mollie pour:', userId, tier, email);
+  async createMolliePayment(userId: string, tier: SubscriptionTier, email: string, promoCode?: string): Promise<string> {
+    console.log('[subscriptionService] Création du paiement Mollie pour:', userId, tier, email, promoCode);
 
-  const checkoutUrl = await createMolliePayment(userId, tier, email);
+    // ✅ Et on le passe à la fonction interne
+    const checkoutUrl = await createMolliePayment(userId, tier, email, promoCode);
 
     if (!checkoutUrl) {
       throw new Error('Impossible de créer le paiement Mollie');
