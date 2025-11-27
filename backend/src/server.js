@@ -24,9 +24,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
+const VALID_PROMO_CODES = {
+  'BIENVENUE': { type: 'percentage', value: 10 }, 
+  'VIP': { type: 'fixed', value: 5.00 }
+};
+
+// 👇 2. COLLE CECI À LA PLACE DE L'ANCIENNE ROUTE create-payment 👇
 app.post('/api/create-payment', async (req, res) => {
   try {
-    const { userId, tier, email } = req.body;
+    const { userId, tier, email, promoCode } = req.body;
 
     if (!userId || !tier || !email) {
       return res.status(400).json({ error: 'Paramètres manquants' });
@@ -38,27 +44,44 @@ app.post('/api/create-payment', async (req, res) => {
       celestial: '30.00',
     };
 
-    const amount = tierPrices[tier];
-    if (!amount) {
+    const basePriceString = tierPrices[tier];
+    if (!basePriceString) {
       return res.status(400).json({ error: 'Tier invalide' });
-    } 
+    }
+
+    let finalAmount = parseFloat(basePriceString);
+    let description = `Abonnement ${tier} - Le Compagnon D&D`;
+
+    // Logique Promo
+    if (promoCode && VALID_PROMO_CODES[promoCode]) {
+      const discount = VALID_PROMO_CODES[promoCode];
+      if (discount.type === 'percentage') {
+        finalAmount = finalAmount * (1 - discount.value / 100);
+        description += ` (Code ${promoCode}: -${discount.value}%)`;
+      } else if (discount.type === 'fixed') {
+        finalAmount = Math.max(0, finalAmount - discount.value);
+        description += ` (Code ${promoCode}: -${discount.value}€)`;
+      }
+      console.log(`🎟️ Code promo appliqué : ${promoCode}. Nouveau prix : ${finalAmount}€`);
+    }
 
     const payment = await mollieClient.payments.create({
       amount: {
         currency: 'EUR',
-        value: amount,
+        value: finalAmount.toFixed(2),
       },
-      description: `Abonnement ${tier} - Le Compagnon D&D`,
+      description: description,
       redirectUrl: `${process.env.FRONTEND_URL}/payment-success?userId=${userId}&tier=${tier}`,
       webhookUrl: `${process.env.BACKEND_URL}/api/webhook`,
       metadata: {
         userId,
         tier,
         email,
+        promoCodeUsed: promoCode || null,
       },
     });
 
-    console.log('✅ Paiement créé:', payment. id);
+    console.log('✅ Paiement créé:', payment.id);
 
     res.json({
       checkoutUrl: payment.getCheckoutUrl(),
