@@ -272,6 +272,9 @@ export function ClassResourcesCard({
 }) {
   if (!resources || !playerClass) return null;
 
+    // ✅ Récupération de la fonction de lancer de dés
+  const { rollDice } = useContext(DiceRollContext);
+
   const cls = canonicalClass(playerClass);
   const items: React.ReactNode[] = [];
 
