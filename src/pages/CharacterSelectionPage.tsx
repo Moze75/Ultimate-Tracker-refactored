@@ -447,7 +447,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
  
   return (
     <div
-      className="character-selection-page min-h-screen"
+      className="character-selection-page min-h-screen flex flex-col"
       style={{
         backgroundImage: `url(${BG_URL})`,
         backgroundSize: 'cover',
@@ -456,16 +456,14 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
         backgroundColor: 'transparent',
       }}
       >
-      <div className="min-h-screen py-6 bg-transparent">
-        <div className="w-full max-w-7xl mx-auto px-4"> 
-         
-         {/* --- 1. HEADER ADMINISTRATIF UNIFIÉ --- */}
-          <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl p-3 mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
-            
-            {/* GAUCHE : Communauté & Support */}
-            <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto justify-between md:justify-start">
-               {/* Lien Discord */}
-               <a 
+      
+      {/* --- 1. NAVBAR (RECTANGLE FULL WIDTH) --- */}
+      <div className="w-full bg-black/80 backdrop-blur-xl border-b border-white/10 z-50">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+           
+           {/* GAUCHE : Communauté */}
+           <div className="flex items-center gap-6">
+              <a 
                  href="https://discord.gg/7zVKwtTe" 
                  target="_blank" 
                  rel="noopener noreferrer"
@@ -478,10 +476,9 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                     className="h-4 w-auto brightness-0 invert opacity-60 group-hover:opacity-100 transition-all" 
                   />
                </a>
-
+               
                <div className="h-4 w-px bg-white/10 hidden md:block"></div>
 
-               {/* Buy Me a Coffee (Nouveau visuel) */}
                <a
                 href="https://buymeacoffee.com/mewan44"
                 target="_blank"
@@ -495,16 +492,26 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                   className="h-8 w-auto" 
                 />
               </a>
-            </div>
+           </div>
 
-            {/* DROITE : Gestion Compte & Abo */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+           {/* DROITE : Actions Admin */}
+           <div className="flex items-center gap-3">
+               {currentSubscription && (
+                   <span className={`hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider border opacity-70 mr-2 ${
+                     currentSubscription.status === 'active' 
+                     ? 'bg-green-500/5 border-green-500/20 text-green-400' 
+                     : 'bg-gray-800/40 border-gray-600/20 text-gray-400'
+                   }`}>
+                    {getSubscriptionText()}
+                  </span>
+               )}
+
                <button
                   onClick={() => setShowSubscription(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-xs font-medium transition-all"
                 >
                   <Crown size={14} className="text-purple-400" />
-                  <span>
+                  <span className="hidden sm:inline">
                     {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
                       ? 'Passer Premium'
                       : 'Abonnement'
@@ -519,26 +526,17 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                 <Settings size={14} className="text-gray-400" />
                 <span className="hidden sm:inline">Compte</span>
               </button>
-            </div>
-          </div>
+           </div>
+        </div>
+      </div>
 
-
-          {/* --- 2. TITRE & CONTEXTE --- */}
-          <div className="text-center mb-12 relative">
+      {/* --- 2. CONTENU PRINCIPAL --- */}
+      <div className="flex-1 py-12 bg-transparent">
+        <div className="w-full max-w-7xl mx-auto px-4"> 
+         
+          {/* Titre & Contexte */}
+          <div className="text-center mb-12">
             
-            {/* Badge Statut Abo (Plus discret) */}
-             {currentSubscription && (
-                <div className="flex justify-center mb-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider border backdrop-blur-sm opacity-80 ${
-                     currentSubscription.status === 'active' 
-                     ? 'bg-green-500/5 border-green-500/20 text-green-400' 
-                     : 'bg-gray-800/40 border-gray-600/20 text-gray-400'
-                   }`}>
-                    {getSubscriptionText()}
-                  </span>
-                </div>
-             )}
-
             <h1
               className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight"
               style={{
@@ -554,7 +552,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                 : 'Aucun personnage pour le moment'}
             </p>
 
-            {/* --- 3. ACTION PRINCIPALE MJ --- */}
+            {/* Action MJ */}
             {currentSubscription?.tier === 'game_master' && (
                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
