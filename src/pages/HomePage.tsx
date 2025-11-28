@@ -351,6 +351,45 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             </div>
           </div>
 
+          {/* --- SECTION MOBILE --- */}
+          <div className="mt-32 flex flex-col md:flex-row items-center justify-center gap-16 max-w-6xl mx-auto">
+            
+            {/* Visuel Téléphone */}
+            <div className="flex-1 flex justify-center md:justify-end order-2 md:order-1">
+               <div className="relative rounded-[2.5rem] border-8 border-gray-900 bg-gray-900 shadow-2xl shadow-blue-900/20 overflow-hidden max-w-[280px] transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+                 <img 
+                   src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/ecran_mobile_1.png" 
+                   alt="Interface Mobile Le Compagnon" 
+                   className="w-full h-auto block"
+                 />
+               </div>
+            </div>
+
+            {/* Texte Explicatif */}
+            <div className="flex-1 text-center md:text-left order-1 md:order-2">
+               <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-4">
+                  Mobile First
+               </div>
+               <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+                 Une vraie app mobile,<br/>
+                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                   pas une version compressée.
+                 </span>
+               </h3>
+               <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
+                 <p>
+                   Vous jouez sur PC ? Profitez de la version Desktop immersive.
+                   Vous jouez sur téléphone ? Découvrez une interface repensée de zéro.
+                 </p>
+                 <p>
+                   Contrairement à d'autres outils (comme D&D Beyond), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
+                   Boutons accessibles au pouce, navigation simplifiée, lisibilité maximale : c'est une expérience faite pour votre main.
+                 </p>
+               </div>
+            </div>
+            
+          </div>
+          
         </div>
       </div>
 
