@@ -377,23 +377,27 @@ useEffect(() => {
   }
 
   // ✅ MODIFIÉ : Écran de chargement des composants avec indicateur de retry
-  if (!LoginPage || !CharacterSelectionPage || !GamePage) {
+  if (!LoginPage || ! CharacterSelectionPage || !GamePage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center space-y-4">
-          <img 
-            src="/icons/wmremove-transformed.png" 
-            alt="Chargement..." 
-            className="animate-spin rounded-full h-12 w-12 mx-auto object-cover" 
-          />
-          <p className="text-gray-400">Chargement des composants...</p>
-          {retryCount > 0 && (
-            <p className="text-yellow-400 text-sm">
-              Tentative {retryCount + 1}/{MAX_RETRIES}
-            </p>
-          )}
+      <>
+        <Toaster position="top-right" />
+        <InstallPrompt />
+        <div className="min-h-screen flex items-center justify-center bg-gray-900">
+          <div className="text-center space-y-4">
+            <img 
+              src="/icons/wmremove-transformed.png" 
+              alt="Chargement..." 
+              className="animate-spin rounded-full h-12 w-12 mx-auto object-cover" 
+            />
+            <p className="text-gray-400">Chargement des composants...</p>
+            {retryCount > 0 && (
+              <p className="text-yellow-400 text-sm">
+                Tentative {retryCount + 1}/{MAX_RETRIES}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
