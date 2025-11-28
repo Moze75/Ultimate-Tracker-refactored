@@ -1413,8 +1413,9 @@ const triggerDiceRoll = useCallback((
 
   // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
 const characterLevel = useMemo(() => {
-  const primaryCaster = getCasterType(player.class);
-  const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+  const pSub = (player as any).subclass || (player as any).sub_class || (player as any).sousClasse;
+  const primaryCaster = getCasterType(player.class, pSub);
+  const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class, null) : 'none';
     
   let level = 1;
   if (primaryCaster !== 'none') {
