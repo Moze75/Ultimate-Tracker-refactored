@@ -491,7 +491,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                 title="Offrir un café au développeur"
               >
                 <img
-                  src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button. png"
+                  src="https://raw. githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button. png"
                   alt="Buy Me a Coffee"
                   className="h-8 w-auto" 
                 />
