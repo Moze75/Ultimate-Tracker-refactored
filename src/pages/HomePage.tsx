@@ -603,12 +603,28 @@ export function HomePage({ onGetStarted }: HomePageProps) {
              <div className="flex items-center gap-2 text-gray-400 text-sm">
                 <Lock size={14} /> Paiements 100% sécurisés via Mollie
              </div>
-             
-             {/* 5. LIENS MIS À JOUR */}
+                 {/* 5. LIENS MIS À JOUR */}
              <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                 <a href="https://le-compagnon-dnd.fr/confidentialite.html" className="hover:text-white transition-colors">Mentions légales & Confidentialité</a>
                 <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
                 <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
+             </div>
+
+             {/* 6. LIEN DISCORD */}
+             <div className="mt-4">
+               <a 
+                 href="https://discord.gg/7zVKwtTe" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 transition-all group"
+               >
+                  <span className="text-gray-400 text-sm group-hover:text-gray-200">Un bug, une question ?</span>
+                  <img 
+                    src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
+                    alt="Discord" 
+                    className="h-5 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+               </a>
              </div>
           </div>
           
