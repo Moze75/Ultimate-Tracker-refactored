@@ -1005,6 +1005,7 @@ case 'Magicien':
           isOpen={showSpellbook}
           onClose={() => setShowSpellbook(false)}
           playerClass={player.class}
+          playerSubclass={subclass} // ✅ Variable 'subclass' déjà calculée plus haut dans ce fichier
         />
       )}
 
