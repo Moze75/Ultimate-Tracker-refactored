@@ -688,7 +688,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
         </div>
       </footer>
 
-       {/* --- CTA FLOTTANT --- */}
+      {/* --- CTA FLOTTANT --- */}
       <div 
         className={`fixed bottom-8 right-8 z-40 transition-all duration-500 ${
           showFloatingCTA ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
@@ -699,16 +699,72 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
           className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-full shadow-lg shadow-blue-900/50 flex items-center gap-2 animate-bounce-slow"
         >
           Commencer <ArrowRight size={18} />
-        </button>
+        </button> 
       </div>
 
-      {/* --- NOUVEAU IMAGE VIEWER AVEC ZOOM --- */}
+      {/* --- IMAGE VIEWER OVERLAY --- */}
       {selectedImageIndex !== null && (
-        <ZoomableImageModal 
-          src={galleryImages[selectedImageIndex].src} 
-          alt={galleryImages[selectedImageIndex].alt} 
-          onClose={closeViewer} 
-        />
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
+          onClick={closeViewer}
+        >
+          {/* Bouton Fermer */}
+          <button 
+            onClick={closeViewer}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors z-50"
+          >
+            <X size={32} />
+          </button>
+
+          {/* Bouton Précédent */}
+          <button 
+            onClick={prevImage}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10 z-50"
+          >
+            <ChevronLeft size={32} />
+          </button>
+
+          {/* Image */}
+          <div 
+            className="relative max-w-full max-h-full overflow-hidden rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur l'image
+          >
+            <img 
+              src={galleryImages[selectedImageIndex].src} 
+              alt={galleryImages[selectedImageIndex].alt}
+              className="max-h-[85vh] max-w-[90vw] object-contain"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-center">
+              <p className="text-white font-medium text-lg">
+                {galleryImages[selectedImageIndex].alt}
+              </p>
+            </div>
+          </div>
+
+          {/* Bouton Suivant */}
+          <button 
+            onClick={nextImage}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-blue-600 rounded-full backdrop-blur transition-colors border border-white/10 z-50"
+          >
+            <ChevronRight size={32} />
+          </button>
+
+          {/* Indicateur de position (points en bas) */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-50">
+            {galleryImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImageIndex(idx);
+                }}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  selectedImageIndex === idx ? 'bg-white w-6' : 'bg-white/30 hover:bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
     </div>
