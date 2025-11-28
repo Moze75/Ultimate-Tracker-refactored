@@ -382,7 +382,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                    Vous jouez sur téléphone ? Découvrez une interface repensée de zéro.
                  </p>
                  <p>
-                   Contrairement à d'autres outils (notamment le principal site connu Américains qui n'a jamais voulu traduire son App), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
+                   Contrairement à d'autres outils (notamment le principal site connu Américain qui n'a jamais voulu traduire son App), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
                    Boutons accessibles au pouce, navigation simplifiée, lisibilité maximale : c'est une expérience faite pour votre main.
                  </p>
                </div>
