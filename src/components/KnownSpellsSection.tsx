@@ -254,6 +254,7 @@ const getWarlockPactSlotLevel = (level: number): number => {
 const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): number => {
   if (casterType === 'warlock') return getWarlockPactSlotLevel(level);
   if (casterType === 'full') return Math.min(9, Math.ceil(level / 2));
+  if (casterType === 'half') {
   
   // ✅ Tiers-lanceurs (Chevalier Occulte / Escroc Arcanique)
   if (casterType === 'third') {
