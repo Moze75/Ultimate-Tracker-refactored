@@ -230,8 +230,9 @@ const getCasterType = (cls?: string, subclass?: string | null): CasterType => {
   const s = subclass ? normalize(subclass) : '';
 
   // ✅ Détection Chevalier Occulte / Escroc Arcanique
+  // ✅ Détection Chevalier Occulte / Escroc Arcanique / Arnaqueur
   if (c.includes('guerrier') && (s.includes('chevalier occulte') || s.includes('eldritch'))) return 'third';
-  if (c.includes('roublard') && (s.includes('escroc') || s.includes('trickster'))) return 'third';
+  if (c.includes('roublard') && (s.includes('escroc') || s.includes('trickster') || s.includes('arnaqueur'))) return 'third';
 
   if (['wizard', 'magicien', 'mage'].some((k) => c.includes(k))) return 'full';
   if (['sorcerer', 'ensorceleur'].some((k) => c.includes(k))) return 'full';
