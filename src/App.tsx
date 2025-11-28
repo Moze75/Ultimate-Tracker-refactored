@@ -454,7 +454,7 @@ useEffect(() => {
       }
 
       if (! selectedCharacter) {
-        return (
+      return (
           <CharacterSelectionPage
             session={session}
             onCharacterSelect={(p: Player) => {
@@ -465,6 +465,7 @@ useEffect(() => {
               }
               setSelectedCharacter(p);
             }}
+            onBackToHome={() => setShowHomePage(true)}
           />
         );
       }
