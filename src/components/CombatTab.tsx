@@ -649,6 +649,7 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
 )}
 
       <AttackSection
+        player={player} // ✅ Ajouté
         attacks={attacks}
         onAdd={() => {
           setEditingAttack(null);
