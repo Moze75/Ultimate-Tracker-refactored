@@ -30,72 +30,67 @@ export function MarkdownLite({ text, ctx }: { text: string; ctx: MarkdownCtx }) 
   return <>{nodes}</>;
 }
 
+// --- PARSER INLINE ROBUSTE (Remplace l'ancienne logique fragile) ---
+function formatInline(text: string): React.ReactNode {
+  if (!text) return null;
+
+  // 1. Nettoyage des liens [Texte](URL) -> Texte pour ne pas casser le parsing
+  let cleaned = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  // Nettoyage des restes [Texte] -> Texte
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1');
+
+  // 2. Regex combinée pour Gras (**...**) et Italique (_..._ ou *...*)
+  // On utilise split pour ne jamais perdre d'espaces
+  const tokenRegex = /(\*\*.+?\*\*|_[^_]+?_|\*[^*]+?\*)/g;
+
+  const parts = cleaned.split(tokenRegex);
+
+  return parts.map((part, index) => {
+    if (!part) return null;
+
+    // GRAS : **texte**
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return (
+        <strong key={index} className="text-white font-semibold">
+          {/* On permet l'italique à l'intérieur du gras */}
+          {formatInlineInner(part.slice(2, -2))}
+        </strong>
+      );
+    }
+
+    // ITALIQUE : _texte_ ou *texte*
+    if (
+      (part.startsWith('_') && part.endsWith('_') && part.length >= 2) ||
+      (part.startsWith('*') && part.endsWith('*') && part.length >= 2)
+    ) {
+      return (
+        <em key={index} className="italic text-gray-100">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+
+    // TEXTE NORMAL (Les espaces sont préservés par le split)
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
+
+// Helper pour éviter la récursion infinie dans le gras
+function formatInlineInner(text: string): React.ReactNode {
+  const parts = text.split(/(_[^_]+?_|\*[^*]+?\*)/g);
+  return parts.map((part, index) => {
+    if ((part.startsWith('_') && part.endsWith('_')) || (part.startsWith('*') && part.endsWith('*'))) {
+      return <em key={index} className="italic">{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
+
 export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode[] {
   const lines = md.split(/\r?\n/);
   const out: React.ReactNode[] = [];
   let i = 0;
   let key = 0;
-
-const pushPara = (buff: string[]) => {
-  const content = buff.join(' ').trim();
-  if (!content) return;
-  
-  // ✅ NOUVEAU : Détecter les patterns *Mot.* et créer des blocs séparés
-  const segments: React.ReactNode[] = [];
-  let remaining = content;
-  let segmentKey = 0;
-  
-  // Regex pour détecter *Mot.* ou _Mot._ suivis d'un espace
-  const italicWithDotPattern = /(\*[^*]+\*\.|_[^_]+_\.)\s+/g;
-  let lastIndex = 0;
-  let match;
-  
-  while ((match = italicWithDotPattern.exec(remaining)) !== null) {
-    // Texte avant le match
-    if (match.index > lastIndex) {
-      const beforeText = remaining.slice(lastIndex, match.index);
-      segments.push(
-        <span key={`seg-${segmentKey++}`}>
-          {formatInline(beforeText)}
-        </span>
-      );
-    }
-    
-    // Le terme en italique avec point
-    const italicTerm = match[1];
-    segments.push(
-      <span key={`seg-${segmentKey++}`} className="block">
-        {formatInline(italicTerm)}
-      </span>
-    );
-    
-    lastIndex = match.index + match[0].length;
-  }
-  
-  // Texte restant après le dernier match
-  if (lastIndex < remaining.length) {
-    segments.push(
-      <span key={`seg-${segmentKey++}`}>
-        {formatInline(remaining.slice(lastIndex))}
-      </span>
-    );
-  }
-  
-  // Si aucun pattern détecté, rendu normal
-  if (segments.length === 0) {
-    out.push(
-      <p key={`p-${key++}`} className="text-sm text-gray-300">
-        {formatInline(content)}
-      </p>
-    );
-  } else {
-    out.push(
-      <p key={`p-${key++}`} className="text-sm text-gray-300">
-        {segments}
-      </p>
-    );
-  }
-};
 
   while (i < lines.length) {
     const line = lines[i];
@@ -113,18 +108,12 @@ const pushPara = (buff: string[]) => {
       continue;
     }
 
-    // ✅ NOUVEAU : Détection ultra-permissive des sections spéciales
-    // Supporte :
-    // - **Label :** texte
-    // - **Label** texte (sans deux-points)
-    // - **Label** seul sur une ligne
+    // Sections spéciales D&D (Temps d'incantation, etc.)
     const boldLabelMatch = line.match(/^\s*\*\*([^*]+)\*\*(.*)$/);
-    
     if (boldLabelMatch) {
       const labelRaw = boldLabelMatch[1].trim();
       const afterLabel = boldLabelMatch[2].trim();
       
-      // Liste des labels reconnus comme "sections spéciales"
       const specialLabels = [
         'amélioration de sort mineur',
         'améliorations de sorts mineurs',
@@ -137,12 +126,7 @@ const pushPara = (buff: string[]) => {
         'durée',
       ];
       
-      const isSpecialLabel = specialLabels.some(sl => 
-        labelRaw.toLowerCase().includes(sl)
-      );
-      
-      if (isSpecialLabel) {
-        // C'est une section spéciale
+      if (specialLabels.some(sl => labelRaw.toLowerCase().includes(sl))) {
         const hasColon = afterLabel.startsWith(':');
         const content = hasColon ? afterLabel.substring(1).trim() : afterLabel;
         
@@ -158,7 +142,7 @@ const pushPara = (buff: string[]) => {
       }
     }
 
-    // #### / ##### -> case à cocher persistante
+    // Case à cocher #### / #####
     const chk = line.match(/^\s*#####{0,1}\s+(.*)$/);
     if (chk) {
       const rawLabel = chk[1];
@@ -170,15 +154,15 @@ const pushPara = (buff: string[]) => {
       const id = `chk-${key}`;
 
       out.push(
-        <div key={`chk-${key++}`} className="flex items-start gap-2">
+        <div key={`chk-${key++}`} className="flex items-start gap-2 mt-2">
           <input
             id={id}
             type="checkbox"
             checked={checked}
             onChange={(e) => ctx.onToggle?.(featureKey, e.currentTarget.checked)}
-            className="mt-0.5 h-4 w-4 accent-violet-500 bg-black/40 border border-white/20 rounded"
+            className="mt-0.5 h-4 w-4 accent-violet-500 bg-black/40 border border-white/20 rounded cursor-pointer"
           />
-          <label htmlFor={id} className="text-sm text-white/90">
+          <label htmlFor={id} className="text-sm text-white/90 cursor-pointer select-none">
             {formatInline(label)}
           </label>
         </div>
@@ -187,39 +171,24 @@ const pushPara = (buff: string[]) => {
       continue;
     }
 
-    // ### / ## / # -> titres
+    // Titres h1, h2, h3
     const h3 = line.match(/^\s*###\s+(.*)$/i);
     if (h3) {
-      out.push(
-        <h4 key={`h3-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-3 mb-2">
-          {formatInline(sentenceCase(h3[1]))}
-        </h4>
-      );
-      i++;
-      continue;
+      out.push(<h4 key={`h3-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h3[1]))}</h4>);
+      i++; continue;
     }
     const h2 = line.match(/^\s*##\s+(.*)$/i);
     if (h2) {
-      out.push(
-        <h4 key={`h2-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-3 mb-2">
-          {formatInline(sentenceCase(h2[1]))}
-        </h4>
-      );
-      i++;
-      continue;
+      out.push(<h4 key={`h2-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h2[1]))}</h4>);
+      i++; continue;
     }
     const h1 = line.match(/^\s*#\s+(.*)$/i);
     if (h1) {
-      out.push(
-        <h4 key={`h1-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-3 mb-2">
-          {formatInline(sentenceCase(h1[1]))}
-        </h4>
-      );
-      i++;
-      continue;
+      out.push(<h4 key={`h1-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h1[1]))}</h4>);
+      i++; continue;
     }
 
-    // Table Markdown
+    // Tableaux
     if (line.includes('|')) {
       const block: string[] = [];
       while (i < lines.length && lines[i].includes('|')) {
@@ -232,8 +201,9 @@ const pushPara = (buff: string[]) => {
         key++;
         continue;
       }
+      // Si ce n'est pas un tableau valide, on affiche comme texte
       out.push(
-        <p key={`pf-${key++}`} className="text-sm text-gray-300">
+        <p key={`pf-${key++}`} className="text-sm text-gray-300 mb-2">
           {formatInline(block.join(' '))}
         </p>
       );
@@ -248,7 +218,7 @@ const pushPara = (buff: string[]) => {
         i++;
       }
       out.push(
-        <ul key={`ul-${key++}`} className="list-disc pl-5 space-y-1 text-gray-300">
+        <ul key={`ul-${key++}`} className="list-disc pl-5 space-y-1 text-gray-300 mb-3">
           {items.map((it, idx) => (
             <li key={`li-${idx}`} className="text-sm">
               {formatInline(it)}
@@ -267,7 +237,7 @@ const pushPara = (buff: string[]) => {
         i++;
       }
       out.push(
-        <ol key={`ol-${key++}`} className="list-decimal pl-5 space-y-1 text-gray-300">
+        <ol key={`ol-${key++}`} className="list-decimal pl-5 space-y-1 text-gray-300 mb-3">
           {items.map((it, idx) => (
             <li key={`oli-${idx}`} className="text-sm">
               {formatInline(it)}
@@ -278,7 +248,8 @@ const pushPara = (buff: string[]) => {
       continue;
     }
 
-    // Paragraphe
+    // Paragraphe standard
+    // On regroupe les lignes de texte successives pour former un paragraphe cohérent
     const buff: string[] = [line];
     i++;
     while (
@@ -289,12 +260,21 @@ const pushPara = (buff: string[]) => {
       !lines[i].includes('|') &&
       !/^\s*#{1,6}\s+/.test(lines[i]) &&
       !/^\s*---+\s*$/.test(lines[i]) &&
-      !/^\s*\*\*[^*]+\*\*/.test(lines[i]) // ✅ Éviter de fusionner les lignes avec **texte**
+      !/^\s*\*\*[^*]+\*\*/.test(lines[i]) // Ne pas fusionner si la ligne commence par un label gras
     ) {
       buff.push(lines[i]);
       i++;
     }
-    pushPara(buff);
+    
+    // Rendu simple du paragraphe (sans la logique "block" qui cassait tout)
+    const content = buff.join(' ').trim();
+    if (content) {
+      out.push(
+        <p key={`p-${key++}`} className="text-sm text-gray-300 leading-relaxed mb-2">
+          {formatInline(content)}
+        </p>
+      );
+    }
   }
 
   return out;
@@ -341,75 +321,4 @@ function renderTable(block: string[], key: number): React.ReactNode | null {
       </table>
     </div>
   );
-}
-
-function formatInline(text: string): React.ReactNode[] {
-  let parts: Array<string | React.ReactNode> = [text];
-  
-  // **gras**
-  parts = splitAndMap(parts, /\*\*([^*]+)\*\*/g, (m, i) => 
-    <strong key={`b-${i}`} className="text-white font-semibold">{m[1]}</strong>
-  );
-  
-  // *italique* (avec style renforcé si suivi d'un point)
-  parts = splitAndMap(parts, /\*([^*]+)\*(\.)? /g, (m, i) => {
-    const hasDot = m[2] === '.';
-    return (
-      <em 
-        key={`i-${i}`} 
-        className={hasDot ? "italic font-semibold text-gray-100" : "italic"}
-      >
-        {m[1]}{hasDot ? '.' : ''}
-      </em>
-    );
-  });
-  
-  // *italique* (sans espace après)
-  parts = splitAndMap(parts, /(^|[^*])\*([^*]+)\*(?!\*)/g, (m, i) => 
-    [m[1], <em key={`i-${i}`} className="italic">{m[2]}</em>]
-  );
-  
-  // _italique_
-  parts = splitAndMap(parts, /_([^_]+)_(\.)? /g, (m, i) => {
-    const hasDot = m[2] === '.';
-    return (
-      <em 
-        key={`u-${i}`} 
-        className={hasDot ? "italic font-semibold text-gray-100" : "italic"}
-      >
-        {m[1]}{hasDot ? '.' : ''}
-      </em>
-    );
-  });
-  
-  return parts.map((p, i) => (typeof p === 'string' ? <React.Fragment key={`t-${i}`}>{p}</React.Fragment> : p));
-}
-
-function splitAndMap(
-  parts: Array<string | React.ReactNode>,
-  regex: RegExp,
-  toNode: (m: RegExpExecArray, idx: number) => React.ReactNode | React.ReactNode[]
-): Array<string | React.ReactNode> {
-  const out: Array<string | React.ReactNode> = [];
-
-  for (const part of parts) {
-    if (typeof part !== 'string') {
-      out.push(part);
-      continue;
-    }
-    let str = part;
-    let lastIndex = 0;
-    let m: RegExpExecArray | null;
-    const r = new RegExp(regex.source, regex.flags);
-
-    while ((m = r.exec(str)) !== null) {
-      out.push(str.slice(lastIndex, m.index));
-      const node = toNode(m, out.length);
-      if (Array.isArray(node)) out.push(...node);
-      else out.push(node);
-      lastIndex = m.index + m[0].length;
-    }
-    out.push(str.slice(lastIndex));
-  }
-  return out;
 }
