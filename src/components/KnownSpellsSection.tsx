@@ -258,7 +258,8 @@ const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): numb
   // ✅ Tiers-lanceurs (Chevalier Occulte / Escroc Arcanique)
   if (casterType === 'third') {
     if (level < 3) return 0;
-    return Math.min(4, Math.ceil((level - 2) / 6) + 1); // Approx: Niv 3->1, 7->2, 13->3, 19->4
+    // Progression exacte : Niv 3-6 (1), Niv 7-12 (2), Niv 13-18 (3), Niv 19-20 (4)
+    return Math.min(4, Math.ceil(level / 6));
   }
 
   if (casterType === 'half') {
