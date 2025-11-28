@@ -203,6 +203,22 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
     modifier: number;
   } | null>(null);
 
+    // Récupère la sous-classe depuis plusieurs clés possibles
+  const getSubclass = (p: Player): string | null => {
+    const anyP: any = p as any;
+    const candidates = [
+      anyP?.subclass,
+      anyP?.sub_class,
+      anyP?.subClass,
+      anyP?.sousClasse,
+      anyP?.['sous-classe'],
+    ];
+    const found = candidates.find((v) => typeof v === 'string' && v.trim().length > 0);
+    return found ? (found as string).trim() : null;
+  };
+
+  const subclass = getSubclass(player);
+
 const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
    const secondarySpellSlotsInitialized = useRef(false);
 
@@ -968,21 +984,7 @@ case 'Magicien':
     }
   };
 
-  // Récupère la sous-classe depuis plusieurs clés possibles
-  const getSubclass = (p: Player): string | null => {
-    const anyP: any = p as any;
-    const candidates = [
-      anyP?.subclass,
-      anyP?.sub_class,
-      anyP?.subClass,
-      anyP?.sousClasse,
-      anyP?.['sous-classe'],
-    ];
-    const found = candidates.find((v) => typeof v === 'string' && v.trim().length > 0);
-    return found ? (found as string).trim() : null;
-  };
 
-  const subclass = getSubclass(player);
 
   return (
     <div className="space-y-8">
