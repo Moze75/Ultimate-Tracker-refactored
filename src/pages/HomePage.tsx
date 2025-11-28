@@ -50,6 +50,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Classes.png", alt: "Classes et Personnages" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/fiche_perso.png", alt: "Fiche Personnage Complète" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Cr%C3%A9ation_objets_perso.png", alt: "Création d'objets" },
+     {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_loots.png", alt: "Gestion des Loots" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_sorts.png", alt: "Gestion des Sorts" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/choix_fond-%C3%A9cran.png", alt: "Personnalisation" }
