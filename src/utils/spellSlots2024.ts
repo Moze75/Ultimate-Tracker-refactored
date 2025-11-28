@@ -125,11 +125,30 @@ export const WARLOCK_SLOTS = [
 export function getSpellSlotsByLevel(
   playerClass: DndClass | string | null | undefined,
   level: number,
-  currentSlots?: SpellSlots | null
+  currentSlots?: SpellSlots | null,
+  subclass?: string | null // ✅ Nouveau paramètre optionnel
 ): SpellSlots {
   const lvl = clampLevel(level);
+  const pClass = playerClass || '';
+  const pSub = subclass ? subclass.toLowerCase() : '';
 
-  // Classes sans sorts ou non-lanceurs
+  // ✅ Gestion Tiers-Lanceurs (Prioritaire sur le bloc "Sans sorts" ci-dessous)
+  const isEldritch = pClass === 'Guerrier' && (pSub.includes('chevalier occulte') || pSub.includes('eldritch'));
+  const isTrickster = pClass === 'Roublard' && (pSub.includes('escroc') || pSub.includes('trickster') || pSub.includes('arnaqueur'));
+
+  if (isEldritch || isTrickster) {
+    const slots = THIRD_CASTER_SLOTS[lvl];
+    return {
+      ...currentSlots,
+      ...slots,
+      used1: currentSlots?.used1 || 0,
+      used2: currentSlots?.used2 || 0,
+      used3: currentSlots?.used3 || 0,
+      used4: currentSlots?.used4 || 0
+    };
+  }
+
+  // Classes sans sorts ou non-lanceurs (si ce n'est pas une sous-classe magique)
   if (
     !playerClass ||
     playerClass === '' ||
