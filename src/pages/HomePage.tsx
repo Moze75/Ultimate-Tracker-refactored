@@ -688,7 +688,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
         </div>
       </footer>
 
-      {/* --- CTA FLOTTANT --- */}
+       {/* --- CTA FLOTTANT --- */}
       <div 
         className={`fixed bottom-8 right-8 z-40 transition-all duration-500 ${
           showFloatingCTA ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
@@ -709,9 +709,6 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
           alt={galleryImages[selectedImageIndex].alt} 
           onClose={closeViewer} 
         />
-      )},
-          </div>
-        </div>
       )}
 
     </div>
