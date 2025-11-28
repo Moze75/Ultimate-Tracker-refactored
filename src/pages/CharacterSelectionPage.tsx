@@ -491,11 +491,28 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                 title="Offrir un café au développeur"
               >
                 <img
-                  src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button.png"
+                  src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button. png"
                   alt="Buy Me a Coffee"
                   className="h-8 w-auto" 
                 />
               </a>
+
+              {/* ✅ NOUVEAU : Bouton retour à l'accueil */}
+              {onBackToHome && (
+                <>
+                  <div className="h-6 w-px bg-white/10"></div>
+                  <button
+                    onClick={onBackToHome}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+                    title="Retour à l'accueil"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span className="hidden sm:inline">Accueil</span>
+                  </button>
+                </>
+              )}
            </div>
 
            {/* DROITE : Actions Admin (Abo + Compte) */}
