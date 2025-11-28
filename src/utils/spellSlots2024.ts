@@ -46,30 +46,6 @@ export const FULL_CASTER_SLOTS = [
   { level1: 4, level2: 3, level3: 3, level4: 3, level5: 3, level6: 2, level7: 2, level8: 1, level9: 1 }
 ];
 
-// ✅ CORRIGÉ : Half Casters (Paladin, Rôdeur) - Selon le tableau officiel 2024
-export const HALF_CASTER_SLOTS = [
-  {},
-  { level1: 2 },  // ✅ Niveau 1 : 2 emplacements de niveau 1
-  { level1: 2 },  // ✅ Niveau 2 : 2 emplacements de niveau 1
-  { level1: 3 },  // Niveau 3
-  { level1: 3 },  // Niveau 4
-  { level1: 4, level2: 2 },  // Niveau 5
-  { level1: 4, level2: 2 },  // Niveau 6
-  { level1: 4, level2: 3 },  // Niveau 7
-  { level1: 4, level2: 3 },  // Niveau 8
-  { level1: 4, level2: 3, level3: 2 },  // Niveau 9
-  { level1: 4, level2: 3, level3: 2 },  // Niveau 10
-  { level1: 4, level2: 3, level3: 3 },  // Niveau 11
-  { level1: 4, level2: 3, level3: 3 },  // Niveau 12
-  { level1: 4, level2: 3, level3: 3, level4: 1 },  // Niveau 13
-  { level1: 4, level2: 3, level3: 3, level4: 1 },  // Niveau 14
-  { level1: 4, level2: 3, level3: 3, level4: 2 },  // Niveau 15
-  { level1: 4, level2: 3, level3: 3, level4: 2 },  // Niveau 16
-  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1 },  // Niveau 17
-  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1 },  // Niveau 18
-  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2 },  // Niveau 19
-  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2 }   // Niveau 20
-];
 
 // ✅ Tiers Casters (Chevalier Occulte, Escroc Arcanique)
 export const THIRD_CASTER_SLOTS = [
@@ -94,6 +70,33 @@ export const THIRD_CASTER_SLOTS = [
   { level1: 4, level2: 3, level3: 3 }, // 18
   { level1: 4, level2: 3, level3: 3, level4: 1 }, // 19
   { level1: 4, level2: 3, level3: 3, level4: 1 }  // 20
+];
+
+
+
+// ✅ CORRIGÉ : Half Casters (Paladin, Rôdeur) - Selon le tableau officiel 2024
+export const HALF_CASTER_SLOTS = [
+  {},
+  { level1: 2 },  // ✅ Niveau 1 : 2 emplacements de niveau 1
+  { level1: 2 },  // ✅ Niveau 2 : 2 emplacements de niveau 1
+  { level1: 3 },  // Niveau 3
+  { level1: 3 },  // Niveau 4
+  { level1: 4, level2: 2 },  // Niveau 5
+  { level1: 4, level2: 2 },  // Niveau 6
+  { level1: 4, level2: 3 },  // Niveau 7
+  { level1: 4, level2: 3 },  // Niveau 8
+  { level1: 4, level2: 3, level3: 2 },  // Niveau 9
+  { level1: 4, level2: 3, level3: 2 },  // Niveau 10
+  { level1: 4, level2: 3, level3: 3 },  // Niveau 11
+  { level1: 4, level2: 3, level3: 3 },  // Niveau 12
+  { level1: 4, level2: 3, level3: 3, level4: 1 },  // Niveau 13
+  { level1: 4, level2: 3, level3: 3, level4: 1 },  // Niveau 14
+  { level1: 4, level2: 3, level3: 3, level4: 2 },  // Niveau 15
+  { level1: 4, level2: 3, level3: 3, level4: 2 },  // Niveau 16
+  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1 },  // Niveau 17
+  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1 },  // Niveau 18
+  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2 },  // Niveau 19
+  { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2 }   // Niveau 20
 ];
 
 
