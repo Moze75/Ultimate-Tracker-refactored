@@ -6,13 +6,13 @@ import { Player } from '../../types/dnd';
 type Attack = any;
 
 interface AttackSectionProps {
-  player: Player; // ✅ Nécessaire pour la logique Moine vs Autres
+  player: Player; // ✅ Nécessaire pour déterminer si Moine et calculer les stats
   attacks: Attack[];
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
   onDelete: (attackId: string) => void;
-  onRollAttack: (attack: Attack) => void;  // ✅ PROP NÉCESSAIRE
-  onRollDamage: (attack: Attack) => void;  // ✅ PROP NÉCESSAIRE
+  onRollAttack: (attack: Attack) => void;
+  onRollDamage: (attack: Attack) => void;
   getAttackBonus: (attack: Attack) => number;
   getDamageBonus: (attack: Attack) => number;
   changeAmmoCount: (attack: Attack, delta: number) => void;
@@ -25,21 +25,76 @@ interface AttackSectionProps {
 }
 
 export function AttackSection({
+  player,
   attacks,
   onAdd,
   onEdit,
   onDelete,
-  onRollAttack,  // ✅ REÇU DU PARENT
-  onRollDamage,  // ✅ REÇU DU PARENT
+  onRollAttack,
+  onRollDamage,
   getAttackBonus,
   getDamageBonus,
   changeAmmoCount,
   setAmmoCount,
   isEmptyLabel
 }: AttackSectionProps) {
-  const physicalAttacks = attacks.filter((a: Attack) => (a.attack_type || 'physical') === 'physical');
+
+  // --- LOGIQUE ATTAQUE SANS ARME ---
+  const getMartialArtsDie = (level: number) => {
+    if (level >= 17) return '1d10';
+    if (level >= 11) return '1d8';
+    if (level >= 5) return '1d6';
+    return '1d4';
+  };
+
+  const getUnarmedStrike = (): Attack => {
+    const isMonk = player.class === 'Moine';
+    let damageDice = '1';
+    let ability = 'Force';
+    let name = 'Attaque sans arme';
+    let properties = '';
+
+    // Logique Moine : Arts Martiaux (DEX ou FORCE, Dé évolutif)
+    if (isMonk) {
+      name = 'Arts Martiaux (Mains nues)';
+      damageDice = getMartialArtsDie(player.level);
+      properties = 'Action Bonus possible';
+      
+      // Détermine la meilleure stat entre Force et Dex pour le Moine
+      const strScore = (player.abilities as any[])?.find((a: any) => a.name === 'Force')?.score || 10;
+      const dexScore = (player.abilities as any[])?.find((a: any) => a.name === 'Dextérité')?.score || 10;
+      
+      if (dexScore > strScore) {
+        ability = 'Dextérité';
+      }
+    }
+
+    return {
+      id: 'unarmed-strike-virtual',
+      name: name,
+      damage_dice: damageDice,
+      damage_type: 'Contondant',
+      range: 'Contact',
+      player_id: player.id,
+      expertise: true, // Tout le monde maîtrise ses attaques sans armes
+      override_ability: ability, 
+      attack_type: 'physical',
+      properties: properties,
+      ammo_type: null,
+      ammo_count: 0,
+      weapon_bonus: 0
+    };
+  };
+
+  // Fusionne l'attaque virtuelle avec les attaques physiques existantes
+  const unarmedStrike = getUnarmedStrike();
+  const physicalAttacks = [
+    unarmedStrike,
+    ...attacks.filter((a: Attack) => (a.attack_type || 'physical') === 'physical')
+  ];
 
   const renderAttackCard = (attack: Attack) => {
+    const isVirtual = attack.id === 'unarmed-strike-virtual';
     const dmgBonus = getDamageBonus(attack);
     const dmgLabel = `${attack.damage_dice}${dmgBonus !== 0 ? (dmgBonus > 0 ? `+${dmgBonus}` : `${dmgBonus}`) : ''}`;
     const ammoType = (attack as any).ammo_type || '';
@@ -48,30 +103,38 @@ export function AttackSection({
     const overrideLabel = attack.override_ability ? ` (${attack.override_ability})` : '';
 
     return (
-      <div key={attack.id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/50">
+      <div key={attack.id} className={`bg-gray-800/50 rounded-lg p-3 border ${isVirtual ? 'border-gray-600/30 bg-gray-800/30' : 'border-gray-700/50'}`}>
         <div className="flex items-start justify-between mb-1">
           <div>
-            <h4 className="font-medium text-gray-100 text-base">{attack.name}</h4>
+            <h4 className="font-medium text-gray-100 text-base flex items-center gap-2">
+                {attack.name}
+                {isVirtual && <span className="text-[10px] bg-gray-700 px-1.5 py-0.5 rounded text-gray-400 uppercase tracking-wide">Auto</span>}
+            </h4>
             <p className="text-sm text-gray-400">
               {attack.damage_type} • {attack.range}
               {overrideLabel && <span className="text-purple-400">{overrideLabel}</span>}
+              {attack.properties && <span className="text-gray-500 italic ml-2"> - {attack.properties}</span>}
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => onEdit(attack)}
-              className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded transition-colors"
-              title="Modifier l'attaque"
-            >
-              <Settings size={16} />
-            </button>
-            <button
-              onClick={() => onDelete(attack.id)}
-              className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-900/30 rounded transition-colors"
-              title="Supprimer l'attaque"
-            >
-              <Trash2 size={16} />
-            </button>
+            {!isVirtual && (
+                <>
+                    <button
+                    onClick={() => onEdit(attack)}
+                    className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded transition-colors"
+                    title="Modifier l'attaque"
+                    >
+                    <Settings size={16} />
+                    </button>
+                    <button
+                    onClick={() => onDelete(attack.id)}
+                    className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-900/30 rounded transition-colors"
+                    title="Supprimer l'attaque"
+                    >
+                    <Trash2 size={16} />
+                    </button>
+                </>
+            )}
           </div>
         </div>
 
@@ -80,7 +143,7 @@ export function AttackSection({
             <button
               onClick={() => {
                 console.log('🎯 [AttackSection] Clic Attaque:', attack.name);
-                onRollAttack(attack);  // ✅ APPELLE LA FONCTION DU PARENT
+                onRollAttack(attack);
               }}
               className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
@@ -104,7 +167,7 @@ export function AttackSection({
             <button
               onClick={() => {
                 console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
-                onRollDamage(attack);  // ✅ APPELLE LA FONCTION DU PARENT
+                onRollDamage(attack);
               }}
               className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
             >
@@ -160,6 +223,7 @@ export function AttackSection({
         </button>
       </div>
       <div className="p-4 space-y-2">
+        {/* On affiche toujours au moins l'attaque sans arme, donc cette condition "vide" est rare mais utile si on filtre autrement */}
         {physicalAttacks.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Sword className="w-12 h-12 mx-auto mb-3 opacity-50" />
