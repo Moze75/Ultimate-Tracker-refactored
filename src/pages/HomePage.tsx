@@ -53,7 +53,11 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_loots.png", alt: "Gestion des Loots" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_sorts.png", alt: "Gestion des Sorts" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/choix_fond-%C3%A9cran.png", alt: "Personnalisation" }
-     
+       {
+    url: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png',
+    title: 'Intégration Obsidian',
+    description: 'Synchronisez vos fiches personnages et vos jets de dés directement dans votre coffre-fort Obsidian.'
+  },
   ];
 
   // --- LOGIQUE DU VIEWER ---
