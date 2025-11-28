@@ -121,7 +121,7 @@ function WelcomeModal({ open, characterName, onContinue }: WelcomeModalProps) {
   );
 }
 
-export function CharacterSelectionPage({ session, onCharacterSelect }: CharacterSelectionPageProps) {
+export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHome }: CharacterSelectionPageProps) {
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
   const [creating, setCreating] = useState(false);
