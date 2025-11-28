@@ -1158,7 +1158,26 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
 const [filterPrepared, setFilterPrepared] = useState<'all' | 'prepared' | 'unprepared'>('all');
 
 
-const combinedSpellSlots = useMemo(() => combineSpellSlots(player), [player]);
+  // ✅ Correctif : Force la lecture des slots pour les Tiers-Lanceurs si combineSpellSlots les ignore
+  const combinedSpellSlots = useMemo(() => {
+    const standard = combineSpellSlots(player);
+    
+    // Vérifie si c'est un Tiers-Lanceur (Guerrier/Roublard magique)
+    const pSub = ((player as any).subclass || (player as any).sub_class || (player as any).sousClasse || '').toLowerCase();
+    const isThirdCaster = 
+      (player.class === 'Guerrier' && (pSub.includes('chevalier occulte') || pSub.includes('eldritch'))) ||
+      (player.class === 'Roublard' && (pSub.includes('escroc') || pSub.includes('trickster') || pSub.includes('arnaqueur'))); // Ajout 'arnaqueur'
+
+    // Si standard est vide mais qu'on devrait avoir des slots, on prend ceux du joueur
+    const hasStandardSlots = Object.values(standard).some(v => typeof v === 'number' && v > 0);
+    
+    if (!hasStandardSlots && isThirdCaster && player.spell_slots) {
+      console.log('[KnownSpellsSection] Utilisation force des slots joueur pour Tiers-Lanceur');
+      return player.spell_slots;
+    }
+    
+    return standard;
+  }, [player]);
 
   // Inject animations CSS
   useEffect(() => {
