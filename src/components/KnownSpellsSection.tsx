@@ -1783,13 +1783,14 @@ return (
       </div>
 
            {showSpellbook && (
-        <SpellbookModal
+            <SpellbookModal
           isOpen={showSpellbook}
           onClose={() => {
             setShowSpellbook(false);
             setSelectedSpells([]);
           }}
           playerClasses={player.secondary_class ? [player.class, player.secondary_class] : [player.class]}
+          playerSubclass={(player as any).subclass || (player as any).sub_class || (player as any).sousClasse} // ✅ ICI
           selectionMode={true}
           onSpellSelect={(spell) => {
             setSelectedSpells((prev) => {
