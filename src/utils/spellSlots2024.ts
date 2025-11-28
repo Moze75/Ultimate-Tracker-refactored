@@ -97,6 +97,7 @@ export const THIRD_CASTER_SLOTS = [
 ];
 
 
+
 // Occultiste (Pact Magic - spécial)
 export const WARLOCK_SLOTS = [
   {},
