@@ -71,6 +71,32 @@ export const HALF_CASTER_SLOTS = [
   { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2 }   // Niveau 20
 ];
 
+// ✅ Tiers Casters (Chevalier Occulte, Escroc Arcanique)
+export const THIRD_CASTER_SLOTS = [
+  {}, // 0
+  {}, // 1
+  {}, // 2
+  { level1: 2 }, // 3
+  { level1: 3 }, // 4
+  { level1: 3 }, // 5
+  { level1: 3 }, // 6
+  { level1: 4, level2: 2 }, // 7
+  { level1: 4, level2: 2 }, // 8
+  { level1: 4, level2: 2 }, // 9
+  { level1: 4, level2: 3 }, // 10
+  { level1: 4, level2: 3 }, // 11
+  { level1: 4, level2: 3 }, // 12
+  { level1: 4, level2: 3, level3: 2 }, // 13
+  { level1: 4, level2: 3, level3: 2 }, // 14
+  { level1: 4, level2: 3, level3: 2 }, // 15
+  { level1: 4, level2: 3, level3: 3 }, // 16
+  { level1: 4, level2: 3, level3: 3 }, // 17
+  { level1: 4, level2: 3, level3: 3 }, // 18
+  { level1: 4, level2: 3, level3: 3, level4: 1 }, // 19
+  { level1: 4, level2: 3, level3: 3, level4: 1 }  // 20
+];
+
+
 // Occultiste (Pact Magic - spécial)
 export const WARLOCK_SLOTS = [
   {},
