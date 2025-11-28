@@ -456,45 +456,70 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
         backgroundColor: 'transparent',
       }}
       >
-      <div className="min-h-screen py-8 bg-transparent">
+      <div className="min-h-screen py-4 md:py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4"> 
-         {/* En-tête avec Buy Me a Coffee (gauche) et Mon compte (droite) */}
-          <div className="flex justify-between items-center mb-4">
-            {/* Bouton Buy Me a Coffee en haut à gauche */}
-            <a
-              href="https://buymeacoffee.com/mewan44"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1 rounded-md transition-all shadow-md"
-            >
-              <img
-                src="/icons/bmc-full-logo-no-background.png"
-                alt="Buy Me a Coffee"
-                className="h-6 w-auto"
-              />
-            </a>
+         
+         {/* --- BARRE D'OUTILS SUPÉRIEURE --- */}
+          <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+            
+            {/* Groupe Gauche : Support & Communauté */}
+            <div className="flex items-center gap-2">
+              {/* Buy Me a Coffee */}
+              <a
+                href="https://buymeacoffee.com/mewan44"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1 rounded-md transition-all shadow-md flex items-center h-8"
+                title="Soutenir le projet"
+              >
+                <img
+                  src="/icons/bmc-full-logo-no-background.png"
+                  alt="Buy Me a Coffee"
+                  className="h-5 w-auto"
+                />
+              </a>
 
-            {/* Bouton Mon compte en haut à droite */}
+              {/* Discord (Version compacte icône seulement sur mobile, texte sur desktop) */}
+              <a 
+                 href="https://discord.gg/7zVKwtTe" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3 py-1 rounded-md transition-all shadow-md flex items-center gap-2 h-8 text-xs font-medium"
+                 title="Rejoindre le Discord"
+               >
+                  <img 
+                    src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
+                    alt="Discord" 
+                    className="h-4 w-auto brightness-0 invert" 
+                  />
+                  <span className="hidden sm:inline">Communauté & Support</span>
+               </a>
+            </div>
+
+            {/* Groupe Droite : Mon compte */}
             <button
               onClick={() => setShowAccount(true)}
-              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
+              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1 rounded-md text-sm font-semibold transition-all h-8 shadow-lg"
             >
               <Settings size={16} />
-              Mon compte
+              <span className="hidden xs:inline">Mon compte</span>
             </button>
           </div>
 
+          {/* --- INFO ABONNEMENT --- */}
           {currentSubscription && (
-            <div className="text-center mb-4">
-              <p className="text-xs text-gray-400">
+            <div className="text-center mb-2">
+               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${
+                 currentSubscription.status === 'active' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-gray-800/50 border-gray-600 text-gray-400'
+               }`}>
                 {getSubscriptionText()}
-              </p>
+              </span>
             </div>
           )}
 
-          <div className="text-center mb-8 sm:mb-12 space-y-4">
+          <div className="text-center mb-8 space-y-2">
             <h1
-              className="text-4xl font-bold text-white"
+              className="text-3xl md:text-4xl font-bold text-white"
               style={{
                 textShadow:
                   '0 0 15px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.6),0 0 30px rgba(255,255,255,.4),0 0 40px rgba(255,255,255,.2)',
@@ -504,7 +529,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
             </h1>
             
             <p
-              className="text-xl text-gray-200"
+              className="text-lg text-gray-200 mb-6"
               style={{ textShadow: '0 0 10px rgba(255,255,255,.3)' }}
             >
               {players.length > 0
@@ -514,24 +539,25 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                 : 'Aucun personnage créé'}
             </p>
 
-            <div className="flex justify-center gap-3 pt-2 flex-wrap">
+            {/* --- BOUTONS ACTIONS PRINCIPALES --- */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto px-4 sm:px-0">
               <button
                 onClick={() => setShowSubscription(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg border border-white/10"
               >
-                <Crown size={20} />
+                <Crown size={18} />
                 {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
-                  ? 'Passer à un plan payant'
-                  : 'Gérer mon abonnement'
+                  ? 'Passer Premium'
+                  : 'Mon Abonnement'
                 }
               </button>
 
               {currentSubscription?.tier === 'game_master' && (
                 <button
                   onClick={() => setShowCampaigns(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg border border-white/10"
                 >
-                  <Scroll size={20} />
+                  <Scroll size={18} />
                   Mes Campagnes
                 </button>
               )}
