@@ -292,10 +292,11 @@ const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
         ) {
           secondarySpellSlotsInitialized.current = true;
           try {
-            const newSecondarySpellSlots = getSpellSlotsByLevel(
+                       const newSecondarySpellSlots = getSpellSlotsByLevel(
               player.secondary_class,
               player.secondary_level || 1,
-              player.secondary_spell_slots
+              player.secondary_spell_slots,
+              null // Pas de sous-classe secondaire gérée pour l'instant
             );
 
             const { error } = await supabase
