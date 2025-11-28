@@ -32,6 +32,7 @@ interface SpellbookModalProps {
   onSpellSelect?: (spell: any) => void;
   selectedSpells?: any[];
   onConfirm?: (spells: any[]) => void;
+  playerSubclass?: string | null; // ✅ Ajout de la prop
 }
 
 const MAGIC_SCHOOLS = [
