@@ -460,12 +460,11 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
         <div className="w-full max-w-7xl mx-auto px-4"> 
          
          {/* --- 1. HEADER ADMINISTRATIF UNIFIÉ --- */}
-         {/* Une seule barre sombre et transparente pour tout regrouper proprement */}
           <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl p-3 mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
             
             {/* GAUCHE : Communauté & Support */}
             <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto justify-between md:justify-start">
-               {/* Lien Discord épuré : Texte puis Icône */}
+               {/* Lien Discord */}
                <a 
                  href="https://discord.gg/7zVKwtTe" 
                  target="_blank" 
@@ -480,34 +479,31 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                   />
                </a>
 
-               {/* Séparateur vertical discret */}
                <div className="h-4 w-px bg-white/10 hidden md:block"></div>
 
-               {/* Buy Me a Coffee (Icône seule pour rester discret) */}
+               {/* Buy Me a Coffee (Nouveau visuel) */}
                <a
                 href="https://buymeacoffee.com/mewan44"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="opacity-60 hover:opacity-100 transition-opacity"
+                className="hover:opacity-90 transition-opacity"
                 title="Offrir un café au développeur"
               >
                 <img
-                  src="/icons/bmc-full-logo-no-background.png"
+                  src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button.png"
                   alt="Buy Me a Coffee"
-                  className="h-6 w-auto"
+                  className="h-8 w-auto" 
                 />
               </a>
             </div>
 
             {/* DROITE : Gestion Compte & Abo */}
             <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-               
-               {/* Bouton Abonnement (Style "Outline" pour ne pas agresser) */}
                <button
                   onClick={() => setShowSubscription(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-sm font-medium transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-xs font-medium transition-all"
                 >
-                  <Crown size={16} className="text-purple-400" />
+                  <Crown size={14} className="text-purple-400" />
                   <span>
                     {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
                       ? 'Passer Premium'
@@ -516,12 +512,11 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                   </span>
                </button>
 
-               {/* Bouton Compte */}
                <button
                 onClick={() => setShowAccount(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-sm font-medium transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-xs font-medium transition-all"
               >
-                <Settings size={16} className="text-gray-400" />
+                <Settings size={14} className="text-gray-400" />
                 <span className="hidden sm:inline">Compte</span>
               </button>
             </div>
@@ -531,13 +526,13 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
           {/* --- 2. TITRE & CONTEXTE --- */}
           <div className="text-center mb-12 relative">
             
-            {/* Badge Statut Abo (Centré au dessus) */}
+            {/* Badge Statut Abo (Plus discret) */}
              {currentSubscription && (
-                <div className="flex justify-center mb-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase border backdrop-blur-sm ${
+                <div className="flex justify-center mb-3">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider border backdrop-blur-sm opacity-80 ${
                      currentSubscription.status === 'active' 
-                     ? 'bg-green-500/10 border-green-500/20 text-green-400' 
-                     : 'bg-gray-800/60 border-gray-600/30 text-gray-400'
+                     ? 'bg-green-500/5 border-green-500/20 text-green-400' 
+                     : 'bg-gray-800/40 border-gray-600/20 text-gray-400'
                    }`}>
                     {getSubscriptionText()}
                   </span>
@@ -559,16 +554,14 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                 : 'Aucun personnage pour le moment'}
             </p>
 
-            {/* --- 3. ACTION PRINCIPALE MJ (En dessous, bien visible) --- */}
+            {/* --- 3. ACTION PRINCIPALE MJ --- */}
             {currentSubscription?.tier === 'game_master' && (
                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
                     onClick={() => setShowCampaigns(true)}
                     className="group relative inline-flex items-center justify-center gap-3 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-700 to-orange-800 text-white font-semibold text-lg shadow-xl shadow-orange-900/20 border border-orange-500/20 overflow-hidden transition-all hover:scale-105 hover:shadow-orange-900/40"
                   >
-                    {/* Effet de brillance au survol */}
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    
                     <Scroll size={20} />
                     <span>Gérer mes Campagnes</span>
                   </button>
