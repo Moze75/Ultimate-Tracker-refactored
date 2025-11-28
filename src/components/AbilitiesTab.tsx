@@ -210,7 +210,7 @@ const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
     const initializeSpellSlots = async () => {
       if (!player.id) return;
 
-      const spellcasters = [
+           const spellcasters = [
         'Magicien',
         'Ensorceleur',
         'Barde',
@@ -219,6 +219,8 @@ const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
         'Paladin',
         'Rôdeur',
         'Occultiste',
+        'Guerrier', // ✅ Ajouté
+        'Roublard', // ✅ Ajouté
       ];
 
       /* 1️⃣ Classe principale : initialiser une seule fois par personnage */
