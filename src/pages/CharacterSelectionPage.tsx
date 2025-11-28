@@ -472,11 +472,11 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                  className="hover:scale-110 transition-transform opacity-80 hover:opacity-100"
                  title="Un bug ? Une question ? Rejoignez-nous sur Discord"
                >
-                  <img 
-                    src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
-                    alt="Discord" 
-                    className="h-7 w-auto brightness-0 invert" 
-                  />
+                <img
+                  src="https://raw. githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button. png"
+                  alt="Buy Me a Coffee"
+                  className="h-8 w-auto" 
+                />
                </a>
                
                {/* Séparateur vertical discret */}
