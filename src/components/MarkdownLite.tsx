@@ -29,14 +29,16 @@ function renderInline(text: string): React.ReactNode {
   // 2) Italique _..._ à l'intérieur de chaque segment
   const toItalicNodes = (str: string, keyPrefix: string) => {
     const nodes: React.ReactNode[] = [];
-    const italicRe = /_(.+?)_/g;
+    // Utilisation de [^_]+ pour être plus robuste sur les délimitations
+    const italicRe = /_([^_]+)_/g;
     let idx = 0;
     let mm: RegExpExecArray | null;
     let cursor = 0;
 
     while ((mm = italicRe.exec(str)) !== null) {
       if (mm.index > cursor) {
-        nodes.push(<span key={`${keyPrefix}-t${idx++}`}>{str.slice(cursor, mm.index)}</span>);
+        // ✅ FIX: On pousse la string directement (pas de <span>), préserve les espaces
+        nodes.push(str.slice(cursor, mm.index));
       }
       nodes.push(
         <em key={`${keyPrefix}-i${idx++}`} className="italic">
@@ -45,21 +47,31 @@ function renderInline(text: string): React.ReactNode {
       );
       cursor = italicRe.lastIndex;
     }
-    if (cursor < str.length) nodes.push(<span key={`${keyPrefix}-t${idx++}`}>{str.slice(cursor)}</span>);
+    if (cursor < str.length) {
+      // ✅ FIX: On pousse le reste en string directe
+      nodes.push(str.slice(cursor));
+    }
     return nodes;
   };
 
   const out: React.ReactNode[] = [];
   let k = 0;
+  
   for (const p of parts) {
     if (p.type === 'bold') {
       out.push(
         <strong key={`b-${k++}`} className="font-semibold">
+          {/* On traite aussi l'italique à l'intérieur du gras */}
           {toItalicNodes(p.value, `b${k}`)}
         </strong>
       );
     } else {
-      out.push(<span key={`t-${k++}`}>{toItalicNodes(p.value, `t${k}`)}</span>);
+      // ✅ FIX: On utilise Fragment pour ne pas casser le flux de texte avec des spans
+      out.push(
+        <React.Fragment key={`t-${k++}`}>
+          {toItalicNodes(p.value, `t${k}`)}
+        </React.Fragment>
+      );
     }
   }
   return out;
