@@ -414,10 +414,15 @@ useEffect(() => {
       if (used && currentUsed >= maxSlots) return;
       if (!used && currentUsed <= 0) return;
 
-      const newSpellSlots = {
-        ...player.spell_slots,
-        used_pact_slots: used ? currentUsed + 1 : currentUsed - 1,
-      };
+                // ✅ Récupération de la sous-classe
+            const pSub = (player as any).subclass || (player as any).sub_class || (player as any).sousClasse;
+            
+            const newSpellSlots = getSpellSlotsByLevel(
+              player.class,
+              player.level || 1,
+              player.spell_slots,
+              pSub // ✅ Passé en argument
+            );
 
       try {
         const { error } = await supabase.from('players').update({ spell_slots: newSpellSlots }).eq('id', player.id);
