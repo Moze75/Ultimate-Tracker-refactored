@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings, Trash2, Sword } from 'lucide-react';
 import BowIcon from '../icons/BowIcon';
+import { Player } from '../../types/dnd';
 
 type Attack = any;
 
