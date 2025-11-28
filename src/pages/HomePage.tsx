@@ -378,7 +378,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                </h3>
                <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
                  <p>
-                   Que vous jouiez sur ordinateur ou sur téléphone, l’expérience a été pensée pour s’adapter à votre façon de jouer.
+                   Le Compagnon s’adapte à votre façon de jouer, sans compromis.
                  </p>
                  <p>
                    Contrairement à d'autres outils (notamment le principal site connu Américain qui n'a jamais voulu traduire son App), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
