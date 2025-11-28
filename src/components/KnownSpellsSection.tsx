@@ -251,9 +251,21 @@ const getWarlockPactSlotLevel = (level: number): number => {
   if (level <= 8) return 4;
   return 5;
 };
-const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): number => {
+const getHighestAllowedSlotLevel = (casterType: CasterType | 'third', level: number): number => {
   if (casterType === 'warlock') return getWarlockPactSlotLevel(level);
-  if (casterType === 'full') return Math.min(9, Math.ceil(level / 2)); 
+  if (casterType === 'full') return Math.min(9, Math.ceil(level / 2));
+  
+  // ✅ Logique Tiers-Lanceur (Guerrier/Roublard)
+  if (casterType === 'third') {
+    if (level < 3) return 0;
+    // Progression plus lente (max niveau 4)
+    if (level <= 6) return 1;
+    if (level <= 12) return 2;
+    if (level <= 18) return 3;
+    return 4;
+  }
+
+  if (casterType === 'half') {
   
   // ✅ Tiers-lanceurs (Chevalier Occulte / Escroc Arcanique)
   if (casterType === 'third') {
