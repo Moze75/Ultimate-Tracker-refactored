@@ -383,7 +383,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                  <p>
 Pas de version comprimée ou bricolée après coup :
                        </p>
-                 <p>
+                
 chaque détail a été pensé pour la fluidité, la lisibilité, et l’accessibilité, même en pleine partie.
 
 Et contrairement à d’autres outils, ici tout est en français, dès le premier clic.
