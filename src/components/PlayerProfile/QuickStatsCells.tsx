@@ -208,11 +208,30 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
         )}
       </div>
 
-      <div className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px]">
+      <div 
+        className="flex flex-col items-center justify-center px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50 min-w-[80px] cursor-pointer hover:bg-gray-700/50 transition-colors relative"
+        onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'proficiency' ? null : 'proficiency')}
+      >
         <div className="text-xl font-bold text-gray-100 mb-1"> 
           +{calculatedProficiencyBonus}
         </div>
         <div className="text-xs uppercase tracking-wide text-gray-500">Maîtrise</div>
+        {activeTooltip === 'proficiency' && (
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
+              <h4 className="font-semibold text-gray-100 mb-1">Bonus de Maîtrise</h4>
+              <p className="mb-2">Votre niveau d'expérience global.</p>
+              <p className="text-gray-400 mb-1">Ce bonus s'ajoute notamment au calcul :</p>
+              <ul className="list-disc list-inside text-gray-400 space-y-1">
+                <li>Des <strong>jets d'attaque</strong>.</li>
+                <li>Des jets de sauvegarde.</li>
+                <li>Des tests de compétences.</li>
+                <li>Du DD de vos sorts.</li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
