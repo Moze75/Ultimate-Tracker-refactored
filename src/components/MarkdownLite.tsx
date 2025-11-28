@@ -1,15 +1,23 @@
 import React, { useMemo } from 'react';
 
-// Nettoyage simple: retirer les crochets autour d'un segment [texte] -> texte
-function stripBrackets(s: string): string {
-  return s.replace(/\[([^\]]+)\]/g, '$1');
+// Nettoyage robuste : gère les liens Markdown et les crochets simples
+function cleanMarkdown(s: string): string {
+  if (!s) return '';
+  // 1. Retire les liens complets [Texte](URL) -> Texte
+  // Cela évite que des underscores dans l'URL ne cassent le parsing italique
+  let res = s.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  
+  // 2. Retire les crochets restants [Texte] -> Texte
+  res = res.replace(/\[([^\]]+)\]/g, '$1');
+  
+  return res;
 }
 
 // Rendu inline: **gras** et _italique_
 function renderInline(text: string): React.ReactNode {
   if (!text) return null;
 
-  const cleaned = stripBrackets(text);
+  const cleaned = cleanMarkdown(text);
 
   // 1) Découpe par **...** (gras)
   const boldRe = /\*\*(.+?)\*\*/g;
@@ -29,7 +37,7 @@ function renderInline(text: string): React.ReactNode {
   // 2) Italique _..._ à l'intérieur de chaque segment
   const toItalicNodes = (str: string, keyPrefix: string) => {
     const nodes: React.ReactNode[] = [];
-    // Utilisation de [^_]+ pour être plus robuste sur les délimitations
+    // Regex : cherche un underscore, du contenu sans underscore, un underscore
     const italicRe = /_([^_]+)_/g;
     let idx = 0;
     let mm: RegExpExecArray | null;
