@@ -464,6 +464,24 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
            
            {/* GAUCHE : Icônes Communauté (Discord + BMC) */}
            <div className="flex items-center gap-5">
+               {/* Buy Me a Coffee */}
+               <a
+                href="https://buymeacoffee.com/mewan44"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-100 opacity-90 transition-opacity hover:scale-105 transform duration-200"
+                title="Offrir un café au développeur"
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button.png"
+                  alt="Buy Me a Coffee"
+                  className="h-8 w-auto" 
+                />
+              </a>
+
+               {/* Séparateur vertical discret */}
+               <div className="h-6 w-px bg-white/10"></div>
+
               {/* Discord (Icône seule agrandie) */}
               <a 
                  href="https://discord.gg/7zVKwtTe" 
@@ -478,24 +496,6 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                     className="h-7 w-auto brightness-0 invert" 
                   />
                </a>
-                
-               {/* Séparateur vertical discret */}
-               <div className="h-6 w-px bg-white/10"></div>
-
-               {/* Buy Me a Coffee */}
-               <a
-                href="https://buymeacoffee.com/mewan44"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:opacity-100 opacity-90 transition-opacity hover:scale-105 transform duration-200"
-                title="Offrir un café au développeur"
-              >
-                <img
-src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/bmc-button.png"
-                  alt="Buy Me a Coffee"
-                  className="h-8 w-auto" 
-                />
-              </a>
 
               {/* ✅ NOUVEAU : Bouton retour à l'accueil */}
               {onBackToHome && (
