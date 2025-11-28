@@ -106,8 +106,8 @@ export function AttackSection({
     const overrideLabel = (!isVirtual && attack.override_ability) ? ` (${attack.override_ability})` : '';
 
     // Pour l'attaque sans arme non-moine, on affiche juste le total fixe (1 + Force)
-    // Le calcul : 1 (base) + dmgBonus (mod force)
-    const fixedDamageValue = 1 + dmgBonus; 
+    // Le calcul : 1 (base) + dmgBonus (mod force), avec un minimum de 1
+    const fixedDamageValue = Math.max(1, 1 + dmgBonus); 
 
     return (
       <div key={attack.id} className={`bg-gray-800/50 rounded-lg p-3 border ${isVirtual ? 'border-gray-600/30 bg-gray-800/30' : 'border-gray-700/50'}`}>
