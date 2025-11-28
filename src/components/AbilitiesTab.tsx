@@ -219,6 +219,15 @@ export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
 
   const subclass = getSubclass(player);
 
+    // ✅ Reset l'initialisation si la sous-classe change (ex: Guerrier -> Chevalier Occulte)
+  const prevSubclassRef = useRef<string | null>(subclass);
+  useEffect(() => {
+    if (prevSubclassRef.current !== subclass) {
+      spellSlotsInitialized.current = false;
+      prevSubclassRef.current = subclass;
+    }
+  }, [subclass]);
+
 const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
    const secondarySpellSlotsInitialized = useRef(false);
 
