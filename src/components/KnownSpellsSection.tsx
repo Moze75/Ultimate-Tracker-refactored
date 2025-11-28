@@ -1398,15 +1398,18 @@ const triggerDiceRoll = useCallback((
 }, [rollDice]);
 
   // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
-  const casterType = useMemo(() => {
-    const primaryCaster = getCasterType(player.class);
-    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class) : 'none';
+   const casterType = useMemo(() => {
+    // Récupération robuste des sous-classes
+    const pSub = (player as any).subclass || (player as any).sub_class || (player as any).sousClasse;
+    // On suppose que pour le moment secondary_subclass n'est pas géré, on passe null ou la même logique si dispo
     
-    // Si l'une des deux classes est un lanceur, retourner ce type
+    const primaryCaster = getCasterType(player.class, pSub);
+    const secondaryCaster = player.secondary_class ? getCasterType(player.secondary_class, null) : 'none';
+    
     if (primaryCaster !== 'none') return primaryCaster;
     if (secondaryCaster !== 'none') return secondaryCaster;
     return 'none';
-  }, [player.class, player.secondary_class]);
+  }, [player.class, player.secondary_class, player]); // Dépendance player ajoutée
 
   // ✅ MODIFIÉ : Utiliser le niveau de la classe qui est effectivement un lanceur
 const characterLevel = useMemo(() => {
