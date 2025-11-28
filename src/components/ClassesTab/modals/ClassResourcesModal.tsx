@@ -698,18 +698,31 @@ case 'Magicien':
     case 'Roublard':
       if (resources.sneak_attack) {
         items.push(
-          <div
+          <button
             key="sneak_attack"
-            className="resource-block bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-gray-700/30 rounded-lg p-3"
+            onClick={() => {
+              // Lancer les dés de l'attaque sournoise
+              rollDice({
+                type: 'damage',
+                attackName: 'Attaque sournoise',
+                diceFormula: (resources.sneak_attack || '1d6').toString(),
+                modifier: 0
+              });
+              if (onPulseScreen) onPulseScreen({} as any);
+            }}
+            className="w-full text-left resource-block bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-gray-700/30 hover:border-red-500/50 hover:bg-red-900/10 transition-all duration-200 rounded-lg p-3 group"
+            title="Cliquer pour lancer les dégâts d'attaque sournoise"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Skull size={20} className="text-red-500" />
-                <span className="text-sm font-medium text-gray-300">Attaque sournoise</span>
+                <Skull size={20} className="text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Attaque sournoise</span>
               </div>
-              <div className="text-sm text-gray-400 bg-gray-800/50 px-3 py-1 rounded-md">{resources.sneak_attack}</div>
+              <div className="text-sm text-gray-400 bg-gray-800/50 border border-gray-700 group-hover:border-red-500/30 group-hover:text-red-200 px-3 py-1 rounded-md font-mono">
+                {resources.sneak_attack}
+              </div>
             </div>
-          </div>
+          </button>
         );
       }
       break;
