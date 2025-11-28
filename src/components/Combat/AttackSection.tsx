@@ -6,7 +6,7 @@ import { Player } from '../../types/dnd';
 type Attack = any;
 
 interface AttackSectionProps {
-  player: Player; // ✅ Nécessaire pour déterminer si Moine et calculer les stats
+  player: Player;
   attacks: Attack[];
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
@@ -49,7 +49,7 @@ export function AttackSection({
 
   const getUnarmedStrike = (): Attack => {
     const isMonk = player.class === 'Moine';
-    let damageDice = '1';
+    let damageDice = '1'; // Par défaut, 1 point de dégât (+ mod)
     let ability = 'Force';
     let name = 'Attaque sans arme';
     let properties = '';
@@ -95,12 +95,19 @@ export function AttackSection({
 
   const renderAttackCard = (attack: Attack) => {
     const isVirtual = attack.id === 'unarmed-strike-virtual';
+    const isMonk = player.class === 'Moine';
+    
     const dmgBonus = getDamageBonus(attack);
     const dmgLabel = `${attack.damage_dice}${dmgBonus !== 0 ? (dmgBonus > 0 ? `+${dmgBonus}` : `${dmgBonus}`) : ''}`;
     const ammoType = (attack as any).ammo_type || '';
     const ammoCount = (attack as any).ammo_count ?? 0;
 
-    const overrideLabel = attack.override_ability ? ` (${attack.override_ability})` : '';
+    // On n'affiche overrideLabel que si ce n'est PAS l'attaque virtuelle
+    const overrideLabel = (!isVirtual && attack.override_ability) ? ` (${attack.override_ability})` : '';
+
+    // Pour l'attaque sans arme non-moine, on affiche juste le total fixe (1 + Force)
+    // Le calcul : 1 (base) + dmgBonus (mod force)
+    const fixedDamageValue = 1 + dmgBonus; 
 
     return (
       <div key={attack.id} className={`bg-gray-800/50 rounded-lg p-3 border ${isVirtual ? 'border-gray-600/30 bg-gray-800/30' : 'border-gray-700/50'}`}>
@@ -108,7 +115,6 @@ export function AttackSection({
           <div>
             <h4 className="font-medium text-gray-100 text-base flex items-center gap-2">
                 {attack.name}
-                {isVirtual && <span className="text-[10px] bg-gray-700 px-1.5 py-0.5 rounded text-gray-400 uppercase tracking-wide">Auto</span>}
             </h4>
             <p className="text-sm text-gray-400">
               {attack.damage_type} • {attack.range}
@@ -164,15 +170,23 @@ export function AttackSection({
           </div>
 
           <div className="flex-1 flex flex-col">
-            <button
-              onClick={() => {
-                console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
-                onRollDamage(attack);
-              }}
-              className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
-            >
-              Dégâts : {dmgLabel}
-            </button>
+            {/* Si c'est une attaque virtuelle ET que ce n'est pas un Moine, on affiche un div statique au lieu d'un bouton */}
+            {isVirtual && !isMonk ? (
+               <div className="bg-orange-900/30 border border-orange-700/30 text-orange-200/70 px-3 py-2 rounded-md flex items-center justify-center cursor-default">
+                 Dégâts fixes : {fixedDamageValue}
+               </div>
+            ) : (
+              <button
+                onClick={() => {
+                  console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
+                  onRollDamage(attack);
+                }}
+                className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
+              >
+                Dégâts : {dmgLabel}
+              </button>
+            )}
+
             {ammoType ? (
               <div className="mt-2 flex items-center justify-center gap-2">
                 <button
@@ -223,7 +237,6 @@ export function AttackSection({
         </button>
       </div>
       <div className="p-4 space-y-2">
-        {/* On affiche toujours au moins l'attaque sans arme, donc cette condition "vide" est rare mais utile si on filtre autrement */}
         {physicalAttacks.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Sword className="w-12 h-12 mx-auto mb-3 opacity-50" />
