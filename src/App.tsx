@@ -190,6 +190,7 @@ useEffect(() => {
                   const parsed = JSON.parse(savedChar);
                   setSelectedCharacter(parsed);
                   appContextService.setContext('game');
+                  setShowHomePage(false); // ✅ AJOUT : On force le masquage ici aussi
                   console.log('[App] 🎮 Personnage restauré (auth change):', parsed.name);
                 } catch (e) {
                   console.error('[App] ❌ Erreur parsing (auth change):', e);
