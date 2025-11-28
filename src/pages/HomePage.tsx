@@ -10,6 +10,51 @@ interface HomePageProps {
   onGetStarted: () => void;
 }
 
+/* --- NOUVEAU COMPOSANT POUR LE ZOOM --- */
+function ZoomableImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  return (
+    <div 
+      className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center overflow-hidden"
+      onClick={onClose} // Ferme si on clique sur le fond noir
+    >
+      {/* Bouton Fermer */}
+      <button 
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/50 rounded-full p-2 transition-colors z-50"
+      >
+        <X size={32} />
+      </button>
+
+      {/* Conteneur de l'image avec scroll si zoomé */}
+      <div 
+        className={`w-full h-full flex items-center justify-center transition-all duration-300 ${isZoomed ? 'overflow-auto cursor-zoom-out' : 'overflow-hidden cursor-zoom-in'}`}
+        onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur le conteneur
+      >
+        <img
+          src={src}
+          alt={alt}
+          onClick={() => setIsZoomed(!isZoomed)}
+          className={`transition-transform duration-300 ease-out select-none max-w-none ${
+            isZoomed 
+              ? 'scale-[2] md:scale-[2.5] cursor-zoom-out' // Zoom fort
+              : 'max-h-[90vh] max-w-[90vw] object-contain cursor-zoom-in' // Fit écran
+          }`}
+          style={{
+            transformOrigin: 'center center'
+          }}
+        />
+      </div>
+      
+      {/* Indication visuelle */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/50 text-sm pointer-events-none bg-black/40 px-3 py-1 rounded-full">
+        {isZoomed ? 'Cliquez pour dézoomer' : 'Cliquez pour zoomer'}
+      </div>
+    </div>
+  );
+}
+
 export function HomePage({ onGetStarted }: HomePageProps) {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
