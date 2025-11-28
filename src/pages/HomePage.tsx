@@ -264,10 +264,10 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 <Crown /> Pour les Maîtres du Jeu
               </h3>
               <ul className="space-y-4 text-gray-300">
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Création et partage de campagnes</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Envoi d’objets / système de loots aléatoires</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Gestion des notes MJ privées</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Visualisation des joueurs en temps réel</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Création de campagnes et invitations des joueurs</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Envoi d’objets customs</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Loots aléatoires et envois ciblés</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Visualisation des joueurs connectés</li>
               </ul>
                <button onClick={scrollToSubscription} className="mt-8 w-full py-3 rounded-lg border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors">
                 Voir les abonnements
