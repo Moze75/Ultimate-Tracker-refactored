@@ -357,6 +357,7 @@ const spellSlotsInitialized = useRef(false); // ← Ajouter cette ligne
     player.spell_slots,
     player.secondary_spell_slots,
     onUpdate,
+    subclass // ✅ Ajouté aux dépendances
   ]);
    
   
