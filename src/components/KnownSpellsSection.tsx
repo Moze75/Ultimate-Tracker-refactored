@@ -220,11 +220,19 @@ const smoothAnimationCSS = `
 `;
 
 /* ===== Règles d’affichage des niveaux de slots D&D 5e (bornage par classe/niveau) ===== */
-type CasterType = 'full' | 'half' | 'warlock' | 'none';
+type CasterType = 'full' | 'half' | 'warlock' | 'third' | 'none'; // ✅ Ajout 'third'
 const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-const getCasterType = (cls?: string): CasterType => {
+
+// ✅ Signature modifiée pour accepter la sous-classe
+const getCasterType = (cls?: string, subclass?: string | null): CasterType => {
   if (!cls) return 'none';
   const c = normalize(cls);
+  const s = subclass ? normalize(subclass) : '';
+
+  // ✅ Détection Chevalier Occulte / Escroc Arcanique
+  if (c.includes('guerrier') && (s.includes('chevalier occulte') || s.includes('eldritch'))) return 'third';
+  if (c.includes('roublard') && (s.includes('escroc') || s.includes('trickster'))) return 'third';
+
   if (['wizard', 'magicien', 'mage'].some((k) => c.includes(k))) return 'full';
   if (['sorcerer', 'ensorceleur'].some((k) => c.includes(k))) return 'full';
   if (['cleric', 'clerc'].some((k) => c.includes(k))) return 'full';
