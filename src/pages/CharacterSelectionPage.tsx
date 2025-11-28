@@ -459,64 +459,78 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
       <div className="min-h-screen py-4 md:py-8 bg-transparent">
         <div className="w-full max-w-6xl mx-auto px-4"> 
          
-         {/* --- BARRE D'OUTILS SUPÉRIEURE --- */}
-          <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+         {/* --- SECTION ADMINISTRATIVE (Tout en haut) --- */}
+          <div className="flex flex-col gap-4 mb-8 pb-4 border-b border-white/5">
             
-            {/* Groupe Gauche : Support & Communauté */}
-            <div className="flex items-center gap-2">
-              {/* Buy Me a Coffee */}
-              <a
-                href="https://buymeacoffee.com/mewan44"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1 rounded-md transition-all shadow-md flex items-center h-8"
-                title="Soutenir le projet"
-              >
-                <img
-                  src="/icons/bmc-full-logo-no-background.png"
-                  alt="Buy Me a Coffee"
-                  className="h-5 w-auto"
-                />
-              </a>
-
-              {/* Discord (Version compacte icône seulement sur mobile, texte sur desktop) */}
-              <a 
-                 href="https://discord.gg/7zVKwtTe" 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3 py-1 rounded-md transition-all shadow-md flex items-center gap-2 h-8 text-xs font-medium"
-                 title="Rejoindre le Discord"
-               >
-                  <img 
-                    src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
-                    alt="Discord" 
-                    className="h-4 w-auto brightness-0 invert" 
+            {/* Ligne 1 : Support (Gauche) & Compte (Droite) */}
+            <div className="flex flex-wrap justify-between items-center gap-3">
+              
+              {/* Groupe Gauche : Coffee + Discord */}
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href="https://buymeacoffee.com/mewan44"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1.5 rounded-md transition-all shadow-md flex items-center"
+                  title="Soutenir le projet"
+                >
+                  <img
+                    src="/icons/bmc-full-logo-no-background.png"
+                    alt="Buy Me a Coffee"
+                    className="h-5 w-auto"
                   />
-                  <span className="hidden sm:inline">Communauté & Support</span>
-               </a>
+                </a>
+
+                <a 
+                   href="https://discord.gg/7zVKwtTe" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3 py-1.5 rounded-md transition-all shadow-md flex items-center gap-2 text-xs font-medium group"
+                 >
+                    <img 
+                      src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
+                      alt="Discord" 
+                      className="h-4 w-auto brightness-0 invert group-hover:scale-110 transition-transform" 
+                    />
+                    <span>Un bug, une question ?</span>
+                 </a>
+              </div>
+
+              {/* Groupe Droite : Mon compte */}
+              <button
+                onClick={() => setShowAccount(true)}
+                className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all shadow-lg hover:border-gray-500"
+              >
+                <Settings size={16} />
+                <span>Mon compte</span>
+              </button>
             </div>
 
-            {/* Groupe Droite : Mon compte */}
-            <button
-              onClick={() => setShowAccount(true)}
-              className="flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1 rounded-md text-sm font-semibold transition-all h-8 shadow-lg"
-            >
-              <Settings size={16} />
-              <span className="hidden xs:inline">Mon compte</span>
-            </button>
+            {/* Ligne 2 : Abonnement (Remonté ici) */}
+             <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setShowSubscription(true)}
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600/90 to-blue-600/90 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-1.5 rounded-md font-semibold text-xs sm:text-sm transition-all shadow-md border border-white/10"
+                >
+                  <Crown size={16} />
+                  {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
+                    ? 'Passer Premium'
+                    : 'Gérer mon abonnement'
+                  }
+                </button>
+                
+                {/* Info status abo textuel */}
+                {currentSubscription && (
+                   <span className={`text-xs px-2 py-0.5 rounded border ${
+                     currentSubscription.status === 'active' ? 'border-green-500/30 text-green-400 bg-green-500/10' : 'border-gray-600 text-gray-400 bg-gray-800/50'
+                   }`}>
+                     {getSubscriptionText()}
+                   </span>
+                )}
+             </div>
           </div>
 
-          {/* --- INFO ABONNEMENT --- */}
-          {currentSubscription && (
-            <div className="text-center mb-2">
-               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${
-                 currentSubscription.status === 'active' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-gray-800/50 border-gray-600 text-gray-400'
-               }`}>
-                {getSubscriptionText()}
-              </span>
-            </div>
-          )}
-
+          {/* --- TITRE & ACTIONS JEU --- */}
           <div className="text-center mb-8 space-y-2">
             <h1
               className="text-3xl md:text-4xl font-bold text-white"
@@ -539,29 +553,18 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                 : 'Aucun personnage créé'}
             </p>
 
-            {/* --- BOUTONS ACTIONS PRINCIPALES --- */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto px-4 sm:px-0">
-              <button
-                onClick={() => setShowSubscription(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg border border-white/10"
-              >
-                <Crown size={18} />
-                {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
-                  ? 'Passer Premium'
-                  : 'Mon Abonnement'
-                }
-              </button>
-
-              {currentSubscription?.tier === 'game_master' && (
-                <button
-                  onClick={() => setShowCampaigns(true)}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg border border-white/10"
-                >
-                  <Scroll size={18} />
-                  Mes Campagnes
-                </button>
-              )}
-            </div>
+            {/* --- BOUTON CAMPAGNES (Resté ici, sous le titre) --- */}
+            {currentSubscription?.tier === 'game_master' && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={() => setShowCampaigns(true)}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-8 py-3 rounded-lg font-semibold text-base transition-all shadow-lg border border-white/10 hover:scale-105"
+                  >
+                    <Scroll size={20} />
+                    Accéder à mes Campagnes
+                  </button>
+                </div>
+            )}
           </div>
 
           {deletingCharacter && (
