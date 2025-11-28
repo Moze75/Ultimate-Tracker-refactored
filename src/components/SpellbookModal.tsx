@@ -58,10 +58,27 @@ export function SpellbookModal({
   selectionMode = false,
   onSpellSelect,
   selectedSpells = [],
-  onConfirm
+  onConfirm,
+  playerSubclass // ✅ Récupéré ici
 }: SpellbookModalProps) {
   // Utiliser playerClasses si fourni, sinon fallback sur playerClass
-  const effectivePlayerClasses = playerClasses || (playerClass ? [playerClass] : []);
+  const baseClasses = playerClasses || (playerClass ? [playerClass] : []);
+  
+  // ✅ Ajouter 'Magicien' si c'est un Chevalier Occulte ou Escroc Arcanique
+  const effectivePlayerClasses = React.useMemo(() => {
+    const classes = [...baseClasses];
+    if (playerSubclass) {
+      const s = playerSubclass.toLowerCase();
+      // Si Guerrier + Chevalier Occulte OU Roublard + Escroc Arcanique
+      const isEldritch = classes.includes('Guerrier') && (s.includes('chevalier occulte') || s.includes('eldritch'));
+      const isTrickster = classes.includes('Roublard') && (s.includes('escroc') || s.includes('trickster'));
+      
+      if (isEldritch || isTrickster) {
+        if (!classes.includes('Magicien')) classes.push('Magicien');
+      }
+    }
+    return classes;
+  }, [baseClasses, playerSubclass]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<Spell[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
