@@ -281,12 +281,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       {/* --- SECTION 5 : VISUELS & DÉMO (CARROUSEL) --- */}
       <div className="py-24 bg-black/20 border-y border-white/5 overflow-hidden">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
             À quoi ça ressemble ?
           </h2>
-          <p className="text-gray-400 text-center mb-12">
-            Glissez pour explorer (Cliquez pour agrandir)
-          </p>
 
           {/* Conteneur Carrousel avec flèches */}
           <div className="relative group max-w-7xl mx-auto">
