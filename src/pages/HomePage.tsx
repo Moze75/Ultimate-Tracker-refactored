@@ -378,8 +378,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                </h3>
                <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
                  <p>
-                   Vous jouez sur PC ? Profitez de la version Desktop immersive.
-                   Vous jouez sur téléphone ? Découvrez une interface repensée de zéro.
+                   Que vous jouiez sur ordinateur ou sur téléphone, l’expérience a été pensée pour s’adapter à votre façon de jouer.
                  </p>
                  <p>
                    Contrairement à d'autres outils (notamment le principal site connu Américain qui n'a jamais voulu traduire son App), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
