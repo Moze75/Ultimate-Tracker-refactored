@@ -709,7 +709,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
           alt={galleryImages[selectedImageIndex].alt} 
           onClose={closeViewer} 
         />
-      )}
+      )},
           </div>
         </div>
       )}
