@@ -176,10 +176,10 @@ onUpdate({
     const updateData: any = {
       current_hp: player.max_hp,
       temporary_hp: 0,
-      hit_dice: {
-        total: player.level,
-        used: Math.max(0, player.hit_dice?.used - Math.floor(player.level / 2) || 0)
-      },
+hit_dice: {
+  total: player.level,
+  used: Math.max(0, (player.hit_dice?. used || 0) - Math.max(1, Math.floor(player.level / 2)))
+},
       class_resources: nextCR,
       spell_slots: {
         ...player.spell_slots,
