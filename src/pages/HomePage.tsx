@@ -265,7 +265,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
               </h3>
               <ul className="space-y-4 text-gray-300">
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Création et partage de campagnes</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Envoi d’objets et d’audios en direct</li>
+                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Envoi d’objets / système de loots aléatoires</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Gestion des notes MJ privées</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Visualisation des joueurs en temps réel</li>
               </ul>
