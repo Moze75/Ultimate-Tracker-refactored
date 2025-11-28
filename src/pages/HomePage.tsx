@@ -381,8 +381,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                    Le Compagnon s’adapte à votre façon de jouer, sans compromis.
                  </p>
                  <p>
-                   Contrairement à d'autres outils (notamment le principal site connu Américain qui n'a jamais voulu traduire son App), nous n'avons pas simplement tassé la version bureau pour qu'elle rentre au chausse-pied. 
-                   Boutons accessibles au pouce, navigation simplifiée, lisibilité maximale : c'est une expérience faite pour votre main.
+Pas de version comprimée ou bricolée après coup :
+chaque détail a été pensé pour la fluidité, la lisibilité, et l’accessibilité, même en pleine partie.
+
+Et contrairement à d’autres outils, ici tout est en français, dès le premier clic.
+Pas de traductions à la volée, pas de confusion :
+juste une app claire, accessible, et conçue pour la communauté francophone.
                  </p>
                </div>
             </div>
