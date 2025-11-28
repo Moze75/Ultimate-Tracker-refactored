@@ -201,9 +201,23 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
           className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
           onClick={() => setActiveTooltip(activeTooltip === 'initiative' ? null : 'initiative')}
         >
-          <div className="text-lg font-bold text-gray-100">
+           <div className="text-lg font-bold text-gray-100">
             {stats.initiative >= 0 ? '+' : ''}{stats.initiative}
           </div>
+          {activeTooltip === 'initiative' && (
+            <>
+              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
+                <h4 className="font-semibold text-gray-100 mb-1">Initiative</h4>
+                <p className="mb-2">Détermine l'ordre de passage lors des combats.</p>
+                <ul className="list-disc list-inside text-gray-400 space-y-1">
+                  <li>Basée sur votre modificateur de Dextérité.</li>
+                  <li>Un score élevé vous permet d'agir avant vos ennemis.</li>
+                  <li>Peut être modifié par des dons ou des objets magiques.</li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
         <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-4">INIT</div>
       </div>
