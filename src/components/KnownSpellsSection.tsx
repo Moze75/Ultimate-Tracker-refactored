@@ -254,6 +254,13 @@ const getWarlockPactSlotLevel = (level: number): number => {
 const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): number => {
   if (casterType === 'warlock') return getWarlockPactSlotLevel(level);
   if (casterType === 'full') return Math.min(9, Math.ceil(level / 2));
+  
+  // ✅ Tiers-lanceurs (Chevalier Occulte / Escroc Arcanique)
+  if (casterType === 'third') {
+    if (level < 3) return 0;
+    return Math.min(4, Math.ceil((level - 2) / 6) + 1); // Approx: Niv 3->1, 7->2, 13->3, 19->4
+  }
+
   if (casterType === 'half') {
     // ✅ CORRIGÉ : Pour les semi-lanceurs (Paladin, Rôdeur) en 2024
     // Niveau 1-2 : Niveau 1
