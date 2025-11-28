@@ -532,10 +532,10 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                {/* Bouton Abo */}
                <button
                   onClick={() => setShowSubscription(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-xs font-medium transition-all backdrop-blur-sm"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 transition-all duration-200"
                 >
                   <Crown size={16} className="text-purple-400" />
-                  <span className="hidden sm:inline">
+                  <span className="text-[9px] sm:text-xs font-medium leading-none sm:leading-normal">
                     {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
                       ? 'Premium'
                       : 'Abo'
@@ -546,10 +546,10 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
                {/* Bouton Compte */}
                <button
                 onClick={() => setShowAccount(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-xs font-medium transition-all backdrop-blur-sm"
+                className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 transition-all duration-200"
               >
                 <Settings size={16} className="text-gray-400" />
-                <span className="hidden sm:inline">Compte</span>
+                <span className="text-[9px] sm:text-xs font-medium leading-none sm:leading-normal">Compte</span>
               </button>
            </div>
         </div>
