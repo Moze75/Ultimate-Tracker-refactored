@@ -230,23 +230,10 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
         >
           <div className="text-lg font-bold text-gray-100">
             +{calculatedProficiencyBonus}
-          </div>
-          {activeTooltip === 'proficiency' && (
-            <>
-              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
-              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
-                <h4 className="font-semibold text-gray-100 mb-1">Bonus de Maîtrise</h4>
-                <p className="mb-2">Représente votre niveau d'expérience et d'entraînement.</p>
-                <p className="text-gray-400 mb-1">S'ajoute automatiquement à :</p>
-                <ul className="list-disc list-inside text-gray-400 space-y-1">
-                  <li>Vos <strong>jets d'attaque</strong> avec les armes maîtrisées.</li>
-                  <li>Vos jets de sauvegarde maîtrisés.</li>
-                  <li>Vos tests de compétences maîtrisées.</li>
-                  <li>Le DD (Degré de Difficulté) de vos sorts.</li>
-                </ul>
-              </div>
-            </>
-          )}
+          </div> 
         </div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-6">MAÎT</div>
+      </div>
+    </div> 
   );
 } 
