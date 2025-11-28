@@ -6,6 +6,7 @@ import { Player } from '../../types/dnd';
 type Attack = any;
 
 interface AttackSectionProps {
+  player: Player; // ✅ Nécessaire pour la logique Moine vs Autres
   attacks: Attack[];
   onAdd: () => void;
   onEdit: (attack: Attack) => void;
