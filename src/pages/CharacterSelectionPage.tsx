@@ -32,6 +32,7 @@ import CharacterCreationWizard from '../features/character-creator/components/ch
 interface CharacterSelectionPageProps {
   session: any;
   onCharacterSelect: (player: Player) => void;
+  onBackToHome?: () => void; // ✅ NOUVEAU : Callback pour retourner à l'accueil
 }
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'lastSelectedCharacterSnapshot';
