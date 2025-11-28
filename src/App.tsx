@@ -445,7 +445,7 @@ useEffect(() => {
         );
       }
 
-      if (showHomePage && !session) {
+      if (showHomePage) {
         return <HomePage onGetStarted={() => setShowHomePage(false)} />;
       }
 
