@@ -20,6 +20,10 @@ import type { ClassResources, Player } from '../../../types/dnd';
 import { canonicalClass, getChaModFromPlayerLike } from './ClassUtilsModal';
 import { useDiceSettings } from '../../../hooks/useDiceSettings';
 
+// ✅ Import du contexte pour lancer les dés
+import { useContext } from 'react';
+import { DiceRollContext } from '../../ResponsiveGameLayout'; 
+
 // Utiliser le type Player du fichier types/dnd.ts au lieu de créer PlayerLike
 type PlayerLike = Player;
 
