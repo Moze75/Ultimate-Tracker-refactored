@@ -456,114 +456,123 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
         backgroundColor: 'transparent',
       }}
       >
-      <div className="min-h-screen py-4 md:py-8 bg-transparent">
-        <div className="w-full max-w-6xl mx-auto px-4"> 
+      <div className="min-h-screen py-6 bg-transparent">
+        <div className="w-full max-w-7xl mx-auto px-4"> 
          
-         {/* --- SECTION ADMINISTRATIVE (Tout en haut) --- */}
-          <div className="flex flex-col gap-4 mb-8 pb-4 border-b border-white/5">
+         {/* --- 1. HEADER ADMINISTRATIF UNIFIÉ --- */}
+         {/* Une seule barre sombre et transparente pour tout regrouper proprement */}
+          <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl p-3 mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
             
-            {/* Ligne 1 : Support (Gauche) & Compte (Droite) */}
-            <div className="flex flex-wrap justify-between items-center gap-3">
-              
-              {/* Groupe Gauche : Coffee + Discord */}
-              <div className="flex flex-wrap items-center gap-2">
-                <a
-                  href="https://buymeacoffee.com/mewan44"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#FFDD00] hover:bg-[#FFED4E] px-2 py-1.5 rounded-md transition-all shadow-md flex items-center"
-                  title="Soutenir le projet"
-                >
-                  <img
-                    src="/icons/bmc-full-logo-no-background.png"
-                    alt="Buy Me a Coffee"
-                    className="h-5 w-auto"
+            {/* GAUCHE : Communauté & Support */}
+            <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto justify-between md:justify-start">
+               {/* Lien Discord épuré : Texte puis Icône */}
+               <a 
+                 href="https://discord.gg/7zVKwtTe" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors"
+               >
+                  <span>Un bug, une question ?</span>
+                  <img 
+                    src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
+                    alt="Discord" 
+                    className="h-4 w-auto brightness-0 invert opacity-60 group-hover:opacity-100 transition-all" 
                   />
-                </a>
+               </a>
 
-                <a 
-                   href="https://discord.gg/7zVKwtTe" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3 py-1.5 rounded-md transition-all shadow-md flex items-center gap-2 text-xs font-medium group"
-                 >
-                    <img 
-                      src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
-                      alt="Discord" 
-                      className="h-4 w-auto brightness-0 invert group-hover:scale-110 transition-transform" 
-                    />
-                    <span>Un bug, une question ?</span>
-                 </a>
-              </div>
+               {/* Séparateur vertical discret */}
+               <div className="h-4 w-px bg-white/10 hidden md:block"></div>
 
-              {/* Groupe Droite : Mon compte */}
-              <button
-                onClick={() => setShowAccount(true)}
-                className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-all shadow-lg hover:border-gray-500"
+               {/* Buy Me a Coffee (Icône seule pour rester discret) */}
+               <a
+                href="https://buymeacoffee.com/mewan44"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="opacity-60 hover:opacity-100 transition-opacity"
+                title="Offrir un café au développeur"
               >
-                <Settings size={16} />
-                <span>Mon compte</span>
-              </button>
+                <img
+                  src="/icons/bmc-full-logo-no-background.png"
+                  alt="Buy Me a Coffee"
+                  className="h-6 w-auto"
+                />
+              </a>
             </div>
 
-            {/* Ligne 2 : Abonnement (Remonté ici) */}
-             <div className="flex flex-wrap items-center gap-3">
-                <button
+            {/* DROITE : Gestion Compte & Abo */}
+            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+               
+               {/* Bouton Abonnement (Style "Outline" pour ne pas agresser) */}
+               <button
                   onClick={() => setShowSubscription(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600/90 to-blue-600/90 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-1.5 rounded-md font-semibold text-xs sm:text-sm transition-all shadow-md border border-white/10"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-sm font-medium transition-all"
                 >
-                  <Crown size={16} />
-                  {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
-                    ? 'Passer Premium'
-                    : 'Gérer mon abonnement'
-                  }
-                </button>
-                
-                {/* Info status abo textuel */}
-                {currentSubscription && (
-                   <span className={`text-xs px-2 py-0.5 rounded border ${
-                     currentSubscription.status === 'active' ? 'border-green-500/30 text-green-400 bg-green-500/10' : 'border-gray-600 text-gray-400 bg-gray-800/50'
-                   }`}>
-                     {getSubscriptionText()}
-                   </span>
-                )}
-             </div>
+                  <Crown size={16} className="text-purple-400" />
+                  <span>
+                    {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
+                      ? 'Passer Premium'
+                      : 'Abonnement'
+                    }
+                  </span>
+               </button>
+
+               {/* Bouton Compte */}
+               <button
+                onClick={() => setShowAccount(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-sm font-medium transition-all"
+              >
+                <Settings size={16} className="text-gray-400" />
+                <span className="hidden sm:inline">Compte</span>
+              </button>
+            </div>
           </div>
 
-          {/* --- TITRE & ACTIONS JEU --- */}
-          <div className="text-center mb-8 space-y-2">
+
+          {/* --- 2. TITRE & CONTEXTE --- */}
+          <div className="text-center mb-12 relative">
+            
+            {/* Badge Statut Abo (Centré au dessus) */}
+             {currentSubscription && (
+                <div className="flex justify-center mb-4">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase border backdrop-blur-sm ${
+                     currentSubscription.status === 'active' 
+                     ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                     : 'bg-gray-800/60 border-gray-600/30 text-gray-400'
+                   }`}>
+                    {getSubscriptionText()}
+                  </span>
+                </div>
+             )}
+
             <h1
-              className="text-3xl md:text-4xl font-bold text-white"
+              className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight"
               style={{
-                textShadow:
-                  '0 0 15px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.6),0 0 30px rgba(255,255,255,.4),0 0 40px rgba(255,255,255,.2)',
+                textShadow: '0 0 30px rgba(255,255,255,0.2)',
               }}
             >
               Mes Personnages
             </h1>
             
-            <p
-              className="text-lg text-gray-200 mb-6"
-              style={{ textShadow: '0 0 10px rgba(255,255,255,.3)' }}
-            >
+            <p className="text-lg text-gray-300 font-light">
               {players.length > 0
-                ? `${players.length} personnage${players.length > 1 ? 's' : ''} créé${
-                    players.length > 1 ? 's' : ''
-                  }`
-                : 'Aucun personnage créé'}
+                ? `${players.length} personnage${players.length > 1 ? 's' : ''} prêt${players.length > 1 ? 's' : ''} pour l'aventure`
+                : 'Aucun personnage pour le moment'}
             </p>
 
-            {/* --- BOUTON CAMPAGNES (Resté ici, sous le titre) --- */}
+            {/* --- 3. ACTION PRINCIPALE MJ (En dessous, bien visible) --- */}
             {currentSubscription?.tier === 'game_master' && (
-                <div className="flex justify-center mt-6">
+               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
                     onClick={() => setShowCampaigns(true)}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-8 py-3 rounded-lg font-semibold text-base transition-all shadow-lg border border-white/10 hover:scale-105"
+                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-700 to-orange-800 text-white font-semibold text-lg shadow-xl shadow-orange-900/20 border border-orange-500/20 overflow-hidden transition-all hover:scale-105 hover:shadow-orange-900/40"
                   >
+                    {/* Effet de brillance au survol */}
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    
                     <Scroll size={20} />
-                    Accéder à mes Campagnes
+                    <span>Gérer mes Campagnes</span>
                   </button>
-                </div>
+               </div>
             )}
           </div>
 
