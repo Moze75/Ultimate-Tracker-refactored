@@ -133,8 +133,8 @@ useEffect(() => {
               if (savedChar) {
                 try {
                   const parsed = JSON.parse(savedChar);
-                  setSelectedCharacter(parsed);
                   appContextService.setContext('game');
+                  setShowHomePage(false); // ✅ AJOUT : On force le masquage de la home page
                   console.log('[App] 🎮 Personnage restauré:', parsed.name);
                 } catch (e) {
                   console.error('[App] ❌ Erreur parsing personnage:', e);
