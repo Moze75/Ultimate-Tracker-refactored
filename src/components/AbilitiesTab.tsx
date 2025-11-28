@@ -937,11 +937,12 @@ case 'Magicien':
     );
   };
 
-  const initializeResources = async () => {
+   const initializeResources = async () => {
     if (!player.class) return;
 
     try {
-      const defaultSpellSlots = getSpellSlotsByLevel(player.class, player.level);
+      const pSub = (player as any).subclass || (player as any).sub_class || (player as any).sousClasse;
+      const defaultSpellSlots = getSpellSlotsByLevel(player.class, player.level, null, pSub); // ✅ Ajout subclass
       const defaultClassResources = getDefaultClassResources(player);
 
       const { error } = await supabase
