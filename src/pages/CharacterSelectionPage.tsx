@@ -457,33 +457,36 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
       }}
       >
       
-      {/* --- 1. NAVBAR (RECTANGLE FULL WIDTH) --- */}
-      <div className="w-full bg-black/80 backdrop-blur-xl border-b border-white/10 z-50">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+      {/* --- 1. NAVBAR (RECTANGLE FULL WIDTH TRANSPARENT) --- */}
+      <div className="w-full bg-black/30 backdrop-blur-md border-b border-white/10 z-50 sticky top-0">
+        <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
            
-           {/* GAUCHE : Communauté */}
-           <div className="flex items-center gap-6">
+           {/* GAUCHE : Icônes Communauté (Discord + BMC) */}
+           <div className="flex items-center gap-5">
+              {/* Discord (Icône seule agrandie) */}
               <a 
                  href="https://discord.gg/7zVKwtTe" 
                  target="_blank" 
                  rel="noopener noreferrer"
-                 className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors"
+                 className="hover:scale-110 transition-transform opacity-80 hover:opacity-100"
+                 title="Un bug ? Une question ? Rejoignez-nous sur Discord"
                >
-                  <span>Un bug, une question ?</span>
                   <img 
                     src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Discord%20Logo%20png%20-%20641x220.png" 
                     alt="Discord" 
-                    className="h-4 w-auto brightness-0 invert opacity-60 group-hover:opacity-100 transition-all" 
+                    className="h-7 w-auto brightness-0 invert" 
                   />
                </a>
                
-               <div className="h-4 w-px bg-white/10 hidden md:block"></div>
+               {/* Séparateur vertical discret */}
+               <div className="h-6 w-px bg-white/10"></div>
 
+               {/* Buy Me a Coffee */}
                <a
                 href="https://buymeacoffee.com/mewan44"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:opacity-90 transition-opacity"
+                className="hover:opacity-100 opacity-90 transition-opacity hover:scale-105 transform duration-200"
                 title="Offrir un café au développeur"
               >
                 <img
@@ -494,10 +497,12 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
               </a>
            </div>
 
-           {/* DROITE : Actions Admin */}
+           {/* DROITE : Actions Admin (Abo + Compte) */}
            <div className="flex items-center gap-3">
+               
+               {/* Badge statut abo (visible uniquement sur desktop) */}
                {currentSubscription && (
-                   <span className={`hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider border opacity-70 mr-2 ${
+                   <span className={`hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider border opacity-80 mr-2 ${
                      currentSubscription.status === 'active' 
                      ? 'bg-green-500/5 border-green-500/20 text-green-400' 
                      : 'bg-gray-800/40 border-gray-600/20 text-gray-400'
@@ -506,24 +511,26 @@ export function CharacterSelectionPage({ session, onCharacterSelect }: Character
                   </span>
                )}
 
+               {/* Bouton Abo */}
                <button
                   onClick={() => setShowSubscription(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-xs font-medium transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-gray-200 text-xs font-medium transition-all backdrop-blur-sm"
                 >
-                  <Crown size={14} className="text-purple-400" />
+                  <Crown size={16} className="text-purple-400" />
                   <span className="hidden sm:inline">
                     {currentSubscription?.status === 'expired' || currentSubscription?.status === 'trial' 
-                      ? 'Passer Premium'
-                      : 'Abonnement'
+                      ? 'Premium'
+                      : 'Abo'
                     }
                   </span>
                </button>
 
+               {/* Bouton Compte */}
                <button
                 onClick={() => setShowAccount(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-xs font-medium transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 text-gray-200 text-xs font-medium transition-all backdrop-blur-sm"
               >
-                <Settings size={14} className="text-gray-400" />
+                <Settings size={16} className="text-gray-400" />
                 <span className="hidden sm:inline">Compte</span>
               </button>
            </div>
