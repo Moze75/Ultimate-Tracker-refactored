@@ -209,10 +209,9 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           {[
             { icon: <Users className="w-6 h-6" />, text: "Créez un perso complet, prêt à jouer en 5 minutes" },
             { icon: <Sword className="w-6 h-6" />, text: "Automatisez les combats, les jets, la CA, l’inventaire" },
-            { icon: <Crown className="w-6 h-6" />, text: "Envoyez des loots à vos joueurs en 2 clics" },
             { icon: <Zap className="w-6 h-6" />, text: "Un vrai assistant pour vos parties autour de la table… ou à distance" },
             { icon: <CheckCircle2 className="w-6 h-6" />, text: "Suivi des objets, des états, des sorts, tout centralisé" },
-            /* 2. CARTE MODIFIÉE */
+      { icon: <Crown className="w-6 h-6" />, text: "Envoyez des loots à vos joueurs en 2 clics" },
             { icon: <Download className="w-6 h-6" />, text: "Système 100% connecté : toujours à jour, installable en App (PWA)" }
           ].map((benefit, idx) => (
             <div key={idx} className="flex items-start gap-4 p-6 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/30 transition-all duration-300">
