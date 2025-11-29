@@ -740,16 +740,11 @@ useEffect(() => {
    
 
   /* ---------------- Reload inventaire (sécurité) ---------------- */
-  useEffect(() => {
-    async function loadInventory() {
-      if (!selectedCharacter) return;
-      try {
-        const items = await inventoryService.getPlayerInventory(selectedCharacter.id);
-        setInventory(items);
-      } catch {}
-    }
-    loadInventory();
-  }, [selectedCharacter?.id]);
+  // ✅ SUPPRIMÉ : L'inventaire est maintenant chargé via Realtime subscription
+  // useEffect(() => {
+  //   async function loadInventory() { ... }
+  //   loadInventory();
+  // }, [selectedCharacter?.id]);
 
   /* ---------------- Rendu d'un pane ---------------- */
 
