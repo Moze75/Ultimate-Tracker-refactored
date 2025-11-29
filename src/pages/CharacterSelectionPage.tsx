@@ -423,6 +423,8 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
       }
 
       setPlayers((prev) => prev.filter((p) => p.id !== character.id));
+      // ✅ Invalider le cache après suppression
+      localStorage.removeItem(`ut:players-list:ts:${session. user.id}`);
       setDeletingCharacter(null);
       setDeleteConfirmation('');
 
