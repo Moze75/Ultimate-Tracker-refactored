@@ -550,9 +550,18 @@ const inventoryService = {
         .single();
 
       if (error) throw error;
+      
+      // ✅ Invalider le cache après ajout
+      if (data && item.player_id) {
+        localStorage.removeItem(`ut:inventory:ts:${item.player_id}`);
+        window.dispatchEvent(new CustomEvent('inventory:refresh', { 
+          detail: { playerId: item.player_id } 
+        }));
+      }
+      
       return data;
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'objet:', error);
+      console. error('Erreur lors de l\'ajout de l\'objet:', error);
       return null;
     }
   },
