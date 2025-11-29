@@ -121,15 +121,22 @@ export function InventoryList({
   const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
   const handleDelete = async (item: InventoryItem) => {
-    if (!window.confirm('Supprimer cet objet ?')) return;
+    if (!window.confirm('Supprimer cet objet ? ')) return;
     try {
-      const { error } = await supabase.from('inventory_items').delete().eq('id', item.id);
+      const { error } = await supabase.from('inventory_items'). delete().eq('id', item.id);
       if (error) throw error;
-      onInventoryUpdate(inventory.filter(i => i.id !== item.id));
+      
+      // ✅ Invalider le cache après suppression
+      const playerId = (item as any).player_id;
+      if (playerId) {
+        localStorage.removeItem(`ut:inventory:ts:${playerId}`);
+      }
+      
+      onInventoryUpdate(inventory. filter(i => i.id !== item. id));
       toast.success('Objet supprimé');
     } catch (e) {
       console.error(e);
-      toast.error('Erreur suppression');
+      toast. error('Erreur suppression');
     }
   };
 
