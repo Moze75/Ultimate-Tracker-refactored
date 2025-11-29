@@ -762,11 +762,11 @@ export function EquipmentTab({
       )}
 
       {showCustom && (
-        <CustomItemModal
+         <CustomItemModal
           onClose={() => setShowCustom(false)}
           onAdd={async (payload) => {
             try {
-              const finalDesc = injectMetaIntoDescription(payload.description || '', { ...payload.meta, equipped: false });
+              const finalDesc = injectMetaIntoDescription(payload.description || '', { ...payload. meta, equipped: false });
               const { data, error } = await supabase
                 .from('inventory_items')
                 .insert([{
@@ -777,7 +777,11 @@ export function EquipmentTab({
                 .select()
                 .single();
               if (error) throw error;
-              if (data) onInventoryUpdate([...inventory, data]);
+              if (data) {
+                onInventoryUpdate([...inventory, data]);
+                // ✅ Invalider le cache après ajout
+                localStorage.removeItem(`ut:inventory:ts:${player.id}`);
+              }
               toast.success('Objet personnalisé ajouté');
             } catch (e) {
               console.error(e);
