@@ -204,11 +204,11 @@ if (prevHash) {
     }
   };
 
-  // Premier check immédiat
-  checkForNewItems();
+// Premier check immédiat
+checkForNewItems();
 
-  // Puis check toutes les 2 secondes
-  pollingIntervalRef.current = setInterval(checkForNewItems, 2000);
+// ✅ OPTIMISÉ : Polling toutes les 30 secondes au lieu de 2
+pollingIntervalRef.current = setInterval(checkForNewItems, 30000);
 
   return () => {
     console.log('🧹 Arrêt du polling');
