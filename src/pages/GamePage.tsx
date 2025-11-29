@@ -441,6 +441,35 @@ useEffect(() => {
   }, [selectedCharacter.id]);
 
   /* ---------------- Initialisation ---------------- */
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        setLoading(true);
+        setConnectionError(null);
+        
+        // ✅ OPTIMISÉ : Plus de testConnection() - on laisse le fetch inventaire 
+        // (via Realtime) gérer les erreurs de connexion
+        
+        setCurrentPlayer((prev) =>
+          prev && prev.id === selectedCharacter. id ?  prev : selectedCharacter
+        );
+        
+        // Note: L'inventaire est maintenant chargé via le useEffect Realtime
+        setLoading(false);
+      } catch (error: any) {
+        console.error('Erreur d\'initialisation:', error);
+        setConnectionError(error?. message ??  'Erreur inconnue');
+        setLoading(false);
+      }
+    };
+
+    if (prevPlayerId. current !== selectedCharacter.id) {
+      prevPlayerId.current = selectedCharacter.id;
+      initialize();
+    } else if (loading) {
+      initialize();
+    }
+  }, [selectedCharacter. id, loading]);
  
  
   /* ---------------- Préchargement Sections Classe ---------------- */
