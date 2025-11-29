@@ -1231,7 +1231,7 @@ const fetchKnownSpells = async (forceRefresh = false) => {
   const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
   
   // 1. Vérifier le cache localStorage d'abord (sauf si forceRefresh)
-  if (!forceRefresh) {
+  if (! forceRefresh) {
     try {
       const cachedData = localStorage. getItem(CACHE_KEY);
       const cachedTimestamp = localStorage.getItem(CACHE_TS_KEY);
@@ -1241,16 +1241,30 @@ const fetchKnownSpells = async (forceRefresh = false) => {
         
         if (age < CACHE_TTL) {
           const parsed = JSON.parse(cachedData);
-          setKnownSpells(parsed);
-          setLoading(false);
-          console.log('[fetchKnownSpells] ✅ Sorts chargés depuis cache:', parsed. length);
-          return;
+          
+          // ✅ VALIDATION : Vérifier que les données sont bien formatées
+          const isValid = Array.isArray(parsed) && parsed.every((s: any) => 
+            s. spell_name && typeof s.spell_level === 'number'
+          );
+          
+          if (isValid) {
+            setKnownSpells(parsed);
+            setLoading(false);
+            console.log('[fetchKnownSpells] ✅ Sorts chargés depuis cache:', parsed. length);
+            return;
+          } else {
+            console.warn('[fetchKnownSpells] ⚠️ Cache invalide, refetch forcé');
+            localStorage.removeItem(CACHE_KEY);
+            localStorage.removeItem(CACHE_TS_KEY);
+          }
         }
       }
     } catch (e) {
       console.warn('[fetchKnownSpells] Erreur lecture cache:', e);
     }
   }
+  
+  // ...  reste du code inchangé
   
   // 2. Fetch depuis Supabase
   try {
