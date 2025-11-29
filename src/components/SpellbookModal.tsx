@@ -89,86 +89,17 @@ export function SpellbookModal({
   const [showAllClasses, setShowAllClasses] = useState(false);
   const [totalSpellsCount, setTotalSpellsCount] = useState(0);
  
-   // ✅ OPTIMISÉ : Cache des sorts en mémoire + localStorage
+   // Charger les sorts depuis le Markdown 2024 hébergé sur GitHub
   useEffect(() => {
-    const SPELLS_CACHE_KEY = 'ut:spells:2024';
-    const SPELLS_CACHE_TTL = 1000 * 60 * 60 * 24; // 24 heures
-    
     const loadSpells = async () => {
-      if (! isOpen) return;
+      if (!isOpen) return;
       
-      // 1. Vérifier le cache localStorage d'abord
-      try {
-        const cachedData = localStorage.getItem(SPELLS_CACHE_KEY);
-        const cachedTimestamp = localStorage.getItem(`${SPELLS_CACHE_KEY}:ts`);
-        
-        if (cachedData && cachedTimestamp) {
-          const age = Date.now() - parseInt(cachedTimestamp, 10);
-          
-          if (age < SPELLS_CACHE_TTL) {
-            const parsed = JSON.parse(cachedData);
-            setSpells(parsed);
-            setTotalSpellsCount(parsed. length);
-            setLoading(false);
-            console.log('[SpellbookModal] ✅ Sorts chargés depuis le cache:', parsed.length);
-            return; // ✅ Pas de requête réseau ! 
-          }
-        }
-      } catch (e) {
-        console.warn('[SpellbookModal] Erreur lecture cache:', e);
-      }
-      
-      // 2.  Cache expiré ou absent : fetch depuis GitHub
       setLoading(true);
       try {
-        console.log('[SpellbookModal] 🔄 Chargement des sorts depuis GitHub...');
+        console.log('[SpellbookModal] Chargement des sorts depuis GitHub RAW...');
         const res = await fetch(
           'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Sorts/Sorts%202024.md'
-        );
-
-        if (! res.ok) {
-          throw new Error(`Échec du chargement: ${res.status}`);
-        }
-
-        const text = await res.text();
-        const parsedSpells = parseSpellsFromMarkdown(text);
-        
-        // Sauvegarder dans le cache
-        try {
-          localStorage. setItem(SPELLS_CACHE_KEY, JSON.stringify(parsedSpells));
-          localStorage.setItem(`${SPELLS_CACHE_KEY}:ts`, Date.now().toString());
-          console.log('[SpellbookModal] 💾 Sorts mis en cache:', parsedSpells.length);
-        } catch (e) {
-          console.warn('[SpellbookModal] Erreur sauvegarde cache:', e);
-        }
-        
-        setTotalSpellsCount(parsedSpells.length);
-        setSpells(parsedSpells);
-      } catch (error) {
-        console.error('[SpellbookModal] Erreur, fallback SAMPLE_SPELLS:', error);
-        
-        // Fallback : essayer le cache même expiré
-        try {
-          const cachedData = localStorage. getItem(SPELLS_CACHE_KEY);
-          if (cachedData) {
-            const parsed = JSON.parse(cachedData);
-            setSpells(parsed);
-            setTotalSpellsCount(parsed.length);
-            console.log('[SpellbookModal] 📴 Utilisation du cache expiré');
-            setLoading(false);
-            return;
-          }
-        } catch {}
-        
-        setTotalSpellsCount(SAMPLE_SPELLS.length);
-        setSpells(SAMPLE_SPELLS);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadSpells();
-  }, [isOpen]);
+        ); 
 
         if (!res.ok) {
           throw new Error(`Échec du chargement du fichier de sorts: ${res.status}`);
