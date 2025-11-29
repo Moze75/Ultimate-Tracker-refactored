@@ -442,9 +442,9 @@ useEffect(() => {
     setActiveTab(saved);
   }, [selectedCharacter.id]);
 
-
+  /* ---------------- Initialisation ---------------- */
  
-
+ 
   /* ---------------- Préchargement Sections Classe ---------------- */
   useEffect(() => {
     let cancelled = false;
@@ -940,7 +940,7 @@ return (
                 className="w-full btn-primary px-4 py-2 rounded-lg"
               >
                 Réessayer
-              </button 
+              </button>
             </div>
           </div>
         );
