@@ -118,12 +118,15 @@ interface KnownSpellsSectionProps {
 }
 
 // Utilitaire pour formater les composantes de sort
-const getComponentsText = (components: { V: boolean; S: boolean; M: string | null }) => {
+const getComponentsText = (components: { V: boolean; S: boolean; M: string | null } | null | undefined) => {
+  // ✅ Sécurité : si components est undefined/null, retourner une chaîne vide
+  if (!components) return '—';
+  
   const parts: string[] = [];
   if (components.V) parts.push('V');
   if (components.S) parts.push('S');
-  if (components.M) parts.push(`M (${components.M})`);
-  return parts.join(', ');
+  if (components.M) parts. push(`M (${components.M})`);
+  return parts.length > 0 ? parts.join(', ') : '—';
 };
 
 // Helpers D&D (DD des sorts)
