@@ -1326,12 +1326,28 @@ const fetchKnownSpells = async () => {
     }
   }, [player.id]); // ✅ Ajout de la dépendance
 
-  const togglePrepared = useCallback(async (spellId: string, isPrepared: boolean) => {
+    const togglePrepared = useCallback(async (spellId: string, isPrepared: boolean) => {
     try {
-      const { error } = await supabase.from('player_spells').update({ is_prepared: !isPrepared }).eq('id', spellId);
+      const { error } = await supabase.from('player_spells').update({ is_prepared: ! isPrepared }).eq('id', spellId);
       if (error) throw error;
-      setKnownSpells((prev) => prev.map((s) => (s.id === spellId ? { ...s, is_prepared: !isPrepared } : s)));
-      toast.success(`✨ Sort ${isPrepared ? 'dépréparé' : 'préparé'}`);
+      setKnownSpells((prev) => prev. map((s) => (s.id === spellId ? { ...s, is_prepared: !isPrepared } : s)));
+      
+      // ✅ Mettre à jour le cache local directement (sans refetch)
+      const CACHE_KEY = `ut:known-spells:${player.id}`;
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const updated = parsed.map((s: any) => 
+            s.id === spellId ?  { ...s, is_prepared: !isPrepared } : s
+          );
+          localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+        }
+      } catch (e) {
+        console.warn('[KnownSpellsSection] Erreur MAJ cache:', e);
+      }
+      
+      toast.success(`✨ Sort ${isPrepared ?  'dépréparé' : 'préparé'}`);
     } catch (err) {
       console.error('Erreur MAJ préparation:', err);
       toast.error('Erreur lors de la mise à jour');
