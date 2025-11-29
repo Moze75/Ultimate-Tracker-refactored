@@ -318,7 +318,9 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
       setCreating(true);
       const newPlayer = await createCharacterFromCreatorPayload(session, payload);
       setPlayers((prev) => [...prev, newPlayer]);
-      toast.success('Nouveau personnage créé !');
+      // ✅ Invalider le cache après création
+      localStorage. removeItem(`ut:players-list:ts:${session.user.id}`);
+      toast.success('Nouveau personnage créé ! ');
 
       appContextService.clearWizardSnapshot();
       appContextService.setContext('game');
