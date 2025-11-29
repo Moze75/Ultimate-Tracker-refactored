@@ -944,20 +944,9 @@ return (
                 onClick={() => {
                   setConnectionError(null);
                   setLoading(true);
-                  (async () => {
-                    try {
-                      const isConnected = await testConnection();
-                      if (!isConnected.success) throw new Error('Impossible de se connecter');
-                      const inventoryData = await inventoryService.getPlayerInventory(selectedCharacter.id);
-                      setInventory(inventoryData);
-                      setCurrentPlayer(selectedCharacter);
-                      setLoading(false);
-                    } catch (e: any) {
-                      console.error(e);
-                      setConnectionError(e?.message ?? 'Erreur inconnue');
-                      setLoading(false);
-                    }
-                  })();
+                  // ✅ OPTIMISÉ : Simple reload, le Realtime se reconnectera
+                  setCurrentPlayer(selectedCharacter);
+                  setLoading(false);
                 }}
                 className="w-full btn-primary px-4 py-2 rounded-lg"
               >
