@@ -1352,7 +1352,7 @@ const fetchKnownSpells = async () => {
       console.error('Erreur MAJ préparation:', err);
       toast.error('Erreur lors de la mise à jour');
     }
-  }, []);
+  }, [player.id]);
 
   // Filtre / groupe
   const { filteredSpells, preparedCount } = useMemo(() => {
