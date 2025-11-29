@@ -16,6 +16,37 @@ const SKIP_AUTO_RESUME_ONCE = 'ut:skipAutoResumeOnce';
 const MAX_RETRIES = 1; // ✅ MODIFIÉ : 1 seul essai au lieu de 3
 const RETRY_DELAY = 1000; // ✅ 1 seconde au lieu de 1.5
 
+// ✅ Helper pour le cache player avec TTL
+const PLAYER_CACHE_KEY = (id: string) => `ut:player:${id}`;
+const PLAYER_CACHE_TS_KEY = (id: string) => `ut:player:ts:${id}`;
+const PLAYER_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+const getCachedPlayer = (playerId: string): Player | null => {
+  try {
+    const cached = localStorage.getItem(PLAYER_CACHE_KEY(playerId));
+    const ts = localStorage.getItem(PLAYER_CACHE_TS_KEY(playerId));
+    
+    if (cached && ts) {
+      const age = Date.now() - parseInt(ts, 10);
+      if (age < PLAYER_CACHE_TTL) {
+        return JSON.parse(cached);
+      }
+    }
+  } catch {}
+  return null;
+};
+
+const setCachedPlayer = (player: Player) => {
+  try {
+    localStorage. setItem(PLAYER_CACHE_KEY(player.id), JSON.stringify(player));
+    localStorage. setItem(PLAYER_CACHE_TS_KEY(player.id), Date.now().toString());
+  } catch {}
+};
+
+const invalidatePlayerCache = (playerId: string) => {
+  localStorage. removeItem(PLAYER_CACHE_TS_KEY(playerId));
+};
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
