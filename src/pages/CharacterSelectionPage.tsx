@@ -191,27 +191,91 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
     }
   };
 
-  const fetchPlayers = async () => {
+   const fetchPlayers = async () => {
     if (playersLoadedRef.current) {
       setLoading(false);
       return;
     }
 
+    const PLAYERS_LIST_CACHE_KEY = `ut:players-list:${session. user.id}`;
+    const PLAYERS_LIST_CACHE_TS_KEY = `ut:players-list:ts:${session.user.id}`;
+    const PLAYERS_LIST_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+    // 1. Vérifier le cache localStorage d'abord
+    try {
+      const cachedData = localStorage.getItem(PLAYERS_LIST_CACHE_KEY);
+      const cachedTimestamp = localStorage.getItem(PLAYERS_LIST_CACHE_TS_KEY);
+      
+      if (cachedData && cachedTimestamp) {
+        const age = Date.now() - parseInt(cachedTimestamp, 10);
+        
+        if (age < PLAYERS_LIST_CACHE_TTL) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPlayers(parsed);
+            playersLoadedRef. current = true;
+            setLoading(false);
+            console.log('[CharacterSelection] ✅ Players chargés depuis cache:', parsed.length);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[CharacterSelection] Erreur lecture cache:', e);
+    }
+
+    // 2. Fetch depuis Supabase avec colonnes optimisées
     try {
       setLoading(true);
       
+      // ✅ OPTIMISÉ : Ne récupérer que les colonnes nécessaires pour l'affichage
       const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: true });
+        . from('players')
+        .select(`
+          id,
+          name,
+          adventurer_name,
+          class,
+          level,
+          race,
+          current_hp,
+          max_hp,
+          temporary_hp,
+          avatar_url,
+          secondary_class,
+          secondary_level,
+          created_at
+        `)
+        . eq('user_id', session.user. id)
+        . order('created_at', { ascending: true });
 
       if (error) throw error;
       
-      setPlayers(data || []);
+      const players = data || [];
+      
+      // Sauvegarder dans le cache
+      try {
+        localStorage. setItem(PLAYERS_LIST_CACHE_KEY, JSON. stringify(players));
+        localStorage.setItem(PLAYERS_LIST_CACHE_TS_KEY, Date.now().toString());
+        console.log('[CharacterSelection] 💾 Players mis en cache:', players. length);
+      } catch (e) {
+        console.warn('[CharacterSelection] Erreur sauvegarde cache:', e);
+      }
+      
+      setPlayers(players);
       playersLoadedRef.current = true;
     } catch (error: any) {
       console.error('Erreur lors de la récupération des personnages:', error);
+      
+      // Fallback : utiliser le cache même expiré
+      try {
+        const cachedData = localStorage. getItem(PLAYERS_LIST_CACHE_KEY);
+        if (cachedData) {
+          setPlayers(JSON. parse(cachedData));
+          console. log('[CharacterSelection] 📴 Utilisation du cache expiré');
+        }
+      } catch {}
+      
       toast.error('Erreur lors de la récupération des personnages');
     } finally {
       setLoading(false);
