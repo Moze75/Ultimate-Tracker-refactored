@@ -183,15 +183,15 @@ useEffect(() => {
           } else {
             if (sessionStorage.getItem(SKIP_AUTO_RESUME_ONCE) === '1') {
               sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
-            } else {
+             } else {
               const savedChar = localStorage.getItem(LAST_SELECTED_CHARACTER_SNAPSHOT);
               if (savedChar) {
                 try {
                   const parsed = JSON.parse(savedChar);
-                  setSelectedCharacter(parsed);
+                  setSelectedCharacter(parsed); // ✅ FIX : Restaurer le personnage ! 
                   appContextService.setContext('game');
-                  setShowHomePage(false); // ✅ AJOUT : On force le masquage ici aussi
-                  console.log('[App] 🎮 Personnage restauré (auth change):', parsed.name);
+                  setShowHomePage(false);
+                  console.log('[App] 🎮 Personnage restauré:', parsed.name);
                 } catch (e) {
                   console.error('[App] ❌ Erreur parsing (auth change):', e);
                 }
