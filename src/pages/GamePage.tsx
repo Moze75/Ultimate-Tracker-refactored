@@ -442,36 +442,8 @@ useEffect(() => {
     setActiveTab(saved);
   }, [selectedCharacter.id]);
 
-  /* ---------------- Initialisation ---------------- */
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        setLoading(true);
-        setConnectionError(null);
-        const isConnected = await testConnection();
-        if (!isConnected.success) throw new Error('Impossible de se connecter à la base de données');
 
-        setCurrentPlayer((prev) =>
-          prev && prev.id === selectedCharacter.id ? prev : selectedCharacter
-        );
-        const inventoryData = await inventoryService.getPlayerInventory(selectedCharacter.id);
-        setInventory(inventoryData);
-        setLoading(false);
-      } catch (error: any) {
-        console.error('Erreur d\'initialisation:', error);
-        setConnectionError(error?.message ?? 'Erreur inconnue');
-        setLoading(false);
-      }
-    };
-
-    if (prevPlayerId.current !== selectedCharacter.id) {
-      prevPlayerId.current = selectedCharacter.id;
-      initialize();
-    } else if (loading) {
-      initialize();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCharacter.id]);
+ 
 
   /* ---------------- Préchargement Sections Classe ---------------- */
   useEffect(() => {
