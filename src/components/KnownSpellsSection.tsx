@@ -1221,96 +1221,94 @@ useEffect(() => {
 }, [player.id]);
 
 
-  
- 
 
-
-
-const fetchKnownSpells = async () => {
+const fetchKnownSpells = async (forceRefresh = false) => {
+    const CACHE_KEY = `ut:known-spells:${player.id}`;
+    const CACHE_TS_KEY = `ut:known-spells:ts:${player.id}`;
+    const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+    
+    // 1.  Vérifier le cache localStorage d'abord (sauf si forceRefresh)
+    if (! forceRefresh) {
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(CACHE_TS_KEY);
+        
+        if (cachedData && cachedTimestamp) {
+          const age = Date.now() - parseInt(cachedTimestamp, 10);
+          
+          if (age < CACHE_TTL) {
+            const parsed = JSON.parse(cachedData);
+            setKnownSpells(parsed);
+            setLoading(false);
+            console.log('[KnownSpellsSection] ✅ Sorts chargés depuis cache:', parsed.length);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('[KnownSpellsSection] Erreur lecture cache:', e);
+      }
+    }
+    
+    // 2.  Fetch depuis Supabase
     try {
       setLoading(true);
       const { data, error } = await supabase 
         .from('player_spells')
-        .select(
-          `
+        .select(`
           id,
           player_id,
           spell_id,
           is_prepared,
           created_at,
           spells ( id, name, level, school, casting_time, range, components, duration, description, higher_levels )
-        `
-        )
+        `)
         .eq('player_id', player.id)
         .order('created_at', { ascending: false });
+        
       if (error) throw error;
 
       const transformed: KnownSpell[] = (data || []).map((item: any) => ({
         id: item.id,
-        player_id: item.player_id,
+        player_id: item. player_id,
         spell_id: item.spell_id,
-        spell_name: item.spells.name,
-        spell_level: item.spells.level,
+        spell_name: item. spells. name,
+        spell_level: item. spells.level,
         spell_school: item.spells.school,
         spell_description: item.spells.description,
-        spell_casting_time: item.spells.casting_time,
-        spell_range: item.spells.range,
+        spell_casting_time: item. spells.casting_time,
+        spell_range: item. spells.range,
         spell_duration: item.spells.duration,
         spell_components: item.spells.components,
         spell_higher_levels: item.spells.higher_levels,
-        is_prepared: item.is_prepared,
+        is_prepared: item. is_prepared,
         created_at: item.created_at,
-      })); 
+      }));
 
-   // 👉 AJOUTE CE LOG
-    console.log('[fetchKnownSpells] Sorts chargés:', transformed);
+      // Sauvegarder dans le cache
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(transformed));
+        localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+        console. log('[KnownSpellsSection] 💾 Sorts mis en cache:', transformed.length);
+      } catch (e) {
+        console.warn('[KnownSpellsSection] Erreur sauvegarde cache:', e);
+      }
       
       setKnownSpells(transformed);
     } catch (err) {
       console.error('Erreur sorts connus:', err);
+      
+      // Fallback : utiliser le cache même expiré
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          setKnownSpells(JSON.parse(cachedData));
+          console.log('[KnownSpellsSection] 📴 Utilisation du cache expiré');
+        }
+      } catch {}
+      
       toast.error('Erreur lors de la récupération des sorts connus');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSpellsSelected = async (spells: Spell[]) => {
-    try {
-      const spellIds = spells.map((s) => s.id);
-      const { data: existing } = await supabase.from('spells').select('id').in('id', spellIds);
-      const existIds = new Set((existing || []).map((s: any) => s.id));
-      const toInsert = spells
-        .filter((spell) => !existIds.has(spell.id))
-        .map((spell) => ({
-          id: spell.id,
-          name: spell.name,
-          level: spell.level,
-          school: spell.school,
-          casting_time: spell.casting_time,
-          range: spell.range,
-          components: spell.components,
-          duration: spell.duration,
-          description: spell.description,
-          higher_levels: spell.higher_levels || null,
-        }));
-      if (toInsert.length > 0) {
-        await supabase.from('spells').upsert(toInsert, { onConflict: 'id', ignoreDuplicates: true });
-      }
-      const links = spells.map((spell) => ({
-        player_id: player.id,
-        spell_id: spell.id,
-        is_prepared: false,
-      }));
-      const { error: linkErr } = await supabase
-        .from('player_spells')
-        .upsert(links, { onConflict: 'player_id,spell_id', ignoreDuplicates: true });
-      if (linkErr) throw linkErr;
-
-      await fetchKnownSpells();
-      toast.success(`✨ ${spells.length} sort${spells.length > 1 ? 's' : ''} ajouté${spells.length > 1 ? 's' : ''}`);
-    } catch (err) {
-      console.error("Erreur d'ajout des sorts:", err);
-      toast.error("Erreur lors de l'ajout des sorts");
     }
   };
 
