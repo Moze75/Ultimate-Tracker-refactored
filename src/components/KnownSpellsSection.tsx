@@ -1302,10 +1302,10 @@ const fetchKnownSpells = async () => {
         .upsert(links, { onConflict: 'player_id,spell_id', ignoreDuplicates: true });
       if (linkErr) throw linkErr;
 
-           // ✅ Invalider le cache puis refetch
+          // ✅ Invalider le cache puis refetch
       localStorage.removeItem(`ut:known-spells:ts:${player.id}`);
       await fetchKnownSpells(true); // forceRefresh = true
-      toast.success(`✨ ${spells.length} sort${spells.length > 1 ?  's' : ''} ajouté${spells.length > 1 ? 's' : ''}`);> 1 ? 's' : ''}`);
+      toast.success(`✨ ${spells.length} sort${spells.length > 1 ?  's' : ''} ajouté${spells.length > 1 ? 's' : ''}`);
     } catch (err) {
       console.error("Erreur d'ajout des sorts:", err);
       toast.error("Erreur lors de l'ajout des sorts");
