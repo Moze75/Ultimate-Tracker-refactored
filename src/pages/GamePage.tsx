@@ -148,22 +148,56 @@ const rollDice = useCallback((data: {
   setDiceRollData(data);
 }, []);
 
-  // --- START: Realtime subscription for inventory_items (GamePage) ---
-  // ✅ OPTIMISÉ : Utilise Realtime au lieu du polling (0 egress pour les updates)
+   // --- START: Inventory avec cache local (GamePage) ---
+  // ✅ OPTIMISÉ : Cache localStorage + fetch uniquement si nécessaire
+
+const INVENTORY_CACHE_KEY = `ut:inventory:${currentPlayer?.id}`;
+const INVENTORY_CACHE_TTL = 1000 * 60 * 60; // 1 heure de validité du cache
 
 useEffect(() => {
-  if (!currentPlayer?.id) return;
+  if (! currentPlayer?. id) return;
 
-  console.log('📡 Activation Realtime pour inventaire player:', currentPlayer.id);
+  const cacheKey = `ut:inventory:${currentPlayer.id}`;
+  const cacheTimestampKey = `ut:inventory:ts:${currentPlayer. id}`;
 
-  // Fonction de fetch réutilisable
-  const fetchInventory = async () => {
-    if (!navigator.onLine) return;
-    
+  const loadInventory = async () => {
+    // 1. Essayer de charger depuis le cache local d'abord
     try {
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
+      
+      if (cachedData && cachedTimestamp) {
+        const age = Date.now() - parseInt(cachedTimestamp, 10);
+        
+        // Si le cache a moins d'1 heure, l'utiliser directement
+        if (age < INVENTORY_CACHE_TTL) {
+          const parsed = JSON.parse(cachedData);
+          setInventory(parsed);
+          console.log('📦 Inventaire chargé depuis cache local:', parsed. length, 'items');
+          return; // ✅ Pas de requête Supabase ! 
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Erreur lecture cache inventaire:', e);
+    }
+
+    // 2. Cache expiré ou absent : fetch depuis Supabase
+    if (! navigator.onLine) {
+      console.log('📴 Offline - utilisation du cache même expiré');
+      try {
+        const cachedData = localStorage. getItem(cacheKey);
+        if (cachedData) {
+          setInventory(JSON. parse(cachedData));
+        }
+      } catch {}
+      return;
+    }
+
+    try {
+      console.log('🔄 Fetch inventaire depuis Supabase.. .');
       const { data, error } = await supabase
         .from('inventory_items')
-        . select('id, name, quantity, type, rarity, equipped, slot, description, weight, value, attunement, properties, damage, damage_type, ac_bonus, created_at')
+        .select('*')
         .eq('player_id', currentPlayer.id)
         .order('created_at', { ascending: false });
 
@@ -174,68 +208,67 @@ useEffect(() => {
 
       if (data) {
         setInventory(data);
-        console. log('📦 Inventaire chargé:', data. length, 'items');
+        // Sauvegarder dans le cache
+        try {
+          localStorage. setItem(cacheKey, JSON.stringify(data));
+          localStorage.setItem(cacheTimestampKey, Date.now().toString());
+          console.log('💾 Inventaire mis en cache:', data.length, 'items');
+        } catch (e) {
+          console.warn('⚠️ Erreur sauvegarde cache:', e);
+        }
       }
     } catch (err) {
       console.error('💥 Erreur fetch inventaire:', err);
     }
   };
 
-  // Fetch initial (une seule fois au montage)
-  fetchInventory();
-
-  // ✅ Subscription Realtime (ne consomme PAS d'egress)
-  const channel = supabase
-    .channel(`inventory-changes-${currentPlayer. id}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*', // INSERT, UPDATE, DELETE
-        schema: 'public',
-        table: 'inventory_items',
-        filter: `player_id=eq.${currentPlayer.id}`,
-      },
-      (payload) => {
-        console.log('📡 Changement inventaire détecté:', payload. eventType);
-        
-        // Optimisation : update local au lieu de refetch complet
-        if (payload.eventType === 'INSERT' && payload.new) {
-          setInventory(prev => [payload.new as any, ...prev]);
-        } else if (payload. eventType === 'DELETE' && payload.old) {
-          setInventory(prev => prev.filter(item => item.id !== (payload.old as any).id));
-        } else if (payload. eventType === 'UPDATE' && payload. new) {
-          setInventory(prev => prev.map(item => 
-            item. id === (payload. new as any).id ?  payload.new as any : item
-          ));
-        }
-      }
-    )
-    .subscribe((status) => {
-      console.log('📡 Realtime subscription status:', status);
-    });
-
-  return () => {
-    console.log('🧹 Désabonnement Realtime inventaire');
-    supabase. removeChannel(channel);
-  };
+  loadInventory();
 }, [currentPlayer?.id]);
 
-// Event custom pour refresh forcé depuis CampaignPlayerModal
+// ✅ Sauvegarder le cache à chaque modification locale de l'inventaire
+useEffect(() => {
+  if (!currentPlayer?.id || inventory.length === 0) return;
+  
+  const cacheKey = `ut:inventory:${currentPlayer.id}`;
+  const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
+  
+  try {
+    localStorage. setItem(cacheKey, JSON.stringify(inventory));
+    localStorage.setItem(cacheTimestampKey, Date.now().toString());
+  } catch (e) {
+    console. warn('⚠️ Erreur mise à jour cache inventaire:', e);
+  }
+}, [inventory, currentPlayer?. id]);
+
+// Event custom pour refresh forcé depuis CampaignPlayerModal ou après ajout/suppression
 useEffect(() => {
   const handleRefreshRequest = async (e: CustomEvent) => {
-    if (e.detail?.playerId === currentPlayer?.id) {
-      console.log('⚡ Refresh forcé demandé');
-      // Refetch manuel si demandé explicitement
-      const { data } = await supabase
-        .from('inventory_items')
-        .select('id, name, quantity, type, rarity, equipped, slot, description, weight, value, attunement, properties, damage, damage_type, ac_bonus, created_at')
-        .eq('player_id', currentPlayer! .id)
-        .order('created_at', { ascending: false });
-      if (data) setInventory(data);
+    if (e.detail?. playerId === currentPlayer?. id) {
+      console.log('⚡ Refresh forcé demandé - invalidation du cache');
+      
+      // Invalider le cache
+      const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
+      localStorage.removeItem(cacheTimestampKey);
+      
+      // Refetch
+      if (navigator.onLine) {
+        const { data } = await supabase
+          .from('inventory_items')
+          .select('*')
+          .eq('player_id', currentPlayer.id)
+          .order('created_at', { ascending: false });
+        
+        if (data) {
+          setInventory(data);
+          const cacheKey = `ut:inventory:${currentPlayer.id}`;
+          localStorage. setItem(cacheKey, JSON.stringify(data));
+          localStorage.setItem(cacheTimestampKey, Date.now().toString());
+        }
+      }
     }
   };
 
-  window. addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
+  window.addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
   
   return () => {
     window.removeEventListener('inventory:refresh', handleRefreshRequest as EventListener);
