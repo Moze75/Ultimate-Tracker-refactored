@@ -732,19 +732,23 @@ export function EquipmentTab({
           onClose={() => { setShowList(false); setAllowedKinds(null); }}
           onAddItem={async (payload) => {
             try {
-              const meta: ItemMeta = { ...(payload.meta as any), equipped: false };
+              const meta: ItemMeta = { ...(payload. meta as any), equipped: false };
               const finalDesc = injectMetaIntoDescription(payload.description || '', meta);
               const { data, error } = await supabase
-                .from('inventory_items')
+                . from('inventory_items')
                 .insert([{
                   player_id: player.id,
-                  name: smartCapitalize(payload.name),
+                  name: smartCapitalize(payload. name),
                   description: finalDesc
                 }])
                 .select()
                 .single();
               if (error) throw error;
-              if (data) onInventoryUpdate([...inventory, data]);
+              if (data) {
+                onInventoryUpdate([...inventory, data]);
+                // ✅ Invalider le cache après ajout
+                localStorage.removeItem(`ut:inventory:ts:${player.id}`);
+              }
             } catch (e) {
               console.error(e);
               toast.error('Erreur ajout équipement');
