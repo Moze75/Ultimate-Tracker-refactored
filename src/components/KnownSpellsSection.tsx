@@ -1320,11 +1320,11 @@ const fetchKnownSpells = async () => {
       // ✅ Invalider le cache après suppression
       localStorage. removeItem(`ut:known-spells:ts:${player. id}`);
       toast.success('Sort retiré de vos sorts connus');
-    } catch (err) {
+     } catch (err) {
       console.error('Erreur suppression sort:', err);
       toast.error('Erreur lors de la suppression du sort');
     }
-  }, []);
+  }, [player.id]); // ✅ Ajout de la dépendance
 
   const togglePrepared = useCallback(async (spellId: string, isPrepared: boolean) => {
     try {
