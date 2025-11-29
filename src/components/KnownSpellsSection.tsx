@@ -1260,10 +1260,8 @@ const fetchKnownSpells = async (forceRefresh = false) => {
         spell_id,
         is_prepared,
         created_at,
-. select(`
-  id, player_id, spell_id, is_prepared, created_at,
-  spells ( id, name, level, school, casting_time, range, duration )
-`)
+        spells ( id, name, level, school, casting_time, range, components, duration, description, higher_levels )
+      `) 
       .eq('player_id', player.id)
       .order('created_at', { ascending: false });
       
