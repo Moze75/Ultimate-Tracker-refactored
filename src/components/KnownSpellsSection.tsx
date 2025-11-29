@@ -1312,11 +1312,13 @@ const fetchKnownSpells = async () => {
     }
   };
 
-  const removeKnownSpell = useCallback(async (spellId: string) => {
+    const removeKnownSpell = useCallback(async (spellId: string) => {
     try {
       const { error } = await supabase.from('player_spells').delete().eq('id', spellId);
       if (error) throw error;
       setKnownSpells((prev) => prev.filter((s) => s.id !== spellId));
+      // ✅ Invalider le cache après suppression
+      localStorage. removeItem(`ut:known-spells:ts:${player. id}`);
       toast.success('Sort retiré de vos sorts connus');
     } catch (err) {
       console.error('Erreur suppression sort:', err);
