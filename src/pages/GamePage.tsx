@@ -149,100 +149,98 @@ const rollDice = useCallback((data: {
 }, []);
 
   // --- START: Realtime subscription for inventory_items (GamePage) ---
-const lastInventoryCheckRef = useRef<string | null>(null);
-const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-const isPollingActiveRef = useRef(false);
+  // ✅ OPTIMISÉ : Utilise Realtime au lieu du polling (0 egress pour les updates)
 
 useEffect(() => {
-  if (!currentPlayer?.id || isPollingActiveRef.current) return;
-  isPollingActiveRef.current = true;
+  if (!currentPlayer?.id) return;
 
-  console.log('🔄 Mode polling activé pour player:', currentPlayer.id);
+  console.log('📡 Activation Realtime pour inventaire player:', currentPlayer.id);
 
-  const checkForNewItems = async () => {
-  if (!navigator.onLine) {
-    // offline: ne spamme pas Supabase
-    return;
-  }
-  try {
-    const { data, error } = await supabase
-      .from('inventory_items')
-      .select('*')
-      .eq('player_id', currentPlayer.id)
-      .order('created_at', { ascending: false });
+  // Fonction de fetch réutilisable
+  const fetchInventory = async () => {
+    if (!navigator.onLine) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        . select('id, name, quantity, type, rarity, equipped, slot, description, weight, value, attunement, properties, damage, damage_type, ac_bonus, created_at')
+        .eq('player_id', currentPlayer.id)
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erreur fetch inventory:', error);
+        console. error('❌ Erreur fetch inventory:', error);
         return;
       }
 
-      if (!data) return;
-
-      // Générer un hash simple pour détecter les changements
-      const currentHash = data.map(i => i.id).sort().join(',');
-      
-      if (lastInventoryCheckRef.current !== currentHash) {
-        const prevHash = lastInventoryCheckRef.current;
-        lastInventoryCheckRef.current = currentHash;
-
-// Détecter les nouveaux items
-if (prevHash) {
-  const prevIds = new Set(inventory.map(i => i.id));
-  const newItems = data.filter(item => !prevIds.has(item.id));
-  
-  if (newItems.length > 0) {
-    console.log('🆕 Nouveaux items détectés:', newItems);
-    // ✅ Pas de toast : l'inventaire se met à jour silencieusement
-  }
-}
-
+      if (data) {
         setInventory(data);
-        console.log('📦 Inventaire mis à jour:', inventory.length);
+        console. log('📦 Inventaire chargé:', data. length, 'items');
       }
     } catch (err) {
-      console.error('💥 Erreur polling:', err);
+      console.error('💥 Erreur fetch inventaire:', err);
     }
   };
 
-// Premier check immédiat
-checkForNewItems();
+  // Fetch initial (une seule fois au montage)
+  fetchInventory();
 
-// ✅ OPTIMISÉ : Polling toutes les 30 secondes au lieu de 2
-pollingIntervalRef.current = setInterval(checkForNewItems, 30000);
+  // ✅ Subscription Realtime (ne consomme PAS d'egress)
+  const channel = supabase
+    .channel(`inventory-changes-${currentPlayer. id}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // INSERT, UPDATE, DELETE
+        schema: 'public',
+        table: 'inventory_items',
+        filter: `player_id=eq.${currentPlayer.id}`,
+      },
+      (payload) => {
+        console.log('📡 Changement inventaire détecté:', payload. eventType);
+        
+        // Optimisation : update local au lieu de refetch complet
+        if (payload.eventType === 'INSERT' && payload.new) {
+          setInventory(prev => [payload.new as any, ...prev]);
+        } else if (payload. eventType === 'DELETE' && payload.old) {
+          setInventory(prev => prev.filter(item => item.id !== (payload.old as any).id));
+        } else if (payload. eventType === 'UPDATE' && payload. new) {
+          setInventory(prev => prev.map(item => 
+            item. id === (payload. new as any).id ?  payload.new as any : item
+          ));
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('📡 Realtime subscription status:', status);
+    });
 
   return () => {
-    console.log('🧹 Arrêt du polling');
-    isPollingActiveRef.current = false;
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
+    console.log('🧹 Désabonnement Realtime inventaire');
+    supabase. removeChannel(channel);
   };
 }, [currentPlayer?.id]);
 
 // Event custom pour refresh forcé depuis CampaignPlayerModal
 useEffect(() => {
-  const handleRefreshRequest = (e: CustomEvent) => {
+  const handleRefreshRequest = async (e: CustomEvent) => {
     if (e.detail?.playerId === currentPlayer?.id) {
       console.log('⚡ Refresh forcé demandé');
-      lastInventoryCheckRef.current = null; // Force un re-check au prochain poll
+      // Refetch manuel si demandé explicitement
+      const { data } = await supabase
+        .from('inventory_items')
+        .select('id, name, quantity, type, rarity, equipped, slot, description, weight, value, attunement, properties, damage, damage_type, ac_bonus, created_at')
+        .eq('player_id', currentPlayer! .id)
+        .order('created_at', { ascending: false });
+      if (data) setInventory(data);
     }
   };
 
-  window.addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
+  window. addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
   
   return () => {
     window.removeEventListener('inventory:refresh', handleRefreshRequest as EventListener);
   };
 }, [currentPlayer?.id]);
-
-// DEBUG: Track inventory changes
-useEffect(() => {
-  console.log('🔥 INVENTORY STATE CHANGED:', inventory.length, 'items');
-  if (inventory.length > 0) {
-    console.log('Last 3 items:', inventory.slice(0, 3).map(i => i.name));
-  }
-}, [inventory]);
   // --- END
 
 // Désactiver le mode grille sur mobile
