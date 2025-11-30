@@ -206,36 +206,27 @@ export function DesktopView({
 
  
               
-<div className="col-span-8">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
-      <button
-        onClick={() => setSettingsOpen(true)}
-        title="Modifier les caractéristiques"
-        className="p-2 rounded-lg text-gray-400 hover:bg-gray-700/60 hover:text-gray-100 transition-colors"
-      >
-        <Settings size={22} />
-      </button>
-    </div>
-    {abilities.length > 0 ? (
-      <HorizontalAbilityScores
-        abilities={abilities}
-        inventory={inventory}
-        onAbilityClick={handleAbilityClick}
-        onSavingThrowClick={handleSavingThrowClick}
-      />
-    ) : (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-sm">
-          Aucune caractéristique configurée.
-          <br />
-          <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
-        </p>
-      </div>
-    )}
-  </div>
-</div>
+              <div className="col-span-8">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
+                  {abilities.length > 0 ?  (
+                    <HorizontalAbilityScores
+                      abilities={abilities}
+                      inventory={inventory}
+                      onAbilityClick={handleAbilityClick}
+                      onSavingThrowClick={handleSavingThrowClick}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500 text-sm">
+                        Aucune caractéristique configurée.  
+                        <br />
+                        <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
+                      </p>
+                    </div>
+                  )}
+                </div>  
+              </div> 
+            </div> 
 
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
