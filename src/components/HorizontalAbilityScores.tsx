@@ -1,19 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Settings, Save } from 'lucide-react';
 import { Ability } from '../types/dnd';
+import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface HorizontalAbilityScoresProps {
   abilities: Ability[];
   inventory?: any[];
   onAbilityClick?: (ability: Ability) => void;
   onSavingThrowClick?: (ability: Ability) => void;
+  player?: any; // Pour pouvoir sauvegarder
+  onUpdate?: (player: any) => void; // Pour mettre à jour après sauvegarde
 }
 
 export function HorizontalAbilityScores({
   abilities,
   inventory = [],
   onAbilityClick,
-  onSavingThrowClick
+  onSavingThrowClick,
+  player,
+  onUpdate
 }: HorizontalAbilityScoresProps) {
+  const [editing, setEditing] = useState(false);
+  const [localAbilities, setLocalAbilities] = useState<Ability[]>(abilities);
+
+  // Synchroniser localAbilities quand abilities change
+  React.useEffect(() => {
+    setLocalAbilities(abilities);
+  }, [abilities]);
+
   const calculateEquipmentBonuses = () => {
     const bonuses = {
       Force: 0,
@@ -55,13 +70,130 @@ export function HorizontalAbilityScores({
   };
 
   const getModifier = (score: number) => Math.floor((score - 10) / 2);
+  const getProficiencyBonus = (level: number): number => {
+    if (level >= 17) return 6;
+    if (level >= 13) return 5;
+    if (level >= 9) return 4;
+    if (level >= 5) return 3;
+    return 2;
+  };
+
   const equipmentBonuses = calculateEquipmentBonuses();
 
+  const handleScoreChange = (index: number, newScore: number) => {
+    const updatedAbilities = [...localAbilities];
+    updatedAbilities[index] = {
+      ...updatedAbilities[index],
+      score: Math.max(1, Math.min(30, newScore))
+    };
+    
+    // Recalculer les modificateurs
+    const profBonus = player ? getProficiencyBonus(player.level) : 2;
+    updatedAbilities[index].modifier = getModifier(updatedAbilities[index].score);
+    
+    // Mettre à jour le jet de sauvegarde si proficient
+    const isSavingThrowProficient = updatedAbilities[index].savingThrow !== abilities[index].modifier;
+    updatedAbilities[index].savingThrow = updatedAbilities[index].modifier + (isSavingThrowProficient ? profBonus : 0);
+    
+    // Mettre à jour les compétences
+    updatedAbilities[index].skills = updatedAbilities[index].skills.map(skill => ({
+      ...skill,
+      bonus: updatedAbilities[index].modifier + (skill.isProficient ? 
+        (skill.hasExpertise ? profBonus * 2 : profBonus) : 0)
+    }));
+
+    setLocalAbilities(updatedAbilities);
+  };
+
+  const handleSavingThrowToggle = (index: number) => {
+    const updatedAbilities = [...localAbilities];
+    const ability = updatedAbilities[index];
+    const profBonus = player ? getProficiencyBonus(player.level) : 2;
+    const isCurrentlyProficient = ability.savingThrow !== ability.modifier;
+    
+    updatedAbilities[index] = {
+      ...ability,
+      savingThrow: ability.modifier + (isCurrentlyProficient ? 0 : profBonus)
+    };
+    
+    setLocalAbilities(updatedAbilities);
+  };
+
+  const handleSave = async () => {
+    if (!player || !onUpdate) {
+      toast.error('Impossible de sauvegarder');
+      return;
+    }
+
+    try {
+      const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
+      const dexMod = getModifier(dexScore);
+
+      const mergedStats = {
+        ...player.stats,
+        proficiency_bonus: getProficiencyBonus(player.level),
+        initiative: dexMod
+      };
+
+      const { error } = await supabase
+        .from('players')
+        .update({ 
+          abilities: localAbilities,
+          stats: mergedStats
+        })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      onUpdate({
+        ...player,
+        abilities: localAbilities,
+        stats: mergedStats
+      });
+
+      setEditing(false);
+      toast.success('Caractéristiques mises à jour');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleCancel = () => {
+    setLocalAbilities(abilities);
+    setEditing(false);
+  };
+
+  const displayAbilities = editing ? localAbilities : abilities;
+
   return (
-    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full">
-      <h3 className="text-lg font-semibold text-gray-100 mb-4">Caractéristiques</h3>
-      <div className="grid grid-cols-6 gap-3">
-        {abilities.map((ability) => {
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
+        {player && onUpdate && (
+          <div className="flex items-center gap-2">
+            {editing && (
+              <button
+                onClick={handleCancel}
+                className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors"
+                title="Annuler"
+              >
+                ✕
+              </button>
+            )}
+            <button
+              onClick={() => editing ? handleSave() : setEditing(true)}
+              className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
+              title={editing ? 'Sauvegarder' : 'Modifier'}
+            >
+              {editing ? <Save size={20} /> : <Settings size={20} />}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-6 gap-3 flex-1">
+        {displayAbilities.map((ability, index) => {
           const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
           const baseModifier = getModifier(ability.score);
           const displayModifier = baseModifier + equipmentBonus;
@@ -69,20 +201,22 @@ export function HorizontalAbilityScores({
           return (
             <div key={ability.name} className="flex flex-col items-center">
               <div
-                className="relative w-24 h-32 flex flex-col items-center justify-start cursor-pointer hover:opacity-80 transition-opacity" 
+                className={`relative w-24 h-32 flex flex-col items-center justify-start transition-opacity ${
+                  editing ? 'opacity-60' : 'cursor-pointer hover:opacity-80'
+                }`}
                 style={{
                   backgroundImage: 'url(/background/contenant_stats.png)',
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center'
                 }}
-                onClick={() => onAbilityClick && onAbilityClick(ability)}
-                title={`Cliquer pour lancer 1d20+${ability.modifier}`}
+                onClick={() => !editing && onAbilityClick && onAbilityClick(ability)}
+                title={editing ? '' : `Cliquer pour lancer 1d20+${ability.modifier}`}
               >
                 <div className="absolute top-5 left-0 right-0 flex flex-col items-center pointer-events-none">
-  <h4 className="text-xs font-semibold text-gray-100 capitalize tracking-wide">
-  {ability.name}
-</h4>
+                  <h4 className="text-xs font-semibold text-gray-100 capitalize tracking-wide">
+                    {ability.name}
+                  </h4>
                 </div>
 
                 {equipmentBonus !== 0 && (
@@ -99,26 +233,46 @@ export function HorizontalAbilityScores({
                   </div>
                 </div>
 
-                <div className="absolute bottom-4 left-[50%] transform -translate-x-1/2 pointer-events-none">
-                  <div className="w-8 h-8 flex items-center justify-center text-sm font-normal text-gray-100">
-                    {ability.score}
-                  </div>
+                <div className="absolute bottom-4 left-[50%] transform -translate-x-1/2">
+                  {editing ? (
+                    <input
+                      type="number"
+                      value={ability.score}
+                      onChange={(e) => handleScoreChange(index, parseInt(e.target.value) || 10)}
+                      className="w-10 h-8 text-center text-sm font-normal bg-gray-700 text-gray-100 border border-gray-600 rounded pointer-events-auto"
+                      min={1}
+                      max={30}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 flex items-center justify-center text-sm font-normal text-gray-100 pointer-events-none">
+                      {ability.score}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="mt-2 w-full max-w-[110px]">
                 <div
-                  className="flex items-center justify-between px-2 py-1 bg-gray-800/50 rounded-md border border-gray-700/50 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                  onClick={() => onSavingThrowClick && onSavingThrowClick(ability)}
-                  title={`Jet de sauvegarde 1d20+${ability.savingThrow}`}
+                  className={`flex items-center justify-between px-2 py-1 bg-gray-800/50 rounded-md border border-gray-700/50 transition-colors ${
+                    editing ? 'cursor-pointer hover:bg-gray-700/70' : 'cursor-pointer hover:bg-gray-700/50'
+                  }`}
+                  onClick={() => {
+                    if (editing) {
+                      handleSavingThrowToggle(index);
+                    } else if (onSavingThrowClick) {
+                      onSavingThrowClick(ability);
+                    }
+                  }}
+                  title={editing ? 'Cliquer pour activer/désactiver la maîtrise' : `Jet de sauvegarde 1d20+${ability.savingThrow}`}
                 >
                   <div className="flex items-center gap-1.5">
                     <div
-                      className={`w-3 h-3 rounded border ${
+                      className={`w-3 h-3 rounded border transition-colors ${
                         ability.savingThrow !== ability.modifier
                           ? 'bg-red-500 border-red-600'
                           : 'border-gray-600'
-                      }`}
+                      } ${editing ? 'cursor-pointer hover:border-red-400' : ''}`}
                     />
                     <span className="text-xs text-gray-400">Sauv.</span>
                   </div>
@@ -131,6 +285,18 @@ export function HorizontalAbilityScores({
           );
         })}
       </div>
+
+      {editing && (
+        <div className="mt-4 pt-4 border-t border-gray-700/50">
+          <button
+            onClick={handleSave}
+            className="w-full btn-primary px-4 py-2 rounded-lg flex items-center justify-center gap-2 font-medium"
+          >
+            <Save size={18} />
+            Sauvegarder les modifications
+          </button>
+        </div>
+      )}
     </div>
   );
 }
