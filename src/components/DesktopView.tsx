@@ -197,18 +197,23 @@ export function DesktopView({
               </div>
 
               <div className="col-span-8">
-                {abilities.length > 0 && (
-                  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+                  {abilities.length > 0 ?  (
                     <HorizontalAbilityScores
                       abilities={abilities}
-                      inventory={inventory} 
+                      inventory={inventory}
                       onAbilityClick={handleAbilityClick}
                       onSavingThrowClick={handleSavingThrowClick}
                     />
-                  </div>
-                )} 
+                  ) : (
+                    <div className="flex items-center justify-center h-full min-h-[120px]">
+                      <div className="text-center text-gray-500">
+                        <div className="animate-pulse">Chargement des caractéristiques...</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div> 
 
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
