@@ -208,12 +208,14 @@ export function DesktopView({
               
 <div className="col-span-8">
   <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-    {abilities.length > 0 ?  (
+    {abilities.length > 0 ? (
       <HorizontalAbilityScores
         abilities={abilities}
         inventory={inventory}
         onAbilityClick={handleAbilityClick}
         onSavingThrowClick={handleSavingThrowClick}
+        player={player}
+        onUpdate={onPlayerUpdate}
       />
     ) : (
       <div className="flex items-center justify-center h-full">
