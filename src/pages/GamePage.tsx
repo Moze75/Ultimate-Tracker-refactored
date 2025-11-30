@@ -770,36 +770,26 @@ useEffect(() => {
   }, [activeTab, selectedCharacter.id, measureActiveHeight, measurePaneHeight, resetGestureState, safeUnfreeze]);
 
   /* ---------------- Bouton retour ---------------- */
-  const handleBackToSelection = () => {
-    // Empêcher les doubles clics / rebonds
-    if (isExiting) {
-      console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
-      return; 
-    } 
-    setIsExiting(true);
+const handleBackToSelection = () => {
+  if (isExiting) {
+    console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
+    return;
+  }
 
-    console.log('[GamePage] handleBackToSelection called', {
-      freezeActive: freezeActiveRef.current,
-      currentPlayerId: currentPlayer?.id,
-    });
-
-    if (freezeActiveRef.current) {
-      console.log('[GamePage] safeUnfreeze(true) avant retour');
-      safeUnfreeze(true);
+  // 🛠️ Forcer la sauvegarde des données
+  try {
+    if (currentPlayer) {
+      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
+      console.log('[GamePage] Snapshot sauvegardé avant retour :', currentPlayer);
     }
+  } catch (e) {
+    console.warn('[GamePage] Impossible de sauvegarder le snapshot avant retour', e);
+  }
 
-    try {
-      sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-      console.log('[GamePage] SKIP_AUTO_RESUME_ONCE=1 enregistré');
-    } catch (err) {
-      console.warn('[GamePage] Impossible d\'écrire SKIP_AUTO_RESUME_ONCE', err);
-    }
+  setIsExiting(true);
 
-    console.log('[GamePage] onBackToSelection() déclenché');
-    onBackToSelection?.();
-    toast.success('Retour à la sélection des personnages');
-  };
-   
+  onBackToSelection?.();
+};
 
   /* ---------------- Reload inventaire (sécurité) ---------------- */
   // ✅ SUPPRIMÉ : L'inventaire est maintenant chargé via Realtime subscription
