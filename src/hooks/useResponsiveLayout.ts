@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 // Breakpoints alignés avec ResponsiveGameLayout
-const MOBILE_BREAKPOINT = 768;   // sm breakpoint
-const TABLET_BREAKPOINT = 996;   // md breakpoint  
-const DESKTOP_BREAKPOINT = 1200; // lg breakpoint
+// NOTE: On garde les mêmes valeurs pour la cohérence logique
+const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 996;
+const DESKTOP_BREAKPOINT = 1200;
 
 function getDeviceType(width: number): DeviceType {
   if (width < MOBILE_BREAKPOINT) return 'mobile';
@@ -14,40 +15,28 @@ function getDeviceType(width: number): DeviceType {
 } 
 
 export function useResponsiveLayout(): DeviceType {
+  // Initialisation sécurisée pour SSR
   const [deviceType, setDeviceType] = useState<DeviceType>(() => {
     if (typeof window === 'undefined') return 'desktop';
     return getDeviceType(window.innerWidth);
   });
   
-  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   useEffect(() => {
-    // Vérifier immédiatement au montage (pour corriger les problèmes de SSR/hydratation)
-    const initialWidth = window.innerWidth;
-    const initialDeviceType = getDeviceType(initialWidth);
-    setDeviceType(initialDeviceType);
-
     const handleResize = () => {
-      // Debounce pour éviter le clignotement
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      
-      resizeTimeoutRef.current = setTimeout(() => {
-        const width = window.innerWidth;
-        const newDeviceType = getDeviceType(width);
-        setDeviceType((prev) => (prev === newDeviceType ? prev : newDeviceType));
-      }, 100); // 100ms de debounce
+      // Suppression du debounce pour éviter le clignotement visuel
+      // lors du redimensionnement rapide
+      const width = window.innerWidth;
+      setDeviceType((prev) => {
+        const newType = getDeviceType(width);
+        return prev === newType ? prev : newType;
+      });
     };
+
+    // Appel initial au cas où
+    handleResize();
 
     window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return deviceType;
