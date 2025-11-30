@@ -822,10 +822,19 @@ useEffect(() => {
 
   /* ---------------- Bouton retour ---------------- */
 const handleBackToSelection = () => {
-  if (isExiting) {
-    console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
-    return;
+  if (isExiting) return;
+
+  // Sauvegarder avant de partir
+  if (currentPlayer) {
+    localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
   }
+
+  // ✅ Invalider le cache de la liste des joueurs pour forcer un refetch
+  localStorage.removeItem(`ut:players-list:ts:${session?. user?.id}`);
+
+  setIsExiting(true);
+  onBackToSelection?. ();
+};
 
   // 🛠️ Forcer la sauvegarde des données
   try {
