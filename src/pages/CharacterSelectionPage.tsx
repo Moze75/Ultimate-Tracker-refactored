@@ -140,45 +140,37 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
   const hasInitializedRef = useRef(false);
   const playersLoadedRef = useRef(false);
 
-  // ✅ AJOUTER ICI - Migration/nettoyage des anciennes données
-  useEffect(() => {
-    try {
-      // Supprimer les anciennes clés potentiellement corrompues
-      const keysToClean = ['selectedCharacter', 'lastSelectedCharacterSnapshot'];
-      keysToClean.forEach(key => {
-        const data = localStorage.getItem(key);
-        if (data) {
-          try {
-            const parsed = JSON.parse(data);
-            // Si la vitesse est 30 (en pieds), c'est une donnée obsolète
-            if (parsed?.speed === 30 || parsed?.speed === '30') {
-              console.log(`[Cleanup] Suppression de ${key} avec données obsolètes (speed=30)`);
-              localStorage.removeItem(key);
-            }
-          } catch (parseError) {
-            // JSON invalide, supprimer la clé
-            console.log(`[Cleanup] Suppression de ${key} - JSON invalide`);
+ // ✅ Cleanup UNIQUE au premier chargement (ne supprime que les données corrompues UNE FOIS)
+useEffect(() => {
+  try {
+    // Vérifier si le cleanup a déjà été fait
+    const cleanupDone = localStorage.getItem('ut:cleanup-v1-done');
+    if (cleanupDone) return; // Ne pas refaire
+
+    const keysToClean = ['selectedCharacter', 'lastSelectedCharacterSnapshot'];
+    keysToClean.forEach(key => {
+      const data = localStorage.getItem(key);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          const speed = parsed?.stats?.speed ??  parsed?.speed;
+          // Supprimer SEULEMENT si speed=30 (données corrompues)
+          if (speed === 30 || speed === '30') {
+            console.log(`[Cleanup] Suppression de ${key} avec speed=30`);
             localStorage.removeItem(key);
           }
-        }
-      });
-      
-      // Nettoyer aussi le cache des players si trop vieux (> 24h)
-      const playersCacheTs = localStorage.getItem(`ut:players-list:ts:${session?.user?.id}`);
-      if (playersCacheTs) {
-        const age = Date.now() - parseInt(playersCacheTs, 10);
-        const ONE_DAY = 1000 * 60 * 60 * 24;
-        if (age > ONE_DAY) {
-          console. log('[Cleanup] Cache players expiré (> 24h), suppression');
-          localStorage.removeItem(`ut:players-list:${session?.user?.id}`);
-          localStorage.removeItem(`ut:players-list:ts:${session?. user?.id}`);
+        } catch {
+          localStorage.removeItem(key);
         }
       }
-    } catch (e) {
-      console. warn('[Cleanup] Erreur nettoyage localStorage', e);
-    } 
-  }, []); // ← S'exécute une seule fois au montage
-  
+    });
+
+    // Marquer le cleanup comme fait
+    localStorage.setItem('ut:cleanup-v1-done', 'true');
+  } catch (e) {
+    console. warn('[Cleanup] Erreur:', e);
+  }
+}, []);
   useEffect(() => {
     if (hasInitializedRef.current) {
       return;
