@@ -191,7 +191,7 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
   const [stats, setStats] = useState(() => ({
     proficiency_bonus: effectiveProficiency,
-    jack_of_all_trades: player.stats.jack_of_all_trades || false
+    jack_of_all_trades: player. stats?.jack_of_all_trades || false
   }));
 
   const [abilities, setAbilities] = useState<Ability[]>(() => {
