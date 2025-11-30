@@ -55,13 +55,6 @@ export function DesktopView({
     ? player.abilities
     : [];
 
-  // 🔍 DEBUG: Vérifier si les abilities sont chargées
-  console.log('🔍 [DesktopView] abilities:', {
-    playerAbilities: player. abilities,
-    abilitiesLength: abilities.length,
-    abilities: abilities.map(a => a.name)
-  });
-
   const handleAbilityClick = (ability: Ability) => {
     console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
     rollDice({
@@ -103,7 +96,7 @@ export function DesktopView({
       {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
       {deviceType === 'desktop' && (
         <div 
-          className="fixed inset-0 pointer-events-none transition-opacity duration-200"
+          className="fixed inset-0 pointer-events-none"
           style={{
             zIndex: 0,
             overflow: 'hidden',
@@ -160,19 +153,18 @@ export function DesktopView({
       <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-       <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
+               <div 
+          className="flex-1 overflow-y-auto overflow-x-auto p-4 lg:p-6"
           style={{
             scrollbarGutter: 'stable',
-            minHeight: 0,
           }}
         >
           <div
             className="max-w-[1280px] mx-auto space-y-4"
             style={{
-              minWidth: 0,
+              minWidth: 1024,
             }}
-          > 
+          >
 
             {/* Header */}
             <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
@@ -203,31 +195,18 @@ export function DesktopView({
                 </div>
               </div>
 
- 
- 
-              
-<div className="col-span-8">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-    {abilities.length > 0 ? (
-      <HorizontalAbilityScores
-        abilities={abilities}
-        inventory={inventory}
-        onAbilityClick={handleAbilityClick}
-        onSavingThrowClick={handleSavingThrowClick}
-        player={player}
-        onUpdate={onPlayerUpdate}
-      />
-    ) : (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-sm">
-          Aucune caractéristique configurée.  
-          <br />
-          <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
-        </p>
-      </div> 
-    )}
-  </div>  
-</div>
+              <div className="col-span-8">
+                {abilities.length > 0 && (
+                  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
+                    <HorizontalAbilityScores
+                      abilities={abilities}
+                      inventory={inventory}
+                      onAbilityClick={handleAbilityClick}
+                      onSavingThrowClick={handleSavingThrowClick}
+                    />
+                  </div>
+                )} 
+              </div>
             </div> 
 
             {/* Grille Skills + TabbedPanel */}
