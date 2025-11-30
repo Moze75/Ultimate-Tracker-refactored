@@ -228,26 +228,32 @@ const fetchPlayers = async () => {
     return;
   }
 
-  const PLAYERS_LIST_CACHE_KEY = `ut:players-list:${session. user. id}`;
+  const PLAYERS_LIST_CACHE_KEY = `ut:players-list:${session.user. id}`;
   const PLAYERS_LIST_CACHE_TS_KEY = `ut:players-list:ts:${session.user.id}`;
   const PLAYERS_LIST_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
   // 1. Vérifier le cache localStorage d'abord
   try {
-    const cachedData = localStorage.getItem(PLAYERS_LIST_CACHE_KEY);
+    const cachedData = localStorage. getItem(PLAYERS_LIST_CACHE_KEY);
     const cachedTimestamp = localStorage.getItem(PLAYERS_LIST_CACHE_TS_KEY);
     
     if (cachedData && cachedTimestamp) {
-      const age = Date. now() - parseInt(cachedTimestamp, 10);
+      const age = Date.now() - parseInt(cachedTimestamp, 10);
       
       if (age < PLAYERS_LIST_CACHE_TTL) {
         const parsed = JSON.parse(cachedData);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        // Vérifier que le cache contient des données COMPLÈTES (avec stats)
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]. stats) {
           setPlayers(parsed);
-          playersLoadedRef. current = true;
+          playersLoadedRef.current = true;
           setLoading(false);
           console.log('[CharacterSelection] ✅ Players chargés depuis cache:', parsed.length);
           return;
+        } else {
+          // Cache incomplet, le supprimer
+          console.log('[CharacterSelection] ⚠️ Cache incomplet, refetch nécessaire');
+          localStorage.removeItem(PLAYERS_LIST_CACHE_KEY);
+          localStorage.removeItem(PLAYERS_LIST_CACHE_TS_KEY);
         }
       }
     }
@@ -255,15 +261,15 @@ const fetchPlayers = async () => {
     console.warn('[CharacterSelection] Erreur lecture cache:', e);
   }
 
-  // 2. Fetch depuis Supabase - TOUTES les colonnes
+  // 2.  Fetch depuis Supabase - TOUTES les colonnes
   try {
     setLoading(true);
     
-    // ✅ FIX : Récupérer TOUT le player car stats/abilities/class_resources sont des JSONB
+    // ✅ IMPORTANT : Récupérer TOUT car stats/abilities/spell_slots sont des JSONB
     const { data, error } = await supabase
       . from('players')
-      . select('*')  // ← IMPORTANT : Récupérer tout ! 
-      .eq('user_id', session. user.id)
+      .select('*')
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -272,9 +278,9 @@ const fetchPlayers = async () => {
     
     // Sauvegarder dans le cache
     try {
-      localStorage. setItem(PLAYERS_LIST_CACHE_KEY, JSON. stringify(players));
+      localStorage.setItem(PLAYERS_LIST_CACHE_KEY, JSON.stringify(players));
       localStorage.setItem(PLAYERS_LIST_CACHE_TS_KEY, Date.now().toString());
-      console.log('[CharacterSelection] 💾 Players mis en cache:', players. length);
+      console. log('[CharacterSelection] 💾 Players complets mis en cache:', players.length);
     } catch (e) {
       console.warn('[CharacterSelection] Erreur sauvegarde cache:', e);
     }
@@ -286,10 +292,10 @@ const fetchPlayers = async () => {
     
     // Fallback : utiliser le cache même expiré
     try {
-      const cachedData = localStorage. getItem(PLAYERS_LIST_CACHE_KEY);
+      const cachedData = localStorage.getItem(PLAYERS_LIST_CACHE_KEY);
       if (cachedData) {
-        setPlayers(JSON. parse(cachedData));
-        console. log('[CharacterSelection] 📴 Utilisation du cache expiré');
+        setPlayers(JSON.parse(cachedData));
+        console.log('[CharacterSelection] 📴 Utilisation du cache expiré');
       }
     } catch {}
     
@@ -298,7 +304,6 @@ const fetchPlayers = async () => {
     setLoading(false);
   }
 };
-
   const handleCreatorComplete = async (payload: CharacterExportPayload) => {
     if (creating) return;
 
