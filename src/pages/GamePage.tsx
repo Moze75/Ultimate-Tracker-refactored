@@ -770,12 +770,26 @@ useEffect(() => {
   }, [activeTab, selectedCharacter.id, measureActiveHeight, measurePaneHeight, resetGestureState, safeUnfreeze]);
 
   /* ---------------- Bouton retour ---------------- */
-  const handleBackToSelection = () => {
-    // Empêcher les doubles clics / rebonds
-    if (isExiting) {
-      console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
-      return;
-    } 
+const handleBackToSelection = () => {
+  if (isExiting) {
+    console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
+    return;
+  }
+
+  // 🛠️ Forcer la sauvegarde des données
+  try {
+    if (currentPlayer) {
+      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
+      console.log('[GamePage] Snapshot sauvegardé avant retour :', currentPlayer);
+    }
+  } catch (e) {
+    console.warn('[GamePage] Impossible de sauvegarder le snapshot avant retour', e);
+  }
+
+  setIsExiting(true);
+
+  onBackToSelection?.();
+};
     setIsExiting(true);
 
     console.log('[GamePage] handleBackToSelection called', {
