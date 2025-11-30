@@ -198,12 +198,16 @@ export function ResponsiveGameLayout({
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        // MODIFICATION ICI : 
-        // On abaisse lg à 1100px pour garantir que le mode 12 colonnes 
-        // s'active bien sur les écrans de desktop standards (souvent ~1280px ou ~1366px) 
-        // mais aussi sur les fenêtres réduites à ~1200px sans sauter à cause de la scrollbar.
-        breakpoints={{ lg: 1100, md: 996, sm: 768 }}
-        cols={{ lg: 12, md: 10, sm: 6 }}
+        /* 
+           CORRECTION DES BREAKPOINTS ET COLONNES :
+           1. On abaisse lg à 1100 pour éviter le problème de scrollbar.
+           2. IMPORTANT : On met cols={{ ... md: 12 }} au lieu de 10.
+              Ainsi, même si la grille passe en mode "md", elle garde la même structure
+              que le mode "lg". Pas de réarrangement brutal.
+        */
+        breakpoints={{ lg: 1100, md: 768, sm: 0 }}
+        cols={{ lg: 12, md: 12, sm: 6 }} 
+        
         rowHeight={60}
         isDraggable={!isLocked}
         isResizable={!isLocked}
