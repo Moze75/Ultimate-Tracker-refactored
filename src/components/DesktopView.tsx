@@ -325,6 +325,6 @@ export function DesktopView({
           onClose={() => setShowConcentrationCheck(false)}
         />
       )}
-    </>  
+    </> 
   );
 }
