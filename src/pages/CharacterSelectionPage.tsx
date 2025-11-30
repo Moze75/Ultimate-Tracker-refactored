@@ -266,55 +266,29 @@ useEffect(() => {
       setLoading(true);
       
       // ✅ OPTIMISÉ : Ne récupérer que les colonnes nécessaires pour l'affichage
-const { data, error } = await supabase
-  .from('players')
-  .select(`
-    id,
-    name,
-    adventurer_name,
-    class,
-    level,
-    race,
-    current_hp,
-    max_hp,
-    temporary_hp,
-    avatar_url,
-    secondary_class,
-    secondary_level, 
-    created_at,
-    speed,           // ✅ AJOUTER
-    armor_class,     // ✅ AJOUTER
-    initiative_bonus // ✅ AJOUTER (si utilisé)
-  `)
-        . eq('user_id', session.user. id)
-        . order('created_at', { ascending: true });
+    // ✅ SOLUTION : Récupérer TOUTES les colonnes avec select('*')
+    // Car stats, abilities, class_resources sont des JSONB
+    const { data, error } = await supabase
+      . from('players')
+      .select('*')  // ← IMPORTANT : Récupérer tout !
+      .eq('user_id', session. user.id)
+      .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      
-      const players = data || [];
-      
-      // Sauvegarder dans le cache
-      try {
-        localStorage. setItem(PLAYERS_LIST_CACHE_KEY, JSON. stringify(players));
-        localStorage.setItem(PLAYERS_LIST_CACHE_TS_KEY, Date.now().toString());
-        console.log('[CharacterSelection] 💾 Players mis en cache:', players. length);
-      } catch (e) {
-        console.warn('[CharacterSelection] Erreur sauvegarde cache:', e);
-      }
-      
-      setPlayers(players);
-      playersLoadedRef.current = true;
-    } catch (error: any) {
-      console.error('Erreur lors de la récupération des personnages:', error);
-      
-      // Fallback : utiliser le cache même expiré
-      try {
-        const cachedData = localStorage. getItem(PLAYERS_LIST_CACHE_KEY);
-        if (cachedData) {
-          setPlayers(JSON. parse(cachedData));
-          console. log('[CharacterSelection] 📴 Utilisation du cache expiré');
-        }
-      } catch {}
+    if (error) throw error;
+    
+    const players = data || [];
+    
+    // Sauvegarder dans le cache
+    try {
+      localStorage.setItem(PLAYERS_LIST_CACHE_KEY, JSON.stringify(players));
+      localStorage.setItem(PLAYERS_LIST_CACHE_TS_KEY, Date. now().toString());
+    } catch (e) {
+      console.warn('[CharacterSelection] Erreur sauvegarde cache:', e);
+    }
+    
+    setPlayers(players);
+    playersLoadedRef.current = true;
+  } catch (error: any) {
       
       toast.error('Erreur lors de la récupération des personnages');
     } finally {
