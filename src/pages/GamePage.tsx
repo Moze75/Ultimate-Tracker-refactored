@@ -123,54 +123,31 @@ const [diceRollData, setDiceRollData] = useState<{
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
 
-// État pour suivre si on a déjà fait le fetch initial
-const hasFetchedRef = useRef(false);
-
+ 
+// ✅ GARDER UNIQUEMENT : Fetch depuis Supabase si le personnage change
 useEffect(() => {
-  // Reset le flag si le personnage change
-  if (prevPlayerId.current !== selectedCharacter.id) {
-    hasFetchedRef. current = false;
-    prevPlayerId.current = selectedCharacter. id;
-  }
-
-  // 1. Utiliser immédiatement selectedCharacter (déjà chargé par CharacterSelectionPage)
-  setCurrentPlayer(selectedCharacter);
-  setLoading(false);
-
-  // 2.  Si pas encore fetch depuis Supabase, le faire en arrière-plan
-  if (!hasFetchedRef.current) {
-    hasFetchedRef. current = true;
+  const fetchPlayerFromSupabase = async () => {
+    if (! selectedCharacter?. id) return;
     
-    const fetchFreshData = async () => {
-      try {
-        const { data, error } = await supabase
-          . from('players')
-          .select('*')
-          . eq('id', selectedCharacter.id)
-          .single();
-        
-        if (! error && data) {
-          // ✅ Fusionner les données au lieu d'écraser
-          setCurrentPlayer(prev => {
-            // Si les données sont identiques, ne pas re-render
-            if (JSON.stringify(prev) === JSON.stringify(data)) {
-              return prev;
-            }
-            console.log('[GamePage] ✅ Données mises à jour depuis Supabase');
-            return data;
-          });
-          
-          // Mettre à jour le cache
-          localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
-        }
-      } catch (e) {
-        console.error('[GamePage] Erreur fetch Supabase', e);
+    try {
+      const { data, error } = await supabase
+        . from('players')
+        .select('*')
+        .eq('id', selectedCharacter.id)
+        .single();
+       
+      if (! error && data) {
+        console.log('[GamePage] ✅ Données fraîches depuis Supabase:', data. speed);
+        setCurrentPlayer(data);
+        // Mettre à jour le cache APRÈS avoir reçu les données correctes
+        localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
       }
-    };
-    
-    fetchFreshData();
-  }
-}, [selectedCharacter]);  // ✅ Dépendre de l'objet entier, pas juste . id
+    } catch (e) {
+      console.error('[GamePage] Erreur fetch Supabase', e);
+      // Fallback: utiliser selectedCharacter passé en prop
+      setCurrentPlayer(selectedCharacter);
+    }
+  };
   
   // Utiliser immédiatement selectedCharacter (déjà chargé par CharacterSelectionPage)
   setCurrentPlayer(selectedCharacter);
