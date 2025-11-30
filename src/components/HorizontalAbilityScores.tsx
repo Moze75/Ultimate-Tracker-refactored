@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Save } from 'lucide-react';
+import { Settings, Save, X } from 'lucide-react';
 import { Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -9,8 +9,8 @@ interface HorizontalAbilityScoresProps {
   inventory?: any[];
   onAbilityClick?: (ability: Ability) => void;
   onSavingThrowClick?: (ability: Ability) => void;
-  player?: any; // Pour pouvoir sauvegarder
-  onUpdate?: (player: any) => void; // Pour mettre à jour après sauvegarde
+  player?: any;
+  onUpdate?: (player: any) => void;
 }
 
 export function HorizontalAbilityScores({
@@ -24,7 +24,6 @@ export function HorizontalAbilityScores({
   const [editing, setEditing] = useState(false);
   const [localAbilities, setLocalAbilities] = useState<Ability[]>(abilities);
 
-  // Synchroniser localAbilities quand abilities change
   React.useEffect(() => {
     setLocalAbilities(abilities);
   }, [abilities]);
@@ -87,15 +86,12 @@ export function HorizontalAbilityScores({
       score: Math.max(1, Math.min(30, newScore))
     };
     
-    // Recalculer les modificateurs
     const profBonus = player ? getProficiencyBonus(player.level) : 2;
     updatedAbilities[index].modifier = getModifier(updatedAbilities[index].score);
     
-    // Mettre à jour le jet de sauvegarde si proficient
     const isSavingThrowProficient = updatedAbilities[index].savingThrow !== abilities[index].modifier;
     updatedAbilities[index].savingThrow = updatedAbilities[index].modifier + (isSavingThrowProficient ? profBonus : 0);
     
-    // Mettre à jour les compétences
     updatedAbilities[index].skills = updatedAbilities[index].skills.map(skill => ({
       ...skill,
       bonus: updatedAbilities[index].modifier + (skill.isProficient ? 
@@ -178,7 +174,7 @@ export function HorizontalAbilityScores({
                 className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors"
                 title="Annuler"
               >
-                ✕
+                <X size={20} />
               </button>
             )}
             <button
