@@ -55,6 +55,13 @@ export function DesktopView({
     ? player.abilities
     : [];
 
+  // 🔍 DEBUG: Vérifier si les abilities sont chargées
+  console.log('🔍 [DesktopView] abilities:', {
+    playerAbilities: player. abilities,
+    abilitiesLength: abilities.length,
+    abilities: abilities.map(a => a.name)
+  });
+
   const handleAbilityClick = (ability: Ability) => {
     console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
     rollDice({
