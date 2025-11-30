@@ -41,6 +41,7 @@ export function DesktopView({
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
+  const [showStatsTab, setShowStatsTab] = useState(false);
   
   // État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
