@@ -198,7 +198,7 @@ export function ResponsiveGameLayout({
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768 }} 
+        breakpoints={{ lg: 1200, md: 1196, sm: 768 }} 
         cols={{ lg: 12, md: 10, sm: 6 }}
         rowHeight={60}
         isDraggable={!isLocked}
