@@ -122,6 +122,43 @@ const [diceRollData, setDiceRollData] = useState<{
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
+  // Effet 1 : Recharge les données depuis le cache localStorage au montage
+useEffect(() => {
+  try {
+    const snapshot = localStorage.getItem(LAST_SELECTED_CHARACTER_SNAPSHOT);
+    if (snapshot) {
+      const parsedPlayer = JSON.parse(snapshot);
+      if (parsedPlayer?.id === selectedCharacter.id) {
+        setCurrentPlayer(parsedPlayer);
+        console.log('[GamePage] Données rechargées depuis snapshot après navigation :', parsedPlayer);
+      }
+    }
+  } catch (e) {
+    console.warn('[GamePage] Impossible de recharger le snapshot après navigation', e);
+  }
+}, []);
+
+// Effet 2 : Recharger les données depuis Supabase si nécessaire
+useEffect(() => {
+  const fetchPlayer = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('id', selectedCharacter.id)
+        .single();
+      if (!error && data) {
+        setCurrentPlayer(data);
+        console.log('[GamePage] Données rechargées depuis Supabase après navigation :', data);
+      }
+    } catch (e) {
+      console.error('[GamePage] Erreur lors du fetch depuis Supabase après navigation', e);
+    }
+  };
+
+  fetchPlayer();
+}, [selectedCharacter.id]);
+
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
   console.log('🔧 [GamePage] isDiceSettingsLoading:', isDiceSettingsLoading);
