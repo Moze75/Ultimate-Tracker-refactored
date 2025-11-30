@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
-// Ajout des icônes manquantes pour les widgets
-import { 
-  Lock, Unlock, RotateCcw, Grid3x3, GripVertical,
-  User, Sword, BookOpen, Zap, Activity, Backpack 
-} from 'lucide-react';
+import { Lock, Unlock, RotateCcw, Grid3x3, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Player } from '../types/dnd';
 import { layoutService } from '../services/layoutService';
@@ -25,19 +21,28 @@ interface ResponsiveGameLayoutProps {
   onToggleMode: () => void;
 }
 
-// CORRECTION : Ajout des composants Icon réels pour correspondre au rendu
-const TAB_LABELS: Record<string, { icon: React.ReactNode; label: string }> = {
-  profile:   { icon: <User className="w-5 h-5" />,     label: 'Profil' },
-  combat:    { icon: <Sword className="w-5 h-5" />,    label: 'Combat' },
-  class:     { icon: <BookOpen className="w-5 h-5" />, label: 'Classe' },
-  abilities: { icon: <Zap className="w-5 h-5" />,      label: 'Capacités' },
-  stats:     { icon: <Activity className="w-5 h-5" />, label: 'Statistiques' },
-  equipment: { icon: <Backpack className="w-5 h-5" />, label: 'Équipement' },
+const TAB_LABELS: Record<string, { icon: string; label: string }> = {
+  profile: {  label: 'Profil' },
+  combat: {  label: 'Combat' },
+  class: {  label: 'Classe' },
+  abilities: { label: 'Capacités' },
+  stats: {  label: 'Statistiques' },
+  equipment: { label: 'Équipement' },
 };
 
-// NOTE: J'ai supprimé l'export de DiceRollContext ici. 
-// Il devrait être déplacé dans un fichier dédié (ex: src/context/DiceContext.tsx)
-// pour éviter les dépendances circulaires et nettoyer ce composant d'affichage.
+// ✨ EXPORT DU CONTEXTE (créé ici mais Provider dans GamePage)
+export const DiceRollContext = React.createContext<{
+  rollDice: (data: {
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  }) => void;
+}>({
+  rollDice: () => {
+    console.warn('⚠️ rollDice appelé hors contexte');
+  },
+});
 
 export function ResponsiveGameLayout({
   player,
@@ -53,6 +58,7 @@ export function ResponsiveGameLayout({
   const [isLocked, setIsLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Charger les préférences de layout
   useEffect(() => {
     async function loadLayout() {
       if (!userId) {
@@ -77,12 +83,14 @@ export function ResponsiveGameLayout({
     loadLayout();
   }, [userId]);
 
+  // Sauvegarder automatiquement les changements
   const handleLayoutChange = useCallback(
     (layout: Layout[], allLayouts: any) => {
       if (isLocked || isLoading) return;
 
       setLayouts(allLayouts);
 
+      // Debounce la sauvegarde
       const timeoutId = setTimeout(() => {
         layoutService.saveLayout(userId, allLayouts, isLocked).catch((error) => {
           console.error('Erreur sauvegarde layout:', error);
@@ -104,7 +112,7 @@ export function ResponsiveGameLayout({
     } catch (error) {
       console.error('Erreur toggle lock:', error);
       toast.error('Erreur lors de la modification du verrou');
-      setIsLocked(!newLocked);
+      setIsLocked(!newLocked); // Rollback
     }
   };
 
@@ -135,6 +143,7 @@ export function ResponsiveGameLayout({
 
   return (
     <div className="relative">
+      {/* Barre d'outils sticky */}
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 p-3 mb-4 rounded-lg flex flex-wrap items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2">
           <button
@@ -185,10 +194,14 @@ export function ResponsiveGameLayout({
         </div>
       </div>
 
+      {/* Grille responsive */}
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        // Appliquer ici le fix précédent pour le téléscopage (1100 au lieu de 1200)
+        // MODIFICATION ICI : 
+        // On abaisse lg à 1100px pour garantir que le mode 12 colonnes 
+        // s'active bien sur les écrans de desktop standards (souvent ~1280px ou ~1366px) 
+        // mais aussi sur les fenêtres réduites à ~1200px sans sauter à cause de la scrollbar.
         breakpoints={{ lg: 1100, md: 996, sm: 768 }}
         cols={{ lg: 12, md: 10, sm: 6 }}
         rowHeight={60}
@@ -201,6 +214,7 @@ export function ResponsiveGameLayout({
         margin={[16, 16]}
         containerPadding={[0, 0]}
       > 
+        {/* Les autres blocs */}
         {['profile', 'combat', 'class', 'abilities', 'stats', 'equipment'].map((key) => (
           <div
             key={key}
@@ -209,14 +223,14 @@ export function ResponsiveGameLayout({
               transition: 'box-shadow 0.2s ease',
             }}
           >
+            {/* En-tête avec poignée de drag */}
             <div
               className={`bg-gray-900/80 px-4 py-3 border-b border-gray-700 flex items-center justify-between ${
                 !isLocked ? 'drag-handle cursor-move hover:bg-gray-900/90' : ''
               }`}
             >
               <div className="flex items-center gap-2">
-                {/* L'icône s'affichera correctement maintenant */}
-                <span className="text-gray-400">{TAB_LABELS[key]?.icon}</span>
+                <span className="text-lg">{TAB_LABELS[key]?.icon}</span>
                 <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">
                   {TAB_LABELS[key]?.label}
                 </h3>
@@ -230,6 +244,7 @@ export function ResponsiveGameLayout({
               )}
             </div>
 
+            {/* Contenu scrollable */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
               {key === 'class' && classSections === null ? (
                 <div className="py-12 text-center text-white/70">
@@ -244,6 +259,7 @@ export function ResponsiveGameLayout({
         ))}
       </ResponsiveGridLayout>
 
+      {/* Styles pour la scrollbar personnalisée */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
@@ -260,6 +276,7 @@ export function ResponsiveGameLayout({
           background: rgba(107, 114, 128, 1);
         }
 
+        /* Styles pour les handles de redimensionnement */
         .react-resizable-handle {
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -278,6 +295,7 @@ export function ResponsiveGameLayout({
           border-bottom: 2px solid rgba(147, 51, 234, 0.6);
         }
 
+        /* Animation lors du drag */
         .react-grid-item.react-draggable-dragging {
           transition: none;
           z-index: 100;
@@ -299,4 +317,4 @@ export function ResponsiveGameLayout({
       `}</style>
     </div>
   );
-}
+} 
