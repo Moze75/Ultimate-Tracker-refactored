@@ -822,24 +822,18 @@ useEffect(() => {
 
   /* ---------------- Bouton retour ---------------- */
 const handleBackToSelection = () => {
-  if (isExiting) {
-    console.log('[GamePage] handleBackToSelection ignoré (déjà en sortie)');
-    return;
-  } 
+  if (isExiting) return;
 
-  // 🛠️ Forcer la sauvegarde des données
-  try {
-    if (currentPlayer) {
-      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
-      console.log('[GamePage] Snapshot sauvegardé avant retour :', currentPlayer);
-    }
-  } catch (e) {
-    console.warn('[GamePage] Impossible de sauvegarder le snapshot avant retour', e);
+  // Sauvegarder avant de partir
+  if (currentPlayer) {
+    localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
   }
 
-  setIsExiting(true);
+  // ✅ Invalider le cache de la liste des joueurs pour forcer un refetch
+  localStorage.removeItem(`ut:players-list:ts:${session?. user?.id}`);
 
-  onBackToSelection?.();
+  setIsExiting(true);
+  onBackToSelection?. ();
 };
 
   /* ---------------- Reload inventaire (sécurité) ---------------- */
