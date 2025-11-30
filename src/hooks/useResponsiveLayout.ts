@@ -4,13 +4,14 @@ export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 // Breakpoints alignés avec ResponsiveGameLayout
 const MOBILE_BREAKPOINT = 768;   // sm breakpoint
+const TABLET_BREAKPOINT = 996;   // md breakpoint  
 const DESKTOP_BREAKPOINT = 1200; // lg breakpoint
 
 function getDeviceType(width: number): DeviceType {
   if (width < MOBILE_BREAKPOINT) return 'mobile';
   if (width < DESKTOP_BREAKPOINT) return 'tablet';
   return 'desktop';
-}
+} 
 
 export function useResponsiveLayout(): DeviceType {
   const [deviceType, setDeviceType] = useState<DeviceType>(() => {
