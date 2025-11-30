@@ -96,7 +96,7 @@ export function DesktopView({
       {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
       {deviceType === 'desktop' && (
         <div 
-          className="fixed inset-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-none transition-opacity duration-200"
           style={{
             zIndex: 0,
             overflow: 'hidden',
