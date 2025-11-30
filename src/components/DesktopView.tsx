@@ -154,15 +154,17 @@ export function DesktopView({
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
                <div 
+       <div 
           className="flex-1 overflow-y-auto overflow-x-auto p-4 lg:p-6"
           style={{
             scrollbarGutter: 'stable',
+            minHeight: 0, // Force le container flex à respecter le overflow
           }}
         >
           <div
             className="max-w-[1280px] mx-auto space-y-4"
             style={{
-              minWidth: 1024,
+              minWidth: 'min(1024px, 100vw - 2rem)', // Évite l'overflow horizontal sur petits écrans
             }}
           >
 
