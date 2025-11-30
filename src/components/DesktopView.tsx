@@ -28,7 +28,7 @@ interface DesktopViewProps {
 export function DesktopView({
   player,
   inventory,
-  onPlayerUpdate,
+  onPlayerUpdate, 
   onInventoryUpdate,
   classSections,
   session,
@@ -96,7 +96,7 @@ export function DesktopView({
       {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
       {deviceType === 'desktop' && (
         <div 
-          className="fixed inset-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-none transition-opacity duration-200"
           style={{
             zIndex: 0,
             overflow: 'hidden',
@@ -153,16 +153,17 @@ export function DesktopView({
       <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
         
         {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-               <div 
+       <div 
           className="flex-1 overflow-y-auto overflow-x-auto p-4 lg:p-6"
           style={{
             scrollbarGutter: 'stable',
+            minHeight: 0, // Force le container flex à respecter le overflow
           }}
         >
           <div
             className="max-w-[1280px] mx-auto space-y-4"
             style={{
-              minWidth: 1024,
+              minWidth: 'min(1024px, 100vw - 2rem)', // Évite l'overflow horizontal sur petits écrans
             }}
           >
 
@@ -195,17 +196,23 @@ export function DesktopView({
                 </div>
               </div>
 
-              <div className="col-span-8">
-                {abilities.length > 0 && (
-                  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full"> 
+               <div className="col-span-8">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+                  {abilities. length > 0 ? (
                     <HorizontalAbilityScores
                       abilities={abilities}
                       inventory={inventory}
                       onAbilityClick={handleAbilityClick}
                       onSavingThrowClick={handleSavingThrowClick}
                     />
-                  </div>
-                )} 
+                  ) : (
+                    <div className="flex items-center justify-center h-full min-h-[120px]">
+                      <div className="text-center text-gray-500">
+                        <div className="animate-pulse">Chargement des caractéristiques... </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div> 
 
