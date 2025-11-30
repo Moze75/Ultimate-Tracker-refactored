@@ -124,54 +124,54 @@ const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSett
 
 
  
-// État pour suivre si on a déjà fait le fetch initial
+// GamePage.tsx - Remplacer le useEffect de fetch (~lignes 127-174)
+
 const hasFetchedRef = useRef(false);
+const FETCH_THROTTLE_MS = 30000; // 30 secondes
 
 useEffect(() => {
-  // Reset le flag si le personnage change
-  if (prevPlayerId.current !== selectedCharacter.id) {
+  if (prevPlayerId. current !== selectedCharacter.id) {
     hasFetchedRef. current = false;
-    prevPlayerId.current = selectedCharacter. id;
+    prevPlayerId.current = selectedCharacter.id;
   }
 
-  // 1. Utiliser immédiatement selectedCharacter (déjà chargé par CharacterSelectionPage)
+  // Afficher immédiatement
   setCurrentPlayer(selectedCharacter);
   setLoading(false);
 
-  // 2.  Si pas encore fetch depuis Supabase, le faire en arrière-plan
-  if (!hasFetchedRef.current) {
-    hasFetchedRef. current = true;
-    
-    const fetchFreshData = async () => {
-      try {
-        const { data, error } = await supabase
-          . from('players')
-          .select('*')
-          . eq('id', selectedCharacter.id)
-          .single();
-        
-        if (! error && data) {
-          // ✅ Fusionner les données au lieu d'écraser
-          setCurrentPlayer(prev => {
-            // Si les données sont identiques, ne pas re-render
-            if (JSON.stringify(prev) === JSON.stringify(data)) {
-              return prev;
-            }
-            console.log('[GamePage] ✅ Données mises à jour depuis Supabase');
-            return data;
-          });
-          
-          // Mettre à jour le cache
-          localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
-        }
-      } catch (e) {
-        console.error('[GamePage] Erreur fetch Supabase', e);
-      }
-    };
-    
-    fetchFreshData();
+  // Fetch throttled
+  if (!hasFetchedRef. current) {
+    const fetchTsKey = `ut:player-fetch-ts:${selectedCharacter.id}`;
+    const lastFetch = parseInt(localStorage.getItem(fetchTsKey) || '0', 10);
+    const elapsed = Date.now() - lastFetch;
+
+    if (elapsed > FETCH_THROTTLE_MS) {
+      hasFetchedRef. current = true;
+
+      supabase
+        . from('players')
+        .select('*')
+        .eq('id', selectedCharacter.id)
+        .single()
+        .then(({ data, error }) => {
+          if (! error && data) {
+            localStorage.setItem(fetchTsKey, Date.now().toString());
+            
+            setCurrentPlayer(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+              console.log('[GamePage] ✅ Sync depuis Supabase');
+              localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
+              return data;
+            });
+          }
+        })
+        .catch(e => console.error('[GamePage] Erreur fetch:', e));
+    } else {
+      console.log('[GamePage] ⏳ Throttled, skip fetch');
+      hasFetchedRef. current = true;
+    }
   }
-}, [selectedCharacter]);  // ✅ Dépendre de l'objet entier, pas juste . id
+}, [selectedCharacter]);
 
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
