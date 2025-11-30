@@ -203,26 +203,28 @@ export function DesktopView({
                 </div>
               </div>
 
-              <div className="col-span-8">
-                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-                  {abilities.length > 0 ?  (
-                    <HorizontalAbilityScores
-                      abilities={abilities}
-                      inventory={inventory}
-                      onAbilityClick={handleAbilityClick}
-                      onSavingThrowClick={handleSavingThrowClick}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-gray-500 text-sm">
-                        Aucune caractéristique configurée.  
-                        <br />
-                        <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+ <div className="col-span-8">
+  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
+      <button
+        title="Modifier les caractéristiques"
+        className="p-2 rounded-lg hover:bg-gray-700 transition-colors text-gray-400"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3a1.5 1.5 0 0 1 1.49 1.326l.26 2.094a1.455 1.455 0 0 0 .482.543l.01.007a1.5 1.5 0 0 0 1.516.023l1.698-1.026a1.5 1.5 0 0 1 2.016.454l1.993 2.765a1.5 1.5 0 0 1-.453 2.06l-1.7 1.026a1.5 1.5 0 0 0-.707 1.255V15a1.5 1.5 0 0 1-1.5 1.5h-3a1.5 1.5 0 0 1-1.5-1.5v-2.913a1.5 1.5 0 0 0-.707-1.255l-1.7-1.026a1.5 1.5 0 0 1-.453-2.06l1.993-2.765A1.5 1.5 0 0 1 11.5 5.484l1.7 1.027a1.5 1.5 0 0 0 1.516-.023 1.5 1.5 0 0 0 .492-.55l.26-2.094A1.5 1.5 0 0 1 18.25 3" />
+        </svg>
+      </button>
+    </div>
+    <HorizontalAbilityScores
+      abilities={abilities}
+      inventory={inventory}
+      onAbilityClick={handleAbilityClick}
+      onSavingThrowClick={handleSavingThrowClick}
+    />
+  </div>
+</div>
             </div> 
 
             {/* Grille Skills + TabbedPanel */}
