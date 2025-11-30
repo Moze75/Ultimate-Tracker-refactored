@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 // On garde 768 comme SEULE frontière importante
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 1200;
 
 function getDeviceType(width: number): DeviceType {
   if (width < MOBILE_BREAKPOINT) return 'mobile';
