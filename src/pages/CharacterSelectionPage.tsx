@@ -394,27 +394,29 @@ const fetchPlayers = async () => {
     }
   };
 
-  const handleSignOut = async () => {
+const handleSignOut = async () => {
+  try {
+    await clearServiceWorkerCache();
+    
+    const { error } = await authService.signOut();
+    if (error) throw error;
+
+    toast.success('Déconnexion réussie');
+
+    appContextService.clearContext();
+    appContextService.clearWizardSnapshot();
+    
     try {
-      await clearServiceWorkerCache();
-      
-      const { error } = await authService.signOut();
-      if (error) throw error;
+      // ✅ Supprimer les deux clés possibles
+      localStorage. removeItem('selectedCharacter');  // Clé utilisée par GamePage
+      localStorage.removeItem('lastSelectedCharacterSnapshot');  // Ancienne clé
+      localStorage.removeItem(PENDING_PLAN_KEY);
+      sessionStorage.clear();
+    } catch {}
 
-      toast.success('Déconnexion réussie');
-
-      appContextService.clearContext();
-      appContextService.clearWizardSnapshot();
-      
-      try {
-        localStorage.removeItem(LAST_SELECTED_CHARACTER_SNAPSHOT);
-        localStorage.removeItem(PENDING_PLAN_KEY); // Nettoyage de sécurité
-        sessionStorage.clear();
-      } catch {}
-
-      window.location.href = window.location.origin;
-      
-    } catch (error: any) {
+    window.location. href = window.location.origin;
+    
+  } catch (error: any) {
       console.error('❌ Erreur de déconnexion:', error);
       toast.error('Erreur lors de la déconnexion');
       
