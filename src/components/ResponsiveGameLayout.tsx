@@ -194,19 +194,21 @@ export function ResponsiveGameLayout({
         </div>
       </div>
 
-      {/* Grille responsive */}
+         {/* Grille responsive */}
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
         /* 
-           CORRECTION DES BREAKPOINTS ET COLONNES :
-           1. On abaisse lg à 1100 pour éviter le problème de scrollbar.
-           2. IMPORTANT : On met cols={{ ... md: 12 }} au lieu de 10.
-              Ainsi, même si la grille passe en mode "md", elle garde la même structure
-              que le mode "lg". Pas de réarrangement brutal.
+           CORRECTION : Synchronisation avec le Hook useResponsiveLayout.
+           On remonte le breakpoint 'md' à 1000 pour qu'il matche votre "MOBILE_BREAKPOINT".
+           
+           Résultat :
+           - Au-dessus de 1000px : Mode 12 colonnes (Desktop confortable)
+           - En dessous de 1000px : Mode 'sm' (6 colonnes ou empilé), ce qui évite
+             le téléscopage sur les tablettes et petits écrans.
         */
-        breakpoints={{ lg: 1100, md: 768, sm: 0 }}
-        cols={{ lg: 12, md: 12, sm: 6 }} 
+        breakpoints={{ lg: 1100, md: 1000, sm: 0 }}
+        cols={{ lg: 12, md: 12, sm: 6 }}
         
         rowHeight={60}
         isDraggable={!isLocked}
