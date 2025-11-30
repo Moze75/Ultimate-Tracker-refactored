@@ -263,6 +263,7 @@ export function DesktopView({
   )}
 </div>
             </div> 
+            </div>
 
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
