@@ -209,21 +209,19 @@ export function DesktopView({
               
 <div className="col-span-8">
   <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-    {/* Ajout de la barre avec la roue des paramètres */}
+    {/* Barre avec titre + accès au modal Stats */}
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
       <button
-        onClick={() => setSettingsOpen(true)}
+        onClick={() => setShowStatsTab(true)}
         title="Modifier les caractéristiques"
         className="p-2 rounded-lg text-gray-400 hover:bg-gray-700/60 hover:text-gray-100 transition-colors"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 3h.01m6.93-6.91l-1.42 1.42a2 2 0 00-.42 2.11l.77 2.3C17.79 13.82 17 14.91 17 16a4 4 0 01-2 3.46l-.78-3.11a2 2 0 00-2.43-1.34L8.9 15.5l-.17-.68a2.02 2.02 0 00-2.11-.42l-1.42 1.42m2.17-3.25L13.99 3h-4l-2.83 2" />
-        </svg>
+        <Settings size={22} />
       </button>
     </div>
 
-    {/* Contenu du bloc des caractéristiques */}
+    {/* HorizontalAbilityScores ou message par défaut */}
     {abilities.length > 0 ? (
       <HorizontalAbilityScores
         abilities={abilities}
@@ -240,9 +238,30 @@ export function DesktopView({
         </p>
       </div>
     )}
-  </div> 
+  </div>
+
+  {/* Modal StatsTab */}
+  {showStatsTab && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full p-6">
+        <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
+          <h4 className="text-lg font-semibold text-gray-100">Édition des Caractéristiques</h4>
+          <button
+            onClick={() => setShowStatsTab(false)}
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-100 transition-colors"
+          >
+            ✖
+          </button>
+        </div>
+        <StatsTab
+          player={player}
+          inventory={inventory}
+          onUpdate={onPlayerUpdate}
+        />
+      </div>
+    </div>
+  )}
 </div>
-            </div>  
 
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
