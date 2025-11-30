@@ -265,7 +265,6 @@ useEffect(() => {
     try {
       setLoading(true);
       
-      // ✅ OPTIMISÉ : Ne récupérer que les colonnes nécessaires pour l'affichage
     // ✅ SOLUTION : Récupérer TOUTES les colonnes avec select('*')
     // Car stats, abilities, class_resources sont des JSONB
     const { data, error } = await supabase
@@ -289,21 +288,6 @@ useEffect(() => {
     setPlayers(players);
     playersLoadedRef.current = true;
   } catch (error: any) {
-      
-      // Fallback : utiliser le cache même expiré
-      try {
-        const cachedData = localStorage. getItem(PLAYERS_LIST_CACHE_KEY);
-        if (cachedData) {
-          setPlayers(JSON. parse(cachedData));
-          console. log('[CharacterSelection] 📴 Utilisation du cache expiré');
-        }
-      } catch {}
-      
-      toast.error('Erreur lors de la récupération des personnages');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreatorComplete = async (payload: CharacterExportPayload) => {
     if (creating) return;
