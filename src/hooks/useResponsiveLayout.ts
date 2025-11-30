@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
-const MOBILE_BREAKPOINT = 700;
-const TABLET_BREAKPOINT = 768;
-const DESKTOP_BREAKPOINT = 1024;
+// Breakpoints alignés avec ResponsiveGameLayout
+const MOBILE_BREAKPOINT = 768;   // sm breakpoint
+const TABLET_BREAKPOINT = 996;   // md breakpoint  
+const DESKTOP_BREAKPOINT = 1200; // lg breakpoint
 
 function getDeviceType(width: number): DeviceType {
   if (width < MOBILE_BREAKPOINT) return 'mobile';
@@ -17,23 +18,36 @@ export function useResponsiveLayout(): DeviceType {
     if (typeof window === 'undefined') return 'desktop';
     return getDeviceType(window.innerWidth);
   });
+  
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Vérifier immédiatement au montage (pour corriger les problèmes de SSR/hydratation)
     const initialWidth = window.innerWidth;
     const initialDeviceType = getDeviceType(initialWidth);
-    if (initialDeviceType !== deviceType) {
-      setDeviceType(initialDeviceType);
-    }
+    setDeviceType(initialDeviceType);
 
     const handleResize = () => {
-      const width = window.innerWidth;
-      const newDeviceType = getDeviceType(width);
-      setDeviceType((prev) => (prev === newDeviceType ? prev : newDeviceType));
+      // Debounce pour éviter le clignotement
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      resizeTimeoutRef.current = setTimeout(() => {
+        const width = window.innerWidth;
+        const newDeviceType = getDeviceType(width);
+        setDeviceType((prev) => (prev === newDeviceType ? prev : newDeviceType));
+      }, 100); // 100ms de debounce
     };
 
-    window. addEventListener('resize', handleResize);
-    return () => window. removeEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
   }, []);
 
   return deviceType;
