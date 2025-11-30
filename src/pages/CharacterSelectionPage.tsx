@@ -277,7 +277,7 @@ const { data, error } = await supabase
     race,
     current_hp, 
     max_hp,
-    temporary_hp,
+    temporary_hp, 
     avatar_url,
     secondary_class,
     secondary_level, 
