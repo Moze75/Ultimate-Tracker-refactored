@@ -14,12 +14,17 @@ interface PlayerAvatarProps {
     secondary_level?: number | null;
   };
   onEdit: () => void;
-  onOpenDiceSettings?: () => void; // ✅ Ajouter
+  onOpenDiceSettings?: () => void;
 }
 
 export function PlayerAvatar({ player, onEdit, onOpenDiceSettings }: PlayerAvatarProps) {
   return (
-    <div className="relative w-full min-w-0 aspect-[7/10] sm:aspect-[2/3] md:aspect-[auto] md:h-[60vh] lg:h-[70vh] rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center md:max-h-[500px]">
+    <div 
+      // CORRECTION : Suppression de "md:aspect-[auto] md:h-[60vh] lg:h-[70vh]"
+      // On garde uniquement l'aspect ratio pour que l'image reste un rectangle "Portrait"
+      // quelle que soit la taille de l'écran (comportement mobile partout).
+      className="relative w-full min-w-0 aspect-[7/10] sm:aspect-[2/3] rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center"
+    >
       <button
         onClick={onEdit}
         className="absolute top-2 left-2 w-9 h-9 rounded-full bg-gray-900/40 backdrop-blur-sm text-white hover:bg-gray-800/50 hover:text-white flex items-center justify-center z-10 transition-colors"
@@ -28,7 +33,6 @@ export function PlayerAvatar({ player, onEdit, onOpenDiceSettings }: PlayerAvata
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* ✅ Passer onOpenDiceSettings à Avatar */}
       <Avatar
         url={player.avatar_url || ''}
         playerId={player.id}
