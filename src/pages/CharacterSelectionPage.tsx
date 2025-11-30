@@ -229,23 +229,26 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
       setLoading(true);
       
       // ✅ OPTIMISÉ : Ne récupérer que les colonnes nécessaires pour l'affichage
-      const { data, error } = await supabase
-        . from('players')
-        .select(`
-          id,
-          name,
-          adventurer_name,
-          class,
-          level,
-          race,
-          current_hp,
-          max_hp,
-          temporary_hp,
-          avatar_url,
-          secondary_class,
-          secondary_level,
-          created_at
-        `)
+const { data, error } = await supabase
+  .from('players')
+  .select(`
+    id,
+    name,
+    adventurer_name,
+    class,
+    level,
+    race,
+    current_hp,
+    max_hp,
+    temporary_hp,
+    avatar_url,
+    secondary_class,
+    secondary_level,
+    created_at,
+    speed,           // ✅ AJOUTER
+    armor_class,     // ✅ AJOUTER
+    initiative_bonus // ✅ AJOUTER (si utilisé)
+  `)
         . eq('user_id', session.user. id)
         . order('created_at', { ascending: true });
 
