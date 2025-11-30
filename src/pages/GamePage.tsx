@@ -124,26 +124,38 @@ const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSett
 
 
  
-// Effet 2 : Recharger les données depuis Supabase si nécessaire
+// ✅ GARDER UNIQUEMENT : Fetch depuis Supabase si le personnage change
 useEffect(() => {
-  const fetchPlayer = async () => {
+  const fetchPlayerFromSupabase = async () => {
+    if (! selectedCharacter?. id) return;
+    
     try {
       const { data, error } = await supabase
-        .from('players')
+        . from('players')
         .select('*')
         .eq('id', selectedCharacter.id)
         .single();
-      if (!error && data) {
+      
+      if (! error && data) {
+        console.log('[GamePage] ✅ Données fraîches depuis Supabase:', data. speed);
         setCurrentPlayer(data);
-        console.log('[GamePage] Données rechargées depuis Supabase après navigation :', data);
+        // Mettre à jour le cache APRÈS avoir reçu les données correctes
+        localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
       }
     } catch (e) {
-      console.error('[GamePage] Erreur lors du fetch depuis Supabase après navigation', e);
+      console.error('[GamePage] Erreur fetch Supabase', e);
+      // Fallback: utiliser selectedCharacter passé en prop
+      setCurrentPlayer(selectedCharacter);
     }
   };
-
-  fetchPlayer();
-}, [selectedCharacter.id]);
+  
+  // Utiliser immédiatement selectedCharacter (déjà chargé par CharacterSelectionPage)
+  setCurrentPlayer(selectedCharacter);
+  
+  // Puis rafraîchir depuis Supabase en arrière-plan (optionnel, pour garantir la fraîcheur)
+  fetchPlayerFromSupabase();
+  
+}, [selectedCharacter. id]);
 
 // ✅ AJOUT : Debug du chargement des settings
 useEffect(() => {
