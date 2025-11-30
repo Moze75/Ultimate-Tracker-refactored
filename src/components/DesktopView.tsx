@@ -214,6 +214,8 @@ export function DesktopView({
         inventory={inventory}
         onAbilityClick={handleAbilityClick}
         onSavingThrowClick={handleSavingThrowClick}
+        player={player}
+        onUpdate={onPlayerUpdate}
       />
     ) : (
       <div className="flex items-center justify-center h-full">
