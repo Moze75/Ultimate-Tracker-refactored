@@ -204,16 +204,7 @@ export function DesktopView({
               </div>
 
 
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
-      <button
-        onClick={() => setSettingsOpen(true)}
-        title="Modifier les caractéristiques"
-        className="p-2 rounded-lg text-gray-400 hover:bg-gray-700/60 hover:text-gray-100 transition-colors"
-      >
-        <Settings size={22} />
-      </button>
-    </div>
+ 
               
               <div className="col-span-8">
                 <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
