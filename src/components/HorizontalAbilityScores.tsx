@@ -163,7 +163,7 @@ export function HorizontalAbilityScores({
   const displayAbilities = editing ? localAbilities : abilities;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
         {player && onUpdate && (
