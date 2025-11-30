@@ -14,7 +14,6 @@ import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 
-
 interface DesktopViewProps {
   player: Player;
   inventory: any[];
@@ -56,15 +55,7 @@ export function DesktopView({
     ? player.abilities
     : [];
 
-  // 🔍 DEBUG: Vérifier si les abilities sont chargées
-  console.log('🔍 [DesktopView] abilities:', {
-    playerAbilities: player. abilities,
-    abilitiesLength: abilities.length,
-    abilities: abilities.map(a => a.name)
-  });
-
   const handleAbilityClick = (ability: Ability) => {
-    console.log('🎲 [DesktopView] Lancer caractéristique:', ability.name);
     rollDice({
       type: 'ability',
       attackName: `Test de ${ability.name}`,
@@ -74,7 +65,6 @@ export function DesktopView({
   };
 
   const handleSavingThrowClick = (ability: Ability) => {
-    console.log('🎲 [DesktopView] Lancer sauvegarde:', ability.name);
     rollDice({
       type: 'saving-throw',
       attackName: `Sauvegarde de ${ability.name}`,
@@ -84,7 +74,6 @@ export function DesktopView({
   };
 
   const handleSkillClick = (skillName: string, bonus: number) => {
-    console.log('🎲 [DesktopView] Lancer compétence:', skillName);
     rollDice({
       type: 'skill',
       attackName: `Test de ${skillName}`,
@@ -93,17 +82,15 @@ export function DesktopView({
     });
   };
 
-  // Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
   };
 
-  return ( 
+  return (
     <>
-      {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
       {deviceType === 'desktop' && (
-        <div 
+        <div
           className="fixed inset-0 pointer-events-none transition-opacity duration-200"
           style={{
             zIndex: 0,
@@ -145,10 +132,10 @@ export function DesktopView({
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: '100%', 
+                height: '100%',
                 objectFit: 'cover',
                 objectPosition: 'center top',
-                pointerEvents: 'none', 
+                pointerEvents: 'none',
                 userSelect: 'none',
                 filter: 'brightness(0.95)',
               }}
@@ -157,11 +144,8 @@ export function DesktopView({
         </div>
       )}
 
-      {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
       <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
-        
-        {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-       <div 
+        <div
           className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
           style={{
             scrollbarGutter: 'stable',
@@ -174,8 +158,6 @@ export function DesktopView({
               minWidth: 0,
             }}
           >
-
-            {/* Header */}
             <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
               <DesktopHeader
                 player={player}
@@ -188,12 +170,11 @@ export function DesktopView({
                 setActiveTooltip={setActiveTooltip}
               />
             </div>
-            
-            {/* Grille HP + Abilities */}
+
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
                 <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
-                  <HPManagerConnected 
+                  <HPManagerConnected
                     player={player}
                     onUpdate={onPlayerUpdate}
                     onConcentrationCheck={(dc) => {
@@ -204,47 +185,42 @@ export function DesktopView({
                 </div>
               </div>
 
- 
- 
-              
-<div className="col-span-8">
-  <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
-    {/* Ajout de la barre avec la roue des paramètres */}
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-100">Caractéristiques</h3>
-      <button
-        onClick={() => setSettingsOpen(true)}
-        title="Modifier les caractéristiques"
-        className="p-2 rounded-lg text-gray-400 hover:bg-gray-700/60 hover:text-gray-100 transition-colors"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 3h.01m6.93-6.91l-1.42 1.42a2 2 0 00-.42 2.11l.77 2.3C17.79 13.82 17 14.91 17 16a4 4 0 01-2 3.46l-.78-3.11a2 2 0 00-2.43-1.34L8.9 15.5l-.17-.68a2.02 2.02 0 00-2.11-.42l-1.42 1.42m2.17-3.25L13.99 3h-4l-2.83 2" />
-        </svg>
-      </button>
-    </div>
+              <div className="col-span-8">
+                <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full min-h-[180px]">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-100">
+                      Caractéristiques
+                    </h3>
+                    <button
+                      onClick={() => setShowStatsTab(true)}
+                      title="Modifier les caractéristiques"
+                      className="p-2 rounded-lg text-gray-400 hover:bg-gray-700/60 hover:text-gray-100 transition-colors"
+                    >
+                      ✨ {/* Icône ou texte */}
+                    </button>
+                  </div>
+                  {abilities.length > 0 ? (
+                    <HorizontalAbilityScores
+                      abilities={abilities}
+                      inventory={inventory}
+                      onAbilityClick={handleAbilityClick}
+                      onSavingThrowClick={handleSavingThrowClick}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500 text-sm">
+                        Aucune caractéristique configurée.
+                        <br />
+                        <span className="text-xs">
+                          Allez dans l'onglet "Stats" pour configurer.
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
-    {/* Contenu du bloc des caractéristiques */}
-    {abilities.length > 0 ? (
-      <HorizontalAbilityScores
-        abilities={abilities}
-        inventory={inventory}
-        onAbilityClick={handleAbilityClick}
-        onSavingThrowClick={handleSavingThrowClick}
-      />
-    ) : (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-sm">
-          Aucune caractéristique configurée.
-          <br />
-          <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
-        </p>
-      </div>
-    )}
-  </div>  
-</div>
-            </div>  
-
-            {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4 flex">
                 <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4 w-full max-h-[880px]">
@@ -269,7 +245,6 @@ export function DesktopView({
               </div>
             </div>
 
-            {/* Bouton Retour aux personnages - À LA FIN DE LA ZONE SCROLLABLE */}
             {onBackToSelection && (
               <div className="w-full mt-6 pb-6">
                 <button
@@ -281,13 +256,9 @@ export function DesktopView({
                 </button>
               </div>
             )}
-
           </div>
         </div>
-
       </div>
-
-      {/* 🔥 MODALS EN OVERLAY */}
 
       <PlayerProfileSettingsModal
         open={settingsOpen}
@@ -297,15 +268,20 @@ export function DesktopView({
         slideFrom="left"
       />
 
-      <CampaignPlayerModal
-        open={showCampaignModal}
-        onClose={() => setShowCampaignModal(false)}
-        player={player}
-        onUpdate={onPlayerUpdate}
-        onInventoryAdd={(item) => {
-          console.log('New item added:', item);
-        }}
-      /> 
+      {showStatsTab && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+          <StatsTab player={player} inventory={inventory} onUpdate={onPlayerUpdate} />
+        </div>
+      )}
+
+      {showCampaignModal && (
+        <CampaignPlayerModal
+          open={showCampaignModal}
+          onClose={() => setShowCampaignModal(false)}
+          player={player}
+          onUpdate={onPlayerUpdate}
+        />
+      )}
 
       <DiceSettingsModal
         open={showDiceSettings}
@@ -316,7 +292,7 @@ export function DesktopView({
         onBackgroundChange={handleBackgroundChange}
         deviceType="desktop"
       />
-      
+
       {showConcentrationCheck && (
         <ConcentrationCheckModal
           player={player}
@@ -325,6 +301,6 @@ export function DesktopView({
           onClose={() => setShowConcentrationCheck(false)}
         />
       )}
-    </> 
+    </>
   );
 }
