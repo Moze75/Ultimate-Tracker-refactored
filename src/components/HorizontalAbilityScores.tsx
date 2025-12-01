@@ -145,45 +145,59 @@ export function HorizontalAbilityScores({
     setLocalAbilities(updatedAbilities);
   };
 
-  const handleSave = async () => {
-    if (!player || !onUpdate) {
-      toast.error('Impossible de sauvegarder');
-      return;
+ const handleSave = async () => {
+  if (!player || !onUpdate) {
+    toast.error('Impossible de sauvegarder');
+    return;
+  }
+
+  try {
+    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
+    const dexMod = getModifier(dexScore);
+
+    // ✅ NOUVEAU : Vérifier si une armure est équipée
+    const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
+
+    // ✅ NOUVEAU : Recalculer la CA si Moine/Barbare sans armure
+    let newArmorClass = player.stats?. armor_class ?? (10 + dexMod);
+    
+    if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
+      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities);
+      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass}`);
+    } else if (!hasArmorEquipped) {
+      newArmorClass = 10 + dexMod;
     }
 
-    try {
-      const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
-      const dexMod = getModifier(dexScore);
+    const mergedStats = {
+      ... player.stats,
+      proficiency_bonus: getProficiencyBonus(player.level),
+      initiative: dexMod,
+      armor_class: newArmorClass, // ✅ NOUVEAU
+    };
 
-      const mergedStats = {
-        ...player.stats,
-        proficiency_bonus: getProficiencyBonus(player.level),
-        initiative: dexMod
-      };
-
-      const { error } = await supabase
-        .from('players')
-        .update({ 
-          abilities: localAbilities,
-          stats: mergedStats
-        })
-        .eq('id', player.id);
-
-      if (error) throw error;
-
-      onUpdate({
-        ...player,
+    const { error } = await supabase
+      .from('players')
+      .update({ 
         abilities: localAbilities,
         stats: mergedStats
-      });
+      })
+      .eq('id', player.id);
 
-      setEditing(false);
-      toast.success('Caractéristiques mises à jour');
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-      toast.error('Erreur lors de la mise à jour');
-    }
-  };
+    if (error) throw error;
+
+    onUpdate({
+      ...player,
+      abilities: localAbilities,
+      stats: mergedStats
+    });
+
+    setEditing(false);
+    toast.success('Caractéristiques mises à jour');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour:', error);
+    toast.error('Erreur lors de la mise à jour');
+  }
+};
 
   const handleCancel = () => {
     setLocalAbilities(abilities);
