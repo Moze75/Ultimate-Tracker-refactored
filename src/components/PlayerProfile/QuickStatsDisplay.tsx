@@ -33,15 +33,7 @@ const getWisModFromPlayer = (player: Player): number => {
   return 0;
 };
 
- const getConModFromPlayer = (player: Player): number => {
-  const abilities: any = (player as any).abilities;
-  const fromArray = Array.isArray(abilities) 
-    ?  abilities.find((a: any) => a?.name === 'Constitution') 
-    : undefined;
-  if (fromArray?. modifier != null) return fromArray.modifier;
-  if (fromArray?.score != null) return Math.floor((fromArray.score - 10) / 2);
-  return 0;
-};
+  
 
 const getConModFromPlayer = (player: Player): number => {
   const abilities: any = (player as any).abilities;
