@@ -8,6 +8,55 @@ import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { AbilityScoreGrid } from './AbilityScoreGrid';
 import { SkillsTable } from './SkillsTable';
 
+// Ajouter après les imports existants (vers ligne 10)
+// ========== HELPERS POUR LE CALCUL DE LA CA ==========
+
+const getConModFromPlayer = (player: Player): number => {
+  const abilities: any = (player as any).abilities;
+  const fromArray = Array.isArray(abilities) 
+    ? abilities. find((a: any) => a?. name === 'Constitution') 
+    : undefined;
+  if (fromArray?. modifier != null) return fromArray.modifier;
+  if (fromArray?.score != null) return Math.floor((fromArray.score - 10) / 2);
+  return 0;
+};
+
+const getWisModFromPlayer = (player: Player): number => {
+  const abilities: any = (player as any).abilities;
+  const fromArray = Array.isArray(abilities) 
+    ? abilities.find((a: any) => a?.name === 'Sagesse') 
+    : undefined;
+  if (fromArray?.modifier != null) return fromArray.modifier;
+  if (fromArray?.score != null) return Math.floor((fromArray.score - 10) / 2);
+  return 0;
+};
+
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur
+ * à partir des abilities LOCALES (pas celles du player stocké)
+ */
+const calculateUnarmoredACFromAbilities = (
+  playerClass: string | null | undefined,
+  abilities: Ability[]
+): number => {
+  const dexAbility = abilities.find(a => a.name === 'Dextérité');
+  const dexMod = dexAbility ?  getModifier(dexAbility.score) : 0;
+
+  if (playerClass === 'Moine') {
+    const wisAbility = abilities. find(a => a.name === 'Sagesse');
+    const wisMod = wisAbility ? getModifier(wisAbility. score) : 0;
+    return 10 + dexMod + wisMod;
+  }
+
+  if (playerClass === 'Barbare') {
+    const conAbility = abilities. find(a => a.name === 'Constitution');
+    const conMod = conAbility ? getModifier(conAbility.score) : 0;
+    return 10 + dexMod + conMod;
+  }
+
+  return 10 + dexMod;
+};
+
 interface StatsTabProps {
   player: Player;
   inventory: any[];
