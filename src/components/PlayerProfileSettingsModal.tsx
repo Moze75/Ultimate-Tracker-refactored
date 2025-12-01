@@ -1136,7 +1136,13 @@ useEffect(() => {
                     }}
               
                     className="input-dark w-full px-3 py-2 rounded-md"
-                    placeholder="Auto si vide: 10 + mod DEX"
+                    placeholder={
+  player.class === 'Moine' 
+    ? "Auto si vide: 10 + DEX + SAG" 
+    : player.class === 'Barbare'
+      ? "Auto si vide: 10 + DEX + CON"
+      : "Auto si vide: 10 + DEX"
+}
                   />
                 </div>
 
