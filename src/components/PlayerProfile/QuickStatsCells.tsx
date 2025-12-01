@@ -5,8 +5,8 @@ import { Player } from '../../types/dnd';
 interface QuickStatsCellsProps {
   player: Player;
   inventory: any[];
-  activeTooltip?: 'ac' | 'speed' | null;
-  setActiveTooltip?: (tooltip: 'ac' | 'speed' | null) => void;
+  activeTooltip?: 'ac' | 'speed' | 'initiative' | 'proficiency' | null;
+  setActiveTooltip?: (tooltip: 'ac' | 'speed' | 'initiative' | 'proficiency' | null) => void;
 }
 
 const getProficiencyBonusForLevel = (level: number): number => {
@@ -19,17 +19,25 @@ const getProficiencyBonusForLevel = (level: number): number => {
 
 const getDexModFromPlayer = (player: Player): number => {
   const abilities: any = (player as any).abilities;
-  const fromArray = Array.isArray(abilities) ? abilities.find((a: any) => a?.name === 'Dextérité') : undefined;
-  if (fromArray?.modifier != null) return fromArray.modifier;
+  const fromArray = Array.isArray(abilities) ?  abilities.find((a: any) => a?. name === 'Dextérité') : undefined;
+  if (fromArray?. modifier != null) return fromArray.modifier;
   if (fromArray?.score != null) return Math.floor((fromArray.score - 10) / 2);
   return 0;
 };
 
 const getWisModFromPlayer = (player: Player): number => {
   const abilities: any = (player as any).abilities;
-  const fromArray = Array.isArray(abilities) ? abilities.find((a: any) => a?.name === 'Sagesse') : undefined;
+  const fromArray = Array.isArray(abilities) ? abilities.find((a: any) => a?. name === 'Sagesse') : undefined;
   if (fromArray?.modifier != null) return fromArray.modifier;
-  if (fromArray?.score != null) return Math.floor((fromArray.score - 10) / 2);
+  if (fromArray?.score != null) return Math. floor((fromArray. score - 10) / 2);
+  return 0;
+};
+
+const getConModFromPlayer = (player: Player): number => {
+  const abilities: any = (player as any).abilities;
+  const fromArray = Array.isArray(abilities) ?  abilities.find((a: any) => a?.name === 'Constitution') : undefined;
+  if (fromArray?.modifier != null) return fromArray.modifier;
+  if (fromArray?.score != null) return Math. floor((fromArray. score - 10) / 2);
   return 0;
 };
 
@@ -38,17 +46,17 @@ function computeArmorAC(armor_formula: {
   addDex: boolean;
   dexCap?: number | null;
 }, dexMod: number): number {
-  if (!armor_formula) return 0;
-  const base = armor_formula.base || 10;
-  if (!armor_formula.addDex) return base;
-  const cap = armor_formula.dexCap == null ? Infinity : armor_formula.dexCap;
+  if (! armor_formula) return 0;
+  const base = armor_formula. base || 10;
+  if (! armor_formula.addDex) return base;
+  const cap = armor_formula. dexCap == null ?  Infinity : armor_formula.dexCap;
   const applied = Math.max(-10, Math.min(cap, dexMod));
   return base + applied;
 }
 
 const calculateEquipmentBonuses = (inventory: any[]): { armor_class: number } => {
   const bonuses = { armor_class: 0 };
-  if (!inventory || !Array.isArray(inventory)) return bonuses;
+  if (! inventory || ! Array.isArray(inventory)) return bonuses;
 
   for (const item of inventory) {
     try {
@@ -58,10 +66,10 @@ const calculateEquipmentBonuses = (inventory: any[]): { armor_class: number } =>
         .reverse()
         .find((l: string) => l.trim().startsWith('#meta:'));
 
-      if (!metaLine) continue;
-      const meta = JSON.parse(metaLine.trim().slice(6));
-      if (meta.equipped && meta.bonuses?.armor_class) {
-        bonuses.armor_class += meta.bonuses.armor_class;
+      if (! metaLine) continue;
+      const meta = JSON.parse(metaLine.trim(). slice(6));
+      if (meta.equipped && meta.bonuses?. armor_class) {
+        bonuses. armor_class += meta.bonuses. armor_class;
       }
     } catch (e) {
       continue;
@@ -74,7 +82,7 @@ const formatFr = (v: number | string | null | undefined): string => {
   if (v == null) return '0';
   if (typeof v === 'string') {
     if (v.includes(',')) return v.trim();
-    return v.replace('.', ',').trim();
+    return v. replace('. ', ',').trim();
   }
   return v.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 };
@@ -82,8 +90,8 @@ const formatFr = (v: number | string | null | undefined): string => {
 const toNumber = (v: unknown): number => {
   if (typeof v === 'number') return v;
   if (typeof v === 'string') {
-    const n = parseFloat(v.replace(',', '.'));
-    return isNaN(n) ? 0 : n;
+    const n = parseFloat(v. replace(',', '.'));
+    return isNaN(n) ?  0 : n;
   }
   return 0;
 };
@@ -99,23 +107,32 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
 
   const dexMod = getDexModFromPlayer(player);
   const wisMod = getWisModFromPlayer(player);
-  const armorFormula = (player as any)?.equipment?.armor?.armor_formula || null;
-  const shieldBonus = Number((player as any)?.equipment?.shield?.shield_bonus ?? 0) || 0;
+  const conMod = getConModFromPlayer(player);
+  const armorFormula = (player as any)?.equipment?.armor?. armor_formula || null;
+  const shieldBonus = Number((player as any)?. equipment?.shield?.shield_bonus ??  0) || 0;
   const baseACFromStats = Number(stats.armor_class || 0);
 
-  const monkUnarmoredDefense = player.class === 'Moine' && !armorFormula
-    ? 10 + dexMod + wisMod
-    : 0;
+  // Calcul de la défense sans armure selon la classe
+  const calculateClassUnarmoredAC = (): number => {
+    if (player.class === 'Moine') return 10 + dexMod + wisMod;
+    if (player.class === 'Barbare') return 10 + dexMod + conMod;
+    return 10 + dexMod;
+  };
+
+  const unarmoredDefenseAC = ! armorFormula ?  calculateClassUnarmoredAC() : 0;
+  const isAutoACValue = baseACFromStats === (10 + dexMod) || baseACFromStats === 0;
 
   const baseAC = armorFormula
     ? computeArmorAC(armorFormula, dexMod)
-    : baseACFromStats > 0
-      ? baseACFromStats
-      : monkUnarmoredDefense;
+    : (isAutoACValue || baseACFromStats <= 0)
+      ? unarmoredDefenseAC
+      : baseACFromStats;
 
   const equipmentBonuses = calculateEquipmentBonuses(inventory);
   const acBonus = Number((stats as any).ac_bonus || 0);
   const totalAC = baseAC + shieldBonus + acBonus + equipmentBonuses.armor_class;
+
+  // ...  reste du JSX identique
 
   return (
     <div className="flex items-center gap-3"> 
