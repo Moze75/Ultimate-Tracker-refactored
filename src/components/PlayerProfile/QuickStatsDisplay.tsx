@@ -156,21 +156,22 @@ const baseAC = armorFormula
     className="relative w-16 h-14 -mt-2 -mb-1 group cursor-pointer overflow-visible"
     onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
   >
-    <img 
-      src="/background/shield_gris.png" 
-      alt="Bouclier CA"
-      style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '80px',
-        height: '100px',
-        objectFit: 'contain',
-        pointerEvents: 'none',
-        filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-      }}
-    />
+<img 
+  src="/background/shield_gris.png" 
+  alt="Bouclier CA"
+  style={{
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '80px',
+    height: '100px',
+    objectFit: 'contain',
+    pointerEvents: 'none',
+    zIndex: 50,
+    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0. 5))'
+  }}
+/>
     <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100 z-10">
       {totalAC}
     </div>
