@@ -121,15 +121,26 @@ export function QuickStatsDisplay({ player, inventory, activeTooltip, setActiveT
   const shieldBonus = Number((player as any)?.equipment?.shield?.shield_bonus ?? 0) || 0;
   const baseACFromStats = Number(stats.armor_class || 0);
 
-  const monkUnarmoredDefense = player.class === 'Moine' && !armorFormula
-    ? 10 + dexMod + wisMod
-    : 0;
+const conMod = getConModFromPlayer(player);
 
-  const baseAC = armorFormula
-    ? computeArmorAC(armorFormula, dexMod)
-    : baseACFromStats > 0
-      ? baseACFromStats
-      : monkUnarmoredDefense;
+// Calcul de la défense sans armure selon la classe
+const calculateClassUnarmoredAC = (): number => {
+  if (player. class === 'Moine') return 10 + dexMod + wisMod;
+  if (player.class === 'Barbare') return 10 + dexMod + conMod;
+  return 10 + dexMod;
+};
+
+const unarmoredDefenseAC = ! armorFormula ?  calculateClassUnarmoredAC() : 0;
+
+// Déterminer si la CA stockée est une valeur "auto" (égale à 10+DEX basique)
+// ou une valeur personnalisée par l'utilisateur
+const isAutoACValue = baseACFromStats === (10 + dexMod) || baseACFromStats === 0;
+
+const baseAC = armorFormula
+  ? computeArmorAC(armorFormula, dexMod)
+  : (isAutoACValue || baseACFromStats <= 0)
+    ? unarmoredDefenseAC
+    : baseACFromStats;
 
   const equipmentBonuses = calculateEquipmentBonuses(inventory);
   const acBonus = Number((stats as any).ac_bonus || 0);
