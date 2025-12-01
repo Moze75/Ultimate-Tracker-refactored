@@ -17,6 +17,141 @@ import { InventoryList } from './Equipment/InventoryList';
 
 import { checkWeaponProficiency, getPlayerWeaponProficiencies, WeaponProficiencyCheck } from '../utils/weaponProficiencyChecker';
 
+// ========== HELPERS POUR LE CALCUL DE LA CA ==========
+
+const getModifier = (score: number): number => Math.floor((score - 10) / 2);
+
+/**
+ * Calcule les bonus d'équipement à partir de l'inventaire
+ */
+const calculateEquipmentBonuses = (inventory: InventoryItem[]): {
+  Force: number;
+  Dextérité: number;
+  Constitution: number;
+  Intelligence: number;
+  Sagesse: number;
+  Charisme: number;
+  armor_class: number;
+} => {
+  const bonuses = {
+    Force: 0,
+    Dextérité: 0,
+    Constitution: 0,
+    Intelligence: 0,
+    Sagesse: 0,
+    Charisme: 0,
+    armor_class: 0
+  };
+
+  for (const item of inventory) {
+    const meta = parseMeta(item. description);
+    if (meta?. equipped && meta.bonuses) {
+      if (meta.bonuses.strength) bonuses.Force += meta.bonuses.strength;
+      if (meta.bonuses.dexterity) bonuses. Dextérité += meta.bonuses.dexterity;
+      if (meta.bonuses. constitution) bonuses. Constitution += meta.bonuses.constitution;
+      if (meta. bonuses.intelligence) bonuses.Intelligence += meta.bonuses. intelligence;
+      if (meta.bonuses.wisdom) bonuses.Sagesse += meta.bonuses. wisdom;
+      if (meta.bonuses.charisma) bonuses.Charisme += meta.bonuses.charisma;
+      if (meta.bonuses. armor_class) bonuses.armor_class += meta.bonuses.armor_class;
+    }
+  }
+
+  return bonuses;
+};
+
+/**
+ * Récupère le modificateur d'une caractéristique depuis les abilities du joueur
+ */
+const getAbilityModFromPlayer = (player: Player, abilityName: string): number => {
+  const abilities: any = (player as any).abilities;
+  if (!Array.isArray(abilities)) return 0;
+  
+  const ability = abilities.find((a: any) => a?. name === abilityName);
+  if (!ability) return 0;
+  
+  if (typeof ability. modifier === 'number') return ability.modifier;
+  if (typeof ability.score === 'number') return getModifier(ability. score);
+  return 0;
+};
+
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur
+ * en tenant compte des bonus d'équipement
+ */
+const calculateUnarmoredAC = (
+  player: Player,
+  equipmentBonuses: { Dextérité: number; Sagesse: number; Constitution: number }
+): number => {
+  const baseDexMod = getAbilityModFromPlayer(player, 'Dextérité');
+  const dexMod = baseDexMod + (equipmentBonuses.Dextérité || 0);
+
+  if (player.class === 'Moine') {
+    const baseWisMod = getAbilityModFromPlayer(player, 'Sagesse');
+    const wisMod = baseWisMod + (equipmentBonuses.Sagesse || 0);
+    return 10 + dexMod + wisMod;
+  }
+
+  if (player.class === 'Barbare') {
+    const baseConMod = getAbilityModFromPlayer(player, 'Constitution');
+    const conMod = baseConMod + (equipmentBonuses.Constitution || 0);
+    return 10 + dexMod + conMod;
+  }
+
+  return 10 + dexMod;
+};
+
+/**
+ * Recalcule et met à jour la CA du joueur si nécessaire
+ */
+const recalculateAndUpdateAC = async (
+  player: Player,
+  updatedInventory: InventoryItem[],
+  onPlayerUpdate: (player: Player) => void
+) => {
+  // Vérifier si une armure est équipée
+  const hasArmorEquipped = ! !(player.equipment?. armor?. armor_formula);
+  
+  // Si une armure est équipée, la CA est gérée par l'armure, pas besoin de recalculer
+  if (hasArmorEquipped) {
+    console.log('[EquipmentTab] Armure équipée, CA gérée par l\'armure');
+    return;
+  }
+
+  // Calculer les bonus d'équipement avec l'inventaire mis à jour
+  const equipmentBonuses = calculateEquipmentBonuses(updatedInventory);
+  
+  // Calculer la nouvelle CA
+  const newArmorClass = calculateUnarmoredAC(player, equipmentBonuses);
+  
+  // Vérifier si la CA a changé
+  const currentAC = player.stats?. armor_class ??  10;
+  
+  if (newArmorClass !== currentAC) {
+    console.log(`[EquipmentTab] ✅ Recalcul CA: ${currentAC} → ${newArmorClass}`);
+    
+    const updatedStats = {
+      ... player.stats,
+      armor_class: newArmorClass
+    };
+
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ stats: updatedStats })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      onPlayerUpdate({
+        ...player,
+        stats: updatedStats
+      });
+    } catch (err) {
+      console.error('[EquipmentTab] Erreur mise à jour CA:', err);
+    }
+  }
+};
+
 interface Equipment {
   name: string;
   description: string;
