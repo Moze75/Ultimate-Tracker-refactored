@@ -746,7 +746,9 @@ useEffect(() => {
       const currentStats = (player.stats as any) || {};
       const finalizedStats: any = {
         ...currentStats,
-        armor_class: Number.isFinite(acVal) && acVal > 0 ? acVal : 10 + dexMod,
+     armor_class: Number. isFinite(acVal) && acVal > 0 
+  ? acVal 
+  : calculateUnarmoredAC(player),
         initiative: Number.isFinite(initVal) ? initVal : dexMod,
         speed: Number.isFinite(speedVal) && speedVal > 0 ? speedVal : 9,
         proficiency_bonus: profAuto,
