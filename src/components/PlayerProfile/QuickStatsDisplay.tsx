@@ -1,4 +1,5 @@
 import React from 'react';
+import { Shield as ShieldIcon } from 'lucide-react'; 
 import { Player, PlayerStats } from '../../types/dnd';
 
 interface QuickStatsDisplayProps {
