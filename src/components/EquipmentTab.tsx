@@ -672,59 +672,25 @@ export function EquipmentTab({
         } catch (weaponSaveError) {
           console.error('Erreur sauvegarde armes équipées:', weaponSaveError);
         }
-  } else if (isEquippableItem) {
-  if (mode === 'unequip' && meta.equipped) {
-    await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
+      } else if (isEquippableItem) { 
+        if (mode === 'unequip' && meta.equipped) {
+          await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
 
-    // ✅ NOUVEAU : Recalculer la CA après déséquipement
-    // Créer l'inventaire mis à jour avec l'objet déséquipé
-    const updatedInv = inventory.map(it =>
-      it. id === freshItem.id
-        ? { ...it, description: injectMetaIntoDescription(visibleDescription(it. description), { ...meta, equipped: false }) }
-        : it
-    );
-    await recalculateAndUpdateAC(player, updatedInv, onPlayerUpdate);
+          try {
+            window.dispatchEvent(
+              new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
+            );
+          } catch (e) {
+            console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
+          }
 
-    try {
-      window.dispatchEvent(
-        new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
-      );
-    } catch (e) {
-      console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
-    }
-
-    const itemTypeName =
-      meta.type === 'jewelry' ? 'Bijou' :
-      meta.type === 'equipment' ? 'Équipement' :
-      meta.type === 'tool' ? 'Outil' : 'Objet';
-    toast.success(`${itemTypeName} déséquipé`);
-  } else if (mode === 'equip' && ! meta.equipped) {
-    await updateItemMetaComplete(freshItem, { ...meta, equipped: true });
-
-    // ✅ NOUVEAU : Recalculer la CA après équipement
-    // Créer l'inventaire mis à jour avec l'objet équipé
-    const updatedInv = inventory.map(it =>
-      it.id === freshItem.id
-        ? { ... it, description: injectMetaIntoDescription(visibleDescription(it.description), { ...meta, equipped: true }) }
-        : it
-    );
-    await recalculateAndUpdateAC(player, updatedInv, onPlayerUpdate);
-
-    try {
-      window.dispatchEvent(
-        new CustomEvent('inventory:refresh', { detail: { playerId: player. id } })
-      );
-    } catch (e) {
-      console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
-    }
-
-    const itemTypeName =
-      meta.type === 'jewelry' ?  'Bijou' :
-      meta.type === 'equipment' ? 'Équipement' :
-      meta. type === 'tool' ? 'Outil' : 'Objet';
-    toast.success(`${itemTypeName} équipé`);
-  }
-}
+          const itemTypeName =
+            meta.type === 'jewelry' ? 'Bijou' :
+            meta.type === 'equipment' ? 'Équipement' :
+            meta.type === 'tool' ? 'Outil' : 'Objet';
+          toast.success(`${itemTypeName} déséquipé`);
+        } else if (mode === 'equip' && !meta.equipped) {
+          await updateItemMetaComplete(freshItem, { ...meta, equipped: true });
 
           try {
             window.dispatchEvent(
