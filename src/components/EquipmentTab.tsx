@@ -672,53 +672,69 @@ export function EquipmentTab({
         } catch (weaponSaveError) {
           console.error('Erreur sauvegarde armes équipées:', weaponSaveError);
         }
-      } else if (isEquippableItem) { 
-        if (mode === 'unequip' && meta.equipped) {
-          await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
+       } else if (isEquippableItem) {
+      if (mode === 'unequip' && meta.equipped) {
+        await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
 
-          try {
-            window.dispatchEvent(
-              new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
-            );
-          } catch (e) {
-            console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
-          }
+        // ✅ Recalculer la CA après déséquipement
+        const updatedInv = inventory.map(it =>
+          it.id === freshItem.id
+            ? { ...it, description: injectMetaIntoDescription(visibleDescription(it. description), { ...meta, equipped: false }) }
+            : it
+        );
+        await recalculateAndUpdateAC(player, updatedInv, onPlayerUpdate);
 
-          const itemTypeName =
-            meta.type === 'jewelry' ? 'Bijou' : 
-            meta.type === 'equipment' ? 'Équipement' :
-            meta.type === 'tool' ? 'Outil' : 'Objet';
-          toast.success(`${itemTypeName} déséquipé`); 
-        } else if (mode === 'equip' && !meta.equipped) {
-          await updateItemMetaComplete(freshItem, { ...meta, equipped: true });
-
-          try {
-            window.dispatchEvent(
-              new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
-            );
-          } catch (e) {
-            console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
-          }
-
-          const itemTypeName =
-            meta.type === 'jewelry' ? 'Bijou' :
-            meta.type === 'equipment' ? 'Équipement' :
-            meta.type === 'tool' ? 'Outil' : 'Objet';
-          toast.success(`${itemTypeName} équipé`);
+        try {
+          window.dispatchEvent(
+            new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
+          );
+        } catch (e) {
+          console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
         }
+
+        const itemTypeName =
+          meta.type === 'jewelry' ? 'Bijou' :
+          meta.type === 'equipment' ? 'Équipement' :
+          meta.type === 'tool' ?  'Outil' : 'Objet';
+        toast.success(`${itemTypeName} déséquipé`);
+      } else if (mode === 'equip' && ! meta.equipped) {
+        await updateItemMetaComplete(freshItem, { ...meta, equipped: true });
+
+        // ✅ Recalculer la CA après équipement
+        const updatedInv = inventory.map(it =>
+          it.id === freshItem.id
+            ?  { ...it, description: injectMetaIntoDescription(visibleDescription(it. description), { ...meta, equipped: true }) }
+            : it
+        );
+        await recalculateAndUpdateAC(player, updatedInv, onPlayerUpdate);
+
+        try {
+          window.dispatchEvent(
+            new CustomEvent('inventory:refresh', { detail: { playerId: player.id } })
+          );
+        } catch (e) {
+          console. warn('[performEquipToggle] dispatch inventory:refresh failed', e);
+        }
+
+        const itemTypeName =
+          meta. type === 'jewelry' ? 'Bijou' :
+          meta.type === 'equipment' ?  'Équipement' :
+          meta.type === 'tool' ? 'Outil' : 'Objet';
+        toast.success(`${itemTypeName} équipé`);
       }
-    } catch (e) {
-      console.error('Erreur performEquipToggle:', e);
-      await refreshInventory(0);
-      toast.error('Erreur lors de la bascule équipement');
-    } finally {
-      setPendingEquipment(prev => {
-        const next = new Set(prev);
-        next.delete(freshItem.id);
-        return next;
-      });
     }
-  };
+  } catch (e) {
+    console.error('Erreur performEquipToggle:', e);
+    await refreshInventory(0);
+    toast. error('Erreur lors de la bascule équipement');
+  } finally {
+    setPendingEquipment(prev => {
+      const next = new Set(prev);
+      next.delete(freshItem.id);
+      return next;
+    });
+  }
+};
 
   const performToggle = async (item: InventoryItem, mode: 'equip' | 'unequip') => {
     if (pendingEquipment.has(item.id)) return;
