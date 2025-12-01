@@ -148,8 +148,11 @@ const baseAC = armorFormula
   const acBonus = Number((stats as any).ac_bonus || 0);
   const totalAC = baseAC + shieldBonus + acBonus + equipmentBonuses.armor_class;
  
-  return (
-  <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1 overflow-visible">
+ return (
+  <div 
+    className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1"
+    style={{ overflow: 'visible' }}
+  >
 {/* CA */}
 <div className="flex flex-col items-center pt-2 relative">
   <div
