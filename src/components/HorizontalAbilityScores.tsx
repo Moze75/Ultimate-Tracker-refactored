@@ -153,34 +153,36 @@ export function HorizontalAbilityScores({
     setLocalAbilities(updatedAbilities);
   };
 
- const handleSave = async () => {
-  if (!player || !onUpdate) {
+const handleSave = async () => {
+  if (! player || !onUpdate) {
     toast.error('Impossible de sauvegarder');
     return;
   }
 
   try {
-    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
-    const dexMod = getModifier(dexScore);
+    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?. score ?? 10;
+    const equipmentBonuses = calculateEquipmentBonuses(); // ✅ Récupérer les bonus
+    const dexMod = getModifier(dexScore) + (equipmentBonuses.Dextérité || 0); // ✅ Inclure le bonus
 
-    // ✅ NOUVEAU : Vérifier si une armure est équipée
-    const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
+    // Vérifier si une armure est équipée
+    const hasArmorEquipped = ! !(player.equipment?. armor?.armor_formula);
 
-    // ✅ NOUVEAU : Recalculer la CA si Moine/Barbare sans armure
-    let newArmorClass = player.stats?. armor_class ?? (10 + dexMod);
+    // Recalculer la CA si Moine/Barbare sans armure
+    let newArmorClass = player.stats?.armor_class ?? (10 + dexMod);
     
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities);
-      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass}`);
-    } else if (!hasArmorEquipped) {
+      // ✅ Passer les bonus d'équipement au calcul
+      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities, equipmentBonuses);
+      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus équipement)`);
+    } else if (! hasArmorEquipped) {
       newArmorClass = 10 + dexMod;
     }
 
     const mergedStats = {
-      ... player.stats,
+      ...player.stats,
       proficiency_bonus: getProficiencyBonus(player.level),
       initiative: dexMod,
-      armor_class: newArmorClass, // ✅ NOUVEAU
+      armor_class: newArmorClass,
     };
 
     const { error } = await supabase
