@@ -102,15 +102,22 @@ export function CompactStatsPanel({ player, inventory }: CompactStatsPanelProps)
   const shieldBonus = Number((player as any)?.equipment?.shield?.shield_bonus ?? 0) || 0;
   const baseACFromStats = Number(stats.armor_class || 0);
 
-  const monkUnarmoredDefense = player.class === 'Moine' && !armorFormula
-    ? 10 + dexMod + wisMod
-    : 0;
+const conMod = getConModFromPlayer(player);
 
-  const baseAC = armorFormula
-    ? computeArmorAC(armorFormula, dexMod)
-    : baseACFromStats > 0
-      ? baseACFromStats
-      : monkUnarmoredDefense;
+const calculateClassUnarmoredAC = (): number => {
+  if (player. class === 'Moine') return 10 + dexMod + wisMod;
+  if (player.class === 'Barbare') return 10 + dexMod + conMod;
+  return 10 + dexMod;
+};
+
+const unarmoredDefenseAC = !armorFormula ? calculateClassUnarmoredAC() : 0;
+const isAutoACValue = baseACFromStats === (10 + dexMod) || baseACFromStats === 0;
+
+const baseAC = armorFormula
+  ?  computeArmorAC(armorFormula, dexMod)
+  : (isAutoACValue || baseACFromStats <= 0)
+    ? unarmoredDefenseAC
+    : baseACFromStats;
 
   const equipmentBonuses = calculateEquipmentBonuses(inventory);
   const acBonus = Number((stats as any).ac_bonus || 0);
