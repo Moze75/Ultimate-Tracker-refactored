@@ -166,13 +166,21 @@ const baseAC = armorFormula
                 <p className="mb-2">Détermine la difficulté pour vous toucher en combat.</p>
                 <p className="text-gray-400">Calcul actuel :</p>
                 <ul className="list-disc list-inside text-gray-400 space-y-1">
-                  {armorFormula ? (
-                    <>
-                      <li>Armure équipée: {computeArmorAC(armorFormula, dexMod)} (Formule: {armorFormula.base}{armorFormula.addDex ? ` + mod DEX${armorFormula.dexCap != null ? ` (max ${armorFormula.dexCap})` : ''}` : ''})</li>
-                    </>
-                  ) : (
-                    <li>CA de base (profil): {baseACFromStats}</li>
-                  )}
+{armorFormula ? (
+  <>
+    <li>Armure équipée: {computeArmorAC(armorFormula, dexMod)} (Formule: {armorFormula.base}{armorFormula.addDex ? ` + mod DEX${armorFormula. dexCap != null ? ` (max ${armorFormula.dexCap})` : ''}` : ''})</li>
+  </>
+) : (
+  <>
+    {player.class === 'Moine' ?  (
+      <li>Défense sans armure (Moine): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + SAG ({wisMod >= 0 ? '+' : ''}{wisMod}) = {unarmoredDefenseAC}</li>
+    ) : player.class === 'Barbare' ?  (
+      <li>Défense sans armure (Barbare): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + CON ({conMod >= 0 ?  '+' : ''}{conMod}) = {unarmoredDefenseAC}</li>
+    ) : (
+      <li>CA de base: 10 + DEX ({dexMod >= 0 ?  '+' : ''}{dexMod}) = {10 + dexMod}</li>
+    )}
+  </>
+)}
                   <li>+ Bonus de bouclier (équipement): {shieldBonus >= 0 ? `+${shieldBonus}` : shieldBonus}</li>
                   {equipmentBonuses.armor_class !== 0 && (
                     <li>+ Bonus d'équipement: {equipmentBonuses.armor_class >= 0 ? `+${equipmentBonuses.armor_class}` : equipmentBonuses.armor_class}</li>
