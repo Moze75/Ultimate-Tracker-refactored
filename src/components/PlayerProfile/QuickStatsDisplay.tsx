@@ -151,28 +151,34 @@ const baseAC = armorFormula
   return (
   <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1 overflow-visible">
 {/* CA */}
-<div className="flex flex-col items-center pt-2 overflow-visible">
+<div className="flex flex-col items-center pt-2 relative">
   <div
-    className="relative w-16 h-14 -mt-2 -mb-1 group cursor-pointer overflow-visible"
+    className="relative cursor-pointer"
     onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+    style={{ width: '60px', height: '50px' }}
   >
-<img 
-  src="/background/shield_gris.png" 
-  alt="Bouclier CA"
-  style={{
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '120px',
-    height: '140px',
-    objectFit: 'contain',
-    pointerEvents: 'none',
-    zIndex: 50,
-    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0. 5))'
-  }}
-/>
-    <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100 z-10">
+    {/* Image qui déborde */}
+    <img 
+      src="/background/shield_gris.png" 
+      alt="Bouclier CA"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '90px',
+        height: '110px',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+        zIndex: 20,
+        marginTop: '-15px'
+      }}
+    />
+    {/* Valeur CA */}
+    <div 
+      className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100"
+      style={{ zIndex: 21 }}
+    >
       {totalAC}
     </div>
           {activeTooltip === 'ac' && (
