@@ -373,48 +373,64 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     });
   };
 
-  const handleSave = async () => {
-    try {
-      const dexScore = abilities.find(a => a.name === 'Dextérité')?.score ?? 10;
-      const dexMod = getModifier(dexScore);
+const handleSave = async () => {
+  try {
+    const dexScore = abilities.find(a => a.name === 'Dextérité')?.score ??  10;
+    const dexMod = getModifier(dexScore);
 
-      const updatedStatsLocal = {
-        ...stats,
-        jack_of_all_trades: hasJackOfAllTrades(player.class, player.level)
-          ? (stats.jack_of_all_trades ?? false)
-          : false
-      };
+    const updatedStatsLocal = {
+      ... stats,
+      jack_of_all_trades: hasJackOfAllTrades(player. class, player.level)
+        ? (stats.jack_of_all_trades ??  false)
+        : false
+    };
 
-      const mergedStats = {
-        ...player.stats,
-        ...updatedStatsLocal,
-        proficiency_bonus: effectiveProficiency,
-        initiative: dexMod
-      };
+    // ✅ NOUVEAU : Vérifier si une armure est équipée
+    const hasArmorEquipped = ! !(player.equipment?. armor?. armor_formula);
 
-      const { error } = await supabase
-        .from('players')
-        .update({ 
-          abilities,
-          stats: mergedStats
-        })
-        .eq('id', player.id);
+    // ✅ NOUVEAU : Recalculer la CA si Moine/Barbare sans armure
+    let newArmorClass = player.stats?. armor_class ?? (10 + dexMod);
+    
+    if (! hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
+      newArmorClass = calculateUnarmoredACFromAbilities(player.class, abilities);
+      console.log(`[StatsTab] ✅ Recalcul CA ${player.class}: ${newArmorClass}`);
+    } else if (! hasArmorEquipped) {
+      // Pour les autres classes sans armure, CA = 10 + DEX
+      newArmorClass = 10 + dexMod;
+    }
+    // Si armure équipée, on garde la CA existante (gérée par l'armure)
 
-      if (error) throw error;
+    const mergedStats = {
+      ...player.stats,
+      ...updatedStatsLocal,
+      proficiency_bonus: effectiveProficiency,
+      initiative: dexMod,
+      armor_class: newArmorClass, // ✅ NOUVEAU : Mise à jour de la CA
+    };
 
-      onUpdate({
-        ...player,
+    const { error } = await supabase
+      . from('players')
+      .update({ 
         abilities,
         stats: mergedStats
-      });
+      })
+      . eq('id', player.id);
 
-      setEditing(false);
-      toast.success('Caractéristiques mises à jour');
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des caractéristiques:', error);
-      toast.error('Erreur lors de la mise à jour');
-    }
-  };
+    if (error) throw error;
+
+    onUpdate({
+      ... player,
+      abilities,
+      stats: mergedStats
+    });
+
+    setEditing(false);
+    toast.success('Caractéristiques mises à jour');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des caractéristiques:', error);
+    toast.error('Erreur lors de la mise à jour');
+  }
+};
 
   const allSkills: Array<{abilityIndex: number; skillIndex: number; abilityShort: string; skillName: string; bonus: number; isProficient: boolean; hasExpertise: boolean}> = [];
   
