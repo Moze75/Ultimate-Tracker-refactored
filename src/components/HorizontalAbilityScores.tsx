@@ -4,6 +4,36 @@ import { Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
+// Ajouter après les imports (vers ligne 10)
+
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur
+ */
+const calculateUnarmoredACFromAbilities = (
+  playerClass: string | null | undefined,
+  abilities: Ability[]
+): number => {
+  const getModifier = (score: number) => Math.floor((score - 10) / 2);
+  
+  const dexAbility = abilities.find(a => a.name === 'Dextérité');
+  const dexMod = dexAbility ? getModifier(dexAbility.score) : 0;
+
+  if (playerClass === 'Moine') {
+    const wisAbility = abilities.find(a => a.name === 'Sagesse');
+    const wisMod = wisAbility ? getModifier(wisAbility. score) : 0;
+    return 10 + dexMod + wisMod;
+  }
+
+  if (playerClass === 'Barbare') {
+    const conAbility = abilities.find(a => a.name === 'Constitution');
+    const conMod = conAbility ? getModifier(conAbility.score) : 0;
+    return 10 + dexMod + conMod;
+  }
+
+  return 10 + dexMod;
+};
+
+
 interface HorizontalAbilityScoresProps {
   abilities: Ability[];
   inventory?: any[];
