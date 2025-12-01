@@ -9,24 +9,32 @@ import toast from 'react-hot-toast';
 /**
  * Calcule la CA "défense sans armure" selon la classe du joueur
  */
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur
+ * en tenant compte des bonus d'équipement
+ */
 const calculateUnarmoredACFromAbilities = (
   playerClass: string | null | undefined,
-  abilities: Ability[]
+  abilities: Ability[],
+  equipmentBonuses: { Force: number; Dextérité: number; Constitution: number; Intelligence: number; Sagesse: number; Charisme: number; armor_class: number }
 ): number => {
   const getModifier = (score: number) => Math.floor((score - 10) / 2);
   
-  const dexAbility = abilities.find(a => a.name === 'Dextérité');
-  const dexMod = dexAbility ? getModifier(dexAbility.score) : 0;
+  const dexAbility = abilities.find(a => a. name === 'Dextérité');
+  const baseDexMod = dexAbility ? getModifier(dexAbility.score) : 0;
+  const dexMod = baseDexMod + (equipmentBonuses. Dextérité || 0);
 
   if (playerClass === 'Moine') {
     const wisAbility = abilities.find(a => a.name === 'Sagesse');
-    const wisMod = wisAbility ? getModifier(wisAbility. score) : 0;
+    const baseWisMod = wisAbility ? getModifier(wisAbility.score) : 0;
+    const wisMod = baseWisMod + (equipmentBonuses.Sagesse || 0);
     return 10 + dexMod + wisMod;
   }
 
   if (playerClass === 'Barbare') {
     const conAbility = abilities.find(a => a.name === 'Constitution');
-    const conMod = conAbility ? getModifier(conAbility.score) : 0;
+    const baseConMod = conAbility ? getModifier(conAbility.score) : 0;
+    const conMod = baseConMod + (equipmentBonuses.Constitution || 0);
     return 10 + dexMod + conMod;
   }
 
