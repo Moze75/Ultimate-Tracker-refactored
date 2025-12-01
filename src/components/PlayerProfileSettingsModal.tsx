@@ -50,6 +50,87 @@ const getDexModFromPlayer = (player: Player): number => {
   return 0;
 };
 
+const getConModFromPlayer = (player: Player): number => {
+  const abilities: any = (player as any).abilities;
+
+  const conFromArray =
+    Array.isArray(abilities)
+      ? abilities. find?. ((a: any) => a?. name === 'Constitution')
+      : undefined;
+
+  let conFromMap: any = undefined;
+  if (! conFromArray && abilities && typeof abilities === 'object') {
+    const direct =
+      abilities['Constitution'] ??
+      abilities['constitution'];
+    if (typeof direct === 'number') {
+      conFromMap = { score: direct };
+    } else if (direct && typeof direct === 'object') {
+      conFromMap = direct;
+    }
+  }
+
+  const con = conFromArray ??  conFromMap;
+  if (! con) return 0;
+
+  if (typeof con. modifier === 'number') return con.modifier;
+  if (typeof con.score === 'number') return getModifier(con.score);
+  return 0;
+};
+
+const getWisModFromPlayer = (player: Player): number => {
+  const abilities: any = (player as any).abilities;
+
+  const wisFromArray =
+    Array.isArray(abilities)
+      ?  abilities.find?.((a: any) => a?.name === 'Sagesse')
+      : undefined;
+
+  let wisFromMap: any = undefined;
+  if (!wisFromArray && abilities && typeof abilities === 'object') {
+    const direct =
+      abilities['Sagesse'] ??
+      abilities['sagesse'] ??
+      abilities['wisdom'];
+    if (typeof direct === 'number') {
+      wisFromMap = { score: direct };
+    } else if (direct && typeof direct === 'object') {
+      wisFromMap = direct;
+    }
+  }
+
+  const wis = wisFromArray ?? wisFromMap;
+  if (!wis) return 0;
+
+  if (typeof wis.modifier === 'number') return wis.modifier;
+  if (typeof wis.score === 'number') return getModifier(wis.score);
+  return 0;
+};
+
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur. 
+ * - Moine : 10 + DEX + SAG
+ * - Barbare : 10 + DEX + CON
+ * - Autres : 10 + DEX
+ */
+const calculateUnarmoredAC = (player: Player): number => {
+  const dexMod = getDexModFromPlayer(player);
+  
+  if (player.class === 'Moine') {
+    const wisMod = getWisModFromPlayer(player);
+    return 10 + dexMod + wisMod;
+  }
+  
+  if (player.class === 'Barbare') {
+    const conMod = getConModFromPlayer(player);
+    return 10 + dexMod + conMod;
+  }
+  
+  // Autres classes : 10 + DEX
+  return 10 + dexMod;
+};
+
+
 function mapClassForRpc(pClass: DndClass | null | undefined): string | null | undefined {
   if (pClass === 'Occultiste') return 'Occultiste';
   return pClass;
