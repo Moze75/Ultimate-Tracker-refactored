@@ -151,18 +151,28 @@ const baseAC = armorFormula
   return (
    <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1">
 {/* CA */}
-<div className="flex flex-col items-center pt-2">
+<div className="flex flex-col items-center pt-2 overflow-visible">
   <div
-    className="relative w-16 h-14 -mt-2 -mb-1 group cursor-pointer"
-    onClick={() => setActiveTooltip(activeTooltip === 'ac' ?  null : 'ac')}
+    className="relative w-16 h-14 -mt-2 -mb-1 group cursor-pointer overflow-visible"
+    onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
   >
     <img 
       src="/background/shield_gris.png" 
       alt="Bouclier CA"
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-40 object-contain drop-shadow-lg pointer-events-none"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '80px',
+        height: '100px',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+        filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
+      }}
     />
     <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100 z-10">
-      {totalAC} 
+      {totalAC}
     </div>
           {activeTooltip === 'ac' && (
             <>
