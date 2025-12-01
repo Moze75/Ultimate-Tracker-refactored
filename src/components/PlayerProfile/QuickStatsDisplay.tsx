@@ -150,16 +150,20 @@ const baseAC = armorFormula
  
   return (
    <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1">
-      {/* CA */}
-     <div className="flex flex-col items-center pt-2">
-        <div
-          className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
-          onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
-        >
-          <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1.5] scale-125" />
-          <div className="absolute inset-0 flex items-center justify-center -translate-y-1 text-lg font-bold text-gray-100 z-10">
-            {totalAC}
-          </div>
+   {/* CA */}
+<div className="flex flex-col items-center pt-2">
+  <div
+    className="relative w-12 h-14 -mt-2 -mb-1 group cursor-pointer"
+    onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+  >
+    <img 
+      src="/background/shield_gris.png" 
+      alt="Bouclier CA"
+      className="absolute inset-0 w-full h-full object-contain"
+    />
+    <div className="absolute inset-0 flex items-center justify-center text-lg font-bold text-gray-100 z-10">
+      {totalAC}
+    </div>
           {activeTooltip === 'ac' && (
             <>
               <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
