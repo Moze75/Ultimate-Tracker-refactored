@@ -148,148 +148,163 @@ const baseAC = armorFormula
   const acBonus = Number((stats as any).ac_bonus || 0);
   const totalAC = baseAC + shieldBonus + acBonus + equipmentBonuses.armor_class;
  
-return (
-  <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-2 mt-2 bg-gray-800/50 rounded-lg py-1 items-center">
-    {/* CA - colonne plus large */}
-    <div className="flex flex-col items-center justify-center px-2">
-      <div
-        className="relative cursor-pointer"
-        style={{ width: '70px', height: '80px' }}
-        onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
-      >
-        <img 
-          src="/background/shield_gris.png" 
-          alt="Bouclier CA"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain'
-          }}
-        />
-        <div 
-          className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100"
-        >
-          {totalAC}
-        </div>
-        {activeTooltip === 'ac' && (
-          <>
-            <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
-              <h4 className="font-semibold text-gray-100 mb-1">Classe d'Armure</h4>
-              <p className="mb-2">Détermine la difficulté pour vous toucher en combat.</p>
-              <p className="text-gray-400">Calcul actuel :</p>
-              <ul className="list-disc list-inside text-gray-400 space-y-1">
-                {armorFormula ?  (
-                  <>
-                    <li>Armure équipée: {computeArmorAC(armorFormula, dexMod)} (Formule: {armorFormula. base}{armorFormula. addDex ? ` + mod DEX${armorFormula. dexCap != null ? ` (max ${armorFormula.dexCap})` : ''}` : ''})</li>
-                  </>
-                ) : (
-                  <>
-                    {player.class === 'Moine' ?  (
-                      <li>Défense sans armure (Moine): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + SAG ({wisMod >= 0 ? '+' : ''}{wisMod}) = {unarmoredDefenseAC}</li>
-                    ) : player.class === 'Barbare' ? (
-                      <li>Défense sans armure (Barbare): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + CON ({conMod >= 0 ? '+' : ''}{conMod}) = {unarmoredDefenseAC}</li>
-                    ) : (
-                      <li>CA de base: 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) = {10 + dexMod}</li>
-                    )}
-                  </>
-                )}
-                <li>+ Bonus de bouclier (équipement): {shieldBonus >= 0 ? `+${shieldBonus}` : shieldBonus}</li>
-                {equipmentBonuses.armor_class !== 0 && (
-                  <li>+ Bonus d'équipement: {equipmentBonuses. armor_class >= 0 ? `+${equipmentBonuses.armor_class}` : equipmentBonuses. armor_class}</li>
-                )}
-                <li>Total: {totalAC}</li>
-              </ul>
-              <p className="text-xs text-gray-500 mt-2">L'armure équipée remplace la CA de base.  La CA de base est configurable dans les paramètres si vous n'utilisez pas d'armure.</p>
-            </div>
-          </>
-        )}
-      </div>
+ return (
+  <div 
+    className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1"
+    style={{ overflow: 'visible' }}
+  >
+{/* CA */}
+<div className="flex flex-col items-center pt-2 relative">
+  <div
+    className="relative cursor-pointer"
+    onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+    style={{ width: '60px', height: '50px' }}
+  >
+    {/* Image qui déborde */}
+    <img 
+      src="/background/shield_gris.png" 
+      alt="Bouclier CA"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '210px',
+        height: '230px',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+        zIndex: 20,
+        marginTop: '-15px'
+      }}
+    />
+    {/* Valeur CA */}
+    <div 
+      className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100"
+      style={{ zIndex: 21 }}
+    >
+      {totalAC}
     </div>
-
-    {/* Vitesse */}
-    <div className="flex flex-col items-center pt-2">
-      <div
-        className="relative w-16 h-10 -mt-2 -mb-1 group cursor-pointer"
-        onClick={() => setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
-      >
-        <div className="text-lg font-bold text-gray-100 whitespace-nowrap">
-          {formatFr(stats.speed)} m
+          {activeTooltip === 'ac' && (
+            <>
+              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
+                <h4 className="font-semibold text-gray-100 mb-1">Classe d'Armure</h4>
+                <p className="mb-2">Détermine la difficulté pour vous toucher en combat.</p>
+                <p className="text-gray-400">Calcul actuel :</p>
+                <ul className="list-disc list-inside text-gray-400 space-y-1">
+{armorFormula ? (
+  <>
+    <li>Armure équipée: {computeArmorAC(armorFormula, dexMod)} (Formule: {armorFormula.base}{armorFormula.addDex ? ` + mod DEX${armorFormula. dexCap != null ? ` (max ${armorFormula.dexCap})` : ''}` : ''})</li>
+  </>
+) : (
+  <>
+    {player.class === 'Moine' ?  (
+      <li>Défense sans armure (Moine): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + SAG ({wisMod >= 0 ? '+' : ''}{wisMod}) = {unarmoredDefenseAC}</li>
+    ) : player.class === 'Barbare' ?  (
+      <li>Défense sans armure (Barbare): 10 + DEX ({dexMod >= 0 ? '+' : ''}{dexMod}) + CON ({conMod >= 0 ?  '+' : ''}{conMod}) = {unarmoredDefenseAC}</li>
+    ) : (
+      <li>CA de base: 10 + DEX ({dexMod >= 0 ?  '+' : ''}{dexMod}) = {10 + dexMod}</li>
+    )}
+  </>
+)}
+                  <li>+ Bonus de bouclier (équipement): {shieldBonus >= 0 ? `+${shieldBonus}` : shieldBonus}</li>
+                  {equipmentBonuses.armor_class !== 0 && (
+                    <li>+ Bonus d'équipement: {equipmentBonuses.armor_class >= 0 ? `+${equipmentBonuses.armor_class}` : equipmentBonuses.armor_class}</li>
+                  )}
+                  <li>Total: {totalAC}</li>
+                </ul>
+                <p className="text-xs text-gray-500 mt-2">L'armure équipée remplace la CA de base. La CA de base est configurable dans les paramètres si vous n'utilisez pas d'armure.</p>
+              </div>
+            </>
+          )}
         </div>
-        {activeTooltip === 'speed' && (
-          <>
-            <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
-              <h4 className="font-semibold text-gray-100 mb-1">Vitesse</h4>
-              <p className="mb-2">Distance que vous pouvez parcourir en un tour. </p>
-              <div className="text-gray-400">
-                <p>Équivalences :</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>{formatFr(stats.speed)} mètres = {Math.floor(speedNum / 1. 5)} cases</li>
-                  <li>Course : × 2 ({formatFr(speedNum * 2)} mètres)</li>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-1" />
+      </div>
+
+      {/* Vitesse */}
+    <div className="flex flex-col items-center pt-2">
+        <div
+          className="relative w-16 h-10 -mt-2 -mb-1 group cursor-pointer"
+          onClick={() => setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
+        >
+          <div className="text-lg font-bold text-gray-100 whitespace-nowrap">
+            {formatFr(stats.speed)} m
+          </div>
+          {activeTooltip === 'speed' && (
+            <>
+              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
+                <h4 className="font-semibold text-gray-100 mb-1">Vitesse</h4>
+                <p className="mb-2">Distance que vous pouvez parcourir en un tour.</p>
+                <div className="text-gray-400">
+                  <p>Équivalences :</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>{formatFr(stats.speed)} mètres = {Math.floor(speedNum / 1.5)} cases</li>
+                    <li>Course : × 2 ({formatFr(speedNum * 2)} mètres)</li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-7">VIT</div>
+      </div>
+
+      {/* Initiative */}
+    <div className="flex flex-col items-center pt-2">
+        <div
+          className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
+          onClick={() => setActiveTooltip(activeTooltip === 'initiative' ? null : 'initiative')}
+        >
+           <div className="text-lg font-bold text-gray-100">
+            {stats.initiative >= 0 ? '+' : ''}{stats.initiative}
+          </div>
+          {activeTooltip === 'initiative' && (
+            <>
+              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
+                <h4 className="font-semibold text-gray-100 mb-1">Initiative</h4>
+                <p className="mb-2">Détermine l'ordre de passage lors des combats.</p>
+                <ul className="list-disc list-inside text-gray-400 space-y-1">
+                  <li>Basée sur votre modificateur de Dextérité.</li>
+                  <li>Un score élevé vous permet d'agir avant vos ennemis.</li>
+                  <li>Peut être modifié par des dons ou des objets magiques.</li>
                 </ul>
               </div>
-            </div>
-          </>
-        )}
-      </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center">VIT</div>
-    </div>
-
-    {/* Initiative */}
-    <div className="flex flex-col items-center pt-2">
-      <div
-        className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
-        onClick={() => setActiveTooltip(activeTooltip === 'initiative' ? null : 'initiative')}
-      >
-        <div className="text-lg font-bold text-gray-100">
-          {stats.initiative >= 0 ? '+' : ''}{stats.initiative}
+            </>
+          )}
         </div>
-        {activeTooltip === 'initiative' && (
-          <>
-            <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
-              <h4 className="font-semibold text-gray-100 mb-1">Initiative</h4>
-              <p className="mb-2">Détermine l'ordre de passage lors des combats.</p>
-              <ul className="list-disc list-inside text-gray-400 space-y-1">
-                <li>Basée sur votre modificateur de Dextérité. </li>
-                <li>Un score élevé vous permet d'agir avant vos ennemis.</li>
-                <li>Peut être modifié par des dons ou des objets magiques.</li>
-              </ul>
-            </div>
-          </>
-        )}
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-4">INIT</div>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center">INIT</div>
-    </div>
 
-    {/* Maîtrise */}
-    <div className="flex flex-col items-center pt-2">
-      <div
-        className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
-        onClick={() => setActiveTooltip(activeTooltip === 'proficiency' ? null : 'proficiency')}
-      >
-        <div className="text-lg font-bold text-gray-100">
-          +{calculatedProficiencyBonus}
+      {/* Maîtrise */}
+   <div className="flex flex-col items-center pt-2">
+        <div
+          className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
+          onClick={() => setActiveTooltip(activeTooltip === 'proficiency' ? null : 'proficiency')}
+        >
+          <div className="text-lg font-bold text-gray-100">
+            +{calculatedProficiencyBonus}
+          </div>
+          {activeTooltip === 'proficiency' && (
+            <>
+              <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
+                <h4 className="font-semibold text-gray-100 mb-1">Bonus de Maîtrise</h4>
+                <p className="mb-2">Représente votre niveau d'expérience et d'entraînement.</p>
+                <p className="text-gray-400 mb-1">S'ajoute automatiquement à :</p>
+                <ul className="list-disc list-inside text-gray-400 space-y-1">
+                  <li>Vos <strong>jets d'attaque</strong> avec les armes maîtrisées.</li>
+                  <li>Vos jets de sauvegarde maîtrisés.</li>
+                  <li>Vos tests de compétences maîtrisées.</li>
+                  <li>Le DD (Degré de Difficulté) de vos sorts.</li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
-        {activeTooltip === 'proficiency' && (
-          <>
-            <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[100]">
-              <h4 className="font-semibold text-gray-100 mb-1">Bonus de Maîtrise</h4>
-              <p className="mb-2">Représente votre niveau d'expérience et d'entraînement.</p>
-              <p className="text-gray-400 mb-1">S'ajoute automatiquement à :</p>
-              <ul className="list-disc list-inside text-gray-400 space-y-1">
-                <li>Vos <strong>jets d'attaque</strong> avec les armes maîtrisées. </li>
-                <li>Vos jets de sauvegarde maîtrisés. </li>
-                <li>Vos tests de compétences maîtrisées.</li>
-                <li>Le DD (Degré de Difficulté) de vos sorts.</li>
-              </ul>
-            </div>
-          </>
-        )}
+        <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-6">MAÎT</div>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center">MAÎT</div>
-    </div>
-  </div>  
-);
+    </div>  
+  );  
+} 
