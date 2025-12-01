@@ -481,7 +481,15 @@ export function PlayerProfileSettingsModal({
     const speedInitial = (player.stats?.speed ?? 0) || 0;
     const profInitial = (player.stats?.proficiency_bonus ?? 0) || 0;
 
-    setAcField(acInitial > 0 ? String(acInitial) : String(10 + dexMod));
+   // Vérifier si une armure est équipée
+const hasArmorEquipped = ! !(player.equipment?.armor?. armor_formula);
+
+// Calculer la CA auto selon la classe (si pas d'armure équipée)
+const autoAC = hasArmorEquipped 
+  ? (10 + dexMod)  // Avec armure, la formule d'armure prendra le dessus à l'affichage
+  : calculateUnarmoredAC(player);
+
+setAcField(acInitial > 0 ? String(acInitial) : String(autoAC));
     setInitField(initInitial !== undefined && initInitial !== null ? String(initInitial) : String(dexMod));
     setSpeedField(speedInitial > 0 ? String(speedInitial).replace('.', ',') : String(9));
     setProfField(profInitial > 0 ? String(profInitial) : String(profAuto));
