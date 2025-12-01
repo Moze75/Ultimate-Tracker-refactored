@@ -385,37 +385,39 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
 const handleSave = async () => {
   try {
-    const dexScore = abilities.find(a => a.name === 'Dextérité')?.score ??  10;
-    const dexMod = getModifier(dexScore);
+    const dexScore = abilities. find(a => a.name === 'Dextérité')?.score ??  10;
+    const equipmentBonuses = calculateEquipmentBonuses(); // ✅ Récupérer les bonus d'équipement
+    const dexMod = getModifier(dexScore) + (equipmentBonuses.Dextérité || 0); // ✅ Inclure le bonus d'équipement
 
     const updatedStatsLocal = {
       ... stats,
-      jack_of_all_trades: hasJackOfAllTrades(player. class, player.level)
+      jack_of_all_trades: hasJackOfAllTrades(player.class, player.level)
         ? (stats.jack_of_all_trades ??  false)
         : false
     };
 
-    // ✅ NOUVEAU : Vérifier si une armure est équipée
-    const hasArmorEquipped = ! !(player.equipment?. armor?. armor_formula);
+    // Vérifier si une armure est équipée
+    const hasArmorEquipped = ! !(player.equipment?.armor?.armor_formula);
 
-    // ✅ NOUVEAU : Recalculer la CA si Moine/Barbare sans armure
+    // Recalculer la CA si Moine/Barbare sans armure
     let newArmorClass = player.stats?. armor_class ?? (10 + dexMod);
     
-    if (! hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      newArmorClass = calculateUnarmoredACFromAbilities(player.class, abilities);
-      console.log(`[StatsTab] ✅ Recalcul CA ${player.class}: ${newArmorClass}`);
+    if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
+      // ✅ Passer les bonus d'équipement au calcul
+      newArmorClass = calculateUnarmoredACFromAbilities(player.class, abilities, equipmentBonuses);
+      console.log(`[StatsTab] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus équipement)`);
     } else if (! hasArmorEquipped) {
-      // Pour les autres classes sans armure, CA = 10 + DEX
+      // Pour les autres classes sans armure, CA = 10 + DEX (avec bonus équipement)
       newArmorClass = 10 + dexMod;
     }
     // Si armure équipée, on garde la CA existante (gérée par l'armure)
 
     const mergedStats = {
-      ...player.stats,
-      ...updatedStatsLocal,
+      ... player.stats,
+      ... updatedStatsLocal,
       proficiency_bonus: effectiveProficiency,
       initiative: dexMod,
-      armor_class: newArmorClass, // ✅ NOUVEAU : Mise à jour de la CA
+      armor_class: newArmorClass,
     };
 
     const { error } = await supabase
@@ -424,12 +426,12 @@ const handleSave = async () => {
         abilities,
         stats: mergedStats
       })
-      . eq('id', player.id);
+      .eq('id', player.id);
 
     if (error) throw error;
 
     onUpdate({
-      ... player,
+      ...player,
       abilities,
       stats: mergedStats
     });
@@ -437,7 +439,7 @@ const handleSave = async () => {
     setEditing(false);
     toast.success('Caractéristiques mises à jour');
   } catch (error) {
-    console.error('Erreur lors de la mise à jour des caractéristiques:', error);
+    console. error('Erreur lors de la mise à jour des caractéristiques:', error);
     toast.error('Erreur lors de la mise à jour');
   }
 };
