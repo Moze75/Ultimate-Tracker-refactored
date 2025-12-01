@@ -113,16 +113,28 @@ const getWisModFromPlayer = (player: Player): number => {
  * - Barbare : 10 + DEX + CON
  * - Autres : 10 + DEX
  */
-const calculateUnarmoredAC = (player: Player): number => {
-  const dexMod = getDexModFromPlayer(player);
+// Remplacer la fonction calculateUnarmoredAC existante par :
+
+/**
+ * Calcule la CA "défense sans armure" selon la classe du joueur
+ * en tenant compte des bonus d'équipement (optionnels)
+ */
+const calculateUnarmoredAC = (
+  player: Player,
+  equipmentBonuses?: { Dextérité?: number; Sagesse?: number; Constitution?: number }
+): number => {
+  const baseDexMod = getDexModFromPlayer(player);
+  const dexMod = baseDexMod + (equipmentBonuses?. Dextérité || 0);
   
   if (player.class === 'Moine') {
-    const wisMod = getWisModFromPlayer(player);
+    const baseWisMod = getWisModFromPlayer(player);
+    const wisMod = baseWisMod + (equipmentBonuses?.Sagesse || 0);
     return 10 + dexMod + wisMod;
   }
   
   if (player.class === 'Barbare') {
-    const conMod = getConModFromPlayer(player);
+    const baseConMod = getConModFromPlayer(player);
+    const conMod = baseConMod + (equipmentBonuses?.Constitution || 0);
     return 10 + dexMod + conMod;
   }
   
