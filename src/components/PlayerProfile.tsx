@@ -44,8 +44,8 @@ export function PlayerProfile({
           <div className="w-full h-full" aria-hidden />
         </SwipeNavigator>
       </div>
-
-    <div className="stat-card w-full" style={{ overflow: 'visible' }}>
+ 
+      <div className="stat-card w-full">
         <div className="stat-header flex items-start justify-between">
           <div className="flex flex-col gap-4 w-full">
             <ActiveConditionsBadges activeConditions={player.active_conditions || []} />
