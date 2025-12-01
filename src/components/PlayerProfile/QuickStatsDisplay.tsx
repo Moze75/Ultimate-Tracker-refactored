@@ -153,7 +153,7 @@ const baseAC = armorFormula
    {/* CA */}
 <div className="flex flex-col items-center pt-2">
   <div
-    className="relative w-12 h-14 -mt-2 -mb-1 group cursor-pointer"
+    className="relative w-18 h-20 -mt-2 -mb-1 group cursor-pointer"
     onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
   >
     <img 
