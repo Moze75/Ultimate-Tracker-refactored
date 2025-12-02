@@ -138,7 +138,8 @@ return (
   <div className="flex items-center gap-3">
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
-      onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ?  null : 'ac')}
+      style={{ marginTop: '-10px' }}
+      onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ?   null : 'ac')}
     >
       <div 
         className="relative flex items-center justify-center"
@@ -165,7 +166,10 @@ return (
           {totalAC}
         </span>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-6">
+      <div 
+        className="text-xs uppercase tracking-wide text-gray-500 -mt-6"
+        style={{ marginLeft: '10px' }}
+      >
         CA
       </div>
       {activeTooltip === 'ac' && (
