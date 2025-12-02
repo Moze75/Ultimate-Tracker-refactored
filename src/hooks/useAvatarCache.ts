@@ -14,9 +14,6 @@ interface UseAvatarCacheResult {
 
 /**
  * Hook pour charger un avatar avec cache local
- * @param playerId - ID du joueur
- * @param remoteUrl - URL Supabase de l'avatar
- * @returns { avatarSrc, isLoading, error, refresh }
  */
 export function useAvatarCache(
   playerId: string | undefined,
@@ -33,8 +30,7 @@ export function useAvatarCache(
       return;
     }
 
-    // Pas d'URL = pas d'avatar
-    if (!remoteUrl) {
+    if (! remoteUrl) {
       setAvatarSrc(null);
       setIsLoading(false);
       return;
@@ -51,7 +47,7 @@ export function useAvatarCache(
       return;
     }
 
-    // 2. Télécharger et mettre en cache
+    // 2.  Télécharger et mettre en cache
     try {
       const base64 = await cacheAvatar(playerId, remoteUrl);
       if (base64) {
@@ -63,7 +59,6 @@ export function useAvatarCache(
     } catch (e) {
       console. error('[useAvatarCache] Erreur:', e);
       setError(true);
-      // Fallback : utiliser l'URL directe
       setAvatarSrc(remoteUrl);
     } finally {
       setIsLoading(false);
