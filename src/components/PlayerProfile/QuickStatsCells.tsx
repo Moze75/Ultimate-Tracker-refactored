@@ -168,7 +168,7 @@ return (
       </div>
       <div 
         className="text-xs uppercase tracking-wide text-gray-500 -mt-6"
-        style={{ marginLeft: '10px' }}
+        style={{ marginLeft: '5px' }}
       >
         CA
       </div>
