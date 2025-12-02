@@ -140,10 +140,9 @@ export function InventoryList({
       toast. error('Erreur suppression');
     }
   };
-
+ 
   return (
-    <>
-      <div className="stat-card">
+    <div className="stat-card">
       <div className="stat-header flex items-center gap-3">
         <Backpack className="text-purple-500" size={24} />
         <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Sac</h2>
