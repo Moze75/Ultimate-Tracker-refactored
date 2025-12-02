@@ -38,18 +38,6 @@ interface EquipmentSlotsProps {
 }
 
 
-interface EquipmentSlotProps {
-  icon: React.ReactNode;
-  position: string;
-  equipment: Equipment | null;
-  type: 'armor' | 'weapon' | 'shield' | 'potion' | 'jewelry';
-  onRequestOpenList: () => void;
-  onToggleEquipFromSlot: () => void;
-  onOpenEditFromSlot: () => void;
-  isEquipped: boolean;
-  onOpenWeaponsManageFromSlot?: () => void;
-  inventory?: InventoryItem[];
-}
 
 export function EquipmentSlots({
   armor,
