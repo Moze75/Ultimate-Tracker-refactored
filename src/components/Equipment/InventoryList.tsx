@@ -337,8 +337,10 @@ export function InventoryList({
         </div>
       </div>
 
-      {/* Modal des filtres - Portal pour sortir du DOM parent */}
-      {filtersOpen && createPortal(
+         {/* Modal des filtres - Portal pour sortir du DOM parent */}
+      {filtersOpen && (() => {
+        console.log('🎯 [InventoryList] RENDERING PORTAL - filtersOpen is TRUE');
+        return createPortal(
         <div 
           className="fixed inset-0 z-[999999] flex items-center justify-center"
           onClick={(e) => { 
