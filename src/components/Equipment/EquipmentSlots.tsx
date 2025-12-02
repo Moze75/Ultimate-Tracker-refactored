@@ -57,15 +57,12 @@ export function EquipmentSlots({
   weaponsSummary,
   potionText,
   jewelryText,
-  bag,
-  bagText,
   inventory,
   equippedWeaponsCount,
   onOpenInventoryModal,
   onToggleFromSlot,
   onOpenEditFromSlot,
-  onOpenWeaponsModal,
-  onOpenBagModal 
+  onOpenWeaponsModal
 }: EquipmentSlotsProps) {
   return ( 
     <div className="stat-card">
