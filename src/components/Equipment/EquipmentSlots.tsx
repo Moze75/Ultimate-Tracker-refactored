@@ -37,18 +37,22 @@ interface EquipmentSlotProps {
 }
 
 export function EquipmentSlots({
-  icon,
-  position,
-  equipment,
-  type,
-  onRequestOpenList,
-  onToggleEquipFromSlot,
+  armor,
+  shield,
+  weaponsSummary,
+  potionText,
+  jewelryText,
+  bag,
+  bagText,
+  inventory,
+  equippedWeaponsCount,
+  onOpenInventoryModal,
+  onToggleFromSlot,
   onOpenEditFromSlot,
-  isEquipped,
-  onOpenWeaponsManageFromSlot,
-  inventory
-}: EquipmentSlotProps) {
-  return (
+  onOpenWeaponsModal,
+  onOpenBagModal 
+}: EquipmentSlotsProps) {
+  return ( 
     <div className="stat-card">
       <div className="stat-header flex items-center gap-3">
         <Backpack className="text-purple-500" size={24} />
