@@ -135,22 +135,23 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   // ...  reste du JSX identique
 
 return (
-  <div className="flex items-center gap-1"> 
+  <div className="flex items-center gap-1"> {/* gap-3 → gap-1 pour rapprocher les éléments */}
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
-      onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+      style={{ marginLeft: '-20px' }} {/* Décale le bouclier à gauche */}
+      onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ?  null : 'ac')}
     >
       <div 
         className="relative flex items-center justify-center"
         style={{
           width: '180px',
           height: '120px', 
-          backgroundImage: 'url(/background/shield_gris.png)',
+          backgroundImage: 'url(/background/shield_gris. png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center'
         }}
-      > 
+      >
         <span className="text-2xl lg:text-3xl font-bold text-gray-100">
           {totalAC}
         </span>
