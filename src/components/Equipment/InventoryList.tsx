@@ -328,7 +328,7 @@ export function InventoryList({
         </div>
       </div>
 
-          {filtersOpen && (
+      {filtersOpen && createPortal(
         <div className="fixed inset-0 z-[11000] flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setFiltersOpen(false); }}>
           <div className="fixed inset-0 bg-black/60" />
           <div className="relative w-[min(22rem,92vw)] bg-gray-900/95 border border-gray-700 rounded-lg p-3 shadow-xl">
@@ -363,7 +363,8 @@ export function InventoryList({
               <button onClick={() => setFiltersOpen(false)} className="btn-primary px-3 py-2 rounded-lg">Fermer</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
