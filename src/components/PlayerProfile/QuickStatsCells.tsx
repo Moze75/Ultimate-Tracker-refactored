@@ -156,7 +156,7 @@ return (
           {totalAC}
         </span>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-4">CA</div>
+      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-6">CA</div>
       {activeTooltip === 'ac' && (
         // ...  reste du tooltip inchangé
         <>
