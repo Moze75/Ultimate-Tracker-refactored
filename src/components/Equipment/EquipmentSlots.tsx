@@ -140,19 +140,7 @@ export function EquipmentSlots({
             inventory={inventory}
           />
 
-          <EquipmentSlot
-            icon={<img src="https://yumzqyyogwzrmlcpvnky.supabase.co/storage/v1/object/public/static//8-2-backpack-png-pic.png" alt="Backpack" className="w-24 h-24 object-contain" />}
-            position="bottom-[5%] right-[2%]"
-            equipment={bag || { name: 'Sac à dos', description: '', isTextArea: true }}
-            type="bag"
-            onRequestOpenList={() => {}}
-            onToggleEquipFromSlot={() => {}}
-            onOpenEditFromSlot={() => {}}
-            onOpenBagModal={onOpenBagModal}
-            isEquipped={false}
-            bagText={bagText}
-            inventory={inventory}
-          />
+
         </div>
       </div>
     </div>
