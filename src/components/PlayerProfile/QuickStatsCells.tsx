@@ -135,9 +135,10 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   // ...  reste du JSX identique
 
 return (
-  <div className="flex items-center gap-1"> 
+  <div className="flex items-center gap-1">
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
+      style={{ marginLeft: '-20px' }}
       onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
     >
       <div 
@@ -149,14 +150,15 @@ return (
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center'
-        }} 
-      >   
+        }}
+      >
         <span className="text-2xl lg:text-3xl font-bold text-gray-100">
           {totalAC}
         </span>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2">CA</div>
-      {activeTooltip === 'ac' && ( 
+      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-4">CA</div>
+      {activeTooltip === 'ac' && (
+        // ...  reste du tooltip inchangé
         <>
           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
