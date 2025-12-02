@@ -154,8 +154,8 @@ return (
           alt="CA"
           style={{
             position: 'absolute',
-            width: '140px',
-            height: '170px',
+            width: '220px',
+            height: '260px',
             objectFit: 'contain',
             pointerEvents: 'none'
           }}
