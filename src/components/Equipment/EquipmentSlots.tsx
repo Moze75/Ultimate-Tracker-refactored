@@ -36,22 +36,18 @@ interface EquipmentSlotProps {
   inventory?: InventoryItem[];
 }
 
-export function EquipmentSlots({
-  armor,
-  shield,
-  weaponsSummary,
-  potionText,
-  jewelryText,
-  bag,
-  bagText,
-  inventory,
-  equippedWeaponsCount,
-  onOpenInventoryModal,
-  onToggleFromSlot,
+export function EquipmentSlot({
+  icon,
+  position,
+  equipment,
+  type,
+  onRequestOpenList,
+  onToggleEquipFromSlot,
   onOpenEditFromSlot,
-  onOpenWeaponsModal,
-  onOpenBagModal
-}: EquipmentSlotsProps) {
+  isEquipped,
+  onOpenWeaponsManageFromSlot,
+  inventory
+}: EquipmentSlotProps) {
   return (
     <div className="stat-card">
       <div className="stat-header flex items-center gap-3">
