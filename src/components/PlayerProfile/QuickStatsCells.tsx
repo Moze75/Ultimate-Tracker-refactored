@@ -171,7 +171,7 @@ return (
       </div>
       {activeTooltip === 'ac' && (
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
+        <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
             <h4 className="font-semibold text-gray-100 mb-1">Classe d'Armure</h4>
             <p className="mb-2">Détermine la difficulté pour vous toucher en combat.</p>
