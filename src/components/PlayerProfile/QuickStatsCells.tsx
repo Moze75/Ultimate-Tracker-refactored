@@ -155,8 +155,8 @@ return (
           src="/background/shield_gris.png" 
           alt="CA"
           style={{
-            width: '100%',
-            height: '100%',
+            width: '130%',
+            height: '130%',
             objectFit: 'contain'
           }}
         />
