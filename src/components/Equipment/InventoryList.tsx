@@ -327,48 +327,4 @@ export function InventoryList({
           })}
         </div>
       </div>
-    </div>
-      </div>
-
-      {/* Modal des filtres - Portal pour sortir du DOM parent */}
-      {filtersOpen && createPortal(
-        <div className="fixed inset-0 z-[999999]" onClick={(e) => { if (e. target === e.currentTarget) setFiltersOpen(false); }}>
-          <div className="fixed inset-0 bg-black/60" onClick={() => setFiltersOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(22rem,92vw)] bg-gray-900/95 border border-gray-700 rounded-lg p-3 z-[1000000]">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-gray-100 font-semibold">Filtres du sac</h4>
-              <button onClick={() => setFiltersOpen(false)} className="p-2 text-gray-400 hover:bg-gray-800 rounded-lg" aria-label="Fermer">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-1">
-              {(['armor','shield','weapon','equipment','potion','jewelry','tool','other'] as MetaType[]).map(k => (
-                <label key={k} className="flex items-center justify-between text-sm text-gray-200 px-2 py-1 rounded hover:bg-gray-800/60 cursor-pointer">
-                  <span>
-                    {k === 'armor' ? 'Armure'
-                      : k === 'shield' ? 'Bouclier'
-                      : k === 'weapon' ? 'Arme'
-                      : k === 'potion' ? 'Potion/Poison'
-                      : k === 'jewelry' ? 'Bijoux'
-                      : k === 'tool' ? 'Outils'
-                      : k === 'other' ? 'Autre' : 'Équipement'}
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="accent-red-500"
-                    checked={bagKinds[k]}
-                    onChange={() => setBagKinds(prev => ({ ...prev, [k]: !prev[k] }))}
-                  />
-                </label>
-              ))}
-            </div>
-            <div className="mt-3 text-right">
-              <button onClick={() => setFiltersOpen(false)} className="btn-primary px-3 py-2 rounded-lg">Fermer</button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  );
-}
+ 
