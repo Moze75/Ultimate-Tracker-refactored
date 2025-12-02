@@ -138,7 +138,7 @@ return (
   <div className="flex items-center gap-1" style={{ overflow: 'visible' }}>
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
-      style={{ width: '90px', overflow: 'visible' }}
+      style={{ width: '110px', overflow: 'visible' }}
       onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
     >
       <div 
