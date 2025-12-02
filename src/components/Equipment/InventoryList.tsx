@@ -327,7 +327,7 @@ export function InventoryList({
           })}
         </div>
       </div>
- 
+
 {filtersOpen && (
   <div className="fixed inset-0 z-[999999]" onClick={(e) => { if (e.target === e.currentTarget) setFiltersOpen(false); }}>
     <div className="fixed inset-0 bg-black/60" onClick={() => setFiltersOpen(false)} />
@@ -350,14 +350,14 @@ export function InventoryList({
                       : k === 'tool' ? 'Outils'
                       : k === 'other' ? 'Autre' : 'Équipement'}
                   </span>
-                  <input
+                  <input 
                     type="checkbox"
                     className="accent-red-500"
                     checked={bagKinds[k]}
                     onChange={() => setBagKinds(prev => ({ ...prev, [k]: !prev[k] }))}
                   />
                 </label>
-              ))} 
+              ))}
             </div>
             <div className="mt-3 text-right">
               <button onClick={() => setFiltersOpen(false)} className="btn-primary px-3 py-2 rounded-lg">Fermer</button>
