@@ -135,30 +135,39 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   // ...  reste du JSX identique
 
 return (
-  <div className="flex items-center gap-1">
+  <div className="flex items-center gap-1" style={{ overflow: 'visible' }}>
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
-      style={{ width: '80px' }}
+      style={{ width: '90px', overflow: 'visible' }}
       onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
     >
       <div 
         className="relative flex items-center justify-center"
         style={{
-          width: '80px',
-          height: '100px', 
-          backgroundImage: 'url(/background/shield_gris.png)',
-          backgroundSize: '140px 175px',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center'
+          width: '90px',
+          height: '110px',
+          overflow: 'visible'
         }}
       >
-        <span className="text-2xl lg:text-3xl font-bold text-gray-100">
+        <img 
+          src="/background/shield_gris.png" 
+          alt="CA"
+          style={{
+            position: 'absolute',
+            width: '140px',
+            height: '170px',
+            objectFit: 'contain',
+            pointerEvents: 'none'
+          }}
+        />
+        <span className="text-2xl lg:text-3xl font-bold text-gray-100 relative z-10">
           {totalAC}
         </span>
       </div>
       <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2">CA</div>
       {activeTooltip === 'ac' && (
         <>
+          // ...  reste du tooltip
     
   
           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
