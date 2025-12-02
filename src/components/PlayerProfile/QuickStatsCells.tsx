@@ -135,36 +135,39 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   // ...  reste du JSX identique
 
 return (
-  <div className="flex items-center gap-1" style={{ overflow: 'visible' }}>
+  <div className="flex items-center gap-1">
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
-      style={{ width: '110px', overflow: 'visible' }}
       onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
     >
       <div 
         className="relative flex items-center justify-center"
         style={{
-          width: '90px',
-          height: '110px',
-          overflow: 'visible'
+          width: '120px',
+          height: '130px',
+          marginTop: '-20px',
+          marginBottom: '-20px',
+          marginLeft: '-15px',
+          marginRight: '-30px'
         }}
       >
         <img 
           src="/background/shield_gris.png" 
           alt="CA"
           style={{
-            position: 'absolute',
-            width: '220px',
-            height: '260px',
-            objectFit: 'contain',
-            pointerEvents: 'none'
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain'
           }}
         />
-        <span className="text-2xl lg:text-3xl font-bold text-gray-100 relative z-10">
+        <span 
+          className="absolute text-2xl lg:text-3xl font-bold text-gray-100"
+          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+        >
           {totalAC}
         </span>
       </div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2">CA</div>
+      <div className="text-xs uppercase tracking-wide text-gray-500 -mt-4">CA</div>
       {activeTooltip === 'ac' && (
         <>
           // ...  reste du tooltip
