@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield as ShieldIcon } from 'lucide-react'; 
+import { Shield as ShieldIcon } from 'lucide-react';
 import { Player, PlayerStats } from '../../types/dnd';
 
 interface QuickStatsDisplayProps {
@@ -148,42 +148,18 @@ const baseAC = armorFormula
   const acBonus = Number((stats as any).ac_bonus || 0);
   const totalAC = baseAC + shieldBonus + acBonus + equipmentBonuses.armor_class;
  
- return (
-  <div 
-    className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1"
-    style={{ overflow: 'visible' }}
-  >
-{/* CA */}
-<div className="flex flex-col items-center pt-2 relative">
-  <div
-    className="relative cursor-pointer"
-    onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
-    style={{ width: '60px', height: '50px' }}
-  >
-    {/* Image qui déborde */}
-    <img 
-      src="/background/shield_gris.png" 
-      alt="Bouclier CA"
-      style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '210px',
-        height: '230px',
-        objectFit: 'contain',
-        pointerEvents: 'none',
-        zIndex: 20,
-        marginTop: '-15px'
-      }}
-    />
-    {/* Valeur CA */}
-    <div 
-      className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-100"
-      style={{ zIndex: 21 }}
-    >
-      {totalAC}
-    </div>
+  return (
+   <div className="grid grid-cols-4 gap-4 mt-2 bg-gray-800/50 rounded-lg py-1">
+      {/* CA */}
+     <div className="flex flex-col items-center pt-2">
+        <div
+          className="relative w-12 h-10 -mt-2 -mb-1 group cursor-pointer"
+          onClick={() => setActiveTooltip(activeTooltip === 'ac' ? null : 'ac')}
+        >
+          <ShieldIcon className="absolute inset-0 w-full h-full text-gray-400 stroke-[1.5] scale-125" />
+          <div className="absolute inset-0 flex items-center justify-center -translate-y-1 text-lg font-bold text-gray-100 z-10">
+            {totalAC}
+          </div>
           {activeTooltip === 'ac' && (
             <>
               <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />
@@ -306,5 +282,5 @@ const baseAC = armorFormula
         <div className="text-xs uppercase tracking-wide text-gray-500 -mt-2 text-center -ml-6">MAÎT</div>
       </div>
     </div>  
-  );  
+  );
 } 
