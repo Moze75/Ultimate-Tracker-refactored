@@ -144,9 +144,8 @@ return (
         className="relative flex items-center justify-center"
         style={{
           width: '160px',
-          height: '170px',
-          marginTop: '-30px',
-          marginBottom: '-30px',
+          height: '140px',
+          marginTop: '-25px',
           marginLeft: '-20px',
           marginRight: '-20px'
         }}
@@ -161,23 +160,17 @@ return (
           }}
         />
         <span 
-          className="absolute text-2xl lg:text-3xl font-bold text-gray-100"
-          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+          className="absolute text-xl font-bold text-gray-100"
+          style={{ top: '45%', left: '50%', transform: 'translate(-50%, -50%)' }}
         >
           {totalAC}
         </span>
       </div>
-      <div 
-        className="text-xs uppercase tracking-wide text-gray-500"
-        style={{ marginTop: '-35px' }}
-      >
+      <div className="text-xs uppercase tracking-wide text-gray-500">
         CA
       </div>
       {activeTooltip === 'ac' && (
         <>
-          // ...  reste du tooltip
-    
-  
           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveTooltip && setActiveTooltip(null); }} />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 backdrop-blur-sm text-sm text-gray-300 rounded-lg max-w-sm w-[90vw] shadow-xl border border-gray-700 z-[9999]">
             <h4 className="font-semibold text-gray-100 mb-1">Classe d'Armure</h4>
