@@ -23,6 +23,21 @@ interface Equipment {
   };
 }
 
+interface EquipmentSlotsProps {
+  armor: Equipment | null;
+  shield: Equipment | null;
+  weaponsSummary: Equipment;
+  potionText: string;
+  jewelryText: string;
+  inventory: InventoryItem[];
+  equippedWeaponsCount: number;
+  onOpenInventoryModal: (type: 'armor' | 'shield') => void;
+  onToggleFromSlot: (slot: 'armor' | 'shield') => void;
+  onOpenEditFromSlot: (slot: 'armor' | 'shield') => void;
+  onOpenWeaponsModal: () => void;
+}
+
+
 interface EquipmentSlotProps {
   icon: React.ReactNode;
   position: string;
