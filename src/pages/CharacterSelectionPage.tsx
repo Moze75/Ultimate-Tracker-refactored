@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { appContextService } from '../services/appContextService';
+import { preloadAvatars } from '../services/avatarCacheService';
 import { Player } from '../types/dnd';
 import {
   LogOut,
