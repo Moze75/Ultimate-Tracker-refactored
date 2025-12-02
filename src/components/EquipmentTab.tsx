@@ -257,11 +257,12 @@ interface EquipmentTabProps {
 }
 
 export function EquipmentTab({
-  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all'
+  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all' 
 }: EquipmentTabProps) {
-const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
-const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
-const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment | null; } | null>(null);
+  const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
+  const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
+  const [bag, setBag] = useState<Equipment | null>(player.equipment?.bag || null);
+  const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment | null; bag: Equipment | null; } | null>(null);
 
   const refreshSeqRef = useRef(0);
   const [pendingEquipment, setPendingEquipment] = useState<Set<string>>(new Set());
