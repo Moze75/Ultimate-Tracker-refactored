@@ -98,9 +98,6 @@ export function InventoryList({
     armor: true, shield: true, weapon: true, equipment: true, potion: true, jewelry: true, tool: true, other: true
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
-  
-  // Debug
-  console.log('🔍 [InventoryList] filtersOpen:', filtersOpen);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const filteredInventory = useMemo(() => {
@@ -338,10 +335,8 @@ export function InventoryList({
       </div>
 
       {/* Modal des filtres - Portal pour sortir du DOM parent */}
-      {filtersOpen && (() => {
-        console.log('🎯 [InventoryList] RENDERING PORTAL - filtersOpen is TRUE');
-        return createPortal(
-        <div  
+      {filtersOpen && createPortal(
+        <div 
           className="fixed inset-0 z-[999999] flex items-center justify-center"
           onClick={(e) => { 
             if (e.target === e.currentTarget) setFiltersOpen(false); 
@@ -392,10 +387,9 @@ export function InventoryList({
               </button>
             </div>
           </div>
-          </div>,
+        </div>,
         document.body
-      );
-      })()}
+      )}
     </>
   );
-}
+} 
