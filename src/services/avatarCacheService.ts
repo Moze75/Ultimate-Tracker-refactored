@@ -8,12 +8,6 @@ const AVATAR_CACHE_TS_PREFIX = 'ut:avatar:ts:';
 const AVATAR_CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 jours
 const MAX_AVATAR_SIZE_BYTES = 500 * 1024; // 500KB max par avatar en base64
 
-interface CachedAvatar {
-  dataUrl: string;
-  originalUrl: string;
-  timestamp: number;
-}
-
 /**
  * Génère une clé de cache unique pour un avatar
  */
@@ -33,8 +27,8 @@ export const getAvatarFromCache = (playerId: string): string | null => {
     const cacheKey = getCacheKey(playerId);
     const tsKey = getTimestampKey(playerId);
     
-    const cachedData = localStorage. getItem(cacheKey);
-    const cachedTs = localStorage.getItem(tsKey);
+    const cachedData = localStorage.getItem(cacheKey);
+    const cachedTs = localStorage. getItem(tsKey);
     
     if (! cachedData || ! cachedTs) {
       return null;
@@ -73,14 +67,14 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
     const blob = await response.blob();
     
     // Vérifier la taille
-    if (blob.size > MAX_AVATAR_SIZE_BYTES) {
+    if (blob. size > MAX_AVATAR_SIZE_BYTES) {
       console.warn(`[AvatarCache] ⚠️ Image trop grande (${Math.round(blob. size / 1024)}KB), compression... `);
       return await compressImage(blob);
     }
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
+      reader. onloadend = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
@@ -126,9 +120,9 @@ const compressImage = (blob: Blob): Promise<string> => {
       }
       
       canvas.width = width;
-      canvas.height = height;
+      canvas. height = height;
       
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx. drawImage(img, 0, 0, width, height);
       
       // Convertir en JPEG avec qualité 0.8
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -155,7 +149,6 @@ export const cacheAvatar = async (
     // Vérifier si déjà en cache avec la même URL
     const existingCache = localStorage.getItem(getCacheKey(playerId));
     if (existingCache) {
-      // Vérifier si c'est toujours valide
       const tsKey = getTimestampKey(playerId);
       const cachedTs = localStorage. getItem(tsKey);
       if (cachedTs) {
@@ -188,7 +181,7 @@ export const cacheAvatar = async (
     
     // Nettoyage en cas d'erreur de quota
     if (e instanceof DOMException && e. name === 'QuotaExceededError') {
-      console.warn('[AvatarCache] ⚠️ Quota localStorage dépassé, nettoyage.. .');
+      console.warn('[AvatarCache] ⚠️ Quota localStorage dépassé, nettoyage...');
       cleanOldAvatars();
     }
     
@@ -230,7 +223,7 @@ const cleanOldAvatars = (): void => {
     avatarKeys.sort((a, b) => a.ts - b.ts);
     
     // Supprimer les 3 plus anciens
-    const toDelete = avatarKeys.slice(0, 3);
+    const toDelete = avatarKeys. slice(0, 3);
     toDelete.forEach(({ key }) => {
       const playerId = key.replace(AVATAR_CACHE_PREFIX, '');
       invalidateAvatarCache(playerId);
@@ -247,7 +240,7 @@ const cleanOldAvatars = (): void => {
  */
 export const preloadAvatars = async (players: { id: string; avatar_url?: string | null }[]): Promise<void> => {
   const toLoad = players.filter(p => {
-    if (! p.avatar_url) return false;
+    if (!p.avatar_url) return false;
     const cached = getAvatarFromCache(p. id);
     return ! cached;
   });
@@ -257,7 +250,7 @@ export const preloadAvatars = async (players: { id: string; avatar_url?: string 
     return;
   }
   
-  console.log(`[AvatarCache] 📥 Préchargement de ${toLoad.length} avatars...`);
+  console. log(`[AvatarCache] 📥 Préchargement de ${toLoad.length} avatars...`);
   
   // Charger en parallèle (max 3 à la fois)
   const batchSize = 3;
