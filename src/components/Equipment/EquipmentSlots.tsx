@@ -29,15 +29,13 @@ interface EquipmentSlotsProps {
   weaponsSummary: Equipment;
   potionText: string;
   jewelryText: string;
-  bag: Equipment | null;
-  bagText: string;
   inventory: InventoryItem[];
   equippedWeaponsCount: number;
   onOpenInventoryModal: (type: 'armor' | 'shield') => void;
   onToggleFromSlot: (slot: 'armor' | 'shield') => void;
   onOpenEditFromSlot: (slot: 'armor' | 'shield') => void;
   onOpenWeaponsModal: () => void;
-  onOpenBagModal: () => void;
+ 
 }
 
 export function EquipmentSlots({
@@ -46,15 +44,12 @@ export function EquipmentSlots({
   weaponsSummary,
   potionText,
   jewelryText,
-  bag,
-  bagText,
   inventory,
   equippedWeaponsCount,
   onOpenInventoryModal,
   onToggleFromSlot,
   onOpenEditFromSlot,
   onOpenWeaponsModal,
-  onOpenBagModal
 }: EquipmentSlotsProps) {
   return (
     <div className="stat-card">
