@@ -259,9 +259,10 @@ interface EquipmentTabProps {
 export function EquipmentTab({
   player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all' 
 }: EquipmentTabProps) {
-const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
-const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
-const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment | null; } | null>(null);
+  const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
+  const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
+  const [bag, setBag] = useState<Equipment | null>(player.equipment?.bag || null);
+  const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment | null; bag: Equipment | null; } | null>(null);
 
   const refreshSeqRef = useRef(0);
   const [pendingEquipment, setPendingEquipment] = useState<Set<string>>(new Set());
@@ -278,6 +279,8 @@ const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment |
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [inventoryModalType, setInventoryModalType] = useState<'armor' | 'shield'>('armor');
 
+  const [showBagModal, setShowBagModal] = useState(false);
+  const [bagText, setBagText] = useState(bag?.description || '');
 
   const [showProficiencyWarning, setShowProficiencyWarning] = useState(false);
   const [proficiencyCheck, setProficiencyCheck] = useState<WeaponProficiencyCheck | null>(null);
@@ -288,15 +291,21 @@ const stableEquipmentRef = useRef<{ armor: Equipment | null; shield: Equipment |
     [player]
   );
 
-useEffect(() => {
-  stableEquipmentRef.current = { armor, shield };
-}, [armor, shield]);
+  useEffect(() => {
+    stableEquipmentRef.current = { armor, shield, bag };
+  }, [armor, shield, bag]);
 
-useEffect(() => {
-  if (!armor && player.equipment?.armor) setArmor(player.equipment. armor);
-  if (!shield && player.equipment?.shield) setShield(player.equipment.shield);
-}, [player.equipment]);
+  useEffect(() => {
+    if (!armor && player.equipment?.armor) setArmor(player.equipment.armor);
+    if (!shield && player.equipment?.shield) setShield(player.equipment.shield);
+    if (!bag && player.equipment?.bag) setBag(player.equipment.bag);
+  }, [player.equipment]);
 
+  useEffect(() => {
+    if (bag?.description) {
+      setBagText(bag.description);
+    }
+  }, [bag]);
 
   useEffect(() => {
     const syncWeaponsFromPlayer = async () => {
@@ -403,30 +412,32 @@ useEffect(() => {
     };
   }, [equippedWeapons]);
 
-const buildEquipmentSnapshot = (override?: Partial<{ armor: Equipment | null; shield: Equipment | null }>) => {
-  const base = stableEquipmentRef.current || { armor, shield };
-  return {
-    armor: override?. armor !== undefined ? override.armor : base.armor,
-    shield: override?.shield !== undefined ? override. shield : base.shield,
-    potion: (player.equipment as any)?.potion ?? null,
-    jewelry: (player.equipment as any)?.jewelry ?? null,
-    weapon: (player.equipment as any)?.weapon ?? null
-  } as any;
-};
+  const buildEquipmentSnapshot = (override?: Partial<{ armor: Equipment | null; shield: Equipment | null; bag: Equipment | null }>) => {
+    const base = stableEquipmentRef.current || { armor, shield, bag };
+    return {
+      armor: override?.armor !== undefined ? override.armor : base.armor,
+      shield: override?.shield !== undefined ? override.shield : base.shield,
+      bag: override?.bag !== undefined ? override.bag : base.bag,
+      potion: (player.equipment as any)?.potion ?? null,
+      jewelry: (player.equipment as any)?.jewelry ?? null,
+      weapon: (player.equipment as any)?.weapon ?? null
+    } as any;
+  };
 
-const saveEquipment = async (slot: 'armor' | 'shield', eq: Equipment | null) => {
-  const snapshot = buildEquipmentSnapshot({ [slot]: eq });
-  try {
-    const { error } = await supabase. from('players').update({ equipment: snapshot }).eq('id', player. id);
-    if (error) throw error;
-    onPlayerUpdate({ ...player, equipment: snapshot });
-    if (slot === 'armor') setArmor(eq);
-    else if (slot === 'shield') setShield(eq);
-  } catch (e) {
-    console.error('Erreur saveEquipment:', e);
-    throw e;
-  }
-};
+  const saveEquipment = async (slot: 'armor' | 'shield' | 'bag', eq: Equipment | null) => {
+    const snapshot = buildEquipmentSnapshot({ [slot]: eq });
+    try {
+      const { error } = await supabase.from('players').update({ equipment: snapshot }).eq('id', player.id);
+      if (error) throw error;
+      onPlayerUpdate({ ...player, equipment: snapshot });
+      if (slot === 'armor') setArmor(eq);
+      else if (slot === 'shield') setShield(eq);
+      else if (slot === 'bag') setBag(eq);
+    } catch (e) {
+      console.error('Erreur saveEquipment:', e);
+      throw e;
+    }
+  };
 
   const refreshInventory = async (delayMs = 0) => {
     const doFetch = async () => {
@@ -822,22 +833,25 @@ const saveEquipment = async (slot: 'armor' | 'shield', eq: Equipment | null) => 
   return (
     <div className="space-y-6">
       {showEquipmentSlots && (
-<EquipmentSlots
-  armor={armor}
-  shield={shield}
-  weaponsSummary={weaponsSummary}
-  potionText={potionText}
-  jewelryText={jewelryText}
-  inventory={inventory}
-  equippedWeaponsCount={equippedWeapons.length}
-  onOpenInventoryModal={(type) => {
-    setInventoryModalType(type);
-    setShowInventoryModal(true);
-  }}
-  onToggleFromSlot={toggleFromSlot}
-  onOpenEditFromSlot={openEditFromSlot}
-  onOpenWeaponsModal={() => setShowWeaponsModal(true)}
-/>
+        <EquipmentSlots
+          armor={armor}
+          shield={shield}
+          weaponsSummary={weaponsSummary}
+          potionText={potionText}
+          jewelryText={jewelryText}
+          bag={bag}
+          bagText={bagText}
+          inventory={inventory}
+          equippedWeaponsCount={equippedWeapons.length}
+          onOpenInventoryModal={(type) => {
+            setInventoryModalType(type);
+            setShowInventoryModal(true);
+          }}
+          onToggleFromSlot={toggleFromSlot}
+          onOpenEditFromSlot={openEditFromSlot}
+          onOpenWeaponsModal={() => setShowWeaponsModal(true)}
+          onOpenBagModal={() => setShowBagModal(true)}
+        />
       )}
 
       {showGold && <GoldManager player={player} onPlayerUpdate={onPlayerUpdate} />}
