@@ -239,7 +239,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 C’est exactement pour ça que Le Compagnon a été créé.
               </p>
               <p className="mt-4 text-blue-100/80">
-                une appli 100% ligne, légère et toujours à jours. Pensée pour le plaisir du jeu, sans prise de tête.
+                une appli 100% ligne, légère et toujours à jours. Pensée pour le plaisir du jeu, sans prise de tête. 
               </p>
             </div>
           </div>
