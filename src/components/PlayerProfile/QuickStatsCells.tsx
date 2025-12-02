@@ -135,7 +135,7 @@ export function QuickStatsCells({ player, inventory, activeTooltip, setActiveToo
   // ...  reste du JSX identique
 
 return (
-  <div className="flex items-center gap-0">
+  <div className="flex items-center gap-5">
     <div
       className="flex flex-col items-center justify-center cursor-pointer relative"
       style={{ marginLeft: '-20px' }}
