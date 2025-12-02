@@ -98,6 +98,9 @@ export function InventoryList({
     armor: true, shield: true, weapon: true, equipment: true, potion: true, jewelry: true, tool: true, other: true
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  // Debug
+  console.log('🔍 [InventoryList] filtersOpen:', filtersOpen);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const filteredInventory = useMemo(() => {
