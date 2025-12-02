@@ -276,12 +276,17 @@ const fetchPlayers = async () => {
     if (error) throw error;
     
     const players = data || [];
+
+    // ✅ NOUVEAU : Précharger les avatars en arrière-plan (non bloquant)
+    preloadAvatars(players). catch(e => {
+      console.warn('[CharacterSelection] Erreur préchargement avatars:', e);
+    });
     
     // Sauvegarder dans le cache
     try {
       localStorage.setItem(PLAYERS_LIST_CACHE_KEY, JSON.stringify(players));
       localStorage.setItem(PLAYERS_LIST_CACHE_TS_KEY, Date.now().toString());
-      console. log('[CharacterSelection] 💾 Players complets mis en cache:', players.length);
+      console.log('[CharacterSelection] 💾 Players complets mis en cache:', players.length);
     } catch (e) {
       console.warn('[CharacterSelection] Erreur sauvegarde cache:', e);
     }
