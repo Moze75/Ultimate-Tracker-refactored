@@ -414,7 +414,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             {/* Texte Explicatif */}
             <div className="flex-1 text-center md:text-left order-1 md:order-2">
                <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-4">
-                  Mobile First
+                  App mobile
                </div>
                <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
                  Le jeu dans la main, dans votre langue,<br/>
