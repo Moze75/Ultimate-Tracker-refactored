@@ -23,39 +23,31 @@ interface Equipment {
   };
 }
 
-interface EquipmentSlotsProps {
-  armor: Equipment | null;
-  shield: Equipment | null;
-  weaponsSummary: Equipment;
-  potionText: string;
-  jewelryText: string; 
-  bag: Equipment | null;
-  bagText: string;
-  inventory: InventoryItem[];
-  equippedWeaponsCount: number;
-  onOpenInventoryModal: (type: 'armor' | 'shield') => void;
-  onToggleFromSlot: (slot: 'armor' | 'shield') => void;
-  onOpenEditFromSlot: (slot: 'armor' | 'shield') => void;
-  onOpenWeaponsModal: () => void;
-  onOpenBagModal: () => void;
+interface EquipmentSlotProps {
+  icon: React.ReactNode;
+  position: string;
+  equipment: Equipment | null;
+  type: 'armor' | 'weapon' | 'shield' | 'potion' | 'jewelry';
+  onRequestOpenList: () => void;
+  onToggleEquipFromSlot: () => void;
+  onOpenEditFromSlot: () => void;
+  isEquipped: boolean;
+  onOpenWeaponsManageFromSlot?: () => void;
+  inventory?: InventoryItem[];
 }
 
-export function EquipmentSlots({
-  armor,
-  shield,
-  weaponsSummary,
-  potionText,
-  jewelryText,
-  bag,
-  bagText,
-  inventory,
-  equippedWeaponsCount,
-  onOpenInventoryModal,
-  onToggleFromSlot,
+export function EquipmentSlot({
+  icon,
+  position,
+  equipment,
+  type,
+  onRequestOpenList,
+  onToggleEquipFromSlot,
   onOpenEditFromSlot,
-  onOpenWeaponsModal,
-  onOpenBagModal
-}: EquipmentSlotsProps) {
+  isEquipped,
+  onOpenWeaponsManageFromSlot,
+  inventory
+}: EquipmentSlotProps) {
   return (
     <div className="stat-card">
       <div className="stat-header flex items-center gap-3">
