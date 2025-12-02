@@ -142,7 +142,7 @@ return (
     >
       <div 
         className="relative flex items-center justify-center"
-        style={{
+        style={{ 
           width: '120px',
           height: '130px',
           marginTop: '-20px',
@@ -155,8 +155,8 @@ return (
           src="/background/shield_gris.png" 
           alt="CA"
           style={{
-            width: '130%',
-            height: '130%',
+            width: '100%',
+            height: '100%',
             objectFit: 'contain'
           }}
         />
