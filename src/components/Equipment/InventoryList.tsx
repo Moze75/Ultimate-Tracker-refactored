@@ -327,10 +327,10 @@ export function InventoryList({
         </div>
       </div>
 
-      {filtersOpen && (
-        <div className="fixed inset-0 z-[11000]" onClick={(e) => { if (e.target === e.currentTarget) setFiltersOpen(false); }}>
+          {filtersOpen && (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setFiltersOpen(false); }}>
           <div className="fixed inset-0 bg-black/60" />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(22rem,92vw)] bg-gray-900/95 border border-gray-700 rounded-lg p-3">
+          <div className="relative w-[min(22rem,92vw)] bg-gray-900/95 border border-gray-700 rounded-lg p-3 shadow-xl">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-gray-100 font-semibold">Filtres du sac</h4>
               <button onClick={() => setFiltersOpen(false)} className="p-2 text-gray-400 hover:bg-gray-800 rounded-lg" aria-label="Fermer">
