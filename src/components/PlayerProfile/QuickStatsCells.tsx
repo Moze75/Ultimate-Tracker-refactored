@@ -143,8 +143,8 @@ return (
       <div 
         className="relative flex items-center justify-center"
         style={{
-          width: '150px',
-          height: '170px',
+          width: '180px',
+          height: '2000px',
           backgroundImage: 'url(/background/shield_gris.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
