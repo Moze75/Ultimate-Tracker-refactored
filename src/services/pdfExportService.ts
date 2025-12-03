@@ -3,9 +3,87 @@ import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 
 // ============================================================================
-// 1. CONFIGURATION
+// 1. CONFIGURATION & CACHE PERSISTANT (IndexedDB)
 // ============================================================================
 const REPO_URL = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main';
+const PDF_URL = '/FDP/eFeuillePersoDD2024.pdf';
+const DB_NAME = 'UltimateTrackerCache';
+const STORE_NAME = 'files';
+const PDF_KEY = 'character_sheet_v1'; // Change ce nom si tu mets à jour le PDF sur le serveur
+
+// --- GESTIONNAIRE BASE DE DONNÉES NAVIGATEUR ---
+const LocalStorage = {
+  async openDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const db = (e.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  },
+
+  async getPDF(): Promise<ArrayBuffer | null> {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get(PDF_KEY);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (e) { return null; }
+  },
+
+  async savePDF(data: ArrayBuffer): Promise<void> {
+    try {
+      const db = await this.openDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(data, PDF_KEY);
+    } catch (e) { console.warn("Impossible de sauvegarder en cache local", e); }
+  }
+};
+
+// Variable RAM (pour la session en cours)
+let memoryCache: ArrayBuffer | null = null;
+
+async function getPdfTemplate(): Promise<ArrayBuffer> {
+  // 1. Vérifier RAM
+  if (memoryCache) {
+    console.log("📦 PDF chargé depuis la RAM");
+    return memoryCache.slice(0);
+  }
+
+  // 2. Vérifier IndexedDB (Disque dur utilisateur)
+  const localData = await LocalStorage.getPDF();
+  if (localData) {
+    console.log("💾 PDF chargé depuis le cache persistant (IndexedDB)");
+    memoryCache = localData;
+    return localData.slice(0);
+  }
+
+  // 3. Télécharger (Réseau)
+  console.log("⬇️ Téléchargement du PDF (Première fois)...");
+  const res = await fetch(PDF_URL);
+  if (!res.ok) throw new Error("Erreur chargement PDF");
+  const downloadedData = await res.arrayBuffer();
+
+  // 4. Sauvegarder pour la prochaine fois
+  memoryCache = downloadedData;
+  await LocalStorage.savePDF(downloadedData);
+  
+  return downloadedData.slice(0);
+}
+
+// ============================================================================
+// 2. MAPPINGS & HELPERS
+// ============================================================================
 
 const SKILL_MAPPING: Record<string, number> = {
   'Acrobaties': 1, 'Dressage': 2, 'Arcanes': 3, 'Athlétisme': 4,
@@ -23,15 +101,13 @@ const SPELLCASTING_ABILITY: Record<string, string> = {
   'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
 };
 
-// ============================================================================
-// 2. HELPERS
-// ============================================================================
 async function fetchMarkdown(path: string): Promise<string> {
   try {
     const res = await fetch(`${REPO_URL}/${path.split('/').map(encodeURIComponent).join('/')}`);
     return res.ok ? await res.text() : '';
   } catch (e) { return ''; }
 }
+
 function parseClassFeatures(md: string, level: number): string[] {
   const features: string[] = [];
   const regex = /^###\s+NIVEAU\s+(\d+)\s*:\s*(.+)$/gim;
@@ -41,6 +117,7 @@ function parseClassFeatures(md: string, level: number): string[] {
   }
   return features;
 }
+
 function parseRaceTraits(md: string, raceName: string): string[] {
   if (!raceName) return [];
   const traits: string[] = [];
@@ -56,6 +133,7 @@ function parseRaceTraits(md: string, raceName: string): string[] {
   }
   return traits;
 }
+
 function parseFeatsFromMD(mdList: string[], featNames: string[]): string[] {
   const found: string[] = [];
   const norm = featNames.map(n => n.toLowerCase().trim());
@@ -69,32 +147,37 @@ function parseFeatsFromMD(mdList: string[], featNames: string[]): string[] {
   });
   return featNames.map(n => found.find(f => f.toLowerCase() === n.toLowerCase()) || n);
 }
+
 function parseMeta(desc: string | null | undefined) {
   if (!desc) return null;
   const l = desc.split('\n').map(x => x.trim()).reverse().find(x => x.startsWith('#meta:'));
   try { return l ? JSON.parse(l.slice(6)) : null; } catch { return null; }
 }
+
 function getHitDieSize(c?: string | null): number {
     if (!c) return 8; const l = c.toLowerCase();
     if (l.includes('barbare')) return 12;
     if (l.includes('guerrier') || l.includes('paladin') || l.includes('rôdeur')) return 10;
     if (l.includes('magicien') || l.includes('ensorceleur')) return 6; return 8;
 }
+
 function getProficiency(level: number) {
   if (level >= 17) return 6; if (level >= 13) return 5; if (level >= 9) return 4; if (level >= 5) return 3; return 2;
 }
 
 // ============================================================================
-// 3. GENERATE
+// 3. GENERATE FUNCTION
 // ============================================================================
+
 export const generateCharacterSheet = async (player: Player) => {
   try {
     const level = player.level || 1;
     const pb = getProficiency(level);
 
-    // 1. LOAD
-    const [pdfBytes, invRes, spellRes, classMd, raceMd, ...donsMds] = await Promise.all([
-        fetch('/FDP/eFeuillePersoDD2024.pdf').then(r => r.arrayBuffer()),
+    // 1. LOAD (Optimisé avec Cache)
+    const pdfBytes = await getPdfTemplate();
+
+    const [invRes, spellRes, classMd, raceMd, ...donsMds] = await Promise.all([
         supabase.from('inventory_items').select('*').eq('player_id', player.id),
         supabase.from('player_spells').select('spells (name, level, range, components, duration, casting_time)').eq('player_id', player.id).order('created_at', { ascending: true }),
         player.class ? fetchMarkdown(`Classes/${player.class}/${player.class}.md`) : Promise.resolve(''),
@@ -105,12 +188,12 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
-    // HELPERS
+    // HELPERS UI
     const setTxt = (n: string, v: any) => { try { form.getTextField(n).setText(String(v ?? '')); } catch (e) {} };
     const setBonus = (n: string, v: number) => { try { form.getTextField(n).setText(`${v >= 0 ? '+' : ''}${v}`); } catch (e) {} };
     const setChk = (n: string, v: boolean) => { try { const f = form.getCheckBox(n); if(v) f.check(); else f.uncheck(); } catch(e) {} };
 
-    // DATA
+    // DATA PREP
     let abilities = []; try { abilities = Array.isArray(player.abilities) ? player.abilities : JSON.parse(player.abilities_json as string); } catch {}
     const stats = player.stats || {};
     const meta = (stats as any).creator_meta || {};
@@ -160,7 +243,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ac', (stats as any).armor_class || 10);
     setBonus('init', (stats as any).initiative || 0);
     setTxt('speed', (stats as any).speed || 9);
-    setBonus('pb', pb); // ✅ RÉTABLI: Bonus de maîtrise
+    setBonus('pb', pb); 
     setTxt('hp-current', player.current_hp);
     setTxt('hp-max', player.max_hp);
     const hdSize = getHitDieSize(player.class);
@@ -198,7 +281,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', items.filter((i: any) => !weapons.slice(0, 6).find((w: any) => w.id === i.id)).map((i: any) => i.name).join(', '));
     setTxt('gp', String(player.gold || 0)); setTxt('sp', String(player.silver || 0)); setTxt('cp', String(player.copper || 0)); setTxt('ep', "0"); setTxt('pp', "0");
 
-      // --- SORTS (Correction : Espaces & Raccourci "Perso") ---
+    // --- SORTS (V18 : Cache + Formatage Portée/Temps + Anti-Crash) ---
     const spells = spellRes.data || [];
     spells.slice(0, 30).forEach((entry: any, idx: number) => {
         if (!entry.spells) return;
@@ -207,7 +290,7 @@ export const generateCharacterSheet = async (player: Player) => {
         const lvl = s.level === 0 ? 'T' : String(s.level);
         const time = (s.casting_time && String(s.casting_time)) || '1 action';
         
-        // Raccourcissement de la portée
+        // Formatage Portée
         let range = s.range ? String(s.range) : '-';
         if (range.toLowerCase().includes('personnelle')) {
             range = 'Perso';
@@ -227,7 +310,7 @@ export const generateCharacterSheet = async (player: Player) => {
         setTxt(`spell${id}`, s.name);
         setTxt(`spell${id}l`, lvl);
         
-        // FUSION : TEMPS + ESPACES + PORTÉE (Plus de tiret)
+        // FUSION : TEMPS + ESPACES + PORTÉE
         const timeAndRange = `${time}      ${range}`;
         setTxt(`spell${id}r`, timeAndRange);
         setTxt(`r${id}`, timeAndRange); 
@@ -248,7 +331,7 @@ export const generateCharacterSheet = async (player: Player) => {
     for (let niv = 1; niv <= 9; niv++) {
         const total = spellSlots[`level${niv}`] || 0;
         const used = spellSlots[`used${niv}`] || 0;
-        setTxt(`slot${niv}`, total); // Champ Total
+        setTxt(`slot${niv}`, total); 
         for (let i = 1; i <= 4; i++) {
             setChk(`cbslot${niv}${i}`, i <= used);
         }
@@ -263,7 +346,7 @@ export const generateCharacterSheet = async (player: Player) => {
         setBonus('spell-mod', castStat.modifier);
     }
 
-    // --- FEATS/TRAITS ---
+    // --- TRAITS / DONS ---
     const featsRaw = [...(stats.feats?.origins || []), ...(stats.feats?.generals || []), ...(stats.feats?.styles || [])].filter(Boolean);
     const feats = parseFeatsFromMD(donsMds, featsRaw).map(x => `• ${x}`).join('\n');
     const traits = parseRaceTraits(raceMd, player.race || '').map(x => `• ${x}`).join('\n');
