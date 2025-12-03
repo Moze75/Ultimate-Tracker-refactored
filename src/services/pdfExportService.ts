@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 
 // --- CONSTANTES DE MAPPING ---
 
+// Mapping des compétences (Ordre PDF anglais -> Nom FR dans votre app)
 const SKILL_MAPPING: Record<string, number> = {
   'Acrobaties': 1, 'Dressage': 2, 'Arcanes': 3, 'Athlétisme': 4,
   'Tromperie': 5, 'Histoire': 6, 'Perspicacité': 7, 'Intimidation': 8,
@@ -15,7 +16,7 @@ const SKILL_MAPPING: Record<string, number> = {
 const SAVE_ORDER = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
 
 const SPELLCASTING_ABILITY: Record<string, string> = {
-  'Magicien': 'Intelligence', 'Artificier': 'Intelligence',
+  'Magicien': 'Intelligence', 'Artificier': 'Intelligence', 'Guerrier': 'Intelligence', // Eldritch Knight
   'Clerc': 'Sagesse', 'Druide': 'Sagesse', 'Rôdeur': 'Sagesse', 'Moine': 'Sagesse',
   'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
 };
@@ -31,6 +32,28 @@ const getProficiency = (level: number) => {
   if (level >= 5) return 3;
   return 2;
 };
+
+function getHitDieSize(className?: string | null): number {
+    if (!className) return 8;
+    const c = className.toLowerCase();
+    if (c.includes('barbare')) return 12;
+    if (c.includes('guerrier') || c.includes('paladin') || c.includes('rôdeur') || c.includes('rodeur')) return 10;
+    if (c.includes('magicien') || c.includes('ensorceleur')) return 6;
+    return 8; // Clerc, Barde, Druide, Roublard, Moine, Occultiste, Artificier
+}
+
+// Parser pour les métadonnées d'inventaire (#meta:{...})
+function parseMeta(description: string | null | undefined) {
+  if (!description) return null;
+  const lines = description.split('\n').map(l => l.trim());
+  const metaLine = [...lines].reverse().find(l => l.startsWith('#meta:'));
+  if (!metaLine) return null;
+  try {
+    return JSON.parse(metaLine.slice(6));
+  } catch {
+    return null;
+  }
+}
 
 export const generateCharacterSheet = async (player: Player) => {
   try {
@@ -62,82 +85,46 @@ export const generateCharacterSheet = async (player: Player) => {
       } catch (e) {}
     };
 
-    // 2. Parsing & Récupération des Données
+    // 2. Récupération des données externes (Supabase)
+    // On lance toutes les requêtes en parallèle pour la vitesse
+    const [inventoryRes, spellsRes, featuresRes] = await Promise.all([
+        supabase.from('inventory_items').select('*').eq('player_id', player.id),
+        supabase.from('player_spells').select('spells (name, level)').eq('player_id', player.id).order('created_at', { ascending: true }),
+        supabase.from('feature_checks').select('feature_key').eq('player_id', player.id).eq('checked', true)
+    ]);
+
+    const inventoryItems = inventoryRes.data || [];
+    const spellList = spellsRes.data || [];
+    const featureList = featuresRes.data || [];
+
+    // 3. Parsing des données locales
     
-    // --- Données "En Dur" dans l'objet Player ---
-    const stats = typeof player.stats === 'string' ? JSON.parse(player.stats) : player.stats || {};
-    const rawAbilities = typeof player.abilities_json === 'string' ? JSON.parse(player.abilities_json) : player.abilities_json || [];
-    const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
-    
-    // Normalisation des Caractéristiques (parfois Array, parfois Object)
+    // Stats (Priorité à player.abilities qui est la structure utilisée par StatsTab)
     let abilitiesData: any[] = [];
-    if (Array.isArray(rawAbilities)) {
-      abilitiesData = rawAbilities;
-    } else if (typeof rawAbilities === 'object') {
-      // Conversion Map -> Array si nécessaire
-      abilitiesData = Object.entries(rawAbilities).map(([name, data]: [string, any]) => ({
-        name,
-        score: data.score,
-        modifier: data.modifier,
-        savingThrow: data.savingThrow,
-        skills: data.skills || []
-      }));
+    if (player.abilities && Array.isArray(player.abilities)) {
+        abilitiesData = player.abilities;
+    } else if (typeof player.abilities_json === 'string') {
+        try { abilitiesData = JSON.parse(player.abilities_json); } catch {}
     }
 
-    // --- Récupération INVENTAIRE (Armes & Équipement) depuis la BDD ---
-    // ✅ NOUVEAU : On fetch l'inventaire réel car equipment_json est souvent vide
-    let weapons: any[] = [];
-    let otherGear: any[] = [];
-    
-    try {
-      const { data: inventoryItems } = await supabase
-        .from('inventory_items')
-        .select('*')
-        .eq('player_id', player.id);
+    const stats = player.stats || {};
+    const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
+    const level = player.level || 1;
+    const pb = getProficiency(level);
 
-      if (inventoryItems) {
-        // Séparer Armes vs Le reste
-        weapons = inventoryItems.filter((i: any) => 
-          i.item_type === 'weapon' || (i.tags && i.tags.includes('Arme'))
-        );
-        otherGear = inventoryItems.filter((i: any) => !weapons.includes(i));
-      }
-    } catch (e) { console.error("Erreur fetch inventaire", e); }
-
-    // 3. Remplissage du PDF
-
-    // --- Identité ---
+    // --- Remplissage : Identité ---
     setTxt('charactername', player.adventurer_name);
     setTxt('class', player.class);
-    setTxt('level', player.level);
-    setTxt('species', player.race); // Race = Species
+    setTxt('level', level);
+    setTxt('species', player.race);
     setTxt('background', player.background);
     setTxt('alignment', player.alignment);
-    setTxt('xp', ""); 
-
-    // --- Combat & Vie ---
-    setTxt('ac', stats.armor_class || 10);
-    setBonus('init', stats.initiative || 0);
-    setTxt('speed', stats.speed || 9);
     
-    // Bonus de maîtrise (calculé)
-    const pb = getProficiency(player.level || 1);
-    setBonus('pb', pb);
+    // Langues
+    const langs = Array.isArray(player.languages) ? player.languages.join(', ') : (player.languages || '');
+    setTxt('languages', langs);
 
-    setTxt('hp-current', player.current_hp);
-    setTxt('hp-max', player.max_hp);
-    setTxt('hp-temp', player.temporary_hp || '');
-    
-    // ✅ NOUVEAU : Dés de vie
-    if (player.hit_dice) {
-        // Format attendu : hit_dice = { total: 5, used: 2 }
-        const hdTotal = typeof player.hit_dice === 'object' ? (player.hit_dice as any).total : player.level;
-        const hdUsed = typeof player.hit_dice === 'object' ? (player.hit_dice as any).used : 0;
-        setTxt('hd-max', `${hdTotal}d${getHitDieSize(player.class)}`); // Ex: 5d8
-        setTxt('hd-spent', hdUsed);
-    }
-
-    // --- Caractéristiques (Scores & Sauvegardes) ---
+    // --- Remplissage : Caractéristiques & Compétences ---
     const statKeyMap: Record<string, string> = {
         'Force': 'str', 'Dextérité': 'dex', 'Constitution': 'con',
         'Intelligence': 'int', 'Sagesse': 'wis', 'Charisme': 'cha'
@@ -146,20 +133,19 @@ export const generateCharacterSheet = async (player: Player) => {
     abilitiesData.forEach((ab: any) => {
         const key = statKeyMap[ab.name];
         if (key) {
-            // ✅ Score & Modif
             setTxt(key, ab.score);
             setBonus(`mod${key}`, ab.modifier);
 
-            // ✅ Sauvegardes (Save1 -> Save6)
+            // Sauvegardes
             const saveIdx = SAVE_ORDER.indexOf(ab.name);
             if (saveIdx >= 0) {
                 const num = saveIdx + 1;
                 setBonus(`save${num}`, ab.savingThrow);
-                // Checkbox si maîtrisé (si save > mod)
+                // On coche si la save est supérieure au modificateur (signe de maîtrise)
                 setChk(`s${num}`, ab.savingThrow > ab.modifier);
             }
 
-            // ✅ Compétences
+            // Compétences
             if (ab.skills && Array.isArray(ab.skills)) {
                 ab.skills.forEach((sk: any) => {
                     const idx = SKILL_MAPPING[sk.name];
@@ -172,101 +158,139 @@ export const generateCharacterSheet = async (player: Player) => {
         }
     });
 
-    // --- Magie (Calculs automatiques) ---
-    // ✅ NOUVEAU : Calcul DD, Bonus Attaque, Carac Incantation
-    const castingAbility = SPELLCASTING_ABILITY[player.class || ''] || null;
-    if (castingAbility) {
-        setTxt('spell-ability', castingAbility); // Ex: "Intelligence"
-        
-        const abilityObj = abilitiesData.find((a: any) => a.name === castingAbility);
-        const mod = abilityObj ? abilityObj.modifier : 0;
-        
-        setBonus('spell-mod', mod); // Modif carac
-        setTxt('spell-dc', 8 + pb + mod); // DD = 8 + PB + Mod
-        setBonus('spell-bonus', pb + mod); // Attaque = PB + Mod
+    // --- Remplissage : Combat ---
+    // CA : on prend celle stockée (calculée par StatsTab) ou 10 par défaut
+    setTxt('ac', (stats as any).armor_class || 10);
+    setBonus('init', (stats as any).initiative || 0);
+    setTxt('speed', (stats as any).speed || 9);
+    setBonus('pb', pb);
+
+    setTxt('hp-current', player.current_hp);
+    setTxt('hp-max', player.max_hp);
+    setTxt('hp-temp', player.temporary_hp || '');
+
+    // Dés de vie
+    const hitDieSize = getHitDieSize(player.class);
+    const hitDiceInfo = player.hit_dice as any;
+    const totalHD = hitDiceInfo?.total ?? level;
+    const usedHD = hitDiceInfo?.used ?? 0;
+    setTxt('hd-max', `${totalHD}d${hitDieSize}`);
+    setTxt('hd-spent', usedHD);
+
+    // --- Remplissage : Magie ---
+    // 1. Stats Magiques (DD, Bonus)
+    const castingStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence'; // Fallback
+    const castingStat = abilitiesData.find((a: any) => a.name === castingStatName);
+    if (castingStat) {
+        setTxt('spell-ability', castingStatName);
+        const mod = castingStat.modifier;
+        setTxt('spell-dc', 8 + pb + mod);
+        setBonus('spell-bonus', pb + mod);
+        setBonus('spell-mod', mod);
     }
 
-    // --- Armes (Depuis l'inventaire fetché) ---
-    const displayWeapons = weapons.slice(0, 6);
-    const overflowWeapons = weapons.slice(6);
+    // 2. Slots
+    for (let i = 1; i <= 9; i++) {
+        const key = `level${i}`;
+        // spellSlots contient souvent { level1: 4, used1: 0 }
+        if (spellSlots[key]) setTxt(`slot${i}`, spellSlots[key]);
+    }
 
-    displayWeapons.forEach((w: any, i: number) => {
-        const row = i + 1;
-        // Nom
-        setTxt(`weapons${row}1`, w.name);
-        
-        // Bonus d'attaque (Approximation : FOR ou DEX + PB)
-        // On essaie de deviner si c'est une arme Finesse/Distance pour utiliser DEX
-        const isFinesse = w.properties?.toLowerCase().includes('finesse') || w.range?.includes('m');
-        const statName = isFinesse ? 'Dextérité' : 'Force';
-        const statObj = abilitiesData.find((a: any) => a.name === statName);
-        const atkBonus = (statObj?.modifier || 0) + (w.is_proficient ? pb : 0); // On suppose maîtrise par défaut pour simplifier
-        // setBonus(`weapons${row}2`, atkBonus); // Peut être activé si voulu
-
-        // Dégâts
-        const dmg = `${w.damage_dice || ''} ${w.damage_type || ''}`;
-        setTxt(`weapons${row}3`, dmg.trim());
-        
-        // Notes
-        setTxt(`weapons${row}4`, w.properties || '');
+    // 3. Liste des Sorts (depuis player_spells)
+    spellList.slice(0, 30).forEach((item: any, idx: number) => {
+        if (item.spells?.name) {
+            setTxt(`spell${idx + 1}`, item.spells.name);
+        }
     });
 
-    // --- Équipement & Or ---
-    const gearText = [
-        ...overflowWeapons.map((w: any) => w.name), // Armes en trop
-        ...otherGear.map((i: any) => `${i.name} (x${i.quantity || 1})`)
-    ].join(', ');
+    // --- Remplissage : Armes & Équipement (depuis inventory_items) ---
     
-    setTxt('equipment', gearText);
-    
-    setTxt('gp', player.gold);
-    setTxt('sp', player.silver);
-    setTxt('cp', player.copper);
+    const weapons: any[] = [];
+    const gear: string[] = [];
 
-    // --- Traits & Dons (Aggregation) ---
-    // ✅ NOUVEAU : On remplit les cases de texte
-    const feats = stats.feats || {};
+    inventoryItems.forEach((item: any) => {
+        const meta = parseMeta(item.description);
+        
+        if (meta?.type === 'weapon') {
+            // C'est une arme
+            // On vérifie si elle est équipée pour la mettre dans la grille
+            if (meta.equipped) {
+                weapons.push({ name: item.name, meta: meta.weapon, proficient: true }); // On suppose la maitrise si équipé
+            } else {
+                // Arme dans le sac
+                gear.push(`${item.name} (Arme)`);
+            }
+        } else if (meta?.type === 'armor' || meta?.type === 'shield') {
+             if (meta.equipped) {
+                 // Note : Le PDF n'a pas de case dédiée "Armure portée", on la met dans l'équipement
+                 gear.push(`${item.name} (Équipé)`);
+             } else {
+                 gear.push(item.name);
+             }
+        } else {
+            // Autre équipement
+            gear.push(item.name);
+        }
+    });
+
+    // Remplir la grille d'armes (max 6)
+    weapons.slice(0, 6).forEach((w, i) => {
+        const row = i + 1;
+        setTxt(`weapons${row}1`, w.name);
+        
+        // Calcul dégâts
+        if (w.meta) {
+            const dmg = `${w.meta.damageDice || ''} ${w.meta.damageType || ''}`;
+            setTxt(`weapons${row}3`, dmg.trim());
+            setTxt(`weapons${row}4`, w.meta.properties || '');
+            
+            // Bonus Attaque (approximatif car pas stocké explicitement sur l'objet)
+            // On essaie de deviner la carac
+            const isFinesse = w.meta.properties?.toLowerCase().includes('finesse') || w.meta.range?.includes('m');
+            const statName = isFinesse ? 'Dextérité' : 'Force';
+            const stat = abilitiesData.find(a => a.name === statName);
+            if (stat) {
+                const atk = stat.modifier + pb + (w.meta.weapon_bonus || 0);
+                setBonus(`weapons${row}2`, atk);
+            }
+        }
+    });
+
+    // Remplir la zone équipement
+    setTxt('equipment', gear.join(', '));
+    
+    // Or
+    setTxt('gp', player.gold || 0);
+    setTxt('sp', player.silver || 0);
+    setTxt('cp', player.copper || 0);
+
+    // --- Remplissage : Traits & Capacités ---
+    
+    // 1. Dons (depuis stats)
+    const feats = (player.stats as any)?.feats || {};
     const featsList = [
         ...(feats.origins || []),
         ...(feats.generals || []),
         ...(feats.styles || [])
-    ].filter(Boolean);
+    ].filter(Boolean).join('\n');
+    setTxt('feats', featsList);
+
+    // 2. Traits (Race)
+    setTxt('traits', player.race ? `Trait racial: ${player.race}` : '');
+
+    // 3. Capacités de Classe (depuis feature_checks)
+    // On récupère les clés cochées dans ClassesTab (ex: "Barbare-Niveau 1 : Rage")
+    // On nettoie le texte pour que ça rentre
+    const classFeatures = featureList
+        .map((f: any) => {
+            // "Barbare-Niveau 1 : Rage" -> "Rage"
+            const parts = f.feature_key.split(':');
+            return parts.length > 1 ? parts[1].trim() : f.feature_key;
+        })
+        .join(', '); // Ou '\n' si beaucoup de place, mais la case 'features1' est petite
     
-    setTxt('feats', featsList.join('\n')); // Liste des dons
-    setTxt('traits', player.race ? `Trait racial: ${player.race}` : ''); // Traits raciaux (simplifié)
-    
-    // Capacités de classe (simplifié via les notes ou historique si dispo)
-    // Si vous avez une colonne 'class_features', utilisez-la ici.
-    // setTxt('features1', "..."); 
-
-    // --- Langues ---
-    if (player.languages) {
-      const langStr = Array.isArray(player.languages) 
-          ? player.languages.join(', ') 
-          : String(player.languages);
-      setTxt('languages', langStr);
-    }
-
-    // --- Magie (Slots & Sorts connus) ---
-    for (let i = 1; i <= 9; i++) {
-        if (spellSlots[`level${i}`]) setTxt(`slot${i}`, spellSlots[`level${i}`]);
-    }
-
-    try {
-      const { data: spellData } = await supabase
-        .from('player_spells')
-        .select('spells (name, level)')
-        .eq('player_id', player.id)
-        .order('created_at', { ascending: true });
-
-      if (spellData && spellData.length > 0) {
-        spellData.slice(0, 30).forEach((item: any, index: number) => {
-          if (item.spells && item.spells.name) {
-            setTxt(`spell${index + 1}`, item.spells.name);
-          }
-        });
-      }
-    } catch (spellError) { console.warn("Erreur sorts", spellError); }
+    setTxt('features1', classFeatures); // Case "Aptitudes de classe"
+    // setTxt('features2', ...); // Si besoin d'une 2eme case
 
     // 4. Export
     const pdfBytes = await pdfDoc.save();
@@ -283,23 +307,3 @@ export const generateCharacterSheet = async (player: Player) => {
     throw err;
   }
 };
-
-// Helper pour la taille du dé de vie
-function getHitDieSize(className?: string | null): number {
-    switch (className) {
-        case 'Barbare': return 12;
-        case 'Guerrier':
-        case 'Paladin':
-        case 'Rôdeur': return 10;
-        case 'Barde':
-        case 'Clerc':
-        case 'Druide':
-        case 'Roublard':
-        case 'Moine':
-        case 'Occultiste':
-        case 'Artificier': return 8;
-        case 'Magicien':
-        case 'Ensorceleur': return 6;
-        default: return 8;
-    }
-}
