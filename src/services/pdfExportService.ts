@@ -3,11 +3,28 @@ import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 
 // ============================================================================
-// 1. CONFIGURATION & HELPERS
+// 1. CONFIGURATION
 // ============================================================================
 const REPO_URL = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main';
 
-// Helpers de parsing (inchangés)
+// ✅ RÉINTÉGRATION DE LA CONSTANTE MANQUANTE
+const SKILL_MAPPING: Record<string, number> = {
+  'Acrobaties': 1, 'Dressage': 2, 'Arcanes': 3, 'Athlétisme': 4,
+  'Tromperie': 5, 'Histoire': 6, 'Perspicacité': 7, 'Intimidation': 8,
+  'Investigation': 9, 'Médecine': 10, 'Nature': 11, 'Perception': 12,
+  'Représentation': 13, 'Persuasion': 14, 'Religion': 15,
+  'Escamotage': 16, 'Discrétion': 17, 'Survie': 18
+};
+
+const SPELLCASTING_ABILITY: Record<string, string> = {
+  'Magicien': 'Intelligence', 'Artificier': 'Intelligence', 'Guerrier': 'Intelligence',
+  'Clerc': 'Sagesse', 'Druide': 'Sagesse', 'Rôdeur': 'Sagesse', 'Moine': 'Sagesse',
+  'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
+};
+
+// ============================================================================
+// 2. HELPERS
+// ============================================================================
 async function fetchMarkdown(path: string): Promise<string> {
   try {
     const res = await fetch(`${REPO_URL}/${path.split('/').map(encodeURIComponent).join('/')}`);
@@ -64,38 +81,7 @@ function getHitDieSize(c?: string | null): number {
 }
 
 // ============================================================================
-// 2. FONCTION DE SONDE (DIAGNOSTIC)
-// ============================================================================
-function runProbe(form: any) {
-    const fields = form.getFields().map((f: any) => f.getName());
-    
-    console.group("🕵️ SUPER SONDE PDF v8");
-    
-    // 1. Chercher les champs d'identité manquants
-    const identityCandidates = fields.filter((n: string) => {
-        const low = n.toLowerCase();
-        return low.includes('race') || low.includes('species') || low.includes('esp') || 
-               low.includes('back') || low.includes('hist') || 
-               low.length <= 3; // Cherche les petits champs c1, c2...
-    });
-    console.log("Candidats Identité (Race/Historique) :", identityCandidates);
-
-    // 2. Chercher les champs de Sorts
-    const spellFields = fields.filter((n: string) => n.startsWith('spell1'));
-    console.log("Structure d'une ligne de sort (Ligne 1) :", spellFields);
-    // Analyse : spell1 (Nom), spell1l (Level?), spell1r (Time?), spell1c (Range?)
-
-    // 3. Chercher les Maîtrises
-    const profFields = fields.filter((n: string) => 
-        n.toLowerCase().includes('weapon') || n.toLowerCase().includes('tool') || n.toLowerCase().includes('armor')
-    );
-    console.log("Champs Maîtrises trouvés :", profFields);
-    
-    console.groupEnd();
-}
-
-// ============================================================================
-// 3. MAIN EXPORT
+// 3. GENERATE
 // ============================================================================
 
 export const generateCharacterSheet = async (player: Player) => {
@@ -116,9 +102,6 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
-    // --- LANCEMENT DE LA SONDE ---
-    runProbe(form);
-
     // HELPERS
     const setTxt = (n: string, v: any) => { try { form.getTextField(n).setText(String(v ?? '')); } catch (e) {} };
     const setChk = (n: string, v: boolean) => { try { const f = form.getCheckBox(n); if(v) f.check(); else f.uncheck(); } catch(e) {} };
@@ -133,16 +116,12 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('class', player.class);
     setTxt('subclass', player.subclass);
     setTxt('level', level);
+    setTxt('race', player.race); // Confirmé par le log : pas de 'species'
     
-    // HISTORIQUE & RACE (On tente les champs standards + les champs mystères 'c1' à 'c10')
-    // Si 'background' ne marche pas, on essaie de voir si c'est un problème de couleur/font en loguant
+    // HISTORIQUE : Le log confirme 'background' est là. 
     const bg = player.background || '';
     setTxt('background', bg); 
-    setTxt('Background', bg);
-    
-    setTxt('race', player.race);
-    setTxt('species', player.race);
-    
+
     setTxt('alignment', player.alignment);
     setTxt('backstory', player.character_history);
 
@@ -160,10 +139,9 @@ export const generateCharacterSheet = async (player: Player) => {
                 setTxt(`save${num}`, `${ab.modifier + (isProf ? pb : 0) >= 0 ? '+' : ''}${ab.modifier + (isProf ? pb : 0)}`);
                 setChk(`s${num}`, isProf);
             }
-            // Skills... (Mapping inchangé, je raccourcis pour la lisibilité)
              if (ab.skills && Array.isArray(ab.skills)) {
                 ab.skills.forEach((sk: any) => {
-                    const idx = SKILL_MAPPING[sk.name];
+                    const idx = SKILL_MAPPING[sk.name]; // Maintenant ça marche
                     if (idx) {
                         const bonus = ab.modifier + (sk.isProficient ? pb : 0) + (sk.hasExpertise ? pb : 0);
                         setTxt(`skill${idx}`, `${bonus >= 0 ? '+' : ''}${bonus}`);
@@ -184,24 +162,24 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hd-max', `${(player.hit_dice as any)?.total ?? level}d${hdSize}`);
     setTxt('hd-spent', (player.hit_dice as any)?.used ?? 0);
 
-    // --- MAÎTRISES (Correction) ---
+    // --- MAÎTRISES ---
+    // Le log confirme weapons, tools, languages
     const wProfs = meta.weapon_proficiencies || [];
     const tProfs = meta.tool_proficiencies || [];
     const langs = (player.languages || []).filter((l: string) => l && !l.toLowerCase().includes('choix'));
     
-    // Forçage dans les champs identifiés par le log précédent
     setTxt('weapons', wProfs.join(', '));
     setTxt('tools', tProfs.join(', '));
     setTxt('languages', langs.join(', '));
 
-    // Armures (Cases à cocher)
+    // Armures (armor1...armor4 confirmés par le log)
     const aProfs = meta.armor_proficiencies || [];
     setChk('armor1', aProfs.some((x: string) => x.includes('légère')));
     setChk('armor2', aProfs.some((x: string) => x.includes('intermédiaire')));
     setChk('armor3', aProfs.some((x: string) => x.includes('lourde')));
     setChk('armor4', aProfs.some((x: string) => x.includes('bouclier')));
 
-    // --- ARMES (Grille) ---
+    // --- ARMES (Grille confirmée weapons11...) ---
     const items = invRes.data || [];
     const weapons = items.map((i: any) => ({ ...i, meta: parseMeta(i.description) }))
                          .filter((i: any) => i.meta?.type === 'weapon')
@@ -211,11 +189,9 @@ export const generateCharacterSheet = async (player: Player) => {
         const r = i + 1;
         const m = w.meta.weapon || {};
         setTxt(`weapons${r}1`, w.name);
-        // Bonus Attaque
         const isFin = m.properties?.toLowerCase().includes('finesse');
         const stat = abilities.find((a: any) => a.name === (isFin ? 'Dextérité' : 'Force'));
         if (stat) setTxt(`weapons${r}2`, `${stat.modifier + pb + (m.weapon_bonus || 0) >= 0 ? '+' : ''}${stat.modifier + pb + (m.weapon_bonus || 0)}`);
-        // Dégâts
         setTxt(`weapons${r}3`, `${m.damageDice || ''} ${m.damageType || ''}`);
         setTxt(`weapons${r}4`, m.properties || '');
     });
@@ -224,7 +200,7 @@ export const generateCharacterSheet = async (player: Player) => {
                       .map((i: any) => i.name).join(', ');
     setTxt('equipment', gear);
 
-    // --- SORTS (CORRECTIF V8) ---
+    // --- SORTS (CORRECTION FINALE) ---
     const spells = spellRes.data || [];
     spells.slice(0, 30).forEach((e: any, i: number) => {
         if (!e.spells) return;
@@ -233,18 +209,18 @@ export const generateCharacterSheet = async (player: Player) => {
         const lvl = s.level === 0 ? 'T' : String(s.level);
         const rng = s.range || '';
 
+        // Structure confirmée par le log : spellX, spellXl, spellXr, spellXc
         setTxt(`spell${id}`, s.name);
         
-        // D'après votre retour : "Distance se remplit dans Temps d'incantation"
-        // Votre log précédent montrait : spell1, spell1l, spell1r, spell1c
-        // Si j'avais mis Range -> spell1r et que ça s'est affiché dans Temps...
-        // ALORS : spell1r = Temps d'incantation.
-        // IL RESTE : spell1c. 
-        // HYPOTHÈSE : spell1c = Portée (Range)
+        // Hypothèse V9 : 
+        // Si vous m'avez dit que 'r' remplissait le temps au lieu de la portée...
+        // Alors spellXr = TIME.
+        // Il reste spellXc et spellXl. spellXl est forcément Level.
+        // Donc spellXc doit être RANGE.
         
         setTxt(`spell${id}l`, lvl);      // Level
         setTxt(`spell${id}c`, rng);      // Range (Nouvelle tentative !)
-        setTxt(`spell${id}r`, "1 act");  // Time (Puisque 'r' semble être le temps)
+        setTxt(`spell${id}r`, "1 act");  // Time
     });
 
     // Stats magie
@@ -256,8 +232,8 @@ export const generateCharacterSheet = async (player: Player) => {
     }
     const slots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     for(let i=1; i<=9; i++) { 
-        // Si cbslotXY sont des cases à cocher, on ne peut pas mettre de nombre.
-        // On cherche un champ texte potentiel 'slot1'
+        // Le log n'a pas montré de champ texte 'slot1', mais 'cbslot'.
+        // On tente quand même le champ texte au cas où
         setTxt(`slot${i}`, slots[`level${i}`]); 
     }
 
