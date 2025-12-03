@@ -167,7 +167,16 @@ export const generateCharacterSheet = async (player: Player) => {
     const creatorMeta = (stats as any).creator_meta || {};
 
      // --- 3. REMPLISSAGE IDENTITÉ ---
-    setTxt('charactername', player.adventurer_name);
+      setTxt('charactername', player.adventurer_name);
+    
+    setTxt('class', player.class);       
+    setTxt('classname', player.class);   
+    setTxt('subclass', player.subclass); 
+    setTxt('archetype', player.subclass);
+    
+    setTxt('level', level);
+    setTxt('species', player.race);
+    setTxt('race', player.race); // Ajout variante
     
     // Tentative de cibler les champs exacts pour Classe et Sous-classe
     setTxt('class', player.class);       // Nom standard
@@ -180,13 +189,19 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('species', player.race);
     
     // Tentative multiple pour l'Historique (Background)
-    setTxt('background', player.background);
-    setTxt('background_name', player.background);
-    setTxt('historique', player.background); 
-    setTxt('history', player.background);
+    const bg = player.background || '';
+    setTxt('background', bg);
+    setTxt('Background', bg); // Casse différente
+    setTxt('history', bg);
+    setTxt('historique', bg);
+    setTxt('Titre', bg); // Parfois utilisé dans les VF
 
+    setTxt('alignment', bg); // Oups, petite erreur dans votre code précédent, c'est corrigé ici :
     setTxt('alignment', player.alignment);
+    
     setTxt('xp', ""); 
+
+    setTxt('backstory', player.character_history); 
 
     // Histoire / Personnalité (Texte long)
     setTxt('backstory', player.character_history); 
