@@ -309,36 +309,60 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ep', "0"); // Electrum souvent ignoré mais champ présent
     setTxt('pp', "0"); // Platine
 
-    // --- 8. MAGIE (corrections : portée -> champs m*, temps -> champs r*, notes -> c*) ---
+    // --- 8. MAGIE ---
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
-      if (!entry.spells) return;
-      const s = entry.spells;
-      const id = idx + 1;
-      const lvl = s.level === 0 ? 'T' : String(s.level);
-      const rng = s.range || '';
-      const time = (s.casting_time && String(s.casting_time)) || '1 action'; // si dispo en BDD
+        if (entry.spells) {
+            const s = entry.spells;
+            const id = idx + 1;
+            const lvl = s.level === 0 ? 'T' : String(s.level);
+            const rng = s.range || '';
+            const time = "1 act"; // Ou valeur réelle si vous l'avez en BDD
 
-      // Nom & niveau
-      setTxt(`spell${id}`, s.name);
-      setTxt(`spell${id}l`, lvl);
-
-      // Temps d'incantation -> champs 'r' (confirmé par la sonde)
-      setTxt(`spell${id}r`, time);
-      setTxt(`r${id}`, time); // variante courte si présente
-
-      // Portée -> champs 'm' (m1, m2... identifiés par la sonde)
-      setTxt(`m${id}`, rng);
-      setTxt(`spell${id}m`, rng); // variante (si existe)
-      try { form.getTextField(`range${id}`).setText(rng); } catch (e) { /* ignore */ }
-
-      // Notes / concentration -> champ 'c' : ici on laisse vide ou on conserve info si tu veux
-      // setTxt(`spell${id}c`, ""); // si tu veux écrire quelque chose dans 'c'
+            setTxt(`spell${id}`, s.name);
+            setTxt(`spell${id}l`, lvl);
+            
+            // D'après vos tests : 'r' remplit le Temps d'incantation
+            setTxt(`spell${id}r`, time);
+            
+            // TENTATIVE PORTÉE : On essaie 'c' (Le seul suffixe restant 'spell1c')
+            // Si ça remplit "Notes" ou "Composantes", dites-le moi avec le résultat de la sonde.
+            setTxt(`spell${id}c`, rng); 
+            
+            // TENTATIVE DE SECOURS : Champs déconnectés
+            setTxt(`range${id}`, rng);
+            setTxt(`portee${id}`, rng);
+        }
     });
 
+    // Stats Magiques
+    const castStat = abilities.find((a: any) => a.name === (SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence'));
+    if (castStat) {
+        setTxt('spell-ability', castStatName);
+        setTxt('spell-dc', 8 + pb + castStat.modifier);
+        setTxt('spell-bonus', `+${pb + castStat.modifier}`);
+        setTxt('spell-mod', `+${castStat.modifier}`);
+    }
 
- 
+    // EMPLACEMENTS DE SORTS (Correction : Cases à cocher)
+    // Le log montrait 'cbslot11', 'cbslot12'... Ce sont des cases.
+    const slots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     
+    for(let niv=1; niv<=9; niv++) {
+        const total = slots[`level${niv}`] || 0;
+        
+        // Essai champ texte (souvent inexistant)
+        setTxt(`slot${niv}`, total);
+        setTxt(`slots-total-${niv}`, total);
+
+        // Remplissage des cases à cocher (cbslot + Niveau + NuméroSlot)
+        // Exemple : Niveau 1, 4 slots -> on coche cbslot11, cbslot12, cbslot13, cbslot14
+        for (let i = 1; i <= 4; i++) {
+            const slotName = `cbslot${niv}${i}`;
+            // On coche si le numéro du slot (i) est <= au total possédé
+            setChk(slotName, i <= total);
+        }
+    } 
 
     // --- 9. TRAITS / DONS / APTITUDES ---
     const featsStats = (stats as any).feats || {};
