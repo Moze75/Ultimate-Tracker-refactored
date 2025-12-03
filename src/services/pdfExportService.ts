@@ -2,7 +2,10 @@ import { PDFDocument } from 'pdf-lib';
 import { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 
-// --- CONFIGURATION ---
+// ============================================================================
+// 1. CONFIGURATION & CONSTANTES
+// ============================================================================
+
 const REPO_URL = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main';
 
 const SKILL_MAPPING: Record<string, number> = {
@@ -21,7 +24,9 @@ const SPELLCASTING_ABILITY: Record<string, string> = {
   'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
 };
 
-// --- PARSING MARKDOWN ---
+// ============================================================================
+// 2. FONCTIONS UTILITAIRES (PARSING & HELPERS)
+// ============================================================================
 
 async function fetchMarkdown(path: string): Promise<string> {
   try {
@@ -118,14 +123,18 @@ function getHitDieSize(className?: string | null): number {
     return 8;
 }
 
-// --- FONCTION PRINCIPALE ---
+// ============================================================================
+// 3. FONCTION PRINCIPALE D'EXPORT
+// ============================================================================
 
 export const generateCharacterSheet = async (player: Player) => {
   try {
     const level = player.level || 1;
     const pb = getProficiency(level);
 
-    // 1. FETCH DONNÉES
+    // ---------------------------------------------------------
+    // ETAPE 1 : FETCH DES DONNÉES (BDD & MARKDOWN & PDF)
+    // ---------------------------------------------------------
     const [
         pdfBytes,
         inventoryRes,
@@ -149,12 +158,14 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
-    // --- HELPERS ---
+    // Helpers pour écrire dans le PDF en toute sécurité
     const setTxt = (name: string, val: any) => { try { form.getTextField(name).setText(String(val ?? '')); } catch (e) {} };
     const setBonus = (name: string, val: number) => { try { form.getTextField(name).setText(`${val >= 0 ? '+' : ''}${val}`); } catch (e) {} };
     const setChk = (name: string, isChecked: boolean) => { try { const f = form.getCheckBox(name); if (isChecked) f.check(); else f.uncheck(); } catch (e) {} };
 
-    // --- DATA LOCALE ---
+    // ---------------------------------------------------------
+    // ETAPE 2 : PRÉPARATION DES DONNÉES LOCALES
+    // ---------------------------------------------------------
     let abilitiesData: any[] = [];
     if (player.abilities && Array.isArray(player.abilities)) {
         abilitiesData = player.abilities;
@@ -166,47 +177,35 @@ export const generateCharacterSheet = async (player: Player) => {
     const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     const creatorMeta = (stats as any).creator_meta || {};
 
-     // --- 3. REMPLISSAGE IDENTITÉ ---
-      setTxt('charactername', player.adventurer_name);
-    
-    setTxt('class', player.class);       
-    setTxt('classname', player.class);   
-    setTxt('subclass', player.subclass); 
+    // ---------------------------------------------------------
+    // ETAPE 3 : REMPLISSAGE IDENTITÉ
+    // ---------------------------------------------------------
+    setTxt('charactername', player.adventurer_name);
+    setTxt('class', player.class);
+    setTxt('classname', player.class);
+    setTxt('subclass', player.subclass);
     setTxt('archetype', player.subclass);
-    
     setTxt('level', level);
     setTxt('species', player.race);
-    setTxt('race', player.race); // Ajout variante
-    
-    // Tentative de cibler les champs exacts pour Classe et Sous-classe
-    setTxt('class', player.class);       // Nom standard
-    setTxt('classname', player.class);   // Variante fréquente
-    
-    setTxt('subclass', player.subclass); // Nom standard
-    setTxt('archetype', player.subclass);// Variante fréquente
-    
-    setTxt('level', level);
-    setTxt('species', player.race);
-    
-    // Tentative multiple pour l'Historique (Background)
-    const bg = player.background || '';
-    setTxt('background', bg);
-    setTxt('Background', bg); // Casse différente
-    setTxt('history', bg);
-    setTxt('historique', bg);
-    setTxt('Titre', bg); // Parfois utilisé dans les VF
-
-    setTxt('alignment', bg); // Oups, petite erreur dans votre code précédent, c'est corrigé ici :
+    setTxt('race', player.race);
     setTxt('alignment', player.alignment);
-    
     setTxt('xp', ""); 
 
-    setTxt('backstory', player.character_history); 
+    // CORRECTION HISTORIQUE : Tir de barrage sur les noms de champs possibles
+    const bg = player.background || '';
+    setTxt('background', bg);
+    setTxt('Background', bg);
+    setTxt('history', bg);
+    setTxt('historique', bg);
+    setTxt('Background Name', bg);
+    setTxt('Background Definition', bg);
 
-    // Histoire / Personnalité (Texte long)
-    setTxt('backstory', player.character_history); 
+    // Histoire longue (Backstory)
+    setTxt('backstory', player.character_history);
 
-    // --- CARACTÉRISTIQUES & COMPÉTENCES ---
+    // ---------------------------------------------------------
+    // ETAPE 4 : CARACTÉRISTIQUES & COMPÉTENCES
+    // ---------------------------------------------------------
     const statKeyMap: Record<string, string> = { 'Force': 'str', 'Dextérité': 'dex', 'Constitution': 'con', 'Intelligence': 'int', 'Sagesse': 'wis', 'Charisme': 'cha' };
     
     abilitiesData.forEach((ab: any) => {
@@ -229,7 +228,7 @@ export const generateCharacterSheet = async (player: Player) => {
                     if (idx) {
                         let totalBonus = ab.modifier;
                         if (sk.isProficient) totalBonus += pb;
-                        if (sk.hasExpertise) totalBonus += pb; // Double maîtrise pour expertise
+                        if (sk.hasExpertise) totalBonus += pb;
                         setBonus(`skill${idx}`, totalBonus);
                         setChk(`sk${idx}`, sk.isProficient || sk.hasExpertise);
                     }
@@ -238,7 +237,9 @@ export const generateCharacterSheet = async (player: Player) => {
         }
     });
 
-    // --- COMBAT ---
+    // ---------------------------------------------------------
+    // ETAPE 5 : COMBAT & VIE
+    // ---------------------------------------------------------
     setTxt('ac', (stats as any).armor_class || 10);
     setBonus('init', (stats as any).initiative || 0);
     setTxt('speed', (stats as any).speed || 9);
@@ -252,41 +253,46 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hd-max', `${hitDiceInfo?.total ?? level}d${hitDieSize}`);
     setTxt('hd-spent', hitDiceInfo?.used ?? 0);
 
-      // --- CASE "AUTRES MAÎTRISES & LANGUES" ---
-    const profsList: string[] = [];
+    // ---------------------------------------------------------
+    // ETAPE 6 : MAÎTRISES (CORRECTION SELON CAPTURE)
+    // ---------------------------------------------------------
     
-    // Langues
-    if (player.languages && player.languages.length) {
-        // Nettoyage des langues vides ou "Au choix"
-        const cleanLangs = player.languages.filter(l => l && !l.toLowerCase().includes('choix'));
-        if (cleanLangs.length) profsList.push(`Langues: ${cleanLangs.join(', ')}`);
-    }
-    
-    // Armures
-    const armorProfs = creatorMeta.armor_proficiencies || [];
-    if (armorProfs.length) profsList.push(`Armures: ${armorProfs.join(', ')}`);
-
-    // Armes
+    // 6.1 ARMES (Zone texte séparée)
     const weaponProfs = creatorMeta.weapon_proficiencies || [];
-    if (weaponProfs.length) profsList.push(`Armes: ${weaponProfs.join(', ')}`);
+    const weaponText = weaponProfs.join(', ');
+    setTxt('Weapons', weaponText);
+    setTxt('Weapons Proficiencies', weaponText);
+    setTxt('Armes', weaponText); // Probablement le bon pour la VF
+    setTxt('MaitriseArmes', weaponText);
 
-    // Outils
+    // 6.2 OUTILS (Zone texte séparée)
     const toolProfs = creatorMeta.tool_proficiencies || [];
-    if (toolProfs.length) profsList.push(`Outils: ${toolProfs.join(', ')}`);
+    const toolText = toolProfs.join(', ');
+    setTxt('Tools', toolText);
+    setTxt('Tool Proficiencies', toolText);
+    setTxt('Outils', toolText); // Probablement le bon pour la VF
+    setTxt('MaitriseOutils', toolText);
 
-    const fullProfsText = profsList.join('\n');
+    // 6.3 ARMURES (Cases à cocher)
+    const armorProfs = creatorMeta.armor_proficiencies || [];
+    const hasLight = armorProfs.some((a: string) => a.toLowerCase().includes('légère'));
+    const hasMedium = armorProfs.some((a: string) => a.toLowerCase().includes('intermédiaire'));
+    const hasHeavy = armorProfs.some((a: string) => a.toLowerCase().includes('lourde'));
+    const hasShield = armorProfs.some((a: string) => a.toLowerCase().includes('bouclier'));
 
-    // Ciblez les champs standards de maîtrises (souvent en bas à gauche)
-    setTxt('proficiencies', fullProfsText);
-    setTxt('other_profs', fullProfsText);
-    setTxt('other_proficiencies', fullProfsText);
-    
-    // Parfois les langues sont séparées
+    setChk('Light Armor', hasLight); setChk('Medium Armor', hasMedium); setChk('Heavy Armor', hasHeavy); setChk('Shields', hasShield);
+    setChk('ArmureLegere', hasLight); setChk('ArmureIntermediaire', hasMedium); setChk('ArmureLourde', hasHeavy); setChk('Bouclier', hasShield);
+
+    // 6.4 LANGUES
     if (player.languages) {
-        setTxt('languages', player.languages.join(', '));
+        const langs = player.languages.filter((l: string) => l && !l.toLowerCase().includes('choix')).join(', ');
+        setTxt('languages', langs);
+        setTxt('Langues', langs);
     }
 
-    // --- ARMES (Grille) ---
+    // ---------------------------------------------------------
+    // ETAPE 7 : ARMES (GRILLE) & ÉQUIPEMENT
+    // ---------------------------------------------------------
     const inventory = inventoryRes.data || [];
     const allWeapons = inventory
         .map((item: any) => ({ item, meta: parseMeta(item.description) }))
@@ -311,7 +317,6 @@ export const generateCharacterSheet = async (player: Player) => {
         }
     });
 
-    // --- ÉQUIPEMENT ---
     const otherGear = inventory.filter((item: any) => {
         const m = parseMeta(item.description);
         return m?.type !== 'weapon';
@@ -325,74 +330,62 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', gearText);
     setTxt('gp', player.gold || 0); setTxt('sp', player.silver || 0); setTxt('cp', player.copper || 0);
 
-      // --- 9. MAGIE ---
+    // ---------------------------------------------------------
+    // ETAPE 8 : MAGIE (CORRECTION GRILLE)
+    // ---------------------------------------------------------
     const spellList = spellsRes.data || [];
     
-    // Pour chaque sort trouvé
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
             const s = entry.spells;
-            const id = idx + 1; // 1 à 30
+            const id = idx + 1;
             
-            // 1. NOM (Ça marche déjà)
             setTxt(`spell${id}`, s.name);
-            setTxt(`SpellName${id}`, s.name); // Variante
-
-            // 2. NIVEAU & PORTÉE
-            const lvl = s.level === 0 ? 'T' : String(s.level);
-            const range = s.range || '';
-            const castingTime = "1 action"; // Valeur par défaut, ou s.casting_time si dispo
-
-            // Stratégie "Tir de barrage" sur les IDs possibles d'après la structure visuelle
+            setTxt(`SpellName${id}`, s.name);
             
-            // Format A : Préfixe + ID (Standard)
-            try { form.getTextField(`spell${id}-level`).setText(lvl); } catch(e) {}
-            try { form.getTextField(`spell${id}-range`).setText(range); } catch(e) {}
-            try { form.getTextField(`spell${id}-time`).setText(castingTime); } catch(e) {}
+            const lvlStr = s.level === 0 ? 'T' : String(s.level);
+            const rangeStr = s.range || '';
+            const timeStr = "1 action";
 
-            // Format B : ID + Suffixe (Fréquent sur fiches FR)
-            try { form.getTextField(`sl${id}`).setText(lvl); } catch(e) {} // Spell Level
-            try { form.getTextField(`sr${id}`).setText(range); } catch(e) {} // Spell Range
-            try { form.getTextField(`st${id}`).setText(castingTime); } catch(e) {} // Spell Time
+            // Tir de barrage sur les champs NIVEAU
+            try { form.getTextField(`spell${id}-level`).setText(lvlStr); } catch(e) {}
+            try { form.getTextField(`sl${id}`).setText(lvlStr); } catch(e) {} 
+            try { form.getTextField(`Level${id}`).setText(lvlStr); } catch(e) {} 
+            try { form.getTextField(`sp${id}_lvl`).setText(lvlStr); } catch(e) {}
 
-            // Format C : Numérotation continue (Parfois les cases sont juste 1, 2, 3...)
-            // C'est risqué mais possible. On tente des noms explicites.
-            try { form.getTextField(`sp${id}_lvl`).setText(lvl); } catch(e) {}
-            try { form.getTextField(`sp${id}_range`).setText(range); } catch(e) {}
+            // Tir de barrage sur les champs PORTÉE
+            try { form.getTextField(`spell${id}-range`).setText(rangeStr); } catch(e) {}
+            try { form.getTextField(`sr${id}`).setText(rangeStr); } catch(e) {}
+            try { form.getTextField(`Range${id}`).setText(rangeStr); } catch(e) {}
+            try { form.getTextField(`sp${id}_range`).setText(rangeStr); } catch(e) {}
             
-            // Format D (Observé sur certaines fiches "Ultimate")
-            try { form.getTextField(`Level${id}`).setText(lvl); } catch(e) {}
-            try { form.getTextField(`Range${id}`).setText(range); } catch(e) {}
+            // Tir de barrage sur les champs TEMPS
+            try { form.getTextField(`spell${id}-time`).setText(timeStr); } catch(e) {}
+            try { form.getTextField(`st${id}`).setText(timeStr); } catch(e) {}
         }
     });
 
-    // Stats globales de magie
     const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
     const castStat = abilitiesData.find((a: any) => a.name === castStatName);
     if (castStat) {
         setTxt('spell-ability', castStatName);
         const dc = 8 + pb + castStat.modifier;
         setTxt('spell-dc', dc);
-        setTxt('spell-save-dc', dc); // Variante
-        
+        setTxt('spell-save-dc', dc);
         const atk = pb + castStat.modifier;
         setBonus('spell-bonus', atk);
-        setBonus('spell-attack-bonus', atk); // Variante
-        
         setBonus('spell-mod', castStat.modifier);
     }
-    
-    // Slots (Emplacements)
     for (let i = 1; i <= 9; i++) {
         if (spellSlots[`level${i}`]) {
             setTxt(`slot${i}`, spellSlots[`level${i}`]);
-            setTxt(`slots-total-${i}`, spellSlots[`level${i}`]); // Variante
+            setTxt(`slots-total-${i}`, spellSlots[`level${i}`]);
         }
     }
 
-      // --- 10. APTITUDES, TRAITS & DONS ---
-    
-    // A. Récupération et nettoyage
+    // ---------------------------------------------------------
+    // ETAPE 9 : APTITUDES, TRAITS & DONS (SÉPARATION)
+    // ---------------------------------------------------------
     const featsStats = (stats as any).feats || {};
     const rawFeats = [
         ...(featsStats.origins || []),
@@ -400,29 +393,28 @@ export const generateCharacterSheet = async (player: Player) => {
         ...(featsStats.styles || [])
     ].filter(Boolean);
 
-    // Parsing Markdown pour avoir les beaux titres
     const featsClean = parseFeatsFromMD([donsOriginMd, donsGeneralMd, donsStyleMd], rawFeats);
     const classFeatures = parseClassFeatures(classMd, level);
     const raceTraits = parseRaceTraits(raceMd, player.race || '');
 
-    // B. Distribution dans les cases spécifiques
-    
-    // Case TRAITS (Traits raciaux uniquement)
+    // Case TRAITS (Gauche) : Espèce seulement
     const traitsFormatted = raceTraits.map(t => `• ${t}`).join('\n');
     setTxt('traits', traitsFormatted);
-    setTxt('racial_traits', traitsFormatted); // Variante
+    setTxt('racial_traits', traitsFormatted);
 
-    // Case DONS (Dons uniquement)
+    // Case DONS (Milieu/Autre) : Dons seulement
     const featsFormatted = featsClean.map(f => `• ${f}`).join('\n');
-    setTxt('feats', featsFormatted); 
-    setTxt('dons', featsFormatted); // Variante nom français
+    setTxt('feats', featsFormatted);
+    setTxt('dons', featsFormatted);
 
-    // Case FEATURES (Aptitudes de classe uniquement)
+    // Case APTITUDES (Droite) : Classe seulement
     const featuresFormatted = classFeatures.map(c => `• ${c}`).join('\n');
-    setTxt('features1', featuresFormatted); // Grande case principale
-    setTxt('class_features', featuresFormatted); // Variante
+    setTxt('features1', featuresFormatted);
+    setTxt('class_features', featuresFormatted);
 
-    // --- EXPORT ---
+    // ---------------------------------------------------------
+    // ETAPE 10 : GÉNÉRATION FINALE
+    // ---------------------------------------------------------
     const finalPdf = await pdfDoc.save();
     const blob = new Blob([finalPdf], { type: 'application/pdf' });
     const link = document.createElement('a');
