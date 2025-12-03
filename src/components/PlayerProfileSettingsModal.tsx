@@ -7,6 +7,7 @@ import { LevelUpModal } from './LevelUpModal';
 import { MulticlassSelectionModal } from './MulticlassSelectionModal';
 import type { DndClass, Player, PlayerBackground, PlayerStats } from '../types/dnd';
 import MarkdownLite from './MarkdownLite';
+import { generateCharacterSheet } from '../services/pdfExportService'; // ✅ IMPORT
 
 /* ============================ Helpers ============================ */
 
