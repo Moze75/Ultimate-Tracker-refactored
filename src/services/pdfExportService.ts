@@ -166,16 +166,29 @@ export const generateCharacterSheet = async (player: Player) => {
     const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     const creatorMeta = (stats as any).creator_meta || {};
 
-    // --- IDENTITÉ (HAUT DE PAGE) ---
+     // --- 3. REMPLISSAGE IDENTITÉ ---
     setTxt('charactername', player.adventurer_name);
-    setTxt('class', player.subclass ? `${player.class} (${player.subclass})` : player.class); // Classe + Sous-classe
+    
+    // Tentative de cibler les champs exacts pour Classe et Sous-classe
+    setTxt('class', player.class);       // Nom standard
+    setTxt('classname', player.class);   // Variante fréquente
+    
+    setTxt('subclass', player.subclass); // Nom standard
+    setTxt('archetype', player.subclass);// Variante fréquente
+    
     setTxt('level', level);
     setTxt('species', player.race);
-    setTxt('background', player.background); // Historique
-    setTxt('alignment', player.alignment);
     
-    // --- HISTOIRE & PERSONNALITÉ ---
-    // Le champ "Histoire" à droite ou au verso
+    // Tentative multiple pour l'Historique (Background)
+    setTxt('background', player.background);
+    setTxt('background_name', player.background);
+    setTxt('historique', player.background); 
+    setTxt('history', player.background);
+
+    setTxt('alignment', player.alignment);
+    setTxt('xp', ""); 
+
+    // Histoire / Personnalité (Texte long)
     setTxt('backstory', player.character_history); 
 
     // --- CARACTÉRISTIQUES & COMPÉTENCES ---
