@@ -1,35 +1,18 @@
 import { PDFDocument } from 'pdf-lib';
 import { Player } from '../types/dnd';
 
-// Mapping FR (App) vers Index PDF (Ordre Alphabétique EN)
-// L'index correspond au numéro du champ skillX et skX
 const SKILL_MAPPING: Record<string, number> = {
-  'Acrobaties': 1,      // Acrobatics
-  'Dressage': 2,        // Animal Handling
-  'Arcanes': 3,         // Arcana
-  'Athlétisme': 4,      // Athletics
-  'Tromperie': 5,       // Deception
-  'Histoire': 6,        // History
-  'Perspicacité': 7,    // Insight
-  'Intimidation': 8,    // Intimidation
-  'Investigation': 9,   // Investigation
-  'Médecine': 10,       // Medicine
-  'Nature': 11,         // Nature
-  'Perception': 12,     // Perception
-  'Représentation': 13, // Performance
-  'Persuasion': 14,     // Persuasion
-  'Religion': 15,       // Religion
-  'Escamotage': 16,     // Sleight of Hand
-  'Discrétion': 17,     // Stealth
-  'Survie': 18          // Survival
+  'Acrobaties': 1, 'Dressage': 2, 'Arcanes': 3, 'Athlétisme': 4,
+  'Tromperie': 5, 'Histoire': 6, 'Perspicacité': 7, 'Intimidation': 8,
+  'Investigation': 9, 'Médecine': 10, 'Nature': 11, 'Perception': 12,
+  'Représentation': 13, 'Persuasion': 14, 'Religion': 15,
+  'Escamotage': 16, 'Discrétion': 17, 'Survie': 18
 };
 
-// Ordre des caractéristiques pour les sauvegardes (Save1 -> Save6)
 const SAVE_ORDER = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
 
 export const generateCharacterSheet = async (player: Player) => {
   try {
-    // 1. Chargement du PDF
     const formUrl = '/FDP/eFeuillePersoDD2024.pdf';
     const formBytes = await fetch(formUrl).then(res => {
       if (!res.ok) throw new Error("Impossible de charger le modèle PDF");
@@ -39,31 +22,27 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(formBytes);
     const form = pdfDoc.getForm();
 
-    // Helpers
+    // --- Helpers ---
     const setTxt = (name: string, val: any) => {
       try {
         const strVal = val === null || val === undefined ? '' : String(val);
-        // Si c'est un bonus positif, on ajoute le + (sauf pour les champs vides)
         form.getTextField(name).setText(strVal);
-      } catch (e) { /* ignore missing fields */ }
+      } catch (e) {}
     };
-    
     const setBonus = (name: string, val: number) => {
         try {
             const prefix = val >= 0 ? '+' : '';
             form.getTextField(name).setText(`${prefix}${val}`);
         } catch (e) {}
     };
-
     const setChk = (name: string, isChecked: boolean) => {
       try {
         const field = form.getCheckBox(name);
-        if (isChecked) field.check();
-        else field.uncheck();
+        if (isChecked) field.check(); else field.uncheck();
       } catch (e) {}
     };
 
-    // 2. Parsing des données
+    // --- Parsing ---
     const stats = typeof player.stats === 'string' ? JSON.parse(player.stats) : player.stats || {};
     const abilities = typeof player.abilities_json === 'string' ? JSON.parse(player.abilities_json) : player.abilities_json || [];
     const equipment = player.equipment_json 
@@ -71,18 +50,14 @@ export const generateCharacterSheet = async (player: Player) => {
       : { weapons: [], armor: [], gear: [], tools: [] };
     const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
 
-    // 3. Remplissage
-    
-    // --- En-tête ---
+    // --- Remplissage Identité & Stats ---
     setTxt('charactername', player.adventurer_name);
     setTxt('class', player.class);
     setTxt('level', player.level);
     setTxt('species', player.race);
     setTxt('background', player.background);
     setTxt('alignment', player.alignment);
-    setTxt('xp', ""); // Calculer si dispo
-
-    // --- Combat ---
+    
     setTxt('ac', stats.armor_class);
     setBonus('init', stats.initiative || 0);
     setTxt('speed', stats.speed);
@@ -91,7 +66,6 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hp-max', player.max_hp);
     setTxt('hp-temp', player.temporary_hp);
 
-    // --- Caractéristiques (Abilities) ---
     const statKeyMap: Record<string, string> = {
         'Force': 'str', 'Dextérité': 'dex', 'Constitution': 'con',
         'Intelligence': 'int', 'Sagesse': 'wis', 'Charisme': 'cha'
@@ -102,75 +76,73 @@ export const generateCharacterSheet = async (player: Player) => {
         if (key) {
             setTxt(key, ab.score);
             setBonus(`mod${key}`, ab.modifier);
-
-            // Saves
             const saveIdx = SAVE_ORDER.indexOf(ab.name);
             if (saveIdx >= 0) {
                 const num = saveIdx + 1;
                 setBonus(`save${num}`, ab.savingThrow);
-                // Logique de maîtrise : si Save > Mod, on considère maîtrisé (ou si info dispo)
                 setChk(`s${num}`, ab.savingThrow > ab.modifier);
             }
-
-            // Skills liés à cette carac
-            if (ab.skills && Array.isArray(ab.skills)) {
+            if (ab.skills) {
                 ab.skills.forEach((sk: any) => {
-                    const skillIdx = SKILL_MAPPING[sk.name];
-                    if (skillIdx) {
-                        setBonus(`skill${skillIdx}`, sk.bonus);
-                        setChk(`sk${skillIdx}`, sk.isProficient || sk.hasExpertise);
+                    const idx = SKILL_MAPPING[sk.name];
+                    if (idx) {
+                        setBonus(`skill${idx}`, sk.bonus);
+                        setChk(`sk${idx}`, sk.isProficient || sk.hasExpertise);
                     }
                 });
             }
         }
     });
 
-    // --- Argent ---
-    setTxt('gp', player.gold);
-    setTxt('sp', player.silver);
-    setTxt('cp', player.copper);
+    // --- Armes (Max 6) ---
+    const allWeapons = equipment.weapons || [];
+    const mainWeapons = allWeapons.slice(0, 6);
+    const overflowWeapons = allWeapons.slice(6); // Armes en trop
+
+    mainWeapons.forEach((w: any, i: number) => {
+        const row = i + 1;
+        setTxt(`weapons${row}1`, w.name);
+        const meta = w.weapon_meta || {};
+        const dmg = `${meta.damageDice || ''} ${meta.damageType || ''}`;
+        setTxt(`weapons${row}3`, dmg.trim());
+        setTxt(`weapons${row}4`, meta.properties || '');
+    });
 
     // --- Équipement ---
+    // On ajoute les armes en trop au début de la liste d'équipement
+    const overflowNames = overflowWeapons.map((w: any) => `${w.name} (Arme)`);
+    
     const gearItems = [
+        ...overflowNames, 
         ...(equipment.armor || []).map((i: any) => i.name),
         ...(equipment.gear || []).map((i: any) => i.name),
         ...(equipment.tools || []).map((i: any) => i.name)
     ].join(', ');
     setTxt('equipment', gearItems);
 
-    // --- Armes (Grid) ---
-    // Format PDF: weapons[Row][Col] -> Row 1-6, Col 1(Name), 3(Dmg), 4(Prop)
-    const weapons = equipment.weapons || [];
-    weapons.slice(0, 6).forEach((w: any, i: number) => {
-        const row = i + 1;
-        setTxt(`weapons${row}1`, w.name);
-        
-        const meta = w.weapon_meta || {};
-        const dmg = `${meta.damageDice || ''} ${meta.damageType || ''}`;
-        setTxt(`weapons${row}3`, dmg.trim());
-        setTxt(`weapons${row}4`, meta.properties || '');
-        
-        // Bonus attaque (Col 2) - Non dispo directement, on laisse vide
-    });
+    // --- Argent ---
+    setTxt('gp', player.gold);
+    setTxt('sp', player.silver);
+    setTxt('cp', player.copper);
 
-    // --- Magie (Slots) ---
-    // Mapping slot1..slot9 (Total slots, pas utilisés)
+    // --- Magie ---
+    // 1. Slots
     for (let i = 1; i <= 9; i++) {
-        const key = `level${i}`;
-        if (spellSlots[key]) {
-            setTxt(`slot${i}`, spellSlots[key]);
-        }
+        if (spellSlots[`level${i}`]) setTxt(`slot${i}`, spellSlots[`level${i}`]);
     }
 
-    // --- Langues ---
-    if (player.languages) {
-        const langStr = Array.isArray(player.languages) 
-            ? player.languages.join(', ') 
-            : String(player.languages);
-        setTxt('languages', langStr);
-    }
+    // 2. Noms des sorts (Si disponibles dans une propriété future 'spells_known')
+    // Actuellement votre objet Player ne semble pas avoir cette liste.
+    // Si vous l'ajoutez, décommentez ceci :
+    /*
+    const spells = player.spells_known || []; // Suppose un tableau de strings
+    spells.forEach((spellName: string, index: number) => {
+        // Le PDF a spell1...spell30
+        setTxt(`spell${index + 1}`, spellName);
+    });
+    */
 
-    // 4. Export
+    // --- Export ---
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const link = document.createElement('a');
@@ -182,6 +154,6 @@ export const generateCharacterSheet = async (player: Player) => {
 
   } catch (err) {
     console.error("Erreur export PDF:", err);
-    throw err; // Propager l'erreur pour que l'UI puisse afficher un toast
+    throw err;
   }
 };
