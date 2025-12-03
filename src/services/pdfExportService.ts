@@ -140,6 +140,24 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
+    // --- 🚨 SONDE À AJOUTER ICI ---
+    console.group("🔍 DIAGNOSTIC SORTS & SLOTS");
+    const dbg = form.getFields().map(f => f.getName());
+    // On cherche tout ce qui ressemble à une portée ou une distance
+    console.log("Candidats Portée :", dbg.filter(n => 
+        n.toLowerCase().includes('range') || 
+        n.toLowerCase().includes('port') || 
+        n.toLowerCase().includes('dist') ||
+        n.toLowerCase().includes('m1') // Le fameux m1 ?
+    ));
+    // On cherche les totaux de slots
+    console.log("Candidats Slots :", dbg.filter(n => 
+        n.toLowerCase().includes('slot') || 
+        n.toLowerCase().includes('total')
+    ));
+    console.groupEnd();
+    // -----------------------------
+    
     // Helpers
     const setTxt = (name: string, val: any) => { try { form.getTextField(name).setText(String(val ?? '')); } catch (e) {} };
     const setBonus = (name: string, val: number) => { try { form.getTextField(name).setText(`${val >= 0 ? '+' : ''}${val}`); } catch (e) {} };
