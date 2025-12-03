@@ -268,62 +268,53 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ep', "0"); 
     setTxt('pp', "0");
 
-    // --- 8. MAGIE (CORRECTION PORTÉE ET SLOTS) ---
-    const spellList = spellsRes.data || [];
-    spellList.slice(0, 30).forEach((entry: any, idx: number) => {
-      if (!entry.spells) return;
-      const s = entry.spells;
-      const id = idx + 1;
-      const lvl = s.level === 0 ? 'T' : String(s.level);
-      const rng = s.range || '';
-      const time = (s.casting_time && String(s.casting_time)) || '1 action'; 
+   // --- SORTS (SOLUTION V15 : Portée dans Notes & Checkboxes) ---
+    const spells = spellRes.data || [];
+    spells.slice(0, 30).forEach((entry: any, idx: number) => {
+        if (!entry.spells) return;
+        const s = entry.spells;
+        const id = idx + 1;
+        const lvl = s.level === 0 ? 'T' : String(s.level);
+        const time = (s.casting_time && String(s.casting_time)) || '1 action';
+        const range = s.range || '-';
+        const comps = s.components || ''; // ex: "V, S, M (poudre)"
+        const dur = s.duration || '';
 
-      // 1. Info de base
-      setTxt(`spell${id}`, s.name);
-      setTxt(`spell${id}l`, lvl);
+        setTxt(`spell${id}`, s.name);
+        setTxt(`spell${id}l`, lvl);
+        setTxt(`spell${id}r`, time); // Temps OK
 
-      // 2. Temps d'incantation (Champ 'r')
-      setTxt(`spell${id}r`, time);
-      setTxt(`r${id}`, time); 
+        // 1. PORTÉE -> On met dans la colonne "Notes" (spellXc) pour être sûr que c'est visible
+        // car le champ 'mX' ou 'pX' est introuvable/inopérant.
+        // On formate: "Portée: 60m"
+        setTxt(`spell${id}c`, `Portée: ${range}`);
 
-      // 3. Portée (Champ 'm' identifié par la sonde)
-      setTxt(`m${id}`, rng);
-      setTxt(`spell${id}m`, rng); 
-      try { form.getTextField(`range${id}`).setText(rng); } catch (e) { /* ignore */ }
+        // 2. COMPOSANTES (Checkboxes C, R, M)
+        // Analyse du texte "V, S, M" ou durée "Concentration"
+        const isConc = dur.toLowerCase().includes('concentration');
+        const isRit = comps.toLowerCase().includes('rituel') || s.name.includes('(R)');
+        const hasMat = comps.includes('M');
 
-      // 4. Notes (Champ 'c')
-      setTxt(`c${id}`, ""); // On vide la note qui contenait la portée par erreur avant
-      setTxt(`spell${id}c`, "");
+        // On essaie les IDs globaux c1, r1, m1 détectés par la sonde
+        setChk(`c${id}`, isConc);
+        setChk(`r${id}`, isRit);
+        setChk(`m${id}`, hasMat);
     });
 
-    // --- 8.b EMPLACEMENTS DE SORTS ---
-    // Total dans slotX, Utilisés dans les cases à cocher cbslotXX
-    for (let lvl = 1; lvl <= 9; lvl++) {
-      const total = spellSlots[`level${lvl}`] ?? 0;
-      const used = spellSlots[`used${lvl}`] ?? 0;
-
-      // Champ texte pour le Total (slot1, slot2...)
-      setTxt(`slot${lvl}`, total);
-      
-      // Cases à cocher pour les slots dépensés (cbslot11, cbslot12...)
-      // Logique : Si j'ai dépensé 2 slots, je coche la case 1 et 2.
-      for (let s = 1; s <= 4; s++) {
-        const cbName = `cbslot${lvl}${s}`;
-        const isUsed = s <= (Number(used) || 0);
-        
-        // Sécurité pour ne pas crasher si la case n'existe pas
-        try {
-          const cb = form.getCheckBox(cbName);
-          if (isUsed) cb.check(); else cb.uncheck();
-        } catch (e) { /* Le champ n'existe pas dans le PDF, on ignore */ }
-      }
+    // --- EMPLACEMENTS DE SORTS ---
+    for (let niv = 1; niv <= 9; niv++) {
+        const total = spellSlots[`level${niv}`] || 0;
+        const used = spellSlots[`used${niv}`] || 0;
+        setTxt(`slot${niv}`, total); // Champ Total
+        for (let i = 1; i <= 4; i++) {
+            setChk(`cbslot${niv}${i}`, i <= used);
+        }
     }
 
-    // Stats Magiques
-    const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
-    const castStat = abilitiesData.find((a: any) => a.name === castStatName);
+    // --- STATS MAGIE ---
+    const castStat = abilities.find((a: any) => a.name === (SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence'));
     if (castStat) {
-        setTxt('spell-ability', castStatName); 
+        setTxt('spell-ability', castStat.name);
         setTxt('spell-dc', 8 + pb + castStat.modifier);
         setBonus('spell-bonus', pb + castStat.modifier);
         setBonus('spell-mod', castStat.modifier);
