@@ -296,37 +296,35 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', gearText);
     setTxt('gp', player.gold || 0); setTxt('sp', player.silver || 0); setTxt('cp', player.copper || 0);
 
-    // --- MAGIE ---
+      // --- 9. MAGIE ---
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
             const s = entry.spells;
             const id = idx + 1;
             
-            setTxt(`spell${id}`, s.name); // Nom
+            // Nom du sort (ça, ça marche)
+            setTxt(`spell${id}`, s.name);
             
-            // Tentative de cibler les champs Niveau et Portée séparés
-            // On essaie plusieurs conventions de nommage courantes
-            try {
-                // Essai 1: Format standard "spellX-level"
-                form.getTextField(`spell${id}-level`).setText(s.level === 0 ? 'T' : String(s.level));
-                form.getTextField(`spell${id}-range`).setText(s.range || '');
-            } catch (e1) {
-                try {
-                    // Essai 2: Format court "slX" / "srX"
-                    form.getTextField(`sl${id}`).setText(s.level === 0 ? 'T' : String(s.level));
-                    form.getTextField(`sr${id}`).setText(s.range || '');
-                } catch (e2) {
-                    // Essai 3: Format "SpellLevelX"
-                    try {
-                        form.getTextField(`SpellLevel${id}`).setText(s.level === 0 ? 'T' : String(s.level));
-                        form.getTextField(`SpellRange${id}`).setText(s.range || '');
-                    } catch (e3) {
-                        // Si vraiment impossible, on met tout dans le nom pour ne pas perdre l'info
-                        // setTxt(`spell${id}`, `${s.name} (Niv ${s.level}, ${s.range})`);
-                    }
-                }
-            }
+            const lvlStr = s.level === 0 ? 'T' : String(s.level);
+            const rangeStr = s.range || '';
+
+            // TENTATIVE DE BARRAGE pour trouver le bon champ (Niveau et Portée)
+            // Format 1 : Standard (spell1-level)
+            try { form.getTextField(`spell${id}-level`).setText(lvlStr); } catch(e) {}
+            try { form.getTextField(`spell${id}-range`).setText(rangeStr); } catch(e) {}
+            
+            // Format 2 : Court (sl1, sr1) - Très courant sur les fiches FR
+            try { form.getTextField(`sl${id}`).setText(lvlStr); } catch(e) {}
+            try { form.getTextField(`sr${id}`).setText(rangeStr); } catch(e) {}
+            
+            // Format 3 : Underscore (spell_level_1)
+            try { form.getTextField(`spell_level_${id}`).setText(lvlStr); } catch(e) {}
+            try { form.getTextField(`spell_range_${id}`).setText(rangeStr); } catch(e) {}
+            
+            // Format 4 : Spécifique (sp1_lvl)
+            try { form.getTextField(`sp${id}_lvl`).setText(lvlStr); } catch(e) {}
+            try { form.getTextField(`sp${id}_range`).setText(rangeStr); } catch(e) {}
         }
     });
 
