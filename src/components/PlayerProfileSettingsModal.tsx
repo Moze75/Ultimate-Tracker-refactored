@@ -854,6 +854,26 @@ useEffect(() => {
     gestureRef.current = 'undetermined';
   };
 
+  // --- GESTION EXPORT PDF ---
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handlePdfExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    const toastId = toast.loading('Génération de la fiche PDF...');
+    
+    try {
+      await generateCharacterSheet(player);
+      toast.success('Fiche téléchargée !', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la création du PDF', { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (startXRef.current == null || startYRef.current == null) return;
     const t = e.touches[0];
