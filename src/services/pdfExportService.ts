@@ -24,8 +24,6 @@ const SPELLCASTING_ABILITY: Record<string, string> = {
   'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
 };
 
-
- 
 // ============================================================================
 // 2. HELPERS
 // ============================================================================
@@ -110,7 +108,7 @@ function getHitDieSize(className?: string | null): number {
 }
 
 // ============================================================================
-// 3. GENERATE FUNCTION
+// 3. GENERATE FUNCTION (Fonction principale)
 // ============================================================================
 
 export const generateCharacterSheet = async (player: Player) => {
@@ -142,30 +140,12 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
-    // --- 🚨 SONDE À AJOUTER ICI ---
-    console.group("🔍 DIAGNOSTIC SORTS & SLOTS");
-    const dbg = form.getFields().map(f => f.getName());
-    // On cherche tout ce qui ressemble à une portée ou une distance
-    console.log("Candidats Portée :", dbg.filter(n => 
-        n.toLowerCase().includes('range') || 
-        n.toLowerCase().includes('port') || 
-        n.toLowerCase().includes('dist') ||
-        n.toLowerCase().includes('m1') // Le fameux m1 ?
-    ));
-    // On cherche les totaux de slots
-    console.log("Candidats Slots :", dbg.filter(n => 
-        n.toLowerCase().includes('slot') || 
-        n.toLowerCase().includes('total')
-    ));
-    console.groupEnd();
-    // -----------------------------
-    
-    // Helpers
+    // Helpers internes
     const setTxt = (name: string, val: any) => { try { form.getTextField(name).setText(String(val ?? '')); } catch (e) {} };
     const setBonus = (name: string, val: number) => { try { form.getTextField(name).setText(`${val >= 0 ? '+' : ''}${val}`); } catch (e) {} };
     const setChk = (name: string, isChecked: boolean) => { try { const f = form.getCheckBox(name); if (isChecked) f.check(); else f.uncheck(); } catch (e) {} };
 
-    // --- 2. DATA PREP ---
+    // --- 2. PRÉPARATION DES DONNÉES ---
     let abilitiesData: any[] = [];
     try { abilitiesData = Array.isArray(player.abilities) ? player.abilities : JSON.parse(player.abilities_json as string); } catch {}
     const stats = player.stats || {};
@@ -178,11 +158,11 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('subclass', player.subclass);
     setTxt('level', level);
     
-    // CORRECTION ESPÈCE : Le log indique le champ 'species'
-    setTxt('species', player.race); 
-    setTxt('race', player.race); // Sécurité
+    // ESPÈCE : On force 'species' ET 'race' pour être sûr
+    setTxt('species', player.race);
+    setTxt('race', player.race);
     
-    // CORRECTION HISTORIQUE : On va chercher plus loin si c'est vide
+    // HISTORIQUE : Fallback multiple
     const bg = player.background || (stats as any).background_custom || (stats as any).historique || '';
     setTxt('background', bg);
     setTxt('Background', bg);
@@ -235,7 +215,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hd-max', `${hitDiceInfo?.total ?? level}d${hitDieSize}`);
     setTxt('hd-spent', hitDiceInfo?.used ?? 0);
 
-    // --- 6. MAÎTRISES (Basé sur les logs 'weapons', 'tools') ---
+    // --- 6. MAÎTRISES ---
     const armorProfs = creatorMeta.armor_proficiencies || [];
     setChk('armor1', armorProfs.some((a: string) => a.toLowerCase().includes('légère')));
     setChk('armor2', armorProfs.some((a: string) => a.toLowerCase().includes('intermédiaire')));
@@ -282,45 +262,62 @@ export const generateCharacterSheet = async (player: Player) => {
     ].join(', ');
     setTxt('equipment', gearText);
     
-    // CORRECTION PIÈCES : Force la valeur 0 si vide pour affichage
     setTxt('gp', String(player.gold || 0)); 
     setTxt('sp', String(player.silver || 0)); 
     setTxt('cp', String(player.copper || 0));
-    setTxt('ep', "0"); // Electrum souvent ignoré mais champ présent
-    setTxt('pp', "0"); // Platine
+    setTxt('ep', "0"); 
+    setTxt('pp', "0");
 
-      // --- 8. MAGIE (CORRECTION FINALE : SWAP TEMPS / PORTÉE) ---
+    // --- 8. MAGIE (CORRECTION PORTÉE ET SLOTS) ---
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
-        if (entry.spells) {
-            const s = entry.spells;
-            const id = idx + 1; 
-            const lvl = s.level === 0 ? 'T' : String(s.level);
-            const rng = s.range || '';
-            const time = "1 act"; // Valeur par défaut si pas dispo en BDD
-            
-            // Nom et Niveau (C'était OK)
-            setTxt(`spell${id}`, s.name);   
-            setTxt(`spell${id}l`, lvl);     
-            
-            // 1. TEMPS D'INCANTATION
-            // Votre test a montré que le champ 'r' correspond au Temps.
-            setTxt(`spell${id}r`, time);
-            setTxt(`r${id}`, time); 
-            
-            // 2. PORTÉE (DISTANCE)
-            // Le champ 'm' (Mètres) est la dernière option logique pour la portée.
-            setTxt(`spell${id}m`, rng);
-            setTxt(`m${id}`, rng);
-            // Sécurité au cas où
-            try { form.getTextField(`range${id}`).setText(rng); } catch(e) {}
+      if (!entry.spells) return;
+      const s = entry.spells;
+      const id = idx + 1;
+      const lvl = s.level === 0 ? 'T' : String(s.level);
+      const rng = s.range || '';
+      const time = (s.casting_time && String(s.casting_time)) || '1 action'; 
 
-            // 3. NOTES / CONCENTRATION
-            // Votre test a montré que le champ 'c' correspond aux Notes.
-            setTxt(`spell${id}c`, ""); // On vide pour l'instant, ou mettez "Conc" si dispo
-            setTxt(`c${id}`, "");
-        }
+      // 1. Info de base
+      setTxt(`spell${id}`, s.name);
+      setTxt(`spell${id}l`, lvl);
+
+      // 2. Temps d'incantation (Champ 'r')
+      setTxt(`spell${id}r`, time);
+      setTxt(`r${id}`, time); 
+
+      // 3. Portée (Champ 'm' identifié par la sonde)
+      setTxt(`m${id}`, rng);
+      setTxt(`spell${id}m`, rng); 
+      try { form.getTextField(`range${id}`).setText(rng); } catch (e) { /* ignore */ }
+
+      // 4. Notes (Champ 'c')
+      setTxt(`c${id}`, ""); // On vide la note qui contenait la portée par erreur avant
+      setTxt(`spell${id}c`, "");
     });
+
+    // --- 8.b EMPLACEMENTS DE SORTS ---
+    // Total dans slotX, Utilisés dans les cases à cocher cbslotXX
+    for (let lvl = 1; lvl <= 9; lvl++) {
+      const total = spellSlots[`level${lvl}`] ?? 0;
+      const used = spellSlots[`used${lvl}`] ?? 0;
+
+      // Champ texte pour le Total (slot1, slot2...)
+      setTxt(`slot${lvl}`, total);
+      
+      // Cases à cocher pour les slots dépensés (cbslot11, cbslot12...)
+      // Logique : Si j'ai dépensé 2 slots, je coche la case 1 et 2.
+      for (let s = 1; s <= 4; s++) {
+        const cbName = `cbslot${lvl}${s}`;
+        const isUsed = s <= (Number(used) || 0);
+        
+        // Sécurité pour ne pas crasher si la case n'existe pas
+        try {
+          const cb = form.getCheckBox(cbName);
+          if (isUsed) cb.check(); else cb.uncheck();
+        } catch (e) { /* Le champ n'existe pas dans le PDF, on ignore */ }
+      }
+    }
 
     // Stats Magiques
     const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
@@ -330,15 +327,6 @@ export const generateCharacterSheet = async (player: Player) => {
         setTxt('spell-dc', 8 + pb + castStat.modifier);
         setBonus('spell-bonus', pb + castStat.modifier);
         setBonus('spell-mod', castStat.modifier);
-    }
-    
-    // Emplacements
-    for (let niv = 1; niv <= 9; niv++) {
-        const totalSlots = spellSlots[`level${niv}`] || 0;
-        // On cible les cases à cocher identifiées dans le log (cbslot11, etc.)
-        // Si on veut juste afficher le total, il faut un champ texte. 
-        // Le log ne montrait pas 'slots-total', donc on ne peut que cocher ou remplir 'slot1' si existe.
-        setTxt(`slot${niv}`, totalSlots);
     }
 
     // --- 9. TRAITS / DONS / APTITUDES ---
