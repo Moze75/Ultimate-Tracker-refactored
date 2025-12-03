@@ -839,6 +839,47 @@ const handleBackToSelection = () => {
   //   loadInventory();
   // }, [selectedCharacter?.id]);
 
+
+  /* ---------------- DIAGNOSTIC PDF (TEMPORAIRE) ---------------- */
+  useEffect(() => {
+    const inspectPdfFields = async () => {
+      try {
+        console.log('🔍 DÉBUT INSPECTION PDF (/FDP/eFeuillePersoDD2024.pdf)...');
+        
+        // 1. Récupération du fichier
+        const response = await fetch('/FDP/eFeuillePersoDD2024.pdf');
+        if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+        
+        const arrayBuffer = await response.arrayBuffer();
+
+        // 2. Chargement dans pdf-lib
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const form = pdfDoc.getForm();
+        const fields = form.getFields();
+
+        // 3. Affichage propre dans la console
+        const fieldMap = fields.map(f => ({
+          name: f.getName(),
+          type: f.constructor.name
+        }));
+
+        console.group('📋 LISTE DES CHAMPS PDF DÉTECTÉS');
+        console.table(fieldMap); // Affiche un joli tableau
+        console.log('Liste brute (à copier pour le prompt) :', JSON.stringify(fieldMap.map(f => f.name), null, 2));
+        console.groupEnd();
+
+        toast.success(`PDF Analysé : ${fields.length} champs trouvés (voir console F12)`);
+
+      } catch (err) {
+        console.error("❌ Erreur lors de l'inspection du PDF:", err);
+        toast.error("Erreur analyse PDF (voir console)");
+      }
+    };
+
+    // On lance l'inspection une seule fois au montage
+    inspectPdfFields();
+  }, []);
+  
   /* ---------------- Rendu d'un pane ---------------- */
 
 const renderPane = (key: TabKey | 'profile-details') => { 
