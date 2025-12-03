@@ -1,181 +1,187 @@
 import { PDFDocument } from 'pdf-lib';
 import { Player } from '../types/dnd';
 
-// Mapping des Compétences (Ordre alphabétique standard D&D 5e)
-const SKILL_ORDER = [
-  'Acrobaties', 'Dressage', 'Arcanes', 'Athlétisme', 'Tromperie', 'Histoire',
-  'Perspicacité', 'Intimidation', 'Investigation', 'Médecine', 'Nature',
-  'Perception', 'Représentation', 'Persuasion', 'Religion', 'Escamotage',
-  'Discrétion', 'Survie'
-];
+// Mapping FR (App) vers Index PDF (Ordre Alphabétique EN)
+// L'index correspond au numéro du champ skillX et skX
+const SKILL_MAPPING: Record<string, number> = {
+  'Acrobaties': 1,      // Acrobatics
+  'Dressage': 2,        // Animal Handling
+  'Arcanes': 3,         // Arcana
+  'Athlétisme': 4,      // Athletics
+  'Tromperie': 5,       // Deception
+  'Histoire': 6,        // History
+  'Perspicacité': 7,    // Insight
+  'Intimidation': 8,    // Intimidation
+  'Investigation': 9,   // Investigation
+  'Médecine': 10,       // Medicine
+  'Nature': 11,         // Nature
+  'Perception': 12,     // Perception
+  'Représentation': 13, // Performance
+  'Persuasion': 14,     // Persuasion
+  'Religion': 15,       // Religion
+  'Escamotage': 16,     // Sleight of Hand
+  'Discrétion': 17,     // Stealth
+  'Survie': 18          // Survival
+};
 
-// Mapping des Sauvegardes (Ordre standard fiche D&D: Str, Dex, Con, Int, Wis, Cha)
+// Ordre des caractéristiques pour les sauvegardes (Save1 -> Save6)
 const SAVE_ORDER = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
 
 export const generateCharacterSheet = async (player: Player) => {
   try {
-    // 1. Charger le PDF vide
-    const formBytes = await fetch('/FDP/eFeuillePersoDD2024.pdf').then(res => res.arrayBuffer());
+    // 1. Chargement du PDF
+    const formUrl = '/FDP/eFeuillePersoDD2024.pdf';
+    const formBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) throw new Error("Impossible de charger le modèle PDF");
+      return res.arrayBuffer();
+    });
+
     const pdfDoc = await PDFDocument.load(formBytes);
     const form = pdfDoc.getForm();
 
-    // --- Helpers pour remplir les champs sans crash ---
-    const setText = (name: string, value: string | number) => {
+    // Helpers
+    const setTxt = (name: string, val: any) => {
       try {
-        const field = form.getTextField(name);
-        field.setText(String(value));
-      } catch (e) { /* Champ introuvable, on ignore silencieusement */ }
+        const strVal = val === null || val === undefined ? '' : String(val);
+        // Si c'est un bonus positif, on ajoute le + (sauf pour les champs vides)
+        form.getTextField(name).setText(strVal);
+      } catch (e) { /* ignore missing fields */ }
+    };
+    
+    const setBonus = (name: string, val: number) => {
+        try {
+            const prefix = val >= 0 ? '+' : '';
+            form.getTextField(name).setText(`${prefix}${val}`);
+        } catch (e) {}
     };
 
-    const setCheck = (name: string, checked: boolean) => {
+    const setChk = (name: string, isChecked: boolean) => {
       try {
         const field = form.getCheckBox(name);
-        if (checked) field.check();
+        if (isChecked) field.check();
         else field.uncheck();
-      } catch (e) { /* Champ introuvable */ }
+      } catch (e) {}
     };
 
-    // --- Préparation des Données ---
-    
-    // 1. Parsing des JSONs
-    const abilitiesData = typeof player.abilities_json === 'string' 
-      ? JSON.parse(player.abilities_json) 
-      : player.abilities_json || []; // Tableau d'objets {name: "Force", score: 10, modifier: 0, savingThrow: 2, skills: []}
-
-    const statsData = typeof player.stats === 'string' 
-      ? JSON.parse(player.stats) 
-      : player.stats || {}; // {armor_class, initiative, speed...}
-
-    const equipmentData = player.equipment_json 
+    // 2. Parsing des données
+    const stats = typeof player.stats === 'string' ? JSON.parse(player.stats) : player.stats || {};
+    const abilities = typeof player.abilities_json === 'string' ? JSON.parse(player.abilities_json) : player.abilities_json || [];
+    const equipment = player.equipment_json 
       ? (typeof player.equipment_json === 'string' ? JSON.parse(player.equipment_json) : player.equipment_json)
       : { weapons: [], armor: [], gear: [], tools: [] };
+    const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
 
-    // --- Remplissage : En-tête ---
-    setText('charactername', player.adventurer_name || '');
-    setText('class', player.class || ''); // Ex: "Guerrier"
-    setText('level', player.level?.toString() || '1');
-    setText('background', player.background || '');
-    setText('species', player.race || ''); // Champ "species" dans le PDF = Race
-    setText('alignment', player.alignment || '');
-    setText('xp', ''); // Pas de champ XP dans Player, laisser vide ou calculer
+    // 3. Remplissage
+    
+    // --- En-tête ---
+    setTxt('charactername', player.adventurer_name);
+    setTxt('class', player.class);
+    setTxt('level', player.level);
+    setTxt('species', player.race);
+    setTxt('background', player.background);
+    setTxt('alignment', player.alignment);
+    setTxt('xp', ""); // Calculer si dispo
 
-    // --- Remplissage : Stats Principales (Scores & Modif) ---
-    // On map les noms français vers les clés du PDF (str, dex, con, int, wis, cha)
-    const statMap: Record<string, string> = {
-      'Force': 'str', 'Dextérité': 'dex', 'Constitution': 'con',
-      'Intelligence': 'int', 'Sagesse': 'wis', 'Charisme': 'cha'
+    // --- Combat ---
+    setTxt('ac', stats.armor_class);
+    setBonus('init', stats.initiative || 0);
+    setTxt('speed', stats.speed);
+    setBonus('pb', stats.proficiency_bonus || 2);
+    setTxt('hp-current', player.current_hp);
+    setTxt('hp-max', player.max_hp);
+    setTxt('hp-temp', player.temporary_hp);
+
+    // --- Caractéristiques (Abilities) ---
+    const statKeyMap: Record<string, string> = {
+        'Force': 'str', 'Dextérité': 'dex', 'Constitution': 'con',
+        'Intelligence': 'int', 'Sagesse': 'wis', 'Charisme': 'cha'
     };
 
-    abilitiesData.forEach((ab: any) => {
-      const pdfKey = statMap[ab.name]; // ex: 'str'
-      if (pdfKey) {
-        setText(pdfKey, ab.score);
-        setText(`mod${pdfKey}`, ab.modifier >= 0 ? `+${ab.modifier}` : ab.modifier);
-        
-        // Sauvegardes (Saves)
-        // Le PDF utilise save1..save6 et s1..s6 (checkbox)
-        const saveIndex = SAVE_ORDER.indexOf(ab.name);
-        if (saveIndex !== -1) {
-            const saveId = saveIndex + 1; // 1 à 6
-            setText(`save${saveId}`, ab.savingThrow >= 0 ? `+${ab.savingThrow}` : ab.savingThrow);
-            
-            // Détection maîtrise sauvegarde (si save > mod, on suppose maîtrisé, ou via une prop 'isProficient' si elle existe)
-            // Ici on compare grossièrement savingThrow vs modifier
-            const isProficient = ab.savingThrow > ab.modifier; 
-            setCheck(`s${saveId}`, isProficient);
-        }
-      }
-    });
+    abilities.forEach((ab: any) => {
+        const key = statKeyMap[ab.name];
+        if (key) {
+            setTxt(key, ab.score);
+            setBonus(`mod${key}`, ab.modifier);
 
-    // --- Remplissage : Combat ---
-    setText('ac', statsData.armor_class || 10);
-    setText('init', (statsData.initiative >= 0 ? '+' : '') + (statsData.initiative || 0));
-    setText('speed', statsData.speed || 30);
-    setText('hp-current', player.current_hp || 0);
-    setText('hp-max', player.max_hp || 0);
-    setText('hp-temp', player.temporary_hp || '');
-    // Pb = Proficiency Bonus (Bonus de Maîtrise)
-    setText('pb', `+${statsData.proficiency_bonus || 2}`);
+            // Saves
+            const saveIdx = SAVE_ORDER.indexOf(ab.name);
+            if (saveIdx >= 0) {
+                const num = saveIdx + 1;
+                setBonus(`save${num}`, ab.savingThrow);
+                // Logique de maîtrise : si Save > Mod, on considère maîtrisé (ou si info dispo)
+                setChk(`s${num}`, ab.savingThrow > ab.modifier);
+            }
 
-    // --- Remplissage : Compétences (Skills) ---
-    // On parcourt la liste ordonnée D&D pour remplir skill1..18 et sk1..18
-    SKILL_ORDER.forEach((skillName, index) => {
-        const pdfIndex = index + 1; // 1 à 18
-        
-        // Trouver le skill dans les données du joueur (imbriqué dans abilitiesData)
-        let foundSkill: any = null;
-        
-        for (const ability of abilitiesData) {
-            const s = ability.skills.find((sk: any) => sk.name === skillName);
-            if (s) {
-                foundSkill = s;
-                break;
+            // Skills liés à cette carac
+            if (ab.skills && Array.isArray(ab.skills)) {
+                ab.skills.forEach((sk: any) => {
+                    const skillIdx = SKILL_MAPPING[sk.name];
+                    if (skillIdx) {
+                        setBonus(`skill${skillIdx}`, sk.bonus);
+                        setChk(`sk${skillIdx}`, sk.isProficient || sk.hasExpertise);
+                    }
+                });
             }
         }
-
-        if (foundSkill) {
-            setText(`skill${pdfIndex}`, foundSkill.bonus >= 0 ? `+${foundSkill.bonus}` : foundSkill.bonus);
-            setCheck(`sk${pdfIndex}`, foundSkill.isProficient);
-        }
     });
 
-    // --- Remplissage : Argent ---
-    setText('gp', player.gold || 0);
-    setText('sp', player.silver || 0);
-    setText('cp', player.copper || 0);
+    // --- Argent ---
+    setTxt('gp', player.gold);
+    setTxt('sp', player.silver);
+    setTxt('cp', player.copper);
 
-    // --- Remplissage : Équipement (Liste texte) ---
-    const gearList = [
-        ...(equipmentData.gear || []).map((i: any) => i.name),
-        ...(equipmentData.tools || []).map((i: any) => i.name),
-        ...(equipmentData.armor || []).map((i: any) => i.name)
+    // --- Équipement ---
+    const gearItems = [
+        ...(equipment.armor || []).map((i: any) => i.name),
+        ...(equipment.gear || []).map((i: any) => i.name),
+        ...(equipment.tools || []).map((i: any) => i.name)
     ].join(', ');
-    setText('equipment', gearList);
+    setTxt('equipment', gearItems);
 
-    // --- Remplissage : Armes (Grid) ---
-    // PDF fields: weapons11 (Name), weapons12 (Atk), weapons13 (Dmg) ... jusqu'à weapons6X
-    // Attention: votre log montre weapons11, weapons12... puis weapons21...
-    // Hypothèse forte: Row 1 = weapons1X, Row 2 = weapons2X...
-    // Col 1 = Name, Col 2 = Bonus, Col 3 = Damage
-    
-    const weapons = equipmentData.weapons || [];
-    weapons.slice(0, 6).forEach((w: any, idx: number) => {
-        const row = idx + 1;
-        // Nom de l'arme
-        setText(`weapons${row}1`, w.name);
+    // --- Armes (Grid) ---
+    // Format PDF: weapons[Row][Col] -> Row 1-6, Col 1(Name), 3(Dmg), 4(Prop)
+    const weapons = equipment.weapons || [];
+    weapons.slice(0, 6).forEach((w: any, i: number) => {
+        const row = i + 1;
+        setTxt(`weapons${row}1`, w.name);
         
-        // Bonus d'attaque (souvent non stocké explicitement, on met vide ou calculé si possible)
-        // On laisse vide pour remplissage manuel ou on met 'Str/Dex'
-        setText(`weapons${row}2`, ""); 
-
-        // Dégâts
         const meta = w.weapon_meta || {};
         const dmg = `${meta.damageDice || ''} ${meta.damageType || ''}`;
-        setText(`weapons${row}3`, dmg.trim());
+        setTxt(`weapons${row}3`, dmg.trim());
+        setTxt(`weapons${row}4`, meta.properties || '');
         
-        // Notes (Portée, propriétés) -> Col 4 ? (weapons14)
-        setText(`weapons${row}4`, meta.properties || '');
+        // Bonus attaque (Col 2) - Non dispo directement, on laisse vide
     });
 
-    // --- Remplissage : Langues ---
-    // Le tableau player.languages est une string[] ou string json
-    let langs = "";
-    if (Array.isArray(player.languages)) langs = player.languages.join(', ');
-    else if (typeof player.languages === 'string') langs = player.languages;
-    setText('languages', langs);
+    // --- Magie (Slots) ---
+    // Mapping slot1..slot9 (Total slots, pas utilisés)
+    for (let i = 1; i <= 9; i++) {
+        const key = `level${i}`;
+        if (spellSlots[key]) {
+            setTxt(`slot${i}`, spellSlots[key]);
+        }
+    }
 
-    // --- Téléchargement ---
+    // --- Langues ---
+    if (player.languages) {
+        const langStr = Array.isArray(player.languages) 
+            ? player.languages.join(', ') 
+            : String(player.languages);
+        setTxt('languages', langStr);
+    }
+
+    // 4. Export
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Feuille_${player.adventurer_name || 'Perso'}.pdf`;
+    link.download = `${player.adventurer_name || 'Personnage'}_Fiche.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-  } catch (error) {
-    console.error("Erreur génération PDF:", error);
-    alert("Erreur lors de la génération du PDF. Vérifiez la console.");
+  } catch (err) {
+    console.error("Erreur export PDF:", err);
+    throw err; // Propager l'erreur pour que l'UI puisse afficher un toast
   }
 };
