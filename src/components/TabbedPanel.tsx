@@ -5,8 +5,10 @@ import { AbilitiesTab } from './AbilitiesTab';
 import { EquipmentTab } from './EquipmentTab';
 import CombatTab from './CombatTab';
 import { NotesTab } from './NotesTab';
+import PlayerProfileProfileTab from './PlayerProfileProfileTab'; // 1. Import ajouté
 
-type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag' | 'notes';
+// 2. Ajout de 'profile' au type TabKey
+type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag' | 'notes' | 'profile';
 
 interface TabbedPanelProps {
   player: Player;
@@ -14,7 +16,7 @@ interface TabbedPanelProps {
   onPlayerUpdate: (player: Player) => void;
   onInventoryUpdate: (inventory: any[]) => void;
   classSections: any[] | null;
-  hiddenTabs?: TabKey[]; // ← Ajouter cette ligne
+  hiddenTabs?: TabKey[];
 }
 
 const TABS = [
@@ -22,9 +24,10 @@ const TABS = [
   { key: 'class', label: 'Classe' },
   { key: 'spells', label: 'Sorts' },
   { key: 'gold', label: 'Or' },
-  { key: 'inventory', label: 'Équipements' }, // ← Changé ici
+  { key: 'inventory', label: 'Équipements' },
   { key: 'bag', label: 'Sac' },
-  { key: 'notes', label: 'Notes' }, // ← Ajouter cette ligne
+  { key: 'profile', label: 'Profil' }, // 3. Onglet ajouté à la liste
+  { key: 'notes', label: 'Notes' },
 ] as const;
 
 const STORAGE_KEY = 'desktopTabbedPanel:activeTab';
@@ -40,6 +43,7 @@ export function TabbedPanel({
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}:${player.id}`);
+      // Casting sécurisé, par défaut 'actions' si la valeur stockée n'est pas valide
       return (saved as TabKey) || 'actions';
     } catch {
       return 'actions';
@@ -53,7 +57,7 @@ export function TabbedPanel({
   }, [activeTab, player.id]);
 
   // Filtrer les onglets à afficher
-  const visibleTabs = TABS.filter(tab => !hiddenTabs.includes(tab.key));
+  const visibleTabs = TABS.filter(tab => !hiddenTabs.includes(tab.key as TabKey));
 
   return (
     <div className="flex flex-col h-full">
@@ -74,62 +78,70 @@ export function TabbedPanel({
         ))}
       </div>
 
-{/* Contenu de l'onglet actif */}
-<div className="flex-1 overflow-y-auto custom-scrollbar">
-  {activeTab === 'actions' && (
-    <CombatTab
-      player={player}
-      inventory={inventory}
-      onUpdate={onPlayerUpdate}
-    />
-  )}
+      {/* Contenu de l'onglet actif */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {activeTab === 'actions' && (
+          <CombatTab
+            player={player}
+            inventory={inventory}
+            onUpdate={onPlayerUpdate}
+          />
+        )}
 
-  {activeTab === 'class' && (
-    <div className="desktop-classes-tab">
-      <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
-    </div>
-  )}
-  {activeTab === 'spells' && (
-    <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
-  )}
+        {activeTab === 'class' && (
+          <div className="desktop-classes-tab">
+            <ClassesTabWrapper player={player} onUpdate={onPlayerUpdate} />
+          </div>
+        )}
+        {activeTab === 'spells' && (
+          <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
+        )}
 
-  {activeTab === 'gold' && (
-    <EquipmentTab
-      player={player}
-      inventory={inventory}
-      onPlayerUpdate={onPlayerUpdate}
-      onInventoryUpdate={onInventoryUpdate}
-      viewMode="gold"
-    />
-  )}
+        {activeTab === 'gold' && (
+          <EquipmentTab
+            player={player}
+            inventory={inventory}
+            onPlayerUpdate={onPlayerUpdate}
+            onInventoryUpdate={onInventoryUpdate}
+            viewMode="gold"
+          />
+        )}
 
-  {activeTab === 'inventory' && (
-    <EquipmentTab
-      player={player}
-      inventory={inventory}
-      onPlayerUpdate={onPlayerUpdate}
-      onInventoryUpdate={onInventoryUpdate}
-      viewMode="inventory"
-    />
-  )}
+        {activeTab === 'inventory' && (
+          <EquipmentTab
+            player={player}
+            inventory={inventory}
+            onPlayerUpdate={onPlayerUpdate}
+            onInventoryUpdate={onInventoryUpdate}
+            viewMode="inventory"
+          />
+        )}
 
-  {activeTab === 'bag' && (
-    <EquipmentTab
-      player={player}
-      inventory={inventory}
-      onPlayerUpdate={onPlayerUpdate}
-      onInventoryUpdate={onInventoryUpdate}
-      viewMode="bag"
-    />
-  )}
+        {activeTab === 'bag' && (
+          <EquipmentTab
+            player={player}
+            inventory={inventory}
+            onPlayerUpdate={onPlayerUpdate}
+            onInventoryUpdate={onInventoryUpdate}
+            viewMode="bag"
+          />
+        )}
 
-  {activeTab === 'notes' && ( 
-    <NotesTab
-      player={player}
-      onUpdate={onPlayerUpdate}
-    />
-  )}
-</div> {/* ← Fermeture de la div overflow-y-auto */}
+        {/* 4. Rendu du contenu de l'onglet Profil */}
+        {activeTab === 'profile' && (
+          <PlayerProfileProfileTab
+            player={player}
+            onUpdate={onPlayerUpdate}
+          />
+        )}
+
+        {activeTab === 'notes' && ( 
+          <NotesTab
+            player={player}
+            onUpdate={onPlayerUpdate}
+          />
+        )}
+      </div>
       
       {/* Styles scrollbar */}
       <style>{`
