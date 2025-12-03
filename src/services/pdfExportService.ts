@@ -140,14 +140,6 @@ export const generateCharacterSheet = async (player: Player) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const form = pdfDoc.getForm();
 
-    // --- 1.5 DIAGNOSTIC (AFFICHER LES CHAMPS DANS LA CONSOLE) ---
-    // 👇 Regardez la console du navigateur (F12) pour voir cette liste
-    const allFields = form.getFields().map(f => f.getName());
-    console.group("🔍 DIAGNOSTIC CHAMPS PDF");
-    console.log("Cherchez 'Background', 'Historique' ou 'Sort' dans cette liste :");
-    console.log(allFields.sort());
-    console.groupEnd();
-
     // Helpers
     const setTxt = (name: string, val: any) => { try { form.getTextField(name).setText(String(val ?? '')); } catch (e) {} };
     const setBonus = (name: string, val: number) => { try { form.getTextField(name).setText(`${val >= 0 ? '+' : ''}${val}`); } catch (e) {} };
@@ -160,20 +152,17 @@ export const generateCharacterSheet = async (player: Player) => {
     const spellSlots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     const creatorMeta = (stats as any).creator_meta || {};
 
-    // --- 3. IDENTITÉ ---
+    // --- 3. IDENTITÉ (Ciblage précis d'après le log) ---
     setTxt('charactername', player.adventurer_name);
     setTxt('class', player.class);
-    setTxt('classname', player.class);
     setTxt('subclass', player.subclass);
     setTxt('level', level);
-    setTxt('species', player.race);
+    setTxt('race', player.race); // Le log ne montre pas 'species', mais essayons 'race' si 'species' échoue
     
-    // HISTORIQUE (On essaie tout ce qui est logique)
-    const bg = player.background || '';
+    // HISTORIQUE : Le log confirme que le champ est 'background'
+    // Si ça ne s'affichait pas avant, c'est que la valeur player.background était vide
+    const bg = player.background || (stats.background_custom ? stats.background_custom : '');
     setTxt('background', bg);
-    setTxt('Background', bg);
-    setTxt('Historique', bg);
-    setTxt('History', bg);
     
     setTxt('alignment', player.alignment);
     setTxt('xp', ""); 
@@ -185,7 +174,8 @@ export const generateCharacterSheet = async (player: Player) => {
         const key = statKeyMap[ab.name];
         if (key) {
             setTxt(key, ab.score);
-            setBonus(`mod${key}`, ab.modifier);
+            setBonus(`mod${key}`, ab.modifier); // Le log montre 'modstr', 'moddex', etc.
+            
             const saveIdx = SAVE_ORDER.indexOf(ab.name);
             if (saveIdx >= 0) {
                 const num = saveIdx + 1;
@@ -222,21 +212,37 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hd-max', `${hitDiceInfo?.total ?? level}d${hitDieSize}`);
     setTxt('hd-spent', hitDiceInfo?.used ?? 0);
 
-    // --- 6. MAÎTRISES & LANGUES ---
-    const profsList: string[] = [];
+    // --- 6. MAÎTRISES (Ciblage précis d'après le log) ---
+    
+    // 6.1 ARMURES (Cases à cocher 'armor1' à 'armor4')
+    const armorProfs = creatorMeta.armor_proficiencies || [];
+    const hasLight = armorProfs.some((a: string) => a.toLowerCase().includes('légère'));
+    const hasMedium = armorProfs.some((a: string) => a.toLowerCase().includes('intermédiaire'));
+    const hasHeavy = armorProfs.some((a: string) => a.toLowerCase().includes('lourde'));
+    const hasShield = armorProfs.some((a: string) => a.toLowerCase().includes('bouclier'));
+
+    setChk('armor1', hasLight);  // Légère
+    setChk('armor2', hasMedium); // Intermédiaire
+    setChk('armor3', hasHeavy);  // Lourde
+    setChk('armor4', hasShield); // Bouclier
+
+    // 6.2 ARMES & OUTILS & LANGUES (Champs texte identifiés dans le log)
+    const weaponProfs = creatorMeta.weapon_proficiencies || [];
+    setTxt('weapons', weaponProfs.join(', ')); // Champ 'weapons' identifié dans le log
+
+    const toolProfs = creatorMeta.tool_proficiencies || [];
+    setTxt('tools', toolProfs.join(', ')); // Champ 'tools' identifié dans le log
+
     if (player.languages) {
-        const l = Array.isArray(player.languages) ? player.languages : [];
-        const clean = l.filter(x => x && !x.toLowerCase().includes('choix'));
-        if (clean.length) profsList.push(`Langues: ${clean.join(', ')}`);
+        const langs = Array.isArray(player.languages) ? player.languages : [];
+        const clean = langs.filter(x => x && !x.toLowerCase().includes('choix')).join(', ');
+        setTxt('languages', clean); // Champ 'languages' identifié dans le log
     }
-    if (creatorMeta.armor_proficiencies?.length) profsList.push(`Armures: ${creatorMeta.armor_proficiencies.join(', ')}`);
-    if (creatorMeta.weapon_proficiencies?.length) profsList.push(`Armes: ${creatorMeta.weapon_proficiencies.join(', ')}`);
-    if (creatorMeta.tool_proficiencies?.length) profsList.push(`Outils: ${creatorMeta.tool_proficiencies.join(', ')}`);
 
-    setTxt('proficiencies', profsList.join('\n'));
-    setTxt('other_profs', profsList.join('\n')); // Variante
-
-    // --- 7. ARMES & ÉQUIPEMENT ---
+    // --- 7. ARMES & ÉQUIPEMENT (Grille 'weaponsX') ---
+    // Le log montre weapons11, weapons12, etc.
+    // Hypothèse : weapons[Ligne][Colonne]
+    // Colonne 1 = Nom, Colonne 2 = Bonus, Colonne 3 = Dégâts, Colonne 4 = Notes ?
     const inventory = inventoryRes.data || [];
     const allWeapons = inventory
         .map((item: any) => ({ item, meta: parseMeta(item.description) }))
@@ -244,12 +250,19 @@ export const generateCharacterSheet = async (player: Player) => {
         .sort((a: any, b: any) => (b.meta.equipped ? 1 : 0) - (a.meta.equipped ? 1 : 0));
 
     allWeapons.slice(0, 6).forEach((w: any, i: number) => {
-        const row = i + 1;
+        const row = i + 1; // 1 à 6
+        // Nom
         setTxt(`weapons${row}1`, w.item.name);
+        
         const meta = w.meta.weapon || {};
+        // Dégâts
         const dmg = `${meta.damageDice || ''} ${meta.damageType || ''}`;
         setTxt(`weapons${row}3`, dmg.trim());
+        
+        // Notes / Propriétés
         setTxt(`weapons${row}4`, meta.properties || '');
+        
+        // Bonus Attaque
         const isFinesse = meta.properties?.toLowerCase().includes('finesse');
         const stat = abilitiesData.find(a => a.name === (isFinesse ? 'Dextérité' : 'Force'));
         if (stat) setBonus(`weapons${row}2`, stat.modifier + pb + (meta.weapon_bonus || 0));
@@ -263,25 +276,19 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', gearText);
     setTxt('gp', player.gold); setTxt('sp', player.silver); setTxt('cp', player.copper);
 
-    // --- 8. MAGIE (TENTATIVES MULTIPLES) ---
+    // --- 8. MAGIE (Ciblage précis d'après le log) ---
+    // Le log montre : spell1, spell1l, spell1r, spell1c... C'est parfait !
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
             const s = entry.spells;
-            const id = idx + 1;
+            const id = idx + 1; // 1 à 30
             const lvl = s.level === 0 ? 'T' : String(s.level);
             
-            setTxt(`spell${id}`, s.name);
-            
-            // Tentatives NIVEAU
-            try { form.getTextField(`spell${id}-level`).setText(lvl); } catch(e) {}
-            try { form.getTextField(`sl${id}`).setText(lvl); } catch(e) {}
-            try { form.getTextField(`Level${id}`).setText(lvl); } catch(e) {}
-            
-            // Tentatives PORTÉE
-            try { form.getTextField(`spell${id}-range`).setText(s.range || ''); } catch(e) {}
-            try { form.getTextField(`sr${id}`).setText(s.range || ''); } catch(e) {}
-            try { form.getTextField(`Range${id}`).setText(s.range || ''); } catch(e) {}
+            setTxt(`spell${id}`, s.name);   // Nom
+            setTxt(`spell${id}l`, lvl);     // Level (suffixe 'l')
+            setTxt(`spell${id}r`, s.range || ''); // Range (suffixe 'r')
+            // spell${id}c est probablement 'Concentration' (case à cocher ou texte)
         }
     });
 
@@ -289,13 +296,34 @@ export const generateCharacterSheet = async (player: Player) => {
     const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
     const castStat = abilitiesData.find((a: any) => a.name === castStatName);
     if (castStat) {
-        setTxt('spell-ability', castStatName);
+        // Le log ne montre pas explicitement 'spell-ability', on tente les standards
+        setTxt('spell-ability', castStatName); 
+        // Mais on a vu 'm1', 'm10' dans le log, peut-être lié à la magie ? 
+        // Restons sur les standards pour l'instant, le log était tronqué ([0...99], etc.)
         setTxt('spell-dc', 8 + pb + castStat.modifier);
         setBonus('spell-bonus', pb + castStat.modifier);
         setBonus('spell-mod', castStat.modifier);
     }
-    for (let i = 1; i <= 9; i++) {
-        if (spellSlots[`level${i}`]) setTxt(`slot${i}`, spellSlots[`level${i}`]);
+    
+    // Emplacements de sorts (Slots)
+    // Le log montre 'cbslot11', 'cbslot12'... Ce sont des cases à cocher pour les slots utilisés !
+    // Il n'y a peut-être pas de champ texte pour le "Total".
+    // On va essayer de remplir les premières cases à cocher en fonction du nombre total de slots.
+    for (let niv = 1; niv <= 9; niv++) {
+        const totalSlots = spellSlots[`level${niv}`] || 0;
+        const usedSlots = spellSlots[`used${niv}`] || 0; // Si vous trackez les utilisés
+        
+        // On coche les cases "disponibles" (ou l'inverse selon la logique de la feuille)
+        // Si cbslot = "CheckBox Slot", alors cbslot11 est le 1er slot du niveau 1.
+        for (let slotNum = 1; slotNum <= 4; slotNum++) { // Max 4 slots par niveau généralement
+             // Si le joueur a ce slot (total >= slotNum), on pourrait vouloir le rendre visible ou le cocher
+             // Sur les PDF, souvent cocher = utilisé.
+             // Sans certitude, on laisse tel quel ou on coche si utilisé.
+             // setChk(`cbslot${niv}${slotNum}`, slotNum <= usedSlots);
+        }
+        
+        // Si un champ texte existe pour le total (souvent caché ou nommé bizarrement), on essaie 'slot1', 'Level 1 Slots'
+        setTxt(`slot${niv}`, totalSlots);
     }
 
     // --- 9. TRAITS / DONS / APTITUDES ---
@@ -306,10 +334,9 @@ export const generateCharacterSheet = async (player: Player) => {
     const traitsFormatted = parseRaceTraits(raceMd, player.race || '').map(t => `• ${t}`).join('\n');
     const featuresFormatted = parseClassFeatures(classMd, level).map(c => `• ${c}`).join('\n');
 
-    setTxt('traits', traitsFormatted);
-    setTxt('feats', featsFormatted);
-    setTxt('dons', featsFormatted); // Au cas où
-    setTxt('features1', featuresFormatted);
+    setTxt('traits', traitsFormatted); // Traits d'espèce
+    setTxt('feats', featsFormatted);   // Dons
+    setTxt('features1', featuresFormatted); // Aptitudes de classe
 
     // --- 10. EXPORT ---
     const finalPdf = await pdfDoc.save();
