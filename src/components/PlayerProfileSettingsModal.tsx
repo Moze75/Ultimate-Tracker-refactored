@@ -1153,6 +1153,7 @@ useEffect(() => {
             </div>
           </CollapsibleCard>
 
+          
 
           {/* Statistiques */}
           <CollapsibleCard title="CA / Vit. / Init. / Maît." defaultCollapsed>
@@ -1745,6 +1746,40 @@ useEffect(() => {
             </div>
           </CollapsibleCard>
 
+
+          {/* EXPORT PDF */}
+          <div className="stat-card border-blue-500/30 bg-blue-900/10">
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-100">Fiche de personnage</h3>
+                  <p className="text-sm text-blue-300/70">Format officiel D&D 2024 (PDF)</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handlePdfExport}
+                disabled={isExporting}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-blue-900/20 flex items-center gap-2"
+              >
+                {isExporting ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span>Génération...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={18} />
+                    <span>Télécharger</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          
           {/* Bandeau d'actions */}
           <div className="mt-4">
             <div className="flex gap-3 justify-end border-t border-gray-700/50 pt-4">
