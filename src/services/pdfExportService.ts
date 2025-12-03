@@ -198,7 +198,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', items.filter((i: any) => !weapons.slice(0, 6).find((w: any) => w.id === i.id)).map((i: any) => i.name).join(', '));
     setTxt('gp', String(player.gold || 0)); setTxt('sp', String(player.silver || 0)); setTxt('cp', String(player.copper || 0)); setTxt('ep', "0"); setTxt('pp', "0");
 
-    // --- SORTS (V17 : Fusion Temps/Portée + Anti-Crash) ---
+      // --- SORTS (Correction : Espaces & Raccourci "Perso") ---
     const spells = spellRes.data || [];
     spells.slice(0, 30).forEach((entry: any, idx: number) => {
         if (!entry.spells) return;
@@ -206,7 +206,12 @@ export const generateCharacterSheet = async (player: Player) => {
         const id = idx + 1;
         const lvl = s.level === 0 ? 'T' : String(s.level);
         const time = (s.casting_time && String(s.casting_time)) || '1 action';
-        const range = s.range ? String(s.range) : '-';
+        
+        // Raccourcissement de la portée
+        let range = s.range ? String(s.range) : '-';
+        if (range.toLowerCase().includes('personnelle')) {
+            range = 'Perso';
+        }
         
         // Gestion sécurisée Composantes
         let compsStr = '';
@@ -222,16 +227,15 @@ export const generateCharacterSheet = async (player: Player) => {
         setTxt(`spell${id}`, s.name);
         setTxt(`spell${id}l`, lvl);
         
-        // ✅ FUSION: "1 action - 18m" dans la colonne Temps (spellXr)
-        // C'est la solution pour forcer l'affichage de la portée
-        const timeAndRange = `${time} - ${range}`;
+        // FUSION : TEMPS + ESPACES + PORTÉE (Plus de tiret)
+        const timeAndRange = `${time}      ${range}`;
         setTxt(`spell${id}r`, timeAndRange);
-        setTxt(`r${id}`, timeAndRange); // Sécurité double nommage
+        setTxt(`r${id}`, timeAndRange); 
 
         // Colonne Notes: Composantes
         setTxt(`spell${id}c`, compsStr);
 
-        // Checkboxes (en minuscule pour comparaison safe)
+        // Checkboxes
         const lowerComps = compsStr.toLowerCase();
         const lowerDur = dur.toLowerCase();
         
