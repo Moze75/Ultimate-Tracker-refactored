@@ -269,7 +269,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ep', "0"); // Electrum souvent ignoré mais champ présent
     setTxt('pp', "0"); // Platine
 
-    // --- 8. MAGIE (CORRECTION PORTÉE / TEMPS) ---
+      // --- 8. MAGIE (CORRECTION FINALE : SWAP TEMPS / PORTÉE) ---
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
@@ -277,27 +277,28 @@ export const generateCharacterSheet = async (player: Player) => {
             const id = idx + 1; 
             const lvl = s.level === 0 ? 'T' : String(s.level);
             const rng = s.range || '';
+            const time = "1 act"; // Valeur par défaut si pas dispo en BDD
             
+            // Nom et Niveau (C'était OK)
             setTxt(`spell${id}`, s.name);   
             setTxt(`spell${id}l`, lvl);     
             
-            // CORRECTION MAJEURE :
-            // D'après le log on a r1...r30 et c1...c30 en plus de spellXr/spellXc
-            // Si vous dites que la portée est allée dans les notes (ou temps), 
-            // on va cibler explicitement les champs courts 'r' et 'c' qui correspondent souvent aux colonnes de grille.
+            // 1. TEMPS D'INCANTATION
+            // Votre test a montré que le champ 'r' correspond au Temps.
+            setTxt(`spell${id}r`, time);
+            setTxt(`r${id}`, time); 
             
-            // Hypothèse 1: 'r' = Range (Portée)
-            setTxt(`r${id}`, rng);
-            setTxt(`spell${id}r`, rng); // On retente ici, mais...
-            setTxt(`range${id}`, rng);  // Variante
-            
-            // Hypothèse 2: 'c' = Casting Time (Temps)
-            setTxt(`c${id}`, "1 act");
-            setTxt(`spell${id}c`, "1 act");
-            
-            // Pour être sûr, si "spellXr" remplissait le temps d'incantation par erreur
-            // On le force à vide si on ne veut pas de conflit, ou on l'utilise pour la portée si c'était l'inverse.
-            // Mais ici je parie sur r=Range.
+            // 2. PORTÉE (DISTANCE)
+            // Le champ 'm' (Mètres) est la dernière option logique pour la portée.
+            setTxt(`spell${id}m`, rng);
+            setTxt(`m${id}`, rng);
+            // Sécurité au cas où
+            try { form.getTextField(`range${id}`).setText(rng); } catch(e) {}
+
+            // 3. NOTES / CONCENTRATION
+            // Votre test a montré que le champ 'c' correspond aux Notes.
+            setTxt(`spell${id}c`, ""); // On vide pour l'instant, ou mettez "Conc" si dispo
+            setTxt(`c${id}`, "");
         }
     });
 
