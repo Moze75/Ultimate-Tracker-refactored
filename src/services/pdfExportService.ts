@@ -24,6 +24,28 @@ const SPELLCASTING_ABILITY: Record<string, string> = {
   'Barde': 'Charisme', 'Ensorceleur': 'Charisme', 'Occultiste': 'Charisme', 'Paladin': 'Charisme'
 };
 
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const form = pdfDoc.getForm();
+
+    // --- 🚨 SONDE À AJOUTER ICI ---
+    console.group("🔍 DIAGNOSTIC SORTS & SLOTS");
+    const dbg = form.getFields().map(f => f.getName());
+    // On cherche tout ce qui ressemble à une portée ou une distance
+    console.log("Candidats Portée :", dbg.filter(n => 
+        n.toLowerCase().includes('range') || 
+        n.toLowerCase().includes('port') || 
+        n.toLowerCase().includes('dist') ||
+        n.toLowerCase().includes('m1') // Le fameux m1 ?
+    ));
+    // On cherche les totaux de slots
+    console.log("Candidats Slots :", dbg.filter(n => 
+        n.toLowerCase().includes('slot') || 
+        n.toLowerCase().includes('total')
+    ));
+    console.groupEnd();
+    // -----------------------------
+
+
 // ============================================================================
 // 2. HELPERS
 // ============================================================================
