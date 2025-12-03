@@ -337,32 +337,7 @@ export const generateCharacterSheet = async (player: Player) => {
     });
 
 
-    // --- 8.b Emplacements de sorts (slot text + cases cbslot) ---
-    // spellSlots peut être un objet ou une string JSON selon ta structure
-    const slotsData = typeof spellSlots === 'string' ? JSON.parse(spellSlots || '{}') : (spellSlots || {});
-
-    for (let lvl = 1; lvl <= 9; lvl++) {
-      const total = slotsData[`level${lvl}`] ?? slotsData[`lvl${lvl}`] ?? 0;
-      const used = slotsData[`used${lvl}`] ?? slotsData[`level${lvl}_used`] ?? 0;
-
-      // Champ texte Total si présent (slot1..slot9)
-      setTxt(`slot${lvl}`, total);
-      // variante
-      try { form.getTextField(`slots-total-${lvl}`).setText(String(total)); } catch (e) {}
-
-      // Cocher les cases cbslot{niveau}{i} pour les emplacements dépensés
-      // la feuille a des cases nommées cbslot11, cbslot12,... on coche les 'used'
-      for (let s = 1; s <= 4; s++) {
-        const cbName = `cbslot${lvl}${s}`;
-        const checked = s <= (Number(used) || 0);
-        try {
-          const cb = form.getCheckBox(cbName);
-          if (checked) cb.check(); else cb.uncheck();
-        } catch (e) {
-          // champ absent -> ignore
-        }
-      }
-    }
+ 
     
 
     // --- 9. TRAITS / DONS / APTITUDES ---
