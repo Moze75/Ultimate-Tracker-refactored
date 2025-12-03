@@ -160,6 +160,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ac', (stats as any).armor_class || 10);
     setBonus('init', (stats as any).initiative || 0);
     setTxt('speed', (stats as any).speed || 9);
+    setBonus('pb', pb); // ✅ RÉTABLI: Bonus de maîtrise
     setTxt('hp-current', player.current_hp);
     setTxt('hp-max', player.max_hp);
     const hdSize = getHitDieSize(player.class);
@@ -197,7 +198,7 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('equipment', items.filter((i: any) => !weapons.slice(0, 6).find((w: any) => w.id === i.id)).map((i: any) => i.name).join(', '));
     setTxt('gp', String(player.gold || 0)); setTxt('sp', String(player.silver || 0)); setTxt('cp', String(player.copper || 0)); setTxt('ep', "0"); setTxt('pp', "0");
 
-    // --- SORTS (V16 : CORRECTIF CRASH + AFFICHAGE SÉCURISÉ) ---
+    // --- SORTS (V17 : Fusion Temps/Portée + Anti-Crash) ---
     const spells = spellRes.data || [];
     spells.slice(0, 30).forEach((entry: any, idx: number) => {
         if (!entry.spells) return;
@@ -207,7 +208,7 @@ export const generateCharacterSheet = async (player: Player) => {
         const time = (s.casting_time && String(s.casting_time)) || '1 action';
         const range = s.range ? String(s.range) : '-';
         
-        // GESTION SÉCURISÉE DES COMPOSANTES (Peut être Array ou String)
+        // Gestion sécurisée Composantes
         let compsStr = '';
         if (Array.isArray(s.components)) {
             compsStr = s.components.join(', ');
@@ -220,11 +221,15 @@ export const generateCharacterSheet = async (player: Player) => {
         // Remplissage
         setTxt(`spell${id}`, s.name);
         setTxt(`spell${id}l`, lvl);
-        setTxt(`spell${id}r`, time);
+        
+        // ✅ FUSION: "1 action - 18m" dans la colonne Temps (spellXr)
+        // C'est la solution pour forcer l'affichage de la portée
+        const timeAndRange = `${time} - ${range}`;
+        setTxt(`spell${id}r`, timeAndRange);
+        setTxt(`r${id}`, timeAndRange); // Sécurité double nommage
 
-        // On met tout dans la colonne "Notes" pour être sûr que c'est visible
-        // Ex: "Portée: 18m | V, S, M"
-        setTxt(`spell${id}c`, `Portée: ${range} | ${compsStr}`);
+        // Colonne Notes: Composantes
+        setTxt(`spell${id}c`, compsStr);
 
         // Checkboxes (en minuscule pour comparaison safe)
         const lowerComps = compsStr.toLowerCase();
@@ -232,7 +237,7 @@ export const generateCharacterSheet = async (player: Player) => {
         
         setChk(`c${id}`, lowerDur.includes('concentration'));
         setChk(`r${id}`, lowerComps.includes('rituel') || s.name.toLowerCase().includes('(r)'));
-        setChk(`m${id}`, lowerComps.includes('m')); // Si contient "m" (ex: V, S, M)
+        setChk(`m${id}`, lowerComps.includes('m')); 
     });
 
     // --- EMPLACEMENTS DE SORTS ---
