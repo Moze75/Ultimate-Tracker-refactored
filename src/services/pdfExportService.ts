@@ -309,56 +309,59 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('ep', "0"); // Electrum souvent ignoré mais champ présent
     setTxt('pp', "0"); // Platine
 
-      // --- 8. MAGIE (CORRECTION FINALE : SWAP TEMPS / PORTÉE) ---
+    // --- 8. MAGIE ---
     const spellList = spellsRes.data || [];
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
             const s = entry.spells;
-            const id = idx + 1; 
+            const id = idx + 1;
             const lvl = s.level === 0 ? 'T' : String(s.level);
             const rng = s.range || '';
-            const time = "1 act"; // Valeur par défaut si pas dispo en BDD
-            
-            // Nom et Niveau (C'était OK)
-            setTxt(`spell${id}`, s.name);   
-            setTxt(`spell${id}l`, lvl);     
-            
-            // 1. TEMPS D'INCANTATION
-            // Votre test a montré que le champ 'r' correspond au Temps.
-            setTxt(`spell${id}r`, time);
-            setTxt(`r${id}`, time); 
-            
-            // 2. PORTÉE (DISTANCE)
-            // Le champ 'm' (Mètres) est la dernière option logique pour la portée.
-            setTxt(`spell${id}m`, rng);
-            setTxt(`m${id}`, rng);
-            // Sécurité au cas où
-            try { form.getTextField(`range${id}`).setText(rng); } catch(e) {}
+            const time = "1 act"; // Ou valeur réelle si vous l'avez en BDD
 
-            // 3. NOTES / CONCENTRATION
-            // Votre test a montré que le champ 'c' correspond aux Notes.
-            setTxt(`spell${id}c`, ""); // On vide pour l'instant, ou mettez "Conc" si dispo
-            setTxt(`c${id}`, "");
+            setTxt(`spell${id}`, s.name);
+            setTxt(`spell${id}l`, lvl);
+            
+            // D'après vos tests : 'r' remplit le Temps d'incantation
+            setTxt(`spell${id}r`, time);
+            
+            // TENTATIVE PORTÉE : On essaie 'c' (Le seul suffixe restant 'spell1c')
+            // Si ça remplit "Notes" ou "Composantes", dites-le moi avec le résultat de la sonde.
+            setTxt(`spell${id}c`, rng); 
+            
+            // TENTATIVE DE SECOURS : Champs déconnectés
+            setTxt(`range${id}`, rng);
+            setTxt(`portee${id}`, rng);
         }
     });
 
     // Stats Magiques
-    const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
-    const castStat = abilitiesData.find((a: any) => a.name === castStatName);
+    const castStat = abilities.find((a: any) => a.name === (SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence'));
     if (castStat) {
-        setTxt('spell-ability', castStatName); 
+        setTxt('spell-ability', castStatName);
         setTxt('spell-dc', 8 + pb + castStat.modifier);
-        setBonus('spell-bonus', pb + castStat.modifier);
-        setBonus('spell-mod', castStat.modifier);
+        setTxt('spell-bonus', `+${pb + castStat.modifier}`);
+        setTxt('spell-mod', `+${castStat.modifier}`);
     }
+
+    // EMPLACEMENTS DE SORTS (Correction : Cases à cocher)
+    // Le log montrait 'cbslot11', 'cbslot12'... Ce sont des cases.
+    const slots = typeof player.spell_slots === 'string' ? JSON.parse(player.spell_slots) : player.spell_slots || {};
     
-    // Emplacements
-    for (let niv = 1; niv <= 9; niv++) {
-        const totalSlots = spellSlots[`level${niv}`] || 0;
-        // On cible les cases à cocher identifiées dans le log (cbslot11, etc.)
-        // Si on veut juste afficher le total, il faut un champ texte. 
-        // Le log ne montrait pas 'slots-total', donc on ne peut que cocher ou remplir 'slot1' si existe.
-        setTxt(`slot${niv}`, totalSlots);
+    for(let niv=1; niv<=9; niv++) {
+        const total = slots[`level${niv}`] || 0;
+        
+        // Essai champ texte (souvent inexistant)
+        setTxt(`slot${niv}`, total);
+        setTxt(`slots-total-${niv}`, total);
+
+        // Remplissage des cases à cocher (cbslot + Niveau + NuméroSlot)
+        // Exemple : Niveau 1, 4 slots -> on coche cbslot11, cbslot12, cbslot13, cbslot14
+        for (let i = 1; i <= 4; i++) {
+            const slotName = `cbslot${niv}${i}`;
+            // On coche si le numéro du slot (i) est <= au total possédé
+            setChk(slotName, i <= total);
+        }
     }
 
     // --- 9. TRAITS / DONS / APTITUDES ---
