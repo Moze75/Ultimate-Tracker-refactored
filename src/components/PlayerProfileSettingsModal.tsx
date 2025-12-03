@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { X, Save, TrendingUp, Triangle, Plus, ChevronDown, Sword, Shield, CheckSquare, Square } from 'lucide-react';
+import { X, Save, TrendingUp, Triangle, Plus, ChevronDown, Sword, Shield, CheckSquare, Square, Download, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Avatar } from './Avatar';
