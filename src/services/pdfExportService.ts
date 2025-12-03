@@ -252,25 +252,39 @@ export const generateCharacterSheet = async (player: Player) => {
     setTxt('hd-max', `${hitDiceInfo?.total ?? level}d${hitDieSize}`);
     setTxt('hd-spent', hitDiceInfo?.used ?? 0);
 
-    // --- CASE "AUTRES MAÎTRISES & LANGUES" (En bas à gauche généralement) ---
+      // --- CASE "AUTRES MAÎTRISES & LANGUES" ---
     const profsList: string[] = [];
     
-    if (player.languages && player.languages.length) profsList.push(`Langues: ${player.languages.join(', ')}`);
+    // Langues
+    if (player.languages && player.languages.length) {
+        // Nettoyage des langues vides ou "Au choix"
+        const cleanLangs = player.languages.filter(l => l && !l.toLowerCase().includes('choix'));
+        if (cleanLangs.length) profsList.push(`Langues: ${cleanLangs.join(', ')}`);
+    }
     
+    // Armures
     const armorProfs = creatorMeta.armor_proficiencies || [];
     if (armorProfs.length) profsList.push(`Armures: ${armorProfs.join(', ')}`);
 
+    // Armes
     const weaponProfs = creatorMeta.weapon_proficiencies || [];
     if (weaponProfs.length) profsList.push(`Armes: ${weaponProfs.join(', ')}`);
 
+    // Outils
     const toolProfs = creatorMeta.tool_proficiencies || [];
     if (toolProfs.length) profsList.push(`Outils: ${toolProfs.join(', ')}`);
 
-    // On essaie de mettre ça dans la case standard "proficiencies"
-    setTxt('proficiencies', profsList.join('\n')); 
-    // Si le PDF a une case séparée "languages", on remplit aussi au cas où
-    const langs = Array.isArray(player.languages) ? player.languages.join(', ') : (player.languages || '');
-    setTxt('languages', langs);
+    const fullProfsText = profsList.join('\n');
+
+    // Ciblez les champs standards de maîtrises (souvent en bas à gauche)
+    setTxt('proficiencies', fullProfsText);
+    setTxt('other_profs', fullProfsText);
+    setTxt('other_proficiencies', fullProfsText);
+    
+    // Parfois les langues sont séparées
+    if (player.languages) {
+        setTxt('languages', player.languages.join(', '));
+    }
 
     // --- ARMES (Grille) ---
     const inventory = inventoryRes.data || [];
