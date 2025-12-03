@@ -12,16 +12,17 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-"dependencies": {
-  "@3d-dice/dice-box": "^1.1.4",
-  "@3d-dice/dice-box-threejs": "^0.0.12",
-  "@supabase/supabase-js": "^2.39.0",
-  "lucide-react": "^0.344.0",
-  "react": "^18.3.1",
-  "react-dom": "^18.3.1",
-  "react-grid-layout": "^1.5.2",
-  "react-hot-toast": "^2.4.1"
-},
+  "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
+    "@3d-dice/dice-box-threejs": "^0.0.12",
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.344.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-grid-layout": "^1.5.2",
+    "react-hot-toast": "^2.4.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@types/react": "^18.3.5",
