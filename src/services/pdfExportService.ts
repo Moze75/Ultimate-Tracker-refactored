@@ -327,46 +327,67 @@ export const generateCharacterSheet = async (player: Player) => {
 
       // --- 9. MAGIE ---
     const spellList = spellsRes.data || [];
+    
+    // Pour chaque sort trouvé
     spellList.slice(0, 30).forEach((entry: any, idx: number) => {
         if (entry.spells) {
             const s = entry.spells;
-            const id = idx + 1;
+            const id = idx + 1; // 1 à 30
             
-            // Nom du sort (ça, ça marche)
+            // 1. NOM (Ça marche déjà)
             setTxt(`spell${id}`, s.name);
-            
-            const lvlStr = s.level === 0 ? 'T' : String(s.level);
-            const rangeStr = s.range || '';
+            setTxt(`SpellName${id}`, s.name); // Variante
 
-            // TENTATIVE DE BARRAGE pour trouver le bon champ (Niveau et Portée)
-            // Format 1 : Standard (spell1-level)
-            try { form.getTextField(`spell${id}-level`).setText(lvlStr); } catch(e) {}
-            try { form.getTextField(`spell${id}-range`).setText(rangeStr); } catch(e) {}
+            // 2. NIVEAU & PORTÉE
+            const lvl = s.level === 0 ? 'T' : String(s.level);
+            const range = s.range || '';
+            const castingTime = "1 action"; // Valeur par défaut, ou s.casting_time si dispo
+
+            // Stratégie "Tir de barrage" sur les IDs possibles d'après la structure visuelle
             
-            // Format 2 : Court (sl1, sr1) - Très courant sur les fiches FR
-            try { form.getTextField(`sl${id}`).setText(lvlStr); } catch(e) {}
-            try { form.getTextField(`sr${id}`).setText(rangeStr); } catch(e) {}
+            // Format A : Préfixe + ID (Standard)
+            try { form.getTextField(`spell${id}-level`).setText(lvl); } catch(e) {}
+            try { form.getTextField(`spell${id}-range`).setText(range); } catch(e) {}
+            try { form.getTextField(`spell${id}-time`).setText(castingTime); } catch(e) {}
+
+            // Format B : ID + Suffixe (Fréquent sur fiches FR)
+            try { form.getTextField(`sl${id}`).setText(lvl); } catch(e) {} // Spell Level
+            try { form.getTextField(`sr${id}`).setText(range); } catch(e) {} // Spell Range
+            try { form.getTextField(`st${id}`).setText(castingTime); } catch(e) {} // Spell Time
+
+            // Format C : Numérotation continue (Parfois les cases sont juste 1, 2, 3...)
+            // C'est risqué mais possible. On tente des noms explicites.
+            try { form.getTextField(`sp${id}_lvl`).setText(lvl); } catch(e) {}
+            try { form.getTextField(`sp${id}_range`).setText(range); } catch(e) {}
             
-            // Format 3 : Underscore (spell_level_1)
-            try { form.getTextField(`spell_level_${id}`).setText(lvlStr); } catch(e) {}
-            try { form.getTextField(`spell_range_${id}`).setText(rangeStr); } catch(e) {}
-            
-            // Format 4 : Spécifique (sp1_lvl)
-            try { form.getTextField(`sp${id}_lvl`).setText(lvlStr); } catch(e) {}
-            try { form.getTextField(`sp${id}_range`).setText(rangeStr); } catch(e) {}
+            // Format D (Observé sur certaines fiches "Ultimate")
+            try { form.getTextField(`Level${id}`).setText(lvl); } catch(e) {}
+            try { form.getTextField(`Range${id}`).setText(range); } catch(e) {}
         }
     });
 
+    // Stats globales de magie
     const castStatName = SPELLCASTING_ABILITY[player.class || ''] || 'Intelligence';
     const castStat = abilitiesData.find((a: any) => a.name === castStatName);
     if (castStat) {
         setTxt('spell-ability', castStatName);
-        setTxt('spell-dc', 8 + pb + castStat.modifier);
-        setBonus('spell-bonus', pb + castStat.modifier);
+        const dc = 8 + pb + castStat.modifier;
+        setTxt('spell-dc', dc);
+        setTxt('spell-save-dc', dc); // Variante
+        
+        const atk = pb + castStat.modifier;
+        setBonus('spell-bonus', atk);
+        setBonus('spell-attack-bonus', atk); // Variante
+        
         setBonus('spell-mod', castStat.modifier);
     }
+    
+    // Slots (Emplacements)
     for (let i = 1; i <= 9; i++) {
-        if (spellSlots[`level${i}`]) setTxt(`slot${i}`, spellSlots[`level${i}`]);
+        if (spellSlots[`level${i}`]) {
+            setTxt(`slot${i}`, spellSlots[`level${i}`]);
+            setTxt(`slots-total-${i}`, spellSlots[`level${i}`]); // Variante
+        }
     }
 
       // --- 10. APTITUDES, TRAITS & DONS ---
