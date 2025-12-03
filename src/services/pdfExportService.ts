@@ -340,8 +340,9 @@ export const generateCharacterSheet = async (player: Player) => {
         if (spellSlots[`level${i}`]) setTxt(`slot${i}`, spellSlots[`level${i}`]);
     }
 
-    // --- TRI ET RÉPARTITION DES APTITUDES (LE POINT CRITIQUE) ---
+      // --- 10. APTITUDES, TRAITS & DONS ---
     
+    // A. Récupération et nettoyage
     const featsStats = (stats as any).feats || {};
     const rawFeats = [
         ...(featsStats.origins || []),
@@ -349,22 +350,27 @@ export const generateCharacterSheet = async (player: Player) => {
         ...(featsStats.styles || [])
     ].filter(Boolean);
 
-    // 1. DONS (Titres nettoyés depuis MD) -> Case "TRAITS"
+    // Parsing Markdown pour avoir les beaux titres
     const featsClean = parseFeatsFromMD([donsOriginMd, donsGeneralMd, donsStyleMd], rawFeats);
-    const featsFormatted = featsClean.map(f => `• ${f} (Don)`);
-
-    // 2. TRAITS D'ESPÈCE (Titres nettoyés depuis MD) -> Case "TRAITS"
-    const raceTraits = parseRaceTraits(raceMd, player.race || '');
-    const traitsFormatted = raceTraits.map(t => `• ${t}`);
-
-    // Assemblage Case "TRAITS" (Gauche)
-    setTxt('traits', [...traitsFormatted, ...featsFormatted].join('\n'));
-
-    // 3. CAPACITÉS DE CLASSE (Titres nettoyés depuis MD) -> Case "FEATURES" (Droite)
     const classFeatures = parseClassFeatures(classMd, level);
-    const featuresFormatted = classFeatures.map(c => `• ${c}`);
+    const raceTraits = parseRaceTraits(raceMd, player.race || '');
+
+    // B. Distribution dans les cases spécifiques
     
-    setTxt('features1', featuresFormatted.join('\n'));
+    // Case TRAITS (Traits raciaux uniquement)
+    const traitsFormatted = raceTraits.map(t => `• ${t}`).join('\n');
+    setTxt('traits', traitsFormatted);
+    setTxt('racial_traits', traitsFormatted); // Variante
+
+    // Case DONS (Dons uniquement)
+    const featsFormatted = featsClean.map(f => `• ${f}`).join('\n');
+    setTxt('feats', featsFormatted); 
+    setTxt('dons', featsFormatted); // Variante nom français
+
+    // Case FEATURES (Aptitudes de classe uniquement)
+    const featuresFormatted = classFeatures.map(c => `• ${c}`).join('\n');
+    setTxt('features1', featuresFormatted); // Grande case principale
+    setTxt('class_features', featuresFormatted); // Variante
 
     // --- EXPORT ---
     const finalPdf = await pdfDoc.save();
