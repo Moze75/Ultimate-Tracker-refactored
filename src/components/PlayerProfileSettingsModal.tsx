@@ -502,10 +502,6 @@ const autoAC = hasArmorEquipped
   ? (10 + dexMod)  // Avec armure, la formule d'armure prendra le dessus à l'affichage
   : calculateUnarmoredAC(player);
 
-const autoAC = hasArmorEquipped 
-  ? (10 + dexMod)  // Avec armure, la formule d'armure prendra le dessus à l'affichage
-  : calculateUnarmoredAC(player);
-
 setAcField(acInitial > 0 ? String(acInitial) : String(autoAC));
     setInitField(initInitial !== undefined && initInitial !== null ? String(initInitial) : String(dexMod));
     setSpeedField(speedInitial > 0 ? String(speedInitial).replace('.', ',') : String(9));
