@@ -418,7 +418,9 @@ const handleSave = async () => {
       ... updatedStatsLocal,
       proficiency_bonus: effectiveProficiency,
       initiative: dexMod,
-      armor_class: newArmorClass,
+          armor_class: newArmorClass,
+      auto_armor_class: autoAC,
+      is_ac_manual: isManualAC,
     };
 
     const { error } = await supabase
