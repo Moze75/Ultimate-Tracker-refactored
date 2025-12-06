@@ -396,21 +396,22 @@ const handleSave = async () => {
         : false
     };
 
-    // Vérifier si une armure est équipée
-    const hasArmorEquipped = ! !(player.equipment?.armor?.armor_formula);
+     // Vérifier si une armure est équipée
+    const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
 
-    // Recalculer la CA si Moine/Barbare sans armure
-    let newArmorClass = player.stats?. armor_class ?? (10 + dexMod);
-    
+    const isManualAC = (player.stats as any)?.is_ac_manual === true;
+
+    // Recalcul CA auto (référence) si pas d'armure
+    let autoAC = player.stats?.auto_armor_class ?? (10 + dexMod);
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      // ✅ Passer les bonus d'équipement au calcul
-      newArmorClass = calculateUnarmoredACFromAbilities(player.class, abilities, equipmentBonuses);
-      console.log(`[StatsTab] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus équipement)`);
-    } else if (! hasArmorEquipped) {
-      // Pour les autres classes sans armure, CA = 10 + DEX (avec bonus équipement)
-      newArmorClass = 10 + dexMod;
+      autoAC = calculateUnarmoredACFromAbilities(player.class, abilities, equipmentBonuses);
+      console.log(`[StatsTab] ✅ Recalcul CA auto ${player.class}: ${autoAC} (avec bonus équipement)`);
+    } else if (!hasArmorEquipped) {
+      autoAC = 10 + dexMod;
     }
-    // Si armure équipée, on garde la CA existante (gérée par l'armure)
+
+    const currentAC = player.stats?.armor_class ?? autoAC;
+    const newArmorClass = isManualAC ? currentAC : autoAC;
 
     const mergedStats = {
       ... player.stats,
