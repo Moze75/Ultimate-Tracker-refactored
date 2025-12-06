@@ -759,11 +759,14 @@ useEffect(() => {
       };
 
       const currentStats = (player.stats as any) || {};
+      const autoAC = calculateUnarmoredAC(player);
+      const isManualAC = Number.isFinite(acVal) && acField.trim() !== '' && acVal > 0;
+
       const finalizedStats: any = {
         ...currentStats,
-     armor_class: Number. isFinite(acVal) && acVal > 0 
-  ? acVal 
-  : calculateUnarmoredAC(player),
+        armor_class: isManualAC ? acVal : autoAC,
+        auto_armor_class: autoAC,
+        is_ac_manual: isManualAC,
         initiative: Number.isFinite(initVal) ? initVal : dexMod,
         speed: Number.isFinite(speedVal) && speedVal > 0 ? speedVal : 9,
         proficiency_bonus: profAuto,
