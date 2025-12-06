@@ -502,6 +502,10 @@ const autoAC = hasArmorEquipped
   ? (10 + dexMod)  // Avec armure, la formule d'armure prendra le dessus à l'affichage
   : calculateUnarmoredAC(player);
 
+const autoAC = hasArmorEquipped 
+  ? (10 + dexMod)  // Avec armure, la formule d'armure prendra le dessus à l'affichage
+  : calculateUnarmoredAC(player);
+
 setAcField(acInitial > 0 ? String(acInitial) : String(autoAC));
     setInitField(initInitial !== undefined && initInitial !== null ? String(initInitial) : String(dexMod));
     setSpeedField(speedInitial > 0 ? String(speedInitial).replace('.', ',') : String(9));
@@ -757,11 +761,14 @@ useEffect(() => {
       };
 
       const currentStats = (player.stats as any) || {};
+         const autoAC = calculateUnarmoredAC(player);
+      const isManualAC = Number.isFinite(acVal) && acField.trim() !== '' && acVal > 0;
+
       const finalizedStats: any = {
         ...currentStats,
-     armor_class: Number. isFinite(acVal) && acVal > 0 
-  ? acVal 
-  : calculateUnarmoredAC(player),
+        armor_class: isManualAC ? acVal : autoAC,
+        auto_armor_class: autoAC,
+        is_ac_manual: isManualAC,
         initiative: Number.isFinite(initVal) ? initVal : dexMod,
         speed: Number.isFinite(speedVal) && speedVal > 0 ? speedVal : 9,
         proficiency_bonus: profAuto,
