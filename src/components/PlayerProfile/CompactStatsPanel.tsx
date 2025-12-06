@@ -111,13 +111,16 @@ const calculateClassUnarmoredAC = (): number => {
 };
 
 const unarmoredDefenseAC = !armorFormula ? calculateClassUnarmoredAC() : 0;
+const isManualAC = (player.stats as any)?.is_ac_manual === true;
 const isAutoACValue = baseACFromStats === (10 + dexMod) || baseACFromStats === 0;
 
 const baseAC = armorFormula
-  ?  computeArmorAC(armorFormula, dexMod)
-  : (isAutoACValue || baseACFromStats <= 0)
-    ? unarmoredDefenseAC
-    : baseACFromStats;
+  ? computeArmorAC(armorFormula, dexMod)
+  : isManualAC
+    ? baseACFromStats
+    : (isAutoACValue || baseACFromStats <= 0)
+      ? unarmoredDefenseAC
+      : baseACFromStats;
 
   const equipmentBonuses = calculateEquipmentBonuses(inventory);
   const acBonus = Number((stats as any).ac_bonus || 0);
