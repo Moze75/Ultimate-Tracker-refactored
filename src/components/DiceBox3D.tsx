@@ -441,7 +441,7 @@ await diceBoxRef.current.updateConfig({
   gravity_multiplier: newSettings.gravity * 400,
   strength: newSettings.strength * 1.3,
   sounds: newSettings.soundsEnabled,
-  volume: newSettings.soundsEnabled ? newSettings.volume : 0, // <-- ajoute cette ligne
+  volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0, // ✅ FIX : Division par 100 pour convertir 0-100 en 0.0-1.0
 });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux) 
