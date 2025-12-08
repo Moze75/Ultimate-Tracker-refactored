@@ -34,8 +34,8 @@ export function DiceSettingsModal({
   const { history, clearHistory, removeEntry } = useDiceHistoryContext();
 
   React.useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
+    setLocalSettings(effectiveSettings);
+  }, [effectiveSettings]);
 
   React.useEffect(() => {
     if (open) {
