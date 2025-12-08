@@ -444,10 +444,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         
       });
 
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [EVENT] Cache de matériaux vidé');
+
         
         // Forcer la mise à jour du matériau dans colorData
         if (diceBoxRef.current.colorData) {
