@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
-import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
+import { DEFAULT_DICE_SETTINGS, useDiceSettings } from '../hooks/useDiceSettings';
 import { createPortal } from 'react-dom';
 import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
 import { audioManager } from '../utils/audioManager';
@@ -72,8 +72,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
-  
+
   const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+
+  // ✅ Lecture directe du contexte pour détecter les changements en temps réel
+  const { settings: contextSettings } = useDiceSettings();
 
   const { addRoll } = useDiceHistoryContext();
 
@@ -177,7 +180,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
 
@@ -317,7 +320,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
       });
 
       await diceBoxRef.current.updateConfig({
@@ -329,7 +332,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
       });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
@@ -446,7 +449,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+        volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0,
       });
 
       await diceBoxRef.current.updateConfig({
@@ -458,7 +461,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+        volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0,
       });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
@@ -570,22 +573,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, [isInitialized]);
 
-  // ✅ Synchronisation du volume en temps réel
+  // ✅ Synchronisation du volume en temps réel (0-1) depuis le contexte
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-    const volumeValue = effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0;
+    const volumeRatio = contextSettings.soundsEnabled ? contextSettings.volume / 100 : 0;
 
     try {
       diceBoxRef.current.updateConfig({
-        sounds: effectiveSettings.soundsEnabled,
-        volume: volumeValue
+        sounds: contextSettings.soundsEnabled,
+        volume: volumeRatio
       });
-      console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeValue, '(', effectiveSettings.volume, '%)');
+      console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeRatio, '(', contextSettings.volume, '%)');
     } catch (err) {
       console.warn('⚠️ [VOLUME] Erreur mise à jour volume:', err);
     }
-  }, [effectiveSettings.volume, effectiveSettings.soundsEnabled, isInitialized]);
+  }, [contextSettings.volume, contextSettings.soundsEnabled, isInitialized]);
 
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
