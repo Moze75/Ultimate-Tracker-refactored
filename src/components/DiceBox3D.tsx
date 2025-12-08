@@ -462,7 +462,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
-               volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0,
+         volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
