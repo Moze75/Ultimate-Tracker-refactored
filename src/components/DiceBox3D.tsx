@@ -20,7 +20,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
- 
+  settings?: DiceSettings;
 }
 
 // Mapping des textures par colorset
@@ -55,7 +55,7 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
-export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
+export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -73,11 +73,10 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
 
+  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
+
   // ✅ Lecture directe du contexte pour détecter les changements en temps réel
   const { settings: contextSettings } = useDiceSettings();
-
-  // ✅ Source de vérité : uniquement le contexte (puis défaut)
-  const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
   const { addRoll } = useDiceHistoryContext();
 
@@ -181,7 +180,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
+          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
 
@@ -312,18 +311,29 @@ volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
         diceBoxRef.current.clearDice();
       }
 
-await diceBoxRef.current.updateConfig({
-  theme_colorset: effectiveSettings.theme || 'custom',
-  theme_texture: textureForTheme,
-  theme_material: effectiveSettings.themeMaterial || "plastic",
-  theme_customColorset: customColorset,
-  baseScale: effectiveSettings.baseScale * 100 / 6,
-  gravity_multiplier: effectiveSettings.gravity * 400,
-  strength: effectiveSettings.strength * 1.3,
-  sounds: effectiveSettings.soundsEnabled,
-  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
-});
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: effectiveSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: effectiveSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength * 1.3,
+        sounds: effectiveSettings.soundsEnabled,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+      });
 
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: effectiveSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: effectiveSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: effectiveSettings.baseScale * 100 / 6,
+        gravity_multiplier: effectiveSettings.gravity * 400,
+        strength: effectiveSettings.strength * 1.3,
+        sounds: effectiveSettings.soundsEnabled,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+      });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
@@ -343,7 +353,7 @@ await diceBoxRef.current.updateConfig({
       
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {}; 
+        diceBoxRef.current.DiceFactory.materials_cache = {};
         console.log('✅ [UPDATE] Cache de matériaux vidé');
         
         // Forcer la mise à jour du matériau dans colorData
@@ -430,21 +440,31 @@ await diceBoxRef.current.updateConfig({
         diceBoxRef.current.clearDice();
       }
 
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: newSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: newSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: newSettings.baseScale * 100 / 6,
+        gravity_multiplier: newSettings.gravity * 400,
+        strength: newSettings.strength * 1.3,
+        sounds: newSettings.soundsEnabled,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+      });
 
+      await diceBoxRef.current.updateConfig({
+        theme_colorset: newSettings.theme || 'custom',
+        theme_texture: textureForTheme,
+        theme_material: newSettings.themeMaterial || "plastic",
+        theme_customColorset: customColorset,
+        baseScale: newSettings.baseScale * 100 / 6,
+        gravity_multiplier: newSettings.gravity * 400,
+        strength: newSettings.strength * 1.3,
+        sounds: newSettings.soundsEnabled,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
+      });
 
-await diceBoxRef.current.updateConfig({
-  theme_colorset: newSettings.theme || 'custom',
-  theme_texture: textureForTheme,
-  theme_material: newSettings.themeMaterial || "plastic",
-  theme_customColorset: customColorset,
-  baseScale: newSettings.baseScale * 100 / 6,
-  gravity_multiplier: newSettings.gravity * 400,
-  strength: newSettings.strength * 1.3,
-  sounds: newSettings.soundsEnabled,
-  volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0, // ✅ FIX : Division par 100 pour convertir 0-100 en 0.0-1.0
-});
-
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux) 
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         diceBoxRef.current.DiceFactory.materials_cache = {};
         console.log('✅ [EVENT] Cache de matériaux vidé');
@@ -557,7 +577,7 @@ await diceBoxRef.current.updateConfig({
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
- const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume / 100 : 0;
+    const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume : 0;
 
     try {
       diceBoxRef.current.updateConfig({
@@ -911,4 +931,4 @@ await diceBoxRef.current.updateConfig({
     </>,
     document.body
   );
-}
+} 
