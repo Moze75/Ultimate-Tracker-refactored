@@ -8,8 +8,9 @@ import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
 interface DiceSettingsModalProps {
   open: boolean;
   onClose: () => void;
-  settings: DiceSettings;
-  onSave: (settings: DiceSettings) => void;
+  // settings et onSave deviennent optionnels et ne sont plus nécessaires
+  settings?: DiceSettings;
+  onSave?: (settings: DiceSettings) => void;
   currentBackground?: string;
   onBackgroundChange?: (backgroundUrl: string) => void;
   deviceType?: 'mobile' | 'tablet' | 'desktop'; // 🆕
