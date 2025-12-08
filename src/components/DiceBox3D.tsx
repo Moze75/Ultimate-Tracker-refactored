@@ -73,10 +73,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const rollDataRef = useRef(rollData);
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
 
-  const effectiveSettings = settings || DEFAULT_DICE_SETTINGS;
-
   // ✅ Lecture directe du contexte pour détecter les changements en temps réel
   const { settings: contextSettings } = useDiceSettings();
+
+  // ✅ Source de vérité : props > contexte > défaut
+  const effectiveSettings = settings ?? contextSettings ?? DEFAULT_DICE_SETTINGS;
 
   const { addRoll } = useDiceHistoryContext();
 
