@@ -60,13 +60,9 @@ export function DiceSettingsModal({
     setLocalSettings(DEFAULT_DICE_SETTINGS);
   };
 
-  const handleChange = (key: keyof DiceSettings, value: any) => {
-    setLocalSettings(prev => {
-      const next = { ...prev, [key]: value };
-      updateSettings?.(next);   // ✅ pousse immédiatement dans le provider
-      return next;
-    });
-  };
+const handleChange = (key: keyof DiceSettings, value: any) => {
+  setLocalSettings(prev => ({ ...prev, [key]: value }));
+};
 
   const handleClearHistory = () => {
     if (window.confirm('Êtes-vous sûr de vouloir effacer tout l\'historique des jets de dés ?')) {
