@@ -578,7 +578,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-    const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume : 0;
+       const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume / 100 : 0;
 
     try {
       diceBoxRef.current.updateConfig({
