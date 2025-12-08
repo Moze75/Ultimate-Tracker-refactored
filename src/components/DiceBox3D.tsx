@@ -181,7 +181,7 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
 
