@@ -61,7 +61,11 @@ export function DiceSettingsModal({
   };
 
   const handleChange = (key: keyof DiceSettings, value: any) => {
-    setLocalSettings(prev => ({ ...prev, [key]: value }));
+    setLocalSettings(prev => {
+      const next = { ...prev, [key]: value };
+      updateSettings?.(next);   // ✅ pousse immédiatement dans le provider
+      return next;
+    });
   };
 
   const handleClearHistory = () => {
