@@ -313,15 +313,15 @@ volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
       }
 
 await diceBoxRef.current.updateConfig({
-  theme_colorset: newSettings.theme || 'custom',
+  theme_colorset: effectiveSettings.theme || 'custom',
   theme_texture: textureForTheme,
-  theme_material: newSettings.themeMaterial || "plastic",
+  theme_material: effectiveSettings.themeMaterial || "plastic",
   theme_customColorset: customColorset,
-  baseScale: newSettings.baseScale * 100 / 6,
-  gravity_multiplier: newSettings.gravity * 400,
-  strength: newSettings.strength * 1.3,
-  sounds: newSettings.soundsEnabled,
-  volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0, // <-- ajoute/normalise
+  baseScale: effectiveSettings.baseScale * 100 / 6,
+  gravity_multiplier: effectiveSettings.gravity * 400,
+  strength: effectiveSettings.strength * 1.3,
+  sounds: effectiveSettings.soundsEnabled,
+  volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
 });
 
 
