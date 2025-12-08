@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Settings, History, Trash2, Image } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
-import { DEFAULT_DICE_SETTINGS } from '../hooks/useDiceSettings';
+import { DEFAULT_DICE_SETTINGS, useDiceSettings } from '../hooks/useDiceSettings';
 import { formatRelativeTime, type DiceRollHistoryEntry } from '../hooks/useDiceHistory';
 import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
  
