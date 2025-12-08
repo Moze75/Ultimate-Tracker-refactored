@@ -180,7 +180,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
+          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
           onRollComplete: (results: any) => {
             if (!mounted) return;
 
@@ -320,7 +320,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
       await diceBoxRef.current.updateConfig({
@@ -332,7 +332,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: effectiveSettings.gravity * 400,
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
-        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume / 100 : 0,
+        volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
@@ -449,7 +449,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
       await diceBoxRef.current.updateConfig({
@@ -461,7 +461,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         gravity_multiplier: newSettings.gravity * 400,
         strength: newSettings.strength * 1.3,
         sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume / 100 : 0,
+        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
       });
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
@@ -573,18 +573,18 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     };
   }, [isInitialized]);
 
-  // ✅ Synchronisation du volume en temps réel (0-1) depuis le contexte
+  // ✅ Synchronisation du volume en temps réel (0-100) depuis le contexte
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-    const volumeRatio = contextSettings.soundsEnabled ? contextSettings.volume / 100 : 0;
+    const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume : 0;
 
     try {
       diceBoxRef.current.updateConfig({
         sounds: contextSettings.soundsEnabled,
-        volume: volumeRatio
+        volume: volumeValue
       });
-      console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeRatio, '(', contextSettings.volume, '%)');
+      console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeValue, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
     } catch (err) {
       console.warn('⚠️ [VOLUME] Erreur mise à jour volume:', err);
     }
