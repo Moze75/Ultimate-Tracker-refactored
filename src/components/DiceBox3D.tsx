@@ -20,7 +20,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings?: DiceSettings;
+ 
 }
 
 // Mapping des textures par colorset
