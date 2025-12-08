@@ -26,8 +26,10 @@ export function DiceSettingsModal({
   onBackgroundChange,
   deviceType // 🆕  
 }: DiceSettingsModalProps) {
-  const [localSettings, setLocalSettings] = useState<DiceSettings>(settings);
-    const { updateSettings } = useDiceSettings();
+  const { settings: contextSettings, updateSettings } = useDiceSettings();
+  const effectiveSettings = contextSettings ?? settings ?? DEFAULT_DICE_SETTINGS;
+
+  const [localSettings, setLocalSettings] = useState<DiceSettings>(effectiveSettings);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const { history, clearHistory, removeEntry } = useDiceHistoryContext();
 
