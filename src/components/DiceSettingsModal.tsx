@@ -56,14 +56,7 @@ export function DiceSettingsModal({
     }
   };
 
-useEffect(() => {
-  if (!open) return;
-  const t = setTimeout(() => {
-    updateSettings?.(localSettings);
-    window.dispatchEvent(new CustomEvent('dice-settings-changed', { detail: localSettings }));
-  }, 150); // debounce léger
-  return () => clearTimeout(t);
-}, [localSettings, open, updateSettings]);
+ 
   
   const handleReset = () => {
     setLocalSettings(DEFAULT_DICE_SETTINGS);
