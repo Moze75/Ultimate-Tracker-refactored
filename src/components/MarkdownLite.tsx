@@ -94,22 +94,29 @@ function parseAlignments(sepLine: string, colCount: number): Align[] {
 /* ---------- Block-level rendering ---------- */
 
 export default function MarkdownLite({ content }: { content: string }) {
-    const flushBox = () => {
-      if (!boxBuffer.length) return;
-      const inner = boxBuffer.join('\n');
-      out.push(
-        <div key={`box-${out.length}`} className="rounded-lg border border-white/15 bg-white/5 p-3 my-4">
-          {boxTitle && (
-            <div className="font-bold text-gray-200 mb-2 uppercase tracking-wide text-sm border-b border-white/10 pb-1">
-              {renderInline(boxTitle)}
-            </div>
-          )}
-          <MarkdownLite content={inner} />
-        </div>
-      );
-      boxBuffer = [];
-      boxTitle = null;
-    };
+  const elements = useMemo(() => {
+    const src = (content || '')
+      .replace(/&lt;!--\s*BOX\s*--&gt;/gi, '<!-- BOX -->')
+      .replace(/&lt;!--\s*\/\s*BOX\s*--&gt;/gi, '<!-- /BOX -->');
+
+    const lines = src.split(/\r?\n/);
+    const out: React.ReactNode[] = [];
+
+    let ulBuffer: string[] = [];
+    let olBuffer: string[] = [];
+    let quoteBuffer: string[] = [];
+    let inBox = false;
+    let boxBuffer: string[] = [];
+
+    const flushUL = () => {
+      if (ulBuffer.length > 0) {
+        out.push(
+          <ul className="list-disc pl-5 space-y-1" key={`ul-${out.length}`}>
+            {ulBuffer.map((item, i) => (
+              <li key={`uli-${i}`}>{renderInline(item)}</li>
+            ))} 
+          </ul>
+        );
         ulBuffer = [];
       }
     };
