@@ -106,7 +106,9 @@ export function GamePage({
 
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
-  const [diceBoxVersion, setDiceBoxVersion] = useState(0); 
+
+
+  
     // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
