@@ -611,9 +611,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       volume: effectiveSettings.volume,
       fxVolume: effectiveSettings.fxVolume,
     });
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
+
 
     playDiceDropSound();
 
