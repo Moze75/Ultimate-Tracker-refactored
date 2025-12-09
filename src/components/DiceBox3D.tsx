@@ -320,7 +320,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
-);
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
