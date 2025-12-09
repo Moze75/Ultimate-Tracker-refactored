@@ -362,10 +362,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
       
             applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
 
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [UPDATE] Cache de matériaux vidé');
+
         
         // Forcer la mise à jour du matériau dans colorData
         if (diceBoxRef.current.colorData) {
