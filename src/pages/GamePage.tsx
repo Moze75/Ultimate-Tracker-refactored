@@ -1260,20 +1260,20 @@ return (
       );
     })()}
 
-{/* ✨ DiceBox3D centralisé - TOUJOURS MONTÉ après chargement settings */}
+{/* ✨ DiceBox3D centralisé */}
 {(() => {
-  console.log('♾️ [GamePage] DiceBox monté (Key:', diceBoxRemountKey, ')');
+  // On utilise le compteur pour générer une clé unique
+  const uniqueKey = `dice-box-v${diceBoxVersion}`;
+  console.log('♾️ [GamePage] Rendu DiceBox avec Key:', uniqueKey);
+
   return (
     <DiceBox3D
-      // 👇 MODIFIE CETTE LIGNE : Ajoute la version dans la key
-      key={`dice-box-gamepage-${diceBoxVersion}`}
+      key={uniqueKey} // 👈 Le changement de cette valeur force le démontage/remontage
       isOpen={!!diceRollData}
       onClose={() => {
-        console.log('🎲 [GamePage] DiceBox fermé (mais reste monté)');
         setDiceRollData(null);
       }}
       rollData={diceRollData}
-      // settings={diceSettings} // (Optionnel : retire ça si ta version de DiceBox3D utilise le context en interne)
     />
   );
 })()} 
