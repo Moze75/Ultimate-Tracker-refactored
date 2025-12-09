@@ -346,29 +346,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
       applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
       
-
-      
-         
-
-
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: newSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: newSettings.themeMaterial || "plastic",
-        theme_customColorset: customColorset,
-        baseScale: newSettings.baseScale * 100 / 6,
-        gravity_multiplier: newSettings.gravity * 400,
-        strength: newSettings.strength * 1.3,
-        sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-      });
-
-      if (onRollCompleteRef.current) {
-        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
-      }
-
-      applyVolume(newSettings.soundsEnabled, newSettings.volume);
-      
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux) 
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         diceBoxRef.current.DiceFactory.materials_cache = {};
