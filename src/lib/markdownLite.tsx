@@ -87,11 +87,8 @@ function formatInlineInner(text: string): React.ReactNode {
 }
 
 export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode[] {
-  // Normalisation : on transforme les balises échappées (&lt;!--) en vraies balises (<!--)
-  // pour que le regex puisse détecter les BOX correctement.
-  const normalized = (md || '')
-    .replace(/&lt;!--/g, '<!--')
-    .replace(/--&gt;/g, '-->');
+  // FIX: On remplace les chevrons encodés (&lt;) pour que la détection des BOX fonctionne
+  const normalized = md.replace(/&lt;!--/g, '<!--').replace(/--&gt;/g, '-->');
 
   const lines = normalized.split(/\r?\n/);
   const out: React.ReactNode[] = [];
