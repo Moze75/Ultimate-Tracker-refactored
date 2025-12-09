@@ -338,9 +338,36 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-        onRollComplete: onRollCompleteRef.current, // ✅ FIX: Réattacher le callback impérativement
       });
 
+      // ✅ [FIX] Réapplication forcée de la gravité et réveil des objets (crucial pour éviter le freeze du moteur)
+      try {
+        if (diceBoxRef.current && diceBoxRef.current.world) {
+          const world: any = diceBoxRef.current.world;
+          const gravSetting = typeof effectiveSettings.gravity === 'number' ? effectiveSettings.gravity : 1;
+          const expectedMultiplier = gravSetting * 400;
+          const gravityValue = -9.8 * expectedMultiplier;
+
+          if (world.gravity && typeof world.gravity.set === 'function') {
+            world.gravity.set(0, 0, gravityValue);
+          } else if (world.gravity && 'z' in world.gravity) {
+            world.gravity.z = gravityValue;
+          }
+
+          if (Array.isArray(world.bodies)) {
+            world.bodies.forEach((b: any) => {
+              try {
+                if (typeof b.wakeUp === 'function') b.wakeUp();
+                if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
+              } catch (err) { /* noop */ }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ [UPDATE] Erreur gravité manuelle:', err);
+      }
+
+      // ✅ Réattacher le callback de fin de lancer fermement
       if (onRollCompleteRef.current) {
         diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
       }
