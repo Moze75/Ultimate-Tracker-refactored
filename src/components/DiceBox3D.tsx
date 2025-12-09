@@ -365,7 +365,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [UPDATE] Cache de matériaux vidé'); 
+        console.log('✅ [UPDATE] Cache de matériaux vidé');
         
         // Forcer la mise à jour du matériau dans colorData
         if (diceBoxRef.current.colorData) {
@@ -378,7 +378,10 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
 
       
-
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        diceBoxRef.current.DiceFactory.materials_cache = {}; 
+        console.log('✅ [UPDATE] Cache de matériaux vidé');
         
         // Forcer la mise à jour du matériau dans colorData
         if (diceBoxRef.current.colorData) {
