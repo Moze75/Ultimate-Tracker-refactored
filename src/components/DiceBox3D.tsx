@@ -340,6 +340,12 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
+      if (onRollCompleteRef.current) {
+        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
+      }
+
+      applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
+      
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
       if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
         diceBoxRef.current.DiceFactory.materials_cache = {};
