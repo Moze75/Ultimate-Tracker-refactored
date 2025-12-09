@@ -178,7 +178,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0, // (reste en 0–100 attendu par DiceBox)
           onRollComplete: (results: any) => {
             if (!mounted) return;
 
