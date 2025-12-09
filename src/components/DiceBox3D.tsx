@@ -300,6 +300,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     if (!diceBoxRef.current || !isInitialized) return;
 
     const updateSettings = async () => {
+            if (diceBoxRef.current && onRollCompleteRef.current) {
+        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
+        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
+      }
+      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
+      lastRollDataRef.current = '';
+      hasShownResultRef.current = false;
+      console.log('🔁 [EVENT] Reset lastRollDataRef & hasShownResultRef après settings-changed pour autoriser un nouveau roll');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [UPDATE] Mise à jour des settings...');
       console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
