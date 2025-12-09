@@ -48,8 +48,9 @@ export function DiceSettingsModal({
 
   const handleSave = () => {
     try {
-      updateSettings?.(localSettings);   // ✅ pousse dans le provider (contexte)
-      onSave?.(localSettings);           // ✅ garde le callback parent si fourni
+      updateSettings?.(localSettings);
+      onSave?.(localSettings);
+      window.dispatchEvent(new CustomEvent('dice-settings-changed', { detail: localSettings }));
       onClose();
     } catch (error) {
       console.error('❌ [DiceSettingsModal] Erreur dans handleSave:', error);
