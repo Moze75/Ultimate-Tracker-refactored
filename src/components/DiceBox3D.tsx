@@ -92,7 +92,8 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
    const playDiceDropSound = useCallback(() => {
     if (effectiveSettings.soundsEnabled) {
-      const vol = (effectiveSettings.fxVolume ?? 50) / 100;
+      const fx = Math.max(0, Math.min(100, effectiveSettings.fxVolume ?? 50));
+      const vol = Math.pow(fx / 100, 1.5); // courbe adoucissante
       audioManager.play('/assets/dice-box/sounds/dice-drop/dice_drop.mp3', vol);
     }
   }, [effectiveSettings]);
