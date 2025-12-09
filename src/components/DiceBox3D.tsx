@@ -328,6 +328,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         diceBoxRef.current.clearDice();
       }
 
+      // et remplace-le par ce bloc (j'ajoute onRollComplete DANS l'objet)
       await diceBoxRef.current.updateConfig({
         theme_colorset: effectiveSettings.theme || 'custom',
         theme_texture: textureForTheme,
@@ -338,6 +339,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+        onRollComplete: onRollCompleteRef.current, // ✅ INDISPENSABLE : On réinjecte le callback ici
       });
 
       // ✅ [FIX] Réapplication forcée de la gravité et réveil des objets (crucial pour éviter le freeze du moteur)
