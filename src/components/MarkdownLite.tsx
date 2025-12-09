@@ -221,16 +221,14 @@ export default function MarkdownLite({ content }: { content: string }) {
       }
 
       // --- 3. Pseudo-Tableau "Clé - Valeur" (ex: Airain – Feu) ---
-      // Détecte "Mot - Mot" pour faire un affichage en colonnes
-      // On exclut les tirets de début de ligne (listes)
+      // MODIFICATION ICI : On utilise une grille avec bordure verticale pour simuler un tableau
       const dashRowMatch = raw.match(/^([^-–*].+?)\s+[–-]\s+(.+)$/);
-      // On vérifie que ce n'est pas une phrase trop longue pour éviter les faux positifs
       if (dashRowMatch && dashRowMatch[1].length < 40 && dashRowMatch[2].length < 60) {
         flushAllBlocks();
         out.push(
-            <div key={`dr-${out.length}`} className="flex justify-between items-center py-1 border-b border-white/5 last:border-0 text-sm">
-                <span className="font-semibold text-gray-200">{renderInline(dashRowMatch[1])}</span>
-                <span className="text-gray-300 text-right">{renderInline(dashRowMatch[2])}</span>
+            <div key={`dr-${out.length}`} className="grid grid-cols-2 py-1 border-b border-white/5 last:border-0 text-sm">
+                <div className="font-semibold text-gray-200 pr-3">{renderInline(dashRowMatch[1])}</div>
+                <div className="text-gray-300 pl-3 border-l border-white/20">{renderInline(dashRowMatch[2])}</div>
             </div>
         );
         continue;
