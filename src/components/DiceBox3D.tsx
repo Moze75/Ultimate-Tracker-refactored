@@ -340,6 +340,20 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
       });
 
+      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
+      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
+        diceBoxRef.current.DiceFactory.materials_cache = {};
+        console.log('✅ [UPDATE] Cache de matériaux vidé');
+        
+        // Forcer la mise à jour du matériau dans colorData
+        if (diceBoxRef.current.colorData) {
+          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+          diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
+          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+          console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
+        }
+      }
+      
             applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
 
       // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
