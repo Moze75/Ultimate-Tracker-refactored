@@ -259,7 +259,9 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
           console.log('💪 Force finale du moteur:', box.strength);
           console.log('♾️ Le DiceBox restera monté en permanence');
         }
- 
+
+          applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
+        
                   // ▶️ Afficher le popup "Dice Roller prêt" au lancement
           setShowReadyPopup(true);
           setTimeout(() => setShowReadyPopup(false), 2500);
