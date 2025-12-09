@@ -595,7 +595,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     console.log('🎲 [ROLL] Lancer #' + thisRollId);
     console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
     console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    let notation = rollData.diceFormula;
+    if (rollData.modifier !== 0) {
+      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+    }
 
     console.log('🎲 [ROLL] Notation:', notation, 'settings:', {
       theme: effectiveSettings.theme,
@@ -607,16 +611,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       volume: effectiveSettings.volume,
       fxVolume: effectiveSettings.fxVolume,
     });
-    
-    setIsRolling(true);
-    setResult(null);
-    setShowResult(false);
-    setIsFadingDice(false);
-    setIsFadingAll(false);
-    pendingResultRef.current = null;
-    hasShownResultRef.current = false;
-
-    let notation = rollData.diceFormula;
     if (rollData.modifier !== 0) {
       notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
     }
