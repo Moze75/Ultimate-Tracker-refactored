@@ -629,7 +629,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       fxVolume: effectiveSettings.fxVolume,
     });
 
-
+    setIsRolling(true);
+    setResult(null);
+    setShowResult(false);
+    setIsFadingDice(false);
+    setIsFadingAll(false);
+    pendingResultRef.current = null;
+    hasShownResultRef.current = false;
+    
     playDiceDropSound();
 
     requestAnimationFrame(() => {
