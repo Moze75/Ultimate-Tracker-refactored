@@ -1267,7 +1267,7 @@ return (
       settings={diceSettings}
     />
   );
-})()}
+})()} 
   </DiceRollContext.Provider>
 );
 }
