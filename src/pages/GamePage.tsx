@@ -121,7 +121,9 @@ const [diceRollData, setDiceRollData] = useState<{
 } | null>(null);
 
 const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
-
+// 🆕 Création d'une clé unique pour forcer le remontage propre du DiceBox
+// On exclut 'soundsEnabled' et 'volume' et 'fxVolume' car ils peuvent être gérés à chaud sans bug
+const diceBoxRemountKey = diceSettings ? `${diceSettings.theme}-${diceSettings.themeColor}-${diceSettings.themeMaterial}-${diceSettings.baseScale}-${diceSettings.gravity}-${diceSettings.strength}` : 'default';
 
  
 // GamePage.tsx - Remplacer le useEffect de fetch (~lignes 127-174)
