@@ -348,7 +348,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
       
 
       
-            applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
+         
 
 
       await diceBoxRef.current.updateConfig({
