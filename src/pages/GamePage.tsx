@@ -1256,20 +1256,20 @@ return (
 
 {/* ✨ DiceBox3D centralisé - TOUJOURS MONTÉ après chargement settings */}
 {(() => {
-  console.log('♾️ [GamePage] DiceBox monté en permanence (même pendant le chargement des settings)');
+  console.log('♾️ [GamePage] DiceBox monté (Key:', diceBoxRemountKey, ')');
   return (
     <DiceBox3D
-      key="dice-box-gamepage"
+      // ✅ La clé force le remontage complet si les settings physiques changent
+      key={`dice-box-${diceBoxRemountKey}`} 
       isOpen={!!diceRollData}
       onClose={() => {
-        console.log('🎲 [GamePage] DiceBox fermé (mais reste monté)');
+        console.log('🎲 [GamePage] DiceBox fermé');
         setDiceRollData(null);
       }}
       rollData={diceRollData}
-      settings={diceSettings}
     />
   );
-})()} 
+})()}
   </DiceRollContext.Provider>
 );
 }
