@@ -113,8 +113,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     }
   }, [effectiveSettings]);
 
-  const generateRandomResult = useCallback((formula: string, modifier: number) => {
-    console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
+   const generateRandomResult = useCallback((formula: string, modifier: number) => {
+    console.log('⚠️ [FALLBACK RANDOM] formula:', formula, 'modifier:', modifier);
     
     const match = formula.match(/(\d+)d(\d+)/i);
     if (!match) {
