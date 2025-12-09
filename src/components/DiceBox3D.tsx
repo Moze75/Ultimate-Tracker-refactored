@@ -270,6 +270,9 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
 
           applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
+
+      lastRollDataRef.current = '';
+      console.log('🔁 [UPDATE] Reset lastRollDataRef pour autoriser un nouveau roll après mise à jour des settings');
         
                   // ▶️ Afficher le popup "Dice Roller prêt" au lancement
           setShowReadyPopup(true);
