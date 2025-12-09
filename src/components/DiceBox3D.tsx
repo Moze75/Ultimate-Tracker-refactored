@@ -20,7 +20,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings?: DiceSettings;
+
 }
 
 // Mapping des textures par colorset
@@ -55,7 +55,7 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
-export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
+export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
