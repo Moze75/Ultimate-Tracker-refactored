@@ -104,9 +104,9 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
     }
   }, [isOpen]);
 
-  const playResultSound = useCallback(() => {
     if (effectiveSettings.soundsEnabled) {
-      const vol = (effectiveSettings.fxVolume ?? 50) / 100;
+      const fx = Math.max(0, Math.min(100, effectiveSettings.fxVolume ?? 50));
+      const vol = Math.pow(fx / 100, 1.5); // courbe adoucissante
       audioManager.play('/assets/dice-box/sounds/dicepopup/dice_results.mp3', vol);
     }
   }, [effectiveSettings]);
