@@ -236,50 +236,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0, // (reste en 0–100 attendu par DiceBox)
-          onRollComplete: (results: any) => {
-            if (!mounted) return;
-
-            if (hasShownResultRef.current) {
-              setIsRolling(false);
-              return;
-            }
-
-            let rollValues: number[] = []; 
-            let diceTotal = 0;
-            
-            if (Array.isArray(results?.sets)) {
-              results.sets.forEach((set: any) => {
-                if (Array.isArray(set?.rolls)) {
-                  set.rolls.forEach((roll: any) => {
-                    if (typeof roll?.value === 'number') {
-                      rollValues.push(roll.value);
-                    }
-                  });
-                }
-              });
-              diceTotal = rollValues.reduce((sum: number, val: number) => sum + val, 0);
-            }
-
-            const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
-            const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
-            hasShownResultRef.current = true;
-            setResult(finalResult);
-            setIsRolling(false);
-            setShowResult(true);
-            try { playResultSound(); } catch (e) { /* noop */ }
-
-            if (rollDataRef.current) {
-              addRoll({
-                attackName: rollDataRef.current.attackName,
-                diceFormula: rollDataRef.current.diceFormula,
-                modifier: rollDataRef.current.modifier,
-                total: finalResult.total,
-                rolls: finalResult.rolls,
-                diceTotal: finalResult.diceTotal,
-              });
-            }
-          }
+                onRollComplete: handleRollComplete,
         };
 
         console.log('📦 Config complète:', config);
