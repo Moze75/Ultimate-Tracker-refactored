@@ -74,8 +74,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   const onRollCompleteRef = useRef<(results: any) => void>();
 
-const { settings: contextSettings } = useDiceSettings();
-const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
+ const { settings: contextSettings } = useDiceSettings();
+  const effectiveSettings = settings ?? contextSettings ?? DEFAULT_DICE_SETTINGS;
 
     // Force le volume/sounds directement sur l’instance (updateConfig de la lib n’assigne pas)
   const applyVolume = useCallback((enabled: boolean, vol: number) => {
