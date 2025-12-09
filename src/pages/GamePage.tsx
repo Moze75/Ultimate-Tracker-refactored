@@ -445,7 +445,7 @@ useEffect(() => {
   );
 
   const closeSettings = useCallback(() => {
-    setSettingsOpen(false);
+    setDiceBoxVersion(v => v + 1);
   }, []);
 
   /* ---------------- Update player ---------------- */
