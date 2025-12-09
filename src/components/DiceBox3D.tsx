@@ -590,6 +590,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+    console.log('🎲 [ROLL] Notation:', notation, 'settings:', {
+      theme: effectiveSettings.theme,
+      material: effectiveSettings.themeMaterial,
+      baseScale: effectiveSettings.baseScale,
+      gravity: effectiveSettings.gravity,
+      strength: effectiveSettings.strength,
+      soundsEnabled: effectiveSettings.soundsEnabled,
+      volume: effectiveSettings.volume,
+      fxVolume: effectiveSettings.fxVolume,
+    });
+    
     setIsRolling(true);
     setResult(null);
     setShowResult(false);
