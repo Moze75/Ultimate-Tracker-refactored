@@ -516,7 +516,11 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
           if (typeof diceBoxRef.current.updateConfig === 'function') {
             try {
-              const maybePromise = diceBoxRef.current.updateConfig({ gravity_multiplier: expectedMultiplier });
+              // ✅ FIX: On inclut onRollComplete pour éviter qu'il soit perdu lors de la màj de gravité
+              const maybePromise = diceBoxRef.current.updateConfig({ 
+                gravity_multiplier: expectedMultiplier,
+                onRollComplete: onRollCompleteRef.current 
+              });
               if (maybePromise && typeof maybePromise.then === 'function') {
                 maybePromise.catch((e: any) => {
                   console.warn('⚠️ updateConfig rejeté :', e);
