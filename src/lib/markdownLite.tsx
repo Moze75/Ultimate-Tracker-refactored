@@ -193,7 +193,7 @@ export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode
 
     // Gestion des BOITES <!-- BOX: Titre --> ... <!-- /BOX -->
     // On capture le titre optionnel après 'BOX:'
-    const boxMatch = line.match(/^\s*<!--\s*BOX(?::\s*(.*))?(?:\s*-->)?/i);
+    const boxMatch = line.match(/^\s*<!--\s*BOX(?::\s*(.*?))?\s*-->/i);
     if (boxMatch) {
       const title = boxMatch[1] ? boxMatch[1].trim() : null;
       const boxContent: string[] = [];
