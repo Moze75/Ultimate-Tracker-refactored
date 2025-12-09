@@ -76,6 +76,14 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
 const { settings: contextSettings } = useDiceSettings();
 const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
+    // Force le volume/sounds directement sur l’instance (updateConfig de la lib n’assigne pas)
+  const applyVolume = useCallback((enabled: boolean, vol: number) => {
+    if (!diceBoxRef.current) return;
+    diceBoxRef.current.sounds = enabled;
+    // DiceBox attend 0–100 et divise par 100 lors du play
+    diceBoxRef.current.volume = enabled ? vol : 0;
+  }, []);
+
   const { addRoll } = useDiceHistoryContext();
 
   useEffect(() => {
