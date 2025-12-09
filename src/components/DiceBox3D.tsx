@@ -538,7 +538,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
 
       lastRollDataRef.current = '';
-      console.log('🔁 [UPDATE] Reset lastRollDataRef pour autoriser un nouveau roll après mise à jour des settings');
+      console.log('🔁 [EVENT] Reset lastRollDataRef après settings-changed pour autoriser un nouveau roll');
       
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
