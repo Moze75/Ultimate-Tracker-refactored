@@ -1,378 +1,372 @@
 import React, { useMemo } from 'react';
 
-// --- COEUR DU RENDU : PARSER RÉCURSIF ---
+export type MarkdownCtx = {
+  characterId?: string | null;
+  className?: string;
+  subclassName?: string | null;
+  checkedMap?: Map<string, boolean>;
+  onToggle?: (featureKey: string, checked: boolean) => void;
+  section?: { level: number; origin: 'class' | 'subclass'; title: string };
+};
 
-// Cette fonction remplace l'ancien système complexe.
-// Elle découpe le texte en tokens (Gras, Italique, Lien) et traite le reste comme du texte.
-function renderInline(text: string): React.ReactNode {
+function sentenceCase(s: string) {
+  const t = (s || '').toLocaleLowerCase('fr-FR').trim();
+  if (!t) return t;
+  const first = t.charAt(0).toLocaleUpperCase('fr-FR') + t.slice(1);
+  return first.replace(/\b([A-Z]{2,})\b/g, '$1');
+}
+
+function slug(s: string) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+export function MarkdownLite({ text, ctx }: { text: string; ctx: MarkdownCtx }) {
+  const nodes = useMemo(() => parseMarkdownLite(text, ctx), [text, ctx]);
+  return <>{nodes}</>;
+}
+
+// --- PARSER INLINE ROBUSTE ---
+function formatInline(text: string): React.ReactNode {
   if (!text) return null;
 
-  // Regex combinée pour capturer :
-  // 1. Gras : **...**
-  // 2. Italique : _..._ (sans underscore à l'intérieur)
-  // 3. Lien complet : [Texte](URL)
-  // 4. Lien simple (reste de nettoyage) : [Texte]
-  const tokenRegex = /(\*\*.+?\*\*|_[^_]+?_|\[[^\]]+\]\([^)]+\)|\[[^\]]+\])/g;
+  // 1. Nettoyage des liens [Texte](URL) -> Texte
+  let cleaned = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  // Nettoyage des restes [Texte] -> Texte
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1');
 
-  // Le split va créer un tableau alternant [Texte, Token, Texte, Token...]
-  // Les espaces autour des tokens sont préservés dans les parties "Texte".
-  const parts = text.split(tokenRegex);
+  // 2. Regex combinée pour Gras (**...**) et Italique (_..._ ou *...*)
+  const tokenRegex = /(\*\*.+?\*\*|_[^_]+?_|\*[^*]+?\*)/g;
+
+  const parts = cleaned.split(tokenRegex);
 
   return parts.map((part, index) => {
     if (!part) return null;
 
-    // CAS 1 : GRAS (**texte**)
+    // GRAS : **texte**
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-      const content = part.slice(2, -2);
       return (
-        <strong key={index} className="font-semibold">
-          {renderInline(content)}
+        <strong key={index} className="text-white font-semibold">
+          {formatInlineInner(part.slice(2, -2))}
         </strong>
       );
     }
 
-    // CAS 2 : ITALIQUE (_texte_)
-    if (part.startsWith('_') && part.endsWith('_') && part.length >= 2) {
-      const content = part.slice(1, -1);
+    // ITALIQUE : _texte_ ou *texte*
+    if (
+      (part.startsWith('_') && part.endsWith('_') && part.length >= 2) ||
+      (part.startsWith('*') && part.endsWith('*') && part.length >= 2)
+    ) {
       return (
-        <em key={index} className="italic">
-          {renderInline(content)}
+        <em key={index} className="italic text-gray-100">
+          {part.slice(1, -1)}
         </em>
       );
     }
 
-    // CAS 3 : LIENS ([Texte](url) ou [Texte])
-    // On retire le lien pour ne garder que le texte (Markdown Lite)
-    if (part.startsWith('[') && part.includes(']')) {
-      const labelMatch = part.match(/^\[([^\]]+)\]/);
-      if (labelMatch) {
-        // On rend le contenu du label (qui peut contenir du gras/italique)
-        return <React.Fragment key={index}>{renderInline(labelMatch[1])}</React.Fragment>;
-      }
-    }
-
-    // CAS 4 : TEXTE BRUT
-    // On retourne le texte tel quel. React gère très bien les espaces ici.
+    // TEXTE NORMAL
     return <React.Fragment key={index}>{part}</React.Fragment>;
   });
 }
 
-/* ---------- Helpers tableaux ---------- */
-
-function isTableSeparator(line: string): boolean {
-  const l = line.trim();
-  if (!l.includes('-')) return false;
-  const core = l.replace(/^\|/, '').replace(/\|$/, '');
-  const cells = core.split('|').map((c) => c.trim()).filter((c) => c.length > 0);
-  if (cells.length === 0) return false;
-  return cells.every((c) => /^:?-{3,}:?$/.test(c));
-}
-
-function splitTableRow(line: string): string[] {
-  let work = line.trim();
-  if (work.startsWith('|')) work = work.slice(1);
-  if (work.endsWith('|')) work = work.slice(0, -1);
-  work = work.replace(/\\\|/g, '§PIPE§');
-  return work.split('|').map((c) => c.replace(/§PIPE§/g, '|').trim());
-}
-
-type Align = 'left' | 'center' | 'right';
-function parseAlignments(sepLine: string, colCount: number): Align[] {
-  const core = sepLine.trim().replace(/^\|/, '').replace(/\|$/, '');
-  const specs = core.split('|').map((c) => c.trim());
-  const aligns = specs.map<Align>((c) => {
-    const left = c.startsWith(':');
-    const right = c.endsWith(':');
-    if (left && right) return 'center';
-    if (right) return 'right';
-    return 'left';
+// Helper pour éviter la récursion infinie dans le gras
+function formatInlineInner(text: string): React.ReactNode {
+  const parts = text.split(/(_[^_]+?_|\*[^*]+?\*)/g);
+  return parts.map((part, index) => {
+    if ((part.startsWith('_') && part.endsWith('_')) || (part.startsWith('*') && part.endsWith('*'))) {
+      return <em key={index} className="italic">{part.slice(1, -1)}</em>;
+    }
+    return part;
   });
-  while (aligns.length < colCount) aligns.push('left');
-  return aligns;
 }
 
-/* ---------- Block-level rendering ---------- */
+export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode[] {
+  // Normalisation des chevrons HTML
+  const normalized = (md || '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
 
-export default function MarkdownLite({ content }: { content: string }) {
-  const elements = useMemo(() => {
-    // 1. Normalisation globale : correction des chevrons encodés
-    const src = (content || '')
-      .replace(/&lt;!--/g, '<!--')
-      .replace(/--&gt;/g, '-->');
+  const lines = normalized.split(/\r?\n/);
+  const out: React.ReactNode[] = [];
+  let i = 0;
+  let key = 0;
 
-    const lines = src.split(/\r?\n/);
-    const out: React.ReactNode[] = [];
+  while (i < lines.length) {
+    const line = lines[i];
 
-    let ulBuffer: string[] = [];
-    let olBuffer: string[] = [];
-    let quoteBuffer: string[] = [];
-    
-    // État pour les Boites
-    let inBox = false;
-    let boxBuffer: string[] = [];
-    let boxTitle: string | null = null;
+    if (!line.trim()) {
+      out.push(<div key={`sp-${key++}`} className="h-2" />);
+      i++;
+      continue;
+    }
 
-    const flushUL = () => {
-      if (ulBuffer.length > 0) {
+    // Séparateur horizontal ---
+    if (/^\s*---+\s*$/.test(line)) {
+      out.push(<div key={`hr-${key++}`} className="my-3 border-t border-white/10" />);
+      i++;
+      continue;
+    }
+
+    // Sections spéciales D&D (Temps d'incantation, etc.)
+    const boldLabelMatch = line.match(/^\s*\*\*([^*]+)\*\*(.*)$/);
+    if (boldLabelMatch) {
+      const labelRaw = boldLabelMatch[1].trim();
+      const afterLabel = boldLabelMatch[2].trim();
+      
+      const specialLabels = [
+        'amélioration de sort mineur',
+        'améliorations de sorts mineurs',
+        'aux niveaux supérieurs',
+        'à des niveaux supérieurs',
+        'niveaux supérieurs',
+        'temps d\'incantation',
+        'portée',
+        'composantes',
+        'durée',
+      ];
+      
+      if (specialLabels.some(sl => labelRaw.toLowerCase().includes(sl))) {
+        const hasColon = afterLabel.startsWith(':');
+        const content = hasColon ? afterLabel.substring(1).trim() : afterLabel;
+        
         out.push(
-          <ul className="list-disc pl-5 space-y-1" key={`ul-${out.length}`}>
-            {ulBuffer.map((item, i) => (
-              <li key={`uli-${i}`}>{renderInline(item)}</li>
-            ))}
-          </ul>
+          <div key={`special-${key++}`} className="mt-3 mb-2">
+            <strong className="text-white font-semibold">{labelRaw}</strong>
+            {hasColon && <span className="text-white font-semibold"> :</span>}
+            {content && <span className="ml-1 text-gray-300">{formatInline(content)}</span>}
+          </div>
         );
-        ulBuffer = [];
+        i++;
+        continue;
       }
-    };
-    const flushOL = () => {
-      if (olBuffer.length > 0) {
-        out.push(
-          <ol className="list-decimal pl-5 space-y-1" key={`ol-${out.length}`}>
-            {olBuffer.map((item, i) => (
-              <li key={`oli-${i}`}>{renderInline(item)}</li>
-            ))}
-          </ol>
-        );
-        olBuffer = [];
-      }
-    };
-    const flushQuote = () => {
-      if (quoteBuffer.length > 0) {
-        const text = quoteBuffer.join(' ').trim();
-        out.push(
-          <blockquote
-            key={`q-${out.length}`}
-            className="border-l-2 border-white/20 pl-3 ml-1 italic text-gray-300 bg-white/5 rounded-sm py-1"
-          >
-            {renderInline(text)}
-          </blockquote>
-        );
-        quoteBuffer = [];
-      }
-    };
-    const flushAllBlocks = () => {
-      flushQuote();
-      flushUL();
-      flushOL();
-    };
+    }
 
-    const flushBox = () => {
-      if (!boxBuffer.length) return;
-      const inner = boxBuffer.join('\n');
+    // Case à cocher #### / #####
+    const chk = line.match(/^\s*#####{0,1}\s+(.*)$/);
+    if (chk) {
+      const rawLabel = chk[1];
+      const label = sentenceCase(rawLabel);
+      const featureKey = slug(
+        `${ctx.section?.level ?? 'x'}-${ctx.section?.origin ?? 'class'}-${ctx.section?.title ?? ''}--${label}`
+      );
+      const checked = ctx.checkedMap?.get(featureKey) ?? false;
+      const id = `chk-${key}`;
+
       out.push(
-        <div key={`box-${out.length}`} className="rounded-lg border border-white/15 bg-white/5 p-3 my-4">
-          {boxTitle && (
-            <div className="font-bold text-gray-200 mb-2 uppercase tracking-wide text-sm border-b border-white/10 pb-1">
-              {renderInline(boxTitle)}
-            </div>
-          )}
-          {/* Appel récursif pour rendre le contenu de la boite */}
-          <MarkdownLite content={inner} />
+        <div key={`chk-${key++}`} className="flex items-start gap-2 mt-2">
+          <input
+            id={id}
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => ctx.onToggle?.(featureKey, e.currentTarget.checked)}
+            className="mt-0.5 h-4 w-4 accent-violet-500 bg-black/40 border border-white/20 rounded cursor-pointer"
+          />
+          <label htmlFor={id} className="text-sm text-white/90 cursor-pointer select-none">
+            {formatInline(label)}
+          </label>
         </div>
       );
-      boxBuffer = [];
-      boxTitle = null;
-    };
+      i++;
+      continue;
+    }
 
-    for (let i = 0; i < lines.length; i++) {
-      let raw = lines[i];
+    // Titres h1, h2, h3
+    const h3 = line.match(/^\s*###\s+(.*)$/i);
+    if (h3) {
+      out.push(<h4 key={`h3-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h3[1]))}</h4>);
+      i++; continue;
+    }
+    const h2 = line.match(/^\s*##\s+(.*)$/i);
+    if (h2) {
+      out.push(<h4 key={`h2-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h2[1]))}</h4>);
+      i++; continue;
+    }
+    const h1 = line.match(/^\s*#\s+(.*)$/i);
+    if (h1) {
+      out.push(<h4 key={`h1-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h1[1]))}</h4>);
+      i++; continue;
+    }
 
-      // --- Gestion des BOX ---
-      // Détection ouverture
-      const boxStartMatch = raw.match(/<!--\s*BOX(?::\s*(.*?))?\s*-->/);
-      const altStartMatch = raw.match(/^\s*II\s*(.*)$/); // Support ancienne syntaxe "II"
-
-      if (!inBox && (boxStartMatch || altStartMatch)) {
-        flushAllBlocks();
-
-        let before = '';
-        let after = '';
-        let title: string | null = null;
-
-        if (boxStartMatch) {
-          // Cas standard <!-- BOX... -->
-          const fullMatch = boxStartMatch[0];
-          const idx = raw.indexOf(fullMatch);
-          before = raw.slice(0, idx); // Texte avant la boite sur la même ligne
-          after = raw.slice(idx + fullMatch.length); // Texte après
-          title = boxStartMatch[1] ? boxStartMatch[1].trim() : null;
-        } else if (altStartMatch) {
-          // Cas alternatif "II"
-          after = altStartMatch[1];
+    // GESTION DES BOITES
+    const boxMatch = line.match(/^\s*<!--\s*BOX(?::\s*(.*?))?\s*-->/i);
+    if (boxMatch) {
+      const title = boxMatch[1] ? boxMatch[1].trim() : null;
+      const boxContent: string[] = [];
+      i++; 
+      
+      while (i < lines.length) {
+        if (lines[i].match(/^\s*<!--\s*\/BOX\s*(?:-->)?/i)) {
+          i++;
+          break;
         }
-
-        // S'il y a du texte avant le début de la boite
-        if (before && before.trim()) {
-          out.push(<p key={`p-pre-${out.length}`}>{renderInline(before)}</p>);
-        }
-
-        inBox = true;
-        boxBuffer = [];
-        boxTitle = title;
-
-        if (after && after.trim()) boxBuffer.push(after);
-        continue;
+        boxContent.push(lines[i]);
+        i++;
       }
 
-      // Gestion contenu boite et fermeture
-      if (inBox) {
-        if (raw.includes('<!-- /BOX -->') || raw.match(/^(.*)\s*\|\|\s*$/)) {
-          const closeMatch = raw.includes('<!-- /BOX -->') 
-            ? raw.match(/(.*)<!-- \/BOX -->/) 
-            : raw.match(/^(.*)\s*\|\|\s*$/);
-            
-          const contentBeforeClose = closeMatch ? closeMatch[1].trim() : '';
-          if (contentBeforeClose) boxBuffer.push(contentBeforeClose);
-          
-          inBox = false;
-          flushBox();
-          continue;
-        }
-        boxBuffer.push(raw);
-        continue;
-      }
-
-      // --- Gestion Tableaux ---
-      const headerLine = raw;
-      const sepLine = lines[i + 1];
-      if (headerLine && sepLine && headerLine.includes('|') && isTableSeparator(sepLine)) {
-        flushAllBlocks();
-        const headerCells = splitTableRow(headerLine);
-        const alignments = parseAlignments(sepLine, headerCells.length);
-        const body: string[][] = [];
-        let j = i + 2;
-        for (; j < lines.length; j++) {
-          const rowLine = lines[j];
-          if (!rowLine || !rowLine.trim() || !rowLine.includes('|')) break;
-          body.push(splitTableRow(rowLine));
-        }
-
-        out.push(
-          <div key={`tblwrap-${out.length}`} className="overflow-x-auto my-3">
-            <table className="w-full text-sm border-separate border-spacing-0">
-              <thead>
-                <tr>
-                  {headerCells.map((cell, idx) => {
-                    const align = alignments[idx];
-                    const alignClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
-                    return (
-                      <th key={`th-${idx}`} className={`px-3 py-2 bg-white/10 border border-white/15 font-semibold ${alignClass}`}>
-                        {renderInline(cell)}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {body.map((row, r) => (
-                  <tr key={`tr-${r}`}>
-                    {headerCells.map((_, c) => {
-                      const cell = row[c] ?? '';
-                      const align = alignments[c];
-                      const alignClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
-                      return (
-                        <td key={`td-${r}-${c}`} className={`px-3 py-2 border border-white/10 ${alignClass}`}>
-                          {renderInline(cell)}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-        i = j - 1;
-        continue;
-      }
-
-      // --- Listes ---
-      const mUL = raw.match(/^\s*[-*]\s+(.*)$/);
-      if (mUL) {
-        flushQuote();
-        flushOL();
-        ulBuffer.push(mUL[1]);
-        continue;
-      }
-
-      const mOL = raw.match(/^\s*\d+[.)]\s+(.*)$/);
-      if (mOL) {
-        flushQuote();
-        flushUL();
-        olBuffer.push(mOL[1]);
-        continue;
-      }
-
-      // --- Citations ---
-      const mQ = raw.match(/^\s*>\s+(.*)$/);
-      if (mQ) {
-        flushUL();
-        flushOL();
-        quoteBuffer.push(mQ[1]);
-        continue;
-      }
-
-      // Flush si ligne normale
-      if ((ulBuffer.length || olBuffer.length || quoteBuffer.length) && raw.trim() !== '') {
-        flushAllBlocks();
-      }
-
-      // --- Titres ---
-      const h4 = raw.match(/^\s*####\s+(.*)$/);
-      if (h4) {
-        out.push(<div className="font-semibold mt-3 mb-1 tracking-wide" key={`h4-${out.length}`}>{renderInline(h4[1])}</div>);
-        continue;
-      }
-      const h3 = raw.match(/^\s*###\s+(.*)$/);
-      if (h3) {
-        out.push(<div className="font-bold text-base mt-4 mb-2" key={`h3-${out.length}`}>{renderInline(h3[1])}</div>);
-        continue;
-      }
-
-      // Pseudo-titre en gras complet
-      const fullBold = raw.match(/^\s*\*\*(.+?)\*\*\s*$/);
-      if (fullBold) {
-        out.push(
-          <div className="mt-3 mb-2 uppercase tracking-wide text-[0.95rem] text-gray-200" key={`sub-${out.length}`}>
-            {renderInline(fullBold[1])}
-          </div>
-        );
-        continue;
-      }
-
-      // Ligne vide
-      if (raw.trim() === '') {
-        flushAllBlocks();
-        out.push(<div className="h-2" key={`sp-${out.length}`} />);
-        continue;
-      }
-
-      // Label: Valeur
-      const labelMatch = raw.match(/^([\p{L}\p{N}'’ .\-\/+()]+?)\s*:\s+(.*)$/u);
-      if (labelMatch) {
-        out.push(
-          <p className="mb-2 leading-relaxed" key={`kv-${out.length}`}>
-            <span className="font-semibold">{labelMatch[1]}: </span>
-            {renderInline(labelMatch[2])}
-          </p>
-        );
-        continue;
-      }
-
-      // Paragraphe standard
+      const inner = parseMarkdownLite(boxContent.join('\n'), ctx);
       out.push(
-        <p className="mb-2 leading-relaxed" key={`p-${out.length}`}>
-          {renderInline(raw)}
+        <div key={`box-${key++}`} className="rounded-lg border border-white/15 bg-white/5 p-3 my-4">
+          {title && (
+            <div className="font-bold text-gray-200 mb-2 uppercase tracking-wide text-sm border-b border-white/10 pb-1">
+              {formatInline(title)}
+            </div>
+          )}
+          <div className="text-sm">{inner}</div>
+        </div>
+      );
+      continue;
+    }
+
+    // --- NOUVEAU : Détection Colonne 1 - Colonne 2 (ex: Airain - Feu) ---
+    // Recherche un motif "Texte - Texte" (avec tiret court ou long)
+    // Exclut les lignes commençant par un tiret de liste (- Item)
+    const splitMatch = line.match(/^(.+?)\s+(?:-|–|—)\s+(.+)$/);
+    if (splitMatch && !line.match(/^\s*[-*]\s+/)) {
+      out.push(
+        <div key={`split-${key++}`} className="grid grid-cols-2 gap-4 py-1 border-b border-white/5 last:border-0 text-sm">
+          <div className="font-semibold text-white/90">{formatInline(splitMatch[1].trim())}</div>
+          <div className="text-gray-300">{formatInline(splitMatch[2].trim())}</div>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Tableaux
+    if (line.includes('|')) {
+      const block: string[] = [];
+      while (i < lines.length && lines[i].includes('|')) {
+        block.push(lines[i]);
+        i++;
+      }
+      const tableNode = renderTable(block, key);
+      if (tableNode) {
+        out.push(tableNode);
+        key++;
+        continue;
+      }
+      out.push(
+        <p key={`pf-${key++}`} className="text-sm text-gray-300 mb-2">
+          {formatInline(block.join(' '))}
+        </p>
+      );
+      continue;
+    }
+
+    // Liste à puces
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
+        i++;
+      }
+      out.push(
+        <ul key={`ul-${key++}`} className="list-disc pl-5 space-y-1 text-gray-300 mb-3">
+          {items.map((it, idx) => (
+            <li key={`li-${idx}`} className="text-sm">
+              {formatInline(it)}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // Liste ordonnée
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+        i++;
+      }
+      out.push(
+        <ol key={`ol-${key++}`} className="list-decimal pl-5 space-y-1 text-gray-300 mb-3">
+          {items.map((it, idx) => (
+            <li key={`oli-${idx}`} className="text-sm">
+              {formatInline(it)}
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // Paragraphe standard
+    const buff: string[] = [line];
+    i++;
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !/^\s*[-*]\s+/.test(lines[i]) &&
+      !/^\s*\d+\.\s+/.test(lines[i]) &&
+      !lines[i].includes('|') &&
+      !/^\s*#{1,6}\s+/.test(lines[i]) &&
+      !/^\s*---+\s*$/.test(lines[i]) &&
+      !/^\s*\*\*[^*]+\*\*/.test(lines[i]) &&
+      !lines[i].match(/^\s*<!--/) &&
+      // On arrête le buffer si on rencontre une ligne "Texte - Texte" pour ne pas la fusionner
+      !lines[i].match(/^.+?\s+(?:-|–|—)\s+.+$/)
+    ) {
+      buff.push(lines[i]);
+      i++;
+    }
+    
+    const content = buff.join(' ').trim();
+    if (content) {
+      out.push(
+        <p key={`p-${key++}`} className="text-sm text-gray-300 leading-relaxed mb-2">
+          {formatInline(content)}
         </p>
       );
     }
+  }
 
-    flushAllBlocks();
-    if (inBox) flushBox();
+  return out;
+}
 
-    return out;
-  }, [content]);
+function renderTable(block: string[], key: number): React.ReactNode | null {
+  if (block.length < 2) return null;
+  const rows = block.map(r =>
+    r
+      .split('|')
+      .map(c => c.trim())
+      .filter((_, idx, arr) => !(idx === 0 && arr[0] === '') && !(idx === arr.length - 1 && arr[arr.length - 1] === ''))
+  );
 
-  if (!content) return null;
-  return <div className="prose prose-invert max-w-none">{elements}</div>;
+  const hasSep = rows[1] && rows[1].every(cell => /^:?-{3,}:?$/.test(cell));
+  const header = hasSep ? rows[0] : null;
+  const body = hasSep ? rows.slice(2) : rows;
+
+  return (
+    <div key={`tbl-${key}`} className="overflow-x-auto my-4">
+      <table className="min-w-[360px] w-full text-sm border-collapse border border-gray-700/50 rounded-lg overflow-hidden">
+        {header && (
+          <thead>
+            <tr className="bg-gray-800/50">
+              {header.map((h, i) => (
+                <th key={`th-${i}`} className="text-left text-gray-200 font-semibold px-3 py-2 border border-gray-700/50">
+                  {formatInline(sentenceCase(h))}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {body.map((cells, r) => (
+            <tr key={`tr-${r}`} className={r % 2 === 0 ? 'bg-gray-800/20' : 'bg-gray-800/30'}>
+              {cells.map((c, ci) => (
+                <td key={`td-${ci}`} className="px-3 py-2 text-gray-300 border border-gray-700/50">
+                  {formatInline(c)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
