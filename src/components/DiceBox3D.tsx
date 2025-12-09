@@ -442,21 +442,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
 
 
-
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux)
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [EVENT] Cache de matériaux vidé');
-        
-        // Forcer la mise à jour du matériau dans colorData
-        if (diceBoxRef.current.colorData) {
-          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
-          diceBoxRef.current.colorData.texture.material = newSettings.themeMaterial || 'plastic';
-          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-          console.log('✅ [EVENT] Matériau réappliqué:', newSettings.themeMaterial || 'plastic');
-        }
-      }
-
       if (diceBoxRef.current) {
         diceBoxRef.current.baseScale = newSettings.baseScale * 100 / 6;
         console.log('✅ [EVENT] baseScale forcé directement:', diceBoxRef.current.baseScale);
