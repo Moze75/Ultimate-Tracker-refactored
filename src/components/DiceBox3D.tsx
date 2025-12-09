@@ -260,6 +260,9 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         
         if (mounted) {
           diceBoxRef.current = box;
+                    if (onRollCompleteRef.current) {
+            diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
+          }
           setIsInitialized(true);
           console.log('✅ DiceBox initialisé avec strength x1.3 !');
           console.log('💪 Force finale du moteur:', box.strength);
