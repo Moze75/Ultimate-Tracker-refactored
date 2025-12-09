@@ -20,7 +20,6 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-
 }
 
 // Mapping des textures par colorset
@@ -74,10 +73,10 @@ export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   const onRollCompleteRef = useRef<(results: any) => void>();
 
-const { settings: contextSettings } = useDiceSettings();
-const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
+  const { settings: contextSettings } = useDiceSettings();
+  const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
-    // Force le volume/sounds directement sur l’instance (updateConfig de la lib n’assigne pas)
+  // Force le volume/sounds directement sur l’instance (updateConfig de la lib n’assigne pas toujours bien le volume)
   const applyVolume = useCallback((enabled: boolean, vol: number) => {
     if (!diceBoxRef.current) return;
     diceBoxRef.current.sounds = enabled;
@@ -157,9 +156,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         console.log('🎲 [INIT] Initialisation PERMANENTE de DiceBox...');
         console.log('🎲 [INIT] Theme:', effectiveSettings.theme);
         console.log('🎲 [INIT] Material:', effectiveSettings.themeMaterial);
-        console.log('🎲 [INIT] Strength (brute):', effectiveSettings.strength);
-        console.log('🎲 [INIT] Strength (x1.3):', effectiveSettings.strength * 1.3);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         const DiceBox = (await import('@3d-dice/dice-box-threejs')).default;
 
@@ -168,8 +164,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         const textureForTheme = effectiveSettings.theme 
           ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
           : 'none';
-
-        console.log('🎨 Texture sélectionnée:', textureForTheme);
 
         const handleRollComplete = (results: any) => {
           if (!mounted) return;
@@ -235,20 +229,13 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
           gravity_multiplier: effectiveSettings.gravity * 400,
           strength: effectiveSettings.strength * 1.3,
           sounds: effectiveSettings.soundsEnabled,
-         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0, // (reste en 0–100 attendu par DiceBox)
-                onRollComplete: handleRollComplete,
+          volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+          onRollComplete: handleRollComplete,
         };
-
-        console.log('📦 Config complète:', config);
 
         const box = new DiceBox('#dice-box-overlay', config);
 
         if (containerRef.current) {
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          
-          console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
-          
           containerRef.current.style.width = '100vw';
           containerRef.current.style.height = '100vh';
           containerRef.current.style.position = 'fixed';
@@ -260,20 +247,18 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         
         if (mounted) {
           diceBoxRef.current = box;
-                    if (onRollCompleteRef.current) {
+          if (onRollCompleteRef.current) {
             diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
           }
           setIsInitialized(true);
-          console.log('✅ DiceBox initialisé avec strength x1.3 !');
-          console.log('💪 Force finale du moteur:', box.strength);
-          console.log('♾️ Le DiceBox restera monté en permanence');
+          console.log('✅ DiceBox initialisé avec succès');
         }
 
-          applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
+        applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
         
-                  // ▶️ Afficher le popup "Dice Roller prêt" au lancement
-          setShowReadyPopup(true);
-          setTimeout(() => setShowReadyPopup(false), 2500);
+        // ▶️ Afficher le popup "Dice Roller prêt" au lancement
+        setShowReadyPopup(true);
+        setTimeout(() => setShowReadyPopup(false), 2500);
       } catch (error) {
         console.error('❌ Erreur init:', error);
         if (mounted) setIsRolling(false);
@@ -292,19 +277,12 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
     };
   }, [effectiveSettings, playResultSound, addRoll]);
 
-  // ✅ Gérer les changements de settings
+  // ✅ Gérer les changements de settings (UNIQUE source de mise à jour)
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
     const updateSettings = async () => {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [UPDATE] Mise à jour des settings...');
-      console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
-      console.log('💪 [UPDATE] Nouvelle force (brute):', effectiveSettings.strength);
-      console.log('💪 [UPDATE] Nouvelle force (x1.3):', effectiveSettings.strength * 1.3);
-      console.log('🎨 [UPDATE] Theme:', effectiveSettings.theme);
-      console.log('🎨 [UPDATE] Theme Color:', effectiveSettings.themeColor);
-      console.log('🎨 [UPDATE] Theme Material:', effectiveSettings.themeMaterial);
       
       const textureForTheme = effectiveSettings.theme 
         ? (COLORSET_TEXTURES[effectiveSettings.theme] || '')
@@ -321,14 +299,12 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         material: effectiveSettings.themeMaterial || 'plastic'
       } : undefined;
 
-      console.log('🎨 [UPDATE] Custom Colorset:', customColorset);
-
       // ✅ Forcer le nettoyage avant mise à jour
       if (diceBoxRef.current && typeof diceBoxRef.current.clearDice === 'function') {
         diceBoxRef.current.clearDice();
       }
 
-      // et remplace-le par ce bloc (j'ajoute onRollComplete DANS l'objet)
+      // ✅ [CRITIQUE] Mettre à jour la config ET réinjecter le callback
       await diceBoxRef.current.updateConfig({
         theme_colorset: effectiveSettings.theme || 'custom',
         theme_texture: textureForTheme,
@@ -339,10 +315,31 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
-        onRollComplete: onRollCompleteRef.current, // ✅ INDISPENSABLE : On réinjecte le callback ici
+        onRollComplete: onRollCompleteRef.current, // ✅ FIX: Indispensable ici
       });
 
-      // ✅ [FIX] Réapplication forcée de la gravité et réveil des objets (crucial pour éviter le freeze du moteur)
+      // ✅ Forcer la mise à jour du matériau dans le moteur physique et visuel
+      if (diceBoxRef.current) {
+        // Vider le cache de matériaux pour forcer la régénération
+        if (diceBoxRef.current.DiceFactory) {
+            diceBoxRef.current.DiceFactory.materials_cache = {};
+        }
+
+        // Réappliquer le matériau sur l'objet de données de couleur
+        if (diceBoxRef.current.colorData) {
+            diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
+            diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
+            if (diceBoxRef.current.DiceFactory && typeof diceBoxRef.current.DiceFactory.applyColorSet === 'function') {
+                diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
+            }
+        }
+
+        // Forcer la propriété sur l'instance principale
+        diceBoxRef.current.theme_material = effectiveSettings.themeMaterial || 'plastic';
+      }
+
+      // ✅ Réapplication forcée de la gravité et réveil des objets 
+      // (Crucial pour éviter que le moteur physique ne "s'endorme" après un changement)
       try {
         if (diceBoxRef.current && diceBoxRef.current.world) {
           const world: any = diceBoxRef.current.world;
@@ -369,75 +366,18 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         console.warn('⚠️ [UPDATE] Erreur gravité manuelle:', err);
       }
 
-      // ✅ Réattacher le callback de fin de lancer fermement
+      // ✅ Double sécurité : Réattacher le callback une seconde fois après tout
       if (onRollCompleteRef.current) {
         diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
       }
 
       applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
-
-
-
       
-      // ✅ VIDER LE CACHE DE MATÉRIAUX (solution pour les matériaux) 
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        diceBoxRef.current.DiceFactory.materials_cache = {};
-        console.log('✅ [UPDATE] Cache de matériaux vidé');
-        
-        // Forcer la mise à jour du matériau dans colorData
-        if (diceBoxRef.current.colorData) {
-          diceBoxRef.current.colorData.texture = diceBoxRef.current.colorData.texture || {};
-          diceBoxRef.current.colorData.texture.material = effectiveSettings.themeMaterial || 'plastic';
-          diceBoxRef.current.DiceFactory.applyColorSet(diceBoxRef.current.colorData);
-          console.log('✅ [UPDATE] Matériau réappliqué:', effectiveSettings.themeMaterial || 'plastic');
-        }
-      }
-
-
-      
-
-
-          // ✅ Forcer la recréation du DiceFactory avec colorset ET matériau
-      if (diceBoxRef.current && diceBoxRef.current.DiceFactory) {
-        try {
-          const DiceFactory = diceBoxRef.current.DiceFactory.constructor;
-          const newFactory = new DiceFactory({
-            baseScale: effectiveSettings.baseScale * 100 / 6,
-            material: effectiveSettings.themeMaterial || 'plastic',
-          });
-          
-          // ✅ Appliquer le nouveau colorset
-          if (customColorset) {
-            newFactory.applyColorSet(customColorset);
-            console.log('✅ [UPDATE] Custom colorset appliqué au factory');
-            console.log('✅ [UPDATE] Matériau appliqué:', effectiveSettings.themeMaterial);
-          } else if (diceBoxRef.current.colorData) {
-            newFactory.applyColorSet(diceBoxRef.current.colorData);
-            console.log('✅ [UPDATE] Colorset existant appliqué au factory');
-          }
-          
-          diceBoxRef.current.DiceFactory = newFactory;
-          console.log('✅ [UPDATE] DiceFactory recréé avec nouveau colorset et matériau');
-        } catch (error) {
-          console.error('❌ [UPDATE] Erreur recréation DiceFactory:', error);
-        }
-      }
-
-      // ✅ Forcer la mise à jour du matériau dans le moteur
-      if (diceBoxRef.current) {
-        diceBoxRef.current.theme_material = effectiveSettings.themeMaterial || 'plastic';
-        console.log('✅ [UPDATE] Matériau forcé sur diceBox:', diceBoxRef.current.theme_material);
-      }
-      
-      console.log('✅ [UPDATE] Force finale appliquée:', diceBoxRef.current.strength);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ [UPDATE] Settings appliqués avec succès');
     };
 
     updateSettings();
-  }, [effectiveSettings, isInitialized]);
-
-
-  
+  }, [effectiveSettings, isInitialized]); // Seule dépendance aux settings du context
 
   // ✅ Synchronisation du volume en temps réel (0-100) depuis le contexte
   useEffect(() => {
@@ -445,7 +385,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
     try {
       applyVolume(contextSettings.soundsEnabled, contextSettings.volume);
-      console.log('🔊 [VOLUME] Mise à jour volume physique:', contextSettings.volume, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
     } catch (err) {
       console.warn('⚠️ [VOLUME] Erreur mise à jour volume:', err);
     }
@@ -457,8 +396,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
       requestAnimationFrame(() => {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
-        console.log('📐 [RESIZE] Recalcul dimensions:', viewportWidth, 'x', viewportHeight);
         
         if (containerRef.current) {
           containerRef.current.style.width = '100vw';
@@ -483,11 +420,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
     currentRollIdRef.current += 1;
     const thisRollId = currentRollIdRef.current;
 
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🎲 [ROLL] Lancer #' + thisRollId);
-    console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
-    console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     setIsRolling(true);
     setResult(null);
@@ -506,12 +439,12 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
     requestAnimationFrame(() => {
       if (thisRollId === currentRollIdRef.current && diceBoxRef.current) {
-        console.log('🚀 Lancement immédiat du roll !');
         
         if (typeof diceBoxRef.current.roll === 'function') {
           diceBoxRef.current.roll(notation);
         } else {
           console.error('❌ [ROLL] Méthode roll() non disponible !');
+          // Fallback
           const randomResult = generateRandomResult(rollData.diceFormula, rollData.modifier);
           setResult(randomResult);
           setShowResult(true);
@@ -602,7 +535,6 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         handleClose();
       }
     } else if (showResult) {
-      console.log('🚪 [CLICK] Fermeture manuelle');
       handleClose();
     } else {
       handleClose();
