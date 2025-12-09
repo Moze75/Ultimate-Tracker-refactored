@@ -555,18 +555,13 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
   useEffect(() => {
     if (!diceBoxRef.current || !isInitialized) return;
 
-    const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume : 0;
-
-    try { 
-      diceBoxRef.current.updateConfig({
-        sounds: contextSettings.soundsEnabled,
-        volume: volumeValue
-      });
-      console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeValue, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
+    try {
+      applyVolume(contextSettings.soundsEnabled, contextSettings.volume);
+      console.log('🔊 [VOLUME] Mise à jour volume physique:', contextSettings.volume, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
     } catch (err) {
       console.warn('⚠️ [VOLUME] Erreur mise à jour volume:', err);
     }
-  }, [contextSettings.volume, contextSettings.soundsEnabled, isInitialized]);
+  }, [contextSettings.volume, contextSettings.soundsEnabled, isInitialized, applyVolume]);
 
   // ✅ Recalculer les dimensions à chaque ouverture
   useEffect(() => {
