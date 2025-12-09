@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
 
-import { testConnection, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Player } from '../types/dnd';
 
 import { PlayerProfile } from '../components/PlayerProfile';
@@ -17,17 +17,14 @@ import { PlayerContext } from '../contexts/PlayerContext';
 import { ResponsiveGameLayout, DiceRollContext } from '../components/ResponsiveGameLayout';
 import { Grid3x3 } from 'lucide-react';
 
-import inventoryService from '../services/inventoryService';  // ✅ Utilise l'export par défaut
 import PlayerProfileProfileTab from '../components/PlayerProfileProfileTab';
 import { loadAbilitySections } from '../services/classesContent';
-
 
 import { PlayerProfileSettingsModal } from '../components/PlayerProfileSettingsModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { DiceBox3D } from '../components/DiceBox3D';
 import { DesktopView } from '../components/DesktopView';
-import { DiceSettingsModal } from '../components/DiceSettingsModal';
 
 import '../styles/swipe.css';
 
@@ -38,7 +35,6 @@ type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profil
 const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'];
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
-const SKIP_AUTO_RESUME_ONCE = 'ut:skipAutoResumeOnce';
 const lastTabKeyFor = (playerId: string) => `ut:lastActiveTab:${playerId}`;
 const isValidTab = (t: string | null): t is TabKey =>
   t === 'combat' || t === 'abilities' || t === 'stats' || t === 'equipment' || t === 'class' || t === 'profile';
@@ -107,243 +103,193 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
-   
-  
-    // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
+  // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
   });
 
-
-  // 👇 AJOUTE CETTE LIGNE : Compteur pour forcer le reload du DiceBox
+  // 🆕 Compteur de version pour forcer le reload du DiceBox
   const [diceBoxVersion, setDiceBoxVersion] = useState(0);
-  
+
   // ✨ État pour le contexte de dés centralisé
-const [diceRollData, setDiceRollData] = useState<{
-  type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
-  attackName: string;
-  diceFormula: string;
-  modifier: number;
-} | null>(null);
+  const [diceRollData, setDiceRollData] = useState<{
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  } | null>(null);
 
-const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
-// 🆕 Création d'une clé unique pour forcer le remontage propre du DiceBox
-// On exclut 'soundsEnabled' et 'volume' et 'fxVolume' car ils peuvent être gérés à chaud sans bug
-const diceBoxRemountKey = diceSettings ? `${diceSettings.theme}-${diceSettings.themeColor}-${diceSettings.themeMaterial}-${diceSettings.baseScale}-${diceSettings.gravity}-${diceSettings.strength}` : 'default';
+  const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
- 
-// GamePage.tsx - Remplacer le useEffect de fetch (~lignes 127-174)
+  const hasFetchedRef = useRef(false);
+  const FETCH_THROTTLE_MS = 30000; // 30 secondes
+  const prevPlayerId = useRef<string | null>(selectedCharacter?.id ?? null);
 
-const hasFetchedRef = useRef(false);
-const FETCH_THROTTLE_MS = 30000; // 30 secondes
+  // ✅ Écouter l'événement de sauvegarde des paramètres pour déclencher le reload du DiceBox
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('🔄 [GamePage] Paramètres sauvegardés -> Rechargement propre du DiceBox');
+      setDiceBoxVersion(v => v + 1);
+    };
 
-useEffect(() => {
-  if (prevPlayerId. current !== selectedCharacter.id) {
-    hasFetchedRef. current = false;
-    prevPlayerId.current = selectedCharacter.id;
-  }
+    window.addEventListener('dice-settings-changed', handleSettingsChanged);
+    return () => window.removeEventListener('dice-settings-changed', handleSettingsChanged);
+  }, []);
 
-  // Afficher immédiatement
-  setCurrentPlayer(selectedCharacter);
-  setLoading(false);
-
-  // Fetch throttled
-  if (!hasFetchedRef. current) {
-    const fetchTsKey = `ut:player-fetch-ts:${selectedCharacter.id}`;
-    const lastFetch = parseInt(localStorage.getItem(fetchTsKey) || '0', 10);
-    const elapsed = Date.now() - lastFetch;
-
-    if (elapsed > FETCH_THROTTLE_MS) {
-      hasFetchedRef. current = true;
-
-      supabase
-        . from('players')
-        .select('*')
-        .eq('id', selectedCharacter.id)
-        .single()
-        .then(({ data, error }) => {
-          if (! error && data) {
-            localStorage.setItem(fetchTsKey, Date.now().toString());
-            
-            setCurrentPlayer(prev => {
-              if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
-              console.log('[GamePage] ✅ Sync depuis Supabase');
-              localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
-              return data;
-            });
-          }
-        })
-        .catch(e => console.error('[GamePage] Erreur fetch:', e));
-    } else {
-      console.log('[GamePage] ⏳ Throttled, skip fetch');
-      hasFetchedRef. current = true;
+  useEffect(() => {
+    if (prevPlayerId.current !== selectedCharacter.id) {
+      hasFetchedRef.current = false;
+      prevPlayerId.current = selectedCharacter.id;
     }
-  }
-}, [selectedCharacter]);
 
-// ✅ AJOUT : Debug du chargement des settings
-useEffect(() => {
-  console.log('🔧 [GamePage] isDiceSettingsLoading:', isDiceSettingsLoading);
-  console.log('🔧 [GamePage] diceSettings:', diceSettings);
-}, [isDiceSettingsLoading, diceSettings]);
+    // Afficher immédiatement
+    setCurrentPlayer(selectedCharacter);
+    setLoading(false);
 
-// ✅ AJOUT : Debug du montage du DiceBox
-useEffect(() => {
-  console.log('🎲 [GamePage] Condition montage DiceBox:');
-  console.log('  - isDiceSettingsLoading:', isDiceSettingsLoading);
-  console.log('  - Montera DiceBox?', !isDiceSettingsLoading);
-  console.log('  - diceRollData:', diceRollData);
-}, [isDiceSettingsLoading, diceRollData]);
-  
+    // Fetch throttled
+    if (!hasFetchedRef.current) {
+      const fetchTsKey = `ut:player-fetch-ts:${selectedCharacter.id}`;
+      const lastFetch = parseInt(localStorage.getItem(fetchTsKey) || '0', 10);
+      const elapsed = Date.now() - lastFetch;
 
-// ✨ Fonction pour lancer les dés (partagée via Context)
-const rollDice = useCallback((data: {
-  type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
-  attackName: string;
-  diceFormula: string;
-  modifier: number;
-}) => {
-  console.log('🎲 [GamePage] rollDice appelé:', data);
-  setDiceRollData(data);
-}, []);
+      if (elapsed > FETCH_THROTTLE_MS) {
+        hasFetchedRef.current = true;
+
+        supabase
+          .from('players')
+          .select('*')
+          .eq('id', selectedCharacter.id)
+          .single()
+          .then(({ data, error }) => {
+            if (!error && data) {
+              localStorage.setItem(fetchTsKey, Date.now().toString());
+              
+              setCurrentPlayer(prev => {
+                if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+                console.log('[GamePage] ✅ Sync depuis Supabase');
+                localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(data));
+                return data;
+              });
+            }
+          })
+          .catch(e => console.error('[GamePage] Erreur fetch:', e));
+      } else {
+        console.log('[GamePage] ⏳ Throttled, skip fetch');
+        hasFetchedRef.current = true;
+      }
+    }
+  }, [selectedCharacter]);
+
+  // ✨ Fonction pour lancer les dés (partagée via Context)
+  const rollDice = useCallback((data: {
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  }) => {
+    console.log('🎲 [GamePage] rollDice appelé:', data);
+    setDiceRollData(data);
+  }, []);
 
    // --- START: Inventory avec cache local (GamePage) ---
-  // ✅ OPTIMISÉ : Cache localStorage + fetch uniquement si nécessaire
+  const INVENTORY_CACHE_KEY = `ut:inventory:${currentPlayer?.id}`;
+  const INVENTORY_CACHE_TTL = 1000 * 60 * 60; // 1 heure de validité du cache
 
-const INVENTORY_CACHE_KEY = `ut:inventory:${currentPlayer?.id}`;
-const INVENTORY_CACHE_TTL = 1000 * 60 * 60; // 1 heure de validité du cache
+  useEffect(() => {
+    if (!currentPlayer?.id) return;
 
-useEffect(() => {
-  if (! currentPlayer?. id) return;
+    const cacheKey = `ut:inventory:${currentPlayer.id}`;
+    const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
 
-  const cacheKey = `ut:inventory:${currentPlayer.id}`;
-  const cacheTimestampKey = `ut:inventory:ts:${currentPlayer. id}`;
-
-  const loadInventory = async () => {
-    // 1. Essayer de charger depuis le cache local d'abord
-    try {
-      const cachedData = localStorage.getItem(cacheKey);
-      const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
-      
-      if (cachedData && cachedTimestamp) {
-        const age = Date.now() - parseInt(cachedTimestamp, 10);
-        
-        // Si le cache a moins d'1 heure, l'utiliser directement
-        if (age < INVENTORY_CACHE_TTL) {
-          const parsed = JSON.parse(cachedData);
-          setInventory(parsed);
-          console.log('📦 Inventaire chargé depuis cache local:', parsed. length, 'items');
-          return; // ✅ Pas de requête Supabase ! 
-        }
-      }
-    } catch (e) {
-      console.warn('⚠️ Erreur lecture cache inventaire:', e);
-    }
-
-    // 2. Cache expiré ou absent : fetch depuis Supabase
-    if (! navigator.onLine) {
-      console.log('📴 Offline - utilisation du cache même expiré');
+    const loadInventory = async () => {
+      // 1. Essayer de charger depuis le cache local d'abord
       try {
-        const cachedData = localStorage. getItem(cacheKey);
-        if (cachedData) {
-          setInventory(JSON. parse(cachedData));
+        const cachedData = localStorage.getItem(cacheKey);
+        const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
+        
+        if (cachedData && cachedTimestamp) {
+          const age = Date.now() - parseInt(cachedTimestamp, 10);
+          if (age < INVENTORY_CACHE_TTL) {
+            const parsed = JSON.parse(cachedData);
+            setInventory(parsed);
+            return; 
+          }
         }
-      } catch {}
-      return;
-    }
+      } catch (e) {
+        console.warn('⚠️ Erreur lecture cache inventaire:', e);
+      }
 
-    try {
-      console.log('🔄 Fetch inventaire depuis Supabase.. .');
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select('*')
-        .eq('player_id', currentPlayer.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console. error('❌ Erreur fetch inventory:', error);
+      // 2. Cache expiré ou absent : fetch depuis Supabase
+      if (!navigator.onLine) {
+        try {
+          const cachedData = localStorage.getItem(cacheKey);
+          if (cachedData) {
+            setInventory(JSON.parse(cachedData));
+          }
+        } catch {}
         return;
       }
 
-      if (data) {
-        setInventory(data);
-        // Sauvegarder dans le cache
-        try {
-          localStorage. setItem(cacheKey, JSON.stringify(data));
-          localStorage.setItem(cacheTimestampKey, Date.now().toString());
-          console.log('💾 Inventaire mis en cache:', data.length, 'items');
-        } catch (e) {
-          console.warn('⚠️ Erreur sauvegarde cache:', e);
-        }
-      }
-    } catch (err) {
-      console.error('💥 Erreur fetch inventaire:', err);
-    }
-  };
-
-  loadInventory();
-}, [currentPlayer?.id]);
-
-// ✅ Sauvegarder le cache à chaque modification locale de l'inventaire
-useEffect(() => {
-  if (!currentPlayer?.id || inventory.length === 0) return;
-  
-  const cacheKey = `ut:inventory:${currentPlayer.id}`;
-  const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
-  
-  try {
-    localStorage. setItem(cacheKey, JSON.stringify(inventory));
-    localStorage.setItem(cacheTimestampKey, Date.now().toString());
-  } catch (e) {
-    console. warn('⚠️ Erreur mise à jour cache inventaire:', e);
-  }
-}, [inventory, currentPlayer?. id]);
-
-// Event custom pour refresh forcé depuis CampaignPlayerModal ou après ajout/suppression
-useEffect(() => {
-  const handleRefreshRequest = async (e: CustomEvent) => {
-    if (e.detail?. playerId === currentPlayer?. id) {
-      console.log('⚡ Refresh forcé demandé - invalidation du cache');
-      
-      // Invalider le cache
-      const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
-      localStorage.removeItem(cacheTimestampKey);
-      
-      // Refetch
-      if (navigator.onLine) {
-        const { data } = await supabase
+      try {
+        const { data, error } = await supabase
           .from('inventory_items')
           .select('*')
           .eq('player_id', currentPlayer.id)
           .order('created_at', { ascending: false });
-        
+
         if (data) {
           setInventory(data);
-          const cacheKey = `ut:inventory:${currentPlayer.id}`;
-          localStorage. setItem(cacheKey, JSON.stringify(data));
-          localStorage.setItem(cacheTimestampKey, Date.now().toString());
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(cacheTimestampKey, Date.now().toString());
+          } catch (e) {
+            console.warn('⚠️ Erreur sauvegarde cache:', e);
+          }
+        }
+      } catch (err) {
+        console.error('💥 Erreur fetch inventaire:', err);
+      }
+    };
+
+    loadInventory();
+  }, [currentPlayer?.id]);
+
+  useEffect(() => {
+    const handleRefreshRequest = async (e: CustomEvent) => {
+      if (e.detail?.playerId === currentPlayer?.id) {
+        const cacheTimestampKey = `ut:inventory:ts:${currentPlayer.id}`;
+        localStorage.removeItem(cacheTimestampKey);
+        
+        if (navigator.onLine) {
+          const { data } = await supabase
+            .from('inventory_items')
+            .select('*')
+            .eq('player_id', currentPlayer.id)
+            .order('created_at', { ascending: false });
+          
+          if (data) {
+            setInventory(data);
+            const cacheKey = `ut:inventory:${currentPlayer.id}`;
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(cacheTimestampKey, Date.now().toString());
+          }
         }
       }
+    };
+
+    window.addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
+    return () => {
+      window.removeEventListener('inventory:refresh', handleRefreshRequest as EventListener);
+    };
+  }, [currentPlayer?.id]);
+
+  useEffect(() => {
+    if (deviceType === 'mobile' && isGridMode) {
+      setIsGridMode(false);
+      toast('Mode grille disponible uniquement sur desktop', { icon: '📱' });
     }
-  };
-
-  window.addEventListener('inventory:refresh', handleRefreshRequest as EventListener);
+  }, [deviceType, isGridMode]);
   
-  return () => {
-    window.removeEventListener('inventory:refresh', handleRefreshRequest as EventListener);
-  };
-}, [currentPlayer?.id]);
-  // --- END
-
-// Désactiver le mode grille sur mobile
-useEffect(() => {
-  if (deviceType === 'mobile' && isGridMode) {
-    setIsGridMode(false);
-    toast('Mode grille disponible uniquement sur desktop', { icon: '📱' });
-  }
-}, [deviceType, isGridMode]);
-  
-  // Onglet initial
   const initialTab: TabKey = (() => {
     try {
       const saved = localStorage.getItem(lastTabKeyFor(selectedCharacter.id));
@@ -354,12 +300,10 @@ useEffect(() => {
   })();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
-  // PRE-MONTAGE COMPLET
   const [visitedTabs] = useState<Set<TabKey>>(
     () => new Set<TabKey>(['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'])
   );
 
-  // État modal Paramètres
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSlideFrom, setSettingsSlideFrom] = useState<'left' | 'right'>('left');
 
@@ -368,15 +312,11 @@ useEffect(() => {
   const widthRef = useRef<number>(0);
   const paneRefs = useRef<Record<TabKey, HTMLDivElement | null>>({} as any);
 
-  // Geste
   const startXRef = useRef<number | null>(null);
   const startYRef = useRef<number | null>(null);
   const dragStartScrollYRef = useRef<number>(0);
-
-  // Décision de direction
   const gestureDirRef = useRef<'undetermined' | 'horizontal' | 'vertical'>('undetermined');
 
-  // Indique si le scroll est réellement gelé
   const freezeActiveRef = useRef(false);
   const freezeWatchdogRef = useRef<number | null>(null);
   const hasStabilizedRef = useRef(false);
@@ -386,19 +326,14 @@ useEffect(() => {
   const [isInteracting, setIsInteracting] = useState(false);
   const [containerH, setContainerH] = useState<number | undefined>(undefined);
   const [heightLocking, setHeightLocking] = useState(false);
-  // Nouveau: historique récent des mouvements pour calculer la vitesse (flick)
   const recentMovesRef = useRef<Array<{ x: number; t: number }>>([]);
-  // Nouveau: mémorise la direction du voisin affiché pendant le drag pour le garder monté pendant l’animation
   const [latchedNeighbor, setLatchedNeighbor] = useState<'prev' | 'next' | null>(null);
-
-  const prevPlayerId = useRef<string | null>(selectedCharacter?.id ?? null);
 
   /* ---------------- Scroll Freeze Safe API ---------------- */
   const safeFreeze = useCallback(() => {
     if (freezeActiveRef.current) return;
     freezeActiveRef.current = true;
     dragStartScrollYRef.current = reallyFreezeScroll();
-    // Watchdog : force unfreeze si rien ne libère après 1.2s
     freezeWatchdogRef.current = window.setTimeout(() => {
       if (freezeActiveRef.current) {
         safeUnfreeze(true);
@@ -435,11 +370,10 @@ useEffect(() => {
     resetGestureState();
   }, [resetGestureState, safeUnfreeze]);
 
-  // Ouvrir/fermer la modale Paramètres
   const openSettings = useCallback(
     (dir: 'left' | 'right' = 'left') => {
-      if (freezeActiveRef.current) safeUnfreeze(true); // si le scroll a été gelé par le swipe de tabs
-      fullAbortInteraction(); // reset gestuelle des tabs en cours
+      if (freezeActiveRef.current) safeUnfreeze(true); 
+      fullAbortInteraction(); 
       setSettingsSlideFrom(dir);
       setSettingsOpen(true);
     },
@@ -447,85 +381,24 @@ useEffect(() => {
   );
 
   const closeSettings = useCallback(() => {
-    setDiceBoxVersion(v => v + 1);
+    setSettingsOpen(false);
   }, []);
 
   /* ---------------- Update player ---------------- */
-const applyPlayerUpdate = useCallback( 
-  (updated: Player) => {
-    if (isExiting) {
-      console.log('[GamePage] applyPlayerUpdate ignoré (isExiting=true)');
-      return;
-    }
+  const applyPlayerUpdate = useCallback( 
+    (updated: Player) => {
+      if (isExiting) return;
+      setCurrentPlayer(updated);
+      try { onUpdateCharacter?.(updated); } catch (e) {}
+      try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated)); } catch (e) {}
+    },
+    [onUpdateCharacter, isExiting, currentPlayer]
+  );
 
-    console.log('[GamePage] applyPlayerUpdate', {
-      before: {
-        current_hp: currentPlayer?.current_hp,
-        temporary_hp: currentPlayer?.temporary_hp,
-      },
-      after: {
-        current_hp: updated.current_hp,
-        temporary_hp: updated.temporary_hp,
-      },
-    });
-
-    setCurrentPlayer(updated);
-
-    try {
-      onUpdateCharacter?.(updated);
-    } catch (e) {
-      console.warn('[GamePage] onUpdateCharacter threw', e);
-    }
-
-    try {
-      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated));
-    } catch (e) {
-      console.warn('[GamePage] localStorage snapshot failed', e);
-    }
-  },
-  [onUpdateCharacter, isExiting, currentPlayer]
-);
-
-    // 🆕 Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = useCallback((url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
   }, []);
-
-
-
-  /* ---------------- Persistance snapshot & tab ---------------- */
-  useEffect(() => {
-    const persist = () => {
-      if (!currentPlayer) return;
-      try {
-        localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
-        localStorage.setItem(lastTabKeyFor(selectedCharacter.id), activeTab);
-      } catch {}
-    };
-    window.addEventListener('visibilitychange', persist);
-    window.addEventListener('pagehide', persist);
-    return () => {
-      window.removeEventListener('visibilitychange', persist);
-      window.removeEventListener('pagehide', persist);
-    };
-  }, [currentPlayer, activeTab, selectedCharacter.id]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lastTabKeyFor(selectedCharacter.id), activeTab); } catch {}
-  }, [activeTab, selectedCharacter.id]);
-
-  useEffect(() => {
-    const saved = (() => {
-      try {
-        const v = localStorage.getItem(lastTabKeyFor(selectedCharacter.id));
-        return isValidTab(v) ? v : 'combat';
-      } catch {
-        return 'combat';
-      }
-    })();
-    setActiveTab(saved);
-  }, [selectedCharacter.id]);
 
   /* ---------------- Initialisation ---------------- */
   useEffect(() => {
@@ -533,31 +406,24 @@ const applyPlayerUpdate = useCallback(
       try {
         setLoading(true);
         setConnectionError(null);
-        
-        // ✅ OPTIMISÉ : Plus de testConnection() - on laisse le fetch inventaire 
-        // (via Realtime) gérer les erreurs de connexion
-        
         setCurrentPlayer((prev) =>
-          prev && prev.id === selectedCharacter. id ?  prev : selectedCharacter
+          prev && prev.id === selectedCharacter.id ? prev : selectedCharacter
         );
-        
-        // Note: L'inventaire est maintenant chargé via le useEffect Realtime
         setLoading(false);
       } catch (error: any) {
         console.error('Erreur d\'initialisation:', error);
-        setConnectionError(error?. message ??  'Erreur inconnue');
+        setConnectionError(error?.message ?? 'Erreur inconnue');
         setLoading(false);
       }
     };
 
-    if (prevPlayerId. current !== selectedCharacter.id) {
+    if (prevPlayerId.current !== selectedCharacter.id) {
       prevPlayerId.current = selectedCharacter.id;
       initialize();
     } else if (loading) {
       initialize();
     }
-  }, [selectedCharacter. id, loading]);
- 
+  }, [selectedCharacter.id, loading]);
  
   /* ---------------- Préchargement Sections Classe ---------------- */
   useEffect(() => {
@@ -612,16 +478,13 @@ const applyPlayerUpdate = useCallback(
     return () => window.cancelAnimationFrame(id);
   }, [activeTab, isInteracting, animating, measureActiveHeight]);
 
-  /* ---------------- Swipe tactile amélioré + sûreté ---------------- */
-  const HORIZONTAL_DECIDE_THRESHOLD = 10;   // déclenche un peu plus tôt
-  const HORIZONTAL_DOMINANCE_RATIO = 1.10;  // dominance horizontale légèrement moins stricte
-  // Nouveaux seuils "plus faciles"
-  const SWIPE_THRESHOLD_RATIO = 0.18;       // 18% de la largeur au lieu de 25%
-  const SWIPE_THRESHOLD_MIN_PX = 36;        // min 36px au lieu de 48px
-
-  // Flick: vitesse au-dessus de laquelle on valide même si la distance < seuil
-  // 0.35 px/ms = 350 px/s (ajuste si besoin entre 0.3 et 0.45)
+  /* ---------------- Swipe tactile amélioré ---------------- */
+  const HORIZONTAL_DECIDE_THRESHOLD = 10;
+  const HORIZONTAL_DOMINANCE_RATIO = 1.10;
+  const SWIPE_THRESHOLD_RATIO = 0.18;
+  const SWIPE_THRESHOLD_MIN_PX = 36;
   const FLICK_VELOCITY_PX_PER_MS = 0.35;
+
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length !== 1) return;
     const t = e.touches[0];
@@ -630,7 +493,6 @@ const applyPlayerUpdate = useCallback(
     gestureDirRef.current = 'undetermined';
     setAnimating(false);
     setLatchedNeighbor(null);
-    // seed de l’historique pour le flick
     recentMovesRef.current = [{ x: t.clientX, t: performance.now() }];
   };
 
@@ -643,7 +505,6 @@ const applyPlayerUpdate = useCallback(
     const adx = Math.abs(dx);
     const ady = Math.abs(dy);
 
-    // Décision
     if (gestureDirRef.current === 'undetermined') {
       if (adx >= HORIZONTAL_DECIDE_THRESHOLD || ady >= HORIZONTAL_DECIDE_THRESHOLD) {
         if (adx > ady * HORIZONTAL_DOMINANCE_RATIO) {
@@ -653,25 +514,21 @@ const applyPlayerUpdate = useCallback(
           safeFreeze();
         } else {
           gestureDirRef.current = 'vertical';
-          return; // Laisse le scroll natif
+          return;
         }
       } else {
-        return; // Pas encore décidé, ne rien faire
+        return;
       }
     }
 
-    if (gestureDirRef.current !== 'horizontal') {
-      return; // Vertical : ne pas empêcher le scroll
-    }
+    if (gestureDirRef.current !== 'horizontal') return;
 
-    // Horizontal confirmé
     e.preventDefault();
 
     let clamped = dx;
     if (!prevKey && clamped > 0) clamped = 0;
     if (!nextKey && clamped < 0) clamped = 0;
 
-    // Mémorise le voisin en vue pour le garder monté pendant l’animation
     if (clamped > 0 && prevKey) {
       if (latchedNeighbor !== 'prev') setLatchedNeighbor('prev');
     } else if (clamped < 0 && nextKey) {
@@ -679,19 +536,15 @@ const applyPlayerUpdate = useCallback(
     }
 
     setDragX(clamped);
-    // Note: ce return n’annule pas le rAF (dans un handler React), on garde simple ici
     requestAnimationFrame(measureDuringSwipe);
-    // Historique pour la vitesse (garde ~120ms de data)
     const now = performance.now();
     recentMovesRef.current.push({ x: t.clientX, t: now });
     const cutoff = now - 120;
     while (recentMovesRef.current.length > 2 && recentMovesRef.current[0].t < cutoff) {
       recentMovesRef.current.shift();
     }
-
   };
 
-  // Déclenche la transition proprement: active d’abord l’anim, puis change le transform dans le frame suivant
   const animateTo = (toPx: number, cb?: () => void) => {
     setAnimating(true);
     requestAnimationFrame(() => {
@@ -699,7 +552,7 @@ const applyPlayerUpdate = useCallback(
       window.setTimeout(() => {
         setAnimating(false);
         cb?.();
-        setLatchedNeighbor(null); // libère le voisin verrouillé à la fin
+        setLatchedNeighbor(null);
       }, 310);
     });
   };
@@ -711,31 +564,27 @@ const applyPlayerUpdate = useCallback(
   };
 
   const onTouchEnd = () => {
-    // Geste non démarré
     if (startXRef.current == null || startYRef.current == null) {
       resetGestureState();
       return;
     }
 
     if (gestureDirRef.current !== 'horizontal') {
-      // Si on avait gelé par erreur (théoriquement non), on libère
       if (freezeActiveRef.current) safeUnfreeze();
       resetGestureState();
       return;
     }
 
-    // Horizontal
     const width = widthRef.current || (stageRef.current?.clientWidth ?? 0);
     const threshold = Math.max(SWIPE_THRESHOLD_MIN_PX, width * SWIPE_THRESHOLD_RATIO);
 
-    // Vitesse pour flick (px/ms) sur la fenêtre ~120ms
     let vx = 0;
     const moves = recentMovesRef.current;
     if (moves.length >= 2) {
       const first = moves[0];
       const last = moves[moves.length - 1];
       const dt = Math.max(1, last.t - first.t);
-      vx = (last.x - first.x) / dt; // >0 vers la droite, <0 vers la gauche
+      vx = (last.x - first.x) / dt;
     }
 
     const commit = (dir: -1 | 1) => {
@@ -767,7 +616,6 @@ const applyPlayerUpdate = useCallback(
     else cancel();
   };
 
-  // Sécurité: événements globaux qui doivent TOUJOURS libérer le scroll si gelé
   useEffect(() => {
     const safetyRelease = () => {
       if (freezeActiveRef.current) safeUnfreeze(true);
@@ -790,11 +638,8 @@ const applyPlayerUpdate = useCallback(
     };
   }, [fullAbortInteraction, safeUnfreeze]);
 
-  /* ---------------- Changement via clic nav ---------------- */
   const handleTabClickChange = useCallback((tab: string) => {
     if (!isValidTab(tab)) return;
-
-    // Si pour une raison quelconque l'UI était "bloquée", reset
     if (freezeActiveRef.current) safeUnfreeze(true);
     resetGestureState();
     setIsInteracting(false);
@@ -823,247 +668,386 @@ const applyPlayerUpdate = useCallback(
     try { localStorage.setItem(lastTabKeyFor(selectedCharacter.id), tab); } catch {}
   }, [activeTab, selectedCharacter.id, measureActiveHeight, measurePaneHeight, resetGestureState, safeUnfreeze]);
 
-  /* ---------------- Bouton retour ---------------- */
-const handleBackToSelection = () => {
-  if (isExiting) return;
-
-  // Sauvegarder avant de partir
-  if (currentPlayer) {
-    localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
-  }
-
-  // ✅ Invalider le cache de la liste des joueurs pour forcer un refetch
-  localStorage.removeItem(`ut:players-list:ts:${session?. user?.id}`);
-
-  setIsExiting(true);
-  onBackToSelection?. ();
-};
-
-  /* ---------------- Reload inventaire (sécurité) ---------------- */
-  // ✅ SUPPRIMÉ : L'inventaire est maintenant chargé via Realtime subscription
-  // useEffect(() => {
-  //   async function loadInventory() { ... }
-  //   loadInventory();
-  // }, [selectedCharacter?.id]);
-
-  /* ---------------- Rendu d'un pane ---------------- */
-
-const renderPane = (key: TabKey | 'profile-details') => { 
-  if (!currentPlayer) return null;
-   
-  // Profil simple (avatar)
-  if (key === 'profile') {
-    if (isGridMode) {
-      return (
-        <div className="-m-4">
-          <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} />
-        </div>
-      );
+  const handleBackToSelection = () => {
+    if (isExiting) return;
+    if (currentPlayer) {
+      localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(currentPlayer));
     }
-    // En mode onglets : afficher le PlayerProfileProfileTab
-    return <PlayerProfileProfileTab player={currentPlayer} onUpdate={applyPlayerUpdate} />;
-  }
-  
-  switch (key) {
-    case 'combat': {
-      return (
-        <div
-          onTouchStart={(e) => {
-            const t = e.touches[0];
-            (e.currentTarget as any).__sx = t.clientX;
-            (e.currentTarget as any).__sy = t.clientY;
-          }}
-          onTouchMove={(e) => {
-            const sx = (e.currentTarget as any).__sx ?? null;
-            const sy = (e.currentTarget as any).__sy ?? null; 
-            if (sx == null || sy == null) return;
-            const t = e.touches[0];
-            const dx = t.clientX - sx;
-            const dy = t.clientY - sy;
-            if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 64) {
-              e.stopPropagation();
-              e.preventDefault();
-              openSettings('left');
-            }
-          }}
-          onTouchEnd={(e) => {
-            (e.currentTarget as any).__sx = null; 
-            (e.currentTarget as any).__sy = null;
-          }}
-             >
-          <CombatTab player={currentPlayer} inventory={inventory} onUpdate={applyPlayerUpdate} />
-        </div>
-      ); 
-    }
-    case 'class': return <ClassesTabWrapper player={currentPlayer} onUpdate={applyPlayerUpdate} />;
-    case 'abilities': return <AbilitiesTab player={currentPlayer} onUpdate={applyPlayerUpdate} />;
-       case 'stats': return <StatsTab player={currentPlayer} inventory={inventory} onUpdate={applyPlayerUpdate} />;
-    case 'equipment':
-      return (
-        <EquipmentTab
-          player={currentPlayer}
-          inventory={inventory}
-          onPlayerUpdate={applyPlayerUpdate}
-          onInventoryUpdate={setInventory}
-        />
-      );
-    default: return null; 
-  }
-}; 
+    localStorage.removeItem(`ut:players-list:ts:${session?.user?.id}`);
+    setIsExiting(true);
+    onBackToSelection?.();
+  };
 
-/* ---------------- Rendu principal avec Provider ---------------- */
-return (
-  <DiceRollContext.Provider value={{ rollDice }}>
-  
-{/* 🔥 IMAGE DE BACKGROUND - POUR MOBILE/TABLET */}
-{(deviceType === 'mobile' || deviceType === 'tablet') && (
-  <>
-    {/* Image de fond */}
-    <div 
-      className="fixed inset-0 pointer-events-none"
-      style={{
-        zIndex: 0,
-        overflow: 'hidden',
-      }}
-    >
-      {backgroundImage.startsWith('color:') ? (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: backgroundImage.replace('color:', ''),
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        />
-      ) : backgroundImage.startsWith('gradient:') ? (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: backgroundImage.replace('gradient:', ''),
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        />
-      ) : (
-        <img
-          src={backgroundImage}
-          alt="background"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center top',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            filter: 'brightness(0.95)',
-          }}
-        />
-      )}
-    </div>
+  const renderPane = (key: TabKey | 'profile-details') => { 
+    if (!currentPlayer) return null;
+     
+    if (key === 'profile') {
+      if (isGridMode) {
+        return (
+          <div className="-m-4">
+            <PlayerProfile player={currentPlayer} onUpdate={applyPlayerUpdate} />
+          </div>
+        );
+      }
+      return <PlayerProfileProfileTab player={currentPlayer} onUpdate={applyPlayerUpdate} />;
+    }
     
-{/* ✨ Calque semi-opaque pour améliorer la lisibilité */}
-<div 
-  className="fixed inset-0 pointer-events-none bg-gray-900/70"
-  style={{
-    zIndex: 1,
-  }}
-/>
-  </>
-)}
-
-{(() => {
-  /* ---------------- Loading ---------------- */
-      if (loading) {
+    switch (key) {
+      case 'combat': {
         return (
-          <div className="min-h-screen flex items-center justify-center relative z-50">
-            <div className="text-center space-y-4">
-              <img
-                src="/icons/wmremove-transformed.png"
-                alt="Chargement..."
-                className="animate-spin rounded-full h-12 w-12 mx-auto object-cover"
-              />
-              <p className="text-gray-400">Chargement en cours...</p>
-            </div>
+          <div
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              (e.currentTarget as any).__sx = t.clientX;
+              (e.currentTarget as any).__sy = t.clientY;
+            }}
+            onTouchMove={(e) => {
+              const sx = (e.currentTarget as any).__sx ?? null;
+              const sy = (e.currentTarget as any).__sy ?? null; 
+              if (sx == null || sy == null) return;
+              const t = e.touches[0];
+              const dx = t.clientX - sx;
+              const dy = t.clientY - sy;
+              if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 64) {
+                e.stopPropagation();
+                e.preventDefault();
+                openSettings('left');
+              }
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as any).__sx = null; 
+              (e.currentTarget as any).__sy = null;
+            }}
+               >
+            <CombatTab player={currentPlayer} inventory={inventory} onUpdate={applyPlayerUpdate} />
           </div>
-        );
+        ); 
       }
-
-      /* ---------------- Erreur de connexion ---------------- */
-      if (connectionError) {
+      case 'class': return <ClassesTabWrapper player={currentPlayer} onUpdate={applyPlayerUpdate} />;
+      case 'abilities': return <AbilitiesTab player={currentPlayer} onUpdate={applyPlayerUpdate} />;
+      case 'stats': return <StatsTab player={currentPlayer} inventory={inventory} onUpdate={applyPlayerUpdate} />;
+      case 'equipment':
         return (
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="max-w-md w-full space-y-4 stat-card p-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-red-500 mb-4">Erreur de connexion</h2>
-                <p className="text-gray-300 mb-4">{connectionError}</p>
-                <p className="text-sm text-gray-400 mb-4">
-                  Vérifiez votre connexion Internet et réessayez.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setConnectionError(null);
-                  setLoading(true);
-                  // ✅ OPTIMISÉ : Simple reload, le Realtime se reconnectera
-                  setCurrentPlayer(selectedCharacter);
-                  setLoading(false);
+          <EquipmentTab
+            player={currentPlayer}
+            inventory={inventory}
+            onPlayerUpdate={applyPlayerUpdate}
+            onInventoryUpdate={setInventory}
+          />
+        );
+      default: return null; 
+    }
+  }; 
+
+  return (
+    <DiceRollContext.Provider value={{ rollDice }}>
+      {(deviceType === 'mobile' || deviceType === 'tablet') && (
+        <>
+          <div 
+            className="fixed inset-0 pointer-events-none"
+            style={{
+              zIndex: 0,
+              overflow: 'hidden',
+            }}
+          >
+            {backgroundImage.startsWith('color:') ? (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  background: backgroundImage.replace('color:', ''),
+                  pointerEvents: 'none',
+                  userSelect: 'none',
                 }}
-                className="w-full btn-primary px-4 py-2 rounded-lg"
-              >
-                Réessayer
-              </button>
-            </div>
+              />
+            ) : backgroundImage.startsWith('gradient:') ? (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  background: backgroundImage.replace('gradient:', ''),
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+              />
+            ) : (
+              <img
+                src={backgroundImage}
+                alt="background"
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  filter: 'brightness(0.95)',
+                }}
+              />
+            )}
           </div>
-        );
-      }
+          <div 
+            className="fixed inset-0 pointer-events-none bg-gray-900/70"
+            style={{
+              zIndex: 1,
+            }}
+          />
+        </>
+      )}
 
-      /* ---------------- Swipe transforms (calculs) ---------------- */
-      const neighborTypeRaw: 'prev' | 'next' | null = (() => {
-        if (dragX > 0 && prevKey) return 'prev';
-        if (dragX < 0 && nextKey) return 'next';
-        return null;
-      })();
+      {(() => {
+        if (loading) {
+          return (
+            <div className="min-h-screen flex items-center justify-center relative z-50">
+              <div className="text-center space-y-4">
+                <img
+                  src="/icons/wmremove-transformed.png"
+                  alt="Chargement..."
+                  className="animate-spin rounded-full h-12 w-12 mx-auto object-cover"
+                />
+                <p className="text-gray-400">Chargement en cours...</p>
+              </div>
+            </div>
+          );
+        }
 
-      const neighborType: 'prev' | 'next' | null =
-        neighborTypeRaw ?? (animating ? latchedNeighbor : null);
+        if (connectionError) {
+          return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+              <div className="max-w-md w-full space-y-4 stat-card p-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-red-500 mb-4">Erreur de connexion</h2>
+                  <p className="text-gray-300 mb-4">{connectionError}</p>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Vérifiez votre connexion Internet et réessayez.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setConnectionError(null);
+                    setLoading(true);
+                    setCurrentPlayer(selectedCharacter);
+                    setLoading(false);
+                  }}
+                  className="w-full btn-primary px-4 py-2 rounded-lg"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          );
+        }
 
-      const currentTransform = `translate3d(${dragX}px, 0, 0)`;
-      const neighborTransform =
-        neighborType === 'next'
-          ? `translate3d(calc(100% + ${dragX}px), 0, 0)`
-          : neighborType === 'prev'
-          ? `translate3d(calc(-100% + ${dragX}px), 0, 0)`
-          : undefined;
-      const showAsStatic = !isInteracting && !animating;
+        const neighborTypeRaw: 'prev' | 'next' | null = (() => {
+          if (dragX > 0 && prevKey) return 'prev';
+          if (dragX < 0 && nextKey) return 'next';
+          return null;
+        })();
 
-      /* ---------------- Mode Desktop (sans grille) ---------------- */
-      if ((deviceType === 'desktop' || deviceType === 'tablet') && !isGridMode && currentPlayer) {
+        const neighborType: 'prev' | 'next' | null =
+          neighborTypeRaw ?? (animating ? latchedNeighbor : null);
+
+        const currentTransform = `translate3d(${dragX}px, 0, 0)`;
+        const neighborTransform =
+          neighborType === 'next'
+            ? `translate3d(calc(100% + ${dragX}px), 0, 0)`
+            : neighborType === 'prev'
+            ? `translate3d(calc(-100% + ${dragX}px), 0, 0)`
+            : undefined;
+        const showAsStatic = !isInteracting && !animating;
+
+        if ((deviceType === 'desktop' || deviceType === 'tablet') && !isGridMode && currentPlayer) {
+          return (
+            <>
+              <div className="fixed top-4 right-4 z-50"></div>
+
+              <DesktopView
+                player={currentPlayer}
+                inventory={inventory}
+                onPlayerUpdate={applyPlayerUpdate}
+                onInventoryUpdate={setInventory}
+                classSections={classSections}
+                session={session}
+                onBackToSelection={handleBackToSelection}
+              />
+
+              <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
+                <button
+                  onClick={handleBackToSelection}
+                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                >
+                  <LogOut size={20} />
+                  Retour aux personnages
+                </button>
+              </div>
+            </>
+          );
+        }
+
         return (
-          <>
-            <div className="fixed top-4 right-4 z-50"></div>
+          <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
+            {deviceType === 'desktop' && !isGridMode && (
+              <div className="fixed top-4 right-4 z-50">
+                <button
+                  onClick={() => {
+                    setIsGridMode(true);
+                    toast.success('Mode grille activé');
+                  }}
+                  className="px-4 py-2 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 flex items-center gap-2 shadow-lg transition-all hover:scale-105"
+                >
+                  <Grid3x3 className="w-5 h-5" />
+                  Mode Grille
+                </button>
+              </div>
+            )}
 
-            <DesktopView
-              player={currentPlayer}
-              inventory={inventory}
-              onPlayerUpdate={applyPlayerUpdate}
-              onInventoryUpdate={setInventory}
-              classSections={classSections}
-              session={session}
-              onBackToSelection={handleBackToSelection}
-            />
+            {!settingsOpen && !isGridMode && (
+              <div
+                className="fixed inset-y-0 left-0 w-4 sm:w-5 z-50"
+                onTouchStart={(e) => {
+                  const t = e.touches[0];
+                  (e.currentTarget as any).__sx = t.clientX;
+                  (e.currentTarget as any).__sy = t.clientY;
+                  (e.currentTarget as any).__edge = t.clientX <= 16;
+                }}
+                onTouchMove={(e) => {
+                  const sx = (e.currentTarget as any).__sx ?? null;
+                  const sy = (e.currentTarget as any).__sy ?? null;
+                  const edge = (e.currentTarget as any).__edge ?? false;
+                  if (!edge || sx == null || sy == null) return;
+                  const t = e.touches[0];
+                  const dx = t.clientX - sx;
+                  const dy = t.clientY - sy;
+                  if (Math.abs(dx) < 14) return;
+                  if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 48) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openSettings('left');
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  (e.currentTarget as any).__sx = null;
+                  (e.currentTarget as any).__sy = null;
+                  (e.currentTarget as any).__edge = false;
+                }}
+              >
+                <div className="w-full h-full" aria-hidden />
+              </div>
+            )}
 
-            <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
+            <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}> 
+              {currentPlayer && (
+                <PlayerContext.Provider value={currentPlayer}>
+                  {!isGridMode && (
+                    <PlayerProfile 
+                      player={currentPlayer} 
+                      onUpdate={applyPlayerUpdate} 
+                      inventory={inventory}
+                      currentBackground={backgroundImage}
+                      onBackgroundChange={handleBackgroundChange}
+                    />
+                  )}
+
+                  {isGridMode && deviceType === 'desktop' ? (
+                    <ResponsiveGameLayout
+                      player={currentPlayer}
+                      userId={session?.user?.id}
+                      onPlayerUpdate={applyPlayerUpdate}
+                      inventory={inventory}
+                      onInventoryUpdate={setInventory}
+                      classSections={classSections}
+                      renderPane={renderPane}
+                      onToggleMode={() => {
+                        setIsGridMode(false);
+                        toast.success('Mode onglets activé');
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
+
+                      <div
+                        ref={stageRef}
+                        className="relative"
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                        onTouchCancel={() => {
+                          fullAbortInteraction();
+                        }}
+                        style={{
+                          touchAction: 'pan-y',
+                          height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                          transition: heightLocking ? 'height 280ms ease' : undefined,
+                        }}
+                      >
+                        {Array.from(visitedTabs).map((key) => {
+                          const isActive = key === activeTab;
+                          const isNeighbor =
+                            (neighborType === 'next' && key === nextKey) ||
+                            (neighborType === 'prev' && key === prevKey);
+
+                          if (showAsStatic) {
+                            return (
+                              <div
+                                key={key}
+                                ref={(el) => { paneRefs.current[key] = el; }}
+                                data-tab={key}
+                                style={{
+                                  display: isActive ? 'block' : 'none',
+                                  position: 'relative',
+                                  transform: 'none'
+                                }}
+                              >
+                                {key === 'class' && classSections === null
+                                  ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
+                                  : renderPane(key)}
+                              </div>
+                            );
+                          }
+
+                          const display = isActive || isNeighbor ? 'block' : 'none';
+                          let transform = 'translate3d(0,0,0)';
+                          if (isActive) transform = currentTransform;
+                          if (isNeighbor && neighborTransform) transform = neighborTransform;
+
+                          return (
+                            <div
+                              key={key}
+                              ref={(el) => { paneRefs.current[key] = el; }}
+                              data-tab={key}
+                              className={animating ? 'sv-anim' : undefined}
+                              style={{
+                                position: 'absolute',
+                                inset: 0,
+                                display,
+                                transform,
+                                willChange: isActive || isNeighbor ? 'transform' : undefined
+                              }}
+                            >
+                              {key === 'class' && classSections === null
+                                ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
+                                : renderPane(key)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </PlayerContext.Provider>
+              )}
+            </div>
+
+            <div className="w-full max-w-md mx-auto mt-6 px-4 relative z-50">
               <button
                 onClick={handleBackToSelection}
                 className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
@@ -1072,213 +1056,40 @@ return (
                 Retour aux personnages
               </button>
             </div>
-          </>
-        );
-      }
 
-      /* ---------------- Mode normal (onglets/grille) ---------------- */
-      return (
-        <div className="min-h-screen p-2 sm:p-4 md:p-6 no-overflow-anchor">
-          {/* Bouton toggle mode grille (visible uniquement sur desktop en mode mobile-like) */}
-          {deviceType === 'desktop' && !isGridMode && (
-            <div className="fixed top-4 right-4 z-50">
-              <button
-                onClick={() => {
-                  setIsGridMode(true);
-                  toast.success('Mode grille activé');
-                }}
-                className="px-4 py-2 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 flex items-center gap-2 shadow-lg transition-all hover:scale-105"
-              >
-                <Grid3x3 className="w-5 h-5" />
-                Mode Grille
-              </button>
-            </div>
-          )}
-
-          {/* Zone de capture de SWIPE au bord gauche (seulement en mode onglets) */}
-          {!settingsOpen && !isGridMode && (
-            <div
-              className="fixed inset-y-0 left-0 w-4 sm:w-5 z-50"
-              onTouchStart={(e) => {
-                const t = e.touches[0];
-                (e.currentTarget as any).__sx = t.clientX;
-                (e.currentTarget as any).__sy = t.clientY;
-                (e.currentTarget as any).__edge = t.clientX <= 16;
-              }}
-              onTouchMove={(e) => {
-                const sx = (e.currentTarget as any).__sx ?? null;
-                const sy = (e.currentTarget as any).__sy ?? null;
-                const edge = (e.currentTarget as any).__edge ?? false;
-                if (!edge || sx == null || sy == null) return;
-                const t = e.touches[0];
-                const dx = t.clientX - sx;
-                const dy = t.clientY - sy;
-                if (Math.abs(dx) < 14) return;
-                if (Math.abs(dx) > Math.abs(dy) * 1.15 && dx > 48) {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  openSettings('left');
-                }
-              }}
-              onTouchEnd={(e) => {
-                (e.currentTarget as any).__sx = null;
-                (e.currentTarget as any).__sy = null;
-                (e.currentTarget as any).__edge = false;
-              }}
-            >
-              <div className="w-full h-full" aria-hidden />
-            </div>
-          )}
-
-                    <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}> 
             {currentPlayer && (
-              <PlayerContext.Provider value={currentPlayer}>
-                {/* PlayerProfile visible SEULEMENT en mode onglets */}
-            {!isGridMode && (
-  <PlayerProfile 
-    player={currentPlayer} 
-    onUpdate={applyPlayerUpdate} 
-    inventory={inventory}
-    currentBackground={backgroundImage}
-    onBackgroundChange={handleBackgroundChange}
-  />
-)}
-
-                {/* MODE GRILLE (desktop uniquement) */}
-                {isGridMode && deviceType === 'desktop' ? (
-                  <ResponsiveGameLayout
-                    player={currentPlayer}
-                    userId={session?.user?.id}
-                    onPlayerUpdate={applyPlayerUpdate}
-                    inventory={inventory}
-                    onInventoryUpdate={setInventory}
-                    classSections={classSections}
-                    renderPane={renderPane}
-                    onToggleMode={() => {
-                      setIsGridMode(false);
-                      toast.success('Mode onglets activé');
-                    }}
-                  />
-                ) : (
-                  /* MODE ONGLETS CLASSIQUE */
-                  <>
-                    <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
-
-                    <div
-                      ref={stageRef}
-                      className="relative"
-                      onTouchStart={onTouchStart}
-                      onTouchMove={onTouchMove}
-                      onTouchEnd={onTouchEnd}
-                      onTouchCancel={() => {
-                        fullAbortInteraction();
-                      }}
-                      style={{
-                        touchAction: 'pan-y',
-                        height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-                        transition: heightLocking ? 'height 280ms ease' : undefined,
-                      }}
-                    >
-                      {Array.from(visitedTabs).map((key) => {
-                        const isActive = key === activeTab;
-                        const isNeighbor =
-                          (neighborType === 'next' && key === nextKey) ||
-                          (neighborType === 'prev' && key === prevKey);
-
-                        if (showAsStatic) {
-                          return (
-                            <div
-                              key={key}
-                              ref={(el) => { paneRefs.current[key] = el; }}
-                              data-tab={key}
-                              style={{
-                                display: isActive ? 'block' : 'none',
-                                position: 'relative',
-                                transform: 'none'
-                              }}
-                            >
-                              {key === 'class' && classSections === null
-                                ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
-                                : renderPane(key)}
-                            </div>
-                          );
-                        }
-
-                        const display = isActive || isNeighbor ? 'block' : 'none';
-                        let transform = 'translate3d(0,0,0)';
-                        if (isActive) transform = currentTransform;
-                        if (isNeighbor && neighborTransform) transform = neighborTransform;
-
-                        return (
-                          <div
-                            key={key}
-                            ref={(el) => { paneRefs.current[key] = el; }}
-                            data-tab={key}
-                            className={animating ? 'sv-anim' : undefined}
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              display,
-                              transform,
-                              willChange: isActive || isNeighbor ? 'transform' : undefined
-                            }}
-                          >
-                            {key === 'class' && classSections === null
-                              ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
-                              : renderPane(key)}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </PlayerContext.Provider>
+              <PlayerProfileSettingsModal
+                open={settingsOpen}
+                onClose={closeSettings}
+                player={currentPlayer}
+                onUpdate={applyPlayerUpdate}
+                slideFrom={settingsSlideFrom}
+              />
             )}
           </div>
+        );
+      })()}
 
-            <div className="w-full max-w-md mx-auto mt-6 px-4 relative z-50">
-            <button
-              onClick={handleBackToSelection}
-              className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-            >
-              <LogOut size={20} />
-              Retour aux personnages
-            </button>
-          </div>
+      {/* ✨ DiceBox3D centralisé - TOUJOURS MONTÉ mais RELOADÉ sur changement de paramètres */}
+      {(() => {
+        // Clé unique basée sur la version pour forcer le démontage/remontage complet
+        const uniqueKey = `dice-box-v${diceBoxVersion}`;
+        console.log('♾️ [GamePage] Rendu DiceBox avec Key:', uniqueKey);
 
-          {/* Modale Paramètres */}
-          {currentPlayer && (
-            <PlayerProfileSettingsModal
-              open={settingsOpen}
-              onClose={closeSettings}
-              player={currentPlayer}
-              onUpdate={applyPlayerUpdate}
-              slideFrom={settingsSlideFrom}
-            />
-          )}
-        </div>
-      );
-    })()}
-
-{/* ✨ DiceBox3D centralisé */}
-{(() => {
-  // On utilise le compteur pour générer une clé unique
-  const uniqueKey = `dice-box-v${diceBoxVersion}`;
-  console.log('♾️ [GamePage] Rendu DiceBox avec Key:', uniqueKey);
-
-  return (
-    <DiceBox3D
-      key={uniqueKey} // 👈 Le changement de cette valeur force le démontage/remontage
-      isOpen={!!diceRollData}
-      onClose={() => {
-        setDiceRollData(null);
-      }}
-      rollData={diceRollData}
-    />
+        return (
+          <DiceBox3D
+            key={uniqueKey}
+            isOpen={!!diceRollData}
+            onClose={() => {
+              console.log('🎲 [GamePage] DiceBox fermé');
+              setDiceRollData(null);
+            }}
+            rollData={diceRollData}
+          />
+        );
+      })()} 
+    </DiceRollContext.Provider>
   );
-})()} 
-  </DiceRollContext.Provider>
-);
 }
 
-export default GamePage; 
+export default GamePage;
