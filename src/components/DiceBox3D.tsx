@@ -197,7 +197,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
           const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
           const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-
+          console.log('✅ [ROLL COMPLETE] total:', finalTotal, 'diceTotal:', diceTotal, 'rolls:', rollValues, 'modifier:', rollDataRef.current?.modifier ?? 0);
           hasShownResultRef.current = true;
           setResult(finalResult);
           setIsRolling(false);
