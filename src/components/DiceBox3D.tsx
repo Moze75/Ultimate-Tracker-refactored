@@ -557,8 +557,10 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
     const volumeValue = contextSettings.soundsEnabled ? contextSettings.volume : 0;
 
-        applyVolume(contextSettings.soundsEnabled, contextSettings.volume);
-      console.log('🔊 [VOLUME] Mise à jour volume physique:', contextSettings.volume, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
+    try { 
+      diceBoxRef.current.updateConfig({
+        sounds: contextSettings.soundsEnabled,
+        volume: volumeValue
       });
       console.log('🔊 [VOLUME] Mise à jour volume physique:', volumeValue, '(soundsEnabled:', contextSettings.soundsEnabled, ')');
     } catch (err) {
