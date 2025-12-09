@@ -338,6 +338,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         strength: effectiveSettings.strength * 1.3,
         sounds: effectiveSettings.soundsEnabled,
         volume: effectiveSettings.soundsEnabled ? effectiveSettings.volume : 0,
+        onRollComplete: onRollCompleteRef.current, // ✅ FIX: Réattacher le callback impérativement
       });
 
       if (onRollCompleteRef.current) {
