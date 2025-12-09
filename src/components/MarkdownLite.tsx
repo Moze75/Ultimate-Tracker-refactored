@@ -2,57 +2,30 @@ import React, { useMemo } from 'react';
 
 // --- COEUR DU RENDU : PARSER RÉCURSIF ---
 
-// Cette fonction remplace l'ancien système complexe.
-// Elle découpe le texte en tokens (Gras, Italique, Lien) et traite le reste comme du texte.
 function renderInline(text: string): React.ReactNode {
   if (!text) return null;
 
-  // Regex combinée pour capturer :
-  // 1. Gras : **...**
-  // 2. Italique : _..._ (sans underscore à l'intérieur)
-  // 3. Lien complet : [Texte](URL)
-  // 4. Lien simple (reste de nettoyage) : [Texte]
+  // Regex combinée pour capturer : Gras, Italique, Liens
   const tokenRegex = /(\*\*.+?\*\*|_[^_]+?_|\[[^\]]+\]\([^)]+\)|\[[^\]]+\])/g;
-
-  // Le split va créer un tableau alternant [Texte, Token, Texte, Token...]
-  // Les espaces autour des tokens sont préservés dans les parties "Texte".
   const parts = text.split(tokenRegex);
 
   return parts.map((part, index) => {
     if (!part) return null;
 
-    // CAS 1 : GRAS (**texte**)
+    // GRAS
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-      const content = part.slice(2, -2);
-      return (
-        <strong key={index} className="font-semibold">
-          {renderInline(content)}
-        </strong>
-      );
+      return <strong key={index} className="font-semibold">{renderInline(part.slice(2, -2))}</strong>;
     }
-
-    // CAS 2 : ITALIQUE (_texte_)
+    // ITALIQUE
     if (part.startsWith('_') && part.endsWith('_') && part.length >= 2) {
-      const content = part.slice(1, -1);
-      return (
-        <em key={index} className="italic">
-          {renderInline(content)}
-        </em>
-      );
+      return <em key={index} className="italic">{renderInline(part.slice(1, -1))}</em>;
     }
-
-    // CAS 3 : LIENS ([Texte](url) ou [Texte])
-    // On retire le lien pour ne garder que le texte (Markdown Lite)
+    // LIENS (Nettoyage pour affichage texte seul)
     if (part.startsWith('[') && part.includes(']')) {
       const labelMatch = part.match(/^\[([^\]]+)\]/);
-      if (labelMatch) {
-        // On rend le contenu du label (qui peut contenir du gras/italique)
-        return <React.Fragment key={index}>{renderInline(labelMatch[1])}</React.Fragment>;
-      }
+      if (labelMatch) return <React.Fragment key={index}>{renderInline(labelMatch[1])}</React.Fragment>;
     }
-
-    // CAS 4 : TEXTE BRUT
-    // On retourne le texte tel quel. React gère très bien les espaces ici.
+    // TEXTE
     return <React.Fragment key={index}>{part}</React.Fragment>;
   });
 }
@@ -91,14 +64,14 @@ function parseAlignments(sepLine: string, colCount: number): Align[] {
   return aligns;
 }
 
-/* ---------- Block-level rendering ---------- */
+/* ---------- COMPOSANT PRINCIPAL ---------- */
 
 export default function MarkdownLite({ content }: { content: string }) {
   const elements = useMemo(() => {
-    // 1. Normalisation globale : correction des chevrons encodés
+    // 1. Normalisation : Correction des chevrons encodés venant de la DB
     const src = (content || '')
-      .replace(/&lt;!--/g, '<!--')
-      .replace(/--&gt;/g, '-->');
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
 
     const lines = src.split(/\r?\n/);
     const out: React.ReactNode[] = [];
@@ -107,7 +80,7 @@ export default function MarkdownLite({ content }: { content: string }) {
     let olBuffer: string[] = [];
     let quoteBuffer: string[] = [];
     
-    // État pour les Boites
+    // États pour les Boites
     let inBox = false;
     let boxBuffer: string[] = [];
     let boxTitle: string | null = null;
@@ -116,9 +89,7 @@ export default function MarkdownLite({ content }: { content: string }) {
       if (ulBuffer.length > 0) {
         out.push(
           <ul className="list-disc pl-5 space-y-1" key={`ul-${out.length}`}>
-            {ulBuffer.map((item, i) => (
-              <li key={`uli-${i}`}>{renderInline(item)}</li>
-            ))}
+            {ulBuffer.map((item, i) => <li key={i}>{renderInline(item)}</li>)}
           </ul>
         );
         ulBuffer = [];
@@ -128,9 +99,7 @@ export default function MarkdownLite({ content }: { content: string }) {
       if (olBuffer.length > 0) {
         out.push(
           <ol className="list-decimal pl-5 space-y-1" key={`ol-${out.length}`}>
-            {olBuffer.map((item, i) => (
-              <li key={`oli-${i}`}>{renderInline(item)}</li>
-            ))}
+            {olBuffer.map((item, i) => <li key={i}>{renderInline(item)}</li>)}
           </ol>
         );
         olBuffer = [];
@@ -138,23 +107,15 @@ export default function MarkdownLite({ content }: { content: string }) {
     };
     const flushQuote = () => {
       if (quoteBuffer.length > 0) {
-        const text = quoteBuffer.join(' ').trim();
         out.push(
-          <blockquote
-            key={`q-${out.length}`}
-            className="border-l-2 border-white/20 pl-3 ml-1 italic text-gray-300 bg-white/5 rounded-sm py-1"
-          >
-            {renderInline(text)}
+          <blockquote key={`q-${out.length}`} className="border-l-2 border-white/20 pl-3 ml-1 italic text-gray-300 bg-white/5 rounded-sm py-1">
+            {renderInline(quoteBuffer.join(' ').trim())}
           </blockquote>
         );
         quoteBuffer = [];
       }
     };
-    const flushAllBlocks = () => {
-      flushQuote();
-      flushUL();
-      flushOL();
-    };
+    const flushAllBlocks = () => { flushQuote(); flushUL(); flushOL(); };
 
     const flushBox = () => {
       if (!boxBuffer.length) return;
@@ -166,7 +127,6 @@ export default function MarkdownLite({ content }: { content: string }) {
               {renderInline(boxTitle)}
             </div>
           )}
-          {/* Appel récursif pour rendre le contenu de la boite */}
           <MarkdownLite content={inner} />
         </div>
       );
@@ -177,53 +137,37 @@ export default function MarkdownLite({ content }: { content: string }) {
     for (let i = 0; i < lines.length; i++) {
       let raw = lines[i];
 
-      // --- Gestion des BOX ---
-      // Détection ouverture
+      // --- 1. Gestion des BOX (Encadrés) ---
       const boxStartMatch = raw.match(/<!--\s*BOX(?::\s*(.*?))?\s*-->/);
-      const altStartMatch = raw.match(/^\s*II\s*(.*)$/); // Support ancienne syntaxe "II"
+      const altStartMatch = raw.match(/^\s*II\s*(.*)$/);
 
       if (!inBox && (boxStartMatch || altStartMatch)) {
         flushAllBlocks();
-
-        let before = '';
-        let after = '';
-        let title: string | null = null;
+        let before = '', after = '', title: string | null = null;
 
         if (boxStartMatch) {
-          // Cas standard <!-- BOX... -->
           const fullMatch = boxStartMatch[0];
           const idx = raw.indexOf(fullMatch);
-          before = raw.slice(0, idx); // Texte avant la boite sur la même ligne
-          after = raw.slice(idx + fullMatch.length); // Texte après
+          before = raw.slice(0, idx);
+          after = raw.slice(idx + fullMatch.length);
           title = boxStartMatch[1] ? boxStartMatch[1].trim() : null;
         } else if (altStartMatch) {
-          // Cas alternatif "II"
           after = altStartMatch[1];
         }
 
-        // S'il y a du texte avant le début de la boite
-        if (before && before.trim()) {
-          out.push(<p key={`p-pre-${out.length}`}>{renderInline(before)}</p>);
-        }
-
+        if (before.trim()) out.push(<p key={`p-pre-${out.length}`}>{renderInline(before)}</p>);
         inBox = true;
         boxBuffer = [];
         boxTitle = title;
-
-        if (after && after.trim()) boxBuffer.push(after);
+        if (after.trim()) boxBuffer.push(after);
         continue;
       }
 
-      // Gestion contenu boite et fermeture
       if (inBox) {
         if (raw.includes('<!-- /BOX -->') || raw.match(/^(.*)\s*\|\|\s*$/)) {
-          const closeMatch = raw.includes('<!-- /BOX -->') 
-            ? raw.match(/(.*)<!-- \/BOX -->/) 
-            : raw.match(/^(.*)\s*\|\|\s*$/);
-            
+          const closeMatch = raw.includes('<!-- /BOX -->') ? raw.match(/(.*)<!-- \/BOX -->/) : raw.match(/^(.*)\s*\|\|\s*$/);
           const contentBeforeClose = closeMatch ? closeMatch[1].trim() : '';
           if (contentBeforeClose) boxBuffer.push(contentBeforeClose);
-          
           inBox = false;
           flushBox();
           continue;
@@ -232,7 +176,7 @@ export default function MarkdownLite({ content }: { content: string }) {
         continue;
       }
 
-      // --- Gestion Tableaux ---
+      // --- 2. Gestion Tableaux ---
       const headerLine = raw;
       const sepLine = lines[i + 1];
       if (headerLine && sepLine && headerLine.includes('|') && isTableSeparator(sepLine)) {
@@ -243,39 +187,29 @@ export default function MarkdownLite({ content }: { content: string }) {
         let j = i + 2;
         for (; j < lines.length; j++) {
           const rowLine = lines[j];
-          if (!rowLine || !rowLine.trim() || !rowLine.includes('|')) break;
+          if (!rowLine.trim() || !rowLine.includes('|')) break;
           body.push(splitTableRow(rowLine));
         }
-
         out.push(
           <div key={`tblwrap-${out.length}`} className="overflow-x-auto my-3">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
                 <tr>
-                  {headerCells.map((cell, idx) => {
-                    const align = alignments[idx];
-                    const alignClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
-                    return (
-                      <th key={`th-${idx}`} className={`px-3 py-2 bg-white/10 border border-white/15 font-semibold ${alignClass}`}>
-                        {renderInline(cell)}
-                      </th>
-                    );
-                  })}
+                  {headerCells.map((c, idx) => (
+                    <th key={idx} className={`px-3 py-2 bg-white/10 border border-white/15 font-semibold text-${alignments[idx]}`}>
+                      {renderInline(c)}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {body.map((row, r) => (
-                  <tr key={`tr-${r}`}>
-                    {headerCells.map((_, c) => {
-                      const cell = row[c] ?? '';
-                      const align = alignments[c];
-                      const alignClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
-                      return (
-                        <td key={`td-${r}-${c}`} className={`px-3 py-2 border border-white/10 ${alignClass}`}>
-                          {renderInline(cell)}
-                        </td>
-                      );
-                    })}
+                  <tr key={r}>
+                    {headerCells.map((_, c) => (
+                      <td key={c} className={`px-3 py-2 border border-white/10 text-${alignments[c]}`}>
+                        {renderInline(row[c] ?? '')}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -286,85 +220,60 @@ export default function MarkdownLite({ content }: { content: string }) {
         continue;
       }
 
-      // --- Listes ---
-      const mUL = raw.match(/^\s*[-*]\s+(.*)$/);
-      if (mUL) {
-        flushQuote();
-        flushOL();
-        ulBuffer.push(mUL[1]);
-        continue;
-      }
-
-      const mOL = raw.match(/^\s*\d+[.)]\s+(.*)$/);
-      if (mOL) {
-        flushQuote();
-        flushUL();
-        olBuffer.push(mOL[1]);
-        continue;
-      }
-
-      // --- Citations ---
-      const mQ = raw.match(/^\s*>\s+(.*)$/);
-      if (mQ) {
-        flushUL();
-        flushOL();
-        quoteBuffer.push(mQ[1]);
-        continue;
-      }
-
-      // Flush si ligne normale
-      if ((ulBuffer.length || olBuffer.length || quoteBuffer.length) && raw.trim() !== '') {
+      // --- 3. Pseudo-Tableau "Clé - Valeur" (ex: Airain – Feu) ---
+      // Détecte "Mot - Mot" pour faire un affichage en colonnes
+      // On exclut les tirets de début de ligne (listes)
+      const dashRowMatch = raw.match(/^([^-–*].+?)\s+[–-]\s+(.+)$/);
+      // On vérifie que ce n'est pas une phrase trop longue pour éviter les faux positifs
+      if (dashRowMatch && dashRowMatch[1].length < 40 && dashRowMatch[2].length < 60) {
         flushAllBlocks();
-      }
-
-      // --- Titres ---
-      const h4 = raw.match(/^\s*####\s+(.*)$/);
-      if (h4) {
-        out.push(<div className="font-semibold mt-3 mb-1 tracking-wide" key={`h4-${out.length}`}>{renderInline(h4[1])}</div>);
-        continue;
-      }
-      const h3 = raw.match(/^\s*###\s+(.*)$/);
-      if (h3) {
-        out.push(<div className="font-bold text-base mt-4 mb-2" key={`h3-${out.length}`}>{renderInline(h3[1])}</div>);
-        continue;
-      }
-
-      // Pseudo-titre en gras complet
-      const fullBold = raw.match(/^\s*\*\*(.+?)\*\*\s*$/);
-      if (fullBold) {
         out.push(
-          <div className="mt-3 mb-2 uppercase tracking-wide text-[0.95rem] text-gray-200" key={`sub-${out.length}`}>
-            {renderInline(fullBold[1])}
-          </div>
+            <div key={`dr-${out.length}`} className="flex justify-between items-center py-1 border-b border-white/5 last:border-0 text-sm">
+                <span className="font-semibold text-gray-200">{renderInline(dashRowMatch[1])}</span>
+                <span className="text-gray-300 text-right">{renderInline(dashRowMatch[2])}</span>
+            </div>
         );
         continue;
       }
 
-      // Ligne vide
-      if (raw.trim() === '') {
-        flushAllBlocks();
-        out.push(<div className="h-2" key={`sp-${out.length}`} />);
+      // --- Listes & Citations ---
+      const mUL = raw.match(/^\s*[-*]\s+(.*)$/);
+      if (mUL) { flushQuote(); flushOL(); ulBuffer.push(mUL[1]); continue; }
+
+      const mOL = raw.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (mOL) { flushQuote(); flushUL(); olBuffer.push(mOL[1]); continue; }
+
+      const mQ = raw.match(/^\s*>\s+(.*)$/);
+      if (mQ) { flushUL(); flushOL(); quoteBuffer.push(mQ[1]); continue; }
+
+      if ((ulBuffer.length || olBuffer.length || quoteBuffer.length) && raw.trim() !== '') flushAllBlocks();
+
+      // --- Titres ---
+      const h4 = raw.match(/^\s*####\s+(.*)$/);
+      if (h4) { out.push(<div key={`h4-${out.length}`} className="font-semibold mt-3 mb-1 tracking-wide">{renderInline(h4[1])}</div>); continue; }
+      
+      const h3 = raw.match(/^\s*###\s+(.*)$/);
+      if (h3) { out.push(<div key={`h3-${out.length}`} className="font-bold text-base mt-4 mb-2">{renderInline(h3[1])}</div>); continue; }
+
+      const fullBold = raw.match(/^\s*\*\*(.+?)\*\*\s*$/);
+      if (fullBold) {
+        out.push(<div key={`sub-${out.length}`} className="mt-3 mb-2 uppercase tracking-wide text-[0.95rem] text-gray-200">{renderInline(fullBold[1])}</div>);
         continue;
       }
 
-      // Label: Valeur
+      if (raw.trim() === '') { flushAllBlocks(); out.push(<div key={`sp-${out.length}`} className="h-2" />); continue; }
+
       const labelMatch = raw.match(/^([\p{L}\p{N}'’ .\-\/+()]+?)\s*:\s+(.*)$/u);
       if (labelMatch) {
         out.push(
-          <p className="mb-2 leading-relaxed" key={`kv-${out.length}`}>
-            <span className="font-semibold">{labelMatch[1]}: </span>
-            {renderInline(labelMatch[2])}
+          <p key={`kv-${out.length}`} className="mb-2 leading-relaxed">
+            <span className="font-semibold">{labelMatch[1]}: </span>{renderInline(labelMatch[2])}
           </p>
         );
         continue;
       }
 
-      // Paragraphe standard
-      out.push(
-        <p className="mb-2 leading-relaxed" key={`p-${out.length}`}>
-          {renderInline(raw)}
-        </p>
-      );
+      out.push(<p key={`p-${out.length}`} className="mb-2 leading-relaxed">{renderInline(raw)}</p>);
     }
 
     flushAllBlocks();
@@ -375,4 +284,4 @@ export default function MarkdownLite({ content }: { content: string }) {
 
   if (!content) return null;
   return <div className="prose prose-invert max-w-none">{elements}</div>;
-} 
+}
