@@ -188,6 +188,40 @@ export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode
       i++; continue;
     }
 
+    // Gestion des BOITES <!-- BOX: Titre --> ... <!-- /BOX -->
+    // On capture le titre optionnel après 'BOX:'
+    const boxMatch = line.match(/^\s*<!--\s*BOX(?::\s*(.*))?(?:\s*-->)?/i);
+    if (boxMatch) {
+      const title = boxMatch[1] ? boxMatch[1].trim() : null;
+      const boxContent: string[] = [];
+      i++; // On saute la ligne d'ouverture
+      
+      while (i < lines.length) {
+        // Détection de fin de boite
+        if (lines[i].match(/^\s*<!--\s*\/BOX\s*(?:-->)?/i)) {
+          i++; // On saute la fermeture
+          break;
+        }
+        boxContent.push(lines[i]);
+        i++;
+      }
+
+      // Rendu récursif du contenu de la boite
+      const inner = parseMarkdownLite(boxContent.join('\n'), ctx);
+      out.push(
+        <div key={`box-${key++}`} className="rounded-lg border border-white/15 bg-white/5 p-3 my-4">
+          {title && (
+            <div className="font-bold text-gray-200 mb-2 uppercase tracking-wide text-sm border-b border-white/10 pb-1">
+              {formatInline(title)}
+            </div>
+          )}
+          <div className="text-sm">{inner}</div>
+        </div>
+      );
+      continue;
+    }
+
+    
     // Tableaux
     if (line.includes('|')) {
       const block: string[] = [];
