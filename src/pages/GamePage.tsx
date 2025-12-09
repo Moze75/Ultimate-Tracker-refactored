@@ -1263,17 +1263,18 @@ return (
   console.log('♾️ [GamePage] DiceBox monté (Key:', diceBoxRemountKey, ')');
   return (
     <DiceBox3D
-      // ✅ La clé force le remontage complet si les settings physiques changent
-      key={`dice-box-${diceBoxRemountKey}`} 
+      // 👇 MODIFIE CETTE LIGNE : Ajoute la version dans la key
+      key={`dice-box-gamepage-${diceBoxVersion}`}
       isOpen={!!diceRollData}
       onClose={() => {
-        console.log('🎲 [GamePage] DiceBox fermé');
+        console.log('🎲 [GamePage] DiceBox fermé (mais reste monté)');
         setDiceRollData(null);
       }}
       rollData={diceRollData}
+      // settings={diceSettings} // (Optionnel : retire ça si ta version de DiceBox3D utilise le context en interne)
     />
   );
-})()}
+})()} 
   </DiceRollContext.Provider>
 );
 }
