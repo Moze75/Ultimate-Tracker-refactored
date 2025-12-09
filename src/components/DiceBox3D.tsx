@@ -613,7 +613,14 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
     console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
 
- 
+ // 🔧 Amorçage du roll : s'assurer que l'état est propre et qu'on est en mode "rolling"
+setIsRolling(true);
+setResult(null);
+setShowResult(false);
+setIsFadingDice(false);
+ setIsFadingAll(false);
+pendingResultRef.current = null;
+hasShownResultRef.current = false;
 
     
     let notation = rollData.diceFormula;
