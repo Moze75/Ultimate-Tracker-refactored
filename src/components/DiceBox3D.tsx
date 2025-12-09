@@ -682,7 +682,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-
+    console.log('👆 [OVERLAY CLICK] isRolling:', isRolling, 'showResult:', showResult);
     if (isRolling) {
       hasShownResultRef.current = true;
       setIsFadingDice(true);
