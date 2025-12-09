@@ -107,7 +107,21 @@ export function GamePage({
   const [isGridMode, setIsGridMode] = useState(false);
   const deviceType = useResponsiveLayout();
 
- 
+   // 👇 AJOUTE CE BLOC :
+  // On crée une version pour forcer le DiceBox à se recharger proprement
+  const [diceBoxVersion, setDiceBoxVersion] = useState(0);
+
+  // On écoute l'événement de sauvegarde des paramètres pour déclencher le reload
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('🔄 [GamePage] Paramètres sauvegardés -> Rechargement propre du DiceBox');
+      setDiceBoxVersion(v => v + 1);
+    };
+
+    window.addEventListener('dice-settings-changed', handleSettingsChanged);
+    return () => window.removeEventListener('dice-settings-changed', handleSettingsChanged);
+  }, []);
+  // 👆 FIN DU BLOC À AJOUTER
   
     // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
