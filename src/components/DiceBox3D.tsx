@@ -530,6 +530,13 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
       }
 
+       // ✅ Réattacher le callback et le volume après update event
+      if (diceBoxRef.current && onRollCompleteRef.current) {
+        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
+        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
+      }
+      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
+
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
