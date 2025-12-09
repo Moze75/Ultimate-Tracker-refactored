@@ -20,7 +20,7 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
-  settings?: DiceSettings;
+
 }
 
 // Mapping des textures par colorset
@@ -55,7 +55,7 @@ const COLORSET_TEXTURES: Record<string, string> = {
   'covid': 'skulls',
 };
 
-export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProps) {
+export function DiceBox3D({ isOpen, onClose, rollData }: DiceBox3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const [result, setResult] = useState<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
@@ -74,8 +74,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
   const pendingResultRef = useRef<{ total: number; rolls: number[]; diceTotal: number } | null>(null);
   const onRollCompleteRef = useRef<(results: any) => void>();
 
- const { settings: contextSettings } = useDiceSettings();
-  const effectiveSettings = settings ?? contextSettings ?? DEFAULT_DICE_SETTINGS;
+const { settings: contextSettings } = useDiceSettings();
+const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
 
     // Force le volume/sounds directement sur l’instance (updateConfig de la lib n’assigne pas)
   const applyVolume = useCallback((enabled: boolean, vol: number) => {
@@ -113,8 +113,8 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     }
   }, [effectiveSettings]);
 
-   const generateRandomResult = useCallback((formula: string, modifier: number) => {
-    console.log('⚠️ [FALLBACK RANDOM] formula:', formula, 'modifier:', modifier);
+  const generateRandomResult = useCallback((formula: string, modifier: number) => {
+    console.log('🎲 Génération résultat aléatoire INSTANTANÉ pour:', formula);
     
     const match = formula.match(/(\d+)d(\d+)/i);
     if (!match) {
@@ -197,7 +197,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
 
           const finalTotal = results?.total ?? (diceTotal + (rollDataRef.current?.modifier || 0));
           const finalResult = { total: finalTotal, rolls: rollValues, diceTotal: diceTotal };
-          console.log('✅ [ROLL COMPLETE] total:', finalTotal, 'diceTotal:', diceTotal, 'rolls:', rollValues, 'modifier:', rollDataRef.current?.modifier ?? 0);
+
           hasShownResultRef.current = true;
           setResult(finalResult);
           setIsRolling(false);
@@ -270,9 +270,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         }
 
           applyVolume(effectiveSettings.soundsEnabled, effectiveSettings.volume);
-
-      lastRollDataRef.current = '';
-      console.log('🔁 [UPDATE] Reset lastRollDataRef pour autoriser un nouveau roll après mise à jour des settings');
         
                   // ▶️ Afficher le popup "Dice Roller prêt" au lancement
           setShowReadyPopup(true);
@@ -300,14 +297,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     if (!diceBoxRef.current || !isInitialized) return;
 
     const updateSettings = async () => {
-            if (diceBoxRef.current && onRollCompleteRef.current) {
-        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
-        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
-      }
-      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
-      lastRollDataRef.current = '';
-      hasShownResultRef.current = false;
-      console.log('🔁 [EVENT] Reset lastRollDataRef & hasShownResultRef après settings-changed pour autoriser un nouveau roll');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔧 [UPDATE] Mise à jour des settings...');
       console.log('💪 [UPDATE] Ancienne force:', diceBoxRef.current.strength);
@@ -518,22 +507,11 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                   if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
                 } catch (err) { /* noop */ }
               });
-             console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
+              console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
+            }
+          } catch (err) {
+            console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
           }
-      } catch (err) {
-        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
-      }
-
-      // ✅ Réattacher le callback + volume + reset de la signature de roll
-      if (diceBoxRef.current && onRollCompleteRef.current) {
-        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
-        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
-      }
-      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
-      lastRollDataRef.current = '';
-      console.log('🔁 [EVENT] Reset lastRollDataRef après settings-changed pour autoriser un nouveau roll');
-
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
           if (typeof diceBoxRef.current.updateConfig === 'function') {
             try {
@@ -552,16 +530,6 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
         console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
       }
 
-       // ✅ Réattacher le callback et le volume après update event
-      if (diceBoxRef.current && onRollCompleteRef.current) {
-        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
-        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
-      }
-      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
-
-      lastRollDataRef.current = '';
-      console.log('🔁 [EVENT] Reset lastRollDataRef après settings-changed pour autoriser un nouveau roll');
-      
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
 
@@ -620,32 +588,7 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
     console.log('🎲 [ROLL] Lancer #' + thisRollId);
     console.log('💪 [ROLL] Force au moment du lancer:', diceBoxRef.current.strength);
     console.log('♾️ [ROLL] DiceBox toujours actif - pas de stutter !');
-
- // 🔧 Amorçage du roll : s'assurer que l'état est propre et qu'on est en mode "rolling"
-setIsRolling(true);
-setResult(null);
-setShowResult(false);
-setIsFadingDice(false);
- setIsFadingAll(false);
-pendingResultRef.current = null;
-hasShownResultRef.current = false;
-
-    
-    let notation = rollData.diceFormula;
-    if (rollData.modifier !== 0) {
-      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
-    }
-
-    console.log('🎲 [ROLL] Notation:', notation, 'settings:', {
-      theme: effectiveSettings.theme,
-      material: effectiveSettings.themeMaterial,
-      baseScale: effectiveSettings.baseScale,
-      gravity: effectiveSettings.gravity,
-      strength: effectiveSettings.strength,
-      soundsEnabled: effectiveSettings.soundsEnabled,
-      volume: effectiveSettings.volume,
-      fxVolume: effectiveSettings.fxVolume,
-    });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     setIsRolling(true);
     setResult(null);
@@ -654,7 +597,12 @@ hasShownResultRef.current = false;
     setIsFadingAll(false);
     pendingResultRef.current = null;
     hasShownResultRef.current = false;
-    
+
+    let notation = rollData.diceFormula;
+    if (rollData.modifier !== 0) {
+      notation += rollData.modifier >= 0 ? `+${rollData.modifier}` : `${rollData.modifier}`;
+    }
+
     playDiceDropSound();
 
     requestAnimationFrame(() => {
@@ -723,7 +671,7 @@ hasShownResultRef.current = false;
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    console.log('👆 [OVERLAY CLICK] isRolling:', isRolling, 'showResult:', showResult);
+
     if (isRolling) {
       hasShownResultRef.current = true;
       setIsFadingDice(true);
