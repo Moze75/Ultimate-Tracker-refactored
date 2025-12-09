@@ -95,29 +95,33 @@ function parseAlignments(sepLine: string, colCount: number): Align[] {
 
 export default function MarkdownLite({ content }: { content: string }) {
   const elements = useMemo(() => {
+    // 1. Normalisation globale : correction des chevrons encodés
     const src = (content || '')
-      .replace(/&lt;!--\s*BOX\s*--&gt;/gi, '<!-- BOX -->')
-      .replace(/&lt;!--\s*\/\s*BOX\s*--&gt;/gi, '<!-- /BOX -->');
+      .replace(/&lt;!--/g, '<!--')
+      .replace(/--&gt;/g, '-->');
 
     const lines = src.split(/\r?\n/);
     const out: React.ReactNode[] = [];
- 
+
     let ulBuffer: string[] = [];
     let olBuffer: string[] = [];
     let quoteBuffer: string[] = [];
+    
+    // État pour les Boites
     let inBox = false;
     let boxBuffer: string[] = [];
- 
+    let boxTitle: string | null = null;
+
     const flushUL = () => {
       if (ulBuffer.length > 0) {
         out.push(
           <ul className="list-disc pl-5 space-y-1" key={`ul-${out.length}`}>
             {ulBuffer.map((item, i) => (
               <li key={`uli-${i}`}>{renderInline(item)}</li>
-            ))} 
+            ))}
           </ul>
         );
-        ulBuffer = []; 
+        ulBuffer = [];
       }
     };
     const flushOL = () => {
@@ -156,50 +160,75 @@ export default function MarkdownLite({ content }: { content: string }) {
       if (!boxBuffer.length) return;
       const inner = boxBuffer.join('\n');
       out.push(
-        <div key={`box-${out.length}`} className="rounded-lg border border-white/15 bg-white/5 p-3">
+        <div key={`box-${out.length}`} className="rounded-lg border border-white/15 bg-white/5 p-3 my-4">
+          {boxTitle && (
+            <div className="font-bold text-gray-200 mb-2 uppercase tracking-wide text-sm border-b border-white/10 pb-1">
+              {renderInline(boxTitle)}
+            </div>
+          )}
+          {/* Appel récursif pour rendre le contenu de la boite */}
           <MarkdownLite content={inner} />
         </div>
       );
       boxBuffer = [];
+      boxTitle = null;
     };
 
     for (let i = 0; i < lines.length; i++) {
       let raw = lines[i];
 
       // --- Gestion des BOX ---
+      // Détection ouverture
+      const boxStartMatch = raw.match(/<!--\s*BOX(?::\s*(.*?))?\s*-->/);
+      const altStartMatch = raw.match(/^\s*II\s*(.*)$/); // Support ancienne syntaxe "II"
+
+      if (!inBox && (boxStartMatch || altStartMatch)) {
+        flushAllBlocks();
+
+        let before = '';
+        let after = '';
+        let title: string | null = null;
+
+        if (boxStartMatch) {
+          // Cas standard <!-- BOX... -->
+          const fullMatch = boxStartMatch[0];
+          const idx = raw.indexOf(fullMatch);
+          before = raw.slice(0, idx); // Texte avant la boite sur la même ligne
+          after = raw.slice(idx + fullMatch.length); // Texte après
+          title = boxStartMatch[1] ? boxStartMatch[1].trim() : null;
+        } else if (altStartMatch) {
+          // Cas alternatif "II"
+          after = altStartMatch[1];
+        }
+
+        // S'il y a du texte avant le début de la boite
+        if (before && before.trim()) {
+          out.push(<p key={`p-pre-${out.length}`}>{renderInline(before)}</p>);
+        }
+
+        inBox = true;
+        boxBuffer = [];
+        boxTitle = title;
+
+        if (after && after.trim()) boxBuffer.push(after);
+        continue;
+      }
+
+      // Gestion contenu boite et fermeture
       if (inBox) {
         if (raw.includes('<!-- /BOX -->') || raw.match(/^(.*)\s*\|\|\s*$/)) {
           const closeMatch = raw.includes('<!-- /BOX -->') 
             ? raw.match(/(.*)<!-- \/BOX -->/) 
             : raw.match(/^(.*)\s*\|\|\s*$/);
             
-          const before = closeMatch ? closeMatch[1].trim() : '';
-          if (before) boxBuffer.push(before);
+          const contentBeforeClose = closeMatch ? closeMatch[1].trim() : '';
+          if (contentBeforeClose) boxBuffer.push(contentBeforeClose);
           
           inBox = false;
           flushBox();
           continue;
         }
         boxBuffer.push(raw);
-        continue;
-      }
-
-      if (raw.includes('<!-- BOX -->') || raw.match(/^\s*II\s*(.*)$/)) {
-        flushAllBlocks();
-        const openMatch = raw.includes('<!-- BOX -->')
-          ? raw.match(/(.*)<!-- BOX -->(.*)/)
-          : raw.match(/^\s*II\s*(.*)$/);
-
-        // S'il y a du texte avant le début de la boite sur la même ligne
-        if (openMatch && openMatch[1] && !raw.match(/^\s*II/)) {
-             out.push(<p key={`p-pre-${out.length}`}>{renderInline(openMatch[1])}</p>);
-        }
-        
-        inBox = true;
-        boxBuffer = [];
-        
-        const after = openMatch ? (raw.includes('<!-- BOX -->') ? openMatch[2] : openMatch[1]) : '';
-        if (after && after.trim()) boxBuffer.push(after);
         continue;
       }
 
@@ -346,4 +375,4 @@ export default function MarkdownLite({ content }: { content: string }) {
 
   if (!content) return null;
   return <div className="prose prose-invert max-w-none">{elements}</div>;
-} 
+}
