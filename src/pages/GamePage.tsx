@@ -1254,18 +1254,11 @@ return (
 
 {/* ✨ DiceBox3D centralisé - TOUJOURS MONTÉ après chargement settings */}
 {(() => {
-  // Si les settings sont en chargement, ne pas monter
-  if (isDiceSettingsLoading) {
-    console.log('⏳ [GamePage] DiceBox en attente - Settings en chargement');
-    return null;
-  }
-  
-  // ✅ Settings chargés, DiceBox MONTÉ EN PERMANENCE
-  console.log('♾️ [GamePage] DiceBox MONTÉ et restera actif');
+  console.log('♾️ [GamePage] DiceBox monté en permanence (même pendant le chargement des settings)');
   return (
     <DiceBox3D
       key="dice-box-gamepage"
-      isOpen={!!diceRollData}  // ✅ Contrôle seulement la VISIBILITÉ
+      isOpen={!!diceRollData}
       onClose={() => {
         console.log('🎲 [GamePage] DiceBox fermé (mais reste monté)');
         setDiceRollData(null);
