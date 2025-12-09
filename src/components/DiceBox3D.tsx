@@ -510,11 +510,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, settings }: DiceBox3DProp
                   if (typeof b.sleepState !== 'undefined') b.sleepState = 0;
                 } catch (err) { /* noop */ }
               });
-              console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
-            }
-          } catch (err) {
-            console.error('❌ [EVENT] Erreur en réveillant les bodies :', err);
+             console.log('✅ [EVENT] Bodies réveillés pour appliquer nouvelle gravité.');
           }
+      } catch (err) {
+        console.error('❌ [EVENT] Erreur lors du forçage de la gravité:', err);
+      }
+
+      // ✅ Réattacher le callback + volume + reset de la signature de roll
+      if (diceBoxRef.current && onRollCompleteRef.current) {
+        diceBoxRef.current.onRollComplete = onRollCompleteRef.current;
+        console.log('🔁 [EVENT] onRollComplete réattaché après settings change');
+      }
+      applyVolume(newSettings.soundsEnabled, newSettings.volume ?? 0);
+      lastRollDataRef.current = '';
+      console.log('🔁 [EVENT] Reset lastRollDataRef après settings-changed pour autoriser un nouveau roll');
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
           if (typeof diceBoxRef.current.updateConfig === 'function') {
             try {
