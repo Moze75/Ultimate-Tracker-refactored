@@ -112,6 +112,10 @@ export function GamePage({
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
   });
 
+
+  // 👇 AJOUTE CETTE LIGNE : Compteur pour forcer le reload du DiceBox
+  const [diceBoxVersion, setDiceBoxVersion] = useState(0);
+  
   // ✨ État pour le contexte de dés centralisé
 const [diceRollData, setDiceRollData] = useState<{
   type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
