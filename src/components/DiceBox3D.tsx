@@ -438,17 +438,7 @@ const effectiveSettings = contextSettings ?? DEFAULT_DICE_SETTINGS;
         diceBoxRef.current.clearDice();
       }
 
-      await diceBoxRef.current.updateConfig({
-        theme_colorset: newSettings.theme || 'custom',
-        theme_texture: textureForTheme,
-        theme_material: newSettings.themeMaterial || "plastic",
-        theme_customColorset: customColorset,
-        baseScale: newSettings.baseScale * 100 / 6,
-        gravity_multiplier: newSettings.gravity * 400,
-        strength: newSettings.strength * 1.3,
-        sounds: newSettings.soundsEnabled,
-        volume: newSettings.soundsEnabled ? newSettings.volume : 0,
-      });
+
 
 
 
