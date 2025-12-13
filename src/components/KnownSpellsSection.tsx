@@ -1560,6 +1560,9 @@ const characterLevel = useMemo(() => {
   return set;
 }, [casterType, characterLevel]);
 
+
+
+  
  // ✅ AJOUT : Calcul du niveau max réel basé sur les slots disponibles dans spellSlots2024
   const maxEffectiveSpellLevel = useMemo(() => {
     if (!combinedSpellSlots) return 1;
