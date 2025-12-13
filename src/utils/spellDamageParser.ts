@@ -323,7 +323,7 @@ export function parseSlotUpgrade(higherLevels: string): {
   }
   
   return null;
-}
+
     }
 
     return {
