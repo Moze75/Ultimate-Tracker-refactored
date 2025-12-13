@@ -773,8 +773,10 @@ function SpellCard({
   // ✅ NOUVEAU : Niveaux de lancement disponibles
   const availableLevels = useMemo(() => {
     const hasUpgrade = damageInfo.upgradeType === 'per_slot_level';
-    return getAvailableCastLevels(spell.spell_level, maxPlayerSpellLevel, hasUpgrade);
-  }, [spell.spell_level, maxPlayerSpellLevel, damageInfo.upgradeType]);
+    // ✅ MODIFICATION : On permet d'afficher jusqu'au niveau 9 pour la simulation,
+    // même si le joueur n'a pas encore les emplacements (maxPlayerSpellLevel)
+    return getAvailableCastLevels(spell.spell_level, 9, hasUpgrade);
+  }, [spell.spell_level, damageInfo.upgradeType]);
   
   // ✅ NOUVEAU : Réinitialiser le niveau sélectionné si le sort change
   useEffect(() => {
