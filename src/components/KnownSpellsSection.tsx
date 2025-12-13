@@ -1564,26 +1564,28 @@ const characterLevel = useMemo(() => {
   
   
  // ✅ AJOUT : Calcul du niveau max réel basé sur les slots disponibles dans spellSlots2024
+  // ✅ CALCUL DU VRAI NIVEAU MAX DU JOUEUR (Basé sur les slots affichés)
   const maxEffectiveSpellLevel = useMemo(() => {
+    // Si on veut forcer le mode "Simulation" pour voir tous les niveaux, mettre return 9;
+    // Sinon, on calcule le vrai max :
+    
     if (!combinedSpellSlots) return 1;
+    let max = 0;
     
-    let max = 1;
-    
-    // 1. Vérifier les slots standards (level1 à level9)
+    // Vérifie les slots classiques (level1 à level9)
     for (let i = 1; i <= 9; i++) {
       const key = `level${i}` as keyof typeof combinedSpellSlots;
-      // On vérifie s'il y a des slots MAX définis pour ce niveau (> 0)
       if ((combinedSpellSlots[key] || 0) > 0) {
         max = i;
       }
     }
     
-    // 2. Vérifier les slots de pacte si applicables
+    // Vérifie les slots de pacte
     if ((combinedSpellSlots.pact_slots || 0) > 0) {
       max = Math.max(max, combinedSpellSlots.pact_level || 0);
     }
     
-    return max;
+    return max > 0 ? max : 1;
   }, [combinedSpellSlots]);
   
     // Niveaux à rendre: cantrips si présents, + niveaux autorisés ayant slots>0 OU ayant des sorts présents
