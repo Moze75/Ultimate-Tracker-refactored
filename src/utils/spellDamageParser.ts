@@ -282,45 +282,48 @@ export function parseSlotUpgrade(higherLevels: string): {
 } | null {
   if (!higherLevels) return null;
   
-  // ✅ CORRECTION : Regex plus robuste
-  // 1. Utilise [\s\S] au lieu de . pour accepter les sauts de ligne entre le dé et "par niveau"
-  // 2. Accepte "par", "pour", "chaque", ou "tous" comme connecteurs
-  let upgradeRegex = /(?:\+)?(\d+d\d+)[\s\S]*?(?:par|pour|chaque|tous)[\s\S]*?(?:niveau|emplacement)/i;
-  let match = higherLevels.match(upgradeRegex);
+  // 1. Nettoyage basique pour faciliter la regex
+  const cleanText = higherLevels.replace(/\*\*/g, '').replace(/\n/g, ' ');
 
-  // ✅ AJOUT : Pattern de secours pour "Les dégâts augmentent de 1d6..."
+  // 2. Regex Principale : "+1d6 par niveau" ou "1d6 supplémentaire par emplacement"
+  let upgradeRegex = /(?:\+)?(\d+d\d+)(?:.*?(?:supplémentaire|en plus))?.*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i;
+  let match = cleanText.match(upgradeRegex);
+
+  // 3. Regex Secondaire : "Les dégâts augmentent de 1d6 pour chaque..." (Cas Boule de Feu)
   if (!match) {
-    // Si on trouve "augmentent de XdY" ET qu'il est question de niveau/emplacement ailleurs
-    const augmentRegex = /augment(?:ent|e|ation)?\s+(?:de\s+)?(\d+d\d+)/i;
-    if (/(?:niveau|emplacement)/i.test(higherLevels)) {
-      match = higherLevels.match(augmentRegex);
-    }
+    const augmentRegex = /augment(?:ent|e)?\s+(?:de\s+)?(\d+d\d+).*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i;
+    match = cleanText.match(augmentRegex);
   }
   
   if (match) {
-    const diceFormula = match[1]; // ex: "1d8"
+    const diceFormula = match[1]; // ex: "1d6" ou "1d8"
     
-    // ⚠️ IMPORTANT : donner un contexte de dégâts à extractDamageComponents
+    // On simule un contexte pour que l'extracteur valide le dé
     const fakeContext = `inflige ${diceFormula} dégâts`;
     const components = extractDamageComponents(fakeContext);
     
     if (components.length === 0) {
-      // En dernier recours, construire à la main
+      // Construction manuelle si extractDamageComponents est trop strict
       const [countStr, typeStr] = diceFormula.split('d');
-      const diceCount = parseInt(countStr, 10);
-      const diceType = parseInt(typeStr, 10);
-      if (!isNaN(diceCount) && !isNaN(diceType)) {
-        return {
-          components: [{
-            diceCount,
-            diceType,
-            formula: diceFormula,
-            damageType: undefined, // sera éventuellement complété par analyzeSpellDamage
-          }],
-          perLevels: 1,
-        };
-      }
-      return null;
+      return {
+        components: [{
+          diceCount: parseInt(countStr, 10),
+          diceType: parseInt(typeStr, 10),
+          formula: diceFormula,
+          damageType: undefined, 
+        }],
+        perLevels: 1,
+      };
+    }
+
+    return {
+      components,
+      perLevels: 1,
+    };
+  }
+  
+  return null;
+}
     }
 
     return {
