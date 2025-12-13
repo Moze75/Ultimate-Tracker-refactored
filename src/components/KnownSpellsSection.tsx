@@ -1826,8 +1826,6 @@ return (
   onTogglePrepared={togglePrepared}
   onRemoveSpell={removeKnownSpell}
   spellAttackBonus={spellAttackBonus}
-  // 🔴 AVANT : maxPlayerSpellLevel={Math.max(...Array.from(allowedLevelsSet), 1)}
-  // 🟢 APRÈS : Utilise la valeur calculée sur les vrais slots
   maxPlayerSpellLevel={maxEffectiveSpellLevel}
   characterLevel={characterLevel}
   abilityModifier={abilityMod}
