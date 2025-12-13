@@ -282,9 +282,20 @@ export function parseSlotUpgrade(higherLevels: string): {
 } | null {
   if (!higherLevels) return null;
   
-  // Pattern: "+1d8 par niveau" ou "1d8 supplémentaire par emplacement"
-  const upgradeRegex = /(?:\+)?(\d+d\d+).*?(?:par|pour chaque).*?(?:niveau|emplacement)/i;
-  const match = higherLevels.match(upgradeRegex);
+  // ✅ CORRECTION : Regex plus robuste
+  // 1. Utilise [\s\S] au lieu de . pour accepter les sauts de ligne entre le dé et "par niveau"
+  // 2. Accepte "par", "pour", "chaque", ou "tous" comme connecteurs
+  let upgradeRegex = /(?:\+)?(\d+d\d+)[\s\S]*?(?:par|pour|chaque|tous)[\s\S]*?(?:niveau|emplacement)/i;
+  let match = higherLevels.match(upgradeRegex);
+
+  // ✅ AJOUT : Pattern de secours pour "Les dégâts augmentent de 1d6..."
+  if (!match) {
+    // Si on trouve "augmentent de XdY" ET qu'il est question de niveau/emplacement ailleurs
+    const augmentRegex = /augment(?:ent|e|ation)?\s+(?:de\s+)?(\d+d\d+)/i;
+    if (/(?:niveau|emplacement)/i.test(higherLevels)) {
+      match = higherLevels.match(augmentRegex);
+    }
+  }
   
   if (match) {
     const diceFormula = match[1]; // ex: "1d8"
