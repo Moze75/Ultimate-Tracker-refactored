@@ -1561,7 +1561,29 @@ const characterLevel = useMemo(() => {
 }, [casterType, characterLevel]);
 
 
-
+  // ✅ CALCUL DU VRAI NIVEAU MAX DU JOUEUR (Basé sur les slots affichés)
+  const maxEffectiveSpellLevel = useMemo(() => {
+    // Si on veut forcer le mode "Simulation" pour voir tous les niveaux, mettre return 9;
+    // Sinon, on calcule le vrai max :
+    
+    if (!combinedSpellSlots) return 1;
+    let max = 0;
+    
+    // Vérifie les slots classiques (level1 à level9)
+    for (let i = 1; i <= 9; i++) {
+      const key = `level${i}` as keyof typeof combinedSpellSlots;
+      if ((combinedSpellSlots[key] || 0) > 0) {
+        max = i;
+      }
+    }
+    
+    // Vérifie les slots de pacte
+    if ((combinedSpellSlots.pact_slots || 0) > 0) {
+      max = Math.max(max, combinedSpellSlots.pact_level || 0);
+    }
+    
+    return max > 0 ? max : 1;
+  }, [combinedSpellSlots]);
   
  // ✅ AJOUT : Calcul du niveau max réel basé sur les slots disponibles dans spellSlots2024
   const maxEffectiveSpellLevel = useMemo(() => {
