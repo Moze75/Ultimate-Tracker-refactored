@@ -72,17 +72,17 @@ export default function CardDetailModal({
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
-      <div className="relative w-full max-w-3xl mx-4 my-8 flex items-center gap-4">
+      <div className="relative w-full max-w-3xl mx-4 my-8 flex items-center md:gap-4">
         {canGoPrev && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onNavigate('prev');
             }}
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700 flex items-center justify-center transition-colors"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 md:static md:translate-y-0 flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-800/90 hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg"
             aria-label="Carte precedente"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </button>
         )}
 
@@ -129,10 +129,10 @@ export default function CardDetailModal({
               e.stopPropagation();
               onNavigate('next');
             }}
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700 flex items-center justify-center transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 md:static md:translate-y-0 flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-800/90 hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg"
             aria-label="Carte suivante"
           >
-            <ChevronRight className="w-6 h-6 text-white" />
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </button>
         )}
       </div>
