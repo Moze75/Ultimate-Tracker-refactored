@@ -120,14 +120,15 @@ type CardProps = React.HTMLAttributes<HTMLDivElement> & {
   effectType?: 'pulse' | 'scan' | 'particles' | 'glitch' | 'all';
 };
 
-export default function Card({ 
-  selected = false, 
-  className = '', 
-  children, 
+export default function Card({
+  selected = false,
+  className = '',
+  children,
   variant = 'default',
   glowIntensity = 'normal',
   effectType = 'all',
-  ...rest 
+  onClick,
+  ...rest
 }: CardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
@@ -277,12 +278,10 @@ export default function Card({
         } ${isHovered && !selected ? 'transform translate-y-[-1px] shadow-lg' : ''}`}
         style={{
           backdropFilter: selected ? 'blur(8px) saturate(1.2)' : undefined,
-          pointerEvents: 'none',
         }}
+        onClick={onClick}
       >
-        <div style={{ pointerEvents: 'auto' }}>
-          {children}
-        </div>
+        {children}
       </div>
 
       {/* Keyframes CSS modernes et sobres */}
