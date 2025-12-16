@@ -309,7 +309,12 @@ export default function RaceSelection({
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300 text-sm mb-3">{race.description}</p>
-                {!isCustomCard && (
+                {isCustomCard ? (
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Settings className="w-10 h-10 text-purple-400 mb-3" />
+                    <span className="text-purple-300 text-sm font-medium">Cliquez pour configurer</span>
+                  </div>
+                ) : (
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-400">
                       <Zap className="w-4 h-4 mr-2 text-yellow-400" />

@@ -277,9 +277,12 @@ export default function Card({
         } ${isHovered && !selected ? 'transform translate-y-[-1px] shadow-lg' : ''}`}
         style={{
           backdropFilter: selected ? 'blur(8px) saturate(1.2)' : undefined,
+          pointerEvents: 'none',
         }}
       >
-        {children}
+        <div style={{ pointerEvents: 'auto' }}>
+          {children}
+        </div>
       </div>
 
       {/* Keyframes CSS modernes et sobres */}
