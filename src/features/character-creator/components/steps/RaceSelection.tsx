@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { races } from '../../data/races';
 import Card, { CardContent, CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
-import { Users, Zap, Shield, Star, ChevronDown, Eye, Heart, Settings } from 'lucide-react';
+import { Users, Zap, Shield, Star, ChevronDown, Eye, Heart, Settings, MessageSquare, Sparkles } from 'lucide-react';
 import CustomRaceModal from '../CustomRaceModal';
 import CardDetailModal from '../ui/CardDetailModal';
 
@@ -138,39 +138,46 @@ export default function RaceSelection({
     }
 
     return (
-      <div className="space-y-4">
-        <p className="text-gray-300 text-base">{race.description}</p>
+      <div className="space-y-5">
+        <p className="text-gray-300 text-base leading-relaxed">{race.description}</p>
 
         <RaceImage raceName={race.name} />
 
-        <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="flex items-center text-sm text-gray-400">
-            <Zap className="w-5 h-5 mr-2 text-yellow-400" />
-            <span>Vitesse: {feetToMeters(race.speed)} m</span>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col items-center p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+            <Zap className="w-5 h-5 mb-1 text-yellow-400" />
+            <span className="text-xs text-gray-400">Vitesse</span>
+            <span className="text-sm font-medium text-white">{feetToMeters(race.speed)} m</span>
           </div>
-          <div className="flex items-center text-sm text-gray-400">
-            <Shield className="w-5 h-5 mr-2 text-blue-400" />
-            <span>Taille: {race.size}</span>
+          <div className="flex flex-col items-center p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+            <Shield className="w-5 h-5 mb-1 text-blue-400" />
+            <span className="text-xs text-gray-400">Taille</span>
+            <span className="text-sm font-medium text-white">{race.size}</span>
           </div>
-          {hasVisionInDark(race.traits) && (
-            <div className="flex items-center text-sm text-gray-400">
-              <Eye className="w-5 h-5 mr-2 text-purple-400" />
-              <span>Vision dans le noir</span>
-            </div>
-          )}
+          <div className="flex flex-col items-center p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+            <Eye className="w-5 h-5 mb-1 text-purple-400" />
+            <span className="text-xs text-gray-400">Vision</span>
+            <span className="text-sm font-medium text-white">{hasVisionInDark(race.traits) ? 'Nyctalopie' : 'Normale'}</span>
+          </div>
         </div>
 
-        <div className="space-y-4 mt-6">
-          <div>
-            <h4 className="font-medium text-white mb-2">Langues</h4>
+        <div className="space-y-3">
+          <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+            <h4 className="font-medium text-white mb-2 flex items-center text-sm">
+              <MessageSquare className="w-4 h-4 mr-2 text-green-400" />
+              Langues
+            </h4>
             <p className="text-gray-300 text-sm">
               {race.languages && race.languages.length > 0 ? race.languages.join(', ') : '—'}
             </p>
           </div>
 
           {race.proficiencies && race.proficiencies.length > 0 && (
-            <div>
-              <h4 className="font-medium text-white mb-2">Compétences</h4>
+            <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+              <h4 className="font-medium text-white mb-2 flex items-center text-sm">
+                <Star className="w-4 h-4 mr-2 text-yellow-400" />
+                Maitrises
+              </h4>
               <p className="text-gray-300 text-sm">
                 {race.proficiencies.join(', ')}
               </p>
@@ -178,23 +185,27 @@ export default function RaceSelection({
           )}
 
           {race.traits && race.traits.length > 0 && (
-            <div>
-              <h4 className="font-medium text-white mb-2">Traits raciaux</h4>
-              <div>
-                <ul className="text-gray-300 text-sm space-y-1">
-                  {race.traits.map((trait: string, idx: number) => (
-                    <li key={idx} className="leading-relaxed">• {trait}</li>
-                  ))}
-                </ul>
-              </div>
+            <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+              <h4 className="font-medium text-white mb-2 flex items-center text-sm">
+                <Sparkles className="w-4 h-4 mr-2 text-red-400" />
+                Traits raciaux
+              </h4>
+              <ul className="text-gray-300 text-sm space-y-1.5">
+                {race.traits.map((trait: string, idx: number) => (
+                  <li key={idx} className="leading-relaxed flex items-start">
+                    <span className="text-gray-500 mr-2">•</span>
+                    <span>{trait}</span>
+                  </li>
+                ))}
+              </ul>
 
               {(race.name === 'Elfe' || race.name === 'Gnome' || race.name === 'Tieffelin') && (
-                <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600/30">
-                  <h5 className="text-xs font-medium text-gray-300 mb-2">Variantes disponibles :</h5>
+                <div className="mt-3 p-2.5 bg-gray-900/50 rounded-md border border-gray-600/30">
+                  <h5 className="text-xs font-medium text-gray-300 mb-1">Variantes disponibles</h5>
                   <p className="text-xs text-gray-400">
                     {race.name === 'Elfe' && 'Haut-Elfe, Elfe Sylvestre, Drow'}
-                    {race.name === 'Gnome' && 'Gnome des Forêts, Gnome des Roches'}
-                    {race.name === 'Tieffelin' && 'Héritage Infernal, Abyssal, Chtonien'}
+                    {race.name === 'Gnome' && 'Gnome des Forets, Gnome des Roches'}
+                    {race.name === 'Tieffelin' && 'Heritage Infernal, Abyssal, Chtonien'}
                   </p>
                   <p className="text-xs text-gray-500 italic mt-1">
                     Le choix de variante se fera dans l'interface du personnage
