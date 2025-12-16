@@ -139,12 +139,9 @@ export default function RaceSelection({
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          {getRaceIcon(race.name)}
-          <h3 className="text-2xl font-bold text-white">{race.name}</h3>
-        </div>
-
         <p className="text-gray-300 text-base">{race.description}</p>
+
+        <RaceImage raceName={race.name} />
 
         <div className="grid grid-cols-2 gap-4 py-4">
           <div className="flex items-center text-sm text-gray-400">
@@ -162,8 +159,6 @@ export default function RaceSelection({
             </div>
           )}
         </div>
-
-        <RaceImage raceName={race.name} />
 
         <div className="space-y-4 mt-6">
           <div>
@@ -381,6 +376,7 @@ export default function RaceSelection({
         }}
         confirmLabel="Valider et continuer"
         confirmDisabled={!selectedRace}
+        titleExtractor={(race) => race.isCustomPlaceholder ? 'Espèce personnalisée' : race.name}
       />
 
       <CustomRaceModal

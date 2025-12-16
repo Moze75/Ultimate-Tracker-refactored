@@ -12,6 +12,7 @@ interface CardDetailModalProps {
   onConfirm?: () => void;
   confirmLabel?: string;
   confirmDisabled?: boolean;
+  titleExtractor?: (card: any) => string;
 }
 
 export default function CardDetailModal({
@@ -24,6 +25,7 @@ export default function CardDetailModal({
   onConfirm,
   confirmLabel = 'Valider',
   confirmDisabled = false,
+  titleExtractor,
 }: CardDetailModalProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -134,9 +136,9 @@ export default function CardDetailModal({
           style={{ touchAction: 'pan-y' }}
         >
           <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4 flex items-center justify-between">
-            <div className="text-sm text-gray-400">
-              Carte {currentIndex + 1} sur {cards.length}
-            </div>
+            <h2 className="text-xl font-bold text-white">
+              {titleExtractor ? titleExtractor(currentCard) : ''}
+            </h2>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-gray-800 transition-colors"

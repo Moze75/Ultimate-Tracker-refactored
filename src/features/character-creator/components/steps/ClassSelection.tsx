@@ -115,12 +115,18 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          {getClassIcon(cls.name)}
-          <h3 className="text-2xl font-bold text-white">{cls.name}</h3>
-        </div>
-
         <p className="text-gray-300 text-base">{cls.description}</p>
+
+        {imageSrc && (
+          <div className="mb-4">
+            <img
+              src={imageSrc}
+              alt={cls.name}
+              className="block w-full h-auto rounded-md border border-gray-700/60"
+              loading="lazy"
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 py-4">
           <div className="flex items-center text-sm text-gray-400">
@@ -136,17 +142,6 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
             <span>Jets de sauvegarde: {cls.savingThrows.join(', ')}</span>
           </div>
         </div>
-
-        {imageSrc && (
-          <div className="mb-4">
-            <img
-              src={imageSrc}
-              alt={cls.name}
-              className="block w-full h-auto rounded-md border border-gray-700/60"
-              loading="lazy"
-            />
-          </div>
-        )}
 
         <div className="mb-4">
           <h4 className="font-medium text-white mb-2 flex items-center">
@@ -397,6 +392,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         }}
         confirmLabel="Valider et continuer"
         confirmDisabled={!selectedClass}
+        titleExtractor={(cls) => cls.name}
       />
     </div>
   );
