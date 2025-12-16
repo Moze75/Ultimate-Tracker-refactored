@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
@@ -40,6 +40,10 @@ export default function CardDetailModal({
     [isOpen, currentIndex, cards.length, onClose, onNavigate]
   );
 
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const isSwiping = useRef(false);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -59,6 +63,41 @@ export default function CardDetailModal({
   const currentCard = cards[currentIndex];
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < cards.length - 1;
+  const SWIPE_THRESHOLD = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    startX.current = t.clientX;
+    startY.current = t.clientY;
+    isSwiping.current = false;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (startX.current == null || startY.current == null) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX.current;
+    const dy = t.clientY - startY.current;
+    if (!isSwiping.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      isSwiping.current = true;
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (startX.current == null || startY.current == null) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX.current;
+    const adx = Math.abs(dx);
+    if (isSwiping.current && adx >= SWIPE_THRESHOLD) {
+      if (dx < 0 && canGoNext) {
+        onNavigate('next');
+      } else if (dx > 0 && canGoPrev) {
+        onNavigate('prev');
+      }
+    }
+    startX.current = null;
+    startY.current = null;
+    isSwiping.current = false;
+  };
 
   const handleConfirm = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -89,6 +128,10 @@ export default function CardDetailModal({
         <div
           className="flex-1 bg-gray-900/95 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in border border-gray-700/50"
           onClick={(e) => e.stopPropagation()}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{ touchAction: 'pan-y' }}
         >
           <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4 flex items-center justify-between">
             <div className="text-sm text-gray-400">
