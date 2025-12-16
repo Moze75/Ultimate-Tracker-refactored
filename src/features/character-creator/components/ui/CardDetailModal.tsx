@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CardDetailModalProps {
@@ -54,9 +53,9 @@ export default function CardDetailModal({
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < cards.length - 1;
 
-  const modal = (
+  return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div className="relative w-full max-w-3xl mx-4 my-8 flex items-center gap-4">
@@ -67,7 +66,7 @@ export default function CardDetailModal({
               onNavigate('prev');
             }}
             className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700 flex items-center justify-center transition-colors"
-            aria-label="Carte précédente"
+            aria-label="Carte precedente"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
@@ -108,6 +107,4 @@ export default function CardDetailModal({
       </div>
     </div>
   );
-
-  return createPortal(modal, document.body);
 }
