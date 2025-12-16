@@ -281,7 +281,7 @@ export default function RaceSelection({
         <p className="text-gray-400">Votre race détermine vos capacités innées et votre héritage</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
         {allRacesIncludingCustom.map((race, index) => {
           const isSelected = selectedRace === race.name;
           const isCustomCard = race.isCustomPlaceholder;
@@ -291,7 +291,7 @@ export default function RaceSelection({
               key={`${race.name}-${index}`}
               selected={isSelected && !isCustomCard}
               onClick={() => handleCardClick(index)}
-              className={`h-full ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''}`}
+              className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''}`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">

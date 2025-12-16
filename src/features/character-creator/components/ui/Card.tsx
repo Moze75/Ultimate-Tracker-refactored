@@ -70,7 +70,7 @@ export default function Card({
       )}
 
       <div
-        className={`relative z-10 rounded-xl border-2 transition-all duration-200 ${
+        className={`relative z-10 h-full rounded-xl border-2 transition-all duration-200 flex flex-col ${
           selected
             ? 'border-transparent bg-gray-900/95'
             : 'border-gray-700/60 bg-gray-900/60 hover:border-gray-500/70 hover:bg-gray-900/80'
@@ -131,5 +131,5 @@ export function CardHeader(props: React.HTMLAttributes<HTMLDivElement>) {
 
 export function CardContent(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className = '', ...rest } = props;
-  return <div className={`p-4 ${className}`} {...rest} />;
+  return <div className={`p-4 flex-1 ${className}`} {...rest} />;
 }

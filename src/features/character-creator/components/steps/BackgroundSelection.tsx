@@ -449,7 +449,7 @@ export default function BackgroundSelection({
         <p className="text-gray-400">Votre historique determine vos competences et votre equipement de depart</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
         {backgroundsData.map((bg, index) => {
           const isSelected = selectedBackground === bg.name;
 
@@ -458,7 +458,7 @@ export default function BackgroundSelection({
               key={bg.name}
               selected={isSelected}
               onClick={() => handleCardClick(index)}
-              className="h-full"
+              className="h-full min-h-[200px]"
             >
               <CardHeader>
                 <div className="flex items-center justify-between">

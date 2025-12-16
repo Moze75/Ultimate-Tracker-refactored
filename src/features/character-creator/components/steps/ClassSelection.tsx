@@ -317,7 +317,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         <p className="text-gray-400">Votre classe détermine vos capacités et votre rôle dans l'aventure</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
         {classes.map((cls, index) => {
           const isSelected = selectedClass === cls.name;
 
@@ -326,7 +326,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
               key={cls.name}
               selected={isSelected}
               onClick={() => handleCardClick(index)}
-              className="h-full"
+              className="h-full min-h-[200px]"
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
