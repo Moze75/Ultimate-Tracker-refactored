@@ -4,6 +4,7 @@ import Card, { CardContent, CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
 import { Users, Zap, Shield, Star, ChevronDown, Eye, Heart, Settings } from 'lucide-react';
 import CustomRaceModal from '../CustomRaceModal';
+import CardDetailModal from '../ui/CardDetailModal';
 
 interface RaceSelectionProps {
   selectedRace: string;
@@ -14,25 +15,34 @@ interface RaceSelectionProps {
   onCustomRaceDataChange?: (race: DndRace | null) => void;
 }
 
-export default function RaceSelection({ 
-  selectedRace, 
-  onRaceSelect, 
+export default function RaceSelection({
+  selectedRace,
+  onRaceSelect,
   onNext,
   customRaceData,
-  onCustomRaceDataChange 
+  onCustomRaceDataChange
 }: RaceSelectionProps) {
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [modalCardIndex, setModalCardIndex] = useState<number | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
 
-  // ✅ Combiner les races standards et la race personnalisée
-  const allRaces = customRaceData 
-    ? [...races, customRaceData] 
-    : races;
+  const customRaceCard = {
+    name: 'Espèce personnalisée',
+    description: 'Créez votre propre espèce avec des traits uniques',
+    speed: 0,
+    size: '',
+    traits: [],
+    languages: [],
+    isCustomPlaceholder: true,
+  };
+
+  const allRacesIncludingCustom = customRaceData
+    ? [...races, customRaceData, customRaceCard]
+    : [...races, customRaceCard];
 
   useEffect(() => {
     console.log('[RaceSelection] customRaceData mis à jour:', customRaceData);
-    console.log('[RaceSelection] allRaces:', allRaces);
-  }, [customRaceData]);
+    console.log('[RaceSelection] allRacesIncludingCustom:', allRacesIncludingCustom);
+  }, [customRaceData, allRacesIncludingCustom]);
   
   // Conversion pieds -> mètres (les données sont en pieds)
   const feetToMeters = (ft?: number) => {
@@ -40,9 +50,15 @@ export default function RaceSelection({
     return Math.round(ft * 0.3048 * 2) / 2;
   };
 
-  const handleClick = (raceName: string) => {
-    onRaceSelect(raceName);
-    setExpanded((prev) => (prev === raceName ? null : raceName));
+  const handleCardClick = (index: number) => {
+    const race = allRacesIncludingCustom[index];
+
+    if (race.isCustomPlaceholder) {
+      setShowCustomModal(true);
+    } else {
+      setModalCardIndex(index);
+      onRaceSelect(race.name);
+    }
   };
 
   // ✅ Gérer la sauvegarde de la race personnalisée
@@ -104,7 +120,99 @@ export default function RaceSelection({
     return traits.some(trait => trait.includes('Vision dans le noir'));
   };
 
-  // Image de race (public/Races/...) avec fallback de noms
+  const renderRaceCardContent = (race: any, index: number) => {
+    if (race.isCustomPlaceholder) {
+      return (
+        <div className="text-center py-8">
+          <Settings className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-purple-300 mb-4">Espèce personnalisée</h3>
+          <p className="text-gray-400 text-sm mb-6">
+            Créez votre propre espèce avec des traits uniques
+          </p>
+          <Button variant="secondary" size="sm" onClick={() => setShowCustomModal(true)}>
+            <Settings className="w-4 h-4 mr-2" />
+            Configurer
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          {getRaceIcon(race.name)}
+          <h3 className="text-2xl font-bold text-white">{race.name}</h3>
+        </div>
+
+        <p className="text-gray-300 text-base">{race.description}</p>
+
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="flex items-center text-sm text-gray-400">
+            <Zap className="w-5 h-5 mr-2 text-yellow-400" />
+            <span>Vitesse: {feetToMeters(race.speed)} m</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-400">
+            <Shield className="w-5 h-5 mr-2 text-blue-400" />
+            <span>Taille: {race.size}</span>
+          </div>
+          {hasVisionInDark(race.traits) && (
+            <div className="flex items-center text-sm text-gray-400">
+              <Eye className="w-5 h-5 mr-2 text-purple-400" />
+              <span>Vision dans le noir</span>
+            </div>
+          )}
+        </div>
+
+        <RaceImage raceName={race.name} />
+
+        <div className="space-y-4 mt-6">
+          <div>
+            <h4 className="font-medium text-white mb-2">Langues</h4>
+            <p className="text-gray-300 text-sm">
+              {race.languages && race.languages.length > 0 ? race.languages.join(', ') : '—'}
+            </p>
+          </div>
+
+          {race.proficiencies && race.proficiencies.length > 0 && (
+            <div>
+              <h4 className="font-medium text-white mb-2">Compétences</h4>
+              <p className="text-gray-300 text-sm">
+                {race.proficiencies.join(', ')}
+              </p>
+            </div>
+          )}
+
+          {race.traits && race.traits.length > 0 && (
+            <div>
+              <h4 className="font-medium text-white mb-2">Traits raciaux</h4>
+              <div>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  {race.traits.map((trait: string, idx: number) => (
+                    <li key={idx} className="leading-relaxed">• {trait}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {(race.name === 'Elfe' || race.name === 'Gnome' || race.name === 'Tieffelin') && (
+                <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                  <h5 className="text-xs font-medium text-gray-300 mb-2">Variantes disponibles :</h5>
+                  <p className="text-xs text-gray-400">
+                    {race.name === 'Elfe' && 'Haut-Elfe, Elfe Sylvestre, Drow'}
+                    {race.name === 'Gnome' && 'Gnome des Forêts, Gnome des Roches'}
+                    {race.name === 'Tieffelin' && 'Héritage Infernal, Abyssal, Chtonien'}
+                  </p>
+                  <p className="text-xs text-gray-500 italic mt-1">
+                    Le choix de variante se fera dans l'interface du personnage
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   function RaceImage({ raceName }: { raceName: string }) {
     // ✅ Mapping explicite pour les races avec images spécifiques
     const RACE_IMAGE_MAPPING: Record<string, string> = {
@@ -174,138 +282,64 @@ export default function RaceSelection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {allRaces.map((race) => {
+        {allRacesIncludingCustom.map((race, index) => {
           const isSelected = selectedRace === race.name;
-          const isExpanded = expanded === race.name;
+          const isCustomCard = race.isCustomPlaceholder;
 
           return (
             <Card
-              key={race.name}
-              selected={isSelected}
-              onClick={() => handleClick(race.name)}
-              className="h-full"
+              key={`${race.name}-${index}`}
+              selected={isSelected && !isCustomCard}
+              onClick={() => handleCardClick(index)}
+              className={`h-full ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''}`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">{race.name}</h3>
+                  <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-purple-300' : 'text-white'}`}>
+                    {race.name}
+                  </h3>
                   <div className="flex items-center gap-2">
-                    {getRaceIcon(race.name)}
-                    <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
+                    {isCustomCard ? (
+                      <Settings className="w-5 h-5 text-purple-400" />
+                    ) : (
+                      getRaceIcon(race.name)
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300 text-sm mb-3">{race.description}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-400">
-                    <Zap className="w-4 h-4 mr-2 text-yellow-400" />
-                    <span>Vitesse: {feetToMeters(race.speed)} m</span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-400">
-                    <Shield className="w-4 h-4 mr-2 text-blue-400" />
-                    <span>Taille: {race.size}</span>
-                  </div>
-                  {hasVisionInDark(race.traits) && (
+                {!isCustomCard && (
+                  <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-400">
-                      <Eye className="w-4 h-4 mr-2 text-purple-400" />
-                      <span>Vision dans le noir</span>
+                      <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+                      <span>Vitesse: {feetToMeters(race.speed)} m</span>
                     </div>
-                  )}
-                  {race.languages && race.languages.length > 0 && (
                     <div className="flex items-center text-sm text-gray-400">
-                      <Star className="w-4 h-4 mr-2 text-green-400" />
-                      <span>
-                        Langues: {race.languages.slice(0, 2).join(', ')}
-                        {race.languages.length > 2 ? '...' : ''}
-                      </span>
+                      <Shield className="w-4 h-4 mr-2 text-blue-400" />
+                      <span>Taille: {race.size}</span>
                     </div>
-                  )}
-                </div>
-
-                {/* Image et détails supplémentaires uniquement quand la carte est dépliée */}
-                {isExpanded && (
-                  <div className="mt-4 border-t border-gray-700/50 pt-4 animate-fade-in">
-                    {/* Image de la race (pleine largeur, non rognée) */}
-                    <RaceImage raceName={race.name} />
-
-                    {/* Détails étendus */}
-                    <div className="grid grid-cols-1 gap-4 mt-4">
-                      <div>
-                        <h4 className="font-medium text-white mb-2">Langues</h4>
-                        <p className="text-gray-300 text-sm">
-                          {race.languages && race.languages.length > 0 ? race.languages.join(', ') : '—'}
-                        </p>
+                    {hasVisionInDark(race.traits) && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <Eye className="w-4 h-4 mr-2 text-purple-400" />
+                        <span>Vision dans le noir</span>
                       </div>
-
-                      {race.proficiencies && race.proficiencies.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-white mb-2">Compétences</h4>
-                          <p className="text-gray-300 text-sm">
-                            {race.proficiencies.join(', ')}
-                          </p>
-                        </div>
-                      )}
-
-                      {race.traits && race.traits.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-white mb-2">Traits raciaux</h4>
-                        <div>
-                            <ul className="text-gray-300 text-sm space-y-1">
-                              {race.traits.map((trait, index) => (
-                                <li key={index} className="leading-relaxed">• {trait}</li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          {(race.name === 'Elfe' || race.name === 'Gnome' || race.name === 'Tieffelin') && (
-                            <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600/30">
-                              <h5 className="text-xs font-medium text-gray-300 mb-2">Variantes disponibles :</h5>
-                              <p className="text-xs text-gray-400">
-                                {race.name === 'Elfe' && 'Haut-Elfe, Elfe Sylvestre, Drow'}
-                                {race.name === 'Gnome' && 'Gnome des Forêts, Gnome des Roches'}
-                                {race.name === 'Tieffelin' && 'Héritage Infernal, Abyssal, Chtonien'}
-                              </p>
-                              <p className="text-xs text-gray-500 italic mt-1">
-                                Le choix de variante se fera dans l'interface du personnage
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {race.languages && race.languages.length > 0 && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <Star className="w-4 h-4 mr-2 text-green-400" />
+                        <span>
+                          Langues: {race.languages.slice(0, 2).join(', ')}
+                          {race.languages.length > 2 ? '...' : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
             </Card>
           );
-        })} 
-
-        
-        {/* ✅ Carte pour créer une race personnalisée */}
-        <Card 
-          className="h-full border-2 border-dashed border-purple-500/50 hover:border-purple-400/70 transition-colors cursor-pointer"
-          onClick={() => setShowCustomModal(true)}
-        >
-          <CardHeader>
-            <div className="flex items-center justify-center">
-              <Settings className="w-6 h-6 text-purple-400 mr-2" />
-              <h3 className="text-lg font-semibold text-purple-300">Espèce personnalisée</h3>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-gray-400 text-sm mb-4">
-                Créez votre propre espèce avec des traits uniques
-              </p>
-              <Button variant="secondary" size="sm" onClick={() => setShowCustomModal(true)}>
-                <Settings className="w-4 h-4 mr-2" />
-                Configurer
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        })}
       </div>
 
       <div className="flex justify-center pt-6">
@@ -319,7 +353,25 @@ export default function RaceSelection({
         </Button>
       </div>
 
-      {/* ✅ Modal de configuration */}
+      <CardDetailModal
+        isOpen={modalCardIndex !== null}
+        onClose={() => setModalCardIndex(null)}
+        cards={allRacesIncludingCustom}
+        currentIndex={modalCardIndex ?? 0}
+        onNavigate={(direction) => {
+          if (modalCardIndex === null) return;
+          const newIndex = direction === 'prev' ? modalCardIndex - 1 : modalCardIndex + 1;
+          if (newIndex >= 0 && newIndex < allRacesIncludingCustom.length) {
+            const newRace = allRacesIncludingCustom[newIndex];
+            if (!newRace.isCustomPlaceholder) {
+              onRaceSelect(newRace.name);
+            }
+            setModalCardIndex(newIndex);
+          }
+        }}
+        renderCardContent={renderRaceCardContent}
+      />
+
       <CustomRaceModal
         open={showCustomModal}
         onClose={() => setShowCustomModal(false)}
