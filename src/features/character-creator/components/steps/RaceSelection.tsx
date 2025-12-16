@@ -375,6 +375,12 @@ export default function RaceSelection({
           }
         }}
         renderCardContent={renderRaceCardContent}
+        onConfirm={() => {
+          setModalCardIndex(null);
+          onNext();
+        }}
+        confirmLabel="Valider et continuer"
+        confirmDisabled={!selectedRace}
       />
 
       <CustomRaceModal

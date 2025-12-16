@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface CardDetailModalProps {
   isOpen: boolean;
@@ -8,6 +9,9 @@ interface CardDetailModalProps {
   currentIndex: number;
   onNavigate: (direction: 'prev' | 'next') => void;
   renderCardContent: (card: any, index: number) => React.ReactNode;
+  onConfirm?: () => void;
+  confirmLabel?: string;
+  confirmDisabled?: boolean;
 }
 
 export default function CardDetailModal({
@@ -17,6 +21,9 @@ export default function CardDetailModal({
   currentIndex,
   onNavigate,
   renderCardContent,
+  onConfirm,
+  confirmLabel = 'Valider',
+  confirmDisabled = false,
 }: CardDetailModalProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -53,9 +60,16 @@ export default function CardDetailModal({
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < cards.length - 1;
 
-  return (
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onConfirm && !confirmDisabled) {
+      onConfirm();
+    }
+  };
+
+  const modal = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div className="relative w-full max-w-3xl mx-4 my-8 flex items-center gap-4">
@@ -90,6 +104,23 @@ export default function CardDetailModal({
           </div>
 
           <div className="p-6">{renderCardContent(currentCard, currentIndex)}</div>
+
+          {onConfirm && (
+            <div className="sticky bottom-0 z-10 bg-gray-900/95 backdrop-blur-sm border-t border-gray-700/50 px-6 py-4">
+              <button
+                onClick={handleConfirm}
+                disabled={confirmDisabled}
+                className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                  confirmDisabled
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-500 text-white shadow-lg hover:shadow-red-500/25'
+                }`}
+              >
+                <Check className="w-5 h-5" />
+                {confirmLabel}
+              </button>
+            </div>
+          )}
         </div>
 
         {canGoNext && (
@@ -107,4 +138,6 @@ export default function CardDetailModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }

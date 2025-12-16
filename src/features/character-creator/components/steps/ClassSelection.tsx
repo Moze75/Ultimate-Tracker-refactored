@@ -391,6 +391,12 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           }
         }}
         renderCardContent={renderClassCardContent}
+        onConfirm={() => {
+          setModalCardIndex(null);
+          onNext();
+        }}
+        confirmLabel="Valider et continuer"
+        confirmDisabled={!selectedClass}
       />
     </div>
   );
