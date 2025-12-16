@@ -187,13 +187,14 @@ export default function Card({
   }[glowIntensity];
 
   return (
-    <div 
+    <div
       ref={cardRef}
       className={`relative rounded-xl cursor-pointer transition-transform duration-200 ${
         isHovered ? 'transform scale-[1.02]' : ''
-      } ${className}`} 
+      } ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
       {...rest}
     >
       {selected && (
@@ -279,7 +280,6 @@ export default function Card({
         style={{
           backdropFilter: selected ? 'blur(8px) saturate(1.2)' : undefined,
         }}
-        onClick={onClick}
       >
         {children}
       </div>
