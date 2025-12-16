@@ -490,71 +490,7 @@ export default function CharacterSummary({
     </div>
   </CardContent>
 </Card>
-      
-      {/* Synthèse des compétences */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center">
-            <Star className="w-5 h-5 text-yellow-400 mr-2" />
-            <h3 className="text-lg font-semibold text-white">Compétences</h3>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-xs text-gray-400 mb-3">
-            Bonus de maîtrise: +{proficiencyBonus} | Maîtrises: classe + historique
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-2 gap-x-4">
-            {ALL_SKILLS.map((skill) => {
-              const bonus = getSkillBonus(skill);
-              const proficient = proficientSet.has(skill);
-              const sign = bonus >= 0 ? '+' : '';
-              return (
-                <div key={skill} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-300">
-                    {skill} {proficient && <span className="text-xs text-red-400">[M]</span>}
-                  </span>
-                  <span className="text-white font-medium">{sign}{bonus}</span>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
-{/* ✅ NOUVELLE SECTION : Jets de sauvegarde maîtrisés */}
-{classData?.savingThrows && classData.savingThrows.length > 0 && (
-  <Card>
-    <CardHeader>
-      <div className="flex items-center">
-        <Shield className="w-5 h-5 text-green-400 mr-2" />
-        <h3 className="text-lg font-semibold text-white">Jets de sauvegarde maîtrisés</h3>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <div className="text-xs text-gray-400 mb-3">
-        Bonus de maîtrise: +{proficiencyBonus}
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-4">
-        {classData.savingThrows.map((save) => {
-          const abilityScore = finalAbilities[save] ?? 10;
-          const modifier = calculateModifier(abilityScore);
-          const totalBonus = modifier + proficiencyBonus;
-          const sign = totalBonus >= 0 ? '+' : '';
-          
-          return (
-            <div key={save} className="flex items-center justify-between text-sm">
-              <span className="text-gray-300">
-                {save} <span className="text-xs text-green-400">[M]</span>
-              </span>
-              <span className="text-white font-medium">{sign}{totalBonus}</span>
-            </div>
-          );
-        })}
-      </div>
-    </CardContent>
-  </Card>
-)}
-      
       {/* Sorts sélectionnés */}
       {(selectedCantrips.length > 0 || selectedLevel1Spells.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
