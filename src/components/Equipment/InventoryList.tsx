@@ -294,7 +294,7 @@ export function InventoryList({
                         })()}
 
                         {canShare && (
-                          <div className="mt-3 pt-3 border-t border-gray-700/30 flex justify-end">
+                          <div className="mt-3 pt-3 border-t border-gray-700/30 flex justify-start">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
