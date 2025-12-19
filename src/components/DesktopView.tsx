@@ -15,6 +15,13 @@ import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 
 
+interface CampaignMember {
+  id: string;
+  player_id: string;
+  player_name: string;
+  user_id: string;
+}
+
 interface DesktopViewProps {
   player: Player;
   inventory: any[];
@@ -23,6 +30,9 @@ interface DesktopViewProps {
   classSections: any[] | null;
   session: any;
   onBackToSelection?: () => void;
+  campaignId?: string | null;
+  campaignMembers?: CampaignMember[];
+  currentUserId?: string;
 }
 
 export function DesktopView({
@@ -33,6 +43,9 @@ export function DesktopView({
   classSections,
   session,
   onBackToSelection,
+  campaignId,
+  campaignMembers,
+  currentUserId,
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
@@ -250,6 +263,9 @@ export function DesktopView({
                     onInventoryUpdate={onInventoryUpdate}
                     classSections={classSections}
                     hiddenTabs={['bag']}
+                    campaignId={campaignId}
+                    campaignMembers={campaignMembers}
+                    currentUserId={currentUserId}
                   />
                 </div>
               </div>

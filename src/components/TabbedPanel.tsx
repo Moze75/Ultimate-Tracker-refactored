@@ -7,8 +7,14 @@ import CombatTab from './CombatTab';
 import { NotesTab } from './NotesTab';
 import PlayerProfileProfileTab from './PlayerProfileProfileTab'; // 1. Import ajouté
 
-// 2. Ajout de 'profile' au type TabKey
 type TabKey = 'actions' | 'class' | 'spells' | 'gold' | 'inventory' | 'bag' | 'notes' | 'profile';
+
+interface CampaignMember {
+  id: string;
+  player_id: string;
+  player_name: string;
+  user_id: string;
+}
 
 interface TabbedPanelProps {
   player: Player;
@@ -17,6 +23,9 @@ interface TabbedPanelProps {
   onInventoryUpdate: (inventory: any[]) => void;
   classSections: any[] | null;
   hiddenTabs?: TabKey[];
+  campaignId?: string | null;
+  campaignMembers?: CampaignMember[];
+  currentUserId?: string;
 }
 
 const TABS = [
@@ -39,6 +48,9 @@ export function TabbedPanel({
   onInventoryUpdate,
   classSections,
   hiddenTabs = [],
+  campaignId,
+  campaignMembers,
+  currentUserId,
 }: TabbedPanelProps) {
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     try {
@@ -104,6 +116,9 @@ export function TabbedPanel({
             onPlayerUpdate={onPlayerUpdate}
             onInventoryUpdate={onInventoryUpdate}
             viewMode="gold"
+            campaignId={campaignId}
+            campaignMembers={campaignMembers}
+            currentUserId={currentUserId}
           />
         )}
 
@@ -114,6 +129,9 @@ export function TabbedPanel({
             onPlayerUpdate={onPlayerUpdate}
             onInventoryUpdate={onInventoryUpdate}
             viewMode="inventory"
+            campaignId={campaignId}
+            campaignMembers={campaignMembers}
+            currentUserId={currentUserId}
           />
         )}
 
@@ -124,6 +142,9 @@ export function TabbedPanel({
             onPlayerUpdate={onPlayerUpdate}
             onInventoryUpdate={onInventoryUpdate}
             viewMode="bag"
+            campaignId={campaignId}
+            campaignMembers={campaignMembers}
+            currentUserId={currentUserId}
           />
         )}
 

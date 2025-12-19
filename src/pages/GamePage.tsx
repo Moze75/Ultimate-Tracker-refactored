@@ -912,6 +912,9 @@ export function GamePage({
                 classSections={classSections}
                 session={session}
                 onBackToSelection={handleBackToSelection}
+                campaignId={campaignId}
+                campaignMembers={campaignMembers}
+                currentUserId={currentUserId}
               />
 
               <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
