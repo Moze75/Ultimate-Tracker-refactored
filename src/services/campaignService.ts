@@ -709,4 +709,89 @@ async claimGift(
 
     return giftIds.length;
   },
+
+  async sendItemToPlayer(
+    campaignId: string,
+    inventoryItemId: string,
+    itemName: string,
+    itemDescription: string,
+    quantity: number,
+    recipientUserId: string
+  ): Promise<CampaignGift> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    const { data: gift, error } = await supabase
+      .from('campaign_gifts')
+      .insert({
+        campaign_id: campaignId,
+        gift_type: 'item',
+        item_name: itemName,
+        item_description: itemDescription,
+        item_quantity: quantity,
+        gold: 0,
+        silver: 0,
+        copper: 0,
+        distribution_mode: 'individual',
+        recipient_ids: [recipientUserId],
+        message: null,
+        sent_by: user.id,
+        status: 'pending',
+        sent_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const { data: invItem, error: invErr } = await supabase
+      .from('inventory_items')
+      .select('id, description')
+      .eq('id', inventoryItemId)
+      .single();
+
+    if (!invErr && invItem) {
+      const META_PREFIX = '#meta:';
+      const desc = invItem.description || '';
+      const lines = desc.split('\n').map((l: string) => l.trim());
+      const metaLine = [...lines].reverse().find((l: string) => l.startsWith(META_PREFIX));
+      let currentQty = 1;
+      if (metaLine) {
+        try {
+          const meta = JSON.parse(metaLine.slice(META_PREFIX.length));
+          currentQty = meta.quantity || 1;
+        } catch {}
+      }
+
+      const newQty = currentQty - quantity;
+      if (newQty <= 0) {
+        await supabase.from('inventory_items').delete().eq('id', inventoryItemId);
+      } else {
+        const updatedDesc = desc.replace(
+          /"quantity":\s*\d+/,
+          `"quantity": ${newQty}`
+        );
+        await supabase.from('inventory_items').update({ description: updatedDesc }).eq('id', inventoryItemId);
+      }
+    }
+
+    return gift as CampaignGift;
+  },
+
+  async getPlayerCampaign(playerId: string): Promise<{ campaignId: string; members: CampaignMember[] } | null> {
+    const { data: membership } = await supabase
+      .from('campaign_members')
+      .select('campaign_id')
+      .eq('player_id', playerId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!membership) return null;
+
+    const members = await this.getCampaignMembers(membership.campaign_id);
+    return {
+      campaignId: membership.campaign_id,
+      members
+    };
+  },
 };

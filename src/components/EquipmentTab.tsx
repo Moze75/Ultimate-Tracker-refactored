@@ -16,6 +16,7 @@ import { EquipmentSlots } from './Equipment/EquipmentSlots';
 import { InventoryList } from './Equipment/InventoryList';
 
 import { checkWeaponProficiency, getPlayerWeaponProficiencies, WeaponProficiencyCheck } from '../utils/weaponProficiencyChecker';
+import { CampaignMember } from '../types/campaign';
 
 // ========== HELPERS POUR LE CALCUL DE LA CA ==========
 
@@ -260,10 +261,14 @@ interface EquipmentTabProps {
   onPlayerUpdate: (player: Player) => void;
   onInventoryUpdate: (inventory: InventoryItem[]) => void;
   viewMode?: 'all' | 'gold' | 'inventory' | 'bag';
+  campaignId?: string | null;
+  campaignMembers?: CampaignMember[];
+  currentUserId?: string;
 }
 
 export function EquipmentTab({
-  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all' 
+  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all',
+  campaignId, campaignMembers, currentUserId
 }: EquipmentTabProps) {
   const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
   const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
@@ -881,6 +886,9 @@ export function EquipmentTab({
         }}
         onOpenAddCustom={() => setShowCustom(true)}
         checkWeaponProficiency={checkWeaponProficiencyForInventory}
+        campaignId={campaignId}
+        campaignMembers={campaignMembers}
+        currentUserId={currentUserId}
       />
       )}
 

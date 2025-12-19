@@ -4,6 +4,8 @@ import { LogOut } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
 import { Player } from '../types/dnd';
+import { CampaignMember } from '../types/campaign';
+import { campaignService } from '../services/campaignService';
 
 import { PlayerProfile } from '../components/PlayerProfile';
 import { TabNavigation } from '../components/TabNavigation';
@@ -121,6 +123,10 @@ export function GamePage({
 
   const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
 
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [campaignMembers, setCampaignMembers] = useState<CampaignMember[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
   const hasFetchedRef = useRef(false);
   const FETCH_THROTTLE_MS = 30000; // 30 secondes
   const prevPlayerId = useRef<string | null>(selectedCharacter?.id ?? null);
@@ -179,6 +185,31 @@ export function GamePage({
       }
     }
   }, [selectedCharacter]);
+
+  useEffect(() => {
+    const loadCampaignData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        setCurrentUserId(user.id);
+
+        if (!currentPlayer?.id) return;
+
+        const campaignData = await campaignService.getPlayerCampaign(currentPlayer.id);
+        if (campaignData) {
+          setCampaignId(campaignData.campaignId);
+          setCampaignMembers(campaignData.members);
+        } else {
+          setCampaignId(null);
+          setCampaignMembers([]);
+        }
+      } catch (error) {
+        console.error('[GamePage] Erreur chargement campagne:', error);
+      }
+    };
+
+    loadCampaignData();
+  }, [currentPlayer?.id]);
 
   // ✨ Fonction pour lancer les dés (partagée via Context)
   const rollDice = useCallback((data: {
@@ -733,6 +764,9 @@ export function GamePage({
             inventory={inventory}
             onPlayerUpdate={applyPlayerUpdate}
             onInventoryUpdate={setInventory}
+            campaignId={campaignId}
+            campaignMembers={campaignMembers}
+            currentUserId={currentUserId}
           />
         );
       default: return null; 

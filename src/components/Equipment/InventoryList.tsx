@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Backpack, Plus, Settings, Trash2, Search, Filter as FilterIcon, X } from 'lucide-react';
+import { Backpack, Plus, Settings, Trash2, Search, Filter as FilterIcon, X, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { InventoryItem } from '../../types/dnd';
+import { CampaignMember } from '../../types/campaign';
+import { ShareItemToPlayerModal } from '../modals/ShareItemToPlayerModal';
 
 type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
 
@@ -79,6 +81,9 @@ interface InventoryListProps {
   onOpenAddList: () => void;
   onOpenAddCustom: () => void;
   checkWeaponProficiency?: (itemName: string) => WeaponProficiencyCheck | null;
+  campaignId?: string | null;
+  campaignMembers?: CampaignMember[];
+  currentUserId?: string;
 }
 
 export function InventoryList({
@@ -91,7 +96,10 @@ export function InventoryList({
   onOpenEditItem,
   onOpenAddList,
   onOpenAddCustom,
-  checkWeaponProficiency
+  checkWeaponProficiency,
+  campaignId,
+  campaignMembers,
+  currentUserId
 }: InventoryListProps) {
   const [bagFilter, setBagFilter] = useState('');
   const [bagKinds, setBagKinds] = useState<Record<MetaType, boolean>>({
@@ -99,6 +107,9 @@ export function InventoryList({
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [shareItem, setShareItem] = useState<InventoryItem | null>(null);
+
+  const canShare = !!(campaignId && campaignMembers && campaignMembers.length > 1 && currentUserId);
 
   const filteredInventory = useMemo(() => {
     const q = bagFilter.trim().toLowerCase();
@@ -281,6 +292,22 @@ export function InventoryList({
                             </div>
                           ) : null;
                         })()}
+
+                        {canShare && (
+                          <div className="mt-3 pt-3 border-t border-gray-700/30 flex justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShareItem(item);
+                              }}
+                              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 border border-gray-700/50 hover:border-blue-500/30 transition-colors"
+                              title="Envoyer a un joueur"
+                            >
+                              <Send size={14} />
+                              Envoyer
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -365,6 +392,24 @@ export function InventoryList({
           </div>
         </div>,
         document.body
+      )}
+
+      {shareItem && campaignId && campaignMembers && currentUserId && (
+        <ShareItemToPlayerModal
+          item={shareItem}
+          campaignId={campaignId}
+          members={campaignMembers}
+          currentUserId={currentUserId}
+          onClose={() => setShareItem(null)}
+          onItemSent={() => {
+            const playerId = (shareItem as any).player_id;
+            if (playerId) {
+              localStorage.removeItem(`ut:inventory:ts:${playerId}`);
+            }
+            window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { playerId } }));
+            toast.success('Objet envoye !');
+          }}
+        />
       )}
     </div>
   );
