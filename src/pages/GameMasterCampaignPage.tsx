@@ -1911,27 +1911,27 @@ return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-white">Envoyer aux joueurs</h2>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex gap-2">
         <button
           onClick={() => setSendModalType('item')}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+          className="px-3 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
-          <Package size={18} />
-          Envoi d'objets
+          <Package size={16} />
+          Objets
         </button>
         <button
           onClick={() => setSendModalType('currency')}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+          className="px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
-          <Coins size={18} />
-          Envoi d'argent
+          <Coins size={16} />
+          Argent
         </button>
         <button
           onClick={() => setShowRandomLootModal(true)}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-amber-700 hover:bg-amber-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
+          className="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
-          <Dices size={18} />
-          Loot aleatoire
+          <Dices size={16} />
+          Loot
         </button>
       </div>
 
