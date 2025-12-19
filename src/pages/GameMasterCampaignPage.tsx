@@ -562,6 +562,12 @@ function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewPro
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
 
   useEffect(() => {
+    loadMembers();
+    loadInvitations();
+    loadInventory();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'members') {
       loadMembers();
       loadInvitations();
