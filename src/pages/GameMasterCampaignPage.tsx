@@ -1914,21 +1914,21 @@ return (
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setSendModalType('item')}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Package size={18} />
           Envoi d'objets
         </button>
         <button
           onClick={() => setSendModalType('currency')}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 border border-yellow-500/30 flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Coins size={18} />
           Envoi d'argent
         </button>
         <button
           onClick={() => setShowRandomLootModal(true)}
-          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-amber-700 hover:bg-amber-600 text-white font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Dices size={18} />
           Loot aleatoire
