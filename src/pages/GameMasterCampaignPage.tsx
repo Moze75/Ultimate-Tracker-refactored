@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'; 
 import {
   ArrowLeft, Plus, Users, Package, Send, Crown, X, Trash2, Mail, Copy, Check,
-  Settings, Search, Edit2, UserPlus, AlertCircle, Dice, //
+  Settings, Search, Edit2, UserPlus, AlertCircle, Coins,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { campaignService } from '../services/campaignService';
@@ -1895,78 +1895,44 @@ function EditCampaignItemModal({
 // =============================================
 // Onglet Envois - IMPLÉMENTATION COMPLÈTE
 // =============================================
-function GiftsTab({ 
-  campaignId, 
-  members, 
-  inventory 
-}: { 
-  campaignId: string; 
-  members: CampaignMember[]; 
+function GiftsTab({
+  campaignId,
+  members,
+  inventory
+}: {
+  campaignId: string;
+  members: CampaignMember[];
   inventory: CampaignInventoryItem[];
 }) {
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [showRandomLootModal, setShowRandomLootModal] = useState(false); // ✅ AJOUT
-  const [giftType, setGiftType] = useState<'item' | 'currency'>('item');
+  const [sendModalType, setSendModalType] = useState<'item' | 'currency' | null>(null);
+  const [showRandomLootModal, setShowRandomLootModal] = useState(false);
 
 return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-xl font-semibold text-white">Envoyer aux joueurs</h2>
-        <div className="flex gap-2">
-          {/* ✅ NOUVEAU BOUTON */}
-          <button
-            onClick={() => setShowRandomLootModal(true)}
-            className="px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 flex items-center gap-2"
-          >
-            <Dices size={18} />
-            Loot aléatoire
-          </button>
-          <button
-            onClick={() => setShowSendModal(true)}
-            className="btn-primary px-6 py-3 rounded-lg flex items-center gap-2"
-          >
-            <Send size={20} />
-            Nouvel envoi
-          </button>
-        </div>
-      </div>
+      <h2 className="text-xl font-semibold text-white">Envoyer aux joueurs</h2>
 
-      {/* Sélecteur de type */}
-      <div className="flex items-center gap-4 bg-gray-900/40 p-4 rounded-lg">
-        <span className="text-sm font-medium text-gray-300">Type d'envoi :</span>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setGiftType('item')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              giftType === 'item'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Objets
-          </button>
-          <button
-            onClick={() => setGiftType('currency')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              giftType === 'currency'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Argent
-          </button>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-        <p className="text-sm text-blue-200">
-          {giftType === 'item' 
-            ? '💎 Envoyez des objets de votre inventaire aux joueurs. Ils pourront choisir de les récupérer individuellement.'
-            : '💰 Distribuez de l\'argent (or, argent, cuivre) aux joueurs. Ils pourront se le répartir équitablement ou individuellement.'
-          }
-        </p>
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => setSendModalType('item')}
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-2 transition-colors"
+        >
+          <Package size={18} />
+          Envoi d'objets
+        </button>
+        <button
+          onClick={() => setSendModalType('currency')}
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 border border-yellow-500/30 flex items-center justify-center gap-2 transition-colors"
+        >
+          <Coins size={18} />
+          Envoi d'argent
+        </button>
+        <button
+          onClick={() => setShowRandomLootModal(true)}
+          className="flex-1 min-w-[140px] px-4 py-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 flex items-center justify-center gap-2 transition-colors"
+        >
+          <Dices size={18} />
+          Loot aleatoire
+        </button>
       </div>
 
       {/* Placeholder - Historique des envois (à implémenter plus tard) */}
@@ -1982,22 +1948,20 @@ return (
         </p>
       </div>
 
-      {/* Modal d'envoi */}
-      {showSendModal && (
+      {sendModalType && (
         <SendGiftModal
           campaignId={campaignId}
           members={members}
           inventory={inventory}
-          giftType={giftType}
-          onClose={() => setShowSendModal(false)}
+          giftType={sendModalType}
+          onClose={() => setSendModalType(null)}
           onSent={() => {
-            setShowSendModal(false);
-            toast.success('Envoi effectué aux joueurs !');
+            setSendModalType(null);
+            toast.success('Envoi effectue aux joueurs !');
           }}
         />
       )}
 
-      {/* ✅ AJOUT DE LA MODAL LOOT ALÉATOIRE */}
       {showRandomLootModal && (
         <RandomLootModal
           campaignId={campaignId}
