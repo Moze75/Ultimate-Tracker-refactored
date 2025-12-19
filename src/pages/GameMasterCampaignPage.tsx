@@ -1938,6 +1938,23 @@ function GiftsTab({
 }) {
   const [sendModalType, setSendModalType] = useState<'item' | 'currency' | null>(null);
   const [showRandomLootModal, setShowRandomLootModal] = useState(false);
+  const [deletingGiftId, setDeletingGiftId] = useState<string | null>(null);
+  const [confirmDeleteGift, setConfirmDeleteGift] = useState<string | null>(null);
+
+  const handleDeleteGift = async (giftId: string) => {
+    try {
+      setDeletingGiftId(giftId);
+      await campaignService.deleteGift(giftId);
+      toast.success('Element supprime de l\'historique');
+      onRefresh();
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setDeletingGiftId(null);
+      setConfirmDeleteGift(null);
+    }
+  };
 
 return (
     <div className="space-y-6">
@@ -2007,6 +2024,8 @@ return (
                   }).join(', ')
                 : null;
 
+              const isDeleting = deletingGiftId === gift.id;
+
               return (
                 <div key={gift.id} className="p-4 hover:bg-gray-800/30 transition-colors">
                   <div className="flex items-start gap-3">
@@ -2074,6 +2093,35 @@ return (
                         </p>
                       )}
                     </div>
+
+                    {confirmDeleteGift === gift.id ? (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleDeleteGift(gift.id)}
+                          disabled={isDeleting}
+                          className="p-1.5 rounded bg-red-600 hover:bg-red-500 text-white transition-colors disabled:opacity-50"
+                          title="Confirmer"
+                        >
+                          {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteGift(null)}
+                          disabled={isDeleting}
+                          className="p-1.5 rounded bg-gray-600 hover:bg-gray-500 text-white transition-colors disabled:opacity-50"
+                          title="Annuler"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteGift(gift.id)}
+                        className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-900/30 transition-colors flex-shrink-0"
+                        title="Supprimer de l'historique"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

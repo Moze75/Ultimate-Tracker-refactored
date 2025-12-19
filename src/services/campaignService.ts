@@ -665,4 +665,20 @@ async claimGift(
       claims: (claims || []).filter(c => c.gift_id === gift.id)
     }));
   },
+
+  async deleteGift(giftId: string): Promise<void> {
+    const { error: claimsError } = await supabase
+      .from('campaign_gift_claims')
+      .delete()
+      .eq('gift_id', giftId);
+
+    if (claimsError) throw claimsError;
+
+    const { error } = await supabase
+      .from('campaign_gifts')
+      .delete()
+      .eq('id', giftId);
+
+    if (error) throw error;
+  },
 };
