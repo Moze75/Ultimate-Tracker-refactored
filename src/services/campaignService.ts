@@ -681,4 +681,32 @@ async claimGift(
 
     if (error) throw error;
   },
+
+  async deleteDistributedGifts(campaignId: string): Promise<number> {
+    const { data: gifts } = await supabase
+      .from('campaign_gifts')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('status', 'distributed');
+
+    if (!gifts || gifts.length === 0) return 0;
+
+    const giftIds = gifts.map(g => g.id);
+
+    const { error: claimsError } = await supabase
+      .from('campaign_gift_claims')
+      .delete()
+      .in('gift_id', giftIds);
+
+    if (claimsError) throw claimsError;
+
+    const { error } = await supabase
+      .from('campaign_gifts')
+      .delete()
+      .in('id', giftIds);
+
+    if (error) throw error;
+
+    return giftIds.length;
+  },
 };

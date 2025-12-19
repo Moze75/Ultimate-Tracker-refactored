@@ -1940,6 +1940,10 @@ function GiftsTab({
   const [showRandomLootModal, setShowRandomLootModal] = useState(false);
   const [deletingGiftId, setDeletingGiftId] = useState<string | null>(null);
   const [confirmDeleteGift, setConfirmDeleteGift] = useState<string | null>(null);
+  const [confirmClearDistributed, setConfirmClearDistributed] = useState(false);
+  const [clearingDistributed, setClearingDistributed] = useState(false);
+
+  const distributedCount = gifts.filter(g => g.status === 'distributed').length;
 
   const handleDeleteGift = async (giftId: string) => {
     try {
@@ -1953,6 +1957,21 @@ function GiftsTab({
     } finally {
       setDeletingGiftId(null);
       setConfirmDeleteGift(null);
+    }
+  };
+
+  const handleClearDistributed = async () => {
+    try {
+      setClearingDistributed(true);
+      const count = await campaignService.deleteDistributedGifts(campaignId);
+      toast.success(`${count} element${count > 1 ? 's' : ''} supprime${count > 1 ? 's' : ''}`);
+      onRefresh();
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors du nettoyage');
+    } finally {
+      setClearingDistributed(false);
+      setConfirmClearDistributed(false);
     }
   };
 
@@ -1991,13 +2010,45 @@ return (
             <History size={18} />
             Historique des envois
           </h3>
-          <button
-            onClick={onRefresh}
-            className="text-gray-400 hover:text-white transition-colors p-1"
-            title="Rafraichir"
-          >
-            <Loader2 size={16} className={giftsLoading ? 'animate-spin' : ''} />
-          </button>
+          <div className="flex items-center gap-2">
+            {distributedCount > 0 && (
+              confirmClearDistributed ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleClearDistributed}
+                    disabled={clearingDistributed}
+                    className="px-2 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {clearingDistributed ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    Confirmer
+                  </button>
+                  <button
+                    onClick={() => setConfirmClearDistributed(false)}
+                    disabled={clearingDistributed}
+                    className="px-2 py-1 rounded bg-gray-600 hover:bg-gray-500 text-white text-xs font-medium transition-colors disabled:opacity-50"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmClearDistributed(true)}
+                  className="px-2 py-1 rounded text-gray-400 hover:text-red-400 hover:bg-red-900/30 text-xs transition-colors flex items-center gap-1"
+                  title="Nettoyer les elements distribues"
+                >
+                  <Trash2 size={14} />
+                  Nettoyer ({distributedCount})
+                </button>
+              )
+            )}
+            <button
+              onClick={onRefresh}
+              className="text-gray-400 hover:text-white transition-colors p-1"
+              title="Rafraichir"
+            >
+              <Loader2 size={16} className={giftsLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
         </div>
 
         {giftsLoading ? (
