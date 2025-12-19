@@ -1931,7 +1931,7 @@ return (
           className="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
           <Dices size={16} />
-          Loot
+          Loot aléatoire
         </button>
       </div>
 
