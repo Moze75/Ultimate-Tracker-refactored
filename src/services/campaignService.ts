@@ -643,4 +643,26 @@ async claimGift(
     if (error) throw error;
     return data || [];
   },
+
+  async getCampaignGifts(campaignId: string): Promise<(CampaignGift & { claims?: CampaignGiftClaim[] })[]> {
+    const { data: gifts, error } = await supabase
+      .from('campaign_gifts')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('sent_at', { ascending: false });
+
+    if (error) throw error;
+    if (!gifts || gifts.length === 0) return [];
+
+    const giftIds = gifts.map(g => g.id);
+    const { data: claims } = await supabase
+      .from('campaign_gift_claims')
+      .select('*')
+      .in('gift_id', giftIds);
+
+    return gifts.map(gift => ({
+      ...gift,
+      claims: (claims || []).filter(c => c.gift_id === gift.id)
+    }));
+  },
 };

@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react'; 
 import {
   ArrowLeft, Plus, Users, Package, Send, Crown, X, Trash2, Mail, Copy, Check,
-  Settings, Search, Edit2, UserPlus, AlertCircle, Coins,
+  Settings, Search, Edit2, UserPlus, AlertCircle, Coins, Clock, History, Loader2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { campaignService } from '../services/campaignService';
-import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation } from '../types/campaign';
+import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation, CampaignGift, CampaignGiftClaim } from '../types/campaign';
 import toast from 'react-hot-toast';
 
 import { LOOT_TABLES, CURRENCY_AMOUNTS, GEM_AMOUNTS, LevelRange, Difficulty, EnemyCount } from '../data/lootTables';
@@ -560,6 +560,8 @@ function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewPro
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const [inventory, setInventory] = useState<CampaignInventoryItem[]>([]);
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
+  const [gifts, setGifts] = useState<(CampaignGift & { claims?: CampaignGiftClaim[] })[]>([]);
+  const [giftsLoading, setGiftsLoading] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -573,6 +575,8 @@ function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewPro
       loadInvitations();
     } else if (activeTab === 'inventory') {
       loadInventory();
+    } else if (activeTab === 'gifts') {
+      loadGifts();
     }
   }, [activeTab]);
 
@@ -610,6 +614,19 @@ const loadInvitations = async () => {
     } catch (error) {
       console.error(error);
       toast.error('Erreur chargement inventaire');
+    }
+  };
+
+  const loadGifts = async () => {
+    try {
+      setGiftsLoading(true);
+      const data = await campaignService.getCampaignGifts(campaign.id);
+      setGifts(data);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur chargement historique');
+    } finally {
+      setGiftsLoading(false);
     }
   };
 
@@ -715,6 +732,9 @@ const loadInvitations = async () => {
             campaignId={campaign.id}
             members={members}
             inventory={inventory}
+            gifts={gifts}
+            giftsLoading={giftsLoading}
+            onRefresh={loadGifts}
           />
         )}
       </div>
@@ -1904,11 +1924,17 @@ function EditCampaignItemModal({
 function GiftsTab({
   campaignId,
   members,
-  inventory
+  inventory,
+  gifts,
+  giftsLoading,
+  onRefresh
 }: {
   campaignId: string;
   members: CampaignMember[];
   inventory: CampaignInventoryItem[];
+  gifts: (CampaignGift & { claims?: CampaignGiftClaim[] })[];
+  giftsLoading: boolean;
+  onRefresh: () => void;
 }) {
   const [sendModalType, setSendModalType] = useState<'item' | 'currency' | null>(null);
   const [showRandomLootModal, setShowRandomLootModal] = useState(false);
@@ -1941,17 +1967,119 @@ return (
         </button>
       </div>
 
-      {/* Placeholder - Historique des envois (à implémenter plus tard) */}
-      <div className="bg-gray-900/30 border border-gray-700 rounded-lg p-8 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 bg-gray-800/60 rounded-full flex items-center justify-center">
-          <Send className="w-8 h-8 text-gray-600" />
+      {/* Historique des envois */}
+      <div className="bg-gray-900/30 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+            <History size={18} />
+            Historique des envois
+          </h3>
+          <button
+            onClick={onRefresh}
+            className="text-gray-400 hover:text-white transition-colors p-1"
+            title="Rafraichir"
+          >
+            <Loader2 size={16} className={giftsLoading ? 'animate-spin' : ''} />
+          </button>
         </div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-2">
-          Historique des envois
-        </h3>
-        <p className="text-gray-500 text-sm">
-          L'historique des objets et argent envoyés apparaîtra ici
-        </p>
+
+        {giftsLoading ? (
+          <div className="p-8 text-center">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-gray-400" />
+            <p className="text-gray-500 mt-2 text-sm">Chargement...</p>
+          </div>
+        ) : gifts.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-800/60 rounded-full flex items-center justify-center">
+              <Send className="w-8 h-8 text-gray-600" />
+            </div>
+            <p className="text-gray-500 text-sm">Aucun envoi pour le moment</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-700/50 max-h-96 overflow-y-auto">
+            {gifts.map(gift => {
+              const isItem = gift.gift_type === 'item';
+              const hasClaims = gift.claims && gift.claims.length > 0;
+              const claimedBy = hasClaims
+                ? gift.claims!.map(c => {
+                    const member = members.find(m => m.player_id === c.player_id);
+                    return member?.player_name || 'Joueur inconnu';
+                  }).join(', ')
+                : null;
+
+              return (
+                <div key={gift.id} className="p-4 hover:bg-gray-800/30 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isItem ? 'bg-purple-900/50' : 'bg-yellow-900/50'
+                    }`}>
+                      {isItem ? (
+                        <Package size={18} className="text-purple-400" />
+                      ) : (
+                        <Coins size={18} className="text-yellow-400" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-gray-200">
+                          {isItem ? gift.item_name : 'Argent'}
+                        </span>
+                        {isItem && gift.item_quantity && gift.item_quantity > 1 && (
+                          <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded text-gray-300">
+                            x{gift.item_quantity}
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          gift.status === 'pending'
+                            ? 'bg-amber-900/50 text-amber-300'
+                            : gift.status === 'distributed'
+                            ? 'bg-green-900/50 text-green-300'
+                            : 'bg-red-900/50 text-red-300'
+                        }`}>
+                          {gift.status === 'pending' ? 'En attente' : gift.status === 'distributed' ? 'Distribue' : 'Annule'}
+                        </span>
+                      </div>
+
+                      {!isItem && (
+                        <p className="text-sm text-yellow-400 mt-0.5">
+                          {gift.gold > 0 && `${gift.gold} po`}
+                          {gift.silver > 0 && ` ${gift.silver} pa`}
+                          {gift.copper > 0 && ` ${gift.copper} pc`}
+                        </p>
+                      )}
+
+                      {gift.message && (
+                        <p className="text-sm text-gray-400 mt-1 italic">"{gift.message}"</p>
+                      )}
+
+                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {new Date(gift.sent_at).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          {gift.distribution_mode === 'individual' ? 'Individuel' : 'Partage'}
+                        </span>
+                      </div>
+
+                      {claimedBy && (
+                        <p className="text-xs text-green-400 mt-1">
+                          Recupere par : {claimedBy}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {sendModalType && (
@@ -1964,6 +2092,7 @@ return (
           onSent={() => {
             setSendModalType(null);
             toast.success('Envoi effectue aux joueurs !');
+            onRefresh();
           }}
         />
       )}
@@ -1976,7 +2105,8 @@ return (
           onClose={() => setShowRandomLootModal(false)}
           onSent={() => {
             setShowRandomLootModal(false);
-            toast.success('Loot aléatoire distribué !');
+            toast.success('Loot aleatoire distribue !');
+            onRefresh();
           }}
         />
       )}
