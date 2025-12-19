@@ -629,11 +629,11 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
  const typeButtons: CatalogKind[] = ['weapons','armors','shields','adventuring_gear','tools','gems']; // ✅ Ajout 'gems'
 
   return (
-    <div className="fixed inset-0 z-[9999]">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
-      <div className="fixed inset-0 bg-gray-900 flex flex-col" style={{ height: '100dvh' }}>
+      <div className="relative bg-gray-900 rounded-xl flex flex-col w-full max-w-2xl max-h-[85vh] border border-gray-700/50 shadow-2xl">
         {/* Header */}
-        <div className="px-3 py-2 border-b border-gray-800">
+        <div className="px-4 py-3 border-b border-gray-800 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <div>
               <h2 className="text-gray-100 font-semibold text-lg">Liste des équipements</h2>
@@ -683,7 +683,7 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
         </div>
 
         {/* Liste */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
           {loading ? (
             <div className="text-gray-400">Chargement…</div>
           ) : filtered.length === 0 ? (
@@ -765,9 +765,9 @@ const preview = (
           )}
         </div>
 
-        {/* ✅ Footer uniquement en mode multi-add */}
+        {/* Footer uniquement en mode multi-add */}
         {multiAdd && (
-          <div className="bg-gray-800/60 border-t border-gray-700 px-3 py-3">
+          <div className="bg-gray-800/60 border-t border-gray-700 px-4 py-3 rounded-b-xl shrink-0">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-400">
                 {filtered.length} résultat{filtered.length > 1 ? 's' : ''}
