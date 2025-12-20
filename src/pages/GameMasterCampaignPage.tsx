@@ -15,6 +15,7 @@ import { Dices } from 'lucide-react'; // Ajoutez cette icône
 import { CustomItemModal } from '../components/modals/CustomItemModal';
 import { EquipmentListModal } from '../components/modals/EquipmentListModal';
 import { ImageUrlInput } from '../components/ImageUrlInput';
+import { PlayerDetailsModal } from '../components/modals/PlayerDetailsModal';
 
 interface GameMasterCampaignPageProps {
   session: any;
@@ -824,6 +825,7 @@ function MembersTab({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [confirmDeleteInvite, setConfirmDeleteInvite] = useState<string | null>(null);
   const [confirmRemoveMember, setConfirmRemoveMember] = useState<string | null>(null);
+  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <div className="space-y-6">
@@ -878,20 +880,36 @@ function MembersTab({
   {members.map((member) => (
     <div
       key={member.id}
-      className="bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4"
+      className="bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4 hover:bg-gray-800/70 hover:border-blue-500/40 transition-all cursor-pointer group"
+      onClick={() => {
+        if (member.player_id) {
+          setSelectedPlayerDetails({
+            id: member.player_id,
+            name: member.player_name || 'Personnage'
+          });
+        }
+      }}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-semibold text-white">
+          <h3 className="font-semibold text-white group-hover:text-blue-300 transition-colors">
             {member.player_name || 'Personnage non défini'}
           </h3>
           <p className="text-sm text-gray-400 mt-1">{member.email}</p>
           <p className="text-xs text-gray-500 mt-2">
             Rejoint le {new Date(member.joined_at).toLocaleDateString('fr-FR')}
           </p>
+          {member.player_id && (
+            <p className="text-xs text-blue-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              Cliquez pour voir la fiche
+            </p>
+          )}
         </div>
 <button
-  onClick={() => setConfirmRemoveMember(member.id)}
+  onClick={(e) => {
+    e.stopPropagation();
+    setConfirmRemoveMember(member.id);
+  }}
   className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg"
   title="Retirer"
 >
@@ -965,6 +983,14 @@ function MembersTab({
             setShowInviteModal(false);
             onReload();
           }}
+        />
+      )}
+
+      {selectedPlayerDetails && (
+        <PlayerDetailsModal
+          playerId={selectedPlayerDetails.id}
+          playerName={selectedPlayerDetails.name}
+          onClose={() => setSelectedPlayerDetails(null)}
         />
       )}
     </div>
