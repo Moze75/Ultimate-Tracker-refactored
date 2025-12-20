@@ -1,10 +1,74 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   X, User, Heart, Shield, Swords, Zap, BookOpen,
-  Scroll, Package, Star, Loader2
+  Scroll, Package, Star, Loader2, Filter
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Player, Ability, SpellSlots } from '../../types/dnd';
+import { Player, Ability, SpellSlots, InventoryItem } from '../../types/dnd';
+
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+
+interface ItemMeta {
+  type: MetaType;
+  quantity?: number;
+  equipped?: boolean;
+  weapon?: {
+    damageDice: string;
+    damageType: string;
+    properties?: string;
+    range?: string;
+  };
+  armor?: {
+    base: number;
+    addDex: boolean;
+    dexCap?: number | null;
+    label: string;
+  };
+  shield?: {
+    bonus: number;
+  };
+}
+
+const META_PREFIX = '#meta:';
+
+function parseMeta(description: string | null | undefined): ItemMeta | null {
+  if (!description) return null;
+  const lines = (description || '').split('\n').map(l => l.trim());
+  const metaLine = [...lines].reverse().find(l => l.startsWith(META_PREFIX));
+  if (!metaLine) return null;
+  try {
+    return JSON.parse(metaLine.slice(META_PREFIX.length));
+  } catch {
+    return null;
+  }
+}
+
+function visibleDescription(desc: string | null | undefined): string {
+  if (!desc) return '';
+  return desc.split('\n').filter((l) => !l.trim().startsWith(META_PREFIX)).join('\n').trim();
+}
+
+const TYPE_LABELS: Record<MetaType, string> = {
+  weapon: 'Arme',
+  armor: 'Armure',
+  shield: 'Bouclier',
+  jewelry: 'Bijou',
+  potion: 'Potion',
+  tool: 'Outil',
+  equipment: 'Equipement',
+  other: 'Autre',
+};
+
+const TYPE_COLORS: Record<MetaType, string> = {
+  weapon: 'bg-red-500/20 text-red-300 border-red-500/40',
+  armor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+  shield: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+  jewelry: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+  potion: 'bg-green-500/20 text-green-300 border-green-500/40',
+  tool: 'bg-gray-500/20 text-gray-300 border-gray-500/40',
+  equipment: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
+  other: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/40',
+};
 
 interface PlayerDetailsModalProps {
   playerId: string;
@@ -14,6 +78,8 @@ interface PlayerDetailsModalProps {
 
 export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDetailsModalProps) {
   const [player, setPlayer] = useState<Player | null>(null);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [typeFilter, setTypeFilter] = useState<MetaType | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,19 +92,27 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .maybeSingle();
+      const [playerResult, inventoryResult] = await Promise.all([
+        supabase
+          .from('players')
+          .select('*')
+          .eq('id', playerId)
+          .maybeSingle(),
+        supabase
+          .from('inventory_items')
+          .select('*')
+          .eq('player_id', playerId)
+          .order('created_at', { ascending: false }),
+      ]);
 
-      if (fetchError) throw fetchError;
-      if (!data) {
-        setError('Joueur non trouvé');
+      if (playerResult.error) throw playerResult.error;
+      if (!playerResult.data) {
+        setError('Joueur non trouve');
         return;
       }
 
-      setPlayer(data as Player);
+      setPlayer(playerResult.data as Player);
+      setInventoryItems(inventoryResult.data || []);
     } catch (err: any) {
       console.error('Erreur chargement joueur:', err);
       setError(err.message || 'Erreur lors du chargement');
@@ -46,6 +120,24 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
       setLoading(false);
     }
   };
+
+  const filteredInventory = useMemo(() => {
+    if (typeFilter === 'all') return inventoryItems;
+    return inventoryItems.filter((item) => {
+      const meta = parseMeta(item.description);
+      return meta?.type === typeFilter;
+    });
+  }, [inventoryItems, typeFilter]);
+
+  const typeCounts = useMemo(() => {
+    const counts: Partial<Record<MetaType, number>> = {};
+    inventoryItems.forEach((item) => {
+      const meta = parseMeta(item.description);
+      const type = meta?.type || 'other';
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return counts;
+  }, [inventoryItems]);
 
   const getModifierString = (score: number) => {
     const mod = Math.floor((score - 10) / 2);
@@ -286,41 +378,102 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                 </div>
               )}
 
-              {player.equipment && Object.values(player.equipment).some(v => v !== null) && (
+              {inventoryItems.length > 0 && (
                 <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                    <Package className="w-4 h-4 text-amber-400" />
-                    Equipement
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {player.equipment.armor && (
-                      <div className="bg-gray-900/60 border border-gray-600 rounded-lg p-3">
-                        <div className="text-xs text-gray-500 mb-1">Armure</div>
-                        <div className="text-sm font-medium text-white">{player.equipment.armor.name}</div>
-                        {player.equipment.armor.description && (
-                          <div className="text-xs text-gray-400 mt-1">{player.equipment.armor.description}</div>
-                        )}
-                      </div>
-                    )}
-                    {player.equipment.weapon && (
-                      <div className="bg-gray-900/60 border border-gray-600 rounded-lg p-3">
-                        <div className="text-xs text-gray-500 mb-1">Arme</div>
-                        <div className="text-sm font-medium text-white">{player.equipment.weapon.name}</div>
-                        {player.equipment.weapon.description && (
-                          <div className="text-xs text-gray-400 mt-1">{player.equipment.weapon.description}</div>
-                        )}
-                      </div>
-                    )}
-                    {player.equipment.shield && (
-                      <div className="bg-gray-900/60 border border-gray-600 rounded-lg p-3">
-                        <div className="text-xs text-gray-500 mb-1">Bouclier</div>
-                        <div className="text-sm font-medium text-white">{player.equipment.shield.name}</div>
-                      </div>
-                    )}
-                    {player.equipment.jewelry && (
-                      <div className="bg-gray-900/60 border border-gray-600 rounded-lg p-3">
-                        <div className="text-xs text-gray-500 mb-1">Bijou</div>
-                        <div className="text-sm font-medium text-white">{player.equipment.jewelry.name}</div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                      <Package className="w-4 h-4 text-amber-400" />
+                      Inventaire ({inventoryItems.length})
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      <Filter className="w-3 h-3 text-gray-500" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <button
+                      onClick={() => setTypeFilter('all')}
+                      className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                        typeFilter === 'all'
+                          ? 'bg-white/10 text-white border-white/30'
+                          : 'text-gray-400 border-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      Tous ({inventoryItems.length})
+                    </button>
+                    {(['weapon', 'armor', 'shield', 'jewelry', 'potion', 'tool', 'equipment', 'other'] as MetaType[]).map((type) => {
+                      const count = typeCounts[type] || 0;
+                      if (count === 0) return null;
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => setTypeFilter(type)}
+                          className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                            typeFilter === type
+                              ? TYPE_COLORS[type]
+                              : 'text-gray-400 border-gray-600 hover:border-gray-500'
+                          }`}
+                        >
+                          {TYPE_LABELS[type]} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                    {filteredInventory.map((item) => {
+                      const meta = parseMeta(item.description);
+                      const type = meta?.type || 'other';
+                      const qty = meta?.quantity || 1;
+                      const equipped = meta?.equipped || false;
+                      const desc = visibleDescription(item.description);
+
+                      let statInfo = '';
+                      if (meta?.weapon) {
+                        statInfo = `${meta.weapon.damageDice} ${meta.weapon.damageType}`;
+                      } else if (meta?.armor) {
+                        statInfo = `CA ${meta.armor.base}${meta.armor.addDex ? ' + Dex' : ''}${meta.armor.dexCap ? ` (max ${meta.armor.dexCap})` : ''}`;
+                      } else if (meta?.shield) {
+                        statInfo = `+${meta.shield.bonus} CA`;
+                      }
+
+                      return (
+                        <div
+                          key={item.id}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors ${
+                            equipped
+                              ? 'bg-emerald-900/20 border-emerald-500/30'
+                              : 'bg-gray-900/40 border-gray-700 hover:border-gray-600'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-white font-medium truncate">
+                                {item.name}
+                                {qty > 1 && <span className="text-gray-400 ml-1">x{qty}</span>}
+                              </span>
+                              <span className={`px-1.5 py-0.5 text-[10px] rounded border ${TYPE_COLORS[type]}`}>
+                                {TYPE_LABELS[type]}
+                              </span>
+                              {equipped && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  Equipe
+                                </span>
+                              )}
+                            </div>
+                            {statInfo && (
+                              <div className="text-xs text-gray-500 mt-0.5">{statInfo}</div>
+                            )}
+                            {desc && typeFilter !== 'all' && (
+                              <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{desc}</div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {filteredInventory.length === 0 && (
+                      <div className="text-center py-4 text-gray-500 text-sm">
+                        Aucun objet de ce type
                       </div>
                     )}
                   </div>
