@@ -290,8 +290,8 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                  <div className="flex flex-wrap justify-center sm:grid sm:grid-cols-5 gap-2">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center w-[calc(50%-4px)] sm:w-auto">
                       <Heart className="w-4 h-4 text-red-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">PV</div>
                       <div className="font-bold text-white text-sm">
@@ -302,13 +302,13 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center w-[calc(50%-4px)] sm:w-auto">
                       <Shield className="w-4 h-4 text-blue-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">CA</div>
                       <div className="font-bold text-white text-sm">{player.stats?.armor_class || 10}</div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center w-[calc(50%-4px)] sm:w-auto">
                       <Zap className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">Init.</div>
                       <div className="font-bold text-white text-sm">
@@ -316,13 +316,13 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center w-[calc(50%-4px)] sm:w-auto">
                       <Star className="w-4 h-4 text-amber-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">Maitrise</div>
                       <div className="font-bold text-white text-sm">+{player.stats?.proficiency_bonus || 2}</div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center col-span-2 sm:col-span-1">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center w-[calc(50%-4px)] sm:w-auto">
                       <Footprints className="w-4 h-4 text-green-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">Vitesse</div>
                       <div className="font-bold text-white text-sm">{player.stats?.speed || 9} m</div>
@@ -384,7 +384,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                   <CollapsibleSection
                     icon={<User className="w-4 h-4 text-cyan-400" />}
                     title="Informations personnelles"
-                    defaultOpen={false}
+                    defaultOpen={true}
                   >
                     <div className="space-y-4">
                       {(age || gender || alignment) && (
@@ -461,7 +461,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                   <CollapsibleSection
                     icon={<Sparkles className="w-4 h-4 text-amber-400" />}
                     title={`Dons (${allFeats.length})`}
-                    defaultOpen={false}
+                    defaultOpen={true}
                   >
                     <div className="space-y-3">
                       {originFeats.length > 0 && (
@@ -519,7 +519,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                   <CollapsibleSection
                     icon={<Shield className="w-4 h-4 text-blue-400" />}
                     title="Maitrises"
-                    defaultOpen={false}
+                    defaultOpen={true}
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
