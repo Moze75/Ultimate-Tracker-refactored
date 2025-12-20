@@ -1,10 +1,41 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   X, User, Heart, Shield, Swords, Zap, BookOpen,
-  Scroll, Package, Star, Loader2, Filter
+  Scroll, Package, Star, Loader2, Filter, ChevronDown,
+  Calendar, Globe, Compass, Sparkles, Wrench, Footprints,
+  ScrollText
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Player, Ability, SpellSlots, InventoryItem } from '../../types/dnd';
+
+interface CollapsibleSectionProps {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+function CollapsibleSection({ icon, title, children, defaultOpen = false }: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="bg-gray-800/40 border border-gray-700 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-sm font-semibold text-gray-300">{title}</span>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </div>
+  );
+}
 
 type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
 
@@ -205,11 +236,11 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
             </div>
           ) : player ? (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-6">
-                <div className="flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="flex-shrink-0 mx-auto sm:mx-0">
                   {player.avatar_url ? (
                     <div
-                      className="w-32 h-32 rounded-xl border-2 border-gray-600 overflow-hidden"
+                      className="w-32 h-32 rounded-xl border-2 border-gray-600 overflow-hidden shadow-lg"
                       style={{
                         backgroundImage: `url(${player.avatar_url})`,
                         backgroundSize: 'cover',
@@ -219,14 +250,14 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                       }}
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-xl border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-xl border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-lg">
                       <User className="w-12 h-12 text-gray-500" />
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 space-y-3">
-                  <div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-center sm:text-left mb-4">
                     <h2 className="text-2xl font-bold text-white">
                       {player.adventurer_name || player.name}
                     </h2>
@@ -246,7 +277,10 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                     </p>
                     {player.subclass && (
                       <p className="text-sm text-gray-500">
-                        Sous-classe: <span className="text-purple-400">{player.subclass}</span>
+                        Sous-classe: <span className="text-blue-400">{player.subclass}</span>
+                        {player.secondary_subclass && (
+                          <span className="text-green-400 ml-2">/ {player.secondary_subclass}</span>
+                        )}
                       </p>
                     )}
                     {player.background && (
@@ -256,53 +290,51 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-4">
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-red-400" />
-                      <div>
-                        <div className="text-xs text-gray-500">PV</div>
-                        <div className="font-bold text-white">
-                          {player.current_hp} / {player.max_hp}
-                          {player.temporary_hp > 0 && (
-                            <span className="text-blue-400 ml-1">+{player.temporary_hp}</span>
-                          )}
-                        </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                      <Heart className="w-4 h-4 text-red-400 mx-auto mb-1" />
+                      <div className="text-[10px] text-gray-500 uppercase">PV</div>
+                      <div className="font-bold text-white text-sm">
+                        {player.current_hp}/{player.max_hp}
+                        {player.temporary_hp > 0 && (
+                          <span className="text-blue-400 text-xs ml-0.5">+{player.temporary_hp}</span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-blue-400" />
-                      <div>
-                        <div className="text-xs text-gray-500">CA</div>
-                        <div className="font-bold text-white">{player.stats?.armor_class || 10}</div>
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                      <Shield className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                      <div className="text-[10px] text-gray-500 uppercase">CA</div>
+                      <div className="font-bold text-white text-sm">{player.stats?.armor_class || 10}</div>
+                    </div>
+
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                      <Zap className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
+                      <div className="text-[10px] text-gray-500 uppercase">Init.</div>
+                      <div className="font-bold text-white text-sm">
+                        {player.stats?.initiative >= 0 ? '+' : ''}{player.stats?.initiative || 0}
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-yellow-400" />
-                      <div>
-                        <div className="text-xs text-gray-500">Initiative</div>
-                        <div className="font-bold text-white">
-                          {player.stats?.initiative >= 0 ? '+' : ''}{player.stats?.initiative || 0}
-                        </div>
-                      </div>
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                      <Star className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                      <div className="text-[10px] text-gray-500 uppercase">Maitrise</div>
+                      <div className="font-bold text-white text-sm">+{player.stats?.proficiency_bonus || 2}</div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-                      <Star className="w-5 h-5 text-amber-400" />
-                      <div>
-                        <div className="text-xs text-gray-500">Bonus Maîtrise</div>
-                        <div className="font-bold text-white">+{player.stats?.proficiency_bonus || 2}</div>
-                      </div>
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center col-span-2 sm:col-span-1">
+                      <Footprints className="w-4 h-4 text-green-400 mx-auto mb-1" />
+                      <div className="text-[10px] text-gray-500 uppercase">Vitesse</div>
+                      <div className="font-bold text-white text-sm">{player.stats?.speed || 9} m</div>
                     </div>
                   </div>
 
-                  <div className="w-full max-w-xs">
+                  <div className="mt-3">
                     <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                       <span>Points de vie</span>
                       <span>{Math.round(getHpPercentage(player.current_hp, player.max_hp))}%</span>
                     </div>
-                    <div className="h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                    <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
                       <div
                         className={`h-full ${getHpColor(getHpPercentage(player.current_hp, player.max_hp))} transition-all`}
                         style={{ width: `${getHpPercentage(player.current_hp, player.max_hp)}%` }}
@@ -337,10 +369,219 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                 </div>
               )}
 
+              {(() => {
+                const age = (player as any)?.age || '';
+                const gender = (player as any)?.gender || '';
+                const alignment = (player as any)?.alignment || '';
+                const languages = Array.isArray((player as any)?.languages)
+                  ? (player as any).languages.filter((lang: string) => lang && !lang.toLowerCase().includes('au choix'))
+                  : [];
+                const hasPersonalInfo = age || gender || alignment || languages.length > 0;
+
+                if (!hasPersonalInfo) return null;
+
+                return (
+                  <CollapsibleSection
+                    icon={<User className="w-4 h-4 text-cyan-400" />}
+                    title="Informations personnelles"
+                    defaultOpen={false}
+                  >
+                    <div className="space-y-4">
+                      {(age || gender || alignment) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {age && (
+                            <div className="bg-gray-900/40 rounded-lg p-3 border border-gray-700/50">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Age</span>
+                              </div>
+                              <div className="text-sm text-gray-200 font-medium">{age}</div>
+                            </div>
+                          )}
+                          {gender && (
+                            <div className="bg-gray-900/40 rounded-lg p-3 border border-gray-700/50">
+                              <div className="flex items-center gap-2 mb-1">
+                                <User className="w-3.5 h-3.5 text-pink-400" />
+                                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Genre</span>
+                              </div>
+                              <div className="text-sm text-gray-200 font-medium">{gender}</div>
+                            </div>
+                          )}
+                          {alignment && (
+                            <div className="bg-gray-900/40 rounded-lg p-3 border border-gray-700/50">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Compass className="w-3.5 h-3.5 text-amber-400" />
+                                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Alignement</span>
+                              </div>
+                              <div className="text-sm text-gray-200 font-medium">{alignment}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {languages.length > 0 && (
+                        <div className="bg-gray-900/40 rounded-lg p-3 border border-gray-700/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+                              Langues ({languages.length})
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {languages.map((lang: string, i: number) => (
+                              <span
+                                key={i}
+                                className="px-2 py-1 text-xs bg-cyan-500/20 text-cyan-200 rounded border border-cyan-500/30"
+                              >
+                                {lang}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleSection>
+                );
+              })()}
+
+              {(() => {
+                const stats = player.stats as any;
+                const feats = stats?.feats || {};
+                const originFeats: string[] = Array.isArray(feats.origins)
+                  ? feats.origins
+                  : typeof feats.origin === 'string' && feats.origin
+                  ? [feats.origin]
+                  : [];
+                const generalFeats: string[] = Array.isArray(feats.generals) ? feats.generals : [];
+                const styleFeats: string[] = Array.isArray(feats.styles) ? feats.styles : [];
+                const allFeats = [...originFeats, ...generalFeats, ...styleFeats];
+
+                if (allFeats.length === 0) return null;
+
+                return (
+                  <CollapsibleSection
+                    icon={<Sparkles className="w-4 h-4 text-amber-400" />}
+                    title={`Dons (${allFeats.length})`}
+                    defaultOpen={false}
+                  >
+                    <div className="space-y-3">
+                      {originFeats.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-2">Dons d'origine</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {originFeats.map((feat, i) => (
+                              <span key={i} className="px-2 py-1 text-xs bg-amber-500/20 text-amber-200 rounded border border-amber-500/30">
+                                {feat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {generalFeats.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-2">Dons generaux</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {generalFeats.map((feat, i) => (
+                              <span key={i} className="px-2 py-1 text-xs bg-blue-500/20 text-blue-200 rounded border border-blue-500/30">
+                                {feat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {styleFeats.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-2">Styles de combat</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {styleFeats.map((feat, i) => (
+                              <span key={i} className="px-2 py-1 text-xs bg-red-500/20 text-red-200 rounded border border-red-500/30">
+                                {feat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleSection>
+                );
+              })()}
+
+              {(() => {
+                const stats = player.stats as any;
+                const creatorMeta = stats?.creator_meta || {};
+                const weapons = creatorMeta.weapon_proficiencies || stats?.weapon_proficiencies || [];
+                const armors = creatorMeta.armor_proficiencies || stats?.armor_proficiencies || [];
+                const tools = creatorMeta.tool_proficiencies || stats?.tool_proficiencies || [];
+                const hasProficiencies = weapons.length > 0 || armors.length > 0 || tools.length > 0;
+
+                if (!hasProficiencies) return null;
+
+                return (
+                  <CollapsibleSection
+                    icon={<Shield className="w-4 h-4 text-blue-400" />}
+                    title="Maitrises"
+                    defaultOpen={false}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Swords className="w-3.5 h-3.5 text-red-400" />
+                          <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Armes</span>
+                        </div>
+                        {weapons.length > 0 ? (
+                          <div className="space-y-1">
+                            {weapons.map((w: string, i: number) => (
+                              <span key={i} className="block px-2 py-1 text-xs bg-gray-700/40 text-gray-200 rounded">
+                                {w}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">Selon classe</p>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shield className="w-3.5 h-3.5 text-blue-400" />
+                          <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Armures</span>
+                        </div>
+                        {armors.length > 0 ? (
+                          <div className="space-y-1">
+                            {armors.map((a: string, i: number) => (
+                              <span key={i} className="block px-2 py-1 text-xs bg-gray-700/40 text-gray-200 rounded">
+                                {a}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">Selon classe</p>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wrench className="w-3.5 h-3.5 text-yellow-400" />
+                          <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Outils</span>
+                        </div>
+                        {tools.length > 0 ? (
+                          <div className="space-y-1">
+                            {tools.map((t: string, i: number) => (
+                              <span key={i} className="block px-2 py-1 text-xs bg-gray-700/40 text-gray-200 rounded">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">Aucune</p>
+                        )}
+                      </div>
+                    </div>
+                  </CollapsibleSection>
+                );
+              })()}
+
               {hasSpellSlots(player.spell_slots) && (
                 <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
                   <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-purple-400" />
+                    <BookOpen className="w-4 h-4 text-blue-400" />
                     Emplacements de sorts
                   </h4>
                   <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
@@ -525,6 +766,20 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                   <span className="text-orange-400">{player.copper || 0} pc</span>
                 </div>
               </div>
+
+              {(player as any)?.character_history && (
+                <CollapsibleSection
+                  icon={<ScrollText className="w-4 h-4 text-blue-400" />}
+                  title="Histoire du personnage"
+                  defaultOpen={false}
+                >
+                  <div className="bg-gray-900/40 rounded-lg p-4 border border-gray-700/50 max-h-60 overflow-y-auto">
+                    <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {(player as any).character_history}
+                    </p>
+                  </div>
+                </CollapsibleSection>
+              )}
             </div>
           ) : null}
         </div>
