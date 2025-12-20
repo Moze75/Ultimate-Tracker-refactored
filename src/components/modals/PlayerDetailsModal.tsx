@@ -378,107 +378,115 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                 </div>
               )}
 
-              {inventoryItems.length > 0 && (
-                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                      <Package className="w-4 h-4 text-amber-400" />
-                      Inventaire ({inventoryItems.length})
-                    </h4>
+              <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-amber-400" />
+                    Inventaire ({inventoryItems.length})
+                  </h4>
+                  {inventoryItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <Filter className="w-3 h-3 text-gray-500" />
                     </div>
-                  </div>
+                  )}
+                </div>
 
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    <button
-                      onClick={() => setTypeFilter('all')}
-                      className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
-                        typeFilter === 'all'
-                          ? 'bg-white/10 text-white border-white/30'
-                          : 'text-gray-400 border-gray-600 hover:border-gray-500'
-                      }`}
-                    >
-                      Tous ({inventoryItems.length})
-                    </button>
-                    {(['weapon', 'armor', 'shield', 'jewelry', 'potion', 'tool', 'equipment', 'other'] as MetaType[]).map((type) => {
-                      const count = typeCounts[type] || 0;
-                      if (count === 0) return null;
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => setTypeFilter(type)}
-                          className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
-                            typeFilter === type
-                              ? TYPE_COLORS[type]
-                              : 'text-gray-400 border-gray-600 hover:border-gray-500'
-                          }`}
-                        >
-                          {TYPE_LABELS[type]} ({count})
-                        </button>
-                      );
-                    })}
-                  </div>
+                {inventoryItems.length > 0 ? (
+                  <>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      <button
+                        onClick={() => setTypeFilter('all')}
+                        className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                          typeFilter === 'all'
+                            ? 'bg-white/10 text-white border-white/30'
+                            : 'text-gray-400 border-gray-600 hover:border-gray-500'
+                        }`}
+                      >
+                        Tous ({inventoryItems.length})
+                      </button>
+                      {(['weapon', 'armor', 'shield', 'jewelry', 'potion', 'tool', 'equipment', 'other'] as MetaType[]).map((type) => {
+                        const count = typeCounts[type] || 0;
+                        if (count === 0) return null;
+                        return (
+                          <button
+                            key={type}
+                            onClick={() => setTypeFilter(type)}
+                            className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                              typeFilter === type
+                                ? TYPE_COLORS[type]
+                                : 'text-gray-400 border-gray-600 hover:border-gray-500'
+                            }`}
+                          >
+                            {TYPE_LABELS[type]} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                  <div className="space-y-1.5 max-h-60 overflow-y-auto">
-                    {filteredInventory.map((item) => {
-                      const meta = parseMeta(item.description);
-                      const type = meta?.type || 'other';
-                      const qty = meta?.quantity || 1;
-                      const equipped = meta?.equipped || false;
-                      const desc = visibleDescription(item.description);
+                    <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                      {filteredInventory.map((item) => {
+                        const meta = parseMeta(item.description);
+                        const type = meta?.type || 'other';
+                        const qty = meta?.quantity || 1;
+                        const equipped = meta?.equipped || false;
+                        const desc = visibleDescription(item.description);
 
-                      let statInfo = '';
-                      if (meta?.weapon) {
-                        statInfo = `${meta.weapon.damageDice} ${meta.weapon.damageType}`;
-                      } else if (meta?.armor) {
-                        statInfo = `CA ${meta.armor.base}${meta.armor.addDex ? ' + Dex' : ''}${meta.armor.dexCap ? ` (max ${meta.armor.dexCap})` : ''}`;
-                      } else if (meta?.shield) {
-                        statInfo = `+${meta.shield.bonus} CA`;
-                      }
+                        let statInfo = '';
+                        if (meta?.weapon) {
+                          statInfo = `${meta.weapon.damageDice} ${meta.weapon.damageType}`;
+                        } else if (meta?.armor) {
+                          statInfo = `CA ${meta.armor.base}${meta.armor.addDex ? ' + Dex' : ''}${meta.armor.dexCap ? ` (max ${meta.armor.dexCap})` : ''}`;
+                        } else if (meta?.shield) {
+                          statInfo = `+${meta.shield.bonus} CA`;
+                        }
 
-                      return (
-                        <div
-                          key={item.id}
-                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors ${
-                            equipped
-                              ? 'bg-emerald-900/20 border-emerald-500/30'
-                              : 'bg-gray-900/40 border-gray-700 hover:border-gray-600'
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-white font-medium truncate">
-                                {item.name}
-                                {qty > 1 && <span className="text-gray-400 ml-1">x{qty}</span>}
-                              </span>
-                              <span className={`px-1.5 py-0.5 text-[10px] rounded border ${TYPE_COLORS[type]}`}>
-                                {TYPE_LABELS[type]}
-                              </span>
-                              {equipped && (
-                                <span className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                  Equipe
+                        return (
+                          <div
+                            key={item.id}
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors ${
+                              equipped
+                                ? 'bg-emerald-900/20 border-emerald-500/30'
+                                : 'bg-gray-900/40 border-gray-700 hover:border-gray-600'
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-white font-medium truncate">
+                                  {item.name}
+                                  {qty > 1 && <span className="text-gray-400 ml-1">x{qty}</span>}
                                 </span>
+                                <span className={`px-1.5 py-0.5 text-[10px] rounded border ${TYPE_COLORS[type]}`}>
+                                  {TYPE_LABELS[type]}
+                                </span>
+                                {equipped && (
+                                  <span className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                    Equipe
+                                  </span>
+                                )}
+                              </div>
+                              {statInfo && (
+                                <div className="text-xs text-gray-500 mt-0.5">{statInfo}</div>
+                              )}
+                              {desc && typeFilter !== 'all' && (
+                                <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{desc}</div>
                               )}
                             </div>
-                            {statInfo && (
-                              <div className="text-xs text-gray-500 mt-0.5">{statInfo}</div>
-                            )}
-                            {desc && typeFilter !== 'all' && (
-                              <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{desc}</div>
-                            )}
                           </div>
+                        );
+                      })}
+                      {filteredInventory.length === 0 && (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          Aucun objet de ce type
                         </div>
-                      );
-                    })}
-                    {filteredInventory.length === 0 && (
-                      <div className="text-center py-4 text-gray-500 text-sm">
-                        Aucun objet de ce type
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Inventaire vide
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {player.is_concentrating && player.concentration_spell && (
                 <div className="bg-purple-900/30 border border-purple-500/50 rounded-xl p-4">
@@ -504,15 +512,6 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {player.character_history && (
-                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Histoire du personnage</h4>
-                  <p className="text-sm text-gray-400 whitespace-pre-wrap">
-                    {player.character_history}
-                  </p>
                 </div>
               )}
 
