@@ -249,13 +249,18 @@ useEffect(() => {
 
     // Écoute des changements d'état d'authentification
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      const { data: sub } = supabase.auth. onAuthStateChange((event, newSession) => {
       console.log('=== [App] 🔄 AUTH STATE CHANGE ===');
       console.log('[App] Event:', event);
-      console.log('[App] New session:', newSession ?  'PRÉSENTE - user: ' + newSession.user?.email : 'NULLE');
+      console.log('[App] New session:', newSession ?  'PRÉSENTE - user:  ' + newSession. user?. email : 'NULLE');
       console.log('[App] hardLoggedOut:', hardLoggedOut);
       console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage.getItem('ut:explicit-logout'));
-      setSession(newSession);
+      
+      // ✅ NOUVEAU : Si c'est une confirmation d'email ou un nouveau login, nettoyer le flag
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+        console. log('[App] 📧 Event de connexion/confirmation - nettoyage du flag explicit-logout');
+        sessionStorage.removeItem('ut:explicit-logout');
+      }
 
       if (!newSession) {
         console.log('[App] 🔓 Déconnexion - purge');
