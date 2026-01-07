@@ -22,7 +22,7 @@ const MAX_LOGIN_ATTEMPTS = 3;
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false); // ✅ NOUVEAU
 
-const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false); // ✅ NOUVEAU
+ 
   
   const BG_URL =
     (import.meta as any)?.env?.VITE_LOGIN_BG_URL ||
