@@ -133,96 +133,94 @@ useEffect(() => {
   useEffect(() => {
     const initSession = async () => {
       try {
-        console.log('=== [App] 🔑 INITIALISATION SESSION ==='); 
+        console.log('=== [App] 🔑 INITIALISATION SESSION ===');
         
-        // ✅ NOUVEAU : Traiter les tokens de confirmation/récupération dans l'URL
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        // ✅ Récupérer les paramètres d'URL une seule fois
+        const urlHash = window.location. hash;
+        const urlParams = new URLSearchParams(window. location.search);
+        const hashParams = new URLSearchParams(urlHash. substring(1));
         
-        if (accessToken && refreshToken) {
-          console.log('[App] 📧 Token détecté dans URL - type:', type);
+        // ✅ Traiter les confirmations via /auth/confirm? token_hash=...
+        const tokenHash = urlParams.get('token_hash');
+        const type = urlParams.get('type');
+
+        if (tokenHash && (type === 'signup' || type === 'email' || type === 'recovery')) {
+          console.log('[App] 📧 Token hash détecté - type:', type);
           
           try {
-            // Laisser Supabase traiter le token
-            const { data, error } = await supabase. auth.setSession({
-              access_token: accessToken,
-              refresh_token:  refreshToken
+            const { data, error } = await supabase. auth.verifyOtp({
+              token_hash: tokenHash,
+              type: type === 'recovery' ? 'recovery' : 'email'
             });
-             
+            
             if (error) {
-              console. error('[App] ❌ Erreur traitement token:', error);
-              toast.error('Erreur lors de la confirmation.  Veuillez réessayer.');
+              console.error('[App] ❌ Erreur vérification token:', error);
+              toast.error('Le lien de confirmation a expiré ou est invalide.  Veuillez réessayer.');
             } else {
-              console. log('[App] ✅ Token traité avec succès - user:', data.user?. email);
-              
-              // Nettoyer le flag de logout et afficher un message
-              sessionStorage. removeItem('ut: explicit-logout');
+              console.log('[App] ✅ Email confirmé avec succès - user:', data.user?.email);
+              sessionStorage.removeItem('ut: explicit-logout');
+              setShowHomePage(false);
               
               if (type === 'signup') {
-                toast.success('Email confirmé !  Bienvenue sur Le Compagnon D&D 🎉');
+                toast. success('Email confirmé !  Bienvenue sur Le Compagnon D&D 🎉');
               } else if (type === 'recovery') {
-                toast.success('Connexion réussie !  Vous pouvez maintenant changer votre mot de passe.');
+                toast. success('Connexion réussie !  Vous pouvez maintenant changer votre mot de passe.');
               }
             }
           } catch (e) {
-            console.error('[App] ❌ Exception traitement token:', e);
+            console.error('[App] ❌ Exception vérification:', e);
+            toast.error('Erreur lors de la confirmation. Veuillez réessayer.');
           }
           
-          // Nettoyer l'URL (supprimer le hash)
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-        console.log('[App] hardLoggedOut actuel:', hardLoggedOut);
-        console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage. getItem('ut: explicit-logout'));
-        console.log('[App] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
-        
-            // ✅ NOUVEAU : Vérifier si on vient d'une confirmation d'email (lien Supabase)
-        const urlHash = window.location. hash;
-        const urlParams = new URLSearchParams(window.location.search);
-        const isEmailConfirmation = urlHash. includes('access_token') || 
-                                     urlHash.includes('type=signup') ||
-                                     urlHash.includes('type=recovery') ||
-                                     urlParams.get('type') === 'signup' ||
-                                     urlParams.get('type') === 'recovery';
-        
-        if (isEmailConfirmation) {
-          console.log('[App] 📧 Confirmation email détectée - nettoyage du flag explicit-logout');
-          sessionStorage.removeItem('ut:explicit-logout');
-          // Nettoyer l'URL pour éviter les problèmes de refresh
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // Nettoyer l'URL
+          window.history. replaceState({}, document.title, window.location.pathname);
         }
         
-        // ✅ Vérifier si on vient d'un logout explicite (SEULEMENT si pas de confirmation email)
+        // ✅ Traiter les tokens dans le hash (access_token pour OAuth/magic links)
+        const accessToken = hashParams. get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+          console.log('[App] 📧 Token access détecté dans hash');
+          
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            
+            if (error) {
+              console.error('[App] ❌ Erreur setSession:', error);
+            } else {
+              console.log('[App] ✅ Session établie - user:', data.user?.email);
+              sessionStorage.removeItem('ut:explicit-logout');
+              toast.success('Connexion réussie !  🎉');
+            }
+          } catch (e) {
+            console.error('[App] ❌ Exception setSession:', e);
+          }
+          
+          // Nettoyer l'URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // ✅ Vérifier si on vient d'un logout explicite
         const explicitLogout = sessionStorage.getItem('ut:explicit-logout');
         console.log('[App] Vérification explicit-logout:', explicitLogout);
         
-        if (explicitLogout === 'true' && !isEmailConfirmation) {
-          console.log('[App] 🚪 LOGOUT EXPLICITE DÉTECTÉ - forcer déconnexion');
+        if (explicitLogout === 'true') {
+          console. log('[App] 🚪 LOGOUT EXPLICITE DÉTECTÉ - forcer déconnexion');
           sessionStorage.removeItem('ut:explicit-logout');
           
-          // Vérifier s'il y a une session active
-          const { data: preCheck } = await supabase.auth.getSession();
-          console.log('[App] Session avant force-logout:', preCheck.session ? 'ACTIVE' : 'NULLE');
-          
-          // Forcer la déconnexion côté Supabase
           try {
-            await supabase.auth. signOut({ scope:  'local' });
+            await supabase.auth. signOut({ scope: 'local' });
             console.log('[App] ✅ Force signOut réussi');
           } catch (e) {
             console.warn('[App] ⚠️ Erreur force signOut:', e);
           }
           
-          // Nettoyer les données locales
-          localStorage. removeItem('selectedCharacter');
+          localStorage.removeItem('selectedCharacter');
           localStorage.removeItem('lastSelectedCharacterSnapshot');
-          
-          // Supprimer aussi les clés Supabase résiduelles
-          const supabaseKeys = Object.keys(localStorage).filter(key => 
-            key.startsWith('sb-') || key.includes('supabase')
-          );
-          console.log('[App] Suppression de', supabaseKeys. length, 'clés Supabase résiduelles');
-          supabaseKeys.forEach(key => localStorage.removeItem(key));
           
           setSession(null);
           setSelectedCharacter(null);
@@ -232,12 +230,13 @@ useEffect(() => {
           return;
         }
         
-        // ✅ NOUVEAU :  Vérifier si on vient directement sur /login ou /app
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/app' || currentPath.startsWith('/app/')) {
+        // ✅ Vérifier si on vient directement sur /login ou /app
+        const currentPath = window.location. pathname;
+        if (currentPath === '/login' || currentPath === '/app' || currentPath. startsWith('/app/')) {
           setShowHomePage(false);
-          console.log('[App] 🏠 Navigation directe vers', currentPath, '- skip homepage');
+          console. log('[App] 🏠 Navigation directe vers', currentPath, '- skip homepage');
         }
+        
         const { data } = await supabase.auth.getSession();
         const current = data?.session ?? null;
         setSession(current);
