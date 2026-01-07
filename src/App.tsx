@@ -134,6 +134,45 @@ useEffect(() => {
     const initSession = async () => {
       try {
         console.log('=== [App] 🔑 INITIALISATION SESSION ===');
+        
+        // ✅ NOUVEAU : Traiter les tokens de confirmation/récupération dans l'URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        if (accessToken && refreshToken) {
+          console.log('[App] 📧 Token détecté dans URL - type:', type);
+          
+          try {
+            // Laisser Supabase traiter le token
+            const { data, error } = await supabase. auth.setSession({
+              access_token: accessToken,
+              refresh_token:  refreshToken
+            });
+            
+            if (error) {
+              console. error('[App] ❌ Erreur traitement token:', error);
+              toast.error('Erreur lors de la confirmation.  Veuillez réessayer.');
+            } else {
+              console. log('[App] ✅ Token traité avec succès - user:', data.user?. email);
+              
+              // Nettoyer le flag de logout et afficher un message
+              sessionStorage. removeItem('ut: explicit-logout');
+              
+              if (type === 'signup') {
+                toast.success('Email confirmé !  Bienvenue sur Le Compagnon D&D 🎉');
+              } else if (type === 'recovery') {
+                toast.success('Connexion réussie !  Vous pouvez maintenant changer votre mot de passe.');
+              }
+            }
+          } catch (e) {
+            console.error('[App] ❌ Exception traitement token:', e);
+          }
+          
+          // Nettoyer l'URL (supprimer le hash)
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
         console.log('[App] hardLoggedOut actuel:', hardLoggedOut);
         console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage. getItem('ut: explicit-logout'));
         console.log('[App] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
