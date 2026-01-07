@@ -133,7 +133,10 @@ useEffect(() => {
   useEffect(() => {
     const initSession = async () => {
       try {
-        console.log('[App] 🔑 Initialisation de la session...');
+        console.log('=== [App] 🔑 INITIALISATION SESSION ===');
+        console.log('[App] hardLoggedOut actuel:', hardLoggedOut);
+        console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage. getItem('ut: explicit-logout'));
+        console.log('[App] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
         
         // ✅ NOUVEAU :  Vérifier si on vient d'un logout explicite
         const explicitLogout = sessionStorage.getItem('ut:explicit-logout');
