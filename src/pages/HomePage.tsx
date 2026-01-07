@@ -664,7 +664,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
              {/* 6. LIEN DISCORD */}
              <div className="mt-4">
                <a 
-                 href="https://discord.gg/7zVKwtTe" 
+                 href="https://discord.gg/kCSFfKaqKZ" 
                  target="_blank" 
                  rel="noopener noreferrer"
                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 transition-all group"
