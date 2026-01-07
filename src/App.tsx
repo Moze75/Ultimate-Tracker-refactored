@@ -138,11 +138,27 @@ useEffect(() => {
         console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage. getItem('ut: explicit-logout'));
         console.log('[App] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
         
-        // ✅ NOUVEAU : Vérifier si on vient d'un logout explicite
+            // ✅ NOUVEAU : Vérifier si on vient d'une confirmation d'email (lien Supabase)
+        const urlHash = window.location. hash;
+        const urlParams = new URLSearchParams(window.location.search);
+        const isEmailConfirmation = urlHash. includes('access_token') || 
+                                     urlHash.includes('type=signup') ||
+                                     urlHash.includes('type=recovery') ||
+                                     urlParams.get('type') === 'signup' ||
+                                     urlParams.get('type') === 'recovery';
+        
+        if (isEmailConfirmation) {
+          console.log('[App] 📧 Confirmation email détectée - nettoyage du flag explicit-logout');
+          sessionStorage.removeItem('ut:explicit-logout');
+          // Nettoyer l'URL pour éviter les problèmes de refresh
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // ✅ Vérifier si on vient d'un logout explicite (SEULEMENT si pas de confirmation email)
         const explicitLogout = sessionStorage.getItem('ut:explicit-logout');
         console.log('[App] Vérification explicit-logout:', explicitLogout);
         
-        if (explicitLogout === 'true') {
+        if (explicitLogout === 'true' && !isEmailConfirmation) {
           console.log('[App] 🚪 LOGOUT EXPLICITE DÉTECTÉ - forcer déconnexion');
           sessionStorage.removeItem('ut:explicit-logout');
           
