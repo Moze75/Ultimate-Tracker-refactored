@@ -22,9 +22,22 @@ const MAX_LOGIN_ATTEMPTS = 3;
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false); // ✅ NOUVEAU
 
-   
-  
-  const BG_URL =
+  // ✅ DEBUG :  Log au montage du composant
+  useEffect(() => {
+    console.log('=== [LoginPage] 🔍 MONTAGE DU COMPOSANT ===');
+    console.log('[LoginPage] sessionStorage ut: explicit-logout:', sessionStorage. getItem('ut:explicit-logout'));
+    console.log('[LoginPage] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ?  'PRÉSENT' : 'ABSENT');
+    console.log('[LoginPage] localStorage lastSelectedCharacterSnapshot:', localStorage.getItem('lastSelectedCharacterSnapshot') ? 'PRÉSENT' : 'ABSENT');
+    
+    // Vérifier s'il y a une session Supabase active
+    import('../lib/supabase').then(({ supabase }) => {
+      supabase. auth.getSession().then(({ data }) => {
+        console.log('[LoginPage] Session Supabase active:', data. session ?  'OUI - user:  ' + data.session.user?. email : 'NON');
+      });
+    });
+  }, []);
+ 
+  const BG_URL ==
     (import.meta as any)?.env?.VITE_LOGIN_BG_URL ||
     'https://yumzqyyogwzrmlcpvnky.supabase.co/storage/v1/object/public/static/tmpoofee5sh.png';
 
