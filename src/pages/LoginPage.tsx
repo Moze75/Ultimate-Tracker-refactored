@@ -93,6 +93,10 @@ const MAX_LOGIN_ATTEMPTS = 3;
     const { error } = await authService.signInWithEmail(email, password);
 
     if (error) throw error;
+    
+    // ✅ NOUVEAU :  Nettoyer le flag de logout explicite après un login réussi
+    sessionStorage.removeItem('ut:explicit-logout');
+    
     toast.success('Connexion réussie');
     setLoginAttempts(0); // Réinitialiser le compteur en cas de succès
   } catch (error: any) {
