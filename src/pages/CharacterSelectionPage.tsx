@@ -582,7 +582,7 @@ const handleSignOut = async () => {
 
               {/* Discord (Icône seule agrandie) */}
               <a 
-                 href="https://discord.gg/7zVKwtTe" 
+                 href="https://discord.gg/kCSFfKaqKZ" 
                  target="_blank" 
                  rel="noopener noreferrer"
                  className="hover:scale-110 transition-transform opacity-80 hover:opacity-100"
