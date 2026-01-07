@@ -234,7 +234,11 @@ useEffect(() => {
     // Écoute des changements d'état d'authentification
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log('[App] 🔄 Auth state change:', event);
+      console.log('=== [App] 🔄 AUTH STATE CHANGE ===');
+      console.log('[App] Event:', event);
+      console.log('[App] New session:', newSession ?  'PRÉSENTE - user: ' + newSession.user?.email : 'NULLE');
+      console.log('[App] hardLoggedOut:', hardLoggedOut);
+      console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage.getItem('ut:explicit-logout'));
       setSession(newSession);
 
       if (!newSession) {
