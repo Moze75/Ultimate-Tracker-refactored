@@ -135,7 +135,29 @@ useEffect(() => {
       try {
         console.log('[App] 🔑 Initialisation de la session...');
         
-        // ✅ NOUVEAU : Vérifier si on vient directement sur /login ou /app
+        // ✅ NOUVEAU :  Vérifier si on vient d'un logout explicite
+        const explicitLogout = sessionStorage.getItem('ut:explicit-logout');
+        if (explicitLogout === 'true') {
+          console.log('[App] 🚪 Logout explicite détecté - forcer déconnexion');
+          sessionStorage.removeItem('ut:explicit-logout');
+          
+          // Forcer la déconnexion côté Supabase
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch {}
+          
+          // Nettoyer les données locales
+          localStorage. removeItem('selectedCharacter');
+          localStorage.removeItem('lastSelectedCharacterSnapshot');
+          
+          setSession(null);
+          setSelectedCharacter(null);
+          setHardLoggedOut(true);
+          setLoading(false);
+          return; // ✅ Sortir de la fonction, ne pas restaurer de session
+        }
+        
+        // ✅ NOUVEAU :  Vérifier si on vient directement sur /login ou /app
         const currentPath = window.location.pathname;
         if (currentPath === '/login' || currentPath === '/app' || currentPath.startsWith('/app/')) {
           setShowHomePage(false);
