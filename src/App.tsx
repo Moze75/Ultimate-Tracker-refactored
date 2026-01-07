@@ -138,26 +138,43 @@ useEffect(() => {
         console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage. getItem('ut: explicit-logout'));
         console.log('[App] localStorage selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
         
-        // ✅ NOUVEAU :  Vérifier si on vient d'un logout explicite
+        // ✅ NOUVEAU : Vérifier si on vient d'un logout explicite
         const explicitLogout = sessionStorage.getItem('ut:explicit-logout');
+        console.log('[App] Vérification explicit-logout:', explicitLogout);
+        
         if (explicitLogout === 'true') {
-          console.log('[App] 🚪 Logout explicite détecté - forcer déconnexion');
+          console.log('[App] 🚪 LOGOUT EXPLICITE DÉTECTÉ - forcer déconnexion');
           sessionStorage.removeItem('ut:explicit-logout');
+          
+          // Vérifier s'il y a une session active
+          const { data: preCheck } = await supabase.auth.getSession();
+          console.log('[App] Session avant force-logout:', preCheck.session ? 'ACTIVE' : 'NULLE');
           
           // Forcer la déconnexion côté Supabase
           try {
-            await supabase.auth.signOut({ scope: 'local' });
-          } catch {}
+            await supabase.auth. signOut({ scope:  'local' });
+            console.log('[App] ✅ Force signOut réussi');
+          } catch (e) {
+            console.warn('[App] ⚠️ Erreur force signOut:', e);
+          }
           
           // Nettoyer les données locales
           localStorage. removeItem('selectedCharacter');
           localStorage.removeItem('lastSelectedCharacterSnapshot');
           
+          // Supprimer aussi les clés Supabase résiduelles
+          const supabaseKeys = Object.keys(localStorage).filter(key => 
+            key.startsWith('sb-') || key.includes('supabase')
+          );
+          console.log('[App] Suppression de', supabaseKeys. length, 'clés Supabase résiduelles');
+          supabaseKeys.forEach(key => localStorage.removeItem(key));
+          
           setSession(null);
           setSelectedCharacter(null);
           setHardLoggedOut(true);
           setLoading(false);
-          return; // ✅ Sortir de la fonction, ne pas restaurer de session
+          console.log('[App] ✅ État réinitialisé, retour early');
+          return;
         }
         
         // ✅ NOUVEAU :  Vérifier si on vient directement sur /login ou /app
