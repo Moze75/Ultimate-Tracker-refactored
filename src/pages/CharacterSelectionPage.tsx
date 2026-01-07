@@ -413,31 +413,44 @@ const handleSignOut = async () => {
       localStorage.removeItem('selectedCharacter');
       localStorage.removeItem('lastSelectedCharacterSnapshot');
       localStorage.removeItem(PENDING_PLAN_KEY);
+      
       // ✅ NOUVEAU : Supprimer aussi le cache des players
       const userId = session?.user?.id;
       if (userId) {
         localStorage.removeItem(`ut: players-list: ${userId}`);
-        localStorage.removeItem(`ut:players-list: ts:${userId}`);
+        localStorage.removeItem(`ut:players-list:ts:${userId}`);
+        // Supprimer aussi les caches de players individuels
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.startsWith('ut:player:') || key.startsWith('ut:player:ts:')) {
+            localStorage.removeItem(key);
+          }
+        });
       }
+      
+      // ✅ NOUVEAU : Marquer qu'on a fait un logout explicite
+      sessionStorage.setItem('ut:explicit-logout', 'true');
+      
       sessionStorage.clear();
+      // Remettre le flag après le clear
+      sessionStorage. setItem('ut: explicit-logout', 'true');
     } catch (e) {
       console.warn('[SignOut] Erreur nettoyage localStorage:', e);
     }
 
-    // ✅ Déconnexion Supabase
-    const { error } = await authService.signOut();
+    // ✅ Déconnexion Supabase avec scope global
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
     if (error) {
       console.warn('[SignOut] Erreur Supabase:', error);
     }
 
     toast. success('Déconnexion réussie');
 
-    // ✅ NOUVEAU : Forcer le nettoyage du cache Supabase sur Firefox
-    // Attendre un court délai pour s'assurer que tout est nettoyé
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // ✅ NOUVEAU : Attendre que Supabase ait fini
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    // ✅ NOUVEAU : Forcer le rechargement complet (pas juste navigation)
-    window.location.replace(window.location. origin);
+    // ✅ NOUVEAU : Forcer le rechargement complet
+    window. location.replace(window.location.origin);
     
   } catch (error: any) {
     console. error('❌ Erreur de déconnexion:', error);
@@ -445,7 +458,8 @@ const handleSignOut = async () => {
     
     // Forcer la déconnexion même en cas d'erreur
     try {
-      await supabase.auth.signOut();
+      sessionStorage.setItem('ut:explicit-logout', 'true');
+      await supabase.auth.signOut({ scope: 'global' });
     } catch {}
     
     setTimeout(() => {
