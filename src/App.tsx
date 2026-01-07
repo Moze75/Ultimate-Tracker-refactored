@@ -135,6 +135,43 @@ useEffect(() => {
       try {
         console.log('=== [App] 🔑 INITIALISATION SESSION ===');
         
+        // ✅ NOUVEAU :  Traiter les confirmations via /auth/confirm? token_hash=... 
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenHash = urlParams.get('token_hash');
+        const type = urlParams.get('type');
+
+        if (tokenHash && (type === 'signup' || type === 'email' || type === 'recovery')) {
+          console.log('[App] 📧 Token hash détecté - type:', type);
+          
+          try {
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash:  tokenHash,
+              type: type === 'recovery' ? 'recovery' : 'email'
+            });
+            
+            if (error) {
+              console.error('[App] ❌ Erreur vérification token:', error);
+              toast.error('Le lien de confirmation a expiré ou est invalide.  Veuillez réessayer.');
+            } else {
+              console.log('[App] ✅ Email confirmé avec succès - user:', data. user?.email);
+              sessionStorage.removeItem('ut: explicit-logout');
+              setShowHomePage(false);
+              
+              if (type === 'signup') {
+                toast.success('Email confirmé !  Bienvenue sur Le Compagnon D&D 🎉');
+              } else if (type === 'recovery') {
+                toast.success('Connexion réussie ! Vous pouvez maintenant changer votre mot de passe.');
+              }
+            }
+          } catch (e) {
+            console.error('[App] ❌ Exception vérification:', e);
+            toast.error('Erreur lors de la confirmation. Veuillez réessayer.');
+          }
+          
+          // Nettoyer l'URL (supprimer les paramètres)
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
         // ✅ NOUVEAU : Traiter les tokens de confirmation/récupération dans l'URL
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
