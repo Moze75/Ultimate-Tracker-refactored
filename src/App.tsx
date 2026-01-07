@@ -133,42 +133,44 @@ useEffect(() => {
   useEffect(() => {
     const initSession = async () => {
       try {
-        console.log('=== [App] 🔑 INITIALISATION SESSION ===');
+        console.log('=== [App] 🔑 INITIALISATION SESSION ==='); 
         
-        // ✅ NOUVEAU :  Traiter les confirmations via /auth/confirm? token_hash=... 
-        const urlParams = new URLSearchParams(window.location.search);
-        const tokenHash = urlParams.get('token_hash');
-        const type = urlParams.get('type');
-
-        if (tokenHash && (type === 'signup' || type === 'email' || type === 'recovery')) {
-          console.log('[App] 📧 Token hash détecté - type:', type);
+        // ✅ NOUVEAU : Traiter les tokens de confirmation/récupération dans l'URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        if (accessToken && refreshToken) {
+          console.log('[App] 📧 Token détecté dans URL - type:', type);
           
           try {
-            const { data, error } = await supabase.auth.verifyOtp({
-              token_hash:  tokenHash,
-              type: type === 'recovery' ? 'recovery' : 'email'
+            // Laisser Supabase traiter le token
+            const { data, error } = await supabase. auth.setSession({
+              access_token: accessToken,
+              refresh_token:  refreshToken
             });
-            
+             
             if (error) {
-              console.error('[App] ❌ Erreur vérification token:', error);
-              toast.error('Le lien de confirmation a expiré ou est invalide.  Veuillez réessayer.');
+              console. error('[App] ❌ Erreur traitement token:', error);
+              toast.error('Erreur lors de la confirmation.  Veuillez réessayer.');
             } else {
-              console.log('[App] ✅ Email confirmé avec succès - user:', data. user?.email);
-              sessionStorage.removeItem('ut: explicit-logout');
-              setShowHomePage(false);
+              console. log('[App] ✅ Token traité avec succès - user:', data.user?. email);
+              
+              // Nettoyer le flag de logout et afficher un message
+              sessionStorage. removeItem('ut: explicit-logout');
               
               if (type === 'signup') {
                 toast.success('Email confirmé !  Bienvenue sur Le Compagnon D&D 🎉');
               } else if (type === 'recovery') {
-                toast.success('Connexion réussie ! Vous pouvez maintenant changer votre mot de passe.');
+                toast.success('Connexion réussie !  Vous pouvez maintenant changer votre mot de passe.');
               }
             }
           } catch (e) {
-            console.error('[App] ❌ Exception vérification:', e);
-            toast.error('Erreur lors de la confirmation. Veuillez réessayer.');
+            console.error('[App] ❌ Exception traitement token:', e);
           }
           
-          // Nettoyer l'URL (supprimer les paramètres)
+          // Nettoyer l'URL (supprimer le hash)
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         console.log('[App] hardLoggedOut actuel:', hardLoggedOut);
