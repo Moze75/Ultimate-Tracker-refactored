@@ -404,33 +404,55 @@ const handleSignOut = async () => {
   try {
     await clearServiceWorkerCache();
     
-    const { error } = await authService.signOut();
-    if (error) throw error;
-
-    toast.success('Déconnexion réussie');
-
+    // ✅ IMPORTANT : Nettoyer AVANT la déconnexion
     appContextService.clearContext();
     appContextService.clearWizardSnapshot();
     
     try {
-      // ✅ Supprimer les deux clés possibles
-      localStorage. removeItem('selectedCharacter');  // Clé utilisée par GamePage
-      localStorage.removeItem('lastSelectedCharacterSnapshot');  // Ancienne clé
+      // Supprimer toutes les clés liées à l'utilisateur
+      localStorage.removeItem('selectedCharacter');
+      localStorage.removeItem('lastSelectedCharacterSnapshot');
       localStorage.removeItem(PENDING_PLAN_KEY);
+      // ✅ NOUVEAU : Supprimer aussi le cache des players
+      const userId = session?.user?.id;
+      if (userId) {
+        localStorage.removeItem(`ut: players-list: ${userId}`);
+        localStorage.removeItem(`ut:players-list: ts:${userId}`);
+      }
       sessionStorage.clear();
-    } catch {}
+    } catch (e) {
+      console.warn('[SignOut] Erreur nettoyage localStorage:', e);
+    }
 
-    window.location. href = window.location.origin;
+    // ✅ Déconnexion Supabase
+    const { error } = await authService.signOut();
+    if (error) {
+      console.warn('[SignOut] Erreur Supabase:', error);
+    }
+
+    toast. success('Déconnexion réussie');
+
+    // ✅ NOUVEAU : Forcer le nettoyage du cache Supabase sur Firefox
+    // Attendre un court délai pour s'assurer que tout est nettoyé
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // ✅ NOUVEAU : Forcer le rechargement complet (pas juste navigation)
+    window.location.replace(window.location. origin);
     
   } catch (error: any) {
-      console.error('❌ Erreur de déconnexion:', error);
-      toast.error('Erreur lors de la déconnexion');
-      
-      setTimeout(() => {
-        window.location.href = window.location.origin;
-      }, 1000);
-    }
-  };
+    console. error('❌ Erreur de déconnexion:', error);
+    toast.error('Erreur lors de la déconnexion');
+    
+    // Forcer la déconnexion même en cas d'erreur
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    
+    setTimeout(() => {
+      window.location.replace(window.location. origin);
+    }, 500);
+  }
+};
 
   const handleDeleteCharacter = async (character: Player) => {
     if (deleteConfirmation !== 'Supprime') {
