@@ -3,8 +3,47 @@ import { createPortal } from 'react-dom';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Card, { CardContent, CardHeader } from './ui/Card';
-import { X, Sword, Heart, Shield, Info, Sparkles } from 'lucide-react';
-import type { CustomClassData, CustomClassSpellcasting } from '../types/character';
+import {
+  X,
+  Sword,
+  Heart,
+  Shield,
+  Sparkles,
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  Flame,
+  Music,
+  Cross,
+  Leaf,
+  Wand2,
+  Swords,
+  HandHeart,
+  Target,
+  Skull,
+  BookOpen,
+  Zap,
+  Moon,
+  Sun,
+  Star,
+  Eye,
+  Crown,
+  Gem,
+  Wind,
+  Droplets,
+  Mountain,
+  Snowflake,
+  Crosshair,
+  ChevronDown,
+  type LucideIcon,
+} from 'lucide-react';
+import type {
+  CustomClassData,
+  CustomClassSpellcasting,
+  CustomClassResource,
+  CustomClassAbility,
+} from '../types/character';
 
 interface CustomClassModalProps {
   open: boolean;
@@ -14,7 +53,16 @@ interface CustomClassModalProps {
 
 const ABILITY_OPTIONS = [
   'Force',
-  'Dextérité',
+  'Dexterite',
+  'Constitution',
+  'Intelligence',
+  'Sagesse',
+  'Charisme',
+];
+
+const ABILITY_OPTIONS_DISPLAY = [
+  'Force',
+  'Dexterite',
   'Constitution',
   'Intelligence',
   'Sagesse',
@@ -24,7 +72,7 @@ const ABILITY_OPTIONS = [
 const HIT_DIE_OPTIONS: Array<{ value: 6 | 8 | 10 | 12; label: string }> = [
   { value: 6, label: 'd6 (Magicien, Ensorceleur)' },
   { value: 8, label: 'd8 (Barde, Clerc, Druide, Moine, Roublard, Occultiste)' },
-  { value: 10, label: 'd10 (Guerrier, Paladin, Rôdeur)' },
+  { value: 10, label: 'd10 (Guerrier, Paladin, Rodeur)' },
   { value: 12, label: 'd12 (Barbare)' },
 ];
 
@@ -36,14 +84,359 @@ const SPELL_LIST_OPTIONS = [
   { value: 'Ensorceleur', label: 'Liste de l\'Ensorceleur' },
   { value: 'Occultiste', label: 'Liste de l\'Occultiste' },
   { value: 'Paladin', label: 'Liste du Paladin' },
-  { value: 'Rôdeur', label: 'Liste du Rôdeur' },
+  { value: 'Rodeur', label: 'Liste du Rodeur' },
 ];
 
 const SPELLCASTING_ABILITY_OPTIONS: Array<{ value: CustomClassSpellcasting['spellcastingAbility']; label: string }> = [
   { value: 'Intelligence', label: 'Intelligence (Magicien)' },
-  { value: 'Sagesse', label: 'Sagesse (Clerc, Druide, Rôdeur)' },
+  { value: 'Sagesse', label: 'Sagesse (Clerc, Druide, Rodeur)' },
   { value: 'Charisme', label: 'Charisme (Barde, Ensorceleur, Paladin, Occultiste)' },
 ];
+
+const ICON_OPTIONS: { name: string; icon: LucideIcon }[] = [
+  { name: 'Sparkles', icon: Sparkles },
+  { name: 'Flame', icon: Flame },
+  { name: 'Music', icon: Music },
+  { name: 'Cross', icon: Cross },
+  { name: 'Leaf', icon: Leaf },
+  { name: 'Wand2', icon: Wand2 },
+  { name: 'Swords', icon: Swords },
+  { name: 'HandHeart', icon: HandHeart },
+  { name: 'Target', icon: Target },
+  { name: 'Skull', icon: Skull },
+  { name: 'BookOpen', icon: BookOpen },
+  { name: 'Shield', icon: Shield },
+  { name: 'Zap', icon: Zap },
+  { name: 'Moon', icon: Moon },
+  { name: 'Sun', icon: Sun },
+  { name: 'Star', icon: Star },
+  { name: 'Eye', icon: Eye },
+  { name: 'Heart', icon: Heart },
+  { name: 'Crown', icon: Crown },
+  { name: 'Gem', icon: Gem },
+  { name: 'Wind', icon: Wind },
+  { name: 'Droplets', icon: Droplets },
+  { name: 'Mountain', icon: Mountain },
+  { name: 'Snowflake', icon: Snowflake },
+  { name: 'Crosshair', icon: Crosshair },
+];
+
+const COLOR_OPTIONS: { name: string; value: CustomClassResource['color']; className: string }[] = [
+  { name: 'Rouge', value: 'red', className: 'bg-red-500' },
+  { name: 'Violet', value: 'purple', className: 'bg-purple-500' },
+  { name: 'Jaune', value: 'yellow', className: 'bg-yellow-500' },
+  { name: 'Vert', value: 'green', className: 'bg-green-500' },
+  { name: 'Bleu', value: 'blue', className: 'bg-blue-500' },
+];
+
+const MAX_RESOURCES = 2;
+
+function getIconComponent(iconName: string): LucideIcon {
+  const found = ICON_OPTIONS.find(opt => opt.name === iconName);
+  return found?.icon || Sparkles;
+}
+
+function IconPicker({ value, onChange }: { value: string; onChange: (iconName: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const SelectedIcon = getIconComponent(value);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-md hover:bg-gray-700/50 transition-colors"
+      >
+        <SelectedIcon size={20} className="text-gray-300" />
+        <ChevronDown size={16} className="text-gray-400" />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 p-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl grid grid-cols-5 gap-1 max-h-48 overflow-y-auto">
+          {ICON_OPTIONS.map(opt => {
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.name}
+                type="button"
+                onClick={() => {
+                  onChange(opt.name);
+                  setOpen(false);
+                }}
+                className={`p-2 rounded-md hover:bg-gray-700/50 transition-colors ${
+                  value === opt.name ? 'bg-gray-700 ring-1 ring-blue-500' : ''
+                }`}
+                title={opt.name}
+              >
+                <Icon size={20} className="text-gray-300" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ResourceEditorProps {
+  resource?: CustomClassResource;
+  onSave: (resource: CustomClassResource) => void;
+  onCancel: () => void;
+}
+
+function ResourceEditor({ resource, onSave, onCancel }: ResourceEditorProps) {
+  const [name, setName] = useState(resource?.name || '');
+  const [maxType, setMaxType] = useState<'fixed' | 'level' | 'modifier'>(
+    typeof resource?.maxValue === 'number' ? 'fixed' : (resource?.maxValue as 'level' | 'modifier') || 'fixed'
+  );
+  const [fixedValue, setFixedValue] = useState(
+    typeof resource?.maxValue === 'number' ? resource.maxValue : 3
+  );
+  const [modifierAbility, setModifierAbility] = useState<CustomClassResource['modifierAbility']>(
+    resource?.modifierAbility || 'Charisme'
+  );
+  const [color, setColor] = useState<CustomClassResource['color']>(resource?.color || 'purple');
+  const [icon, setIcon] = useState(resource?.icon || 'Sparkles');
+  const [shortRest, setShortRest] = useState(resource?.shortRest || false);
+  const [longRest, setLongRest] = useState(resource?.longRest ?? true);
+
+  const handleSubmit = () => {
+    if (!name.trim()) {
+      alert('Le nom de la ressource est requis');
+      return;
+    }
+
+    const newResource: CustomClassResource = {
+      id: resource?.id || crypto.randomUUID(),
+      name: name.trim(),
+      maxValue: maxType === 'fixed' ? fixedValue : maxType,
+      modifierAbility: maxType === 'modifier' ? modifierAbility : undefined,
+      color,
+      icon,
+      shortRest,
+      longRest,
+    };
+
+    onSave(newResource);
+  };
+
+  return (
+    <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">Nom de la ressource</label>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          className="input-dark w-full px-3 py-2 rounded-md"
+          placeholder="Ex: Points de magie"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Type de maximum</label>
+          <select
+            value={maxType}
+            onChange={e => setMaxType(e.target.value as 'fixed' | 'level' | 'modifier')}
+            className="input-dark w-full px-3 py-2 rounded-md"
+          >
+            <option value="fixed">Valeur fixe</option>
+            <option value="level">= Niveau du personnage</option>
+            <option value="modifier">= Modificateur de caracteristique</option>
+          </select>
+        </div>
+
+        {maxType === 'fixed' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Valeur maximale</label>
+            <input
+              type="number"
+              min={1}
+              value={fixedValue}
+              onChange={e => setFixedValue(Math.max(1, parseInt(e.target.value) || 1))}
+              className="input-dark w-full px-3 py-2 rounded-md"
+            />
+          </div>
+        )}
+
+        {maxType === 'modifier' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Caracteristique</label>
+            <select
+              value={modifierAbility}
+              onChange={e => setModifierAbility(e.target.value as CustomClassResource['modifierAbility'])}
+              className="input-dark w-full px-3 py-2 rounded-md"
+            >
+              {ABILITY_OPTIONS.map(ability => (
+                <option key={ability} value={ability}>{ability}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Icone</label>
+          <IconPicker value={icon} onChange={setIcon} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Couleur</label>
+          <div className="flex gap-2">
+            {COLOR_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setColor(opt.value)}
+                className={`w-8 h-8 rounded-full ${opt.className} ${
+                  color === opt.value ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''
+                }`}
+                title={opt.name}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300 mb-1">Regeneration</label>
+        <div className="flex gap-3">
+          <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors ${
+            shortRest
+              ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400'
+          }`}>
+            <input
+              type="checkbox"
+              checked={shortRest}
+              onChange={e => setShortRest(e.target.checked)}
+              className="sr-only"
+            />
+            <Sun size={16} />
+            <span className="text-sm">Repos court</span>
+          </label>
+          <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors ${
+            longRest
+              ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400'
+          }`}>
+            <input
+              type="checkbox"
+              checked={longRest}
+              onChange={e => setLongRest(e.target.checked)}
+              className="sr-only"
+            />
+            <Moon size={16} />
+            <span className="text-sm">Repos long</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="flex-1 btn-primary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+        >
+          <Save size={16} />
+          {resource ? 'Modifier' : 'Ajouter'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="btn-secondary px-4 py-2 rounded-lg"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface AbilityEditorProps {
+  ability?: CustomClassAbility;
+  onSave: (ability: CustomClassAbility) => void;
+  onCancel: () => void;
+}
+
+function AbilityEditor({ ability, onSave, onCancel }: AbilityEditorProps) {
+  const [name, setName] = useState(ability?.name || '');
+  const [level, setLevel] = useState(ability?.level || 1);
+  const [description, setDescription] = useState(ability?.description || '');
+
+  const handleSubmit = () => {
+    if (!name.trim()) {
+      alert('Le nom de la competence est requis');
+      return;
+    }
+
+    const newAbility: CustomClassAbility = {
+      id: ability?.id || crypto.randomUUID(),
+      name: name.trim(),
+      level,
+      description: description.trim(),
+    };
+
+    onSave(newAbility);
+  };
+
+  return (
+    <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Nom de la competence</label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="input-dark w-full px-3 py-2 rounded-md"
+            placeholder="Ex: Souffle du dragon"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Niveau d'obtention</label>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={level}
+            onChange={e => setLevel(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+            className="input-dark w-full px-3 py-2 rounded-md"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+        <textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          className="input-dark w-full px-3 py-2 rounded-md min-h-[80px] resize-y"
+          placeholder="Decrivez la competence..."
+        />
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="flex-1 btn-primary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+        >
+          <Save size={16} />
+          {ability ? 'Modifier' : 'Ajouter'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="btn-secondary px-4 py-2 rounded-lg"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CustomClassModal({ open, onClose, onSave }: CustomClassModalProps) {
   const [name, setName] = useState('');
@@ -59,6 +452,14 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
   const [spellcastingAbility, setSpellcastingAbility] = useState<CustomClassSpellcasting['spellcastingAbility']>('Intelligence');
   const [spellList, setSpellList] = useState('Magicien');
 
+  const [resources, setResources] = useState<CustomClassResource[]>([]);
+  const [addingResource, setAddingResource] = useState(false);
+  const [editingResource, setEditingResource] = useState<CustomClassResource | null>(null);
+
+  const [abilities, setAbilities] = useState<CustomClassAbility[]>([]);
+  const [addingAbility, setAddingAbility] = useState(false);
+  const [editingAbility, setEditingAbility] = useState<CustomClassAbility | null>(null);
+
   if (!open) return null;
 
   const handleTogglePrimaryAbility = (ability: string) => {
@@ -69,6 +470,34 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
     }
   };
 
+  const handleSaveResource = (resource: CustomClassResource) => {
+    if (editingResource) {
+      setResources(prev => prev.map(r => (r.id === resource.id ? resource : r)));
+    } else {
+      setResources(prev => [...prev, resource]);
+    }
+    setEditingResource(null);
+    setAddingResource(false);
+  };
+
+  const handleDeleteResource = (id: string) => {
+    setResources(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleSaveAbility = (ability: CustomClassAbility) => {
+    if (editingAbility) {
+      setAbilities(prev => prev.map(a => (a.id === ability.id ? ability : a)));
+    } else {
+      setAbilities(prev => [...prev, ability]);
+    }
+    setEditingAbility(null);
+    setAddingAbility(false);
+  };
+
+  const handleDeleteAbility = (id: string) => {
+    setAbilities(prev => prev.filter(a => a.id !== id));
+  };
+
   const handleSave = () => {
     if (!name.trim()) {
       alert('Le nom de la classe est requis');
@@ -76,29 +505,29 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
     }
 
     if (primaryAbility.length === 0) {
-      alert('Sélectionnez au moins une caractéristique principale');
+      alert('Selectionnez au moins une caracteristique principale');
       return;
     }
 
     if (!savingThrow1 || !savingThrow2) {
-      alert('Sélectionnez deux jets de sauvegarde');
+      alert('Selectionnez deux jets de sauvegarde');
       return;
     }
 
     if (savingThrow1 === savingThrow2) {
-      alert('Les deux jets de sauvegarde doivent être différents');
+      alert('Les deux jets de sauvegarde doivent etre differents');
       return;
     }
 
     const customClass: CustomClassData = {
       name: name.trim(),
-      description: description.trim() || 'Classe personnalisée',
+      description: description.trim() || 'Classe personnalisee',
       hitDie,
       primaryAbility,
       savingThrows: [savingThrow1, savingThrow2],
       isCustom: true,
-      resources: [],
-      abilities: [],
+      resources,
+      abilities,
       spellcasting: spellcastingEnabled ? {
         enabled: true,
         cantrips: cantripsCount,
@@ -125,12 +554,20 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
     setSpellsKnownCount(4);
     setSpellcastingAbility('Intelligence');
     setSpellList('Magicien');
+    setResources([]);
+    setAddingResource(false);
+    setEditingResource(null);
+    setAbilities([]);
+    setAddingAbility(false);
+    setEditingAbility(null);
   };
 
   const handleCancel = () => {
     handleReset();
     onClose();
   };
+
+  const canAddResource = resources.length < MAX_RESOURCES && !addingResource && !editingResource;
 
   const modalContent = (
     <div
@@ -145,7 +582,7 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Sword className="w-5 h-5 text-amber-400" />
-            <h3 className="text-lg font-semibold text-white">Créer une classe personnalisée</h3>
+            <h3 className="text-lg font-semibold text-white">Creer une classe personnalisee</h3>
           </div>
           <button
             onClick={handleCancel}
@@ -183,7 +620,7 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Dé de vie *
+                  De de vie *
                 </label>
                 <select
                   value={hitDie}
@@ -203,7 +640,7 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h4 className="text-white font-semibold">Caractéristiques principales *</h4>
+                <h4 className="text-white font-semibold">Caracteristiques principales *</h4>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300">
                   {primaryAbility.length}/2
                 </span>
@@ -211,10 +648,10 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-400 mb-3">
-                Sélectionnez 1 ou 2 caractéristiques principales pour cette classe.
+                Selectionnez 1 ou 2 caracteristiques principales pour cette classe.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {ABILITY_OPTIONS.map((ability) => {
+                {ABILITY_OPTIONS_DISPLAY.map((ability) => {
                   const isSelected = primaryAbility.includes(ability);
                   const isDisabled = !isSelected && primaryAbility.length >= 2;
 
@@ -249,7 +686,7 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-400">
-                Choisissez deux caractéristiques pour les jets de sauvegarde maîtrisés.
+                Choisissez deux caracteristiques pour les jets de sauvegarde maitrises.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -261,8 +698,8 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
                     onChange={(e) => setSavingThrow1(e.target.value)}
                     className="input-dark w-full"
                   >
-                    <option value="">Sélectionner...</option>
-                    {ABILITY_OPTIONS.map((ability) => (
+                    <option value="">Selectionner...</option>
+                    {ABILITY_OPTIONS_DISPLAY.map((ability) => (
                       <option key={ability} value={ability} disabled={ability === savingThrow2}>
                         {ability}
                       </option>
@@ -278,8 +715,8 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
                     onChange={(e) => setSavingThrow2(e.target.value)}
                     className="input-dark w-full"
                   >
-                    <option value="">Sélectionner...</option>
-                    {ABILITY_OPTIONS.map((ability) => (
+                    <option value="">Selectionner...</option>
+                    {ABILITY_OPTIONS_DISPLAY.map((ability) => (
                       <option key={ability} value={ability} disabled={ability === savingThrow1}>
                         {ability}
                       </option>
@@ -401,22 +838,210 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
 
           <Card>
             <CardHeader>
+              <div className="flex items-center justify-between">
+                <h4 className="text-white font-semibold flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  Ressources de classe
+                </h4>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300">
+                  {resources.length}/{MAX_RESOURCES}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-400">
+                Ajoutez jusqu'a {MAX_RESOURCES} ressources de classe (points de magie, charges, etc.)
+              </p>
+
+              {resources.length === 0 && !addingResource && (
+                <div className="text-center text-gray-500 py-4 border border-dashed border-gray-700 rounded-lg">
+                  Aucune ressource definie
+                </div>
+              )}
+
+              {resources.map(resource => {
+                const Icon = getIconComponent(resource.icon);
+                const colorClass = COLOR_OPTIONS.find(c => c.value === resource.color)?.className || 'bg-purple-500';
+
+                if (editingResource?.id === resource.id) {
+                  return (
+                    <ResourceEditor
+                      key={resource.id}
+                      resource={resource}
+                      onSave={handleSaveResource}
+                      onCancel={() => setEditingResource(null)}
+                    />
+                  );
+                }
+
+                return (
+                  <div
+                    key={resource.id}
+                    className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${colorClass.replace('bg-', 'bg-opacity-20 text-')}`}>
+                        <Icon size={20} className={colorClass.replace('bg-', 'text-')} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-200">{resource.name}</span>
+                          <div className="flex items-center gap-1">
+                            {resource.shortRest && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" title="Se regenere au repos court">
+                                <Sun size={10} />
+                              </span>
+                            )}
+                            {resource.longRest && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30" title="Se regenere au repos long">
+                                <Moon size={10} />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Max:{' '}
+                          {typeof resource.maxValue === 'number'
+                            ? resource.maxValue
+                            : resource.maxValue === 'level'
+                            ? 'Niveau'
+                            : `Mod. ${resource.modifierAbility}`}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingResource(resource)}
+                        className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                        title="Modifier"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteResource(resource.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {addingResource && (
+                <ResourceEditor
+                  onSave={handleSaveResource}
+                  onCancel={() => setAddingResource(false)}
+                />
+              )}
+
+              {canAddResource && (
+                <button
+                  type="button"
+                  onClick={() => setAddingResource(true)}
+                  className="w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-gray-600 hover:text-gray-300 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} />
+                  Ajouter une ressource
+                </button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <h4 className="text-white font-semibold flex items-center gap-2">
-                <Info className="w-4 h-4 text-sky-400" />
-                Ressources et compétences
+                <BookOpen className="w-4 h-4 text-sky-400" />
+                Competences de classe
               </h4>
             </CardHeader>
-            <CardContent>
-              <div className="bg-sky-900/20 border border-sky-700/30 rounded-lg p-4">
-                <p className="text-sm text-sky-200">
-                  Les ressources de classe (points de ki, rages, etc.) et les compétences de classe
-                  par niveau seront configurables <strong>directement dans l'interface de jeu</strong> via
-                  le bouton de paramètres dans l'onglet Classe.
-                </p>
-                <p className="text-xs text-sky-300/70 mt-2">
-                  Cela vous permet d'ajuster votre classe au fur et à mesure de votre progression.
-                </p>
-              </div>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-400">
+                Ajoutez les competences de classe obtenues a differents niveaux.
+              </p>
+
+              {abilities.length === 0 && !addingAbility && (
+                <div className="text-center text-gray-500 py-4 border border-dashed border-gray-700 rounded-lg">
+                  Aucune competence definie
+                </div>
+              )}
+
+              {abilities
+                .sort((a, b) => a.level - b.level)
+                .map(ability => {
+                  if (editingAbility?.id === ability.id) {
+                    return (
+                      <AbilityEditor
+                        key={ability.id}
+                        ability={ability}
+                        onSave={handleSaveAbility}
+                        onCancel={() => setEditingAbility(null)}
+                      />
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={ability.id}
+                      className="p-3 bg-gray-800/30 rounded-lg border border-gray-700/50"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">
+                              Niv. {ability.level}
+                            </span>
+                            <span className="font-medium text-gray-200">{ability.name}</span>
+                          </div>
+                          {ability.description && (
+                            <p className="mt-1 text-sm text-gray-400 line-clamp-2">
+                              {ability.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1 ml-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingAbility(ability)}
+                            className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                            title="Modifier"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAbility(ability.id)}
+                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {addingAbility && (
+                <AbilityEditor
+                  onSave={handleSaveAbility}
+                  onCancel={() => setAddingAbility(false)}
+                />
+              )}
+
+              {!addingAbility && !editingAbility && (
+                <button
+                  type="button"
+                  onClick={() => setAddingAbility(true)}
+                  className="w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-gray-600 hover:text-gray-300 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} />
+                  Ajouter une competence
+                </button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -427,7 +1052,7 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
           </Button>
           <Button onClick={handleSave} className="min-w-[200px]">
             <Heart className="w-4 h-4 mr-2" />
-            Créer la classe
+            Creer la classe
           </Button>
         </div>
       </div>
