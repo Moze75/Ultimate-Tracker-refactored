@@ -23,6 +23,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // ✅ Parse les webhooks Mollie
 
 // ---------------------------------------------------------
 // 1. DÉFINITION DES CODES PROMOS (À MODIFIER SELON VOS BESOINS)
