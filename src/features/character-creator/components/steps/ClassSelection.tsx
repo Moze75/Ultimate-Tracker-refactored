@@ -2,25 +2,27 @@ import React, { useState, useMemo } from 'react';
 import { classes } from '../../data/classes';
 import Card, { CardContent, CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
-import { Sword, Heart, Shield, Zap, BookOpen, CheckSquare, Square, Package, Wrench, Star, Sparkles } from 'lucide-react';
-import { DndClass } from '../../types/character';
+import { Sword, Heart, Shield, Zap, BookOpen, CheckSquare, Square, Package, Wrench, Star, Sparkles, Settings } from 'lucide-react';
+import { DndClass, CustomClassData } from '../../types/character';
 import { normalizeSkill } from '../../data/skills';
 import { getClassImageUrl } from '../../utils/classImages';
 import CardDetailModal from '../ui/CardDetailModal';
+import CustomClassModal from '../CustomClassModal';
 
 interface ClassSelectionProps {
-  selectedClass: DndClass | '';
-  onClassSelect: (dndClass: DndClass) => void;
+  selectedClass: DndClass | string | '';
+  onClassSelect: (dndClass: DndClass | string) => void;
   onNext: () => void;
   onPrevious: () => void;
 
-  // Compétences sélectionnées
   selectedSkills?: string[];
   onSelectedSkillsChange?: (skills: string[]) => void;
 
-  // Nouvelle prop pour l'équipement sélectionné
-  selectedEquipmentOption?: string; // "A", "B", "C" ou ""
+  selectedEquipmentOption?: string;
   onSelectedEquipmentOptionChange?: (option: string) => void;
+
+  customClassData?: CustomClassData | null;
+  onCustomClassDataChange?: (classData: CustomClassData | null) => void;
 }
 
 const ClassSelection: React.FC<ClassSelectionProps> = ({
@@ -32,18 +34,61 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
   onSelectedSkillsChange = () => {},
   selectedEquipmentOption = '',
   onSelectedEquipmentOptionChange = () => {},
+  customClassData,
+  onCustomClassDataChange,
 }) => {
   const [modalCardIndex, setModalCardIndex] = useState<number | null>(null);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+
+  const customClassCard = {
+    name: 'Classe personnalisée',
+    description: 'Créez votre propre classe avec des capacités uniques',
+    hitDie: 8,
+    primaryAbility: [],
+    savingThrows: [],
+    isCustomPlaceholder: true,
+  };
+
+  const allClassesIncludingCustom = useMemo(() => {
+    const list: any[] = [...classes];
+    if (customClassData) {
+      list.push(customClassData);
+    }
+    list.push(customClassCard);
+    return list;
+  }, [customClassData]);
 
   const selectedClassData = useMemo(
-    () => classes.find((c) => c.name === selectedClass),
-    [selectedClass]
+    () => {
+      if (customClassData && selectedClass === customClassData.name) {
+        return customClassData;
+      }
+      return classes.find((c) => c.name === selectedClass);
+    },
+    [selectedClass, customClassData]
   );
 
   const handleCardClick = (index: number) => {
-    const cls = classes[index];
+    const cls = allClassesIncludingCustom[index];
+
+    if (cls.isCustomPlaceholder) {
+      setShowCustomModal(true);
+      return;
+    }
+
     onClassSelect(cls.name);
     setModalCardIndex(index);
+  };
+
+  const handleSaveCustomClass = (classData: CustomClassData) => {
+    if (onCustomClassDataChange) {
+      onCustomClassDataChange(classData);
+    }
+    onClassSelect(classData.name);
+    setShowCustomModal(false);
+    setTimeout(() => {
+      onNext();
+    }, 100);
   };
 
   const getClassIcon = (className: DndClass) => {
@@ -339,40 +384,67 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-        {classes.map((cls, index) => {
+        {allClassesIncludingCustom.map((cls, index) => {
           const isSelected = selectedClass === cls.name;
+          const isCustomCard = cls.isCustomPlaceholder;
+          const isCustomClass = cls.isCustom === true;
 
           return (
             <Card
-              key={cls.name}
-              selected={isSelected}
+              key={`${cls.name}-${index}`}
+              selected={isSelected && !isCustomCard}
               onClick={() => handleCardClick(index)}
-              className="h-full min-h-[200px]"
+              className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-amber-500/50 hover:border-amber-400/70' : ''}`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">{cls.name}</h3>
+                  <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-amber-300' : isCustomClass ? 'text-amber-200' : 'text-white'}`}>
+                    {cls.name}
+                  </h3>
                   <div className="flex items-center gap-2">
-                    {getClassIcon(cls.name)}
+                    {isCustomCard || isCustomClass ? (
+                      <Settings className="w-5 h-5 text-amber-400" />
+                    ) : (
+                      getClassIcon(cls.name)
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-3">{cls.description}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-400">
-                    <Heart className="w-4 h-4 mr-2 text-red-400" />
-                    <span>Dé de vie: d{cls.hitDie}</span>
+                {isCustomCard ? (
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Settings className="w-10 h-10 text-amber-400 mb-3" />
+                    <span className="text-amber-300 text-sm font-medium">Cliquez pour configurer</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-400">
-                    <Zap className="w-4 h-4 mr-2 text-yellow-400" />
-                    <span>Capacité principale: {cls.primaryAbility.join(', ')}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-400">
-                    <Shield className="w-4 h-4 mr-2 text-blue-400" />
-                    <span>Jets de sauvegarde: {cls.savingThrows.join(', ')}</span>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <p className="text-gray-300 text-sm mb-3">{cls.description}</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-400">
+                        <Heart className="w-4 h-4 mr-2 text-red-400" />
+                        <span>Dé de vie: d{cls.hitDie}</span>
+                      </div>
+                      {cls.primaryAbility && cls.primaryAbility.length > 0 && (
+                        <div className="flex items-center text-sm text-gray-400">
+                          <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+                          <span>Capacité principale: {cls.primaryAbility.join(', ')}</span>
+                        </div>
+                      )}
+                      {cls.savingThrows && cls.savingThrows.length > 0 && (
+                        <div className="flex items-center text-sm text-gray-400">
+                          <Shield className="w-4 h-4 mr-2 text-blue-400" />
+                          <span>Jets de sauvegarde: {cls.savingThrows.join(', ')}</span>
+                        </div>
+                      )}
+                      {isCustomClass && (
+                        <div className="flex items-center text-sm text-amber-400/80 mt-2">
+                          <Settings className="w-4 h-4 mr-2" />
+                          <span>Classe personnalisée</span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           );
@@ -400,13 +472,14 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
       <CardDetailModal
         isOpen={modalCardIndex !== null}
         onClose={() => setModalCardIndex(null)}
-        cards={classes}
+        cards={allClassesIncludingCustom.filter(c => !c.isCustomPlaceholder)}
         currentIndex={modalCardIndex ?? 0}
         onNavigate={(direction) => {
           if (modalCardIndex === null) return;
+          const filteredClasses = allClassesIncludingCustom.filter(c => !c.isCustomPlaceholder);
           const newIndex = direction === 'prev' ? modalCardIndex - 1 : modalCardIndex + 1;
-          if (newIndex >= 0 && newIndex < classes.length) {
-            const newClass = classes[newIndex];
+          if (newIndex >= 0 && newIndex < filteredClasses.length) {
+            const newClass = filteredClasses[newIndex];
             onClassSelect(newClass.name);
             setModalCardIndex(newIndex);
           }
@@ -419,6 +492,12 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         confirmLabel="Valider et continuer"
         confirmDisabled={!selectedClass}
         titleExtractor={(cls) => cls.name}
+      />
+
+      <CustomClassModal
+        open={showCustomModal}
+        onClose={() => setShowCustomModal(false)}
+        onSave={handleSaveCustomClass}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { DndRace } from './character';
+import { DndRace, CustomClassData } from './character';
 
 type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
 
@@ -19,8 +19,6 @@ interface ArmorMeta {
 interface ShieldMeta {
   bonus: number;
 }
-
-export interface CharacterExportPayload {
 
 export interface ItemMeta {
   type: MetaType;
@@ -125,5 +123,6 @@ export interface CharacterExportPayload {
   selectedCantrips?: SpellData[];      // Sorts mineurs (tours de magie)
   selectedLevel1Spells?: SpellData[];  // Sorts de niveau 1
 
-    customRaceData?: DndRace; // ✅ AJOUTER cette ligne à la fin
+  customRaceData?: DndRace;
+  customClassData?: CustomClassData;
 }

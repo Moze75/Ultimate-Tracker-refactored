@@ -11,7 +11,7 @@ import ProfileSelection from './steps/ProfileSelection';
 import AbilityScores from './steps/AbilityScores';
 import CharacterSummary from './steps/CharacterSummary';
 
-import { DndClass, DndRace } from '../types/character';
+import { DndClass, DndRace, CustomClassData } from '../types/character';
 import type { CharacterExportPayload } from '../types/CharacterExport'; 
 import { supabase } from '../../../lib/supabase';
 import { calculateArmorClass, calculateHitPoints, calculateModifier } from '../utils/dndCalculations';
@@ -141,8 +141,9 @@ export default function CharacterCreationWizard({ onFinish, onCancel, initialSna
   const [loadingEquipment, setLoadingEquipment] = useState(false);
   const [characterName, setCharacterName] = useState(initialSnapshot?.characterName ?? '');
   const [selectedRace, setSelectedRace] = useState('');
-const [customRaceData, setCustomRaceData] = useState<DndRace | null>(null); // ← NOUVEAU
-const [selectedClass, setSelectedClass] = useState<DndClass | ''>('');
+const [customRaceData, setCustomRaceData] = useState<DndRace | null>(null);
+const [selectedClass, setSelectedClass] = useState<DndClass | string>('');
+const [customClassData, setCustomClassData] = useState<CustomClassData | null>(null);
   const [selectedBackground, setSelectedBackground] = useState(initialSnapshot?.selectedBackground ?? '');
   const [backgroundEquipmentOption, setBackgroundEquipmentOption] = useState<'A' | 'B' | ''>(initialSnapshot?.backgroundEquipmentOption ?? '');
   const [selectedClassSkills, setSelectedClassSkills] = useState<string[]>(initialSnapshot?.selectedClassSkills ?? []);
@@ -371,7 +372,8 @@ const payload: CharacterExportPayload = {
   age: age.trim() || undefined,
   gender: gender.trim() || undefined,
   characterHistory: characterHistory.trim() || undefined,
-  customRaceData: customRaceData || undefined, // ✅ AJOUTER CETTE LIGNE
+  customRaceData: customRaceData || undefined,
+  customClassData: customClassData || undefined,
 };
 
      // ✅ Nettoyer le snapshot et marquer le contexte "game"
@@ -439,7 +441,8 @@ creator_meta: {
   weapon_proficiencies: classData?.weaponProficiencies || [],
   armor_proficiencies: classData?.armorProficiencies || [],
   tool_proficiencies: classData?.toolProficiencies || [],
-  custom_race: customRaceData || null, // ✅ AJOUTER CETTE LIGNE
+  custom_race: customRaceData || null,
+  custom_class: customClassData || null,
 },
         },
         abilities: null,
@@ -600,6 +603,8 @@ const renderStep = () => {
             onSelectedSkillsChange={setSelectedClassSkills}
             selectedEquipmentOption={selectedEquipmentOption}
             onSelectedEquipmentOptionChange={setSelectedEquipmentOption}
+            customClassData={customClassData}
+            onCustomClassDataChange={setCustomClassData}
             onNext={nextStep}
             onPrevious={previousStep}
           />
