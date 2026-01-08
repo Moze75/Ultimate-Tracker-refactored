@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Check, Search, BookOpen, Sparkles } from 'lucide-react';
 import Button from '../ui/Button';
-import { DndClass } from '../../types/character';
+import { DndClass, CustomClassData } from '../../types/character';
 import { getSpellKnowledgeInfo } from '../../../../utils/spellSlots2024';
 import { supabase } from '../../../../lib/supabase';
 import { MarkdownLite } from '../../../../lib/markdownLite';
@@ -25,13 +25,14 @@ interface Spell {
 }
 
 interface SpellSelectionProps {
-  selectedClass: DndClass | '';
+  selectedClass: DndClass | string | '';
   selectedCantrips: Spell[];
   selectedLevel1Spells: Spell[];
   onCantripsChange: (spells: Spell[]) => void;
   onLevel1SpellsChange: (spells: Spell[]) => void;
   onNext: () => void;
   onPrevious: () => void;
+  customClassData?: CustomClassData | null;
 }
 
 const getComponentsText = (components: Spell['components']) => {
@@ -91,6 +92,7 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
   onLevel1SpellsChange,
   onNext,
   onPrevious,
+  customClassData,
 }) => {
   const [allSpells, setAllSpells] = useState<Spell[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,10 +100,24 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
 
+  const isCustomClass = customClassData?.isCustom && customClassData?.name === selectedClass;
+  const customSpellcasting = isCustomClass ? customClassData.spellcasting : null;
+
   const spellInfo = useMemo(() => {
     if (!selectedClass) return { kind: 'none' as const };
+    if (customSpellcasting?.enabled) {
+      return {
+        kind: 'prepared' as const,
+        cantrips: customSpellcasting.cantrips,
+        prepared: customSpellcasting.spellsKnown,
+        label: customClassData?.name || 'Classe personnalisée',
+        note: 'Sorts connus au niveau 1',
+      };
+    }
     return getSpellKnowledgeInfo(selectedClass, 1);
-  }, [selectedClass]);
+  }, [selectedClass, customSpellcasting, customClassData?.name]);
+
+  const spellListClass = customSpellcasting?.enabled ? customSpellcasting.spellList : selectedClass;
 
   const cantripsNeeded = spellInfo.kind === 'prepared' ? (spellInfo.cantrips || 0) : 0;
   const level1SpellsNeeded = spellInfo.kind === 'prepared' ? spellInfo.prepared : 0;
@@ -309,11 +325,11 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
   };
 
   const filteredCantrips = useMemo(() => {
-    if (!selectedClass) return [];
+    if (!spellListClass) return [];
 
     let filtered = allSpells.filter(spell =>
       spell.level === 0 &&
-      spell.classes.some(spellClass => spellClass.toLowerCase() === selectedClass.toLowerCase())
+      spell.classes.some(spellClass => spellClass.toLowerCase() === spellListClass.toLowerCase())
     );
 
     if (searchTerm) {
@@ -329,14 +345,14 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
     }
 
     return filtered;
-  }, [allSpells, selectedClass, searchTerm, selectedSchool]);
+  }, [allSpells, spellListClass, searchTerm, selectedSchool]);
 
   const filteredLevel1Spells = useMemo(() => {
-    if (!selectedClass) return [];
+    if (!spellListClass) return [];
 
     let filtered = allSpells.filter(spell =>
       spell.level === 1 &&
-      spell.classes.some(spellClass => spellClass.toLowerCase() === selectedClass.toLowerCase())
+      spell.classes.some(spellClass => spellClass.toLowerCase() === spellListClass.toLowerCase())
     );
 
     if (searchTerm) {
@@ -352,7 +368,7 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
     }
 
     return filtered;
-  }, [allSpells, selectedClass, searchTerm, selectedSchool]);
+  }, [allSpells, spellListClass, searchTerm, selectedSchool]);
 
   const toggleSpellSelection = (spell: Spell, isCantrip: boolean) => {
     if (isCantrip) {
@@ -376,16 +392,33 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
     selectedCantrips.length === cantripsNeeded &&
     selectedLevel1Spells.length === level1SpellsNeeded;
 
+  const showNoSpellsMessage = isCustomClass && !customSpellcasting?.enabled;
+  const displayClassName = isCustomClass ? customClassData?.name : selectedClass;
+
   return (
     <div className="wizard-step space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Choisissez vos sorts</h2>
         <p className="text-gray-400">
-          Sélectionnez vos sorts de départ pour votre {selectedClass}
+          {showNoSpellsMessage
+            ? `Votre classe ${displayClassName} ne possede pas de magie`
+            : `Selectionnez vos sorts de depart pour votre ${displayClassName}`
+          }
         </p>
       </div>
 
-      {loading ? (
+      {showNoSpellsMessage ? (
+        <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700/50 text-center">
+          <Sparkles className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+          <p className="text-gray-400 mb-4">
+            Cette classe personnalisee n'a pas ete configuree pour lancer des sorts.
+            Vous pouvez continuer sans selectionner de sorts.
+          </p>
+          <p className="text-xs text-gray-500">
+            Vous pouvez modifier cela dans les parametres de la classe personnalisee.
+          </p>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
             <img 

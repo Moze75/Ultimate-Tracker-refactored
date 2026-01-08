@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Card, { CardContent, CardHeader } from './ui/Card';
-import { X, Sword, Heart, Shield, Info } from 'lucide-react';
-import type { CustomClassData } from '../types/character';
+import { X, Sword, Heart, Shield, Info, Sparkles } from 'lucide-react';
+import type { CustomClassData, CustomClassSpellcasting } from '../types/character';
 
 interface CustomClassModalProps {
   open: boolean;
@@ -28,6 +28,23 @@ const HIT_DIE_OPTIONS: Array<{ value: 6 | 8 | 10 | 12; label: string }> = [
   { value: 12, label: 'd12 (Barbare)' },
 ];
 
+const SPELL_LIST_OPTIONS = [
+  { value: 'Magicien', label: 'Liste du Magicien' },
+  { value: 'Clerc', label: 'Liste du Clerc' },
+  { value: 'Druide', label: 'Liste du Druide' },
+  { value: 'Barde', label: 'Liste du Barde' },
+  { value: 'Ensorceleur', label: 'Liste de l\'Ensorceleur' },
+  { value: 'Occultiste', label: 'Liste de l\'Occultiste' },
+  { value: 'Paladin', label: 'Liste du Paladin' },
+  { value: 'Rôdeur', label: 'Liste du Rôdeur' },
+];
+
+const SPELLCASTING_ABILITY_OPTIONS: Array<{ value: CustomClassSpellcasting['spellcastingAbility']; label: string }> = [
+  { value: 'Intelligence', label: 'Intelligence (Magicien)' },
+  { value: 'Sagesse', label: 'Sagesse (Clerc, Druide, Rôdeur)' },
+  { value: 'Charisme', label: 'Charisme (Barde, Ensorceleur, Paladin, Occultiste)' },
+];
+
 export default function CustomClassModal({ open, onClose, onSave }: CustomClassModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -35,6 +52,12 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
   const [primaryAbility, setPrimaryAbility] = useState<string[]>([]);
   const [savingThrow1, setSavingThrow1] = useState('');
   const [savingThrow2, setSavingThrow2] = useState('');
+
+  const [spellcastingEnabled, setSpellcastingEnabled] = useState(false);
+  const [cantripsCount, setCantripsCount] = useState(2);
+  const [spellsKnownCount, setSpellsKnownCount] = useState(4);
+  const [spellcastingAbility, setSpellcastingAbility] = useState<CustomClassSpellcasting['spellcastingAbility']>('Intelligence');
+  const [spellList, setSpellList] = useState('Magicien');
 
   if (!open) return null;
 
@@ -76,6 +99,13 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
       isCustom: true,
       resources: [],
       abilities: [],
+      spellcasting: spellcastingEnabled ? {
+        enabled: true,
+        cantrips: cantripsCount,
+        spellsKnown: spellsKnownCount,
+        spellcastingAbility,
+        spellList,
+      } : undefined,
     };
 
     onSave(customClass);
@@ -90,6 +120,11 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
     setPrimaryAbility([]);
     setSavingThrow1('');
     setSavingThrow2('');
+    setSpellcastingEnabled(false);
+    setCantripsCount(2);
+    setSpellsKnownCount(4);
+    setSpellcastingAbility('Intelligence');
+    setSpellList('Magicien');
   };
 
   const handleCancel = () => {
@@ -252,6 +287,115 @@ export default function CustomClassModal({ open, onClose, onSave }: CustomClassM
                   </select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h4 className="text-white font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-400" />
+                Magie
+              </h4>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-gray-200 font-medium">Cette classe peut lancer des sorts</span>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Activez pour configurer les options de magie
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSpellcastingEnabled(!spellcastingEnabled)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    spellcastingEnabled ? 'bg-blue-600' : 'bg-gray-700'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                      spellcastingEnabled ? 'translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {spellcastingEnabled && (
+                <div className="space-y-4 pt-3 border-t border-gray-700/50">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Liste de sorts a utiliser
+                    </label>
+                    <select
+                      value={spellList}
+                      onChange={(e) => setSpellList(e.target.value)}
+                      className="input-dark w-full"
+                    >
+                      {SPELL_LIST_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Definit quels sorts seront disponibles pour cette classe
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Caracteristique d'incantation
+                    </label>
+                    <select
+                      value={spellcastingAbility}
+                      onChange={(e) => setSpellcastingAbility(e.target.value as CustomClassSpellcasting['spellcastingAbility'])}
+                      className="input-dark w-full"
+                    >
+                      {SPELLCASTING_ABILITY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Tours de magie (niveau 1)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={6}
+                        value={cantripsCount}
+                        onChange={(e) => setCantripsCount(Math.max(0, Math.min(6, parseInt(e.target.value) || 0)))}
+                        className="input-dark w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Sorts connus (niveau 1)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={spellsKnownCount}
+                        onChange={(e) => setSpellsKnownCount(Math.max(0, Math.min(10, parseInt(e.target.value) || 0)))}
+                        className="input-dark w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
+                    <p className="text-xs text-blue-200">
+                      Au niveau 1, votre personnage connaitra <strong>{cantripsCount}</strong> tour(s) de magie
+                      et <strong>{spellsKnownCount}</strong> sort(s) de niveau 1 de la liste du <strong>{spellList}</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

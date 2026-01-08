@@ -102,6 +102,14 @@ export interface CustomClassAbility {
   level: number;
 }
 
+export interface CustomClassSpellcasting {
+  enabled: boolean;
+  cantrips: number;
+  spellsKnown: number;
+  spellcastingAbility: 'Intelligence' | 'Sagesse' | 'Charisme';
+  spellList: string;
+}
+
 export interface CustomClassData {
   name: string;
   description: string;
@@ -111,4 +119,5 @@ export interface CustomClassData {
   isCustom: true;
   resources: CustomClassResource[];
   abilities: CustomClassAbility[];
+  spellcasting?: CustomClassSpellcasting;
 }

@@ -620,6 +620,7 @@ const renderStep = () => {
             onLevel1SpellsChange={setSelectedLevel1Spells}
             onNext={nextStep}
             onPrevious={previousStep}
+            customClassData={customClassData}
           />
         );
 

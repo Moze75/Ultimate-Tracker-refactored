@@ -157,6 +157,15 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
     const chosenCount = selectedClass === cls.name ? (selectedSkills?.length || 0) : 0;
     const availableSkillsForClass = getAvailableSkillsForClass(cls);
     const isSelected = selectedClass === cls.name;
+    const isCustomClass = cls.isCustom === true;
+
+    const weaponProfs = cls.weaponProficiencies || [];
+    const armorProfs = cls.armorProficiencies || [];
+    const toolProfs = cls.toolProficiencies || [];
+    const equipOptions = cls.equipmentOptions || [];
+    const classFeatures = cls.features || [];
+    const customResources = cls.resources || [];
+    const customAbilities = cls.abilities || [];
 
     return (
       <div className="space-y-5">
@@ -182,60 +191,62 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           <div className="flex flex-col items-center p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
             <Zap className="w-5 h-5 mb-1 text-yellow-400" />
             <span className="text-xs text-gray-400 text-center">Capacite</span>
-            <span className="text-sm font-medium text-white text-center">{cls.primaryAbility.join(', ')}</span>
+            <span className="text-sm font-medium text-white text-center">{(cls.primaryAbility || []).join(', ') || '-'}</span>
           </div>
           <div className="flex flex-col items-center p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
             <Shield className="w-5 h-5 mb-1 text-blue-400" />
             <span className="text-xs text-gray-400">Sauvegardes</span>
-            <span className="text-sm font-medium text-white text-center">{cls.savingThrows.join(', ')}</span>
+            <span className="text-sm font-medium text-white text-center">{(cls.savingThrows || []).join(', ') || '-'}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
-            <h4 className="font-medium text-white mb-2 flex items-center text-sm">
-              <Sword className="w-4 h-4 mr-2 text-red-400" />
-              Armes
-            </h4>
-            <div className="text-sm text-gray-300">
-              {cls.weaponProficiencies.length > 0 ? (
-                <ul className="space-y-1">
-                  {cls.weaponProficiencies.map((weapon: string, idx: number) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="text-gray-500 mr-2">•</span>
-                      <span>{weapon}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-gray-500">Aucune</span>
-              )}
+        {!isCustomClass && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+              <h4 className="font-medium text-white mb-2 flex items-center text-sm">
+                <Sword className="w-4 h-4 mr-2 text-red-400" />
+                Armes
+              </h4>
+              <div className="text-sm text-gray-300">
+                {weaponProfs.length > 0 ? (
+                  <ul className="space-y-1">
+                    {weaponProfs.map((weapon: string, idx: number) => (
+                      <li key={idx} className="flex items-start">
+                        <span className="text-gray-500 mr-2">•</span>
+                        <span>{weapon}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-500">Aucune</span>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+              <h4 className="font-medium text-white mb-2 flex items-center text-sm">
+                <Shield className="w-4 h-4 mr-2 text-blue-400" />
+                Armures
+              </h4>
+              <div className="text-sm text-gray-300">
+                {armorProfs.length > 0 ? (
+                  <ul className="space-y-1">
+                    {armorProfs.map((armor: string, idx: number) => (
+                      <li key={idx} className="flex items-start">
+                        <span className="text-gray-500 mr-2">•</span>
+                        <span>{armor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-500">Aucune</span>
+                )}
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
-            <h4 className="font-medium text-white mb-2 flex items-center text-sm">
-              <Shield className="w-4 h-4 mr-2 text-blue-400" />
-              Armures
-            </h4>
-            <div className="text-sm text-gray-300">
-              {cls.armorProficiencies.length > 0 ? (
-                <ul className="space-y-1">
-                  {cls.armorProficiencies.map((armor: string, idx: number) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="text-gray-500 mr-2">•</span>
-                      <span>{armor}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-gray-500">Aucune</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {cls.toolProficiencies && cls.toolProficiencies.length > 0 && (
+        {toolProfs.length > 0 && (
           <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
             <h4 className="font-medium text-white mb-2 flex items-center text-sm">
               <Wrench className="w-4 h-4 mr-2 text-yellow-400" />
@@ -243,7 +254,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
             </h4>
             <div className="text-sm text-gray-300">
               <ul className="space-y-1">
-                {cls.toolProficiencies.map((tool: string, idx: number) => (
+                {toolProfs.map((tool: string, idx: number) => (
                   <li key={idx} className="flex items-start">
                     <span className="text-gray-500 mr-2">•</span>
                     <span>{tool}</span>
@@ -302,71 +313,113 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           </div>
         )}
 
-        <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium text-white flex items-center text-sm">
-              <Package className="w-4 h-4 mr-2 text-yellow-400" />
-              Equipement de depart
-            </h4>
-            {isSelected && selectedEquipmentOption && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-300">
-                Option {selectedEquipmentOption}
-              </span>
-            )}
-          </div>
-          <div className="space-y-2">
-            {cls.equipmentOptions.map((option: any, idx: number) => {
-              const canToggle = isSelected;
-              const isChecked = isSelected && selectedEquipmentOption === option.label;
+        {equipOptions.length > 0 && (
+          <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-white flex items-center text-sm">
+                <Package className="w-4 h-4 mr-2 text-yellow-400" />
+                Equipement de depart
+              </h4>
+              {isSelected && selectedEquipmentOption && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-300">
+                  Option {selectedEquipmentOption}
+                </span>
+              )}
+            </div>
+            <div className="space-y-2">
+              {equipOptions.map((option: any, idx: number) => {
+                const canToggle = isSelected;
+                const isChecked = isSelected && selectedEquipmentOption === option.label;
 
-              return (
-                <button
-                  type="button"
-                  key={`${option.label}-${idx}`}
-                  className={`w-full flex items-start justify-start gap-3 px-3 py-2.5 rounded-md border text-left transition-colors ${
-                    isChecked
-                      ? 'border-yellow-500/60 bg-yellow-900/20 text-gray-100'
-                      : 'border-gray-600/50 bg-gray-900/30 text-gray-300 hover:bg-gray-800/50'
-                  } ${!canToggle ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (canToggle) toggleEquipment(option.label);
-                  }}
-                  aria-disabled={!canToggle}
-                >
-                  {isChecked ? (
-                    <CheckSquare className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <Square className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-                  )}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm mb-1">Option {option.label}</div>
-                    <ul className="text-xs text-gray-400 space-y-0.5">
-                      {option.items.map((item: string, itemIdx: number) => (
-                        <li key={itemIdx} className="flex items-start">
-                          <span className="text-gray-500 mr-1.5">•</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    type="button"
+                    key={`${option.label}-${idx}`}
+                    className={`w-full flex items-start justify-start gap-3 px-3 py-2.5 rounded-md border text-left transition-colors ${
+                      isChecked
+                        ? 'border-yellow-500/60 bg-yellow-900/20 text-gray-100'
+                        : 'border-gray-600/50 bg-gray-900/30 text-gray-300 hover:bg-gray-800/50'
+                    } ${!canToggle ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (canToggle) toggleEquipment(option.label);
+                    }}
+                    aria-disabled={!canToggle}
+                  >
+                    {isChecked ? (
+                      <CheckSquare className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <Square className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm mb-1">Option {option.label}</div>
+                      <ul className="text-xs text-gray-400 space-y-0.5">
+                        {option.items.map((item: string, itemIdx: number) => (
+                          <li key={itemIdx} className="flex items-start">
+                            <span className="text-gray-500 mr-1.5">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        {Array.isArray(cls.features) && cls.features.length > 0 && (
+        {classFeatures.length > 0 && (
           <div className="p-3 rounded-lg bg-gray-800/40 border border-gray-700/40">
             <h4 className="font-medium text-white mb-2 flex items-center text-sm">
               <Sparkles className="w-4 h-4 mr-2 text-purple-400" />
               Capacites de classe (niveau 1)
             </h4>
             <ul className="text-gray-300 text-sm space-y-1.5">
-              {cls.features.map((feat: string, index: number) => (
+              {classFeatures.map((feat: string, index: number) => (
                 <li key={index} className="flex items-start">
                   <span className="text-gray-500 mr-2">•</span>
                   <span>{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {isCustomClass && customResources.length > 0 && (
+          <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-700/40">
+            <h4 className="font-medium text-amber-200 mb-2 flex items-center text-sm">
+              <Zap className="w-4 h-4 mr-2 text-amber-400" />
+              Ressources personnalisees
+            </h4>
+            <ul className="text-gray-300 text-sm space-y-1.5">
+              {customResources.map((res: any) => (
+                <li key={res.id} className="flex items-start">
+                  <span className="text-amber-500 mr-2">•</span>
+                  <span>{res.name} (max: {res.maxValue === 'level' ? 'Niveau' : res.maxValue === 'modifier' ? `Mod. ${res.modifierAbility}` : res.maxValue})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {isCustomClass && customAbilities.length > 0 && (
+          <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-700/40">
+            <h4 className="font-medium text-amber-200 mb-2 flex items-center text-sm">
+              <Sparkles className="w-4 h-4 mr-2 text-amber-400" />
+              Capacites personnalisees
+            </h4>
+            <ul className="text-gray-300 text-sm space-y-2">
+              {customAbilities.map((ability: any) => (
+                <li key={ability.id} className="flex flex-col">
+                  <div className="flex items-center">
+                    <span className="text-amber-500 mr-2">•</span>
+                    <span className="font-medium">{ability.name}</span>
+                    <span className="text-xs text-gray-500 ml-2">(Niv. {ability.level})</span>
+                  </div>
+                  {ability.description && (
+                    <p className="text-xs text-gray-400 ml-4 mt-1">{ability.description}</p>
+                  )}
                 </li>
               ))}
             </ul>
