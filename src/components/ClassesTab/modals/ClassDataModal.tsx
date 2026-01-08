@@ -1,28 +1,50 @@
-import { 
-  norm, 
-  uniq, 
-  stripDiacritics, 
-  stripParentheses, 
-  sentenceCase, 
-  CLASS_ALIASES, 
-  SUBCLASS_ALIASES, 
-  AbilitySection 
+import {
+  norm,
+  uniq,
+  stripDiacritics,
+  stripParentheses,
+  sentenceCase,
+  CLASS_ALIASES,
+  SUBCLASS_ALIASES,
+  AbilitySection
 } from './ClassUtilsModal';
-// ✅ CORRECT - remonter 3 niveaux depuis modals/ vers src/
 import { loadAbilitySections } from '../../../services/classesContent';
+import type { Player, CustomClassData } from '../../../types/dnd';
 
 const DEBUG = typeof window !== 'undefined' && (window as any).UT_DEBUG === true;
+
+function convertCustomAbilitiesToSections(customClass: CustomClassData, level: number): AbilitySection[] {
+  if (!customClass?.abilities?.length) return [];
+
+  return customClass.abilities
+    .filter(ability => ability.level <= level)
+    .map(ability => ({
+      title: ability.name,
+      level: ability.level,
+      content: ability.description || '',
+      origin: 'class' as const,
+      features: [{
+        name: ability.name,
+        description: ability.description || '',
+      }],
+    }));
+}
 
 /* ===========================================================
    Chargement "smart" avec alias
    =========================================================== */
 
-export async function loadSectionsSmart(params: { 
-  className: string; 
-  subclassName: string | null; 
-  level: number 
+export async function loadSectionsSmart(params: {
+  className: string;
+  subclassName: string | null;
+  level: number;
+  player?: Player | null;
 }): Promise<AbilitySection[]> {
-  const { className, subclassName, level } = params;
+  const { className, subclassName, level, player } = params;
+
+  if (player?.custom_class_data?.isCustom) {
+    return convertCustomAbilitiesToSections(player.custom_class_data, level);
+  }
   const clsNorm = norm(className);
   const subNorm = subclassName ? norm(subclassName) : '';
 

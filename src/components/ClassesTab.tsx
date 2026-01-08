@@ -4,6 +4,7 @@ import {
   Sparkles,
   ChevronDown,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
@@ -26,6 +27,7 @@ import {
 } from './ClassesTab/modals/ClassResourcesModal';
 import { loadSectionsSmart } from './ClassesTab/modals/ClassDataModal';
 import { loadFeatureChecks, upsertFeatureCheck } from '../services/featureChecks';
+import { CustomClassSettingsModal } from './CustomClassSettingsModal';
 
 type Props = {
   player?: (PlayerLike & Partial<Player>) | null;
@@ -58,6 +60,9 @@ function ClassesTab({
   const triggerScreenRippleFromEvent = createScreenRippleHandler(setScreenRipple);
 
   const [classHeaderOpen, setClassHeaderOpen] = useState(true);
+  const [showCustomClassSettings, setShowCustomClassSettings] = useState(false);
+
+  const isCustomClass = !!(player?.custom_class_data?.isCustom);
 
   const rawClass = (player?.class ?? playerClass ?? className ?? '').trim();
   const rawSubclass = (getSubclassFromPlayerLike(player) ?? subclassName) ?? null;
@@ -102,6 +107,7 @@ function ClassesTab({
           className: rawClass,
           subclassName: rawSubclass,
           level: finalLevel,
+          player: player as Player | null,
         });
         if (!mounted) return;
         setSections(res);
@@ -115,7 +121,7 @@ function ClassesTab({
     })();
 
     return () => { mounted = false; };
-  }, [preloadedSections, rawClass, rawSubclass, finalLevel]);
+  }, [preloadedSections, rawClass, rawSubclass, finalLevel, player?.custom_class_data]);
 
   /* Load feature checks */
   useEffect(() => {
@@ -353,6 +359,18 @@ function ClassesTab({
                 Niveau {finalLevel}
               </span>
             )}
+            {isCustomClass && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCustomClassSettings(true);
+                }}
+                className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors"
+                title="Parametres de la classe"
+              >
+                <Settings size={18} />
+              </button>
+            )}
             {classHeaderOpen ? (
               <ChevronDown size={20} className="text-gray-400" />
             ) : (
@@ -454,6 +472,17 @@ function ClassesTab({
           x={screenRipple.x}
           y={screenRipple.y}
           onDone={() => setScreenRipple(null)}
+        />
+      )}
+
+      {isCustomClass && player && (
+        <CustomClassSettingsModal
+          open={showCustomClassSettings}
+          onClose={() => setShowCustomClassSettings(false)}
+          player={player as Player}
+          onUpdate={(updatedPlayer) => {
+            if (onUpdate) onUpdate(updatedPlayer);
+          }}
         />
       )}
     </div>

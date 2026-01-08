@@ -16,7 +16,8 @@ import {
   Plus,
   Minus,
 } from 'lucide-react';
-import type { ClassResources, Player } from '../../../types/dnd';
+import type { ClassResources, Player, CustomClassResource } from '../../../types/dnd';
+import { getIconComponent } from '../../CustomClassSettingsModal';
 import { canonicalClass, getChaModFromPlayerLike } from './ClassUtilsModal';
 import { useDiceSettings } from '../../../hooks/useDiceSettings';
 
@@ -253,6 +254,54 @@ export function mirrorMonkKeys(resource: keyof ClassResources, value: any, into:
   } else if (r === 'used_ki_points') {
     into.used_credo_points = value;
   }
+}
+
+function getModifierFromPlayer(player: any, abilityName: string): number {
+  const abilities = player?.abilities;
+  if (!abilities) return 0;
+
+  const abilityMap: Record<string, string[]> = {
+    'Force': ['Force', 'force', 'strength', 'STR', 'str'],
+    'Dexterite': ['Dextérité', 'Dexterite', 'dexterite', 'dexterity', 'DEX', 'dex'],
+    'Constitution': ['Constitution', 'constitution', 'CON', 'con'],
+    'Intelligence': ['Intelligence', 'intelligence', 'INT', 'int'],
+    'Sagesse': ['Sagesse', 'sagesse', 'wisdom', 'WIS', 'wis'],
+    'Charisme': ['Charisme', 'charisme', 'charisma', 'CHA', 'cha'],
+  };
+
+  const keys = abilityMap[abilityName] || [abilityName];
+
+  if (Array.isArray(abilities)) {
+    const found = abilities.find((a: any) => keys.some(k => a?.name === k));
+    if (found) {
+      if (typeof found.modifier === 'number') return found.modifier;
+      if (typeof found.score === 'number') return Math.floor((found.score - 10) / 2);
+    }
+  } else if (typeof abilities === 'object') {
+    for (const k of keys) {
+      const val = abilities[k];
+      if (typeof val === 'number') return Math.floor((val - 10) / 2);
+      if (val && typeof val === 'object') {
+        if (typeof val.modifier === 'number') return val.modifier;
+        if (typeof val.score === 'number') return Math.floor((val.score - 10) / 2);
+      }
+    }
+  }
+
+  return 0;
+}
+
+function getCustomResourceMax(resource: CustomClassResource, level: number, player: any): number {
+  if (typeof resource.maxValue === 'number') {
+    return resource.maxValue;
+  }
+  if (resource.maxValue === 'level') {
+    return level;
+  }
+  if (resource.maxValue === 'modifier' && resource.modifierAbility) {
+    return Math.max(1, getModifierFromPlayer(player, resource.modifierAbility));
+  }
+  return 1;
 }
 
 export function ClassResourcesCard({
@@ -728,6 +777,45 @@ case 'Magicien':
       break;
   }
 
+  if (player?.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
+    const customResources = player.custom_class_data.resources;
+    const customState = resources?.custom_resources || {};
+
+    for (const res of customResources) {
+      const Icon = getIconComponent(res.icon);
+      const total = getCustomResourceMax(res, level || 1, player);
+      const used = customState[res.id]?.used || 0;
+
+      items.push(
+        <ResourceBlock
+          key={`custom-${res.id}`}
+          icon={<Icon size={20} />}
+          label={res.name}
+          total={total}
+          used={used}
+          onUse={() => {
+            const newCustomState = {
+              ...customState,
+              [res.id]: { current: total, used: Math.min(used + 1, total) },
+            };
+            onUpdateResource('custom_resources' as any, newCustomState);
+          }}
+          onRestore={() => {
+            const newCustomState = {
+              ...customState,
+              [res.id]: { current: total, used: Math.max(0, used - 1) },
+            };
+            onUpdateResource('custom_resources' as any, newCustomState);
+          }}
+          onUpdateTotal={() => {}}
+          color={res.color}
+          hideEdit
+          onGlobalPulse={onPulseScreen}
+        />
+      );
+    }
+  }
+
   if (!items.length) return null;
 
   return (
@@ -798,7 +886,19 @@ export function buildDefaultsForClass(cls: string, level: number, player?: Playe
       return { favored_foe: Math.max(1, Math.floor((level + 3) / 4)), used_favored_foe: 0 };
     case 'Roublard':
       return { sneak_attack: `${Math.ceil(level / 2)}d6` };
-    default:
+    default: {
+      if (player?.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
+        const customResources = player.custom_class_data.resources;
+        const customState: Record<string, { current: number; used: number }> = {};
+
+        for (const res of customResources) {
+          const maxVal = getCustomResourceMax(res, level, player);
+          customState[res.id] = { current: maxVal, used: 0 };
+        }
+
+        return { custom_resources: customState };
+      }
       return {};
+    }
   }
 }
