@@ -58,13 +58,49 @@ export interface SpellSlots {
   used_pact_slots?: number;
 }
 
+export interface CustomClassResource {
+  id: string;
+  name: string;
+  maxValue: number | 'level' | 'modifier';
+  modifierAbility?: 'Force' | 'Dextérité' | 'Constitution' | 'Intelligence' | 'Sagesse' | 'Charisme';
+  color: 'red' | 'purple' | 'yellow' | 'green' | 'blue';
+  icon: string;
+  shortRest?: boolean;
+  longRest?: boolean;
+}
+
+export interface CustomClassAbility {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+}
+
+export interface CustomClassData {
+  name: string;
+  description: string;
+  hitDie: 6 | 8 | 10 | 12;
+  primaryAbility: string[];
+  savingThrows: string[];
+  isCustom: true;
+  resources: CustomClassResource[];
+  abilities: CustomClassAbility[];
+}
+
+export interface CustomResourceState {
+  [resourceId: string]: {
+    current: number;
+    used: number;
+  };
+}
+
 export interface ClassResources {
   // Barbare
   rage?: number;
   used_rage?: number;
 
   // Barde
-  bardic_inspiration?: number; // total (calculé dynamiquement côté app)
+  bardic_inspiration?: number;
   used_bardic_inspiration?: number;
 
   // Clerc & Paladin (conduits divins)
@@ -79,7 +115,7 @@ export interface ClassResources {
   sorcery_points?: number;
   used_sorcery_points?: number;
 
-    // Ensorceleur — Sorcellerie innée (2 charges)
+  // Ensorceleur — Sorcellerie innée (2 charges)
   innate_sorcery?: number;
   used_innate_sorcery?: number;
 
@@ -99,7 +135,7 @@ export interface ClassResources {
   // Métabolisme surnaturel (Moine N2+)
   supernatural_metabolism?: number;
   used_supernatural_metabolism?: number;
-  
+
   // Paladin
   lay_on_hands?: number;
   used_lay_on_hands?: number;
@@ -113,6 +149,9 @@ export interface ClassResources {
 
   // Occultiste (Warlock)
   pact_magic?: boolean;
+
+  // Classes personnalisées
+  custom_resources?: CustomResourceState;
 }
 
 export interface PlayerStats {
@@ -236,6 +275,8 @@ export interface Player {
   concentration_spell?: string;
 
   active_conditions?: string[];
+
+  custom_class_data?: CustomClassData | null;
 }
 
 export interface Condition {

@@ -83,3 +83,32 @@ export interface CharacterCreationStep {
   description: string;
   component: React.ComponentType<any>;
 }
+
+export interface CustomClassResource {
+  id: string;
+  name: string;
+  maxValue: number | 'level' | 'modifier';
+  modifierAbility?: 'Force' | 'Dextérité' | 'Constitution' | 'Intelligence' | 'Sagesse' | 'Charisme';
+  color: 'red' | 'purple' | 'yellow' | 'green' | 'blue';
+  icon: string;
+  shortRest?: boolean;
+  longRest?: boolean;
+}
+
+export interface CustomClassAbility {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+}
+
+export interface CustomClassData {
+  name: string;
+  description: string;
+  hitDie: 6 | 8 | 10 | 12;
+  primaryAbility: string[];
+  savingThrows: string[];
+  isCustom: true;
+  resources: CustomClassResource[];
+  abilities: CustomClassAbility[];
+}
