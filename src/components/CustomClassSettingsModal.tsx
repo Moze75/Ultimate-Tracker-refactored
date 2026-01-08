@@ -280,25 +280,38 @@ function ResourceEditor({
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={shortRest}
-            onChange={e => setShortRest(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-300">Repos court</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={longRest}
-            onChange={e => setLongRest(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-300">Repos long</span>
-        </label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300 mb-1">Regeneration</label>
+        <div className="flex gap-3">
+          <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors ${
+            shortRest
+              ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400'
+          }`}>
+            <input
+              type="checkbox"
+              checked={shortRest}
+              onChange={e => setShortRest(e.target.checked)}
+              className="sr-only"
+            />
+            <Sun size={16} />
+            <span className="text-sm">Repos court</span>
+          </label>
+          <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors ${
+            longRest
+              ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400'
+          }`}>
+            <input
+              type="checkbox"
+              checked={longRest}
+              onChange={e => setLongRest(e.target.checked)}
+              className="sr-only"
+            />
+            <Moon size={16} />
+            <span className="text-sm">Repos long</span>
+          </label>
+        </div>
       </div>
 
       <div className="flex gap-2 pt-2">
@@ -752,7 +765,21 @@ export function CustomClassSettingsModal({
                       <Icon size={20} className={colorClass.replace('bg-', 'text-')} />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-200">{resource.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-200">{resource.name}</span>
+                        <div className="flex items-center gap-1">
+                          {resource.shortRest && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" title="Se regenere au repos court">
+                              <Sun size={10} />
+                            </span>
+                          )}
+                          {resource.longRest && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30" title="Se regenere au repos long">
+                              <Moon size={10} />
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <div className="text-xs text-gray-400">
                         Max:{' '}
                         {typeof resource.maxValue === 'number'
@@ -760,8 +787,6 @@ export function CustomClassSettingsModal({
                           : resource.maxValue === 'level'
                           ? 'Niveau'
                           : `Mod. ${resource.modifierAbility}`}
-                        {resource.shortRest && ' | Repos court'}
-                        {resource.longRest && ' | Repos long'}
                       </div>
                     </div>
                   </div>

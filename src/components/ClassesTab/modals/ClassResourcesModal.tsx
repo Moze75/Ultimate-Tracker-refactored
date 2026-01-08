@@ -15,6 +15,8 @@ import {
   X,
   Plus,
   Minus,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import type { ClassResources, Player, CustomClassResource } from '../../../types/dnd';
 import { getIconComponent } from '../../CustomClassSettingsModal';
@@ -87,19 +89,23 @@ export function ResourceBlock({
   color = 'purple',
   hideEdit = false,
   onGlobalPulse,
+  shortRest,
+  longRest,
 }: {
   icon: React.ReactNode;
   label: string;
   total: number;
   used: number;
   onUse: () => void;
-  onRestore?: () => void; // rendu optionnel et sécurisé
+  onRestore?: () => void;
   onUpdateTotal: (newTotal: number) => void;
   onUpdateUsed?: (value: number) => void;
   useNumericInput?: boolean;
   color?: 'red' | 'purple' | 'yellow' | 'green' | 'blue';
   hideEdit?: boolean;
   onGlobalPulse?: (ev: React.MouseEvent<HTMLButtonElement>) => void;
+  shortRest?: boolean;
+  longRest?: boolean;
 }) {
   const remaining = Math.max(0, total - used);
   const [isEditing, setIsEditing] = useState(false);
@@ -154,7 +160,23 @@ export function ResourceBlock({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className={`${colorClasses[color]}`}>{icon}</div>
-          <span className="text-sm font-medium text-gray-300">{label}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-300">{label}</span>
+            {(shortRest || longRest) && (
+              <div className="flex items-center gap-1">
+                {shortRest && (
+                  <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400" title="Se regenere au repos court">
+                    <Sun size={10} />
+                  </span>
+                )}
+                {longRest && (
+                  <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400" title="Se regenere au repos long">
+                    <Moon size={10} />
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <div
           className={[
@@ -811,6 +833,8 @@ case 'Magicien':
           color={res.color}
           hideEdit
           onGlobalPulse={onPulseScreen}
+          shortRest={res.shortRest}
+          longRest={res.longRest}
         />
       );
     }

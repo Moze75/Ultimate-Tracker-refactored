@@ -1,8 +1,10 @@
-import React from 'react';
-import { Moon, Star, Dice1 as DiceD20, Brain, Plus, Minus, Scroll } from 'lucide-react';
+import React, { useState } from 'react';
+import { Moon, Star, Sun, Brain, Plus, Minus, Scroll } from 'lucide-react';
 import { Player, PlayerStats } from '../../types/dnd';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { RestSelectionModal } from '../modals/RestSelectionModal';
+import { buildShortRestUpdate, buildLongRestUpdate } from '../../services/restService';
 
 interface PlayerActionsPanelProps {
   player: Player;
@@ -11,111 +13,11 @@ interface PlayerActionsPanelProps {
 }
 
 export function PlayerActionsPanel({ player, onUpdate, onOpenCampaigns }: PlayerActionsPanelProps) {
-  const handleShortRest = async () => {
-    if (!player.hit_dice || player.hit_dice.total - player.hit_dice.used <= 0) {
-      toast.error('Aucun dé de vie disponible');
-      return;
-    }
+  const [showRestModal, setShowRestModal] = useState(false);
+
+  const handleShortRestConfirm = async (hitDiceCount: number, selectedResourceIds: string[]) => {
     try {
-      const hitDieSize = (() => {
-        switch (player.class) {
-          case 'Barbare': return 12;
-          case 'Guerrier':
-          case 'Paladin':
-          case 'Rôdeur': return 10;
-          case 'Barde':
-          case 'Clerc':
-          case 'Druide':
-          case 'Moine':
-          case 'Roublard':
-          case 'Occultiste':
-            return 8;
-          case 'Magicien':
-          case 'Ensorceleur': return 6;
-          default: return 8;
-        }
-      })();
-
-      const roll = Math.floor(Math.random() * hitDieSize) + 1;
-      const constitutionMod = player.abilities?.find(a => a.name === 'Constitution')?.modifier || 0;
-      const healing = Math.max(1, roll + constitutionMod);
-
-      const nextCR: any = { ...(player.class_resources || {}) };
-      let recoveredLabel = '';
-
-      if (player.class === 'Magicien') {
-        nextCR.used_arcane_recovery = false;
-        nextCR.arcane_recovery_slots_used = 0;
-      }
-
-      if (player.class === 'Paladin' && typeof nextCR.used_channel_divinity === 'number') {
-        const before = nextCR.used_channel_divinity || 0;
-        nextCR.used_channel_divinity = Math.max(0, before - 1);
-        if (before > 0) recoveredLabel = ' (+1 Conduit divin récupéré)';
-      }
-
-      // 🔧 AJOUTER : Reset points de crédo pour le Moine
-if (player.class === 'Moine') {
-  nextCR.used_credo_points = 0;
-  nextCR.used_ki_points = 0; // Aussi pour la compatibilité
-  const total = nextCR.credo_points || nextCR.ki_points || 0;
-  if (total > 0) {
-    recoveredLabel += ` (+${total} point${total > 1 ? 's' : ''} de crédo récupéré${total > 1 ? 's' : ''})`;
-  }
-}
-
-// 🔧 AJOUTER ICI : Reset points de crédo pour le Moine (classe secondaire)
-const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
-if (player.secondary_class === 'Moine') {
-  nextSecondaryCR.used_credo_points = 0;
-  nextSecondaryCR.used_ki_points = 0;
-  const total = nextSecondaryCR.credo_points || nextSecondaryCR.ki_points || 0;
-  if (total > 0) {
-    recoveredLabel += ` (+${total} point${total > 1 ? 's' : ''} de crédo (classe secondaire) récupéré${total > 1 ? 's' : ''})`;
-  }
-}
-      
-        const nextSpellSlots = { ...(player.spell_slots || {}) };
-
-      // 🔹 Pact slots pour Occultiste PRINCIPAL (classe principale)
-      if (player.class === 'Occultiste' && typeof nextSpellSlots.used_pact_slots === 'number') {
-        const pactSlots = nextSpellSlots.pact_slots || 0;
-        if (nextSpellSlots.used_pact_slots > 0 && pactSlots > 0) {
-          nextSpellSlots.used_pact_slots = 0;
-          recoveredLabel += ` (+${pactSlots} emplacement${pactSlots > 1 ? 's' : ''} de pacte récupéré${pactSlots > 1 ? 's' : ''})`;
-        }
-      }
-
-      // 🔹 Pact slots pour Occultiste SECONDAIRE (classe secondaire)
-      const nextSecondarySpellSlots: any = { ...(player.secondary_spell_slots || {}) };
-      if (player.secondary_class === 'Occultiste' && typeof nextSecondarySpellSlots.used_pact_slots === 'number') {
-        const pactSlots = nextSecondarySpellSlots.pact_slots || 0;
-        if (nextSecondarySpellSlots.used_pact_slots > 0 && pactSlots > 0) {
-          nextSecondarySpellSlots.used_pact_slots = 0;
-          recoveredLabel += ` (+${pactSlots} emplacement${pactSlots > 1 ? 's' : ''} de pacte (classe secondaire) récupéré${pactSlots > 1 ? 's' : ''})`;
-        }
-      }
-
-      // 🔧 Construire l'objet de mise à jour
-      const updateData: any = {
-        current_hp: Math.min(player.max_hp, player.current_hp + healing),
-        hit_dice: {
-          ...player.hit_dice,
-          used: player.hit_dice.used + 1,
-        },
-        class_resources: nextCR,
-        spell_slots: nextSpellSlots,
-      };
-
-      // 🔧 Ajouter secondary_class_resources si classe secondaire existe
-      if (player.secondary_class) {
-        updateData.secondary_class_resources = nextSecondaryCR;
-      }
-
-      // 🔧 Ajouter secondary_spell_slots si classe secondaire existe
-      if (player.secondary_class) {
-        updateData.secondary_spell_slots = nextSecondarySpellSlots;
-      }
+      const { updateData, restoredLabels } = buildShortRestUpdate(player, hitDiceCount, selectedResourceIds);
 
       const { error } = await supabase
         .from('players')
@@ -124,12 +26,16 @@ if (player.secondary_class === 'Moine') {
 
       if (error) throw error;
 
-onUpdate({
-  ...player,
-  ...updateData // 🔧 Utilise updateData qui contient déjà secondary_class_resources
-});
+      onUpdate({
+        ...player,
+        ...updateData,
+      });
 
-      toast.success(`Repos court : +${healing} PV${recoveredLabel}`);
+      if (restoredLabels.length > 0) {
+        toast.success(`Repos court : ${restoredLabels.join(', ')}`);
+      } else {
+        toast.success('Repos court effectue');
+      }
     } catch (error) {
       console.error('Erreur lors du repos court:', error);
       toast.error('Erreur lors du repos');
@@ -137,228 +43,165 @@ onUpdate({
   };
 
   const handleLongRest = async () => {
-  try {
-    // 🔧 Reset classe principale
-    const nextCR: any = { ...(player.class_resources || {}) };
-    nextCR.used_rage = 0;
-    nextCR.used_bardic_inspiration = 0;
-    nextCR.used_channel_divinity = 0;
-    nextCR.used_wild_shape = 0;
-    nextCR.used_sorcery_points = 0;
-    nextCR.used_action_surge = 0;
-    nextCR.used_arcane_recovery = false;
-    nextCR.arcane_recovery_slots_used = 0;
-    nextCR.used_credo_points = 0;
-    nextCR.used_ki_points = 0;
-    nextCR.used_lay_on_hands = 0;
-    nextCR.used_favored_foe = 0;
-    nextCR.used_innate_sorcery = 0;
-    nextCR.used_supernatural_metabolism = 0;
+    try {
+      const { updateData } = buildLongRestUpdate(player);
 
-    // 🔧 AJOUTER : Reset classe secondaire
-    const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
-    nextSecondaryCR.used_rage = 0;
-    nextSecondaryCR.used_bardic_inspiration = 0;
-    nextSecondaryCR.used_channel_divinity = 0;
-    nextSecondaryCR.used_wild_shape = 0;
-    nextSecondaryCR.used_sorcery_points = 0;
-    nextSecondaryCR.used_action_surge = 0;
-    nextSecondaryCR.used_arcane_recovery = false;
-    nextSecondaryCR.arcane_recovery_slots_used = 0;
-    nextSecondaryCR.used_credo_points = 0;
-    nextSecondaryCR.used_ki_points = 0;
-    nextSecondaryCR.used_lay_on_hands = 0;
-    nextSecondaryCR.used_favored_foe = 0;
-    nextSecondaryCR.used_innate_sorcery = 0;
-    nextSecondaryCR.used_supernatural_metabolism = 0;
+      const { error } = await supabase
+        .from('players')
+        .update(updateData)
+        .eq('id', player.id);
 
-    // 🔧 Construire l'objet de mise à jour
-    const updateData: any = {
-      current_hp: player.max_hp,
-      temporary_hp: 0,
-hit_dice: {
-  total: player.level,
-  used: Math.max(0, (player.hit_dice?. used || 0) - Math.max(1, Math.floor(player.level / 2)))
-},
-      class_resources: nextCR,
-      spell_slots: {
-        ...player.spell_slots,
-        used1: 0, used2: 0, used3: 0, used4: 0,
-        used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
-        used_pact_slots: 0
-      },
-      is_concentrating: false,
-      concentration_spell: null
-    };
+      if (error) throw error;
 
-    // 🔧 Ajouter secondary_class_resources si présent
-    if (player.secondary_class) {
-      updateData.secondary_class_resources = nextSecondaryCR;
+      onUpdate({
+        ...player,
+        ...updateData
+      });
+
+      toast.success('Repos long effectue (toutes les ressources restaurees)');
+    } catch (error) {
+      console.error('Erreur lors du repos long:', error);
+      toast.error('Erreur lors du repos');
     }
-
-    // 🔧 AJOUTER : Reset secondary_spell_slots si présent
-    if (player.secondary_spell_slots) {
-      updateData.secondary_spell_slots = {
-        ...player.secondary_spell_slots,
-        used1: 0, used2: 0, used3: 0, used4: 0,
-        used5: 0, used6: 0, used7: 0, used8: 0, used9: 0,
-        used_pact_slots: 0
-      };
-    }
-
-    const { error } = await supabase
-      .from('players')
-      .update(updateData)
-      .eq('id', player.id);
-
-    if (error) throw error;
-
-    onUpdate({
-      ...player,
-      ...updateData
-    });
-
-    toast.success('Repos long effectué (toutes les ressources restaurées)');
-  } catch (error) {
-    console.error('Erreur lors du repos long:', error);
-    toast.error('Erreur lors du repos');
-  }
-};
+  };
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 items-stretch w-32 justify-start">
-      {/* Bouton Campagnes */}
-      <button
-        onClick={onOpenCampaigns}
-        className="w-32 h-9 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-2"
-      >
-        <span className="ml-1.5 flex-1 text-left">Campagnes</span>
-        <Scroll className="w-4 h-4" />
-      </button>
+    <>
+      <div className="flex flex-col gap-3 sm:gap-4 items-stretch w-32 justify-start">
+        <button
+          onClick={onOpenCampaigns}
+          className="w-32 h-9 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-2"
+        >
+          <span className="ml-1.5 flex-1 text-left">Campagnes</span>
+          <Scroll className="w-4 h-4" />
+        </button>
 
-      {/* Inspirations */}
-      <div className="w-32 rounded text-sm bg-gray-800/50 flex flex-col">
-        <div className="text-gray-400 text-sm text-center h-8 flex items-center justify-center gap-1">
-          <span className="ml-3">Inspiration</span>
-          <Star className="w-4 h-4 ml-2" />
+        <div className="w-32 rounded text-sm bg-gray-800/50 flex flex-col">
+          <div className="text-gray-400 text-sm text-center h-8 flex items-center justify-center gap-1">
+            <span className="ml-3">Inspiration</span>
+            <Star className="w-4 h-4 ml-2" />
+          </div>
+          <div className="flex items-center justify-center gap-2 h-8">
+            <button
+              onClick={async () => {
+                try {
+                  const newValue = Math.max(0, (player.stats?.inspirations || 0) - 1);
+                  const newStats = { ...(player.stats || {}), inspirations: newValue } as PlayerStats;
+                  const { error } = await supabase.from('players').update({ stats: newStats }).eq('id', player.id);
+                  if (error) throw error;
+                  onUpdate({ ...player, stats: newStats });
+                  toast.success('Inspiration retiree');
+                } catch (error) {
+                  console.error('Erreur maj inspiration:', error);
+                  toast.error('Erreur lors de la mise a jour');
+                }
+              }}
+              className={`w-6 h-6 flex items-center justify-center rounded ${
+                (player.stats?.inspirations || 0) > 0
+                  ? 'text-yellow-500 hover:bg-yellow-500/20'
+                  : 'text-gray-600 cursor-not-allowed'
+              }`}
+              disabled={(player.stats?.inspirations || 0) <= 0}
+            >
+              <Minus size={14} />
+            </button>
+            <span className={`font-medium w-4 text-center ${(player.stats?.inspirations || 0) > 0 ? 'text-yellow-500' : 'text-gray-400'}`}>
+              {player.stats?.inspirations || 0}
+            </span>
+            <button
+              onClick={async () => {
+                try {
+                  const newValue = Math.min(3, (player.stats?.inspirations || 0) + 1);
+                  const newStats = { ...(player.stats || {}), inspirations: newValue } as PlayerStats;
+                  const { error } = await supabase.from('players').update({ stats: newStats }).eq('id', player.id);
+                  if (error) throw error;
+                  onUpdate({ ...player, stats: newStats });
+                  toast.success('Inspiration ajoutee');
+                } catch (error) {
+                  console.error('Erreur maj inspiration:', error);
+                  toast.error('Erreur lors de la mise a jour');
+                }
+              }}
+              className={`w-6 h-6 flex items-center justify-center rounded ${
+                (player.stats?.inspirations || 0) < 3
+                  ? 'text-yellow-500 hover:bg-yellow-500/20'
+                  : 'text-gray-600 cursor-not-allowed'
+              }`}
+              disabled={(player.stats?.inspirations || 0) >= 3}
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center justify-center gap-2 h-8">
-          <button
-            onClick={async () => {
-              try {
-                const newValue = Math.max(0, (player.stats?.inspirations || 0) - 1);
-                const newStats = { ...(player.stats || {}), inspirations: newValue } as PlayerStats;
-                const { error } = await supabase.from('players').update({ stats: newStats }).eq('id', player.id);
-                if (error) throw error;
-                onUpdate({ ...player, stats: newStats });
-                toast.success('Inspiration retirée');
-              } catch (error) {
-                console.error('Erreur maj inspiration:', error);
-                toast.error('Erreur lors de la mise à jour');
-              }
-            }}
-            className={`w-6 h-6 flex items-center justify-center rounded ${
-              (player.stats?.inspirations || 0) > 0
-                ? 'text-yellow-500 hover:bg-yellow-500/20'
-                : 'text-gray-600 cursor-not-allowed'
-            }`}
-            disabled={(player.stats?.inspirations || 0) <= 0}
-          >
-            <Minus size={14} />
-          </button>
-          <span className={`font-medium w-4 text-center ${(player.stats?.inspirations || 0) > 0 ? 'text-yellow-500' : 'text-gray-400'}`}>
-            {player.stats?.inspirations || 0}
-          </span>
-          <button
-            onClick={async () => {
-              try {
-                const newValue = Math.min(3, (player.stats?.inspirations || 0) + 1);
-                const newStats = { ...(player.stats || {}), inspirations: newValue } as PlayerStats;
-                const { error } = await supabase.from('players').update({ stats: newStats }).eq('id', player.id);
-                if (error) throw error;
-                onUpdate({ ...player, stats: newStats });
-                toast.success('Inspiration ajoutée');
-              } catch (error) {
-                console.error('Erreur maj inspiration:', error);
-                toast.error('Erreur lors de la mise à jour');
-              }
-            }}
-            className={`w-6 h-6 flex items-center justify-center rounded ${
-              (player.stats?.inspirations || 0) < 3
-                ? 'text-yellow-500 hover:bg-yellow-500/20'
-                : 'text-gray-600 cursor-not-allowed'
-            }`}
-            disabled={(player.stats?.inspirations || 0) >= 3}
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-      </div>
 
-      {/* Repos long */}
-      <button
-        onClick={handleLongRest}
-        className="w-32 h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3"
-      >
-        <span className="ml-1.5 flex-1 text-left">Repos long</span>
-        <Moon className="w-4 h-4" />
-      </button>
+        <button
+          onClick={handleLongRest}
+          className="w-32 h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3"
+        >
+          <span className="ml-1.5 flex-1 text-left">Repos long</span>
+          <Moon className="w-4 h-4" />
+        </button>
 
-      {/* Repos court */}
-      <button
-        onClick={handleShortRest}
-        className="w-32 h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3"
-      >
-        <span className="ml-1.5 flex-1 text-left">Repos court</span>
-        <DiceD20 className="w-4 h-4" />
-      </button>
+        <button
+          onClick={() => setShowRestModal(true)}
+          className="w-32 h-9 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3"
+        >
+          <span className="ml-1.5 flex-1 text-left">Repos court</span>
+          <Sun className="w-4 h-4" />
+        </button>
 
-      {/* Dés de vie */}
-      {player.hit_dice && (
-        <div className="w-32 px-2 py-1 text-sm bg-gray-800/30 rounded flex flex-col items-center">
-          <span className="text-gray-400 mb-0.5">Dés de vie</span>
-          <span className="text-gray-300 font-medium text-center">
-            {player.hit_dice.total - player.hit_dice.used} / {player.hit_dice.total}
-          </span>
-        </div>
-      )}
+        {player.hit_dice && (
+          <div className="w-32 px-2 py-1 text-sm bg-gray-800/30 rounded flex flex-col items-center">
+            <span className="text-gray-400 mb-0.5">Des de vie</span>
+            <span className="text-gray-300 font-medium text-center">
+              {player.hit_dice.total - player.hit_dice.used} / {player.hit_dice.total}
+            </span>
+          </div>
+        )}
 
-      {/* Concentration */}
-      <button
-        onClick={async () => {
-          try {
-            const { error } = await supabase
-              .from('players')
-              .update({
+        <button
+          onClick={async () => {
+            try {
+              const { error } = await supabase
+                .from('players')
+                .update({
+                  is_concentrating: !player.is_concentrating,
+                  concentration_spell: !player.is_concentrating ? 'Sort actif' : null
+                })
+                .eq('id', player.id);
+              if (error) throw error;
+
+              onUpdate({
+                ...player,
                 is_concentrating: !player.is_concentrating,
                 concentration_spell: !player.is_concentrating ? 'Sort actif' : null
-              })
-              .eq('id', player.id);
-            if (error) throw error;
+              });
 
-            onUpdate({
-              ...player,
-              is_concentrating: !player.is_concentrating,
-              concentration_spell: !player.is_concentrating ? 'Sort actif' : null
-            });
+              toast.success(player.is_concentrating ? 'Concentration interrompue' : 'Concentration activee');
+            } catch (error) {
+              console.error('Erreur concentration:', error);
+              toast.error('Erreur lors de la modification de la concentration');
+            }
+          }}
+          className={`w-32 h-9 rounded text-sm flex items-center px-3 transition-all duration-200 ${
+            player.is_concentrating
+              ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-lg shadow-purple-500/20 animate-pulse'
+              : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+          }`}
+        >
+          <div className="ml-auto inline-flex items-center gap-1">
+            <span>Concentration</span>
+            <Brain className={`w-4 h-4 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
+          </div>
+        </button>
+      </div>
 
-            toast.success(player.is_concentrating ? 'Concentration interrompue' : 'Concentration activée');
-          } catch (error) {
-            console.error('Erreur concentration:', error);
-            toast.error('Erreur lors de la modification de la concentration');
-          }
-        }}
-        className={`w-32 h-9 rounded text-sm flex items-center px-3 transition-all duration-200 ${
-          player.is_concentrating
-            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-lg shadow-purple-500/20 animate-pulse'
-            : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
-        }`}
-      >
-        <div className="ml-auto inline-flex items-center gap-1">
-          <span>Concentration</span>
-          <Brain className={`w-4 h-4 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
-        </div>
-      </button>
-    </div>
+      <RestSelectionModal
+        open={showRestModal}
+        onClose={() => setShowRestModal(false)}
+        player={player}
+        onConfirm={handleShortRestConfirm}
+      />
+    </>
   );
 }

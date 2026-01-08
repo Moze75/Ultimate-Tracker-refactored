@@ -1,7 +1,10 @@
-import React from 'react';
-import { Users, Sparkles, Sunset, Moon, Dice6, Focus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, Sparkles, Sun, Moon, Dice6, Focus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Player } from '../../types/dnd';
+import { supabase } from '../../lib/supabase';
+import { RestSelectionModal } from '../modals/RestSelectionModal';
+import { buildShortRestUpdate, buildLongRestUpdate } from '../../services/restService';
 
 interface CompactActionsRowProps {
   player: Player;
@@ -10,183 +13,186 @@ interface CompactActionsRowProps {
 }
 
 export function CompactActionsRow({ player, onUpdate, onOpenCampaigns }: CompactActionsRowProps) {
-  const handleInspirationToggle = () => {
-    const newInspirations = (player.stats?.inspirations || 0) === 0 ? 1 : 0;
-    onUpdate({
-      ...player,
-      stats: { ...player.stats, inspirations: newInspirations }
-    });
-    toast.success(newInspirations ? 'Inspiration activée' : 'Inspiration utilisée');
+  const [showRestModal, setShowRestModal] = useState(false);
+
+  const handleInspirationToggle = async () => {
+    try {
+      const newInspirations = (player.stats?.inspirations || 0) === 0 ? 1 : 0;
+      const newStats = { ...player.stats, inspirations: newInspirations };
+
+      const { error } = await supabase
+        .from('players')
+        .update({ stats: newStats })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      onUpdate({
+        ...player,
+        stats: newStats
+      });
+      toast.success(newInspirations ? 'Inspiration activee' : 'Inspiration utilisee');
+    } catch (error) {
+      console.error('Erreur maj inspiration:', error);
+      toast.error('Erreur lors de la mise a jour');
+    }
   };
 
- const handleLongRest = () => {
-  if (!window.confirm('Effectuer un repos long ? (restaure tous les PV, sorts, etc.)')) return;
-  
-  const maxHp = player.max_hp || 1;
-  
-  // 🔧 Reset classe principale
-  const nextCR: any = { ...(player.class_resources || {}) };
-  nextCR.used_rage = 0;
-  nextCR.used_bardic_inspiration = 0;
-  nextCR.used_channel_divinity = 0;
-  nextCR.used_wild_shape = 0;
-  nextCR.used_sorcery_points = 0;
-  nextCR.used_action_surge = 0;
-  nextCR.used_arcane_recovery = false;
-  nextCR.arcane_recovery_slots_used = 0;
-  nextCR.used_credo_points = 0;
-  nextCR.used_ki_points = 0;
-  nextCR.used_lay_on_hands = 0;
-  nextCR.used_favored_foe = 0;
-  nextCR.used_innate_sorcery = 0;
-  nextCR.used_supernatural_metabolism = 0;
+  const handleLongRest = async () => {
+    if (!window.confirm('Effectuer un repos long ? (restaure tous les PV, sorts, etc.)')) return;
 
-  // 🔧 AJOUTER : Reset classe secondaire
-  const nextSecondaryCR: any = { ...(player.secondary_class_resources || {}) };
-  nextSecondaryCR.used_rage = 0;
-  nextSecondaryCR.used_bardic_inspiration = 0;
-  nextSecondaryCR.used_channel_divinity = 0;
-  nextSecondaryCR.used_wild_shape = 0;
-  nextSecondaryCR.used_sorcery_points = 0;
-  nextSecondaryCR.used_action_surge = 0;
-  nextSecondaryCR.used_arcane_recovery = false;
-  nextSecondaryCR.arcane_recovery_slots_used = 0;
-  nextSecondaryCR.used_credo_points = 0;
-  nextSecondaryCR.used_ki_points = 0;
-  nextSecondaryCR.used_lay_on_hands = 0;
-  nextSecondaryCR.used_favored_foe = 0;
-  nextSecondaryCR.used_innate_sorcery = 0;
-  nextSecondaryCR.used_supernatural_metabolism = 0;
+    try {
+      const { updateData } = buildLongRestUpdate(player);
 
-   const updateData: any = {
-    current_hp: maxHp,
-    temp_hp: 0,
-    hit_dice_used: 0,
-    class_resources: nextCR,
-    stats: { ...player.stats, inspirations: 0 },
+      const { error } = await supabase
+        .from('players')
+        .update(updateData)
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      onUpdate({
+        ...player,
+        ...updateData,
+      });
+
+      toast.success('Repos long effectue');
+    } catch (error) {
+      console.error('Erreur lors du repos long:', error);
+      toast.error('Erreur lors du repos');
+    }
   };
 
-  // 🔹 Reset des emplacements de sorts principaux
-  if (player.spell_slots) {
-    updateData.spell_slots = {
-      ...player.spell_slots,
-      used1: 0,
-      used2: 0,
-      used3: 0,
-      used4: 0,
-      used5: 0,
-      used6: 0,
-      used7: 0,
-      used8: 0,
-      used9: 0,
-      used_pact_slots: 0,
-    };
-  }
+  const handleShortRestConfirm = async (hitDiceCount: number, selectedResourceIds: string[]) => {
+    try {
+      const { updateData, restoredLabels } = buildShortRestUpdate(player, hitDiceCount, selectedResourceIds);
 
-  // 🔹 Reset des emplacements de sorts secondaires (y compris pact slots secondaires)
-  if (player.secondary_spell_slots) {
-    updateData.secondary_spell_slots = {
-      ...player.secondary_spell_slots,
-      used1: 0,
-      used2: 0,
-      used3: 0,
-      used4: 0,
-      used5: 0,
-      used6: 0,
-      used7: 0,
-      used8: 0,
-      used9: 0,
-      used_pact_slots: 0,
-    };
-  }
+      const { error } = await supabase
+        .from('players')
+        .update(updateData)
+        .eq('id', player.id);
 
-  // Ajouter secondary_class_resources si présent
-  if (player.secondary_class) {
-    updateData.secondary_class_resources = nextSecondaryCR;
-  }
+      if (error) throw error;
 
-  onUpdate({
-    ...player,
-    ...updateData,
-  });
-  
-  toast.success('Repos long effectué');
-};
+      onUpdate({
+        ...player,
+        ...updateData,
+      });
 
-  const handleShortRest = () => {
-    if (!window.confirm('Effectuer un repos court ?')) return;
-    toast.success('Repos court effectué');
+      if (restoredLabels.length > 0) {
+        toast.success(`Repos court : ${restoredLabels.join(', ')}`);
+      } else {
+        toast.success('Repos court effectue');
+      }
+    } catch (error) {
+      console.error('Erreur lors du repos court:', error);
+      toast.error('Erreur lors du repos');
+    }
   };
 
-  const handleHitDiceToggle = () => {
-    toast.info('Gestion des dés de vie (à implémenter)');
-  };
+  const handleConcentrationToggle = async () => {
+    try {
+      const newConcentrating = !player.is_concentrating;
 
-  const handleConcentrationToggle = () => {
-    toast.info('Gestion de la concentration (à implémenter)');
+      const { error } = await supabase
+        .from('players')
+        .update({
+          is_concentrating: newConcentrating,
+          concentration_spell: newConcentrating ? 'Sort actif' : null
+        })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      onUpdate({
+        ...player,
+        is_concentrating: newConcentrating,
+        concentration_spell: newConcentrating ? 'Sort actif' : null
+      });
+
+      toast.success(newConcentrating ? 'Concentration activee' : 'Concentration interrompue');
+    } catch (error) {
+      console.error('Erreur concentration:', error);
+      toast.error('Erreur lors de la modification');
+    }
   };
 
   const hasInspiration = (player.stats?.inspirations || 0) > 0;
+  const availableHitDice = player.hit_dice
+    ? player.hit_dice.total - player.hit_dice.used
+    : 0;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <button
-        onClick={onOpenCampaigns}
-        className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
-        title="Campagnes"
-      >
-        <Users className="w-4 h-4" />
-        <span className="text-sm">Campagnes</span>
-      </button>
+    <>
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          onClick={onOpenCampaigns}
+          className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
+          title="Campagnes"
+        >
+          <Users className="w-4 h-4" />
+          <span className="text-sm">Campagnes</span>
+        </button>
 
-      <button
-        onClick={handleInspirationToggle}
-        className={`px-3 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
-          hasInspiration
-            ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/30'
-            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700/50'
-        }`}
-        title={hasInspiration ? 'Inspiration active' : 'Inspiration inactive'}
-      >
-        <Sparkles className="w-4 h-4" />
-        <span className="text-sm">Inspiration</span>
-      </button>
+        <button
+          onClick={handleInspirationToggle}
+          className={`px-3 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+            hasInspiration
+              ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/30'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700/50'
+          }`}
+          title={hasInspiration ? 'Inspiration active' : 'Inspiration inactive'}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="text-sm">Inspiration</span>
+        </button>
 
-      <button
-        onClick={handleLongRest}
-        className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
-        title="Repos long"
-      >
-        <Moon className="w-4 h-4" />
-        <span className="text-sm">Repos long</span>
-      </button>
+        <button
+          onClick={handleLongRest}
+          className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
+          title="Repos long"
+        >
+          <Moon className="w-4 h-4" />
+          <span className="text-sm">Repos long</span>
+        </button>
 
-      <button
-        onClick={handleShortRest}
-        className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
-        title="Repos court"
-      >
-        <Sunset className="w-4 h-4" />
-        <span className="text-sm">Repos court</span>
-      </button>
+        <button
+          onClick={() => setShowRestModal(true)}
+          className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
+          title="Repos court"
+        >
+          <Sun className="w-4 h-4" />
+          <span className="text-sm">Repos court</span>
+        </button>
 
-      <button
-        onClick={handleHitDiceToggle}
-        className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
-        title="Dés de vie"
-      >
-        <Dice6 className="w-4 h-4" />
-        <span className="text-sm">Dés de vie</span>
-      </button>
+        <div
+          className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 flex items-center gap-2"
+          title="Des de vie"
+        >
+          <Dice6 className="w-4 h-4" />
+          <span className="text-sm">{availableHitDice}/{player.hit_dice?.total || player.level}</span>
+        </div>
 
-      <button
-        onClick={handleConcentrationToggle}
-        className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-colors flex items-center gap-2"
-        title="Concentration"
-      >
-        <Focus className="w-4 h-4" />
-        <span className="text-sm">Concentration</span>
-      </button>
-    </div>
+        <button
+          onClick={handleConcentrationToggle}
+          className={`px-3 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+            player.is_concentrating
+              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 hover:bg-purple-500/30 animate-pulse'
+              : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700/50'
+          }`}
+          title="Concentration"
+        >
+          <Focus className="w-4 h-4" />
+          <span className="text-sm">Concentration</span>
+        </button>
+      </div>
+
+      <RestSelectionModal
+        open={showRestModal}
+        onClose={() => setShowRestModal(false)}
+        player={player}
+        onConfirm={handleShortRestConfirm}
+      />
+    </>
   );
 }
