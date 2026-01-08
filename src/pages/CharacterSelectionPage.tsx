@@ -759,7 +759,7 @@ const handleSignOut = async () => {
             </p>
 
             {/* Action MJ */}
-            {currentSubscription?.tier === 'game_master' && (
+           {(currentSubscription?.tier === 'game_master' || currentSubscription?.tier === 'celestial') && (
                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
                     onClick={() => setShowCampaigns(true)}
