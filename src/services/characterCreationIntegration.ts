@@ -525,15 +525,18 @@ const { error: updError } = await supabase
 
     // ✅ AJOUT : Champs de profil
     alignment: payload.selectedAlignment || null,
-   languages: (payload.selectedLanguages || []).filter(lang => 
-      lang && 
-      lang.trim() !== '' && 
+   languages: (payload.selectedLanguages || []).filter(lang =>
+      lang &&
+      lang.trim() !== '' &&
       !lang.toLowerCase().includes('au choix') &&
       !lang.toLowerCase().includes('choisir')
     ),
     age: payload.age || null,
     gender: payload.gender || null,
     character_history: payload.characterHistory || null,
+
+    // ✅ AJOUT : Classe personnalisée dans la colonne dédiée
+    custom_class_data: payload.customClassData || null,
   })
   .eq('id', playerId);
   if (updError) throw updError;
