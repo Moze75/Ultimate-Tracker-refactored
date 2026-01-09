@@ -9,7 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 
-import type { ClassResources, Player } from '../types/dnd';
+import type { ClassResources, Player, CustomClassData } from '../types/dnd';
 import {
   AbilitySection,
   PlayerLike,
@@ -18,6 +18,14 @@ import {
   getSubclassFromPlayerLike,
   getChaModFromPlayerLike,
 } from './ClassesTab/modals/ClassUtilsModal';
+
+function getCustomClassData(player: PlayerLike | null | undefined): CustomClassData | null {
+  if (!player) return null;
+  if (player.custom_class_data?.isCustom) return player.custom_class_data;
+  const stats = (player as any)?.stats;
+  if (stats?.creator_meta?.custom_class?.isCustom) return stats.creator_meta.custom_class;
+  return null;
+}
 import { ScreenRipple, createScreenRippleHandler } from './ClassesTab/modals/ClassEffectsModal';
 import { AbilityCard } from './ClassesTab/modals/ClassAbilitiesModal';
 import {
@@ -62,7 +70,8 @@ function ClassesTab({
   const [classHeaderOpen, setClassHeaderOpen] = useState(true);
   const [showCustomClassSettings, setShowCustomClassSettings] = useState(false);
 
-  const isCustomClass = !!(player?.custom_class_data?.isCustom);
+  const customClassData = getCustomClassData(player);
+  const isCustomClass = !!customClassData?.isCustom;
 
   const rawClass = (player?.class ?? playerClass ?? className ?? '').trim();
   const rawSubclass = (getSubclassFromPlayerLike(player) ?? subclassName) ?? null;

@@ -37,6 +37,14 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import type { Player, CustomClassData, CustomClassResource, CustomClassAbility } from '../types/dnd';
 
+function getCustomClassData(player: Player | null | undefined): CustomClassData | null {
+  if (!player) return null;
+  if (player.custom_class_data?.isCustom) return player.custom_class_data;
+  const stats = (player as any)?.stats;
+  if (stats?.creator_meta?.custom_class?.isCustom) return stats.creator_meta.custom_class;
+  return null;
+}
+
 const ICON_OPTIONS: { name: string; icon: LucideIcon }[] = [
   { name: 'Sparkles', icon: Sparkles },
   { name: 'Flame', icon: Flame },
@@ -434,7 +442,7 @@ export function CustomClassSettingsModal({
   player,
   onUpdate,
 }: CustomClassSettingsModalProps) {
-  const customClass = player.custom_class_data;
+  const customClass = getCustomClassData(player);
 
   const [className, setClassName] = useState(customClass?.name || '');
   const [description, setDescription] = useState(customClass?.description || '');
@@ -456,7 +464,7 @@ export function CustomClassSettingsModal({
     if (!open) return;
     setDirty(false);
 
-    const cc = player.custom_class_data;
+    const cc = getCustomClassData(player);
     setClassName(cc?.name || '');
     setDescription(cc?.description || '');
     setHitDie(cc?.hitDie || 8);
@@ -464,7 +472,7 @@ export function CustomClassSettingsModal({
     setSavingThrows(cc?.savingThrows || []);
     setResources(cc?.resources || []);
     setAbilities(cc?.abilities || []);
-  }, [open, player.custom_class_data]);
+  }, [open, player.custom_class_data, player]);
 
   useEffect(() => {
     if (!open) return;

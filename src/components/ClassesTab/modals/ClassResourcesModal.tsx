@@ -18,17 +18,25 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
-import type { ClassResources, Player, CustomClassResource } from '../../../types/dnd';
+import type { ClassResources, Player, CustomClassResource, CustomClassData } from '../../../types/dnd';
 import { getIconComponent } from '../../CustomClassSettingsModal';
 import { canonicalClass, getChaModFromPlayerLike } from './ClassUtilsModal';
 import { useDiceSettings } from '../../../hooks/useDiceSettings';
 
 // ✅ Import du contexte pour lancer les dés
 import { useContext } from 'react';
-import { DiceRollContext } from '../../ResponsiveGameLayout'; 
+import { DiceRollContext } from '../../ResponsiveGameLayout';
 
 // Utiliser le type Player du fichier types/dnd.ts au lieu de créer PlayerLike
 type PlayerLike = Player;
+
+function getCustomClassData(player: Player | null | undefined): CustomClassData | null {
+  if (!player) return null;
+  if (player.custom_class_data?.isCustom) return player.custom_class_data;
+  const stats = (player as any)?.stats;
+  if (stats?.creator_meta?.custom_class?.isCustom) return stats.creator_meta.custom_class;
+  return null;
+}
 
 /* ===========================================================
    Ressources de classe
@@ -799,8 +807,9 @@ case 'Magicien':
       break;
   }
 
-  if (player?.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
-    const customResources = player.custom_class_data.resources;
+  const customClassData = getCustomClassData(player);
+  if (customClassData?.isCustom && customClassData.resources?.length > 0) {
+    const customResources = customClassData.resources;
     const customState = resources?.custom_resources || {};
 
     for (const res of customResources) {
@@ -911,8 +920,9 @@ export function buildDefaultsForClass(cls: string, level: number, player?: Playe
     case 'Roublard':
       return { sneak_attack: `${Math.ceil(level / 2)}d6` };
     default: {
-      if (player?.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
-        const customResources = player.custom_class_data.resources;
+      const customData = getCustomClassData(player);
+      if (customData?.isCustom && customData.resources?.length > 0) {
+        const customResources = customData.resources;
         const customState: Record<string, { current: number; used: number }> = {};
 
         for (const res of customResources) {

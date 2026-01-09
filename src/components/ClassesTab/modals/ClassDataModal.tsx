@@ -13,6 +13,14 @@ import type { Player, CustomClassData } from '../../../types/dnd';
 
 const DEBUG = typeof window !== 'undefined' && (window as any).UT_DEBUG === true;
 
+function getCustomClassData(player: Player | null | undefined): CustomClassData | null {
+  if (!player) return null;
+  if (player.custom_class_data?.isCustom) return player.custom_class_data;
+  const stats = (player as any)?.stats;
+  if (stats?.creator_meta?.custom_class?.isCustom) return stats.creator_meta.custom_class;
+  return null;
+}
+
 function convertCustomAbilitiesToSections(customClass: CustomClassData, level: number): AbilitySection[] {
   if (!customClass?.abilities?.length) return [];
 
@@ -42,8 +50,9 @@ export async function loadSectionsSmart(params: {
 }): Promise<AbilitySection[]> {
   const { className, subclassName, level, player } = params;
 
-  if (player?.custom_class_data?.isCustom) {
-    return convertCustomAbilitiesToSections(player.custom_class_data, level);
+  const customClassData = getCustomClassData(player);
+  if (customClassData?.isCustom) {
+    return convertCustomAbilitiesToSections(customClassData, level);
   }
   const clsNorm = norm(className);
   const subNorm = subclassName ? norm(subclassName) : '';

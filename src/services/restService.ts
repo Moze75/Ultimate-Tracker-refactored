@@ -1,4 +1,12 @@
-import type { Player, ClassResources, CustomClassResource } from '../types/dnd';
+import type { Player, ClassResources, CustomClassResource, CustomClassData } from '../types/dnd';
+
+function getCustomClassData(player: Player | null | undefined): CustomClassData | null {
+  if (!player) return null;
+  if (player.custom_class_data?.isCustom) return player.custom_class_data;
+  const stats = (player as any)?.stats;
+  if (stats?.creator_meta?.custom_class?.isCustom) return stats.creator_meta.custom_class;
+  return null;
+}
 
 export interface RestableResource {
   id: string;
@@ -141,10 +149,11 @@ export function getRestorableResources(player: Player, restType: 'short' | 'long
     }
   }
 
-  if (player.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
+  const customClassData = getCustomClassData(player);
+  if (customClassData?.isCustom && customClassData.resources?.length > 0) {
     const customState = cr.custom_resources || {};
 
-    for (const res of player.custom_class_data.resources) {
+    for (const res of customClassData.resources) {
       const shouldShow = restType === 'short' ? res.shortRest : res.longRest;
       if (!shouldShow) continue;
 
@@ -272,10 +281,11 @@ export function buildShortRestUpdate(
     }
   }
 
-  if (player.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
+  const customClassDataShort = getCustomClassData(player);
+  if (customClassDataShort?.isCustom && customClassDataShort.resources?.length > 0) {
     const customState = { ...(nextCR.custom_resources || {}) };
 
-    for (const res of player.custom_class_data.resources) {
+    for (const res of customClassDataShort.resources) {
       if (!res.shortRest) continue;
       if (!selectedResourceIds.includes(`custom_${res.id}`)) continue;
 
@@ -349,10 +359,11 @@ export function buildLongRestUpdate(player: Player): RestUpdateResult {
   nextSecondaryCR.used_arcane_recovery = false;
   nextSecondaryCR.arcane_recovery_slots_used = 0;
 
-  if (player.custom_class_data?.isCustom && player.custom_class_data.resources?.length > 0) {
+  const customClassDataLong = getCustomClassData(player);
+  if (customClassDataLong?.isCustom && customClassDataLong.resources?.length > 0) {
     const customState = { ...(nextCR.custom_resources || {}) };
 
-    for (const res of player.custom_class_data.resources) {
+    for (const res of customClassDataLong.resources) {
       if (!res.longRest) continue;
 
       const maxVal = getCustomResourceMaxValue(res, player.level || 1, player);
