@@ -534,9 +534,6 @@ const { error: updError } = await supabase
     age: payload.age || null,
     gender: payload.gender || null,
     character_history: payload.characterHistory || null,
-
-    // ✅ AJOUT : Classe personnalisée dans la colonne dédiée
-    custom_class_data: payload.customClassData || null,
   })
   .eq('id', playerId);
   if (updError) throw updError;
