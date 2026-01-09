@@ -19,6 +19,8 @@ const DND_CLASSES: DndClass[] = [
   'Magicien', 'Moine', 'Paladin', 'Rôdeur', 'Roublard', 'Occultiste',
 ];
 
+const DEFAULT_CUSTOM_CLASS_IMAGE = '/sans_classe.png';
+
 const CLASS_IMAGES: Record<string, string> = {
   'Barbare': '/Barbare.png',
   'Barde': '/Barde.png',
@@ -33,6 +35,8 @@ const CLASS_IMAGES: Record<string, string> = {
   'Roublard': '/Voleur.png',
   'Occultiste': '/Occultiste.png',
 };
+
+const getClassImage = (className: string): string => CLASS_IMAGES[className] || DEFAULT_CUSTOM_CLASS_IMAGE;
 
 const getModifier = (score: number): number => Math.floor((score - 10) / 2);
 
@@ -180,7 +184,7 @@ export function MulticlassSelectionModal({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {availableClasses.map((cls) => (
                     <button key={cls} onClick={() => handleClassSelect(cls)} className="relative p-3 rounded-lg border-2 border-gray-700 hover:border-blue-500 transition-all bg-gray-800/50 hover:bg-gray-700/50 flex flex-col items-center gap-2">
-                      <img src={CLASS_IMAGES[cls]} alt={cls} className="w-16 h-16 object-contain" />
+                      <img src={getClassImage(cls)} alt={cls} className="w-16 h-16 object-contain" />
                       <span className="text-sm font-medium text-gray-200">{cls}</span>
                     </button>
                   ))}
@@ -191,7 +195,7 @@ export function MulticlassSelectionModal({
             <>
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
                 <div className="flex items-center gap-3 mb-3">
-                  <img src={CLASS_IMAGES[selectedClass]} alt={selectedClass} className="w-12 h-12 object-contain" />
+                  <img src={getClassImage(selectedClass)} alt={selectedClass} className="w-12 h-12 object-contain" />
                   <div>
                     <h4 className="text-lg font-bold text-gray-100">{selectedClass}</h4>
                     <p className="text-sm text-gray-400">Niveau 1</p>

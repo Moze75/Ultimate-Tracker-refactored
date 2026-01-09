@@ -34,9 +34,10 @@ const feetToMeters = (ft?: number) => {
   return Math.round(n * 0.3048 * 2) / 2;
 };
 
-// Mappe une classe vers une image publique placée dans /public/*.png
-function getClassImageUrlLocal(className: DndClass | string | undefined | null): string | null {
-  if (!className) return null;
+import { DEFAULT_CUSTOM_CLASS_IMAGE } from '../utils/classImages';
+
+function getClassImageUrlLocal(className: DndClass | string | undefined | null): string {
+  if (!className) return DEFAULT_CUSTOM_CLASS_IMAGE;
   switch (className) {
     case 'Guerrier': return '/Guerrier.png';
     case 'Magicien': return '/Magicien.png';
@@ -51,7 +52,7 @@ function getClassImageUrlLocal(className: DndClass | string | undefined | null):
     case 'Ensorceleur': return '/Ensorceleur.png';
     case 'Occultiste': return '/Occultiste.png';
     default:
-      return null;
+      return DEFAULT_CUSTOM_CLASS_IMAGE;
   }
 }
 

@@ -16,9 +16,11 @@ interface CompactAvatarProps {
   onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
 }
 
+const DEFAULT_CUSTOM_CLASS_IMAGE = '/sans_classe.png';
+
 export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAvatarProps) {
   const getClassImage = (className: string | undefined) => {
-    if (!className) return '/icons/wmremove-transformed.png';
+    if (!className) return DEFAULT_CUSTOM_CLASS_IMAGE;
     const classMap: Record<string, string> = {
       'Barbare': '/Barbare.png',
       'Barde': '/Barde.png',
@@ -33,7 +35,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAva
       'Rôdeur': '/Rodeur.png',
       'Roublard': '/Voleur.png',
     };
-    return classMap[className] || '/icons/wmremove-transformed.png';
+    return classMap[className] || DEFAULT_CUSTOM_CLASS_IMAGE;
   };
 
   const imageUrl = player.avatar_url || getClassImage(player.class);
@@ -47,7 +49,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAva
           alt={player.adventurer_name || player.name}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.currentTarget.src = '/icons/wmremove-transformed.png';
+            e.currentTarget.src = DEFAULT_CUSTOM_CLASS_IMAGE;
           }}
         />
       </div>
