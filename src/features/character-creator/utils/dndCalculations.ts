@@ -4,7 +4,7 @@ export function calculateModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
 
-export function calculateHitPoints(constitution: number, dndClass: DndClass, level: number = 1): number {
+export function calculateHitPoints(constitution: number, dndClass: DndClass | string, level: number = 1, customHitDie?: number): number {
   const hitDice: Record<DndClass, number> = {
     'Barbare': 12,
     'Guerrier': 10,
@@ -20,9 +20,9 @@ export function calculateHitPoints(constitution: number, dndClass: DndClass, lev
     'Magicien': 6
   };
 
-  const hitDie = hitDice[dndClass];
+  const hitDie = customHitDie ?? hitDice[dndClass as DndClass] ?? 8;
   const constitutionModifier = calculateModifier(constitution);
-  
+
   return hitDie + constitutionModifier + (level - 1) * (Math.floor(hitDie / 2) + 1 + constitutionModifier);
 }
 

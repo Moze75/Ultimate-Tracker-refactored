@@ -6,7 +6,7 @@ import { calculateHitPoints, calculateArmorClass, calculateModifier } from '../.
 import { races } from '../../data/races';
 import { classes } from '../../data/classes';
 import { backgrounds } from '../../data/backgrounds';
-import { DndClass } from '../../types/character';
+import { DndClass, CustomClassData } from '../../types/character';
 import { User, Heart, Shield, Zap, Users, BookOpen, Package, Scroll, Star, AlertCircle, X, Sword, Wrench, Sparkles, Globe, Calendar, UserCircle } from 'lucide-react';
 
 interface Spell {
@@ -31,30 +31,22 @@ interface CharacterSummaryProps {
   characterName: string;
   onCharacterNameChange: (name: string) => void;
   selectedRace: string;
-  selectedClass: DndClass;
+  selectedClass: DndClass | string;
   selectedBackground: string;
   abilities: Record<string, number>;
   onFinish: () => void;
   onPrevious: () => void;
 
-  // Compétences choisies dans ClassSelection
   selectedClassSkills?: string[];
-
-  // Équipement choisi dans ClassSelection
   selectedEquipmentOption?: string;
-
-  // Équipement d'historique
   selectedBackgroundEquipmentOption?: 'A' | 'B' | '';
-
-  // Sorts sélectionnés
   selectedCantrips?: Spell[];
   selectedLevel1Spells?: Spell[];
-
-  // ✅ Nouveaux props de profil
   selectedAlignment?: string;
   selectedLanguages?: string[];
   age?: string;
   gender?: string;
+  customClassData?: CustomClassData | null;
 }
 
 // Liste canonique des compétences (FR)
@@ -143,6 +135,7 @@ export default function CharacterSummary({
   selectedLanguages = [],
   age = '',
   gender = '',
+  customClassData,
 }: CharacterSummaryProps) {
   const [nameError, setNameError] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -174,7 +167,7 @@ export default function CharacterSummary({
     return fa;
   }, [abilities, raceData]);
 
-  const hitPoints = calculateHitPoints(finalAbilities['Constitution'] || 10, selectedClass);
+  const hitPoints = calculateHitPoints(finalAbilities['Constitution'] || 10, selectedClass, 1, customClassData?.hitDie);
   const armorClass = calculateArmorClass(finalAbilities['Dextérité'] || 10);
   const initiative = calculateModifier(finalAbilities['Dextérité'] || 10);
 

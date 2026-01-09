@@ -265,7 +265,12 @@ if (loadingEquipment) {
       }
 
       // Dérivés de combat
-      const hitPoints = calculateHitPoints(finalAbilities['Constitution'] || 10, selectedClass as DndClass);
+      const hitPoints = calculateHitPoints(
+        finalAbilities['Constitution'] || 10,
+        selectedClass,
+        1,
+        customClassData?.hitDie
+      );
       const armorClass = calculateArmorClass(finalAbilities['Dextérité'] || 10);
       const initiative = calculateModifier(finalAbilities['Dextérité'] || 10);
       const speedFeet = raceData?.speed || 30;
@@ -672,7 +677,7 @@ const renderStep = () => {
             characterName={characterName}
             onCharacterNameChange={setCharacterName}
             selectedRace={selectedRace}
-            selectedClass={selectedClass as DndClass}
+            selectedClass={selectedClass}
             selectedBackground={selectedBackground}
             abilities={effectiveAbilities}
             selectedClassSkills={selectedClassSkills}
@@ -684,6 +689,7 @@ const renderStep = () => {
             selectedLanguages={selectedLanguages}
             age={age}
             gender={gender}
+            customClassData={customClassData}
             onFinish={handleFinish}
             onPrevious={previousStep}
           />
