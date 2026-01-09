@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Sun, Plus, Minus, Check, Dice6, Heart } from 'lucide-react';
 import type { Player } from '../../types/dnd';
-import { getRestorableResources, getHitDieSize, type RestableResource } from '../../services/restService';
+import { getRestorableResources, getHitDieSize, getModifierFromPlayer, type RestableResource } from '../../services/restService';
 import { getIconComponent } from '../CustomClassSettingsModal';
 
 interface RestSelectionModalProps {
@@ -24,7 +24,7 @@ export function RestSelectionModal({ open, onClose, player, onConfirm }: RestSel
     : 0;
 
   const hitDieSize = getHitDieSize(player.class);
-  const constitutionMod = player.abilities?.find(a => a.name === 'Constitution')?.modifier || 0;
+  const constitutionMod = getModifierFromPlayer(player, 'Constitution');
 
   const estimatedHealing = useMemo(() => {
     if (hitDiceCount === 0) return 0;

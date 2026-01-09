@@ -24,7 +24,7 @@ export interface RestUpdateResult {
   restoredLabels: string[];
 }
 
-function getModifierFromPlayer(player: Player, abilityName: string): number {
+export function getModifierFromPlayer(player: Player, abilityName: string): number {
   const abilities = player?.abilities;
   if (!abilities) return 0;
 
@@ -227,7 +227,7 @@ export function buildShortRestUpdate(
     const available = player.hit_dice.total - player.hit_dice.used;
     const diceToUse = Math.min(hitDiceToUse, available);
     const hitDieSize = getHitDieSize(player.class);
-    const constitutionMod = player.abilities?.find(a => a.name === 'Constitution')?.modifier || 0;
+    const constitutionMod = getModifierFromPlayer(player, 'Constitution');
 
     for (let i = 0; i < diceToUse; i++) {
       const roll = Math.floor(Math.random() * hitDieSize) + 1;
