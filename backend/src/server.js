@@ -44,6 +44,9 @@ const VALID_PROMO_CODES = {
   // Exemple 1 : -10% pour tout le monde 
   'AIDEDD10': { type: 'percentage', value: 10 }, 
 
+    // Exemple 1 : -10% pour tout le monde 
+  'ITA10': { type: 'percentage', value: 10 }, 
+
 };
 
 // 👇 NOUVELLE ROUTE POUR VÉRIFIER UN CODE
