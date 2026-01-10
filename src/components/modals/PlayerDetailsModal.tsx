@@ -3,10 +3,11 @@ import {
   X, User, Heart, Shield, Swords, Zap, BookOpen,
   Scroll, Package, Star, Loader2, Filter, ChevronDown,
   Calendar, Globe, Compass, Sparkles, Wrench, Footprints,
-  ScrollText
+  ScrollText, Minus, Plus
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Player, Ability, SpellSlots, InventoryItem } from '../../types/dnd';
+import toast from 'react-hot-toast';
 
 interface CollapsibleSectionProps {
   icon: React.ReactNode;
@@ -105,14 +106,17 @@ interface PlayerDetailsModalProps {
   playerId: string;
   playerName: string;
   onClose: () => void;
+  onPlayerUpdated?: () => void;
 }
 
-export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDetailsModalProps) {
+export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpdated }: PlayerDetailsModalProps) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [typeFilter, setTypeFilter] = useState<MetaType | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hpChangeValue, setHpChangeValue] = useState<string>('');
+  const [isApplyingHp, setIsApplyingHp] = useState(false);
 
   useEffect(() => {
     loadPlayerData();
@@ -193,6 +197,84 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
       if (slots[key] && (slots[key] as number) > 0) return true;
     }
     return false;
+  };
+
+  const applyDamage = async () => {
+    if (!player) return;
+    const amount = parseInt(hpChangeValue);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Entrez un montant valide');
+      return;
+    }
+
+    setIsApplyingHp(true);
+    try {
+      let newCurrentHp = player.current_hp;
+      let newTempHp = player.temporary_hp || 0;
+
+      if (newTempHp > 0) {
+        if (amount <= newTempHp) {
+          newTempHp -= amount;
+        } else {
+          const remaining = amount - newTempHp;
+          newTempHp = 0;
+          newCurrentHp = Math.max(0, newCurrentHp - remaining);
+        }
+      } else {
+        newCurrentHp = Math.max(0, newCurrentHp - amount);
+      }
+
+      const { error } = await supabase
+        .from('players')
+        .update({
+          current_hp: newCurrentHp,
+          temporary_hp: newTempHp,
+        })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      setPlayer({ ...player, current_hp: newCurrentHp, temporary_hp: newTempHp });
+      setHpChangeValue('');
+      toast.success(`${amount} degats appliques`);
+      onPlayerUpdated?.();
+    } catch (err) {
+      console.error('Erreur application degats:', err);
+      toast.error('Erreur lors de l\'application des degats');
+    } finally {
+      setIsApplyingHp(false);
+    }
+  };
+
+  const applyHealing = async () => {
+    if (!player) return;
+    const amount = parseInt(hpChangeValue);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Entrez un montant valide');
+      return;
+    }
+
+    setIsApplyingHp(true);
+    try {
+      const newCurrentHp = Math.min(player.max_hp, player.current_hp + amount);
+
+      const { error } = await supabase
+        .from('players')
+        .update({ current_hp: newCurrentHp })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      setPlayer({ ...player, current_hp: newCurrentHp });
+      setHpChangeValue('');
+      toast.success(`${amount} PV soignes`);
+      onPlayerUpdated?.();
+    } catch (err) {
+      console.error('Erreur application soins:', err);
+      toast.error('Erreur lors de l\'application des soins');
+    } finally {
+      setIsApplyingHp(false);
+    }
   };
 
   return (
@@ -339,6 +421,39 @@ export function PlayerDetailsModal({ playerId, playerName, onClose }: PlayerDeta
                         className={`h-full ${getHpColor(getHpPercentage(player.current_hp, player.max_hp))} transition-all`}
                         style={{ width: `${getHpPercentage(player.current_hp, player.max_hp)}%` }}
                       />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-gray-800/60 border border-gray-700 rounded-lg">
+                    <div className="text-xs text-gray-400 mb-2 font-medium">Modifier les PV (MJ)</div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        value={hpChangeValue}
+                        onChange={(e) => setHpChangeValue(e.target.value)}
+                        placeholder="Montant"
+                        className="flex-1 px-3 py-2 bg-gray-900/60 border border-gray-600 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                        disabled={isApplyingHp}
+                      />
+                      <button
+                        onClick={applyDamage}
+                        disabled={isApplyingHp || !hpChangeValue}
+                        className="px-3 py-2 bg-red-600/80 hover:bg-red-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+                        title="Appliquer des degats"
+                      >
+                        <Minus size={16} />
+                        Degats
+                      </button>
+                      <button
+                        onClick={applyHealing}
+                        disabled={isApplyingHp || !hpChangeValue}
+                        className="px-3 py-2 bg-green-600/80 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+                        title="Appliquer des soins"
+                      >
+                        <Plus size={16} />
+                        Soins
+                      </button>
                     </div>
                   </div>
                 </div>
