@@ -86,11 +86,16 @@ async function getPdfTemplate(): Promise<ArrayBuffer> {
 // ============================================================================
 
 const SKILL_MAPPING: Record<string, number> = {
-  'Acrobaties': 1, 'Dressage': 2, 'Arcanes': 3, 'Athlétisme': 4,
-  'Tromperie': 5, 'Histoire': 6, 'Perspicacité': 7, 'Intimidation': 8,
-  'Investigation': 9, 'Médecine': 10, 'Nature': 11, 'Perception': 12,
-  'Représentation': 13, 'Persuasion': 14, 'Religion': 15,
-  'Escamotage': 16, 'Discrétion': 17, 'Survie': 18
+  // Force
+  'Athlétisme':  1,
+  // Dextérité
+  'Acrobaties': 2, 'Discrétion': 3, 'Escamotage': 4,
+  // Intelligence
+  'Arcanes': 5, 'Histoire':  6, 'Investigation': 7, 'Nature': 8, 'Religion': 9,
+  // Sagesse
+  'Dressage': 10, 'Intuition':  11, 'Perspicacité': 11, 'Médecine': 12, 'Perception':  13, 'Survie': 14,
+  // Charisme
+  'Intimidation': 15, 'Persuasion': 16, 'Représentation': 17, 'Tromperie': 18
 };
 
 const SAVE_ORDER = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
