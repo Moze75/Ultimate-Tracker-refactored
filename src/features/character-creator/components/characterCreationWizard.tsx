@@ -39,22 +39,7 @@ import { getClassImageUrl } from '../../../config/assets';
 
 function getClassImageUrlLocal(className: DndClass | string | undefined | null): string {
   if (!className) return DEFAULT_CUSTOM_CLASS_IMAGE;
-  switch (className) {
-    case 'Guerrier': return '/Guerrier.png';
-    case 'Magicien': return '/Magicien.png';
-    case 'Roublard': return '/Voleur.png';
-    case 'Clerc': return '/Clerc.png';
-    case 'Rôdeur': return '/Rodeur.png';
-    case 'Barbare': return '/Barbare.png';
-    case 'Barde': return '/Barde.png';
-    case 'Druide': return '/Druide.png';
-    case 'Moine': return '/Moine.png';
-    case 'Paladin': return '/Paladin.png';
-    case 'Ensorceleur': return '/Ensorceleur.png';
-    case 'Occultiste': return '/Occultiste.png';
-    default:
-      return DEFAULT_CUSTOM_CLASS_IMAGE;
-  }
+  return getClassImageUrl(className as string) || DEFAULT_CUSTOM_CLASS_IMAGE;
 }
 
 // Normalise le don d'historique pour coller à la liste attendue par l'app
