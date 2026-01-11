@@ -78,11 +78,24 @@ function buildAbilitiesForTracker(
 
 async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<string | null> {
   try {
+    // 🔥 Si l'URL vient de Cloudflare R2, on la garde telle quelle (PAS de fetch/ré-upload)
+    if (url.includes('r2.dev') || url.includes('/static/')) {
+      console.log('✅ [tryUploadAvatarFromUrl - Integration] URL depuis R2/CDN, pas de ré-upload nécessaire:', url);
+      return url;
+    }
+
+    // 🔥 Si c'est une URL HTTP/HTTPS complète (autre que R2), on la garde aussi
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      console.log('✅ [tryUploadAvatarFromUrl - Integration] URL externe complète, pas de ré-upload:', url);
+      return url;
+    }
+
+    // Sinon, on upload (cas d'une dataURL ou chemin relatif local uniquement)
+    console.warn('⚠️ [tryUploadAvatarFromUrl - Integration] Upload depuis URL locale/blob:', url);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
 
-    // Déduire le content-type/extension
     const contentType = blob.type || 'image/png';
     const ext = (() => {
       const t = contentType.split('/')[1]?.toLowerCase();
@@ -90,12 +103,16 @@ async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<st
       return t || 'png';
     })();
 
-    const fileName = `class-${Date.now()}.${ext}`;
+    const fileName = `avatar-${Date.now()}.${ext}`;
     const filePath = `${playerId}/${fileName}`;
 
     const { error: uploadErr } = await supabase.storage
       .from('avatars')
-      .upload(filePath, blob, { upsert: true, contentType });
+      .upload(filePath, blob, { 
+        upsert: true, 
+        contentType,
+        cacheControl: '31536000' // 🔥 Cache 1 an
+      });
 
     if (uploadErr) throw uploadErr;
 
@@ -105,8 +122,8 @@ async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<st
 
     return publicUrl || null;
   } catch (e) {
-    console.warn('Upload avatar depuis URL/dataURL impossible, fallback sur URL directe:', e);
-    return null;
+    console.warn('❌ [tryUploadAvatarFromUrl - Integration] Upload impossible, on garde l\'URL originale:', e);
+    return url; // 🔥 Garde l'URL originale en fallback
   }
 }
 
