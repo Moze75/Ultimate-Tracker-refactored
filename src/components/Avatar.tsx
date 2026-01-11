@@ -152,8 +152,8 @@ export function Avatar({
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
+        .upload(filePath, compressedFile, {
+          cacheControl: '31536000', // 🔥 1 an au lieu de 1h
           upsert: true
         });
 
