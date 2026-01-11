@@ -40,7 +40,7 @@ const MAX_LOGIN_ATTEMPTS = 3;
 
   const BG_URL =
     (import.meta as any)?.env?.VITE_LOGIN_BG_URL ||
-    'https://yumzqyyogwzrmlcpvnky.supabase.co/storage/v1/object/public/static/tmpoofee5sh.png';
+    ASSETS.LOGIN_BACKGROUND;
 
   const bgStyle: React.CSSProperties = {
     backgroundImage: `url(${BG_URL})`,
