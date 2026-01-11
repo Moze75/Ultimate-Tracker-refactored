@@ -41,31 +41,21 @@ export const ASSETS = {
     Occultiste: getAssetUrl('/static/Occultiste.png', true),
   } as Record<string, string>,
   
-  // Images de races (migré vers R2)
-  RACE_IMAGES: {
-    'Humain': getAssetUrl('/Races/Humain.png', true),
-    'Elfe': getAssetUrl('/Races/Elfe.png', true),
-    'Nain': getAssetUrl('/Races/Nain.png', true),
-    'Halfelin': getAssetUrl('/Races/Halfelin.png', true),
-    'Demi-Elfe': getAssetUrl('/Races/Demi-Elfe.png', true),
-    'Demi-Orc': getAssetUrl('/Races/Demi-Orc.png', true),
-    'Gnome': getAssetUrl('/Races/Gnome. png', true),
-    'Tieffelin': getAssetUrl('/Races/Tieffelin.png', true),
-    'Drakéide': getAssetUrl('/Races/Drakeide.png', true),
-  } as Record<string, string>,
+  // Images de races (migré vers R2 dans le dossier static)
+  RACE_IMAGES_BASE: getAssetUrl('/static', true),
   
   // Avatars de joueurs (restent sur Supabase pour l'upload direct)
-  AVATARS_BASE:  `${SUPABASE_STORAGE_URL}/avatars`,
+  AVATARS_BASE: `${SUPABASE_STORAGE_URL}/avatars`,
 };
 
 // Helper pour récupérer l'image d'une classe
 export function getClassImageUrl(className: string): string {
-  return ASSETS. CLASS_IMAGES[className] || getAssetUrl('/static/default-class.png', true);
+  return ASSETS.CLASS_IMAGES[className] || getAssetUrl('/static/default-class.png', true);
 }
 
 // Helper pour récupérer l'image d'une race
 export function getRaceImageUrl(raceName: string): string {
-  return ASSETS.RACE_IMAGES[raceName] || getAssetUrl('/Races/default-race.png', true);
+  return `${ASSETS.RACE_IMAGES_BASE}/${raceName}. png`;
 }
 
 export { getAssetUrl };
