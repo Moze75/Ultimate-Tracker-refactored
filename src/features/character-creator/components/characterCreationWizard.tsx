@@ -35,6 +35,7 @@ const feetToMeters = (ft?: number) => {
 };
 
 import { DEFAULT_CUSTOM_CLASS_IMAGE } from '../utils/classImages';
+import { getClassImageUrl } from '../../../config/assets';
 
 function getClassImageUrlLocal(className: DndClass | string | undefined | null): string {
   if (!className) return DEFAULT_CUSTOM_CLASS_IMAGE;
