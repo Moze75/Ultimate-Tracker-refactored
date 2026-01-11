@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import { Users, Zap, Shield, Star, ChevronDown, Eye, Heart, Settings, MessageSquare, Sparkles } from 'lucide-react';
 import CustomRaceModal from '../CustomRaceModal';
 import CardDetailModal from '../ui/CardDetailModal';
+import { ASSETS } from '../../../../config/assets';
 
 interface RaceSelectionProps {
   selectedRace: string;
