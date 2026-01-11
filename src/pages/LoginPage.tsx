@@ -3,6 +3,7 @@ import { testConnection } from '../lib/supabase';
 import { LogIn, Mail, Lock, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
+import { ASSETS } from '../config/assets';
 
 interface LoginPageProps {
   onBackToHome?: () => void; // ✅ NOUVEAU : Callback optionnel pour retourner à l'accueil
