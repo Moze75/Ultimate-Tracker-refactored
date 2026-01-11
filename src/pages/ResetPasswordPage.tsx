@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
+import { ASSETS } from '../config/assets';
 
 export function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('');
