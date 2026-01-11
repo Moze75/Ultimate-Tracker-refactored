@@ -133,6 +133,12 @@ export function Avatar({
 
     setIsUploading(true);
     try {
+      // 🆕 Compresser l'image avant upload
+      toast.loading('Compression de l\'image... ', { id: 'compress' });
+      const compressedFile = await compressImage(file, 300); // Max 300 KB
+      toast.dismiss('compress');
+      console.log(`✅ Compression :  ${(file.size / 1024).toFixed(2)} KB → ${(compressedFile.size / 1024).toFixed(2)} KB`);
+      
       if (url) {
         const oldPath = extractSupabaseAvatarPath(url);
         if (oldPath) {
