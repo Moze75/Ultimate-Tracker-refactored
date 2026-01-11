@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import { Sword, Heart, Shield, Zap, BookOpen, CheckSquare, Square, Package, Wrench, Star, Sparkles, Settings } from 'lucide-react';
 import { DndClass, CustomClassData } from '../../types/character';
 import { normalizeSkill } from '../../data/skills';
-import { getClassImageUrl } from '../../utils/classImages';
+import { getClassImageUrl } from '../../../../config/assets';
 import CardDetailModal from '../ui/CardDetailModal';
 import CustomClassModal from '../CustomClassModal';
 
