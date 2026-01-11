@@ -49,75 +49,7 @@ export function Avatar({
     return publicUrl. slice(i + marker. length);
   };
 
-  // 🆕 Fonction pour compresser l'image
-  const compressImage = async (file: File, maxSizeKB = 300): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        const img = new Image();
-        img.src = e.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Redimensionner si trop grand (max 800x800)
-          const maxDimension = 800;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = (height / width) * maxDimension;
-              width = maxDimension;
-            } else {
-              width = (width / height) * maxDimension;
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas. getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          // Compression progressive jusqu'à atteindre la taille cible
-          let quality = 0.8;
-          const tryCompress = () => {
-            canvas.toBlob(
-              (blob) => {
-                if (! blob) {
-                  reject(new Error('Compression failed'));
-                  return;
-                }
-
-                const sizeKB = blob.size / 1024;
-                console.log(`📦 Taille après compression (quality=${quality. toFixed(2)}): ${sizeKB.toFixed(2)} KB`);
-
-                if (sizeKB <= maxSizeKB || quality <= 0.3) {
-                  const compressedFile = new File([blob], file.name, {
-                    type: 'image/jpeg',
-                    lastModified: Date.now(),
-                  });
-                  resolve(compressedFile);
-                } else {
-                  quality -= 0.1;
-                  tryCompress();
-                }
-              },
-              'image/jpeg',
-              quality
-            );
-          };
-
-          tryCompress();
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
-
-  const handleFileSelect = async (event:  React.ChangeEvent<HTMLInputElement>) => {
+ 
   
   const handleFileSelect = async (event: React. ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
