@@ -220,22 +220,23 @@ export default function RaceSelection({
     );
   };
 
-  function RaceImage({ raceName }: { raceName: string }) {
+  function RaceImage({ raceName }:  { raceName: string }) {
+    // ✅ Utiliser l'URL depuis assets.ts (Cloudflare R2 - dossier static)
+    const base = ASSETS.RACE_IMAGES_BASE;
+    
     // ✅ Mapping explicite pour les races avec images spécifiques
     const RACE_IMAGE_MAPPING: Record<string, string> = {
       'Haut-Elfe': 'Haut-elfe.png',
       'Elfe sylvestre': 'Elfe-Sylvestre.png',
       'Drow': 'Drow.png',
     };
-
-    const base = '/Races/';
     
     // ✅ Vérifier d'abord le mapping
     const mappedImage = RACE_IMAGE_MAPPING[raceName];
     if (mappedImage) {
       return (
         <img
-          src={base + mappedImage}
+          src={`${base}/${mappedImage}`}
           alt={raceName}
           className="w-full h-auto object-contain rounded-md shadow-sm"
           loading="lazy"
@@ -244,7 +245,7 @@ export default function RaceSelection({
     }
 
     // Sinon, utiliser la logique de fallback comme avant
-    const toASCII = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const toASCII = (s:  string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const slug = (s: string) =>
       toASCII(s)
         .toLowerCase()
@@ -269,7 +270,7 @@ export default function RaceSelection({
     const [idx, setIdx] = useState(0);
     if (idx >= candidates.length) return null;
 
-    const src = base + candidates[idx];
+    const src = `${base}/${candidates[idx]}`;
     return (
       <img
         src={src}
