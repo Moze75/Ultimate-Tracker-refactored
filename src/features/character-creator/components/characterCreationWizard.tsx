@@ -66,6 +66,20 @@ function parseGoldFromItems(items?: string[]): number | undefined {
 // Tente d'uploader une image dans le bucket Supabase "avatars"
 async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<string | null> {
   try {
+    // 🔥 Si l'URL vient de Cloudflare R2, on la garde telle quelle (PAS de ré-upload)
+    if (url.includes('r2.dev') || url.includes('/static/')) {
+      console.log('✅ [tryUploadAvatarFromUrl] URL depuis R2/CDN, pas de ré-upload nécessaire:', url);
+      return url;
+    }
+
+    // 🔥 Si c'est une URL HTTP/HTTPS complète (autre que R2), on la garde aussi
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      console.log('✅ [tryUploadAvatarFromUrl] URL externe complète, pas de ré-upload:', url);
+      return url;
+    }
+
+    // Sinon, on upload (cas d'une dataURL ou chemin relatif local uniquement)
+    console.warn('⚠️ [tryUploadAvatarFromUrl] Upload depuis URL locale/blob:', url);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
@@ -80,20 +94,24 @@ async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<st
     const fileName = `class-${Date.now()}.${ext}`;
     const filePath = `${playerId}/${fileName}`;
 
-    const { error: uploadErr } = await supabase.storage
+    const { error: uploadErr } = await supabase. storage
       .from('avatars')
-      .upload(filePath, blob, { upsert: true, contentType });
+      .upload(filePath, blob, { 
+        upsert: true, 
+        contentType,
+        cacheControl: '31536000' // 🔥 Cache 1 an (au lieu de défaut)
+      });
 
     if (uploadErr) throw uploadErr;
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabase. storage
       .from('avatars')
       .getPublicUrl(filePath);
 
     return publicUrl || null;
   } catch (e) {
-    console.warn('Upload avatar depuis URL impossible:', e);
-    return null;
+    console.warn('❌ [tryUploadAvatarFromUrl] Upload impossible, on garde l\'URL originale:', e);
+    return url; // 🔥 Garde l'URL originale en fallback
   }
 }
 
