@@ -62,7 +62,7 @@ export function EquipmentSlots({
       <div className="p-4">
         <div className="relative w-full mx-auto aspect-[2/3] bg-gray-800/50 rounded-lg overflow-hidden">
           <img
-            src="https://yumzqyyogwzrmlcpvnky.supabase.co/storage/v1/object/public/static//Silouete.png"
+            src={ASSETS.CHARACTER_SILHOUETTE}
             alt="Character silhouette"
             className="absolute inset-0 w-full h-full object-contain opacity-30"
             style={{ mixBlendMode: 'luminosity' }}
