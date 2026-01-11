@@ -64,7 +64,7 @@ function parseGoldFromItems(items?: string[]): number | undefined {
 }
 
 // Tente d'uploader une image dans le bucket Supabase "avatars"
-async function tryUploadAvatarFromUrl(playerId: string, url: string): Promise<string | null> {
+async function tryUploadAvatarFromUrl(playerId:  string, url: string): Promise<string | null> {
   try {
     // 🔥 Si l'URL vient de Cloudflare R2, on la garde telle quelle (PAS de ré-upload)
     if (url.includes('r2.dev') || url.includes('/static/')) {
