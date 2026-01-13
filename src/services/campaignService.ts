@@ -6,6 +6,7 @@ import {
   CampaignInventoryItem,
   CampaignGift,
   CampaignGiftClaim,
+  CampaignNote,
   GiftType,
   DistributionMode
 } from '../types/campaign';
@@ -793,5 +794,78 @@ async claimGift(
       campaignId: membership.campaign_id,
       members
     };
+  },
+
+  async getCampaignNotes(campaignId: string): Promise<CampaignNote[]> {
+    const { data, error } = await supabase
+      .from('campaign_notes')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('note_order', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createCampaignNote(campaignId: string, title: string = 'Nouvelle note'): Promise<CampaignNote> {
+    const { data: existingNotes } = await supabase
+      .from('campaign_notes')
+      .select('note_order')
+      .eq('campaign_id', campaignId)
+      .order('note_order', { ascending: false })
+      .limit(1);
+
+    const nextOrder = existingNotes && existingNotes.length > 0 ? existingNotes[0].note_order + 1 : 0;
+
+    const { data, error } = await supabase
+      .from('campaign_notes')
+      .insert({
+        campaign_id: campaignId,
+        title,
+        content: '',
+        note_order: nextOrder,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateCampaignNote(noteId: string, updates: Partial<Pick<CampaignNote, 'title' | 'content'>>): Promise<CampaignNote> {
+    const { data, error } = await supabase
+      .from('campaign_notes')
+      .update(updates)
+      .eq('id', noteId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteCampaignNote(noteId: string): Promise<void> {
+    const { error } = await supabase
+      .from('campaign_notes')
+      .delete()
+      .eq('id', noteId);
+
+    if (error) throw error;
+  },
+
+  async reorderCampaignNotes(campaignId: string, noteIds: string[]): Promise<void> {
+    const updates = noteIds.map((id, index) => ({
+      id,
+      note_order: index,
+    }));
+
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('campaign_notes')
+        .update({ note_order: update.note_order })
+        .eq('id', update.id);
+
+      if (error) throw error;
+    }
   },
 };

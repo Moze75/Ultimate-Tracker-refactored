@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react'; 
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   ArrowLeft, Plus, Users, Package, Send, Crown, X, Trash2, Mail, Copy, Check,
   Settings, Search, Edit2, UserPlus, AlertCircle, Coins, Clock, History, Loader2,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { campaignService } from '../services/campaignService';
@@ -16,6 +17,7 @@ import { CustomItemModal } from '../components/modals/CustomItemModal';
 import { EquipmentListModal } from '../components/modals/EquipmentListModal';
 import { ImageUrlInput } from '../components/ImageUrlInput';
 import { PlayerDetailsModal } from '../components/modals/PlayerDetailsModal';
+import { CampaignNotesTab } from '../components/CampaignNotesTab';
 
 interface GameMasterCampaignPageProps {
   session: any;
@@ -557,7 +559,7 @@ interface CampaignDetailViewProps {
 }
 
 function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'notes'>('members');
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const [inventory, setInventory] = useState<CampaignInventoryItem[]>([]);
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
@@ -703,6 +705,17 @@ const loadInvitations = async () => {
               <Send size={20} />
               Envoyer aux joueurs
             </button>
+            <button
+              onClick={() => setActiveTab('notes')}
+              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'notes'
+                  ? 'border-purple-500 text-purple-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <FileText size={20} />
+              Notes
+            </button>
           </div>
         </div>
 
@@ -737,6 +750,10 @@ const loadInvitations = async () => {
             giftsLoading={giftsLoading}
             onRefresh={loadGifts}
           />
+        )}
+
+        {activeTab === 'notes' && (
+          <CampaignNotesTab campaignId={campaign.id} />
         )}
       </div>
     </div>

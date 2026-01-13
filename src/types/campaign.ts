@@ -73,11 +73,21 @@ export interface CampaignGiftClaim {
   gift_id: string;
   user_id: string;
   player_id?: string;
-  
+
   claimed_quantity?: number;
   claimed_gold: number;
   claimed_silver: number;
   claimed_copper: number;
-  
+
   claimed_at: string;
+}
+
+export interface CampaignNote {
+  id: string;
+  campaign_id: string;
+  title: string;
+  content: string;
+  note_order: number;
+  created_at: string;
+  updated_at: string;
 }
