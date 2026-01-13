@@ -122,7 +122,7 @@ function NoteCard({
       onDragEnd={() => setIsDragging(false)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, note.id)}
-      className={`bg-gray-800/60 border border-gray-700/50 rounded-lg transition-all duration-200 ${
+      className={`group bg-gray-800/60 border border-gray-700/50 rounded-lg transition-all duration-200 ${
         isDragging ? 'opacity-50 scale-[0.98]' : ''
       } hover:border-gray-600/50`}
     >
