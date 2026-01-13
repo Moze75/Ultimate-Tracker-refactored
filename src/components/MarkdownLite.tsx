@@ -247,17 +247,15 @@ export default function MarkdownLite({ content }: { content: string }) {
       if ((ulBuffer.length || olBuffer.length || quoteBuffer.length) && raw.trim() !== '') flushAllBlocks();
 
       // --- Titres ---
-      const h4 = raw.match(/^\s*####\s+(.*)$/);
-      if (h4) { out.push(<div key={`h4-${out.length}`} className="font-semibold mt-3 mb-1 tracking-wide">{renderInline(h4[1])}</div>); continue; }
-      
-      const h3 = raw.match(/^\s*###\s+(.*)$/);
-      if (h3) { out.push(<div key={`h3-${out.length}`} className="font-bold text-base mt-4 mb-2">{renderInline(h3[1])}</div>); continue; }
+      const h2 = raw.match(/^\s*##\s+(.*)$/);
+      if (h2) { out.push(<h2 key={`h2-${out.length}`} className="text-xl font-bold mt-5 mb-3 text-gray-100">{renderInline(h2[1])}</h2>); continue; }
 
-      const fullBold = raw.match(/^\s*\*\*(.+?)\*\*\s*$/);
-      if (fullBold) {
-        out.push(<div key={`sub-${out.length}`} className="mt-3 mb-2 uppercase tracking-wide text-[0.95rem] text-gray-200">{renderInline(fullBold[1])}</div>);
-        continue;
-      }
+      const h3 = raw.match(/^\s*###\s+(.*)$/);
+      if (h3) { out.push(<h3 key={`h3-${out.length}`} className="text-lg font-semibold mt-4 mb-2 text-gray-200">{renderInline(h3[1])}</h3>); continue; }
+
+      const h4 = raw.match(/^\s*####\s+(.*)$/);
+      if (h4) { out.push(<h4 key={`h4-${out.length}`} className="text-base font-medium mt-3 mb-1 text-gray-300">{renderInline(h4[1])}</h4>); continue; }
+
 
       if (raw.trim() === '') { flushAllBlocks(); out.push(<div key={`sp-${out.length}`} className="h-2" />); continue; }
 

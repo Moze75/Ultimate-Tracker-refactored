@@ -254,7 +254,7 @@ function NoteCard({
               {showPreview ? 'Editer' : 'Apercu'}
             </button>
             <span className="text-xs text-gray-500">
-              Supporte le Markdown: **gras**, _italique_, listes, titres (### ou ##)
+              Supporte le Markdown: **gras**, _italique_, listes, titres (## ou ###)
             </span>
           </div>
 
@@ -473,13 +473,13 @@ export function CampaignNotesTab({ campaignId }: CampaignNotesTabProps) {
         <h3 className="text-sm font-medium text-gray-400 mb-2">Aide Markdown</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-500">
           <div>
-            <code className="text-amber-400">**texte**</code> = <strong>gras</strong>
+            <code className="text-amber-400">**texte**</code> = <strong className="font-bold">gras</strong>
           </div>
           <div>
             <code className="text-amber-400">_texte_</code> = <em>italique</em>
           </div>
           <div>
-            <code className="text-amber-400">### Titre</code> = Titre
+            <code className="text-amber-400">## ou ###</code> = <span className="text-lg">Titre</span>
           </div>
           <div>
             <code className="text-amber-400">- item</code> = Liste
