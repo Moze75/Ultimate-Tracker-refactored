@@ -177,17 +177,17 @@ export function parseMarkdownLite(md: string, ctx: MarkdownCtx): React.ReactNode
     // Titres h1, h2, h3
     const h3 = line.match(/^\s*###\s+(.*)$/i);
     if (h3) {
-      out.push(<h4 key={`h3-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h3[1]))}</h4>);
+      out.push(<h3 key={`h3-${key++}`} className="text-lg font-semibold text-gray-100 mt-4 mb-2">{formatInline(h3[1])}</h3>);
       i++; continue;
     }
     const h2 = line.match(/^\s*##\s+(.*)$/i);
     if (h2) {
-      out.push(<h4 key={`h2-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h2[1]))}</h4>);
+      out.push(<h2 key={`h2-${key++}`} className="text-xl font-bold text-white mt-5 mb-3">{formatInline(h2[1])}</h2>);
       i++; continue;
     }
     const h1 = line.match(/^\s*#\s+(.*)$/i);
     if (h1) {
-      out.push(<h4 key={`h1-${key++}`} className="text-white font-semibold text-sm sm:text-base mt-4 mb-2">{formatInline(sentenceCase(h1[1]))}</h4>);
+      out.push(<h1 key={`h1-${key++}`} className="text-2xl font-bold text-white mt-6 mb-3">{formatInline(h1[1])}</h1>);
       i++; continue;
     }
 
