@@ -93,10 +93,8 @@ export function GamePage({
   session,
   selectedCharacter,
   onBackToSelection,
-  onUpdateCharacter,
-  campaignId,
-  campaignMembers,
-}:  GamePageProps) {
+  onUpdateCharacter, 
+}: GamePageProps) {
   /* ---------------- State principal ---------------- */
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
