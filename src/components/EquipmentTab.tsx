@@ -16,6 +16,7 @@ import { EquipmentSlots } from './Equipment/EquipmentSlots';
 import { InventoryList } from './Equipment/InventoryList';
 
 import { checkWeaponProficiency, getPlayerWeaponProficiencies, WeaponProficiencyCheck } from '../utils/weaponProficiencyChecker';
+import { CampaignMember } from '../types/campaign';
 
 // ========== HELPERS POUR LE CALCUL DE LA CA ==========
 
@@ -119,36 +120,42 @@ const recalculateAndUpdateAC = async (
 
   // Calculer les bonus d'équipement avec l'inventaire mis à jour
   const equipmentBonuses = calculateEquipmentBonuses(updatedInventory);
-  
-  // Calculer la nouvelle CA
-  const newArmorClass = calculateUnarmoredAC(player, equipmentBonuses);
-  
-  // Vérifier si la CA a changé
-  const currentAC = player.stats?. armor_class ??  10;
-  
-  if (newArmorClass !== currentAC) {
-    console.log(`[EquipmentTab] ✅ Recalcul CA: ${currentAC} → ${newArmorClass}`);
-    
-    const updatedStats = {
-      ... player.stats,
-      armor_class: newArmorClass
-    };
 
-    try {
-      const { error } = await supabase
-        .from('players')
-        .update({ stats: updatedStats })
-        .eq('id', player.id);
+  // Calculer la CA auto
+  const newAutoAC = calculateUnarmoredAC(player, equipmentBonuses);
 
-      if (error) throw error;
+  const currentStats = player.stats || {};
+  const isManualAC = (currentStats as any).is_ac_manual === true;
+  const currentAC = currentStats.armor_class ?? 10;
 
-      onPlayerUpdate({
-        ...player,
-        stats: updatedStats
-      });
-    } catch (err) {
-      console.error('[EquipmentTab] Erreur mise à jour CA:', err);
-    }
+  const updatedStats = {
+    ...currentStats,
+    auto_armor_class: newAutoAC,
+    armor_class: isManualAC ? currentAC : newAutoAC,
+  };
+
+  const shouldUpdate =
+    updatedStats.armor_class !== currentStats.armor_class ||
+    updatedStats.auto_armor_class !== (currentStats as any).auto_armor_class;
+
+  if (!shouldUpdate) return;
+
+  console.log(`[EquipmentTab] ✅ Recalcul CA: ${currentAC} → ${updatedStats.armor_class} (auto=${newAutoAC}, manuel=${isManualAC})`);
+
+  try {
+    const { error } = await supabase
+      .from('players')
+      .update({ stats: updatedStats })
+      .eq('id', player.id);
+
+    if (error) throw error;
+
+    onPlayerUpdate({
+      ...player,
+      stats: updatedStats
+    });
+  } catch (err) {
+    console.error('[EquipmentTab] Erreur mise à jour CA:', err);
   }
 };
 
@@ -254,10 +261,14 @@ interface EquipmentTabProps {
   onPlayerUpdate: (player: Player) => void;
   onInventoryUpdate: (inventory: InventoryItem[]) => void;
   viewMode?: 'all' | 'gold' | 'inventory' | 'bag';
+  campaignId?: string | null;
+  campaignMembers?: CampaignMember[];
+  currentUserId?: string;
 }
 
 export function EquipmentTab({
-  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all' 
+  player, inventory, onPlayerUpdate, onInventoryUpdate, viewMode = 'all',
+  campaignId, campaignMembers, currentUserId
 }: EquipmentTabProps) {
   const [armor, setArmor] = useState<Equipment | null>(player.equipment?.armor || null);
   const [shield, setShield] = useState<Equipment | null>(player.equipment?.shield || null);
@@ -875,6 +886,9 @@ export function EquipmentTab({
         }}
         onOpenAddCustom={() => setShowCustom(true)}
         checkWeaponProficiency={checkWeaponProficiencyForInventory}
+        campaignId={campaignId}
+        campaignMembers={campaignMembers}
+        currentUserId={currentUserId}
       />
       )}
 
@@ -997,3 +1011,4 @@ export function EquipmentTab({
     </div>
   );
 }
+ 
