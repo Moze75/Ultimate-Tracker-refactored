@@ -46,8 +46,6 @@ type GamePageProps = {
   selectedCharacter: Player;
   onBackToSelection: () => void;
   onUpdateCharacter?: (p: Player) => void;
-  campaignId?: string | null;
-  campaignMembers?: CampaignMember[];
 };
 
 /* ===========================================================
