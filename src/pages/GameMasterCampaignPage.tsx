@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
-import {
   ArrowLeft, Plus, Users, Package, Send, Crown, X, Trash2, Mail, Copy, Check,
   Settings, Search, Edit2, UserPlus, AlertCircle, Coins, Clock, History, Loader2,
-  Image,
+  FileText, 
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { campaignService } from '../services/campaignService';
