@@ -16,6 +16,7 @@ import { Dices } from 'lucide-react'; // Ajoutez cette icône
 import { CustomItemModal } from '../components/modals/CustomItemModal';
 import { EquipmentListModal } from '../components/modals/EquipmentListModal';
 import { ImageUrlInput } from '../components/ImageUrlInput';
+import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
 import { PlayerDetailsModal } from '../components/modals/PlayerDetailsModal';
 import { CampaignNotesTab } from '../components/CampaignNotesTab';
 
