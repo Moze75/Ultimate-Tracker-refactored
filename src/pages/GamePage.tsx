@@ -712,9 +712,7 @@ const [visitedTabs] = useState<Set<TabKey>>(
   const renderPane = (key: TabKey | 'profile-details') => { 
     if (!currentPlayer) return null;
      
-    if (key === 'visuals') {
-      return <CampaignVisualsTab playerId={currentPlayer.id} userId={session?. user?. id || ''} />;
-    }
+    if (key === 'profile') { 
       if (isGridMode) {
         return (
           <div className="-m-4">
