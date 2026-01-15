@@ -331,8 +331,8 @@ export function GamePage({
   })();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
-  const [visitedTabs] = useState<Set<TabKey>>(
-    () => new Set<TabKey>(['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'])
+const [visitedTabs] = useState<Set<TabKey>>(
+    () => new Set<TabKey>(['combat', 'class', 'abilities', 'stats', 'equipment', 'profile', 'visuals'])
   );
 
   const [settingsOpen, setSettingsOpen] = useState(false);
