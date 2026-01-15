@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
-
+ 
 import { supabase } from '../lib/supabase';
 import { Player } from '../types/dnd';
 import { CampaignMember } from '../types/campaign';
@@ -23,7 +23,6 @@ import PlayerProfileProfileTab from '../components/PlayerProfileProfileTab';
 import { loadAbilitySections } from '../services/classesContent';
 
 import { PlayerProfileSettingsModal } from '../components/PlayerProfileSettingsModal';
-  import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { DiceBox3D } from '../components/DiceBox3D';
@@ -34,8 +33,8 @@ import '../styles/swipe.css';
 /* ===========================================================
    Types & Constantes
    =========================================================== */
-type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile' | 'visuals';
-const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile', 'visuals'];
+type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile';
+const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'];
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
 const lastTabKeyFor = (playerId: string) => `ut:lastActiveTab:${playerId}`;
@@ -92,8 +91,8 @@ export function GamePage({
   session,
   selectedCharacter,
   onBackToSelection,
-  onUpdateCharacter, 
-}: GamePageProps) { 
+  onUpdateCharacter,
+}: GamePageProps) {
   /* ---------------- State principal ---------------- */
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -332,8 +331,8 @@ export function GamePage({
   })();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
-const [visitedTabs] = useState<Set<TabKey>>(
-    () => new Set<TabKey>(['combat', 'class', 'abilities', 'stats', 'equipment', 'profile', 'visuals'])
+  const [visitedTabs] = useState<Set<TabKey>>(
+    () => new Set<TabKey>(['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'])
   );
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -712,10 +711,8 @@ const [visitedTabs] = useState<Set<TabKey>>(
 
   const renderPane = (key: TabKey | 'profile-details') => { 
     if (!currentPlayer) return null;
-         if (key === 'visuals') {
-      return <CampaignVisualsTab playerId={currentPlayer.id} userId={session?. user?. id || ''} />;
-    }
-    if (key === 'profile') { 
+     
+    if (key === 'profile') {
       if (isGridMode) {
         return (
           <div className="-m-4">
