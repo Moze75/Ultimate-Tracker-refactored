@@ -23,6 +23,7 @@ import PlayerProfileProfileTab from '../components/PlayerProfileProfileTab';
 import { loadAbilitySections } from '../services/classesContent';
 
 import { PlayerProfileSettingsModal } from '../components/PlayerProfileSettingsModal';
+import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { DiceBox3D } from '../components/DiceBox3D';
