@@ -33,7 +33,7 @@ import '../styles/swipe.css';
 /* ===========================================================
    Types & Constantes
    =========================================================== */
-type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile';
+type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile' | 'visuals';
 const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'];
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
