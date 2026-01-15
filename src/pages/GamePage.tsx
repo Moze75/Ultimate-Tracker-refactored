@@ -34,7 +34,7 @@ import '../styles/swipe.css';
    Types & Constantes
    =========================================================== */
 type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile' | 'visuals';
-const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile'];
+const TAB_ORDER: TabKey[] = ['combat', 'class', 'abilities', 'stats', 'equipment', 'profile', 'visuals'];
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
 const lastTabKeyFor = (playerId: string) => `ut:lastActiveTab:${playerId}`;
