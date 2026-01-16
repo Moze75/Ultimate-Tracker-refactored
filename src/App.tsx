@@ -10,6 +10,7 @@ import { DiceSettingsProvider } from './hooks/useDiceSettings'; // ✅ AJOUT
 import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore'; 
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import { welcomeEmailService } from './services/welcomeEmailService';
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
 const SKIP_AUTO_RESUME_ONCE = 'ut:skipAutoResumeOnce';
