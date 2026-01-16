@@ -295,6 +295,36 @@ useEffect(() => {
       console.log('[App] New session:', newSession ?  'PRÉSENTE - user:  ' + newSession. user?. email : 'NULLE');
       console.log('[App] hardLoggedOut:', hardLoggedOut);
       console.log('[App] sessionStorage ut:explicit-logout:', sessionStorage.getItem('ut:explicit-logout'));
+
+              
+      // 🔔 DÉTECTION NOUVEAU UTILISATEUR - Envoi email bienvenue
+      if (
+        newSession?. user &&
+        (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
+        !welcomeEmailSentRef.current. has(newSession.user.id)
+      ) {
+        // Vérifier si c'est un nouvel utilisateur (créé il y a moins de 60 secondes)
+        const userCreatedAt = new Date(newSession.user.created_at);
+        const now = new Date();
+        const diffSeconds = (now.getTime() - userCreatedAt.getTime()) / 1000;
+
+        console.log('⏱️ [App] Compte créé il y a', diffSeconds, 'secondes');
+
+        if (diffSeconds < 60) {
+          console.log('🎉 [App] NOUVEL UTILISATEUR DÉTECTÉ ! ', newSession.user.email);
+
+          // Marquer comme traité pour éviter les doublons
+          welcomeEmailSentRef.current.add(newSession.user.id);
+
+          // Envoyer l'email de bienvenue (sans attendre)
+          welcomeEmailService.sendWelcomeEmail(
+            newSession.user.id,
+            newSession.user.email! 
+          ).catch(err => {
+            console.error('❌ [App] Erreur envoi email bienvenue:', err);
+          });
+        }
+      }
       
       // ✅ NOUVEAU : Si c'est une confirmation d'email ou un nouveau login, nettoyer le flag
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
