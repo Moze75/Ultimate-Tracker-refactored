@@ -55,6 +55,7 @@ function App() {
 
   const [componentLoadError, setComponentLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+    const welcomeEmailSentRef = useRef(new Set<string>());
 
   const [LoginPage, setLoginPage] = useState<React.ComponentType<any> | null>(null);
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
