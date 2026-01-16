@@ -7,37 +7,13 @@ export const authService = {
   },
 
   async signUp(email: string, password: string) {
-    const result = await supabase.auth. signUp({
+    return await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: 'https://le-compagnon-dnd.fr'
       }
     });
-
-    // Envoyer l'email de bienvenue si l'inscription réussit
-    if (result. data. user && ! result.error) {
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-        await fetch(`${supabaseUrl}/functions/v1/send-welcome-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseAnonKey}`
-          },
-          body: JSON.stringify({ email:  result.data.user.email })
-        });
-
-        console.log('[authService] Email de bienvenue envoyé à', email);
-      } catch (emailError) {
-        console.error('[authService] Erreur envoi email bienvenue:', emailError);
-        // Ne pas bloquer l'inscription si l'email échoue
-      }
-    }
-
-    return result;
   },
 
   async signInWithEmail(email: string, password: string) {
