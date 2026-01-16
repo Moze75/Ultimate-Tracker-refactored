@@ -6,11 +6,16 @@ export const welcomeEmailService = {
       console.log('🚀 [welcomeEmailService] Vérification pour', email);
 
       // Vérifier si l'email a déjà été envoyé
-      const { data: existing } = await supabase
+      const { data: existing, error:  checkError } = await supabase
         .from('welcome_emails_sent')
         .select('id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+
+      // Ignorer l'erreur PGRST116 (aucune ligne trouvée)
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('⚠️ [welcomeEmailService] Erreur vérification:', checkError);
+      }
 
       if (existing) {
         console.log('⏭️ [welcomeEmailService] Email déjà envoyé pour', email);
