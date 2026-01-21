@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 interface CampaignVisualsTabProps {
   playerId: string;
-  userId: string; 
+  userId: string;
 }
 
 export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps) {
