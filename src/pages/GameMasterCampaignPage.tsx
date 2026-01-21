@@ -770,7 +770,7 @@ const loadInvitations = async () => {
         {activeTab === 'visuals' && (
           <CampaignVisualsTab
             playerId={campaign.id}
-            userId={session?. user?. id || ''}
+            userId={session?.user?.id || ''}
           />
         )}
 

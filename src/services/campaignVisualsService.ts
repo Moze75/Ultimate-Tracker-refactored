@@ -3,21 +3,20 @@ import { supabase } from '../lib/supabase';
 export interface CampaignVisual {
   id: string;
   user_id: string;
-campaign_id: string; 
+  campaign_id: string;
   title: string;
   image_url: string;
-  description?:  string;
+  description?: string;
   category: 'character' | 'location' | 'item' | 'npc' | 'general';
   created_at: string;
 }
 
 export const campaignVisualsService = {
-  async getAll(playerId: string): Promise<CampaignVisual[]> {
+  async getAll(campaignId: string): Promise<CampaignVisual[]> {
     const { data, error } = await supabase
       .from('campaign_visuals')
       .select('*')
-    .eq('campaign_id', campaignId)  // CORRECT (et renommer le param)
-
+      .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -46,7 +45,7 @@ export const campaignVisualsService = {
 
   async delete(id: string): Promise<void> {
     const { error } = await supabase
-      . from('campaign_visuals')
+      .from('campaign_visuals')
       .delete()
       .eq('id', id);
 

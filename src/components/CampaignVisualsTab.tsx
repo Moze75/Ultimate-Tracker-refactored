@@ -14,11 +14,12 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
-const [editingLoading, setEditingLoading] = useState(false);
+  const [editingLoading, setEditingLoading] = useState(false);
+  const [viewingVisual, setViewingVisual] = useState<CampaignVisual | null>(null);
   const [newVisual, setNewVisual] = useState({
     title: '',
     image_url: '',
-    description:  '',
+    description: '',
     category: 'general' as CampaignVisual['category']
   });
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ const [editingLoading, setEditingLoading] = useState(false);
   };
 
   const handleAdd = async () => {
-    if (!newVisual.title. trim() || !newVisual.image_url.trim()) {
+    if (!newVisual.title.trim() || !newVisual.image_url.trim()) {
       toast.error('Le titre et l\'URL sont requis');
       return;
     }
@@ -48,9 +49,9 @@ const [editingLoading, setEditingLoading] = useState(false);
       await campaignVisualsService.create({
         user_id: userId,
         campaign_id: playerId,
-        ... newVisual
+        ...newVisual
       });
-      toast.success('Visuel ajouté ! ');
+      toast.success('Visuel ajouté !');
       setNewVisual({ title: '', image_url: '', description: '', category: 'general' });
       setIsAdding(false);
       loadVisuals();
@@ -63,7 +64,7 @@ const [editingLoading, setEditingLoading] = useState(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (! confirm('Supprimer ce visuel ?')) return;
+    if (!confirm('Supprimer ce visuel ?')) return;
 
     try {
       await campaignVisualsService.delete(id);
@@ -133,7 +134,7 @@ const [editingLoading, setEditingLoading] = useState(false);
             />
 
             <select
-              value={newVisual. category}
+              value={newVisual.category}
               onChange={(e) => setNewVisual({ ...newVisual, category: e.target.value as any })}
               className="input-dark w-full"
             >
@@ -215,7 +216,7 @@ const [editingLoading, setEditingLoading] = useState(false);
                     <Trash2 size={14} />
                   </button>
                 </div>
-                <div className="p-3 space-y-1. 5">
+                <div className="p-3 space-y-1.5">
                   <h3 className="font-semibold text-gray-100 text-sm truncate">{visual.title}</h3>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs border ${getCategoryColor(visual.category)}`}>
                     {getCategoryLabel(visual.category)}
@@ -238,7 +239,7 @@ const [editingLoading, setEditingLoading] = useState(false);
 
       {/* Lightbox pour voir l'image en grand */}
       {viewingVisual && (
-        <div 
+        <div
           className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setViewingVisual(null)}
         >
@@ -265,10 +266,9 @@ const [editingLoading, setEditingLoading] = useState(false);
           </div>
         </div>
       )}
-    </div>
-  );
-}
-{editingVisual && (
+
+      {/* Modale d'édition */}
+      {editingVisual && (
   <div
     className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
     onClick={() => setEditingVisual(null)}
@@ -364,4 +364,7 @@ const [editingLoading, setEditingLoading] = useState(false);
       </div>
     </div>
   </div>
-)}
+      )}
+    </div>
+  );
+}
