@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   ArrowLeft, Plus, Users, Package, Send, Crown, X, Trash2, Mail, Copy, Check,
   Settings, Search, Edit2, UserPlus, AlertCircle, Coins, Clock, History, Loader2,
-  FileText,
+  Image,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { campaignService } from '../services/campaignService';
@@ -16,7 +16,7 @@ import { Dices } from 'lucide-react'; // Ajoutez cette icône
 import { CustomItemModal } from '../components/modals/CustomItemModal';
 import { EquipmentListModal } from '../components/modals/EquipmentListModal';
 import { ImageUrlInput } from '../components/ImageUrlInput';
-import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
+
 import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
 import { PlayerDetailsModal } from '../components/modals/PlayerDetailsModal';
 import { CampaignNotesTab } from '../components/CampaignNotesTab';
