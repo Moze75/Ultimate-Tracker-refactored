@@ -19,6 +19,8 @@ import { ImageUrlInput } from '../components/ImageUrlInput';
 import { CampaignVisualsTab } from '../components/CampaignVisualsTab';
 import { PlayerDetailsModal } from '../components/modals/PlayerDetailsModal';
 import { CampaignNotesTab } from '../components/CampaignNotesTab';
+import { DraggableVisualWindows, DraggableWindowData } from '../components/DraggableVisualWindow';
+import { CampaignVisual } from '../services/campaignVisualsService';
 
 interface GameMasterCampaignPageProps {
   session: any;
@@ -560,12 +562,13 @@ interface CampaignDetailViewProps {
 }
 
 function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'visuals'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'visuals' | 'notes'>('members');
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const [inventory, setInventory] = useState<CampaignInventoryItem[]>([]);
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
   const [gifts, setGifts] = useState<(CampaignGift & { claims?: CampaignGiftClaim[] })[]>([]);
   const [giftsLoading, setGiftsLoading] = useState(false);
+  const [draggableWindows, setDraggableWindows] = useState<DraggableWindowData[]>([]);
 
   useEffect(() => {
     loadMembers();
@@ -632,6 +635,29 @@ const loadInvitations = async () => {
     } finally {
       setGiftsLoading(false);
     }
+  };
+
+  const openVisualWindow = (visual: CampaignVisual) => {
+    const windowWidth = Math.min(800, window.innerWidth * 0.8);
+    const windowHeight = Math.min(600, window.innerHeight * 0.8);
+    const x = (window.innerWidth - windowWidth) / 2 + draggableWindows.length * 30;
+    const y = (window.innerHeight - windowHeight) / 2 + draggableWindows.length * 30;
+
+    setDraggableWindows([...draggableWindows, {
+      visual,
+      position: { x, y },
+      size: { width: windowWidth, height: windowHeight }
+    }]);
+  };
+
+  const closeVisualWindow = (index: number) => {
+    setDraggableWindows(draggableWindows.filter((_, i) => i !== index));
+  };
+
+  const updateWindowPosition = (index: number, position: { x: number; y: number }) => {
+    const newWindows = [...draggableWindows];
+    newWindows[index].position = position;
+    setDraggableWindows(newWindows);
   };
 
   return (
@@ -771,6 +797,7 @@ const loadInvitations = async () => {
           <CampaignVisualsTab
             playerId={campaign.id}
             userId={session?.user?.id || ''}
+            onOpenVisual={openVisualWindow}
           />
         )}
 
@@ -778,6 +805,12 @@ const loadInvitations = async () => {
           <CampaignNotesTab campaignId={campaign.id} />
         )}
       </div>
+
+      <DraggableVisualWindows
+        windows={draggableWindows}
+        onClose={closeVisualWindow}
+        onUpdatePosition={updateWindowPosition}
+      />
     </div>
   );
 }
