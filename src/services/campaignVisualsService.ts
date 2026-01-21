@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 export interface CampaignVisual {
   id: string;
   user_id: string;
-  player_id: string;
+campaign_id: string; 
   title: string;
   image_url: string;
   description?:  string;
