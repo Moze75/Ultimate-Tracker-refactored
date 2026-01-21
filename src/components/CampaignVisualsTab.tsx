@@ -13,7 +13,8 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
   const [visuals, setVisuals] = useState<CampaignVisual[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [viewingVisual, setViewingVisual] = useState<CampaignVisual | null>(null);
+  const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
+const [editingLoading, setEditingLoading] = useState(false);
   const [newVisual, setNewVisual] = useState({
     title: '',
     image_url: '',
