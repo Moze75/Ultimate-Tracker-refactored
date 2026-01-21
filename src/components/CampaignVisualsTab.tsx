@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Image as ImageIcon, Edit2, Eye } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Eye, Maximize2 } from 'lucide-react';
 import { ImageUrlInput } from './ImageUrlInput';
 import { campaignVisualsService, CampaignVisual } from '../services/campaignVisualsService';
 import toast from 'react-hot-toast';
@@ -9,12 +9,17 @@ interface CampaignVisualsTabProps {
   userId: string;
 }
 
+interface DraggableWindow {
+  visual: CampaignVisual;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+}
+
 export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps) {
   const [visuals, setVisuals] = useState<CampaignVisual[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
-  const [editingLoading, setEditingLoading] = useState(false);
+  const [draggableWindows, setDraggableWindows] = useState<DraggableWindow[]>([]);
+  const [draggingWindow, setDraggingWindow] = useState<{ index: number; offsetX: number; offsetY: number } | null>(null);
   const [newVisual, setNewVisual] = useState({
     title: '',
     image_url: '',
@@ -96,6 +101,60 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
     };
     return labels[category as keyof typeof labels] || category;
   };
+
+  const openDraggableWindow = (visual: CampaignVisual) => {
+    const windowWidth = Math.min(800, window.innerWidth * 0.8);
+    const windowHeight = Math.min(600, window.innerHeight * 0.8);
+    const x = (window.innerWidth - windowWidth) / 2 + draggableWindows.length * 30;
+    const y = (window.innerHeight - windowHeight) / 2 + draggableWindows.length * 30;
+
+    setDraggableWindows([...draggableWindows, {
+      visual,
+      position: { x, y },
+      size: { width: windowWidth, height: windowHeight }
+    }]);
+  };
+
+  const closeDraggableWindow = (index: number) => {
+    setDraggableWindows(draggableWindows.filter((_, i) => i !== index));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, index: number) => {
+    if ((e.target as HTMLElement).closest('.window-content')) return;
+
+    const window = draggableWindows[index];
+    setDraggingWindow({
+      index,
+      offsetX: e.clientX - window.position.x,
+      offsetY: e.clientY - window.position.y
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!draggingWindow) return;
+
+    const newWindows = [...draggableWindows];
+    newWindows[draggingWindow.index].position = {
+      x: e.clientX - draggingWindow.offsetX,
+      y: e.clientY - draggingWindow.offsetY
+    };
+    setDraggableWindows(newWindows);
+  };
+
+  const handleMouseUp = () => {
+    setDraggingWindow(null);
+  };
+
+  useEffect(() => {
+    if (draggingWindow) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [draggingWindow, draggableWindows]);
 
   return (
     <div className="stat-card">
@@ -197,12 +256,12 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
                   <button
   onClick={(e) => {
     e.stopPropagation();
-    setEditingVisual(visual);
+    openDraggableWindow(visual);
   }}
   className="absolute top-2 left-2 p-1.5 bg-blue-600/80 hover:bg-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-  title="Éditer"
+  title="Ouvrir dans une fenêtre"
 >
-  <Edit2 size={14} />
+  <Maximize2 size={14} />
 </button>
                   
                   <button
@@ -237,104 +296,55 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
         )}
       </div>
 
-      {/* Modale d'édition */}
-      {editingVisual && (
-  <div
-    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
-    onClick={() => setEditingVisual(null)}
-  >
-    <div
-      className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 w-[min(32rem,96vw)] p-6 relative"
-      onClick={e => e.stopPropagation()}
-    >
-      <button
-        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white"
-        onClick={() => setEditingVisual(null)}
-      >
-        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-        <Edit2 size={18} />
-        Modifier le visuel
-      </h3>
-
-      <div className="space-y-3">
-        <input
-          type="text"
-          className="input-dark w-full"
-          placeholder="Titre du visuel"
-          value={editingVisual.title}
-          onChange={(e) => setEditingVisual(ev => ev ? {...ev, title: e.target.value} : ev)}
-        />
-
-        <select
-          className="input-dark w-full"
-          value={editingVisual.category}
-          onChange={(e) => setEditingVisual(ev => ev ? { ...ev, category: e.target.value as CampaignVisual['category'] } : ev)}
-        >
-          <option value="general">Général</option>
-          <option value="character">Personnage</option>
-          <option value="location">Lieu</option>
-          <option value="item">Objet</option>
-          <option value="npc">PNJ</option>
-        </select>
-
-        <ImageUrlInput
-          value={editingVisual.image_url}
-          onChange={(url) => setEditingVisual(ev => ev ? { ...ev, image_url: url } : ev)}
-          label="URL de l'image"
-        />
-
-        <textarea
-          className="input-dark w-full min-h-[60px] text-sm"
-          placeholder="Description (optionnelle)"
-          value={editingVisual.description || ''}
-          onChange={(e) => setEditingVisual(ev => ev ? { ...ev, description: e.target.value } : ev)}
-        />
-      </div>
-
-      <div className="flex justify-end gap-2 mt-5">
-        <button
-          className="btn-secondary"
-          onClick={() => setEditingVisual(null)}
-        >
-          Annuler
-        </button>
-        <button
-          className="btn-primary"
-          disabled={editingLoading}
-          onClick={async () => {
-            if (!editingVisual.title.trim() || !editingVisual.image_url.trim()) {
-              toast.error("Le titre et l'URL sont requis");
-              return;
-            }
-            setEditingLoading(true);
-            try {
-              await campaignVisualsService.update(editingVisual.id, {
-                title: editingVisual.title,
-                category: editingVisual.category,
-                image_url: editingVisual.image_url,
-                description: editingVisual.description,
-              });
-              toast.success('Modifié !');
-              setEditingVisual(null);
-              loadVisuals(); // recharge
-            } catch (error) {
-              toast.error("Erreur lors de la sauvegarde");
-              console.error(error);
-            } finally {
-              setEditingLoading(false);
-            }
+      {/* Fenêtres déplaçables */}
+      {draggableWindows.map((win, index) => (
+        <div
+          key={index}
+          className="fixed z-[9999] bg-gray-900 rounded-lg shadow-2xl border border-gray-700 overflow-hidden"
+          style={{
+            left: `${win.position.x}px`,
+            top: `${win.position.y}px`,
+            width: `${win.size.width}px`,
+            height: `${win.size.height}px`,
           }}
         >
-          {editingLoading ? "Enregistrement..." : "Sauvegarder"}
-        </button>
-      </div>
-    </div>
-  </div>
-      )}
+          <div
+            className="bg-gray-800 px-4 py-3 flex items-center justify-between cursor-move border-b border-gray-700"
+            onMouseDown={(e) => handleMouseDown(e, index)}
+          >
+            <div className="flex items-center gap-2">
+              <ImageIcon size={18} className="text-purple-400" />
+              <h3 className="font-semibold text-white text-sm truncate max-w-[300px]">
+                {win.visual.title}
+              </h3>
+              <span className={`px-2 py-0.5 rounded-full text-xs border ${getCategoryColor(win.visual.category)}`}>
+                {getCategoryLabel(win.visual.category)}
+              </span>
+            </div>
+            <button
+              onClick={() => closeDraggableWindow(index)}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              title="Fermer"
+            >
+              <svg className="w-5 h-5 text-gray-400 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="window-content overflow-auto h-[calc(100%-3rem)] bg-gray-950 p-4">
+            <img
+              src={win.visual.image_url}
+              alt={win.visual.title}
+              className="w-full h-auto object-contain rounded"
+            />
+            {win.visual.description && (
+              <div className="mt-4 p-3 bg-gray-800/50 rounded border border-gray-700">
+                <p className="text-sm text-gray-300">{win.visual.description}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
