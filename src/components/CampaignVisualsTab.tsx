@@ -5,7 +5,7 @@ import { campaignVisualsService, CampaignVisual } from '../services/campaignVisu
 import toast from 'react-hot-toast';
 
 interface CampaignVisualsTabProps {
-  playerId: string;
+  campaign_id: string;
   userId: string;
 }
 
