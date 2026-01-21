@@ -46,7 +46,7 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
     try {
       await campaignVisualsService.create({
         user_id: userId,
-        player_id: playerId,
+        campaign_id: playerId,
         ... newVisual
       });
       toast.success('Visuel ajouté ! ');
