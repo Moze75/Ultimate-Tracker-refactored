@@ -10,18 +10,19 @@ interface CampaignVisualsTabProps {
 }
 
 export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps) {
-  const [visuals, setVisuals] = useState<CampaignVisual[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
+const [visuals, setVisuals] = useState<CampaignVisual[]>([]);
+const [isAdding, setIsAdding] = useState(false);
+const [editingId, setEditingId] = useState<string | null>(null);
+const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
 const [editingLoading, setEditingLoading] = useState(false);
-  const [newVisual, setNewVisual] = useState({
-    title: '',
-    image_url: '',
-    description:  '',
-    category: 'general' as CampaignVisual['category']
-  });
-  const [loading, setLoading] = useState(false);
+const [viewingVisual, setViewingVisual] = useState<CampaignVisual | null>(null);  // <--- AJOUTE cette ligne
+const [newVisual, setNewVisual] = useState({
+  title: '',
+  image_url: '',
+  description:  '',
+  category: 'general' as CampaignVisual['category']
+});
+const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadVisuals();
