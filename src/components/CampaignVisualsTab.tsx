@@ -15,7 +15,6 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
   const [editingLoading, setEditingLoading] = useState(false);
-  const [viewingVisual, setViewingVisual] = useState<CampaignVisual | null>(null);
   const [newVisual, setNewVisual] = useState({
     title: '',
     image_url: '',
@@ -181,9 +180,10 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visuals.map((visual) => (
               <div key={visual.id} className="bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700 group hover:border-purple-500/30 transition-colors">
-                <div 
+                <div
                   className="aspect-video bg-gray-900 relative cursor-pointer"
-                  onClick={() => setViewingVisual(visual)}
+                  onClick={() => window.open(visual.image_url, '_blank', 'noopener,noreferrer')}
+                  title="Ouvrir dans un nouvel onglet"
                 >
                   <img
                     src={visual.image_url}
@@ -236,36 +236,6 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
           </div>
         )}
       </div>
-
-      {/* Lightbox pour voir l'image en grand */}
-      {viewingVisual && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setViewingVisual(null)}
-        >
-          <button
-            onClick={() => setViewingVisual(null)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300"
-          >
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div className="max-w-5xl w-full">
-            <img
-              src={viewingVisual.image_url}
-              alt={viewingVisual.title}
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-            />
-            <div className="mt-4 text-center">
-              <h3 className="text-xl font-bold text-white">{viewingVisual.title}</h3>
-              {viewingVisual.description && (
-                <p className="text-gray-300 mt-2">{viewingVisual.description}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modale d'édition */}
       {editingVisual && (
