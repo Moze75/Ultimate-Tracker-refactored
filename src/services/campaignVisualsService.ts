@@ -16,7 +16,8 @@ export const campaignVisualsService = {
     const { data, error } = await supabase
       .from('campaign_visuals')
       .select('*')
-      .eq('player_id', playerId)
+    .eq('campaign_id', campaignId)  // CORRECT (et renommer le param)
+
       .order('created_at', { ascending: false });
 
     if (error) throw error;
