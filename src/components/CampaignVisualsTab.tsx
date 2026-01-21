@@ -192,6 +192,18 @@ const [editingLoading, setEditingLoading] = useState(false);
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <Eye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
                   </div>
+
+                  <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setEditingVisual(visual);
+  }}
+  className="absolute top-2 left-2 p-1.5 bg-blue-600/80 hover:bg-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+  title="Éditer"
+>
+  <Edit2 size={14} />
+</button>
+                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
