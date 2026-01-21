@@ -561,7 +561,7 @@ interface CampaignDetailViewProps {
 }
 
 function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'notes'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'visuals'>('members');
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const [inventory, setInventory] = useState<CampaignInventoryItem[]>([]);
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
