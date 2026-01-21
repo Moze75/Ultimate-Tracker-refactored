@@ -13,7 +13,8 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
   const [visuals, setVisuals] = useState<CampaignVisual[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [viewingVisual, setViewingVisual] = useState<CampaignVisual | null>(null);
+  const [editingVisual, setEditingVisual] = useState<CampaignVisual | null>(null);
+const [editingLoading, setEditingLoading] = useState(false);
   const [newVisual, setNewVisual] = useState({
     title: '',
     image_url: '',
@@ -44,9 +45,9 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
 
     setLoading(true);
     try {
-      await campaignVisualsService.create({ 
+      await campaignVisualsService.create({
         user_id: userId,
-        player_id: playerId,
+        campaign_id: playerId,
         ... newVisual
       });
       toast.success('Visuel ajouté ! ');
@@ -191,6 +192,18 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <Eye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
                   </div>
+
+                  <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setEditingVisual(visual);
+  }}
+  className="absolute top-2 left-2 p-1.5 bg-blue-600/80 hover:bg-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+  title="Éditer"
+>
+  <Edit2 size={14} />
+</button>
+                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -255,3 +268,100 @@ export function CampaignVisualsTab({ playerId, userId }: CampaignVisualsTabProps
     </div>
   );
 }
+{editingVisual && (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
+    onClick={() => setEditingVisual(null)}
+  >
+    <div
+      className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 w-[min(32rem,96vw)] p-6 relative"
+      onClick={e => e.stopPropagation()}
+    >
+      <button
+        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white"
+        onClick={() => setEditingVisual(null)}
+      >
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+        <Edit2 size={18} />
+        Modifier le visuel
+      </h3>
+
+      <div className="space-y-3">
+        <input
+          type="text"
+          className="input-dark w-full"
+          placeholder="Titre du visuel"
+          value={editingVisual.title}
+          onChange={(e) => setEditingVisual(ev => ev ? {...ev, title: e.target.value} : ev)}
+        />
+
+        <select
+          className="input-dark w-full"
+          value={editingVisual.category}
+          onChange={(e) => setEditingVisual(ev => ev ? { ...ev, category: e.target.value as CampaignVisual['category'] } : ev)}
+        >
+          <option value="general">Général</option>
+          <option value="character">Personnage</option>
+          <option value="location">Lieu</option>
+          <option value="item">Objet</option>
+          <option value="npc">PNJ</option>
+        </select>
+
+        <ImageUrlInput
+          value={editingVisual.image_url}
+          onChange={(url) => setEditingVisual(ev => ev ? { ...ev, image_url: url } : ev)}
+          label="URL de l'image"
+        />
+
+        <textarea
+          className="input-dark w-full min-h-[60px] text-sm"
+          placeholder="Description (optionnelle)"
+          value={editingVisual.description || ''}
+          onChange={(e) => setEditingVisual(ev => ev ? { ...ev, description: e.target.value } : ev)}
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 mt-5">
+        <button
+          className="btn-secondary"
+          onClick={() => setEditingVisual(null)}
+        >
+          Annuler
+        </button>
+        <button
+          className="btn-primary"
+          disabled={editingLoading}
+          onClick={async () => {
+            if (!editingVisual.title.trim() || !editingVisual.image_url.trim()) {
+              toast.error("Le titre et l'URL sont requis");
+              return;
+            }
+            setEditingLoading(true);
+            try {
+              await campaignVisualsService.update(editingVisual.id, {
+                title: editingVisual.title,
+                category: editingVisual.category,
+                image_url: editingVisual.image_url,
+                description: editingVisual.description,
+              });
+              toast.success('Modifié !');
+              setEditingVisual(null);
+              loadVisuals(); // recharge
+            } catch (error) {
+              toast.error("Erreur lors de la sauvegarde");
+              console.error(error);
+            } finally {
+              setEditingLoading(false);
+            }
+          }}
+        >
+          {editingLoading ? "Enregistrement..." : "Sauvegarder"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
