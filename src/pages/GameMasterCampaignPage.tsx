@@ -730,7 +730,7 @@ const loadInvitations = async () => {
               }`}
             >
               <Send size={20} />
-              Envoi
+              Envois
             </button>
 
             <button
