@@ -1356,7 +1356,7 @@ function InventoryTab({
                     <button
                       onClick={() => setQuickSendItem(item)}
                       className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-900/30 rounded"
-                      title="Envoyer aux joueurs"
+                      title="Envoi"
                     >
                       <Send size={16} />
                     </button>
