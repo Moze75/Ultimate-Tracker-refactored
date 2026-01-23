@@ -701,7 +701,7 @@ const loadInvitations = async () => {
 <div className="flex flex-wrap md:flex-nowrap gap-2 border-b border-gray-700">
   <button
               onClick={() => setActiveTab('members')} 
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+       className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'members'
                   ? 'border-purple-500 text-purple-400' 
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -712,7 +712,7 @@ const loadInvitations = async () => {
             </button>
             <button
               onClick={() => setActiveTab('inventory')}
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+        className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'inventory'
                   ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -723,7 +723,7 @@ const loadInvitations = async () => {
             </button>
             <button
               onClick={() => setActiveTab('gifts')}
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+            className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'gifts'
                   ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -735,7 +735,7 @@ const loadInvitations = async () => {
 
             <button
               onClick={() => setActiveTab('visuals')}
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+        className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'visuals'
                   ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
