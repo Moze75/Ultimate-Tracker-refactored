@@ -700,9 +700,10 @@ const loadInvitations = async () => {
           {/* Tabs */}
     <div className="flex gap-4 border-b border-gray-700 overflow-x-auto scrollbar-thin w-full px-1">
   <button
-              onClick={() => setActiveTab('members')}
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'members'
+<button
+  onClick={() => setActiveTab('members')}
+  className={`flex-shrink-0 pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+    activeTab === 'members'
                   ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
