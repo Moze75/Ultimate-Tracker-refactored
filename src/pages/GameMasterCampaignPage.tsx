@@ -698,8 +698,8 @@ const loadInvitations = async () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 border-b border-gray-700 overflow-x-auto">
-            <button
+    <div className="flex gap-4 border-b border-gray-700 overflow-x-auto scrollbar-thin w-full px-1">
+  <button
               onClick={() => setActiveTab('members')}
               className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'members'
