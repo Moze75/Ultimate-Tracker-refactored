@@ -747,7 +747,7 @@ const loadInvitations = async () => {
             
             <button
               onClick={() => setActiveTab('notes')}
-              className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+          className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'notes'
                   ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
