@@ -136,6 +136,7 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
   const [showAccount, setShowAccount] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
   const [remainingTrialDays, setRemainingTrialDays] = useState<number | null>(null);
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false);
 
   // ✅ Protection contre les rechargements multiples
   const hasInitializedRef = useRef(false);
