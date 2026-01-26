@@ -947,7 +947,14 @@ onClick={() => {
   }
   setShowCreator(true);
 }}
-                className="w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-slate-800/40 backdrop-blur-sm border-dashed border-2 border-slate-600/50 hover:border-green-500/50 group rounded-xl overflow-hidden"
+className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-slate-800/40 backdrop-blur-sm border-dashed border-2 border-slate-600/50 hover:border-green-400/60 rounded-xl
+  ${
+    ((currentSubscription?.tier === 'free' && currentSubscription?.status === 'expired') ||
+    ((currentSubscription?.tier === 'free' || currentSubscription?.status === 'trial') && players.length >= 1))
+      ? 'opacity-60 pointer-events-auto'
+      : ''
+  }
+`}
               >
                 <div className="p-6 flex items-center justify-center gap-6 min-h-[140px]">
                   <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center">
