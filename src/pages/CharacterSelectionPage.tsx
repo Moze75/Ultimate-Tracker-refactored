@@ -1000,6 +1000,28 @@ onClick={() => {
         characterName={newCharacter?.adventurer_name || newCharacter?.name || 'Aventurier'}
         onContinue={handleWelcomeContinue}
       />
+      {showTrialExpiredModal && (
+  <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center">
+    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-red-400/30 rounded-xl max-w-sm w-full p-8 shadow-2xl text-center">
+      <h2 className="text-2xl font-bold text-red-400 mb-4">Essai expiré</h2>
+      <p className="text-gray-200 mb-6">Votre période d’essai gratuit est terminée.<br />
+        Abonnez-vous pour accéder à vos personnages existants et continuer l’aventure !</p>
+      <button
+        onClick={() => {
+          setShowTrialExpiredModal(false);
+          setShowSubscription(true);
+        }}
+        className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-700 to-purple-500 text-white font-semibold hover:from-purple-600 hover:to-purple-400 transition-all text-lg mb-2"
+      >
+        Choisir un abonnement
+      </button>
+      <button
+        onClick={() => setShowTrialExpiredModal(false)}
+        className="w-full py-2 rounded-lg bg-gray-800 text-gray-200 mt-2 hover:bg-gray-700"
+      >Fermer</button>
+    </div>
+  </div>
+)}
     </div>
   );
 }
