@@ -162,6 +162,9 @@ const MAX_LOGIN_ATTEMPTS = 3;
     }
   };
 
+  // ✅ Marquer pour la welcome première connexion (lu sur CharacterSelectionPage)
+localStorage.setItem('ut:show-first-welcome', 'true');
+
   // ✅ NOUVELLE FONCTION - Réinitialisation du mot de passe
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
