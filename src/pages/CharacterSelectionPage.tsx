@@ -140,6 +140,19 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
   const [showTrialLimitModal, setShowTrialLimitModal] = useState(false);
   const [showFirstWelcome, setShowFirstWelcome] = useState(false);
 
+// Afficher la modal de bienvenue à la première connexion (email OU Google, sans timeout)
+useEffect(() => {
+  if (
+    localStorage.getItem('ut:show-first-welcome') !== 'shown' &&
+    players &&
+    players.length === 0 &&
+    currentSubscription?.tier === 'free'
+  ) {
+    setShowFirstWelcome(true);
+    localStorage.setItem('ut:show-first-welcome', 'shown');
+  }
+}, [players, currentSubscription]);
+  
   // ✅ Protection contre les rechargements multiples
   const hasInitializedRef = useRef(false);
   const playersLoadedRef = useRef(false);
