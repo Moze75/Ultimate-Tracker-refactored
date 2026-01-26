@@ -869,8 +869,16 @@ const handleSignOut = async () => {
                     </button>
 
                     <div
-                      className="p-6 cursor-pointer hover:scale-[1.02] transition-all duration-200 relative z-10"
-                      onClick={() => onCharacterSelect(player)}
+className={`p-6 cursor-pointer hover:scale-[1.02] transition-all duration-200 relative z-10 ${
+  currentSubscription?.tier === 'free' && currentSubscription?.status === 'expired' ? 'opacity-60 pointer-events-auto' : ''
+}`}
+onClick={() => {
+  if (currentSubscription?.tier === 'free' && currentSubscription?.status === 'expired') {
+    setShowTrialExpiredModal(true);
+    return;
+  }
+  onCharacterSelect(player);
+}}
                     >
                       <div className="flex items-center gap-6">
                         <div className="w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden bg-white/10">
