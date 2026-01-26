@@ -932,7 +932,21 @@ onClick={() => {
               })}
 
               <div
-                onClick={() => setShowCreator(true)}
+                onClick={() => {
+  if (currentSubscription?.tier === 'free' && currentSubscription?.status === 'expired') {
+    setShowTrialExpiredModal(true);
+    return;
+  }
+  // Limite de 1 perso pour free/trial
+  if (
+    (currentSubscription?.tier === 'free' || currentSubscription?.status === 'trial') &&
+    players.length >= 1
+  ) {
+    setShowTrialLimitModal(true);
+    return;
+  }
+  setShowCreator(true);
+}}
                 className="w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-slate-800/40 backdrop-blur-sm border-dashed border-2 border-slate-600/50 hover:border-green-500/50 group rounded-xl overflow-hidden"
               >
                 <div className="p-6 flex items-center justify-center gap-6 min-h-[140px]">
