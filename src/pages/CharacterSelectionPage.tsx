@@ -138,6 +138,13 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
   const [remainingTrialDays, setRemainingTrialDays] = useState<number | null>(null);
   const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false);
   const [showTrialLimitModal, setShowTrialLimitModal] = useState(false);
+  useEffect(() => {
+    // Afficher la modal de bienvenue UNIQUEMENT si on a le flag (jamais plus)
+    if (localStorage.getItem('ut:show-first-welcome') === 'true') {
+      setShowFirstWelcome(true);
+      localStorage.removeItem('ut:show-first-welcome');
+    }
+  }, []);
   const [showFirstWelcome, setShowFirstWelcome] = useState(false);
 
 // Afficher la modal de bienvenue à la première connexion (email OU Google, sans timeout)
