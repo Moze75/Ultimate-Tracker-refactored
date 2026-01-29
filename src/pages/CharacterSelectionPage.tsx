@@ -536,7 +536,7 @@ await new Promise(resolve => setTimeout(resolve, 300));
     console.log('[SignOut] 8️⃣ Redirection vers:', window.location.origin);
     console.log('[SignOut] === FIN DÉCONNEXION ===');
     
-    window.location.replace(window.location. origin);
+  window.location.replace(window.location.origin + '/login');
     
   } catch (error:  any) {
     console.error('[SignOut] ❌ ERREUR:', error);
