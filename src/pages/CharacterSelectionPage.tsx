@@ -143,19 +143,22 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
 const [showFirstWelcome, setShowFirstWelcome] = useState(false);
 
 useEffect(() => {
-  if (loading) return; // attend la fin du chargement pour éviter bug sur array vide temporairement
+  if (loading) return;
 
-  // Cas 1 : flag posé à l'inscription mail
+  // Blocage des comptes non gratuits !
+  if (!currentSubscription || currentSubscription.tier !== 'free') return;
+
+  // Cas 1 : flag "true" => inscrit via mail, jamais vu la modale
   if (localStorage.getItem('ut:show-first-welcome') === 'true') {
     setShowFirstWelcome(true);
     localStorage.removeItem('ut:show-first-welcome');
     return;
   }
-  // Cas 2 : première connexion Google (et jamais mail, et uniquement si flag jamais posé)
+  // Cas 2 : premier login Google, jamais de flag posé
   if (
-    !localStorage.getItem('ut:show-first-welcome') &&      // jamais pop
-    players.length === 0 &&                                // aucun personnage (new user !)
-    currentSubscription?.tier === 'free'
+    !localStorage.getItem('ut:show-first-welcome') &&
+    players.length === 0 // nouvel utilisateur
+    // pas besoin de remettre tier===free ici, déjà testé plus haut
   ) {
     setShowFirstWelcome(true);
     localStorage.setItem('ut:show-first-welcome', 'google');
