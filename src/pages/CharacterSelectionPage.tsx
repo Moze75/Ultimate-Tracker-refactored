@@ -482,19 +482,23 @@ const handleSignOut = async () => {
     sessionStorage. setItem('ut: explicit-logout', 'true');
     console.log('[SignOut] ✅ Flag ut:explicit-logout posé');
     
-    // Étape 5 : Déconnexion Supabase
-    console. log('[SignOut] 5️⃣ Appel supabase.auth. signOut({ scope: "global" })...');
+// Étape 5 : Déconnexion Supabase PATCH Firefox-friendly
+console.log('[SignOut] 5️⃣ Appel supabase.auth.signOut({ scope: "global" })...');
+let signOutDone = false;
 try {
-  const { error } = await supabase.auth.signOut({ scope: 'global' });
-  if (error) {
-    // Affiche seulement si ce n'est pas NetworkError (Firefox)
+  const { error } = await Promise.race([
+    supabase.auth.signOut({ scope: 'global' }),
+    new Promise(resolve => setTimeout(() => resolve({ error: 'timeout' }), 1200)), // force 1.2s timeout
+  ]);
+  signOutDone = true;
+  if (error && error !== 'timeout') {
     if (error.message && error.message.includes('NetworkError')) {
       console.log('[Logout] NetworkError ignorée (Firefox déconnexion rapide).');
     } else {
       toast.error('Erreur réseau lors de la déconnexion. Essayez de rafraîchir.');
     }
   }
-} catch (err) {
+} catch (err: any) {
   if (err.message && err.message.includes('NetworkError')) {
     console.log('[Logout] NetworkError ignorée (behaviour Firefox).');
   } else {
