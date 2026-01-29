@@ -506,6 +506,8 @@ try {
     console.error('[SignOut] ❌ ERREUR:', err);
   }
 }
+    // Petite attente pour laisser finir les pending fetch avant redir (Firefox friendly)
+await new Promise(resolve => setTimeout(resolve, 300));
 
     // Étape 6 :  Vérifier que la session est bien nulle
     console. log('[SignOut] 6️⃣ Vérification session post-signOut...');
