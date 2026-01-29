@@ -484,12 +484,24 @@ const handleSignOut = async () => {
     
     // Étape 5 : Déconnexion Supabase
     console. log('[SignOut] 5️⃣ Appel supabase.auth. signOut({ scope: "global" })...');
-    const { error } = await supabase.auth.signOut({ scope: 'global' });
-    if (error) {
-      console.warn('[SignOut] ⚠️ Erreur Supabase signOut:', error);
+try {
+  const { error } = await supabase.auth.signOut({ scope: 'global' });
+  if (error) {
+    // Affiche seulement si ce n'est pas NetworkError (Firefox)
+    if (error.message && error.message.includes('NetworkError')) {
+      console.log('[Logout] NetworkError ignorée (Firefox déconnexion rapide).');
     } else {
-      console.log('[SignOut] ✅ Supabase signOut réussi');
+      toast.error('Erreur réseau lors de la déconnexion. Essayez de rafraîchir.');
     }
+  }
+} catch (err) {
+  if (err.message && err.message.includes('NetworkError')) {
+    console.log('[Logout] NetworkError ignorée (behaviour Firefox).');
+  } else {
+    toast.error('Erreur réseau à la déconnexion');
+    console.error('[SignOut] ❌ ERREUR:', err);
+  }
+}
 
     // Étape 6 :  Vérifier que la session est bien nulle
     console. log('[SignOut] 6️⃣ Vérification session post-signOut...');
