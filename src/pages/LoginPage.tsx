@@ -144,7 +144,9 @@ const MAX_LOGIN_ATTEMPTS = 3;
       const { error } = await authService.signUp(email, password);
 
       if (error) throw error;
-      setSignUpSuccess(true);
+    setSignUpSuccess(true);
+localStorage.setItem('ut:show-first-welcome', 'true'); // ✅ Ajout du flag ici UNIQUEMENT
+toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.');
       toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.');
     } catch (error: any) {
       console.error('Erreur d\'inscription:', error);
