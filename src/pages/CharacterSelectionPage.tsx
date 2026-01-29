@@ -139,14 +139,25 @@ export function CharacterSelectionPage({ session, onCharacterSelect, onBackToHom
   const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false);
   const [showTrialLimitModal, setShowTrialLimitModal] = useState(false);
 
-  const [showFirstWelcome, setShowFirstWelcome] = useState(false);
-  useEffect(() => {
-    // Afficher la modal de bienvenue UNIQUEMENT si on a le flag (jamais plus)
-    if (localStorage.getItem('ut:show-first-welcome') === 'true') {
-      setShowFirstWelcome(true);
-      localStorage.removeItem('ut:show-first-welcome');
-    }
-  }, []);
+const [showFirstWelcome, setShowFirstWelcome] = useState(false);
+
+useEffect(() => {
+  // Cas 1 : flag "true" => classique post signup
+  if (localStorage.getItem('ut:show-first-welcome') === 'true') {
+    setShowFirstWelcome(true);
+    localStorage.removeItem('ut:show-first-welcome');
+    return;
+  }
+  // Cas 2 : première connexion google réelle (aucun personnage, jamais de flag posé)
+  if (
+    !localStorage.getItem('ut:show-first-welcome') &&      // n'a jamais affiché
+    players.length === 0 &&                                // nouvel utilisateur
+    currentSubscription?.tier === 'free'                   // google ou mail, trial uniquement
+  ) {
+    setShowFirstWelcome(true);
+    localStorage.setItem('ut:show-first-welcome', 'google');
+  }
+}, [players, currentSubscription]);
 
   
   // ✅ Protection contre les rechargements multiples
