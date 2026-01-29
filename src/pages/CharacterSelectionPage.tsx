@@ -195,17 +195,7 @@ useEffect(() => {
     console. warn('[Cleanup] Erreur:', e);
   }
 }, []);
-  useEffect(() => {
-    if (hasInitializedRef.current) {
-      return;
-    }
-    hasInitializedRef.current = true;
 
-  // ✅ Modal de bienvenue à la première connexion après inscription
-  if (localStorage.getItem('ut:show-first-welcome')) {
-    setShowFirstWelcome(true);
-    localStorage.removeItem('ut:show-first-welcome');
-  }
     
     // ✅ GESTION DE LA REDIRECTION APRÈS LOGIN
     // On vérifie si l'utilisateur avait cliqué sur un plan avant de se loguer
