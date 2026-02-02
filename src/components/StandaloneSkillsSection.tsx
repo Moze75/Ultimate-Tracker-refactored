@@ -5,6 +5,7 @@ import { SkillsTable } from './SkillsTable';
 interface StandaloneSkillsSectionProps {
   player: Player;
   onSkillClick?: (skillName: string, bonus: number) => void;
+  onUpdate?: (player: Player) => void;
 }
 
 const DEFAULT_ABILITIES: Ability[] = [
