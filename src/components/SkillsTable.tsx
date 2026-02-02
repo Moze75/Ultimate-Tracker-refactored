@@ -25,6 +25,7 @@ interface SkillsTableProps {
   handleExpertiseChange: (abilityIndex: number, skillIndex: number) => void;
   rollSkillCheck: (skillName: string, bonus: number) => void;
   statsJackOfAllTrades: boolean;
+  onEdit?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
 }
@@ -37,6 +38,7 @@ export function SkillsTable({
   handleExpertiseChange,
   rollSkillCheck,
   statsJackOfAllTrades,
+  onEdit,
   onSave,
   onCancel
 }: SkillsTableProps) {
@@ -45,7 +47,7 @@ export function SkillsTable({
       <div className="w-full max-w-2xl bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-lg font-semibold text-gray-300 text-left">Compétences</h4>
-          {onSave && onCancel && (
+          {onEdit && onSave && onCancel && (
             <div className="flex items-center gap-2">
               {editing && (
                 <button
@@ -57,7 +59,7 @@ export function SkillsTable({
                 </button>
               )}
               <button
-                onClick={() => editing ? onSave() : {}}
+                onClick={() => editing ? onSave() : onEdit()}
                 className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
                 title={editing ? 'Sauvegarder' : 'Modifier'}
               >
