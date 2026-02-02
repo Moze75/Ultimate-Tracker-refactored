@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, Settings, Save, X } from 'lucide-react';
 
 // ✅ AJOUT : Fonction de mapping pour l'affichage
 const getDisplaySkillName = (skillName: string): string => {
@@ -25,6 +25,8 @@ interface SkillsTableProps {
   handleExpertiseChange: (abilityIndex: number, skillIndex: number) => void;
   rollSkillCheck: (skillName: string, bonus: number) => void;
   statsJackOfAllTrades: boolean;
+  onSave?: () => void;
+  onCancel?: () => void;
 }
 
 export function SkillsTable({
@@ -34,22 +36,46 @@ export function SkillsTable({
   handleProficiencyChange,
   handleExpertiseChange,
   rollSkillCheck,
-  statsJackOfAllTrades
+  statsJackOfAllTrades,
+  onSave,
+  onCancel
 }: SkillsTableProps) {
   return (
     <div className="flex justify-center mt-6">
       <div className="w-full max-w-2xl bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
-        <h4 className="text-lg font-semibold text-gray-300 mb-3 text-left">Compétences</h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-lg font-semibold text-gray-300 text-left">Compétences</h4>
+          {onSave && onCancel && (
+            <div className="flex items-center gap-2">
+              {editing && (
+                <button
+                  onClick={onCancel}
+                  className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors"
+                  title="Annuler"
+                >
+                  <X size={20} />
+                </button>
+              )}
+              <button
+                onClick={() => editing ? onSave() : {}}
+                className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
+                title={editing ? 'Sauvegarder' : 'Modifier'}
+              >
+                {editing ? <Save size={20} /> : <Settings size={20} />}
+              </button>
+            </div>
+          )}
+        </div>
         <div className="space-y-1.5">
           {allSkills.map((skill) => (
-    <div
-  key={`${skill.abilityIndex}-${skill.skillIndex}`}
-  className={`flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded ${
-    !editing ? 'cursor-pointer hover:bg-gray-700/50 transition-colors' : ''
-  }`}
-  onClick={() => !editing && rollSkillCheck(skill.skillName, skill.bonus)}
-  title={!editing ? `Test de ${getDisplaySkillName(skill.skillName)} 1d20+${skill.bonus}` : ''}
->
+            <div
+              key={`${skill.abilityIndex}-${skill.skillIndex}`}
+              className={`flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded ${
+                !editing ? 'cursor-pointer hover:bg-gray-700/50 transition-colors' : ''
+              }`}
+              onClick={() => !editing && rollSkillCheck(skill.skillName, skill.bonus)}
+              title={!editing ? `Test de ${getDisplaySkillName(skill.skillName)} 1d20+${skill.bonus}` : ''}
+            >
               <div className="flex items-center gap-3 flex-1">
                 {editing ? (
                   <button
@@ -96,7 +122,7 @@ export function SkillsTable({
 
                 <span className="text-sm text-gray-500 min-w-[40px]">{skill.abilityShort}</span>
                 <span className="text-sm text-gray-300 flex-1">
-                  {getDisplaySkillName(skill.skillName)}  {/* ✅ MODIFIÉ */}
+                  {getDisplaySkillName(skill.skillName)}
                   {!skill.isProficient && statsJackOfAllTrades && (
                     <span className="text-xs text-blue-400 ml-1" title="Touche-à-tout">
                       (T)
