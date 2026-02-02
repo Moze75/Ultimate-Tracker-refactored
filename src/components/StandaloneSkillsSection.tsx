@@ -208,37 +208,8 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
   });
 
   return (
-    <div className="relative h-full flex flex-col overflow-hidden">
-      {/* Boutons Settings / Save / Cancel en haut à droite */}
-      <div className="absolute top-0 right-0 z-10 flex gap-2">
-        {editing ? (
-          <>
-            <button
-              onClick={handleSaveChanges}
-              className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-              title="Sauvegarder les modifications"
-            >
-              <Save size={18} />
-            </button>
-            <button
-              onClick={handleCancelChanges}
-              className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-              title="Annuler les modifications"
-            >
-              <X size={18} />
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setEditing(true)}
-            className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
-            title="Modifier les compétences"
-          >
-            <Settings size={18} />
-          </button>
-        )}
-      </div>
-
+    return (
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Conteneur scrollable pour SkillsTable */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <SkillsTable
