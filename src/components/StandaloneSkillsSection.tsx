@@ -219,6 +219,7 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
           handleExpertiseChange={handleExpertiseChange}
           rollSkillCheck={handleSkillClick}
           statsJackOfAllTrades={player.stats?.jack_of_all_trades || false}
+          onEdit={() => setEditing(true)}
           onSave={handleSaveChanges}
           onCancel={handleCancelChanges}
         />
