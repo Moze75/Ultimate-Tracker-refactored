@@ -47,9 +47,9 @@ export function SkillsTable({
       <div className="w-full max-w-2xl bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-lg font-semibold text-gray-300 text-left">Compétences</h4>
-          {onEdit && onSave && onCancel && (
+          {(onEdit || onSave || onCancel) && (
             <div className="flex items-center gap-2">
-              {editing && (
+              {editing && onCancel && (
                 <button
                   onClick={onCancel}
                   className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors"
@@ -58,13 +58,21 @@ export function SkillsTable({
                   <X size={20} />
                 </button>
               )}
-              <button
-                onClick={() => editing ? onSave() : onEdit()}
-                className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
-                title={editing ? 'Sauvegarder' : 'Modifier'}
-              >
-                {editing ? <Save size={20} /> : <Settings size={20} />}
-              </button>
+              {(onEdit || onSave) && (
+                <button
+                  onClick={() => {
+                    if (editing && onSave) {
+                      onSave();
+                    } else if (!editing && onEdit) {
+                      onEdit();
+                    }
+                  }}
+                  className="p-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
+                  title={editing ? 'Sauvegarder' : 'Modifier'}
+                >
+                  {editing ? <Save size={20} /> : <Settings size={20} />}
+                </button>
+              )}
             </div>
           )}
         </div>
