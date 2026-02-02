@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Save, X } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { SkillsTable } from './SkillsTable';
 
@@ -99,6 +99,7 @@ const getAbilityShortName = (abilityName: string): string => {
 export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: StandaloneSkillsSectionProps) {
   const [editing, setEditing] = useState(false);
   const [localAbilities, setLocalAbilities] = useState<Ability[]>([]);
+  const [savedAbilities, setSavedAbilities] = useState<Ability[]>([]);
   
   const abilities: Ability[] = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
@@ -107,6 +108,7 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
   React.useEffect(() => {
     if (abilities.length > 0) {
       setLocalAbilities(abilities);
+      setSavedAbilities(abilities);
     }
   }, [abilities]);
 
@@ -134,8 +136,6 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
   };
 
   const handleProficiencyChange = (abilityIndex: number, skillIndex: number) => {
-    if (!onUpdate) return;
-    
     const newAbilities = [...localAbilities];
     const skill = newAbilities[abilityIndex].skills[skillIndex];
     
@@ -151,12 +151,9 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
       (skill.isProficient ? (skill.hasExpertise ? profBonus * 2 : profBonus) : 0);
     
     setLocalAbilities(newAbilities);
-    onUpdate({ ...player, abilities: newAbilities });
   };
 
   const handleExpertiseChange = (abilityIndex: number, skillIndex: number) => {
-    if (!onUpdate) return;
-    
     const newAbilities = [...localAbilities];
     const skill = newAbilities[abilityIndex].skills[skillIndex];
     
@@ -170,13 +167,18 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
       (skill.hasExpertise ? profBonus * 2 : profBonus);
     
     setLocalAbilities(newAbilities);
-    onUpdate({ ...player, abilities: newAbilities });
   };
 
   const handleSaveChanges = () => {
     if (onUpdate && localAbilities.length > 0) {
       onUpdate({ ...player, abilities: localAbilities });
+      setSavedAbilities(localAbilities);
     }
+    setEditing(false);
+  };
+
+  const handleCancelChanges = () => {
+    setLocalAbilities(savedAbilities);
     setEditing(false);
   };
 
@@ -206,40 +208,49 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
   });
 
   return (
-    <div className="relative">
-      {/* Bouton Settings en haut à droite */}
-      <button
-        onClick={() => setEditing(!editing)}
-        className={`absolute top-0 right-0 z-10 p-2 rounded-lg transition-colors ${
-          editing
-            ? 'bg-blue-600 text-white hover:bg-blue-700'
-            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-        }`}
-        title={editing ? 'Sauvegarder les modifications' : 'Modifier les compétences'}
-      >
-        <Settings size={18} />
-      </button>
-
-      <SkillsTable
-        allSkills={allSkills}
-        editing={editing}
-        expertiseLimit={expertiseLimit}
-        handleProficiencyChange={handleProficiencyChange}
-        handleExpertiseChange={handleExpertiseChange}
-        rollSkillCheck={handleSkillClick}
-        statsJackOfAllTrades={player.stats?.jack_of_all_trades || false}
-      />
-      
-      {editing && (
-        <div className="mt-4 flex justify-end">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Boutons Settings / Save / Cancel en haut à droite */}
+      <div className="absolute top-0 right-0 z-10 flex gap-2">
+        {editing ? (
+          <>
+            <button
+              onClick={handleSaveChanges}
+              className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+              title="Sauvegarder les modifications"
+            >
+              <Save size={18} />
+            </button>
+            <button
+              onClick={handleCancelChanges}
+              className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              title="Annuler les modifications"
+            >
+              <X size={18} />
+            </button>
+          </>
+        ) : (
           <button
-            onClick={handleSaveChanges}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            onClick={() => setEditing(true)}
+            className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+            title="Modifier les compétences"
           >
-            Sauvegarder
+            <Settings size={18} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Conteneur scrollable pour SkillsTable */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <SkillsTable
+          allSkills={allSkills}
+          editing={editing}
+          expertiseLimit={expertiseLimit}
+          handleProficiencyChange={handleProficiencyChange}
+          handleExpertiseChange={handleExpertiseChange}
+          rollSkillCheck={handleSkillClick}
+          statsJackOfAllTrades={player.stats?.jack_of_all_trades || false}
+        />
+      </div>
     </div>
   );
 }
