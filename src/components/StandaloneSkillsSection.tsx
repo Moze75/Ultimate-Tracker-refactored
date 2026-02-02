@@ -94,7 +94,10 @@ const getAbilityShortName = (abilityName: string): string => {
   }
 };
 
-export function StandaloneSkillsSection({ player, onSkillClick }: StandaloneSkillsSectionProps) {
+export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: StandaloneSkillsSectionProps) {
+  const [editing, setEditing] = useState(false);
+  const [localAbilities, setLocalAbilities] = useState<Ability[]>([]);
+  
   const abilities: Ability[] = Array.isArray(player.abilities) && player.abilities.length > 0
     ? player.abilities
     : DEFAULT_ABILITIES;
