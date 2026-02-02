@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Settings } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { SkillsTable } from './SkillsTable';
 
@@ -103,6 +104,83 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
     ? player.abilities
     : DEFAULT_ABILITIES;
 
+  React.useEffect(() => {
+    if (abilities.length > 0) {
+      setLocalAbilities(abilities);
+    }
+  }, [abilities]);
+
+  const getProficiencyBonus = (level: number): number => {
+    if (level >= 17) return 6;
+    if (level >= 13) return 5;
+    if (level >= 9) return 4;
+    if (level >= 5) return 3;
+    return 2;
+  };
+
+  const getExpertiseLimit = (className: string, level: number): number => {
+    if (!className) return 0;
+    if (className.toLowerCase() === 'barde') return level >= 10 ? 4 : 2;
+    if (className.toLowerCase() === 'roublard') return level >= 6 ? 2 : 0;
+    return 0;
+  };
+
+  const expertiseLimit = getExpertiseLimit(player.class, player.level);
+
+  const handleSkillClick = (skillName: string, bonus: number) => {
+    if (onSkillClick) {
+      onSkillClick(skillName, bonus);
+    }
+  };
+
+  const handleProficiencyChange = (abilityIndex: number, skillIndex: number) => {
+    if (!onUpdate) return;
+    
+    const newAbilities = [...localAbilities];
+    const skill = newAbilities[abilityIndex].skills[skillIndex];
+    
+    if (skill.isProficient && skill.hasExpertise) {
+      skill.hasExpertise = false;
+    }
+    
+    skill.isProficient = !skill.isProficient;
+    
+    const profBonus = getProficiencyBonus(player.level);
+    newAbilities[abilityIndex].skills[skillIndex].bonus = 
+      newAbilities[abilityIndex].modifier + 
+      (skill.isProficient ? (skill.hasExpertise ? profBonus * 2 : profBonus) : 0);
+    
+    setLocalAbilities(newAbilities);
+    onUpdate({ ...player, abilities: newAbilities });
+  };
+
+  const handleExpertiseChange = (abilityIndex: number, skillIndex: number) => {
+    if (!onUpdate) return;
+    
+    const newAbilities = [...localAbilities];
+    const skill = newAbilities[abilityIndex].skills[skillIndex];
+    
+    if (!skill.isProficient) return;
+    
+    skill.hasExpertise = !skill.hasExpertise;
+    
+    const profBonus = getProficiencyBonus(player.level);
+    newAbilities[abilityIndex].skills[skillIndex].bonus = 
+      newAbilities[abilityIndex].modifier + 
+      (skill.hasExpertise ? profBonus * 2 : profBonus);
+    
+    setLocalAbilities(newAbilities);
+    onUpdate({ ...player, abilities: newAbilities });
+  };
+
+  const handleSaveChanges = () => {
+    if (onUpdate && localAbilities.length > 0) {
+      onUpdate({ ...player, abilities: localAbilities });
+    }
+    setEditing(false);
+  };
+
+  const displayAbilities = localAbilities.length > 0 ? localAbilities : abilities;
   const allSkills: Array<{
     abilityIndex: number;
     skillIndex: number;
@@ -113,7 +191,7 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
     hasExpertise: boolean;
   }> = [];
 
-  abilities.forEach((ability, abilityIndex) => {
+  displayAbilities.forEach((ability, abilityIndex) => {
     ability.skills.forEach((skill, skillIndex) => {
       allSkills.push({
         abilityIndex,
@@ -123,25 +201,45 @@ export function StandaloneSkillsSection({ player, onSkillClick, onUpdate }: Stan
         bonus: skill.bonus,
         isProficient: skill.isProficient,
         hasExpertise: skill.hasExpertise
-      }); 
-    }); 
+      });
+    });
   });
 
-  const handleSkillClick = (skillName: string, bonus: number) => {
-    if (onSkillClick) {
-      onSkillClick(skillName, bonus);
-    } 
-  };
-
   return (
-    <SkillsTable
-      allSkills={allSkills}
-      editing={false}
-      expertiseLimit={0}
-      handleProficiencyChange={() => {}}
-      handleExpertiseChange={() => {}}
-      rollSkillCheck={handleSkillClick}
-      statsJackOfAllTrades={player.stats?.jack_of_all_trades || false}
-    />
+    <div className="relative">
+      {/* Bouton Settings en haut à droite */}
+      <button
+        onClick={() => setEditing(!editing)}
+        className={`absolute top-0 right-0 z-10 p-2 rounded-lg transition-colors ${
+          editing
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+        }`}
+        title={editing ? 'Sauvegarder les modifications' : 'Modifier les compétences'}
+      >
+        <Settings size={18} />
+      </button>
+
+      <SkillsTable
+        allSkills={allSkills}
+        editing={editing}
+        expertiseLimit={expertiseLimit}
+        handleProficiencyChange={handleProficiencyChange}
+        handleExpertiseChange={handleExpertiseChange}
+        rollSkillCheck={handleSkillClick}
+        statsJackOfAllTrades={player.stats?.jack_of_all_trades || false}
+      />
+      
+      {editing && (
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleSaveChanges}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Sauvegarder
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
