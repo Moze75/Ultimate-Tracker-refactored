@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Card, { CardContent, CardHeader } from './ui/Card';
 import { X, Plus, Trash2, Users } from 'lucide-react';
 import { DndRace } from '../types/character';
+
 
 interface CustomRaceModalProps {
   open: boolean;
