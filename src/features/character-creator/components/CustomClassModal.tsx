@@ -439,7 +439,9 @@ function AbilityEditor({ ability, onSave, onCancel }: AbilityEditorProps) {
   );
 }
 
-export default function CustomClassModal({ open, onClose, onSave }: CustomClassModalProps) {
+import { useEffect } from 'react'; // ✅ Ajouter dans les imports en haut du fichier si pas déjà présent
+
+export default function CustomClassModal({ open, onClose, onSave, initialData }: CustomClassModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [hitDie, setHitDie] = useState<6 | 8 | 10 | 12>(8);
