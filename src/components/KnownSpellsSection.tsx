@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Zap,
   Dice5,
-  } from 'lucide-react';
+  Settings,
+  X,
+} from 'lucide-react';
   
 import {
   analyzeSpellDamage,
