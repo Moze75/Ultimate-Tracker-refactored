@@ -639,24 +639,21 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-lg font-semibold text-white">Liste des équipements</h3>
-            {multiAdd && addedItems.size > 0 && (
-              <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/30 text-green-300">
-                {addedItems.size} sélectionné{addedItems.size > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-800"
-            aria-label="Fermer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <div className="px-4 py-3 border-b border-gray-800 shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-gray-100 font-semibold text-lg">Liste des équipements</h2>
+              {/* ✅ Compteur uniquement en mode multi-add */}
+              {multiAdd && addedItems.size > 0 && (
+                <p className="text-sm text-green-400 mt-1">
+                  {addedItems.size} objet{addedItems.size > 1 ? 's' : ''} ajouté{addedItems.size > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-800 rounded-lg" aria-label="Fermer">
+              <X />
+            </button> 
+          </div> 
 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
   <div className="flex items-center gap-2 flex-1 min-w-0">
     <Search className="w-5 h-5 text-gray-400 shrink-0" />
