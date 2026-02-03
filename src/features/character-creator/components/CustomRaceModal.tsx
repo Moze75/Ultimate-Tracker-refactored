@@ -137,7 +137,9 @@ const handleSave = () => {
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white">Créer une espèce personnalisée</h3>
+       <h3 className="text-lg font-semibold text-white">
+  {initialData ? 'Modifier l\'espèce personnalisée' : 'Créer une espèce personnalisée'}
+</h3>
           </div>
           <button
             onClick={handleCancel}
