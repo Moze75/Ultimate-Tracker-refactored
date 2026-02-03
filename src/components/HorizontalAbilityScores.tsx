@@ -152,7 +152,8 @@ export function HorizontalAbilityScores({
     return 2;
   };
 
-  const equipmentBonuses = calculateEquipmentBonuses();
+    const equipmentBonuses = calculateEquipmentBonuses();
+  const featBonuses = calculateFeatBonuses();
 
   const handleScoreChange = (index: number, newScore: number) => {
     const updatedAbilities = [...localAbilities];
