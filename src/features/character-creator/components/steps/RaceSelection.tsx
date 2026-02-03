@@ -1,3 +1,5 @@
+import { Edit2, Trash2 } from 'lucide-react';
+import { deleteUserCustomRace } from '../../../../services/customTemplatesService';
 import React, { useState, useEffect, useMemo } from 'react';
 import { races } from '../../data/races';
 import Card, { CardContent, CardHeader } from '../ui/Card';
