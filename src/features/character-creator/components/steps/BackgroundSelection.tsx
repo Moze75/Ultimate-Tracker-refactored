@@ -15,6 +15,8 @@ interface BackgroundSelectionProps {
   onEquipmentOptionChange?: (opt: 'A' | 'B' | '') => void;
   onNext: () => void;
   onPrevious: () => void;
+  customBackgroundData?: CustomBackgroundData | null;
+  onCustomBackgroundDataChange?: (data: CustomBackgroundData | null) => void;
 }
 
 const backgroundsData = [
