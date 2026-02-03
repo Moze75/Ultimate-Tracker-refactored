@@ -11,7 +11,8 @@ interface AbilityScoresProps {
   onNext: () => void;
   onPrevious: () => void;
   selectedBackground?: DndBackground | null;
-  onEffectiveAbilitiesChange?: (abilities: Record<string, number>) => void; 
+  customBackgroundData?: CustomBackgroundData | null;
+  onEffectiveAbilitiesChange?: (abilities: Record<string, number>) => void;
 }
 
 const abilityNames = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
