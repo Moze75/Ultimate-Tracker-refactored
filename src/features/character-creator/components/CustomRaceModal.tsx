@@ -22,6 +22,36 @@ export default function CustomRaceModal({ open, onClose, onSave, initialData }: 
   const [darkvision, setDarkvision] = useState(0);
   const [traits, setTraits] = useState<string[]>(['']);
 
+  // ✅ Pré-remplir le formulaire si on édite une race existante
+  useEffect(() => {
+    if (initialData && open) {
+      setName(initialData.name || '');
+      setDescription(initialData.description || '');
+      setSize(initialData.size || 'Moyen');
+      
+      // Convertir pieds en mètres pour l'affichage
+      const speedInMeters = initialData.speed 
+        ? Math.round(initialData.speed * 0.3048) 
+        : 9;
+      setSpeed(speedInMeters);
+      
+      // Extraire la vision dans le noir des traits
+      const allTraits = initialData.traits || [];
+      const darkvisionTrait = allTraits.find(t => t.includes('Vision dans le noir'));
+      
+      if (darkvisionTrait) {
+        const match = darkvisionTrait.match(/(\d+)/);
+        setDarkvision(match ? parseInt(match[1]) : 0);
+        // Retirer le trait de vision des autres traits
+        const otherTraits = allTraits.filter(t => !t.includes('Vision dans le noir'));
+        setTraits(otherTraits.length > 0 ? otherTraits : ['']);
+      } else {
+        setDarkvision(0);
+        setTraits(allTraits.length > 0 ? allTraits : ['']);
+      }
+    }
+  }, [initialData, open]);
+
   if (!open) return null;
 
   const handleAddTrait = () => {
