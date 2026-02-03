@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Card, { CardContent, CardHeader } from './ui/Card';
-import { X, Plus, Trash2, BookOpen, Star, Wrench, Zap, Scroll } from 'lucide-react';
+import { X, Plus, Trash2, BookOpen, Star, Wrench, Zap, Scroll, Package } from 'lucide-react';
 import { CustomBackgroundData } from '../types/character';
+import EquipmentCatalogPicker from './EquipmentCatalogPicker';
 
 interface CustomBackgroundModalProps {
   open: boolean;
@@ -55,8 +56,12 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
   const [feat, setFeat] = useState('');
   const [skillProficiencies, setSkillProficiencies] = useState<string[]>([]);
   const [toolProficiency, setToolProficiency] = useState('');
-  const [equipmentA, setEquipmentA] = useState<string[]>(['']);
-  const [equipmentB, setEquipmentB] = useState<string[]>(['50 po']);
+  const [equipmentA, setEquipmentA] = useState<string[]>([]);
+  const [goldA, setGoldA] = useState<number>(0);
+  const [goldB, setGoldB] = useState<number>(50);
+  
+  // États pour le picker d'équipement
+  const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
 
   useEffect(() => {
     if (initialData && open) {
@@ -66,8 +71,20 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       setFeat(initialData.feat || '');
       setSkillProficiencies(initialData.skillProficiencies || []);
       setToolProficiency(initialData.toolProficiencies?.[0] || '');
-      setEquipmentA(initialData.equipmentOptions?.optionA?.length ? initialData.equipmentOptions.optionA : ['']);
-      setEquipmentB(initialData.equipmentOptions?.optionB?.length ? initialData.equipmentOptions.optionB : ['50 po']);
+      
+      // Parser l'équipement existant
+      const optA = initialData.equipmentOptions?.optionA || [];
+      const nonGoldItems = optA.filter(item => !/^\d+\s*po$/i.test(item));
+      const goldItem = optA.find(item => /^\d+\s*po$/i.test(item));
+      const goldMatch = goldItem?.match(/^(\d+)\s*po$/i);
+      
+      setEquipmentA(nonGoldItems);
+      setGoldA(goldMatch ? parseInt(goldMatch[1]) : 0);
+      
+      const optB = initialData.equipmentOptions?.optionB || ['50 po'];
+      const goldBItem = optB.find(item => /^\d+\s*po$/i.test(item));
+      const goldBMatch = goldBItem?.match(/^(\d+)\s*po$/i);
+      setGoldB(goldBMatch ? parseInt(goldBMatch[1]) : 50);
     }
   }, [initialData, open]);
 
@@ -89,12 +106,12 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
     }
   };
 
-  const handleAddEquipmentA = () => setEquipmentA([...equipmentA, '']);
-  const handleRemoveEquipmentA = (index: number) => setEquipmentA(equipmentA.filter((_, i) => i !== index));
-  const handleEquipmentAChange = (index: number, value: string) => {
-    const newItems = [...equipmentA];
-    newItems[index] = value;
-    setEquipmentA(newItems);
+  const handleRemoveEquipment = (index: number) => {
+    setEquipmentA(equipmentA.filter((_, i) => i !== index));
+  };
+
+  const handleEquipmentSelect = (items: string[]) => {
+    setEquipmentA(items);
   };
 
   const handleSave = () => {
@@ -118,11 +135,15 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       alert('La maîtrise d\'outil est requise');
       return;
     }
-
-    const validEquipmentA = equipmentA.filter(e => e.trim() !== '');
-    if (validEquipmentA.length === 0) {
-      alert('L\'option d\'équipement A doit contenir au moins un élément');
+    if (equipmentA.length === 0 && goldA <= 0) {
+      alert('L\'option A doit contenir au moins un équipement ou de l\'or');
       return;
+    }
+
+    // Construire l'option A avec l'or
+    const optionAWithGold = [...equipmentA];
+    if (goldA > 0) {
+      optionAWithGold.push(`${goldA} po`);
     }
 
     const customBackground: CustomBackgroundData = {
@@ -133,8 +154,8 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       skillProficiencies,
       toolProficiencies: [toolProficiency],
       equipmentOptions: {
-        optionA: validEquipmentA,
-        optionB: equipmentB.filter(e => e.trim() !== ''),
+        optionA: optionAWithGold,
+        optionB: [`${goldB} po`],
       },
       isCustom: true,
     };
@@ -152,8 +173,9 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
     setFeat('');
     setSkillProficiencies([]);
     setToolProficiency('');
-    setEquipmentA(['']);
-    setEquipmentB(['50 po']);
+    setEquipmentA([]);
+    setGoldA(0);
+    setGoldB(50);
   };
 
   const handleCancel = () => {
@@ -323,48 +345,74 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
           {/* Équipement de départ */}
           <Card>
             <CardHeader>
-              <h4 className="text-white font-semibold">Équipement de départ *</h4>
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-amber-400" />
+                <h4 className="text-white font-semibold">Équipement de départ *</h4>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Option A */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-300">Option A</span>
-                  <Button onClick={handleAddEquipmentA} variant="secondary" size="sm">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-300">Option A - Équipements</span>
+                  <Button 
+                    onClick={() => setShowEquipmentPicker(true)} 
+                    variant="secondary" 
+                    size="sm"
+                  >
                     <Plus className="w-4 h-4 mr-1" />
-                    Ajouter
+                    Sélectionner du catalogue
                   </Button>
                 </div>
-                <div className="space-y-2">
-                  {equipmentA.map((item, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={item}
-                        onChange={(e) => handleEquipmentAChange(index, e.target.value)}
-                        placeholder="Ex: Épée longue, 10 po..."
-                        className="flex-1"
-                      />
-                      {equipmentA.length > 1 && (
+                
+                {equipmentA.length > 0 ? (
+                  <div className="space-y-2">
+                    {equipmentA.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-800/50 rounded-md px-3 py-2">
+                        <span className="text-gray-200 text-sm">{item}</span>
                         <button
-                          onClick={() => handleRemoveEquipmentA(index)}
-                          className="text-red-400 hover:text-red-300 p-2"
+                          onClick={() => handleRemoveEquipment(index)}
+                          className="text-red-400 hover:text-red-300 p-1"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm py-4 text-center bg-gray-800/30 rounded-md">
+                    Aucun équipement sélectionné. Cliquez sur "Sélectionner du catalogue".
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-400">Or (po) inclus dans l'option A:</label>
+                  <input
+                    type="number"
+                    value={goldA}
+                    onChange={(e) => setGoldA(Math.max(0, parseInt(e.target.value) || 0))}
+                    min={0}
+                    className="input-dark w-24 px-2 py-1 rounded"
+                  />
                 </div>
               </div>
 
               {/* Option B */}
-              <div>
-                <span className="text-sm text-gray-300 block mb-2">Option B (généralement 50 po)</span>
-                <Input
-                  value={equipmentB[0] || ''}
-                  onChange={(e) => setEquipmentB([e.target.value])}
-                  placeholder="Ex: 50 po"
-                />
+              <div className="pt-3 border-t border-gray-700">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-300">Option B - Or uniquement:</span>
+                  <input
+                    type="number"
+                    value={goldB}
+                    onChange={(e) => setGoldB(Math.max(0, parseInt(e.target.value) || 0))}
+                    min={0}
+                    className="input-dark w-24 px-2 py-1 rounded"
+                  />
+                  <span className="text-gray-400 text-sm">po</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  L'option B est généralement 50 po pour tous les historiques standards.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -380,6 +428,15 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
           </Button>
         </div>
       </div>
+
+      {/* Picker d'équipement */}
+      <EquipmentCatalogPicker
+        open={showEquipmentPicker}
+        onClose={() => setShowEquipmentPicker(false)}
+        onSelect={handleEquipmentSelect}
+        selectedItems={equipmentA}
+        title="Sélectionner l'équipement de départ"
+      />
     </div>
   );
 
