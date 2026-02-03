@@ -7,6 +7,7 @@ import { DiceRollContext } from './ResponsiveGameLayout'; // ✨ AJOUT
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { AbilityScoreGrid } from './AbilityScoreGrid';
 import { SkillsTable } from './SkillsTable';
+import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
 
 // Ajouter après les imports existants (vers ligne 10)
 // ========== HELPERS POUR LE CALCUL DE LA CA ==========
