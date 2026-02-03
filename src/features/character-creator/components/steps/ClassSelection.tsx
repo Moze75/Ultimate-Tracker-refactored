@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { classes } from '../../data/classes';
 import Card, { CardContent, CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
@@ -8,6 +8,7 @@ import { normalizeSkill } from '../../data/skills';
 import { getClassImageUrl } from '../../../../config/assets';
 import CardDetailModal from '../ui/CardDetailModal';
 import CustomClassModal from '../CustomClassModal';
+import { getUserCustomClasses, saveUserCustomClass } from '../../../../services/customTemplatesService';
 
 interface ClassSelectionProps {
   selectedClass: DndClass | string | '';
