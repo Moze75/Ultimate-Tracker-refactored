@@ -573,87 +573,12 @@ export default function BackgroundSelection({
         <p className="text-gray-400">Votre historique determine vos competences et votre equipement de depart</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-        {allBackgroundsIncludingCustom.map((bg, index) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch"> 
+        {backgroundsData.map((bg, index) => {
           const isSelected = selectedBackground === bg.name;
-          const isCustomCard = (bg as any).isCustomPlaceholder;
-          const isCustomBackground = (bg as any).isCustom && !isCustomCard;
-
+ 
           return (
             <Card
-              key={bg.name}
-              selected={isSelected}
-              onClick={() => handleCardClick(index)}
-              className={`h-full min-h-[200px] ${isCustomCard ? 'border-blue-500/30 bg-blue-900/10' : isCustomBackground ? 'border-blue-400/50' : ''}`}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-blue-300' : isCustomBackground ? 'text-blue-200' : 'text-white'}`}>
-                    {bg.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {isCustomBackground && (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditCustomBackground(bg as CustomBackgroundData);
-                          }}
-                          className="p-1 rounded hover:bg-blue-500/20 transition-colors"
-                          title="Modifier cet historique"
-                        >
-                          <Edit2 className="w-4 h-4 text-blue-400" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCustomBackground(bg.name);
-                          }}
-                          className="p-1 rounded hover:bg-red-500/20 transition-colors"
-                          title="Supprimer cet historique"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
-                      </>
-                    )}
-                    {isCustomCard ? (
-                      <Settings className="w-5 h-5 text-blue-400" />
-                    ) : (
-                      <BookOpen className="w-5 h-5 text-blue-400" />
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isCustomCard ? (
-                  <div className="text-center py-4">
-                    <p className="text-gray-400 text-sm mb-3">{bg.description}</p>
-                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); setShowCustomModal(true); }}>
-                      <Settings className="w-4 h-4 mr-2" />
-                      Créer
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-gray-300 text-sm mb-3">{bg.description}</p>
-                    <div className="space-y-2 text-sm text-gray-400">
-                      <div className="flex items-center">
-                        <Scroll className="w-4 h-4 mr-2 text-purple-400" />
-                        <span>Don: {bg.feat}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-2 text-yellow-400" />
-                        <span>Compétences: {bg.skillProficiencies?.join(', ') || '-'}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Wrench className="w-4 h-4 mr-2 text-green-400" />
-                        <span>Outils: {bg.toolProficiencies?.join(', ') || '-'}</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
               key={bg.name}
               selected={isSelected}
               onClick={() => handleCardClick(index)}
