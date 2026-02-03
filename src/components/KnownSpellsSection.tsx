@@ -677,7 +677,9 @@ function SpellCard({
   maxPlayerSpellLevel,
   characterLevel,
   abilityModifier,
-  onRoll, // ✅ nouveau
+  onRoll,
+  customBonuses,
+  onUpdateBonus,
 }: {
   spell: KnownSpell;
   expandedSpell: string | null;
@@ -694,6 +696,8 @@ function SpellCard({
     diceFormula: string,
     modifier: number
   ) => void;
+  customBonuses: { attackBonus: number; damageBonus: number };
+  onUpdateBonus: (type: 'attackBonus' | 'damageBonus', value: number) => void;
 }) {
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
