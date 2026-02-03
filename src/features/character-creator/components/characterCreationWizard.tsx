@@ -305,8 +305,8 @@ if (loadingEquipment) {
       // Équipement combiné
       const equipment = [...classEquipment, ...bgEquip];
 
-      // Don d'historique
-      const backgroundFeat = normalizeBackgroundFeat(selectedBackgroundObj?.feat);
+      // Don d'historique - utiliser customBackgroundData si disponible
+      const backgroundFeat = normalizeBackgroundFeat(effectiveBgData?.feat);
 
       // Or initial
       const goldFromClassEquipment = parseGoldFromItems(classEquipment);
