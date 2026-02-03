@@ -1144,6 +1144,38 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
   const [selectedSpells, setSelectedSpells] = useState<Spell[]>([]);
   const [expandedSpell, setExpandedSpell] = useState<string | null>(null);
 
+  // État pour les bonus personnalisés des sorts
+  // Structure: { [spell_id]: { attackBonus: number, damageBonus: number } }
+  const [spellBonuses, setSpellBonuses] = useState<Record<string, { attackBonus: number; damageBonus: number }>>(() => {
+    const saved = localStorage.getItem(`spell-bonuses-${player.id}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
+
+  // Sauvegarder les bonus quand ils changent
+  useEffect(() => {
+    localStorage.setItem(`spell-bonuses-${player.id}`, JSON.stringify(spellBonuses));
+  }, [spellBonuses, player.id]);
+
+  // Fonction pour mettre à jour les bonus d'un sort
+  const updateSpellBonus = useCallback((spellId: string, type: 'attackBonus' | 'damageBonus', value: number) => {
+    setSpellBonuses(prev => ({
+      ...prev,
+      [spellId]: {
+        ...prev[spellId],
+        attackBonus: prev[spellId]?.attackBonus || 0,
+        damageBonus: prev[spellId]?.damageBonus || 0,
+        [type]: value
+      }
+    }));
+  }, []);
+
    const [collapsedLevels, setCollapsedLevels] = useState<Set<string>>(() => {
     const saved = localStorage.getItem(`spell-levels-state-${player.id}`);
     if (saved) {
