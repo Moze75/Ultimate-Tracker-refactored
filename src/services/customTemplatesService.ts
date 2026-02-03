@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { DndRace, CustomClassData } from '../features/character-creator/types/character';
+import type { DndRace, CustomClassData, CustomBackgroundData } from '../features/character-creator/types/character';
 
 // =====================
 // RACES PERSONNALISÉES
