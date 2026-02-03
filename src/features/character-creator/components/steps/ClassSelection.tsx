@@ -40,6 +40,24 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
 }) => {
   const [modalCardIndex, setModalCardIndex] = useState<number | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [savedCustomClasses, setSavedCustomClasses] = useState<CustomClassData[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+
+  // ✅ Charger les classes personnalisées sauvegardées au montage
+  useEffect(() => {
+    async function loadSavedClasses() {
+      setLoadingClasses(true);
+      try {
+        const customClasses = await getUserCustomClasses();
+        setSavedCustomClasses(customClasses);
+      } catch (error) {
+        console.error('Erreur chargement classes sauvegardées:', error);
+      } finally {
+        setLoadingClasses(false);
+      }
+    }
+    loadSavedClasses();
+  }, []);
 
   const customClassCard = {
     name: 'Classe personnalisée',
@@ -50,14 +68,20 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
     isCustomPlaceholder: true,
   };
 
+  // ✅ Combiner les classes par défaut, les classes sauvegardées et la classe en cours de création
   const allClassesIncludingCustom = useMemo(() => {
-    const list: any[] = [...classes];
-    if (customClassData) {
-      list.push(customClassData);
-    }
-    list.push(customClassCard);
-    return list;
-  }, [customClassData]);
+    // Classes personnalisées de la DB (exclure celles qui ont le même nom qu'une classe de base)
+    const customClassesFromDb = savedCustomClasses.filter(
+      (c) => !classes.some((base) => base.name === c.name)
+    );
+    
+    // Classe en cours de création (si pas déjà dans la liste)
+    const currentCustom = customClassData && !customClassesFromDb.some((c) => c.name === customClassData.name)
+      ? [customClassData]
+      : [];
+    
+    return [...classes, ...customClassesFromDb, ...currentCustom, customClassCard];
+  }, [savedCustomClasses, customClassData]);
 
   const selectedClassData = useMemo(
     () => {
