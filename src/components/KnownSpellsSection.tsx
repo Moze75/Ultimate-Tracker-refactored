@@ -797,6 +797,7 @@ function SpellCard({
   }, [spell.spell_level]);
 
   // ✅ Helper pour convertir totalDamage ("2d6 + 3") en (diceFormula, modifier)
+  // Inclut maintenant le bonus de dégâts personnalisé
   const parseDamageFormula = (damageString: string): { diceFormula: string; modifier: number } => {
     // Extraire la première occurrence de XdY
     const diceMatch = damageString.match(/(\d+d\d+)/i);
@@ -804,12 +805,35 @@ function SpellCard({
 
     // Extraire un éventuel modificateur numérique global, ex: "+ 3" ou "-2"
     const modMatch = damageString.match(/([+-]\s*\d+)\s*$/);
-    const modifier = modMatch ? parseInt(modMatch[1].replace(/\s+/g, ''), 10) : 0;
+    const baseModifier = modMatch ? parseInt(modMatch[1].replace(/\s+/g, ''), 10) : 0;
+
+    // Ajouter le bonus personnalisé
+    const totalModifier = baseModifier + effectiveDamageBonus;
 
     return {
       diceFormula: baseFormula,
-      modifier,
+      modifier: totalModifier,
     };
+  };
+
+  // Helper pour afficher les dégâts avec le bonus personnalisé
+  const formatDamageDisplay = (baseDamage: string): string => {
+    if (effectiveDamageBonus === 0) return baseDamage;
+    
+    // Si le baseDamage contient déjà un modificateur, l'ajuster
+    const hasModifier = /[+-]\s*\d+\s*$/.test(baseDamage);
+    if (hasModifier) {
+      // Extraire et recalculer
+      const match = baseDamage.match(/^(.+?)([+-]\s*\d+)\s*$/);
+      if (match) {
+        const dicepart = match[1].trim();
+        const existingMod = parseInt(match[2].replace(/\s+/g, ''), 10);
+        const newMod = existingMod + effectiveDamageBonus;
+        return `${dicepart} ${newMod >= 0 ? '+' : ''}${newMod}`;
+      }
+    }
+    // Sinon ajouter le bonus
+    return `${baseDamage} ${effectiveDamageBonus >= 0 ? '+' : ''}${effectiveDamageBonus}`;
   };
   
   const handleRemoveSpell = (e: React.MouseEvent) => {
