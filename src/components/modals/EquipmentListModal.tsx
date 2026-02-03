@@ -629,9 +629,15 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
  const typeButtons: CatalogKind[] = ['weapons','armors','shields','adventuring_gear','tools','gems']; // ✅ Ajout 'gems'
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative bg-gray-900 rounded-xl flex flex-col w-full max-w-2xl max-h-[85vh] border border-gray-700/50 shadow-2xl">
+    <div 
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      style={{ zIndex: 9999 }}
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-3xl max-h-[85vh] overflow-hidden bg-gray-900 border border-gray-800 rounded-xl shadow-xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-800 shrink-0">
           <div className="flex items-center justify-between mb-2">
