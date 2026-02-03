@@ -91,22 +91,42 @@ export default function RaceSelection({
   };
 
   // ✅ Gérer la sauvegarde de la race personnalisée
-  const handleSaveCustomRace = (race: DndRace) => {
+  const handleSaveCustomRace = async (race: DndRace) => {
     console.log('[RaceSelection] Race reçue:', race);
     
-    // 1. Sauvegarder la race personnalisée
+    // 1. Sauvegarder la race personnalisée dans l'état local
     if (onCustomRaceDataChange) {
       onCustomRaceDataChange(race);
     }
     
-    // 2. Sélectionner la race
+    // ✅ 2. Sauvegarder dans Supabase pour réutilisation future
+    try {
+      const result = await saveUserCustomRace(race);
+      if (result.success) {
+        // Ajouter à la liste locale si pas déjà présente
+        setSavedCustomRaces((prev) => {
+          const exists = prev.some((r) => r.name === race.name);
+          if (exists) {
+            return prev.map((r) => (r.name === race.name ? race : r));
+          }
+          return [...prev, race];
+        });
+        console.log('[RaceSelection] Race sauvegardée dans Supabase');
+      } else {
+        console.warn('[RaceSelection] Échec sauvegarde Supabase:', result.error);
+      }
+    } catch (error) {
+      console.error('[RaceSelection] Erreur sauvegarde:', error);
+    }
+    
+    // 3. Sélectionner la race
     onRaceSelect(race.name);
     console.log('[RaceSelection] Race sélectionnée:', race.name);
     
-    // 3. Fermer le modal
+    // 4. Fermer le modal
     setShowCustomModal(false);
     
-    // ✅ 4. Passer automatiquement au step suivant
+    // ✅ 5. Passer automatiquement au step suivant
     setTimeout(() => {
       onNext();
       console.log('[RaceSelection] Passage au step suivant');
