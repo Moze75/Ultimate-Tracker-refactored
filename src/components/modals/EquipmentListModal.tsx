@@ -606,10 +606,10 @@ export function EquipmentListModal({
   
   const typeButtons: CatalogKind[] = ['weapons', 'armors', 'shields', 'adventuring_gear', 'tools', 'gems'];
 
-  return (
+  const modalContent = (
     <div 
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 10000 }}
       onClick={onClose}
     >
       <div 
