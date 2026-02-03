@@ -31,6 +31,7 @@ export function AbilityScoreGrid({
   abilities,
   editing,
   calculateEquipmentBonuses,
+  calculateFeatBonuses,
   handleScoreChange,
   rollAbilityCheck,
   rollSavingThrow,
