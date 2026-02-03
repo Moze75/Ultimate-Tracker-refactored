@@ -368,7 +368,7 @@ const payload: CharacterExportPayload = {
   toolProficiencies: classData?.toolProficiencies || [],
   racialTraits: raceData?.traits || [],
   classFeatures: classData?.features || [],
-  backgroundFeature: selectedBackgroundObj?.feature || '',
+      backgroundFeature: effectiveBgData?.feature || '',
   savingThrows: classData?.savingThrows || [],
   languages: allLanguages,
   hitDice: {
