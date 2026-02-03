@@ -1029,19 +1029,24 @@ function SpellCard({
             {glasDamageAlternatives.d12}
           </button>
         </div>
-      ) : (
+         ) : (
         // Cas général : un seul badge avec la formule totale
         <button
           type="button"
-          className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 font-mono font-bold hover:bg-orange-500/30 transition-colors"
-          title="Lancer les dégâts du sort"
+          className={`text-xs px-2 py-1 rounded border font-mono font-bold hover:opacity-80 transition-colors ${
+            effectiveDamageBonus !== 0
+              ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+              : 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+          }`}
+          title={`Lancer les dégâts du sort${effectiveDamageBonus !== 0 ? ` [inclut +${effectiveDamageBonus} bonus]` : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             const { diceFormula, modifier } = parseDamageFormula(totalDamage);
             onRoll('damage', spell.spell_name, diceFormula, modifier);
           }}
         >
-          {totalDamage}
+          {formatDamageDisplay(totalDamage)}
+          {effectiveDamageBonus !== 0 && <span className="ml-1">★</span>}
         </button>
       )}
     </>
