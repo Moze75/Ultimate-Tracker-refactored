@@ -1,4 +1,4 @@
-import React, { useState } from 'react';  
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Button from './ui/Button'; 
 import Input from './ui/Input';
@@ -439,7 +439,7 @@ function AbilityEditor({ ability, onSave, onCancel }: AbilityEditorProps) {
   );
 }
 
-import { useEffect } from 'react'; // ✅ Ajouter dans les imports en haut du fichier si pas déjà présent
+
 
 export default function CustomClassModal({ open, onClose, onSave, initialData }: CustomClassModalProps) {
   const [name, setName] = useState('');
