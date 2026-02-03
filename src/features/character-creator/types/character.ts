@@ -110,6 +110,24 @@ export interface CustomClassSpellcasting {
   spellList: string;
 }
 
+// =====================
+// HISTORIQUES PERSONNALISÉS
+// =====================
+
+export interface CustomBackgroundData {
+  name: string;
+  description: string;
+  abilityScores: string[]; // 3 caractéristiques au choix
+  feat: string; // Don d'origine
+  skillProficiencies: string[]; // 2 compétences
+  toolProficiencies: string[]; // 1 outil ou instrument
+  equipmentOptions: {
+    optionA: string[];
+    optionB: string[];
+  };
+  isCustom?: boolean;
+}
+
 export interface CustomClassData {
   name: string;
   description: string;
