@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card, { CardContent, CardHeader } from '../ui/Card';
+import { Edit2, Trash2, Settings } from 'lucide-react';
+import CustomBackgroundModal from '../CustomBackgroundModal';
+import { getUserCustomBackgrounds, saveUserCustomBackground, deleteUserCustomBackground } from '../../../../services/customTemplatesService';
+import { CustomBackgroundData } from '../../types/character';
 import Button from '../ui/Button';
 import { BookOpen, Star, Wrench, Zap, CheckCircle2, Circle, Scroll } from 'lucide-react';
 import CardDetailModal from '../ui/CardDetailModal';
