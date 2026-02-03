@@ -331,9 +331,123 @@ export default function BackgroundSelection({
   selectedEquipmentOption = '',
   onEquipmentOptionChange = () => {},
   onNext,
-  onPrevious
+  onPrevious,
+  customBackgroundData,
+  onCustomBackgroundDataChange
 }: BackgroundSelectionProps) {
   const [modalCardIndex, setModalCardIndex] = useState<number | null>(null);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [savedCustomBackgrounds, setSavedCustomBackgrounds] = useState<CustomBackgroundData[]>([]);
+  const [loadingBackgrounds, setLoadingBackgrounds] = useState(true);
+  const [editingBackground, setEditingBackground] = useState<CustomBackgroundData | null>(null);
+
+  // Charger les historiques personnalisés sauvegardés au montage
+  useEffect(() => {
+    async function loadSavedBackgrounds() {
+      setLoadingBackgrounds(true);
+      try {
+        const backgrounds = await getUserCustomBackgrounds();
+        setSavedCustomBackgrounds(backgrounds);
+      } catch (error) {
+        console.error('Erreur chargement historiques sauvegardés:', error);
+      } finally {
+        setLoadingBackgrounds(false);
+      }
+    }
+    loadSavedBackgrounds();
+  }, []);
+
+  // Placeholder pour la carte "Créer un historique personnalisé"
+  const customBackgroundCard = {
+    name: 'Historique personnalisé',
+    description: 'Créez votre propre historique avec des compétences uniques',
+    abilityScores: [],
+    feat: '',
+    skillProficiencies: [],
+    toolProficiencies: [],
+    equipmentOptions: { optionA: [], optionB: [] },
+    isCustomPlaceholder: true,
+  };
+
+  // Combiner les historiques par défaut et personnalisés
+  const allBackgroundsIncludingCustom = useMemo(() => {
+    const customFromDb = savedCustomBackgrounds.filter(
+      (b) => !backgroundsData.some((base) => base.name === b.name)
+    );
+    const currentCustom = customBackgroundData && !customFromDb.some((b) => b.name === customBackgroundData.name)
+      ? [customBackgroundData]
+      : [];
+    return [...backgroundsData, ...customFromDb, ...currentCustom, customBackgroundCard];
+  }, [savedCustomBackgrounds, customBackgroundData]);
+
+  // Fonction pour éditer un historique personnalisé
+  const handleEditCustomBackground = (bg: CustomBackgroundData) => {
+    setEditingBackground(bg);
+    setShowCustomModal(true);
+  };
+
+  // Fonction pour supprimer un historique personnalisé
+  const handleDeleteCustomBackground = async (bgName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'historique "${bgName}" ?\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      const result = await deleteUserCustomBackground(bgName);
+      if (result.success) {
+        setSavedCustomBackgrounds((prev) => prev.filter((b) => b.name !== bgName));
+        if (selectedBackground === bgName) {
+          onBackgroundSelect('');
+          if (onCustomBackgroundDataChange) {
+            onCustomBackgroundDataChange(null);
+          }
+        }
+        console.log('[BackgroundSelection] Historique supprimé:', bgName);
+      } else {
+        alert('Erreur lors de la suppression de l\'historique');
+      }
+    } catch (error) {
+      console.error('[BackgroundSelection] Erreur suppression:', error);
+      alert('Erreur lors de la suppression de l\'historique');
+    }
+  };
+
+  // Gérer la sauvegarde d'un historique personnalisé
+  const handleSaveCustomBackground = async (background: CustomBackgroundData) => {
+    console.log('[BackgroundSelection] Historique reçu:', background);
+
+    if (onCustomBackgroundDataChange) {
+      onCustomBackgroundDataChange(background);
+    }
+
+    try {
+      const result = await saveUserCustomBackground(background);
+      if (result.success) {
+        setSavedCustomBackgrounds((prev) => {
+          const exists = prev.some((b) => b.name === background.name);
+          if (exists) {
+            return prev.map((b) => (b.name === background.name ? background : b));
+          }
+          return [...prev, background];
+        });
+        console.log('[BackgroundSelection] Historique sauvegardé dans Supabase');
+      } else {
+        console.warn('[BackgroundSelection] Échec sauvegarde Supabase:', result.error);
+      }
+    } catch (error) {
+      console.error('[BackgroundSelection] Erreur sauvegarde:', error);
+    }
+
+    onBackgroundSelect(background.name);
+    console.log('[BackgroundSelection] Historique sélectionné:', background.name);
+
+    setShowCustomModal(false);
+
+    setTimeout(() => {
+      onNext();
+      console.log('[BackgroundSelection] Passage au step suivant');
+    }, 100);
+  };
 
   const handleCardClick = (index: number) => {
     const bg = backgroundsData[index];
