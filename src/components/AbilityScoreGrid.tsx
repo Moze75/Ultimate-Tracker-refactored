@@ -13,6 +13,14 @@ interface AbilityScoreGridProps {
     Charisme: number;
     armor_class: number;
   };
+  calculateFeatBonuses: () => {
+    Force: number;
+    Dextérité: number;
+    Constitution: number;
+    Intelligence: number;
+    Sagesse: number;
+    Charisme: number;
+  };
   handleScoreChange: (index: number, score: number) => void;
   rollAbilityCheck: (ability: Ability) => void;
   rollSavingThrow: (ability: Ability) => void;
