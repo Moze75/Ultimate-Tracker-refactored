@@ -257,9 +257,9 @@ const handleSave = () => {
           <Button variant="secondary" onClick={handleCancel}>
             Annuler
           </Button>
-          <Button onClick={handleSave} className="min-w-[200px]">
-            Créer l'espèce
-          </Button>
+<Button onClick={handleSave} className="min-w-[200px]">
+  {initialData ? 'Enregistrer les modifications' : 'Créer l\'espèce'}
+</Button>
         </div>
       </div>
     </div>
