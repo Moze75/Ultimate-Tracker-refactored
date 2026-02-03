@@ -10,9 +10,10 @@ interface CustomRaceModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (race: DndRace) => void;
+  initialData?: DndRace | null; // ✅ Données pour l'édition
 }
 
-export default function CustomRaceModal({ open, onClose, onSave }: CustomRaceModalProps) {
+export default function CustomRaceModal({ open, onClose, onSave, initialData }: CustomRaceModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [size, setSize] = useState('Moyen');
