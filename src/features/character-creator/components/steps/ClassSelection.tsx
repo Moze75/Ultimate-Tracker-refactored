@@ -44,6 +44,45 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
   const [savedCustomClasses, setSavedCustomClasses] = useState<CustomClassData[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
 
+    // ✅ État pour l'édition d'une classe existante
+  const [editingClass, setEditingClass] = useState<CustomClassData | null>(null);
+
+  // ✅ Fonction pour éditer une classe personnalisée
+  const handleEditCustomClass = (classData: CustomClassData) => {
+    setEditingClass(classData);
+    setShowCustomModal(true);
+  };
+
+  // ✅ Fonction pour supprimer une classe personnalisée
+  const handleDeleteCustomClass = async (className: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la classe "${className}" ?\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      const result = await deleteUserCustomClass(className);
+      if (result.success) {
+        // Retirer de la liste locale
+        setSavedCustomClasses((prev) => prev.filter((c) => c.name !== className));
+        
+        // Si c'était la classe sélectionnée, désélectionner
+        if (selectedClass === className) {
+          onClassSelect('');
+          if (onCustomClassDataChange) {
+            onCustomClassDataChange(null);
+          }
+        }
+        
+        console.log('[ClassSelection] Classe supprimée:', className);
+      } else {
+        alert('Erreur lors de la suppression de la classe');
+      }
+    } catch (error) {
+      console.error('[ClassSelection] Erreur suppression:', error);
+      alert('Erreur lors de la suppression de la classe');
+    }
+  };
+
   // ✅ Charger les classes personnalisées sauvegardées au montage
   useEffect(() => {
     async function loadSavedClasses() {
