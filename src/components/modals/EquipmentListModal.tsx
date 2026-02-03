@@ -794,29 +794,35 @@ const preview = (
           )}
         </div> 
 
-        {/* Footer uniquement en mode multi-add */}
-        {multiAdd && (
-          <div className="bg-gray-800/60 border-t border-gray-700 px-4 py-3 rounded-b-xl shrink-0">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-400">
-                {filtered.length} résultat{filtered.length > 1 ? 's' : ''}
-                {addedItems.size > 0 && (
-                  <span className="ml-2 text-green-400">
-                    • {addedItems.size} ajouté{addedItems.size > 1 ? 's' : ''}
-                  </span>
-                )}
-              </p>
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-800 flex-shrink-0">
+          <div className="text-sm text-gray-400">
+            {filtered.length} équipement{filtered.length > 1 ? 's' : ''}
+            {addedItems.size > 0 && (
+              <span className="text-green-400 ml-2">
+                • {addedItems.size} sélectionné{addedItems.size > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              {multiAdd ? 'Annuler' : 'Fermer'}
+            </button>
+            {multiAdd && (
               <button
                 onClick={onClose}
-                className="btn-primary px-6 py-2 rounded-lg flex items-center gap-2"
+                className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
               >
-                <Check size={18} />
-                Terminer {addedItems.size > 0 && `(${addedItems.size})`}
+                <Check className="w-4 h-4" />
+                Valider ({addedItems.size})
               </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
-  ); 
+  );
 }
