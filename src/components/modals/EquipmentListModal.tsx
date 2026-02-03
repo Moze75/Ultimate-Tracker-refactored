@@ -691,20 +691,17 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
             {typeButtons.map(k => {
                 if (allowedKinds && !allowedKinds.includes(k)) return null;
                 return (
-                  <button
-                    key={k}
-                    onClick={() => setFilters(prev => ({ ...prev, [k]: !prev[k] }))}
-                    className={`px-2 py-1 rounded text-xs border ${
-                      effectiveFilters[k] ? 'border-red-500/40 text-red-300 bg-red-900/20' : 'border-gray-600 text-gray-300 hover:bg-gray-800/40'
-                    }`}
-                  >
-     {k === 'weapons' ? 'Armes' :
- k === 'armors' ? 'Armures' :
- k === 'shields' ? 'Boucliers' :
- k === 'adventuring_gear' ? 'Équipements' : 
- k === 'tools' ? 'Outils' :
- k === 'gems' ? 'Bijoux' : k} {/* ✅ AJOUT */}
-                  </button>
+               <button
+                key={k}
+                onClick={() => setFilters(prev => ({ ...prev, [k]: !prev[k] }))}
+                className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                  effectiveFilters[k]
+                    ? getKindStyle(k).activeClass
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {getKindLabel(k)}
+              </button>
                 );
               })}
             </div>
