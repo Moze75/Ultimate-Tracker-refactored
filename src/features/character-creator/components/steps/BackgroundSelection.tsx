@@ -450,14 +450,18 @@ export default function BackgroundSelection({
   };
 
   const handleCardClick = (index: number) => {
-    const bg = backgroundsData[index];
-    if (selectedBackground !== bg.name) {
-      onEquipmentOptionChange('');
-    }
-    onBackgroundSelect(bg.name);
-    setModalCardIndex(index);
-  };
+    const bg = allBackgroundsIncludingCustom[index];
 
+    if ((bg as any).isCustomPlaceholder) {
+      setShowCustomModal(true);
+    } else {
+      if (selectedBackground !== bg.name) {
+        onEquipmentOptionChange('');
+      }
+      onBackgroundSelect(bg.name);
+      setModalCardIndex(index);
+    }
+  };
   const renderBackgroundCardContent = (bg: typeof backgroundsData[0], index: number) => {
     const isSelected = selectedBackground === bg.name;
 
