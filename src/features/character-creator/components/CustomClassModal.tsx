@@ -49,6 +49,7 @@ interface CustomClassModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (classData: CustomClassData) => void;
+  initialData?: CustomClassData | null; // ✅ Données pour l'édition
 }
 
 const ABILITY_OPTIONS = [
