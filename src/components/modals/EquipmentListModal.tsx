@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Check, Plus } from 'lucide-react';
+import { Search, X, Check, Plus, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWeaponCategory } from '../../utils/weaponProficiencyChecker'; 
 
