@@ -315,6 +315,18 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     proficiencyBonus = effectiveProficiency
   ) => {
     const equipmentBonuses = calculateEquipmentBonuses();
+    const featBonuses = calculateFeatBonuses();
+    
+    // Combiner les bonus équipement + dons
+    const combinedBonuses = {
+      Force: equipmentBonuses.Force + featBonuses.Force,
+      Dextérité: equipmentBonuses.Dextérité + featBonuses.Dextérité,
+      Constitution: equipmentBonuses.Constitution + featBonuses.Constitution,
+      Intelligence: equipmentBonuses.Intelligence + featBonuses.Intelligence,
+      Sagesse: equipmentBonuses.Sagesse + featBonuses.Sagesse,
+      Charisme: equipmentBonuses.Charisme + featBonuses.Charisme,
+      armor_class: equipmentBonuses.armor_class
+    };
 
     return newAbilities.map(ability => {
       const baseModifier = getModifier(ability.score);
