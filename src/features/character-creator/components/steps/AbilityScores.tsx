@@ -53,10 +53,9 @@ export default function AbilityScores({
   const [bgAssignments, setBgAssignments] = useState<{ plusTwo?: string; plusOne?: string }>({});
 
   const effectiveAbilities = useMemo(() => {
-    if (!selectedBackground) return abilities;
-    return applyBackgroundBonuses(abilities, selectedBackground.abilityScores, bgMode, bgAssignments);
-  }, [abilities, selectedBackground, bgMode, bgAssignments]);
-
+    if (!effectiveBackground) return abilities;
+    return applyBackgroundBonuses(abilities, effectiveBackground.abilityScores, bgMode, bgAssignments);
+  }, [abilities, effectiveBackground, bgMode, bgAssignments]);
   useEffect(() => {
     onEffectiveAbilitiesChange?.(effectiveAbilities);
   }, [effectiveAbilities, onEffectiveAbilitiesChange]);
