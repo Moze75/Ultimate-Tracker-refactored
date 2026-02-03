@@ -717,13 +717,14 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-gray-500 text-sm">Aucun résultat</div>
-          ) : (
-            filtered.map(ci => {
+           ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {filtered.map(ci => {
               const isOpen = !!expanded[ci.id];
               const isAdded = addedItems.has(ci.id);
-              const isAdding = adding === ci.id; 
+              const isAdding = adding === ci.id;
 
-const preview = (
+              const preview = (
   <>
     {ci.kind === 'armors' && ci.armor && <div>CA: {ci.armor.label}</div>}
     {ci.kind === 'shields' && ci.shield && <div>Bonus de bouclier: +{ci.shield.bonus}</div>}
