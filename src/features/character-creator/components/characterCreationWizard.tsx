@@ -147,8 +147,9 @@ export default function CharacterCreationWizard({ onFinish, onCancel, initialSna
   const [characterName, setCharacterName] = useState(initialSnapshot?.characterName ?? '');
   const [selectedRace, setSelectedRace] = useState('');
 const [customRaceData, setCustomRaceData] = useState<DndRace | null>(null);
-const [selectedClass, setSelectedClass] = useState<DndClass | string>('');
 const [customClassData, setCustomClassData] = useState<CustomClassData | null>(null);
+const [customBackgroundData, setCustomBackgroundData] = useState<CustomBackgroundData | null>(null);
+  const [selectedBackground, setSelectedBackground] = useState(initialSnapshot?.selectedBackground ?? '');
   const [selectedBackground, setSelectedBackground] = useState(initialSnapshot?.selectedBackground ?? '');
   const [backgroundEquipmentOption, setBackgroundEquipmentOption] = useState<'A' | 'B' | ''>(initialSnapshot?.backgroundEquipmentOption ?? '');
   const [selectedClassSkills, setSelectedClassSkills] = useState<string[]>(initialSnapshot?.selectedClassSkills ?? []);
