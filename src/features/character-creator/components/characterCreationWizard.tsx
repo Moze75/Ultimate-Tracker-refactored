@@ -298,8 +298,8 @@ if (loadingEquipment) {
             ? effectiveBgData?.equipmentOptions?.optionB ?? []
             : [];
 
-      // Compétences maîtrisées
-      const backgroundSkills = selectedBackgroundObj?.skillProficiencies ?? [];
+      // Compétences maîtrisées - utiliser customBackgroundData si disponible
+      const backgroundSkills = effectiveBgData?.skillProficiencies ?? [];
       const proficientSkills = Array.from(new Set([...(selectedClassSkills || []), ...backgroundSkills]));
 
       // Équipement combiné
