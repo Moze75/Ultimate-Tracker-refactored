@@ -529,13 +529,20 @@ export default function AbilityScores({
         </Card>
       )}
 
-      {selectedBackground && (
+          {effectiveBackground && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-400" />
               <h3 className="text-lg font-semibold text-white">Bonus d'historique</h3>
-              <span className="text-sm text-gray-400 ml-auto">{selectedBackground.name}</span>
+              <div className="flex items-center gap-2 ml-auto">
+                {effectiveBackground.isCustom && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-blue-900/30 text-blue-300 border border-blue-500/30">
+                    Personnalisé
+                  </span>
+                )}
+                <span className="text-sm text-gray-400">{effectiveBackground.name}</span>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -560,7 +567,7 @@ export default function AbilityScores({
               <div className="text-xs text-gray-400 p-2.5 rounded-lg bg-gray-800/50 border border-gray-700/30">
                 <span className="text-gray-500">Caractéristiques autorisées:</span>{' '}
                 <span className="text-gray-200 font-medium">
-                  {selectedBackground.abilityScores.join(' • ')}
+                  {effectiveBackground.abilityScores.join(' • ')}
                 </span>
               </div>
 
@@ -576,7 +583,7 @@ export default function AbilityScores({
                       }
                     >
                       <option value="">Sélectionner...</option>
-                      {selectedBackground.abilityScores.map((a) => (
+                      {effectiveBackground.abilityScores.map((a) => (
                         <option
                           key={a}
                           value={a}
@@ -597,7 +604,7 @@ export default function AbilityScores({
                       }
                     >
                       <option value="">Sélectionner...</option>
-                      {selectedBackground.abilityScores.map((a) => (
+                      {effectiveBackground.abilityScores.map((a) => (
                         <option
                           key={a}
                           value={a}
@@ -611,7 +618,7 @@ export default function AbilityScores({
                 </div>
               ) : (
                 <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-700/50 text-sm text-blue-200">
-                  ✓ Bonus de +1 appliqué automatiquement à: {selectedBackground.abilityScores.join(', ')}
+                  ✓ Bonus de +1 appliqué automatiquement à: {effectiveBackground.abilityScores.join(', ')}
                 </div>
               )}
 
