@@ -206,6 +206,44 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
   const effectiveProficiency = getProficiencyBonusForLevel(player.level);
 
+  // Importer en haut du fichier:
+  // import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
+
+  const calculateFeatBonuses = React.useCallback(() => {
+    const bonuses: Record<AbilityName, number> = {
+      Force: 0,
+      Dextérité: 0,
+      Constitution: 0,
+      Intelligence: 0,
+      Sagesse: 0,
+      Charisme: 0
+    };
+
+    const feats = (player.stats as any)?.feats || {};
+    const featAbilityChoices: Record<string, AbilityName> = (player.stats as any)?.feat_ability_choices || {};
+    
+    const allFeats: string[] = [
+      ...(Array.isArray(feats.generals) ? feats.generals : []),
+      ...(Array.isArray(feats.origins) ? feats.origins : []),
+      ...(Array.isArray(feats.styles) ? feats.styles : [])
+    ];
+
+    for (const featName of allFeats) {
+      const normalizedName = normalizeFeatName(featName);
+      const featBonus = FEAT_BONUSES[normalizedName];
+      
+      if (featBonus) {
+        // Vérifie si un choix a été fait pour ce don
+        const chosenAbility = featAbilityChoices[normalizedName];
+        if (chosenAbility && featBonus.choices.includes(chosenAbility)) {
+          bonuses[chosenAbility] += featBonus.amount;
+        }
+      }
+    }
+
+    return bonuses;
+  }, [player.stats]);
+
   const calculateEquipmentBonuses = React.useCallback(() => {
     const bonuses = {
       Force: 0,
