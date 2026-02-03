@@ -3,6 +3,7 @@ import { Settings, Save, X } from 'lucide-react';
 import { Ability } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
 
 // Ajouter après les imports (vers ligne 10)
 
