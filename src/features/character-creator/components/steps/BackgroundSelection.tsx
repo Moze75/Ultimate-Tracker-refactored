@@ -675,7 +675,7 @@ export default function BackgroundSelection({
       <CardDetailModal
         isOpen={modalCardIndex !== null}
         onClose={() => setModalCardIndex(null)}
-        cards={backgroundsData}
+        cards={allBackgroundsIncludingCustom}
         currentIndex={modalCardIndex ?? 0}
         onNavigate={(direction) => {
           if (modalCardIndex === null) return;
