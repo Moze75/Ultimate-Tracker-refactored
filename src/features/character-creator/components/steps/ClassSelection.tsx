@@ -105,12 +105,39 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
     setModalCardIndex(index);
   };
 
-  const handleSaveCustomClass = (classData: CustomClassData) => {
+  const handleSaveCustomClass = async (classData: CustomClassData) => {
+    // 1. Sauvegarder dans l'état local du wizard
     if (onCustomClassDataChange) {
       onCustomClassDataChange(classData);
     }
+
+    // ✅ 2. Sauvegarder dans Supabase pour réutilisation future
+    try {
+      const result = await saveUserCustomClass(classData);
+      if (result.success) {
+        // Ajouter à la liste locale si pas déjà présente
+        setSavedCustomClasses((prev) => {
+          const exists = prev.some((c) => c.name === classData.name);
+          if (exists) {
+            return prev.map((c) => (c.name === classData.name ? classData : c));
+          }
+          return [...prev, classData];
+        });
+        console.log('[ClassSelection] Classe sauvegardée dans Supabase');
+      } else {
+        console.warn('[ClassSelection] Échec sauvegarde Supabase:', result.error);
+      }
+    } catch (error) {
+      console.error('[ClassSelection] Erreur sauvegarde:', error);
+    }
+
+    // 3. Sélectionner la classe
     onClassSelect(classData.name);
+    
+    // 4. Fermer le modal
     setShowCustomModal(false);
+    
+    // 5. Passer au step suivant
     setTimeout(() => {
       onNext();
     }, 100);
