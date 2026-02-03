@@ -701,6 +701,14 @@ function SpellCard({
 }) {
   const isExpanded = expandedSpell === spell.id;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBonusSettings, setShowBonusSettings] = useState(false);
+
+  // Calculer les bonus effectifs (base + personnalisés)
+  const effectiveAttackBonus = spellAttackBonus !== null 
+    ? spellAttackBonus + (customBonuses.attackBonus || 0) 
+    : null;
+  
+  const effectiveDamageBonus = (customBonuses.damageBonus || 0);
 
  // ✅ NOUVEAU : État pour le niveau de lancement sélectionné
   const [selectedCastLevel, setSelectedCastLevel] = useState<number>(spell.spell_level);
