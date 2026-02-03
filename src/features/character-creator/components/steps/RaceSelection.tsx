@@ -33,6 +33,45 @@ export default function RaceSelection({
   const [savedCustomRaces, setSavedCustomRaces] = useState<DndRace[]>([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
 
+    // ✅ État pour l'édition d'une race existante
+  const [editingRace, setEditingRace] = useState<DndRace | null>(null);
+
+  // ✅ Fonction pour éditer une race personnalisée
+  const handleEditCustomRace = (race: DndRace) => {
+    setEditingRace(race);
+    setShowCustomModal(true);
+  };
+
+  // ✅ Fonction pour supprimer une race personnalisée
+  const handleDeleteCustomRace = async (raceName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la race "${raceName}" ?\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      const result = await deleteUserCustomRace(raceName);
+      if (result.success) {
+        // Retirer de la liste locale
+        setSavedCustomRaces((prev) => prev.filter((r) => r.name !== raceName));
+        
+        // Si c'était la race sélectionnée, désélectionner
+        if (selectedRace === raceName) {
+          onRaceSelect('');
+          if (onCustomRaceDataChange) {
+            onCustomRaceDataChange(null);
+          }
+        }
+        
+        console.log('[RaceSelection] Race supprimée:', raceName);
+      } else {
+        alert('Erreur lors de la suppression de la race');
+      }
+    } catch (error) {
+      console.error('[RaceSelection] Erreur suppression:', error);
+      alert('Erreur lors de la suppression de la race');
+    }
+  };
+
   // ✅ Charger les races personnalisées sauvegardées au montage
   useEffect(() => {
     async function loadSavedRaces() {
