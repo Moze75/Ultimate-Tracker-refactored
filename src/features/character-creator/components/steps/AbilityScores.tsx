@@ -18,13 +18,35 @@ const abilityNames = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'S
 
 export default function AbilityScores({
   abilities,
-  onAbilitiesChange, 
+  onAbilitiesChange,
   onNext,
   onPrevious,
   selectedBackground = null,
+  customBackgroundData = null,
   onEffectiveAbilitiesChange
 }: AbilityScoresProps) {
   const [method, setMethod] = useState<'pointbuy' | 'array' | 'roll'>('pointbuy');
+
+  // ✅ Créer un objet d'historique unifié (standard ou personnalisé)
+  const effectiveBackground = useMemo(() => {
+    // Si on a un historique personnalisé avec des abilityScores
+    if (customBackgroundData && customBackgroundData.abilityScores && customBackgroundData.abilityScores.length > 0) {
+      return {
+        name: customBackgroundData.name,
+        abilityScores: customBackgroundData.abilityScores,
+        isCustom: true,
+      };
+    }
+    // Sinon, utiliser l'historique standard
+    if (selectedBackground) {
+      return {
+        name: selectedBackground.name,
+        abilityScores: selectedBackground.abilityScores,
+        isCustom: false,
+      };
+    }
+    return null;
+  }, [selectedBackground, customBackgroundData]);
   const [rolledScores, setRolledScores] = useState<number[]>([]);
   const [assignedScores, setAssignedScores] = useState<Record<string, number>>({});
   const [bgMode, setBgMode] = useState<'twoPlusOne' | 'oneOneOne'>('twoPlusOne');
