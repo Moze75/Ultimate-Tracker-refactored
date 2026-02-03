@@ -107,6 +107,42 @@ export function HorizontalAbilityScores({
     return bonuses;
   };
 
+  const calculateFeatBonuses = () => {
+    const bonuses: Record<AbilityName, number> = {
+      Force: 0,
+      Dextérité: 0,
+      Constitution: 0,
+      Intelligence: 0,
+      Sagesse: 0,
+      Charisme: 0
+    };
+
+    if (!player?.stats) return bonuses;
+
+    const feats = player.stats.feats || {};
+    const featAbilityChoices: Record<string, AbilityName> = player.stats.feat_ability_choices || {};
+    
+    const allFeats: string[] = [
+      ...(Array.isArray(feats.generals) ? feats.generals : []),
+      ...(Array.isArray(feats.origins) ? feats.origins : []),
+      ...(Array.isArray(feats.styles) ? feats.styles : [])
+    ];
+
+    for (const featName of allFeats) {
+      const normalizedName = normalizeFeatName(featName);
+      const featBonus = FEAT_BONUSES[normalizedName];
+      
+      if (featBonus) {
+        const chosenAbility = featAbilityChoices[normalizedName];
+        if (chosenAbility && featBonus.choices.includes(chosenAbility)) {
+          bonuses[chosenAbility] += featBonus.amount;
+        }
+      }
+    }
+
+    return bonuses;
+  };
+  
   const getModifier = (score: number) => Math.floor((score - 10) / 2);
   const getProficiencyBonus = (level: number): number => {
     if (level >= 17) return 6;
