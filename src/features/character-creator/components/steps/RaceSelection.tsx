@@ -338,31 +338,57 @@ export default function RaceSelection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-        {allRacesIncludingCustom.map((race, index) => {
-          const isSelected = selectedRace === race.name;
-          const isCustomCard = race.isCustomPlaceholder;
+  {allRacesIncludingCustom.map((race, index) => {
+  const isSelected = selectedRace === race.name;
+  const isCustomCard = race.isCustomPlaceholder;
+  const isCustomRace = race.isCustom === true; // ✅ Race personnalisée sauvegardée
 
-          return (
-            <Card
-              key={`${race.name}-${index}`}
-              selected={isSelected && !isCustomCard}
-              onClick={() => handleCardClick(index)}
-              className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''}`}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-purple-300' : 'text-white'}`}>
-                    {race.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {isCustomCard ? (
-                      <Settings className="w-5 h-5 text-purple-400" />
-                    ) : (
-                      getRaceIcon(race.name)
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
+  return (
+    <Card
+      key={`${race.name}-${index}`}
+      selected={isSelected && !isCustomCard}
+      onClick={() => handleCardClick(index)}
+      className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''} ${isCustomRace ? 'border-purple-500/30' : ''}`}
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-purple-300' : isCustomRace ? 'text-purple-200' : 'text-white'}`}>
+            {race.name}
+          </h3>
+          <div className="flex items-center gap-2">
+            {/* ✅ Boutons Modifier/Supprimer pour les races personnalisées */}
+            {isCustomRace && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCustomRace(race);
+                  }}
+                  className="p-1 rounded hover:bg-purple-500/20 transition-colors"
+                  title="Modifier cette race"
+                >
+                  <Edit2 className="w-4 h-4 text-purple-400" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCustomRace(race.name);
+                  }}
+                  className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                  title="Supprimer cette race"
+                >
+                  <Trash2 className="w-4 h-4 text-red-400" />
+                </button>
+              </>
+            )}
+            {isCustomCard ? (
+              <Settings className="w-5 h-5 text-purple-400" />
+            ) : (
+              getRaceIcon(race.name)
+            )}
+          </div>
+        </div>
+      </CardHeader>
               <CardContent>
                 <p className="text-gray-300 text-sm mb-3">{race.description}</p>
                 {isCustomCard ? (
