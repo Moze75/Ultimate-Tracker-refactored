@@ -286,12 +286,16 @@ if (loadingEquipment) {
         ? classData.equipmentOptions.find(opt => opt.label === selectedEquipmentOption)?.items || []
         : classData?.equipment || [];
 
-      // Équipement d'historique
+      // Équipement d'historique - utiliser customBackgroundData si disponible
+      const effectiveBgData = customBackgroundData && customBackgroundData.name === selectedBackground
+        ? customBackgroundData
+        : selectedBackgroundObj;
+      
       const bgEquip =
         backgroundEquipmentOption === 'A'
-          ? selectedBackgroundObj?.equipmentOptions?.optionA ?? []
+          ? effectiveBgData?.equipmentOptions?.optionA ?? []
           : backgroundEquipmentOption === 'B'
-            ? selectedBackgroundObj?.equipmentOptions?.optionB ?? []
+            ? effectiveBgData?.equipmentOptions?.optionB ?? []
             : [];
 
       // Compétences maîtrisées
