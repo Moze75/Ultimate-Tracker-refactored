@@ -44,9 +44,12 @@ export function AbilityScoreGrid({
       <div className="grid grid-cols-3 gap-4 mb-6">
         {abilities.map((ability, abilityIndex) => {
           const equipmentBonuses = calculateEquipmentBonuses();
+          const featBonuses = calculateFeatBonuses();
           const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
+          const featBonus = featBonuses[ability.name as keyof typeof featBonuses] || 0;
+          const totalBonus = equipmentBonus + featBonus;
           const baseModifier = getModifier(ability.score);
-          const displayModifier = baseModifier + equipmentBonus;
+          const displayModifier = baseModifier + totalBonus;
 
           return (
             <div key={ability.name} className="flex flex-col items-center">
