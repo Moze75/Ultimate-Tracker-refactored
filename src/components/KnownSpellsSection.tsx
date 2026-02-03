@@ -876,17 +876,22 @@ function SpellCard({
         <div className="flex items-center justify-between gap-3">
  {/* Partie gauche : Badges */}
 <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-  {damageInfo.isAttackRoll && spellAttackBonus !== null && (
+  {damageInfo.isAttackRoll && effectiveAttackBonus !== null && (
     <button
       type="button"
-      className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30 font-medium hover:bg-red-500/30 transition-colors"
-      title="Lancer un jet d'attaque de sort (1d20 + bonus)"
+      className={`text-xs px-2 py-1 rounded-full border font-medium hover:opacity-80 transition-colors ${
+        customBonuses.attackBonus !== 0 
+          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
+          : 'bg-red-500/20 text-red-400 border-red-500/30'
+      }`}
+      title={`Lancer un jet d'attaque de sort (1d20 + ${effectiveAttackBonus})${customBonuses.attackBonus !== 0 ? ` [inclut +${customBonuses.attackBonus} bonus]` : ''}`}
       onClick={(e) => {
         e.stopPropagation();
-        onRoll('attack', spell.spell_name, '1d20', spellAttackBonus);
+        onRoll('attack', spell.spell_name, '1d20', effectiveAttackBonus);
       }}
     >
-      att. {spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}
+      att. {effectiveAttackBonus >= 0 ? '+' : ''}{effectiveAttackBonus}
+      {customBonuses.attackBonus !== 0 && <span className="ml-1 text-yellow-300">★</span>}
     </button>
   )}
   
