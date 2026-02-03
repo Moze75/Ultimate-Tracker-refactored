@@ -544,6 +544,7 @@ const handleSave = async () => {
             abilities={abilities}
             editing={editing}
             calculateEquipmentBonuses={calculateEquipmentBonuses}
+            calculateFeatBonuses={calculateFeatBonuses}
             handleScoreChange={handleScoreChange}
             rollAbilityCheck={rollAbilityCheck}
             rollSavingThrow={rollSavingThrow}
