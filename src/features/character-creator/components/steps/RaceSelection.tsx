@@ -507,11 +507,15 @@ export default function RaceSelection({
         titleExtractor={(race) => race.isCustomPlaceholder ? 'Espèce personnalisée' : race.name}
       />
 
-      <CustomRaceModal
-        open={showCustomModal}
-        onClose={() => setShowCustomModal(false)}
-        onSave={handleSaveCustomRace}
-      />
+    <CustomRaceModal
+  open={showCustomModal}
+  onClose={() => {
+    setShowCustomModal(false);
+    setEditingRace(null); // ✅ Réinitialiser l'édition
+  }}
+  onSave={handleSaveCustomRace}
+  initialData={editingRace} // ✅ Passer les données pour édition
+/>
     </div>
   );
 }
