@@ -627,10 +627,12 @@ export default function CustomClassModal({ open, onClose, onSave, initialData }:
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Sword className="w-5 h-5 text-amber-400" />
-            <h3 className="text-lg font-semibold text-white">Creer une classe personnalisee</h3>
-          </div>
+    <div className="flex items-center gap-2">
+  <Sword className="w-5 h-5 text-amber-400" />
+  <h3 className="text-lg font-semibold text-white">
+    {initialData ? 'Modifier la classe personnalisée' : 'Créer une classe personnalisée'}
+  </h3>
+</div>
           <button
             onClick={handleCancel}
             className="text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-800"
