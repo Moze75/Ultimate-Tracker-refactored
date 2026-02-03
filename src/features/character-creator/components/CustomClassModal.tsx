@@ -463,6 +463,50 @@ export default function CustomClassModal({ open, onClose, onSave, initialData }:
   const [addingAbility, setAddingAbility] = useState(false);
   const [editingAbility, setEditingAbility] = useState<CustomClassAbility | null>(null);
 
+  // ✅ Pré-remplir le formulaire si on édite une classe existante
+  useEffect(() => {
+    if (initialData && open) {
+      setName(initialData.name || '');
+      setDescription(initialData.description || '');
+      setHitDie(initialData.hitDie || 8);
+      setPrimaryAbility(initialData.primaryAbility || []);
+      
+      // Jets de sauvegarde
+      if (initialData.savingThrows && initialData.savingThrows.length >= 2) {
+        setSavingThrow1(initialData.savingThrows[0] || '');
+        setSavingThrow2(initialData.savingThrows[1] || '');
+      } else {
+        setSavingThrow1('');
+        setSavingThrow2('');
+      }
+      
+      // Magie
+      if (initialData.spellcasting?.enabled) {
+        setSpellcastingEnabled(true);
+        setCantripsCount(initialData.spellcasting.cantrips || 2);
+        setSpellsKnownCount(initialData.spellcasting.spellsKnown || 4);
+        setSpellcastingAbility(initialData.spellcasting.spellcastingAbility || 'Intelligence');
+        setSpellList(initialData.spellcasting.spellList || 'Magicien');
+      } else {
+        setSpellcastingEnabled(false);
+        setCantripsCount(2);
+        setSpellsKnownCount(4);
+        setSpellcastingAbility('Intelligence');
+        setSpellList('Magicien');
+      }
+      
+      // Ressources et compétences
+      setResources(initialData.resources || []);
+      setAbilities(initialData.abilities || []);
+      
+      // Réinitialiser les états d'édition
+      setAddingResource(false);
+      setEditingResource(null);
+      setAddingAbility(false);
+      setEditingAbility(null);
+    }
+  }, [initialData, open]);
+
   if (!open) return null;
 
   const handleTogglePrimaryAbility = (ability: string) => {
