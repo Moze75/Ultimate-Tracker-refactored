@@ -138,7 +138,7 @@ export default function AbilityScores({
   const isRollComplete = method === 'roll' && Object.keys(assignedScores).length === 6;
 
   const isBackgroundComplete =
-    !selectedBackground
+    !effectiveBackground
       ? true
       : (bgMode === 'oneOneOne' || (!!bgAssignments.plusTwo && !!bgAssignments.plusOne && bgAssignments.plusTwo !== bgAssignments.plusOne));
 
