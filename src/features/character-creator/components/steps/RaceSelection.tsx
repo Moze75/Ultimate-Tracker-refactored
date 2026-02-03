@@ -16,6 +16,9 @@ interface RaceSelectionProps {
   onCustomRaceDataChange?: (race: DndRace | null) => void;
 }
 
+import { getUserCustomRaces, saveUserCustomRace } from '../../../../services/customTemplatesService';
+import { DndRace } from '../../types/character';
+
 export default function RaceSelection({
   selectedRace,
   onRaceSelect,
@@ -25,6 +28,24 @@ export default function RaceSelection({
 }: RaceSelectionProps) {
   const [modalCardIndex, setModalCardIndex] = useState<number | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [savedCustomRaces, setSavedCustomRaces] = useState<DndRace[]>([]);
+  const [loadingRaces, setLoadingRaces] = useState(true);
+
+  // ✅ Charger les races personnalisées sauvegardées au montage
+  useEffect(() => {
+    async function loadSavedRaces() {
+      setLoadingRaces(true);
+      try {
+        const races = await getUserCustomRaces();
+        setSavedCustomRaces(races);
+      } catch (error) {
+        console.error('Erreur chargement races sauvegardées:', error);
+      } finally {
+        setLoadingRaces(false);
+      }
+    }
+    loadSavedRaces();
+  }, []);
 
   const customRaceCard = {
     name: 'Espèce personnalisée',
@@ -36,9 +57,16 @@ export default function RaceSelection({
     isCustomPlaceholder: true,
   };
 
-  const allRacesIncludingCustom = customRaceData
-    ? [...races, customRaceData, customRaceCard]
-    : [...races, customRaceCard];
+  // ✅ Combiner les races par défaut, les races sauvegardées et la race en cours de création
+  const allRacesIncludingCustom = useMemo(() => {
+    const customRacesFromDb = savedCustomRaces.filter(
+      (r) => !races.some((base) => base.name === r.name)
+    );
+    const currentCustom = customRaceData && !customRacesFromDb.some((r) => r.name === customRaceData.name)
+      ? [customRaceData]
+      : [];
+    return [...races, ...customRacesFromDb, ...currentCustom, customRaceCard];
+  }, [savedCustomRaces, customRaceData]);
 
   useEffect(() => {
     console.log('[RaceSelection] customRaceData mis à jour:', customRaceData);
