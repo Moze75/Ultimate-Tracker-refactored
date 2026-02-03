@@ -310,8 +310,8 @@ if (loadingEquipment) {
 
       // Or initial
       const goldFromClassEquipment = parseGoldFromItems(classEquipment);
-      const goldFromA = parseGoldFromItems(selectedBackgroundObj?.equipmentOptions?.optionA);
-      const goldFromB = parseGoldFromItems(selectedBackgroundObj?.equipmentOptions?.optionB);
+      const goldFromA = parseGoldFromItems(effectiveBgData?.equipmentOptions?.optionA);
+      const goldFromB = parseGoldFromItems(effectiveBgData?.equipmentOptions?.optionB);
       
       const backgroundGold = backgroundEquipmentOption === 'A'
         ? goldFromA
