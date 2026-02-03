@@ -1109,6 +1109,156 @@ function SpellCard({
       <div className={`spell-card-content ${isExpanded ? 'expanded' : ''}`}>
         <div className="border-t border-gray-700/50 bg-gray-900/50">
           <div className="p-3 space-y-4">
+            {/* Bouton roue des paramètres */}
+            <div className="flex justify-end">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowBonusSettings(!showBonusSettings);
+                }}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  showBonusSettings 
+                    ? 'bg-purple-500/30 text-purple-300 border border-purple-500/50' 
+                    : (customBonuses.attackBonus !== 0 || customBonuses.damageBonus !== 0)
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30'
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 border border-gray-600/50'
+                }`}
+                title="Paramètres de bonus personnalisés"
+              >
+                <Settings size={16} className={showBonusSettings ? 'animate-spin' : ''} />
+              </button>
+            </div>
+
+            {/* Panneau de paramètres de bonus */}
+            {showBonusSettings && (
+              <div className="bg-gray-800/70 border border-purple-500/30 rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
+                    <Settings size={14} />
+                    Bonus personnalisés
+                  </h5>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowBonusSettings(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-300"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                
+                <p className="text-xs text-gray-400 mb-3">
+                  Ajoutez des bonus supplémentaires aux jets de ce sort (ex: modificateur de caractéristique, bonus d'objet magique, etc.)
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Bonus d'attaque */}
+                  {damageInfo.isAttackRoll && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-red-400 flex items-center gap-1">
+                        Bonus d'attaque
+                        {customBonuses.attackBonus !== 0 && (
+                          <span className="text-yellow-400">★</span>
+                        )}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('attackBonus', customBonuses.attackBonus - 1);
+                          }}
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          value={customBonuses.attackBonus}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('attackBonus', parseInt(e.target.value) || 0);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-16 h-8 text-center bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-purple-500"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('attackBonus', customBonuses.attackBonus + 1);
+                          }}
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Attaque finale: {effectiveAttackBonus !== null ? (effectiveAttackBonus >= 0 ? '+' : '') + effectiveAttackBonus : 'N/A'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Bonus de dégâts */}
+                  {damageInfo.isDamageSpell && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-orange-400 flex items-center gap-1">
+                        Bonus de dégâts
+                        {customBonuses.damageBonus !== 0 && (
+                          <span className="text-yellow-400">★</span>
+                        )}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('damageBonus', customBonuses.damageBonus - 1);
+                          }}
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          value={customBonuses.damageBonus}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('damageBonus', parseInt(e.target.value) || 0);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-16 h-8 text-center bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-purple-500"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateBonus('damageBonus', customBonuses.damageBonus + 1);
+                          }}
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Dégâts: {totalDamage ? formatDamageDisplay(totalDamage) : 'N/A'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bouton reset */}
+                {(customBonuses.attackBonus !== 0 || customBonuses.damageBonus !== 0) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdateBonus('attackBonus', 0);
+                      onUpdateBonus('damageBonus', 0);
+                    }}
+                    className="w-full mt-2 py-2 text-xs bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded border border-gray-600/50 transition-colors"
+                  >
+                    Réinitialiser les bonus
+                  </button>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-gray-800/50 p-2 rounded-lg border border-gray-700/30">
                 <div className="text-xs font-medium text-gray-400 mb-1">Temps d'incantation</div>
