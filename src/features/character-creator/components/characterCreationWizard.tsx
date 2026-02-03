@@ -11,7 +11,7 @@ import ProfileSelection from './steps/ProfileSelection';
 import AbilityScores from './steps/AbilityScores';
 import CharacterSummary from './steps/CharacterSummary';
 
-import { DndClass, DndRace, CustomClassData } from '../types/character';
+import { DndClass, DndRace, CustomClassData, CustomBackgroundData } from '../types/character';
 import type { CharacterExportPayload } from '../types/CharacterExport'; 
 import { supabase } from '../../../lib/supabase';
 import { calculateArmorClass, calculateHitPoints, calculateModifier } from '../utils/dndCalculations';
