@@ -17,7 +17,7 @@ export interface ItemMeta {
   armor?: ArmorMeta;
   shield?: ShieldMeta;
 }
-type CatalogKind = 'armors' | 'shields' | 'weapons' | 'adventuring_gear' | 'tools' | 'gems'; // ✅ Ajout de 'gems'
+type CatalogKind = 'armors' | 'shields' | 'weapons' | 'adventuring_gear' | 'tools' | 'gems';
 interface CatalogItem {
   id: string;
   kind: CatalogKind;
@@ -26,7 +26,7 @@ interface CatalogItem {
   armor?: ArmorMeta;
   shield?: ShieldMeta;
   weapon?: WeaponMeta;
-  imageUrl?: string; // ✅ Support des images
+  imageUrl?: string;
 }
 
 /* Helpers locaux */
@@ -37,17 +37,19 @@ const URLS = {
   weapons: `${ULT_BASE}/Armes.md`,
   adventuring_gear: `${ULT_BASE}/Equipements_daventurier.md`,
   tools: `${ULT_BASE}/Outils.md`,
-  gems: `${ULT_BASE}/Pierres%20pr%C3%A9cieuses.md`, // ✅ AJOUT
+  gems: `${ULT_BASE}/Pierres%20pr%C3%A9cieuses.md`,
 };
-const META_PREFIX = '#meta:';
+
 const stripPriceParentheses = (name: string) =>
   name.replace(/\s*\((?:\d+|\w+|\s|,|\.|\/|-)+\s*p[oa]?\)\s*$/i, '').trim();
+
 const smartCapitalize = (name: string) => {
   const base = stripPriceParentheses(name).trim();
   if (!base) return '';
   const lower = base.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
 };
+
 const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase();
 
 async function fetchText(url: string): Promise<string> {
@@ -55,6 +57,7 @@ async function fetchText(url: string): Promise<string> {
   if (!res.ok) throw new Error(`Fetch catalogue échoué: ${url}`);
   return await res.text();
 }
+
 function parseMarkdownTable(md: string): string[][] {
   const rows: string[][] = [];
   const lines = md.split('\n');
@@ -68,6 +71,7 @@ function parseMarkdownTable(md: string): string[][] {
   }
   return rows;
 }
+
 function looksLikeHeader(cellA: string, cellB: string, keyword: RegExp) {
   return keyword.test(cellB || '') || /^nom$/i.test(cellA || '');
 }
@@ -85,40 +89,30 @@ function parseArmors(md: string): CatalogItem[] {
       
       if (cells.length >= 2) {
         const [nomRaw, ca] = cells;
-        
         const nomNorm = nomRaw.toLowerCase();
         const caNorm = (ca || '').toLowerCase();
         
         if (
-          !nomRaw ||
-          !ca ||
-          nomNorm.includes('armure') && caNorm.includes('classe') ||
-          nomRaw.includes('-') && nomRaw.length > 5 ||
-          ca.includes('-') && ca.length > 5 ||
-          nomRaw === '—' ||
-          ca === '—' ||
-          nomRaw === '---' ||
-          ca === '---' ||
-          caNorm.includes('force') ||
-          caNorm.includes('discrétion') ||
-          nomNorm === 'force' ||
-          nomNorm === 'discrétion'
+          !nomRaw || !ca ||
+          (nomNorm.includes('armure') && caNorm.includes('classe')) ||
+          (nomRaw.includes('-') && nomRaw.length > 5) ||
+          (ca.includes('-') && ca.length > 5) ||
+          nomRaw === '—' || ca === '—' ||
+          nomRaw === '---' || ca === '---' ||
+          caNorm.includes('force') || caNorm.includes('discrétion') ||
+          nomNorm === 'force' || nomNorm === 'discrétion'
         ) {
           continue;
         }
         
         const nom = stripPriceParentheses(nomRaw);
-
-        if (!nom || nom === '---' || nom.length < 2) {
-          continue;
-        }
+        if (!nom || nom === '---' || nom.length < 2) continue;
         
         let base = 10, addDex = false, dexCap: number | null = null;
         
         if (ca.toLowerCase().includes('modificateur de dex')) {
           const baseMatch = ca.match(/(\d+)/);
           const capMatch = ca.match(/max\s*(\d+)/i);
-          
           if (baseMatch) {
             base = parseInt(baseMatch[1]);
             addDex = true;
@@ -128,28 +122,23 @@ function parseArmors(md: string): CatalogItem[] {
           const numberMatch = ca.match(/^\s*(\d+)\s*$/);
           if (numberMatch) {
             base = parseInt(numberMatch[1]);
-            addDex = false;
-            dexCap = null;
           } else {
             const anyNumberMatch = ca.match(/(\d+)/);
             if (anyNumberMatch) {
               base = parseInt(anyNumberMatch[1]);
-              addDex = false;
-              dexCap = null;
             }
           }
         }
         
         items.push({ 
           id: `armor:${nom}`, 
-          kind: 'armors' as CatalogKind, 
+          kind: 'armors', 
           name: nom, 
           armor: { base, addDex, dexCap, label: ca } 
         });
       }
     }
   }
-  
   return items;
 }
 
@@ -183,7 +172,6 @@ function parseWeapons(md: string): CatalogItem[] {
     let damageType: 'Tranchant' | 'Perforant' | 'Contondant' = 'Tranchant';
     if (/contondant/i.test(degats)) damageType = 'Contondant';
     else if (/perforant/i.test(degats)) damageType = 'Perforant';
-    else if (/tranchant/i.test(degats)) damageType = 'Tranchant';
     let range = 'Corps à corps';
     const pm = (props || '').match(/portée\s*([\d,\.\/\s]+)/i);
     if (pm) {
@@ -195,21 +183,18 @@ function parseWeapons(md: string): CatalogItem[] {
       detectedCategory === 'Armes courantes' ? 'Armes courantes' :
       detectedCategory === 'Armes de guerre (Finesse ou Légère)' ? 'Armes de guerre présentant la propriété Finesse ou Légère' :
       detectedCategory === 'Armes de guerre (Légère)' ? 'Armes de guerre dotées de la propriété Légère' :
-      detectedCategory === 'Armes de guerre' ? 'Armes de guerre' :
-      undefined;
+      detectedCategory === 'Armes de guerre' ? 'Armes de guerre' : undefined;
     items.push({ id: `weapon:${nom}`, kind: 'weapons', name: nom, weapon: { damageDice, damageType, properties: props || '', range, category } });
   }
   return items;
 }
 
-/* Markdown renderer simple (tables + listes) */ 
 function isMarkdownTableLine(line: string) {
   const l = line.trim();
   return l.startsWith('|') && l.endsWith('|') && l.includes('|');
 }
 
 function MarkdownLite({ text }: { text: string }) {
-  // ✅ Fonction pour rendre le texte avec markdown basique
   const renderText = (str: string) => {
     const parts = str.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, idx) => {
@@ -262,7 +247,6 @@ function MarkdownLite({ text }: { text: string }) {
   );
 }
 
-/* OUTILS parsing robuste (tables + sections) */
 function parseMarkdownTables(md: string): string[][][] {
   const tables: string[][][] = [];
   const lines = md.split('\n');
@@ -286,14 +270,9 @@ function parseTools(md: string): CatalogItem[] {
   const items: CatalogItem[] = [];
   const tables = parseMarkdownTables(md);
   const noiseRow = (s: string) =>
-    !s ||
-    /^autres? outils?$/i.test(s) ||
-    /^types? d'?outils?$/i.test(s) ||
-    /^outils?$/i.test(s) ||
-    /^sommaire$/i.test(s) ||
-    /^table des matières$/i.test(s) ||
-    /^généralités?$/i.test(s) ||
-    /^introduction$/i.test(s);
+    !s || /^autres? outils?$/i.test(s) || /^types? d'?outils?$/i.test(s) ||
+    /^outils?$/i.test(s) || /^sommaire$/i.test(s) || /^table des matières$/i.test(s) ||
+    /^généralités?$/i.test(s) || /^introduction$/i.test(s);
 
   for (const table of tables) {
     if (table.length === 0) continue;
@@ -319,25 +298,25 @@ function parseTools(md: string): CatalogItem[] {
 
   const lines = md.split('\n');
   const sections: { name: string; desc: string }[] = [];
-  let current: { name: string; buf: string[] } | null = null;
+  let currentSection: { name: string; buf: string[] } | null = null;
   const isHeader = (line: string) => /^#{2,3}\s+/.test(line);
   const headerName = (line: string) => line.replace(/^#{2,3}\s+/, '').trim();
 
   for (const raw of lines) {
     if (isHeader(raw)) {
-      if (current) {
-        const nm = stripPriceParentheses(current.name);
-        const ds = current.buf.join('\n').trim();
+      if (currentSection) {
+        const nm = stripPriceParentheses(currentSection.name);
+        const ds = currentSection.buf.join('\n').trim();
         if (nm && ds && !noiseRow(nm)) sections.push({ name: nm, desc: ds });
       }
-      current = { name: headerName(raw), buf: [] };
+      currentSection = { name: headerName(raw), buf: [] };
     } else {
-      if (current) current.buf.push(raw);
+      if (currentSection) currentSection.buf.push(raw);
     }
   }
-  if (current) {
-    const nm = stripPriceParentheses(current.name);
-    const ds = current.buf.join('\n').trim();
+  if (currentSection) {
+    const nm = stripPriceParentheses(currentSection.name);
+    const ds = currentSection.buf.join('\n').trim();
     if (nm && ds && !noiseRow(nm)) sections.push({ name: nm, desc: ds });
   }
 
@@ -351,18 +330,14 @@ function parseTools(md: string): CatalogItem[] {
   return [...dedup.values()];
 }
 
- // ✅ COLLEZ ICI ⬇️
 function parseGems(md: string): CatalogItem[] {
   const items: CatalogItem[] = [];
   const tables = parseMarkdownTables(md);
   
   for (const table of tables) {
     if (table.length === 0) continue;
-    
     const header = table[0];
     const body = table.slice(1);
-    
-    // Chercher les colonnes pertinentes
     const nameColIdx = header.findIndex(h => /pierre|gemme|nom/i.test(h));
     const valueColIdx = header.findIndex(h => /valeur|prix|co[ûu]t/i.test(h));
     const descColIdx = header.findIndex(h => /description|effet/i.test(h));
@@ -373,49 +348,31 @@ function parseGems(md: string): CatalogItem[] {
       const rawName = row[nameColIdx] || '';
       const name = stripPriceParentheses(rawName).trim();
       
-      // ✅ Filtrer les lignes vides, headers, et séparateurs
-      if (!name || 
-          name === '---' || 
-          name === '—' ||
-          name.length < 2 ||
-          /^pierre|^gemme|^valeur|^nom|^description/i.test(name) ||
-          /^-+$/.test(name)) {
+      if (!name || name === '---' || name === '—' || name.length < 2 ||
+          /^pierre|^gemme|^valeur|^nom|^description/i.test(name) || /^-+$/.test(name)) {
         continue;
       }
       
-      // Construire la description
       const parts: string[] = [];
       
       if (valueColIdx !== -1 && row[valueColIdx]) {
         let value = row[valueColIdx].trim();
         if (value && value !== '---' && value !== '—') {
-          // ✅ Conversion automatique en type de monnaie
           const numMatch = value.match(/(\d+)\s*(po|pa|pc|or|argent|cuivre)?/i);
           if (numMatch) {
             const amount = numMatch[1];
             let currency = numMatch[2] ? numMatch[2].toLowerCase() : '';
-            
-            // Déterminer la monnaie selon la valeur
             if (!currency || currency === 'po' || currency === 'or') {
-              currency = parseInt(amount) >= 100 ? 'po' : 
-                         parseInt(amount) >= 10 ? 'pa' : 'pc';
+              currency = parseInt(amount) >= 100 ? 'po' : parseInt(amount) >= 10 ? 'pa' : 'pc';
             } else if (currency === 'pa' || currency === 'argent') {
               currency = 'pa';
             } else if (currency === 'pc' || currency === 'cuivre') {
               currency = 'pc';
             }
-            
-// Symboles de monnaie
-const symbol = currency === 'po' ? '🟡' : 
-              currency === 'pa' ? '⚪' : '🟤';
-const label = currency === 'po' ? "pièce d'or" : 
-             currency === 'pa' ? "pièce d'argent" : 
-             "pièce de cuivre";
-
-// Pluriel si nécessaire
-const fullLabel = parseInt(amount) > 1 ? `${label}s` : label;
-
-parts.push(`**Valeur**: ${symbol} ${amount} ${fullLabel}`);
+            const symbol = currency === 'po' ? '🟡' : currency === 'pa' ? '⚪' : '🟤';
+            const label = currency === 'po' ? "pièce d'or" : currency === 'pa' ? "pièce d'argent" : "pièce de cuivre";
+            const fullLabel = parseInt(amount) > 1 ? `${label}s` : label;
+            parts.push(`**Valeur**: ${symbol} ${amount} ${fullLabel}`);
           } else {
             parts.push(`**Valeur**: ${value}`);
           }
@@ -430,19 +387,42 @@ parts.push(`**Valeur**: ${symbol} ${amount} ${fullLabel}`);
       }
       
       const description = parts.join('\n\n');
-      
-      // ✅ Ne pas ajouter si pas de description
       if (!description) continue;
       
-      items.push({
-        id: `gem:${name}`,
-        kind: 'gems',
-        name,
-        description
-      });
+      items.push({ id: `gem:${name}`, kind: 'gems', name, description });
     }
   }
-  
+  return items;
+}
+
+function parseSectionedList(md: string, kind: CatalogKind): CatalogItem[] {
+  const items: CatalogItem[] = [];
+  const lines = md.split('\n');
+  let current: { name: string; descLines: string[] } | null = null;
+
+  const isNoiseName = (n: string) =>
+    !n || /^sommaire$/i.test(n) || /^table des matières$/i.test(n) || /^introduction$/i.test(n);
+
+  const flush = () => {
+    if (!current) return;
+    const rawName = current.name || '';
+    const cleanName = stripPriceParentheses(rawName);
+    const desc = current.descLines.join('\n').trim();
+    if (!cleanName.trim() || isNoiseName(cleanName) || !desc) {
+      current = null;
+      return;
+    }
+    items.push({ id: `${kind}:${cleanName}`, kind, name: cleanName, description: desc });
+    current = null;
+  };
+
+  for (const line of lines) {
+    const h = line.match(/^#{2,3}\s+(.+?)\s*$/);
+    if (h) { if (current) flush(); current = { name: h[1].trim(), descLines: [] }; continue; }
+    if (/^---\s*$/.test(line)) { if (current) { flush(); continue; } }
+    if (current) current.descLines.push(line);
+  }
+  if (current) flush();
   return items;
 }
 
@@ -453,32 +433,66 @@ type FilterState = {
   shields: boolean;
   adventuring_gear: boolean;
   tools: boolean;
-  gems: boolean; // ✅ AJOUT
+  gems: boolean;
 };
 
 export function EquipmentListModal({
   onClose,
   onAddItem,
   allowedKinds = null,
-  multiAdd = false,  // ✅ NOUVEAU : Par défaut false (comportement joueur)
+  multiAdd = false,
 }: {
   onClose: () => void;
   onAddItem: (item: { name: string; description?: string; meta: ItemMeta }) => void;
   allowedKinds?: CatalogKind[] | null;
-  multiAdd?: boolean;  // ✅ NOUVEAU
+  multiAdd?: boolean;
 }) {
   const [loading, setLoading] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const [all, setAll] = React.useState<CatalogItem[]>([]);
-const [filters, setFilters] = React.useState<FilterState>({
-  weapons: true, armors: true, shields: true, adventuring_gear: true, tools: true,
-  gems: true // ✅ AJOUT
-});
+  const [filters, setFilters] = React.useState<FilterState>({
+    weapons: true, armors: true, shields: true, adventuring_gear: true, tools: true, gems: true
+  });
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
-  
-  // États pour le mode multi-ajout
   const [addedItems, setAddedItems] = React.useState<Set<string>>(new Set());
   const [adding, setAdding] = React.useState<string | null>(null);
+
+  // Helpers pour le style des catégories
+  const getKindLabel = (kind: CatalogKind): string => {
+    switch (kind) {
+      case 'weapons': return 'Armes';
+      case 'armors': return 'Armures';
+      case 'shields': return 'Boucliers';
+      case 'adventuring_gear': return 'Équipements';
+      case 'tools': return 'Outils';
+      case 'gems': return 'Bijoux';
+      default: return kind;
+    }
+  };
+
+  const getKindStyle = (kind: CatalogKind) => {
+    switch (kind) {
+      case 'weapons': return { activeClass: 'bg-red-900/30 text-red-300 border border-red-500/30' };
+      case 'armors': return { activeClass: 'bg-purple-900/30 text-purple-300 border border-purple-500/30' };
+      case 'shields': return { activeClass: 'bg-blue-900/30 text-blue-300 border border-blue-500/30' };
+      case 'adventuring_gear': return { activeClass: 'bg-gray-700 text-gray-200 border border-gray-500/30' };
+      case 'tools': return { activeClass: 'bg-teal-900/30 text-teal-300 border border-teal-500/30' };
+      case 'gems': return { activeClass: 'bg-yellow-900/30 text-yellow-300 border border-yellow-500/30' };
+      default: return { activeClass: 'bg-gray-700 text-gray-200' };
+    }
+  };
+
+  const getKindBadge = (kind: CatalogKind) => {
+    switch (kind) {
+      case 'weapons': return 'bg-red-900/30 text-red-300';
+      case 'armors': return 'bg-purple-900/30 text-purple-300';
+      case 'shields': return 'bg-blue-900/30 text-blue-300';
+      case 'adventuring_gear': return 'bg-gray-800/60 text-gray-300';
+      case 'tools': return 'bg-teal-900/30 text-teal-300';
+      case 'gems': return 'bg-yellow-900/30 text-yellow-300';
+      default: return 'bg-gray-800 text-gray-300';
+    }
+  };
 
   React.useEffect(() => {
     const prev = document.body.style.overflow;
@@ -486,26 +500,23 @@ const [filters, setFilters] = React.useState<FilterState>({
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-React.useEffect(() => {
-  const load = async () => {
-    setLoading(true);
-    try {
-      const [armorsMd, shieldsMd, weaponsMd, gearMd, toolsMd, gemsMd] = await Promise.all([ // ✅ Ajout gemsMd
-        fetchText(URLS.armors), fetchText(URLS.shields), fetchText(URLS.weapons),
-        fetchText(URLS.adventuring_gear), fetchText(URLS.tools),
-        fetchText(URLS.gems), // ✅ AJOUT
-      ]);
+  React.useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [armorsMd, shieldsMd, weaponsMd, gearMd, toolsMd, gemsMd] = await Promise.all([
+          fetchText(URLS.armors), fetchText(URLS.shields), fetchText(URLS.weapons),
+          fetchText(URLS.adventuring_gear), fetchText(URLS.tools), fetchText(URLS.gems),
+        ]);
 
-      const armorItems = parseArmors(armorsMd);
-
-      const list: CatalogItem[] = [
-        ...armorItems,
-        ...parseShields(shieldsMd),
-        ...parseWeapons(weaponsMd),
-        ...parseTools(toolsMd),
-        ...parseGems(gemsMd), // ✅ AJOUT
-        ...parseSectionedList(gearMd, 'adventuring_gear'),
-      ];
+        const list: CatalogItem[] = [
+          ...parseArmors(armorsMd),
+          ...parseShields(shieldsMd),
+          ...parseWeapons(weaponsMd),
+          ...parseTools(toolsMd),
+          ...parseGems(gemsMd),
+          ...parseSectionedList(gearMd, 'adventuring_gear'),
+        ];
 
         const seen = new Set<string>();
         const cleaned = list.filter(ci => {
@@ -528,92 +539,57 @@ React.useEffect(() => {
     load();
   }, []);
 
-  function parseSectionedList(md: string, kind: CatalogKind): CatalogItem[] {
-    const items: CatalogItem[] = [];
-    const lines = md.split('\n');
-    let current: { name: string; descLines: string[] } | null = null;
-
-    const isNoiseName = (n: string) =>
-      !n ||
-      /^sommaire$/i.test(n) ||
-      /^table des matières$/i.test(n) ||
-      /^introduction$/i.test(n);
-
-    const flush = () => {
-      if (!current) return;
-      const rawName = current.name || '';
-      const cleanName = stripPriceParentheses(rawName);
-      const desc = current.descLines.join('\n').trim();
-      if (!cleanName.trim() || isNoiseName(cleanName) || !desc) {
-        current = null;
-        return;
-      }
-      items.push({ id: `${kind}:${cleanName}`, kind, name: cleanName, description: desc });
-      current = null;
+  const effectiveFilters: FilterState = React.useMemo(() => {
+    if (!allowedKinds) return filters;
+    return {
+      weapons: allowedKinds.includes('weapons'),
+      armors: allowedKinds.includes('armors'),
+      shields: allowedKinds.includes('shields'),
+      adventuring_gear: allowedKinds.includes('adventuring_gear'),
+      tools: allowedKinds.includes('tools'),
+      gems: allowedKinds.includes('gems'),
     };
+  }, [allowedKinds, filters]);
 
-    for (const line of lines) {
-      const h = line.match(/^#{2,3}\s+(.+?)\s*$/);
-      if (h) { if (current) flush(); current = { name: h[1].trim(), descLines: [] }; continue; }
-      if (/^---\s*$/.test(line)) { if (current) { flush(); continue; } }
-      if (current) current.descLines.push(line);
-    }
-    if (current) flush();
-    return items;
-  }
+  const noneSelected = !effectiveFilters.weapons && !effectiveFilters.armors && !effectiveFilters.shields && 
+                       !effectiveFilters.adventuring_gear && !effectiveFilters.tools && !effectiveFilters.gems;
 
-const effectiveFilters: FilterState = React.useMemo(() => {
-  if (!allowedKinds) return filters;
-  return {
-    weapons: allowedKinds.includes('weapons'),
-    armors: allowedKinds.includes('armors'),
-    shields: allowedKinds.includes('shields'),
-    adventuring_gear: allowedKinds.includes('adventuring_gear'),
-    tools: allowedKinds.includes('tools'),
-    gems: allowedKinds.includes('gems'), // ✅ AJOUT
-  };
-}, [allowedKinds, filters]);
+  const filtered = React.useMemo(() => {
+    if (noneSelected) return [];
+    const q = query.trim().toLowerCase();
+    return all.filter(ci => {
+      if (!effectiveFilters[ci.kind]) return false;
+      if (allowedKinds && !allowedKinds.includes(ci.kind)) return false;
+      if (!q) return true;
+      if (smartCapitalize(ci.name).toLowerCase().includes(q)) return true;
+      if ((ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') && 
+          (ci.description || '').toLowerCase().includes(q)) return true;
+      return false;
+    });
+  }, [all, query, effectiveFilters, allowedKinds, noneSelected]);
 
- const noneSelected = !effectiveFilters.weapons && !effectiveFilters.armors && !effectiveFilters.shields && !effectiveFilters.adventuring_gear && !effectiveFilters.tools && !effectiveFilters.gems; // ✅ Ajout
-
-const filtered = React.useMemo(() => {
-  if (noneSelected) return [];
-  const q = query.trim().toLowerCase();
-  return all.filter(ci => {
-    if (!effectiveFilters[ci.kind]) return false;
-    if (allowedKinds && !allowedKinds.includes(ci.kind)) return false;
-    if (!q) return true;
-    if (smartCapitalize(ci.name).toLowerCase().includes(q)) return true;
-    if ((ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') && (ci.description || '').toLowerCase().includes(q)) return true; // ✅ Ajout || ci.kind === 'gems'
-    return false;
-  });
-}, [all, query, effectiveFilters, allowedKinds, noneSelected]);
-
-  // ✅ MODIFIÉ : Comportement conditionnel selon multiAdd
   const handlePick = async (ci: CatalogItem) => {
-    // En mode multi-add, bloquer si déjà ajouté
-    // En mode single-add, ne pas bloquer
     if (adding || (multiAdd && addedItems.has(ci.id))) return;
 
     try {
       setAdding(ci.id);
 
-let meta: ItemMeta = { type: 'equipment', quantity: 1, equipped: false };
-if (ci.kind === 'armors' && ci.armor) meta = { type: 'armor', quantity: 1, equipped: false, armor: ci.armor };
-if (ci.kind === 'shields' && ci.shield) meta = { type: 'shield', quantity: 1, equipped: false, shield: ci.shield };
-if (ci.kind === 'weapons' && ci.weapon) meta = { type: 'weapon', quantity: 1, equipped: false, weapon: ci.weapon };
-if (ci.kind === 'tools') meta = { type: 'tool', quantity: 1, equipped: false };
-if (ci.kind === 'gems') meta = { type: 'jewelry', quantity: 1, equipped: false }; // ✅ AJOUT
-const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') ? (ci.description || '').trim() : ''; // ✅ Ajout || ci.kind === 'gems'
+      let meta: ItemMeta = { type: 'equipment', quantity: 1, equipped: false };
+      if (ci.kind === 'armors' && ci.armor) meta = { type: 'armor', quantity: 1, equipped: false, armor: ci.armor };
+      if (ci.kind === 'shields' && ci.shield) meta = { type: 'shield', quantity: 1, equipped: false, shield: ci.shield };
+      if (ci.kind === 'weapons' && ci.weapon) meta = { type: 'weapon', quantity: 1, equipped: false, weapon: ci.weapon };
+      if (ci.kind === 'tools') meta = { type: 'tool', quantity: 1, equipped: false };
+      if (ci.kind === 'gems') meta = { type: 'jewelry', quantity: 1, equipped: false };
+      
+      const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') 
+        ? (ci.description || '').trim() : '';
       
       await onAddItem({ name: ci.name, description, meta });
       
       if (multiAdd) {
-        // Mode GM : Marquer comme ajouté, rester ouvert
         setAddedItems(prev => new Set(prev).add(ci.id));
         toast.success(`${ci.name} ajouté !`);
       } else {
-        // Mode joueur : Fermer immédiatement
         toast.success(`${ci.name} ajouté !`);
         onClose();
       }
@@ -626,7 +602,8 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
   };
 
   const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
- const typeButtons: CatalogKind[] = ['weapons','armors','shields','adventuring_gear','tools','gems']; // ✅ Ajout 'gems'
+  
+  const typeButtons: CatalogKind[] = ['weapons', 'armors', 'shields', 'adventuring_gear', 'tools', 'gems'];
 
   return (
     <div 
@@ -639,21 +616,25 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-800 shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h2 className="text-gray-100 font-semibold text-lg">Liste des équipements</h2>
-              {/* ✅ Compteur uniquement en mode multi-add */}
-              {multiAdd && addedItems.size > 0 && (
-                <p className="text-sm text-green-400 mt-1">
-                  {addedItems.size} objet{addedItems.size > 1 ? 's' : ''} ajouté{addedItems.size > 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-800 rounded-lg" aria-label="Fermer">
-              <X /> 
-            </button> 
-          </div> 
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-yellow-400" />
+            <h3 className="text-lg font-semibold text-white">Liste des équipements</h3>
+            {multiAdd && addedItems.size > 0 && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/30 text-green-300">
+                {addedItems.size} sélectionné{addedItems.size > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-800"
+            aria-label="Fermer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Barre de recherche et filtres */}
         <div className="px-5 py-3 border-b border-gray-800 space-y-3 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -672,12 +653,8 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
               onClick={() => {
                 const allOn = Object.values(filters).every(v => v);
                 setFilters({
-                  weapons: !allOn,
-                  armors: !allOn,
-                  shields: !allOn,
-                  adventuring_gear: !allOn,
-                  tools: !allOn,
-                  gems: !allOn,
+                  weapons: !allOn, armors: !allOn, shields: !allOn,
+                  adventuring_gear: !allOn, tools: !allOn, gems: !allOn,
                 });
               }}
               className={`px-3 py-1 rounded-md text-sm transition-colors ${
@@ -689,26 +666,25 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
               Tout
             </button>
             {typeButtons.map(k => {
-                if (allowedKinds && !allowedKinds.includes(k)) return null;
-                return (
-               <button
-                key={k}
-                onClick={() => setFilters(prev => ({ ...prev, [k]: !prev[k] }))}
-                className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                  effectiveFilters[k]
-                    ? getKindStyle(k).activeClass
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {getKindLabel(k)}
-              </button>
-                );
-              })}
-            </div>
+              if (allowedKinds && !allowedKinds.includes(k)) return null;
+              return (
+                <button
+                  key={k}
+                  onClick={() => setFilters(prev => ({ ...prev, [k]: !prev[k] }))}
+                  className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                    effectiveFilters[k]
+                      ? getKindStyle(k).activeClass
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {getKindLabel(k)}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-            {/* Liste */}
+        {/* Liste */}
         <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
             <div className="text-center py-8">
@@ -716,83 +692,70 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
               <p className="text-gray-400">Chargement du catalogue...</p>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-gray-500 text-sm">Aucun résultat</div>
+            <div className="text-center py-8 text-gray-500">
+              {query ? `Aucun résultat pour "${query}"` : 'Aucun équipement disponible'}
+            </div>
           ) : (
-            filtered.map(ci => {
-              const isOpen = !!expanded[ci.id];
-              const isAdded = addedItems.has(ci.id);
-              const isAdding = adding === ci.id;  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {filtered.map(ci => {
+                const isOpen = expanded[ci.id];
+                const isAdded = addedItems.has(ci.id);
+                const isAdding = adding === ci.id;
 
-const preview = (
-  <>
-    {ci.kind === 'armors' && ci.armor && <div>CA: {ci.armor.label}</div>}
-    {ci.kind === 'shields' && ci.shield && <div>Bonus de bouclier: +{ci.shield.bonus}</div>}
-    {ci.kind === 'weapons' && ci.weapon && (
-      <div className="space-y-0.5">
-        <div>Dégâts: {ci.weapon.damageDice} {ci.weapon.damageType}</div>
-        {ci.weapon.properties && <div>Propriété: {ci.weapon.properties}</div>}
-        {ci.weapon.range && <div>Portée: {ci.weapon.range}</div>}
-      </div>
-    )}
-    {ci.kind === 'gems' && <div className="text-xs text-gray-400"> Voir le détail</div>}
-    {(ci.kind === 'adventuring_gear' || ci.kind === 'tools') && (ci.description ? 'Voir le détail' : 'Équipement')}
-  </>
-);
+                const preview = (
+                  <>
+                    {ci.kind === 'armors' && ci.armor && <span>CA: {ci.armor.label}</span>}
+                    {ci.kind === 'shields' && ci.shield && <span>Bonus: +{ci.shield.bonus}</span>}
+                    {ci.kind === 'weapons' && ci.weapon && <span>{ci.weapon.damageDice} {ci.weapon.damageType}</span>}
+                    {ci.kind === 'gems' && <span>Bijou/Gemme</span>}
+                    {(ci.kind === 'adventuring_gear' || ci.kind === 'tools') && <span>Équipement</span>}
+                  </>
+                );
 
-              return (
-                <div 
-                  key={ci.id} 
-                  className={`border rounded-md transition-all ${
-                    multiAdd && isAdded 
-                      ? 'bg-green-900/20 border-green-500/50' 
-                      : 'bg-gray-800/50 border-gray-700/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between p-3 gap-3">
-                    <div className="flex-1 min-w-0">
-                      <button className="text-gray-100 font-medium hover:underline break-words text-left" onClick={() => toggleExpand(ci.id)}>
-                        {smartCapitalize(ci.name)}
-                      </button>
-                      <div className="text-xs text-gray-400 mt-1">{preview}</div>
-                    </div>
-                    
-                    {/* ✅ Bouton conditionnel */}
-                    <button 
-                      onClick={() => handlePick(ci)} 
-                      disabled={isAdding || (multiAdd && isAdded)}
-                      className={`px-3 py-2 rounded-lg flex items-center gap-1 transition-colors ${
-                        multiAdd && isAdded
-                          ? 'bg-green-600/20 text-green-400 cursor-default'
-                          : isAdding
-                          ? 'bg-gray-700 text-gray-400 cursor-wait'
-                          : 'btn-primary'
+                return (
+                  <div key={ci.id} className="flex flex-col">
+                    <button
+                      onClick={() => !isAdded ? handlePick(ci) : toggleExpand(ci.id)}
+                      disabled={isAdding}
+                      className={`text-left p-3 rounded-lg border transition-colors ${
+                        isAdded
+                          ? 'border-green-500/50 bg-green-900/20'
+                          : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
                       }`}
                     >
-                      {isAdding ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      ) : (multiAdd && isAdded) ? (
-                        <>
-                          <Check className="w-4 h-4" /> Ajouté
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4" /> Ajouter
-                        </>
-                      )}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-gray-100 font-medium truncate">
+                              {smartCapitalize(ci.name)}
+                            </span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${getKindBadge(ci.kind)}`}>
+                              {getKindLabel(ci.kind)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {preview}
+                          </div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                          isAdded ? 'bg-green-500 border-green-500' : 'border-gray-600'
+                        }`}>
+                          {isAdded && <Check className="w-3 h-3 text-white" />}
+                          {isAdding && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400" />}
+                        </div>
+                      </div>
                     </button>
+                    {isOpen && (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') && (
+                      <div className="px-3 py-2 bg-gray-800/30 rounded-b-lg border-x border-b border-gray-700">
+                        <MarkdownLite text={(ci.description || '').trim()} />
+                      </div>
+                    )}
                   </div>
-{isOpen && ( 
-  <div className="px-3 pb-3">
-    {(ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci.kind === 'gems') // ✅ Ajout
-      ? <MarkdownLite text={(ci.description || '').trim()} />
-      : <div className="text-sm text-gray-400">Aucun détail supplémentaire</div>}
-  </div>
-)}
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
-        </div> 
+        </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-800 flex-shrink-0">
