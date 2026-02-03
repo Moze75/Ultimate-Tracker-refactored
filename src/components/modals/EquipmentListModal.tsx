@@ -708,10 +708,13 @@ const description = (ci.kind === 'adventuring_gear' || ci.kind === 'tools' || ci
           </div>
         </div>
 
-        {/* Liste */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
+            {/* Liste */}
+        <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
-            <div className="text-gray-400">Chargement…</div>
+            <div className="text-center py-8">
+              <div className="animate-spin h-8 w-8 border-2 border-gray-600 border-t-yellow-500 rounded-full mx-auto mb-3" />
+              <p className="text-gray-400">Chargement du catalogue...</p>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="text-gray-500 text-sm">Aucun résultat</div>
           ) : (
