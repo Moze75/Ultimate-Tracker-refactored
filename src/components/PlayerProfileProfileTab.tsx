@@ -315,7 +315,7 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
     )
   : [];
 
-  // Dons
+   // Dons
   const feats: any = (player.stats as any)?.feats || {};
   const originFeats: string[] = Array.isArray(feats.origins)
     ? feats.origins
@@ -324,6 +324,48 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
     : [];
   const generalFeats: string[] = Array.isArray(feats.generals) ? feats.generals : [];
   const styleFeats: string[] = Array.isArray(feats.styles) ? feats.styles : [];
+
+  // État pour les choix de caractéristiques des dons
+  const [featAbilityChoices, setFeatAbilityChoices] = useState<Record<string, AbilityName>>(() => {
+    return (player.stats as any)?.feat_ability_choices || {};
+  });
+
+  // Synchroniser avec les props du joueur
+  useEffect(() => {
+    setFeatAbilityChoices((player.stats as any)?.feat_ability_choices || {});
+  }, [player.id, player.stats]);
+
+  // Sauvegarder le choix de caractéristique pour un don
+  const saveFeatAbilityChoice = async (featName: string, ability: AbilityName) => {
+    const normalizedName = normalizeFeatName(featName);
+    const newChoices = { ...featAbilityChoices, [normalizedName]: ability };
+    
+    setFeatAbilityChoices(newChoices);
+
+    try {
+      const newStats = {
+        ...(player.stats || {}),
+        feat_ability_choices: newChoices
+      };
+
+      const { error } = await supabase
+        .from('players')
+        .update({ stats: newStats })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      // Notifier le parent pour mettre à jour le joueur
+      if (onUpdate) {
+        onUpdate({
+          ...player,
+          stats: newStats
+        });
+      }
+    } catch (e: any) {
+      console.error('[ProfileTab] Erreur sauvegarde choix don:', e);
+    }
+  };
 
   // Extraire les maîtrises depuis les stats
   const getPlayerProficiencies = () => {
