@@ -1129,7 +1129,7 @@ function SpellCard({
               </button>
             </div>
 
-            {/* Panneau de paramètres de bonus */}
+                    {/* Panneau de paramètres de bonus */}
             {showBonusSettings && (
               <div className="bg-gray-800/70 border border-purple-500/30 rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between mb-2">
@@ -1152,8 +1152,16 @@ function SpellCard({
                   Ajoutez des bonus supplémentaires aux jets de ce sort (ex: modificateur de caractéristique, bonus d'objet magique, etc.)
                 </p>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Bonus d'attaque */}
+                {/* Message si le sort n'a ni attaque ni dégâts */}
+                {!damageInfo.isAttackRoll && !damageInfo.isDamageSpell && (
+                  <div className="text-xs text-gray-500 italic bg-gray-700/30 p-3 rounded border border-gray-600/30">
+                    Ce sort n'a pas de jet d'attaque ni de dégâts détectés automatiquement. 
+                    Les bonus personnalisés ne s'appliquent qu'aux sorts offensifs.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Bonus d'attaque - affiché si le sort a un jet d'attaque */}
                   {damageInfo.isAttackRoll && (
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-red-400 flex items-center gap-1">
@@ -1164,30 +1172,31 @@ function SpellCard({
                       </label>
                       <div className="flex items-center gap-2">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onUpdateBonus('attackBonus', customBonuses.attackBonus - 1);
                           }}
-                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center font-bold"
                         >
-                          -
+                          −
                         </button>
                         <input
                           type="number"
                           value={customBonuses.attackBonus}
                           onChange={(e) => {
-                            e.stopPropagation();
                             onUpdateBonus('attackBonus', parseInt(e.target.value) || 0);
                           }}
                           onClick={(e) => e.stopPropagation()}
                           className="w-16 h-8 text-center bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-purple-500"
                         />
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onUpdateBonus('attackBonus', customBonuses.attackBonus + 1);
                           }}
-                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center font-bold"
                         >
                           +
                         </button>
@@ -1198,7 +1207,7 @@ function SpellCard({
                     </div>
                   )}
 
-                  {/* Bonus de dégâts */}
+                  {/* Bonus de dégâts - affiché si le sort inflige des dégâts */}
                   {damageInfo.isDamageSpell && (
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-orange-400 flex items-center gap-1">
@@ -1209,30 +1218,31 @@ function SpellCard({
                       </label>
                       <div className="flex items-center gap-2">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onUpdateBonus('damageBonus', customBonuses.damageBonus - 1);
                           }}
-                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center font-bold"
                         >
-                          -
+                          −
                         </button>
                         <input
                           type="number"
                           value={customBonuses.damageBonus}
                           onChange={(e) => {
-                            e.stopPropagation();
                             onUpdateBonus('damageBonus', parseInt(e.target.value) || 0);
                           }}
                           onClick={(e) => e.stopPropagation()}
                           className="w-16 h-8 text-center bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-purple-500"
                         />
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onUpdateBonus('damageBonus', customBonuses.damageBonus + 1);
                           }}
-                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center font-bold"
                         >
                           +
                         </button>
@@ -1244,9 +1254,10 @@ function SpellCard({
                   )}
                 </div>
 
-                {/* Bouton reset */}
+                {/* Bouton reset - affiché seulement si des bonus sont définis */}
                 {(customBonuses.attackBonus !== 0 || customBonuses.damageBonus !== 0) && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onUpdateBonus('attackBonus', 0);
