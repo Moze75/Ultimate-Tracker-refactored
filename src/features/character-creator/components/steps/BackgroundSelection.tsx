@@ -697,6 +697,16 @@ export default function BackgroundSelection({
         confirmLabel="Valider et continuer"
         confirmDisabled={!selectedBackground || !selectedEquipmentOption}
       />
+      
+      <CustomBackgroundModal
+        open={showCustomModal}
+        onClose={() => {
+          setShowCustomModal(false);
+          setEditingBackground(null);
+        }}
+        onSave={handleSaveCustomBackground}
+        initialData={editingBackground}
+      />
     </div>
   );
 }
