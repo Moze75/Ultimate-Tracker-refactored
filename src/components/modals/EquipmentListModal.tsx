@@ -789,4 +789,7 @@ export function EquipmentListModal({
       </div>
     </div>
   );
+
+  // ✅ Rendre dans le body pour éviter les problèmes de z-index et de positionnement
+  return createPortal(modalContent, document.body);
 }
