@@ -5,13 +5,16 @@ import { calculateModifier, validatePointBuy, standardArray, rollAbilityScore, a
 import { Dice1, RotateCcw, Calculator, TrendingUp, ChevronRight } from 'lucide-react';
 import type { DndBackground } from '../../types/character';
 
+import type { DndBackground, CustomBackgroundData } from '../../types/character';
+
 interface AbilityScoresProps {
   abilities: Record<string, number>;
   onAbilitiesChange: (abilities: Record<string, number>) => void;
   onNext: () => void;
   onPrevious: () => void;
   selectedBackground?: DndBackground | null;
-  onEffectiveAbilitiesChange?: (abilities: Record<string, number>) => void; 
+  customBackgroundData?: CustomBackgroundData | null;
+  onEffectiveAbilitiesChange?: (abilities: Record<string, number>) => void;
 }
 
 const abilityNames = ['Force', 'Dextérité', 'Constitution', 'Intelligence', 'Sagesse', 'Charisme'];
