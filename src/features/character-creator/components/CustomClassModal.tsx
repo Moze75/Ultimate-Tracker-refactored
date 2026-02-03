@@ -1099,10 +1099,10 @@ export default function CustomClassModal({ open, onClose, onSave, initialData }:
           <Button variant="secondary" onClick={handleCancel}>
             Annuler
           </Button>
-          <Button onClick={handleSave} className="min-w-[200px]">
-            <Heart className="w-4 h-4 mr-2" />
-            Creer la classe
-          </Button>
+<Button onClick={handleSave} className="min-w-[200px]">
+  <Heart className="w-4 h-4 mr-2" />
+  {initialData ? 'Enregistrer les modifications' : 'Créer la classe'}
+</Button>
         </div>
       </div>
     </div>
