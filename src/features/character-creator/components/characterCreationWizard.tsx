@@ -673,6 +673,7 @@ const renderStep = () => {
             abilities={abilities}
             onAbilitiesChange={setAbilities}
             selectedBackground={selectedBackgroundObj}
+            customBackgroundData={customBackgroundData}
             onEffectiveAbilitiesChange={setEffectiveAbilities}
             onNext={nextStep}
             onPrevious={previousStep}
