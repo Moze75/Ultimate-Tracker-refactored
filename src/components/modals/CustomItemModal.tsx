@@ -370,7 +370,11 @@ const [bonusAC, setBonusAC] = React.useState<number | ''>('');
           <button onClick={onClose} className="btn-secondary px-4 py-2 rounded-lg">Annuler</button>
           <button onClick={add} className="btn-primary px-4 py-2 rounded-lg">Ajouter</button>
         </div>
+        </div>
       </div>
     </div>
   );
+
+  // ✅ Rendre dans le body pour éviter les problèmes de z-index et de positionnement
+  return createPortal(modalContent, document.body);
 }
