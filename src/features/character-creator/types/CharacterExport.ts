@@ -125,4 +125,5 @@ export interface CharacterExportPayload {
 
   customRaceData?: DndRace;
   customClassData?: CustomClassData;
+  customBackgroundData?: CustomBackgroundData;
 }
