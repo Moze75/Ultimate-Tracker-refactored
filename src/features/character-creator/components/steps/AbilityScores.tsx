@@ -62,7 +62,7 @@ export default function AbilityScores({
 
   useEffect(() => {
     setBgAssignments({});
-  }, [selectedBackground, bgMode]);
+  }, [effectiveBackground, bgMode]);
 
   useEffect(() => {
     if (method === 'pointbuy') {
