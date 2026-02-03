@@ -698,15 +698,18 @@ export default function BackgroundSelection({
         confirmDisabled={!selectedBackground || !selectedEquipmentOption}
       />
       
-      <CustomBackgroundModal
-        open={showCustomModal}
-        onClose={() => {
-          setShowCustomModal(false);
-          setEditingBackground(null);
-        }}
-        onSave={handleSaveCustomBackground}
-        initialData={editingBackground}
-      />
+<CustomBackgroundModal
+  open={showCustomModal}
+  onClose={() => setShowCustomModal(false)}
+  onSave={(background) => {
+    onCustomBackgroundDataChange(background);
+    onBackgroundSelect(background.name);
+    // ✅ Sélectionner automatiquement l'option A après création d'un historique personnalisé
+    onEquipmentOptionChange('A');
+    setShowCustomModal(false);
+  }}
+  initialData={customBackgroundData}
+/>
     </div>
   );
 }
