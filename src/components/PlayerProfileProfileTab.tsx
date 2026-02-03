@@ -739,12 +739,17 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
         {donsList.length === 0 ? (
           <NotFound label="Don" value={undefined} />
         ) : (
-          <div className="space-y-6">
+           <div className="space-y-6">
             {donsList.map((item, i) => {
               const kindLabel = 
                 item.kind === 'origine' ? "Don d'origine" : 
                 item.kind === 'general' ? "Don général" : 
                 "Style de combat";
+              
+              // Vérifier si ce don offre un bonus de caractéristique
+              const normalizedFeatName = normalizeFeatName(item.name);
+              const featBonus = FEAT_BONUSES[normalizedFeatName];
+              const currentChoice = featAbilityChoices[normalizedFeatName];
               
               return (
                 <div key={`${item.kind}-${item.name}-${i}`} className="border border-white/10 rounded-lg p-3 bg-gray-800/40">
@@ -752,6 +757,41 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
                     {kindLabel}
                   </div>
                   <div className="text-base font-semibold mt-1 mb-2">{renderInline(item.name)}</div>
+                  
+                  {/* Sélecteur de bonus de caractéristique */}
+                  {featBonus && featBonus.choices.length > 0 && (
+                    <div className="mb-3 p-3 bg-emerald-900/20 border border-emerald-700/30 rounded-lg">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-sm text-emerald-300 font-medium">
+                          +{featBonus.amount} à :
+                        </span>
+                        <div className="flex gap-2 flex-wrap">
+                          {featBonus.choices.map((ability) => (
+                            <button
+                              key={ability}
+                              onClick={() => saveFeatAbilityChoice(item.name, ability)}
+                              className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                                currentChoice === ability
+                                  ? 'bg-emerald-500 border-emerald-400 text-white font-medium'
+                                  : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:border-emerald-500 hover:text-emerald-300'
+                              }`}
+                            >
+                              {ability}
+                              {currentChoice === ability && (
+                                <Check size={14} className="inline ml-1" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {!currentChoice && (
+                        <div className="text-xs text-amber-400 mt-2">
+                          ⚠️ Choisissez une caractéristique pour appliquer le bonus
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   {item.hit ? (
                     <MarkdownLite content={item.hit.content} />
                   ) : (
