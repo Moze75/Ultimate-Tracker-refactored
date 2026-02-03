@@ -541,20 +541,47 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
               onClick={() => handleCardClick(index)}
               className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-amber-500/50 hover:border-amber-400/70' : ''}`}
             >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-amber-300' : isCustomClass ? 'text-amber-200' : 'text-white'}`}>
-                    {cls.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {isCustomCard || isCustomClass ? (
-                      <Settings className="w-5 h-5 text-amber-400" />
-                    ) : (
-                      getClassIcon(cls.name)
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
+<CardHeader>
+  <div className="flex items-center justify-between">
+    <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-amber-300' : isCustomClass ? 'text-amber-200' : 'text-white'}`}>
+      {cls.name}
+    </h3>
+    <div className="flex items-center gap-2">
+      {/* ✅ Boutons Modifier/Supprimer pour les classes personnalisées */}
+      {isCustomClass && !isCustomCard && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditCustomClass(cls);
+            }}
+            className="p-1 rounded hover:bg-amber-500/20 transition-colors"
+            title="Modifier cette classe"
+          >
+            <Edit2 className="w-4 h-4 text-amber-400" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteCustomClass(cls.name);
+            }}
+            className="p-1 rounded hover:bg-red-500/20 transition-colors"
+            title="Supprimer cette classe"
+          >
+            <Trash2 className="w-4 h-4 text-red-400" />
+          </button>
+        </>
+      )}
+      {isCustomCard ? (
+        <Settings className="w-5 h-5 text-amber-400" />
+      ) : isCustomClass ? (
+        <Settings className="w-5 h-5 text-amber-400" />
+      ) : (
+        getClassIcon(cls.name)
+      )}
+    </div>
+  </div>
+</CardHeader>
               <CardContent>
                 {isCustomCard ? (
                   <div className="flex flex-col items-center justify-center py-4">
