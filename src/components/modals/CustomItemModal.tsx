@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { ImageUrlInput } from '../ImageUrlInput';
 import toast from 'react-hot-toast';
@@ -139,10 +140,17 @@ const [bonusAC, setBonusAC] = React.useState<number | ''>('');
   onClose();
 };
 
-  return (
-    <div className="fixed inset-0 z-[9999]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="fixed inset-0 bg-black/60" />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(32rem,95vw)] max-h-[90vh] overflow-y-auto bg-gray-900/95 border border-gray-700 rounded-lg p-4">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      style={{ zIndex: 10000 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div 
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-100">Objet personnalisé</h3>
           <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-800 rounded-lg"><X size={20} /></button>
