@@ -642,8 +642,10 @@ const renderStep = () => {
             onBackgroundSelect={setSelectedBackground}
             selectedEquipmentOption={backgroundEquipmentOption}
             onEquipmentOptionChange={setBackgroundEquipmentOption}
-            onNext={nextStep}
-            onPrevious={previousStep}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            customBackgroundData={customBackgroundData}
+            onCustomBackgroundDataChange={setCustomBackgroundData}
           />
         );
 
