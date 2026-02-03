@@ -1,4 +1,4 @@
-import { DndRace, CustomClassData } from './character';
+import { DndRace, CustomClassData, CustomBackgroundData } from './character';
 
 type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
 
