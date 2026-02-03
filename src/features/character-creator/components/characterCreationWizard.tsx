@@ -389,8 +389,8 @@ const payload: CharacterExportPayload = {
   characterHistory: characterHistory.trim() || undefined,
   customRaceData: customRaceData || undefined,
   customClassData: customClassData || undefined,
+  customBackgroundData: customBackgroundData || undefined,
 };
-
      // ✅ Nettoyer le snapshot et marquer le contexte "game"
   appContextService.clearWizardSnapshot();
   appContextService.setContext('game');
