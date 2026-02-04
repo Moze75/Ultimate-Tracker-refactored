@@ -4,6 +4,7 @@ import { HPManager } from '../HPManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
+import { triggerHealingAura } from '../../utils/healingAura';
 import { audioManager } from '../../utils/audioManager';
 import { useDiceSettings } from '../../hooks/useDiceSettings';
 
@@ -205,8 +206,9 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
-    // ✅ Jouer le son de guérison
+    // ✅ Jouer le son de guérison et déclencher l'aura
     playHealingSound();
+    triggerHealingAura(healing);
 
     // 1) Calcul local des nouveaux HP
     const { current_hp, temporary_hp } = computeHealing(player, healing);
