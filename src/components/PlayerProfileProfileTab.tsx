@@ -224,7 +224,7 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
       >
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-lg font-semibold text-gray-100">
+          <h3 className={`${isDesktop ? 'text-sm' : 'text-lg'} font-semibold text-gray-100`}>
             {title}
             {!!subtitle && <span className="ml-2 font-normal text-gray-300">- {subtitle}</span>}
           </h3>
