@@ -42,7 +42,7 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
           <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Mon argent</h2>
         </div>
       )}
-      <div className={device === 'desktop' ? 'space-y-2 max-w-lg' : 'p-4 space-y-2'}>
+      <div className={device === 'desktop' ? 'space-y-2 max-w-lg mx-auto' : 'p-4 space-y-2'}>
         {(['gold', 'silver', 'copper'] as Currency[]).map(curr => (
           <CurrencyInput
             key={curr}
