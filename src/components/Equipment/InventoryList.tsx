@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Backpack, Plus, Settings, Trash2, Search, Filter as FilterIcon, X, Send } from 'lucide-react';
+import { Backpack, Plus, Settings, Trash2, Search, Filter as FilterIcon, X, Send, Swords, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { InventoryItem } from '../../types/dnd';
@@ -45,6 +45,11 @@ interface WeaponProficiencyCheck {
   shouldApplyProficiencyBonus: boolean;
 }
 
+interface ArmorProficiencyCheck {
+  isProficient: boolean;
+  category: string;
+}
+
 const META_PREFIX = '#meta:';
 const stripPriceParentheses = (name: string) =>
   name.replace(/\s*\((?:\d+|\w+|\s|,|\.|\/|-)+\s*p[oa]?\)\s*$/i, '').trim();
@@ -81,6 +86,7 @@ interface InventoryListProps {
   onOpenAddList: () => void;
   onOpenAddCustom: () => void;
   checkWeaponProficiency?: (itemName: string) => WeaponProficiencyCheck | null;
+  checkArmorProficiency?: (itemName: string) => ArmorProficiencyCheck | null;
   campaignId?: string | null;
   campaignMembers?: CampaignMember[];
   currentUserId?: string;
@@ -97,6 +103,7 @@ export function InventoryList({
   onOpenAddList,
   onOpenAddCustom,
   checkWeaponProficiency,
+  checkArmorProficiency,
   campaignId,
   campaignMembers,
   currentUserId
@@ -207,6 +214,15 @@ export function InventoryList({
             }
             const notProficient = isWeapon && weaponProficiency && !weaponProficiency.isProficient;
 
+            let armorProficiency: ArmorProficiencyCheck | null = null;
+            if ((isArmor || isShield) && checkArmorProficiency) {
+              armorProficiency = checkArmorProficiency(item.name);
+            }
+
+            const showProficiencyBadge =
+              (isWeapon && weaponProficiency?.isProficient) ||
+              ((isArmor || isShield) && armorProficiency?.isProficient);
+
             const buttonLabel = pendingEquipment.has(item.id)
               ? 'En cours...'
               : isEquipped
@@ -236,6 +252,15 @@ export function InventoryList({
                       {meta?.type === 'jewelry' && <span className="text-xs px-2 py-0.5 rounded bg-yellow-900/30 text-yellow-300 whitespace-nowrap">Bijou</span>}
                       {meta?.type === 'potion' && <span className="text-xs px-2 py-0.5 rounded bg-green-900/30 text-green-300 whitespace-nowrap">Potion/Poison</span>}
                       {meta?.type === 'other' && <span className="text-xs px-2 py-0.5 rounded bg-slate-900/30 text-slate-300 whitespace-nowrap">Autre</span>}
+                      {showProficiencyBadge && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/30 text-emerald-400 border border-emerald-700/30 whitespace-nowrap"
+                          title={isWeapon ? 'Arme maîtrisée' : isShield ? 'Bouclier maîtrisé' : 'Armure maîtrisée'}
+                        >
+                          {isWeapon ? <Swords size={10} /> : <ShieldCheck size={10} />}
+                          Maîtrise
+                        </span>
+                      )}
                     </div>
                     {expanded[item.id] && (
                       <div className="mt-2 space-y-2">
