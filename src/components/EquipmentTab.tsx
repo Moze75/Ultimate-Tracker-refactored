@@ -16,6 +16,7 @@ import { EquipmentSlots } from './Equipment/EquipmentSlots';
 import { InventoryList } from './Equipment/InventoryList';
 
 import { checkWeaponProficiency, getPlayerWeaponProficiencies, WeaponProficiencyCheck } from '../utils/weaponProficiencyChecker';
+import { checkArmorProficiency as checkArmorProf, getPlayerArmorProficiencies } from '../utils/armorProficiencyChecker';
 import { CampaignMember } from '../types/campaign';
 
 // ========== HELPERS POUR LE CALCUL DE LA CA ==========
@@ -299,6 +300,11 @@ export function EquipmentTab({
 
   const playerWeaponProficiencies = useMemo(
     () => getPlayerWeaponProficiencies(player),
+    [player]
+  );
+
+  const playerArmorProficiencies = useMemo(
+    () => getPlayerArmorProficiencies(player),
     [player]
   );
 
@@ -837,6 +843,18 @@ export function EquipmentTab({
     }
   };
 
+  const checkArmorProficiencyForInventory = (itemName: string) => {
+    const item = inventory.find(i => i.name === itemName);
+    if (!item) return null;
+    const meta = parseMeta(item.description);
+    if (!meta || (meta.type !== 'armor' && meta.type !== 'shield')) return null;
+    try {
+      return checkArmorProf(itemName, playerArmorProficiencies, { type: meta.type });
+    } catch {
+      return null;
+    }
+  };
+
   const showEquipmentSlots = viewMode === 'all' || viewMode === 'bag';
   const showGold = viewMode === 'all' || viewMode === 'gold';
   const showInventory = viewMode === 'all' || viewMode === 'inventory';
@@ -886,6 +904,7 @@ export function EquipmentTab({
         }}
         onOpenAddCustom={() => setShowCustom(true)}
         checkWeaponProficiency={checkWeaponProficiencyForInventory}
+        checkArmorProficiency={checkArmorProficiencyForInventory}
         campaignId={campaignId}
         campaignMembers={campaignMembers}
         currentUserId={currentUserId}

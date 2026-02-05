@@ -3,11 +3,13 @@ import {
   X, User, Heart, Shield, Swords, Zap, BookOpen,
   Scroll, Package, Star, Loader2, Filter, ChevronDown,
   Calendar, Globe, Compass, Sparkles, Wrench, Footprints,
-  ScrollText, Minus, Plus
+  ScrollText, Minus, Plus, ShieldCheck
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Player, Ability, SpellSlots, InventoryItem } from '../../types/dnd';
 import toast from 'react-hot-toast';
+import { checkWeaponProficiency, getPlayerWeaponProficiencies } from '../../utils/weaponProficiencyChecker';
+import { checkArmorProficiency, getPlayerArmorProficiencies } from '../../utils/armorProficiencyChecker';
 
 interface CollapsibleSectionProps {
   icon: React.ReactNode;
@@ -173,6 +175,16 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
     });
     return counts;
   }, [inventoryItems]);
+
+  const playerWeaponProfs = useMemo(
+    () => (player ? getPlayerWeaponProficiencies(player) : []),
+    [player]
+  );
+
+  const playerArmorProfs = useMemo(
+    () => (player ? getPlayerArmorProficiencies(player) : []),
+    [player]
+  );
 
   const getModifierString = (score: number) => {
     const mod = Math.floor((score - 10) / 2);
@@ -786,6 +798,38 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                         const qty = meta?.quantity || 1;
                         const equipped = meta?.equipped || false;
                         const desc = visibleDescription(item.description);
+                        const isWeapon = type === 'weapon';
+                        const isArmor = type === 'armor';
+                        const isShield = type === 'shield';
+
+                        let weaponProf = null;
+                        if (isWeapon && meta?.weapon) {
+                          try {
+                            weaponProf = checkWeaponProficiency(
+                              item.name,
+                              playerWeaponProfs,
+                              meta.weapon.category,
+                              meta.weapon.properties
+                            );
+                          } catch {}
+                        }
+
+                        let armorProf = null;
+                        if (isArmor || isShield) {
+                          try {
+                            armorProf = checkArmorProficiency(
+                              item.name,
+                              playerArmorProfs,
+                              { type: meta?.type }
+                            );
+                          } catch {}
+                        }
+
+                        const isProficient = isWeapon
+                          ? weaponProf?.isProficient
+                          : (isArmor || isShield)
+                            ? armorProf?.isProficient
+                            : null;
 
                         let statInfo = '';
                         if (meta?.weapon) {
@@ -806,7 +850,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                             }`}
                           >
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm text-white font-medium truncate">
                                   {item.name}
                                   {qty > 1 && <span className="text-gray-400 ml-1">x{qty}</span>}
@@ -817,6 +861,17 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                                 {equipped && (
                                   <span className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                                     Equipe
+                                  </span>
+                                )}
+                                {isProficient === true && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded bg-emerald-900/25 text-emerald-400 border border-emerald-700/30">
+                                    {isWeapon ? <Swords size={10} /> : <ShieldCheck size={10} />}
+                                    Maitrise
+                                  </span>
+                                )}
+                                {isProficient === false && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded bg-amber-900/25 text-amber-400 border border-amber-700/30">
+                                    Non maitrise
                                   </span>
                                 )}
                               </div>
