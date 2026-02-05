@@ -211,14 +211,14 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
   const isDesktop = device === 'desktop';
 
   return (
-    <div className={isDesktop ? 'bg-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-xl overflow-hidden' : 'stat-card'}>
+    <div className={isDesktop ? 'rounded-xl overflow-hidden' : 'stat-card'}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center justify-between gap-3 cursor-pointer rounded-lg transition-colors duration-200 ${
+        className={`w-full flex items-center justify-between gap-3 cursor-pointer transition-colors duration-200 ${
           isDesktop
-            ? 'bg-gray-700/20 hover:bg-gray-700/30 border-b border-gray-700/30 p-4'
-            : 'stat-header !bg-gray-800/30 hover:bg-gray-800/40'
+            ? 'bg-gray-800/40 hover:bg-gray-800/50 border-b border-gray-700/30 p-4 rounded-t-xl'
+            : 'stat-header !bg-gray-800/30 hover:bg-gray-800/40 rounded-lg'
         }`}
         aria-expanded={open}
       >
