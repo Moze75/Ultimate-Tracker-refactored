@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { InventoryItem } from '../../types/dnd';
 import { CampaignMember } from '../../types/campaign';
 import { ShareItemToPlayerModal } from '../modals/ShareItemToPlayerModal';
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 
 type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
 
@@ -116,6 +117,7 @@ export function InventoryList({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [shareItem, setShareItem] = useState<InventoryItem | null>(null);
 
+  const device = useResponsiveLayout();
   const canShare = !!(campaignId && campaignMembers && campaignMembers.length > 1 && currentUserId);
 
   const filteredInventory = useMemo(() => {
@@ -160,13 +162,15 @@ export function InventoryList({
   };
 
   return (
-    <div className="stat-card">
-      <div className="stat-header flex items-center gap-3">
-        <Backpack className="text-purple-500" size={24} />
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Sac</h2>
-      </div>
+    <div className={device === 'desktop' ? '' : 'stat-card'}>
+      {device !== 'desktop' && (
+        <div className="stat-header flex items-center gap-3">
+          <Backpack className="text-purple-500" size={24} />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Sac</h2>
+        </div>
+      )}
 
-      <div className="p-4">
+      <div className={device === 'desktop' ? '' : 'p-4'}>
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <button onClick={onOpenAddList} className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2">
             <Plus size={20} /> Liste d'équipement
