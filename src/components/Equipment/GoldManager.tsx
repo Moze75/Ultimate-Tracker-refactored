@@ -33,8 +33,8 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
   };
 
   return (
-    <div className="stat-card !bg-gray-800/70 lg:!bg-gray-800/30">
-      <div className="stat-header !from-gray-800/70 !to-gray-900/70 lg:!from-gray-800/30 lg:!to-gray-900/30 flex items-center gap-3">
+    <div className="stat-card !bg-gray-800/70 lg:!bg-transparent lg:!border-transparent lg:!shadow-none lg:![background-image:none]">
+      <div className="stat-header !from-gray-800/70 !to-gray-900/70 lg:!from-transparent lg:!to-transparent lg:!border-transparent flex items-center gap-3">
         <Coins className="text-green-500" size={24} />
         <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Mon argent</h2>
       </div>
