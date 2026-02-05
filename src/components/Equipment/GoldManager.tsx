@@ -57,11 +57,11 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
         </div>
       )}
       {device === 'desktop' ? (
-        <div className="flex gap-8">
-          <div className="flex-1 space-y-2">
+        <div className="pt-4 flex flex-wrap gap-x-8 gap-y-2">
+          <div className="flex-1 min-w-[340px] space-y-2">
             {renderCurrencyList(leftCurrencies)}
           </div>
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-[340px] space-y-2">
             {renderCurrencyList(rightCurrencies)}
           </div>
         </div>
