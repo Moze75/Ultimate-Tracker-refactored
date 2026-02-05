@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { Player } from '../../types/dnd';
 import { CurrencyInput } from './CurrencyInput';
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 
 type Currency = 'gold' | 'silver' | 'copper';
 
@@ -13,6 +14,7 @@ interface GoldManagerProps {
 }
 
 export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
+  const device = useResponsiveLayout();
   const handleCurrencyChange = async (currency: Currency, amount: number, isAdd: boolean) => {
     const currentAmount = (player[currency] as number) || 0;
     const newAmount = Math.max(0, isAdd ? currentAmount + amount : currentAmount - amount);
@@ -33,12 +35,15 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
   };
 
   return (
-    <div className="stat-card !bg-gray-800/70 lg:!bg-transparent lg:!border-transparent lg:!shadow-none lg:![background-image:none]">
-      <div className="stat-header !from-gray-800/70 !to-gray-900/70 lg:!from-transparent lg:!to-transparent lg:!border-transparent flex items-center gap-3">
+    <div className={device === 'desktop' ? '' : 'stat-card !bg-gray-800/70'}>
+      <div className={device === 'desktop'
+        ? 'flex items-center gap-3 mb-4'
+        : 'stat-header !from-gray-800/70 !to-gray-900/70 flex items-center gap-3'
+      }>
         <Coins className="text-green-500" size={24} />
         <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Mon argent</h2>
       </div>
-      <div className="p-4 space-y-2">
+      <div className={device === 'desktop' ? 'space-y-2' : 'p-4 space-y-2'}>
         {(['gold', 'silver', 'copper'] as Currency[]).map(curr => (
           <CurrencyInput
             key={curr}
