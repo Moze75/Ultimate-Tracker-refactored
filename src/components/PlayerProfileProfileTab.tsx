@@ -4,6 +4,7 @@ import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuse
 import type { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import MarkdownLite from './MarkdownLite';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 const RAW_BASE = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main';
 
@@ -198,8 +199,8 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
   const [open, setOpen] = useState(defaultOpen);
   const [contentHeight, setContentHeight] = useState<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
+  const device = useResponsiveLayout();
 
-  // ✅ NOUVEAU : Mesurer la hauteur du contenu
   useEffect(() => {
     if (contentRef.current) {
       const height = contentRef.current.scrollHeight;
@@ -207,12 +208,18 @@ function SectionContainer({ icon, title, children, subtitle, defaultOpen = true 
     }
   }, [open, children]);
 
+  const isDesktop = device === 'desktop';
+
   return (
-    <div className="stat-card">  
+    <div className={isDesktop ? 'bg-gray-800/20 backdrop-blur-sm border border-gray-700/30 rounded-xl overflow-hidden' : 'stat-card'}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-className="stat-header !bg-gray-800/30 w-full flex items-center justify-between gap-3 cursor-pointer hover:bg-gray-800/40 rounded-lg transition-colors duration-200"
+        className={`w-full flex items-center justify-between gap-3 cursor-pointer rounded-lg transition-colors duration-200 ${
+          isDesktop
+            ? 'bg-gray-700/20 hover:bg-gray-700/30 border-b border-gray-700/30 p-4'
+            : 'stat-header !bg-gray-800/30 hover:bg-gray-800/40'
+        }`}
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
@@ -222,13 +229,11 @@ className="stat-header !bg-gray-800/30 w-full flex items-center justify-between 
             {!!subtitle && <span className="ml-2 font-normal text-gray-300">- {subtitle}</span>}
           </h3>
         </div>
-        {/* ✅ MODIFIÉ : Chevron avec animation */}
         <div className={`profile-chevron ${!open ? 'rotated' : ''}`}>
           <ChevronDown size={18} className="text-gray-300" />
         </div>
       </button>
-      
-      {/* ✅ MODIFIÉ : Contenu avec animation smooth */}
+
       <div
         ref={contentRef}
         className={`profile-section-content ${open ? 'expanded' : 'collapsed'}`}
