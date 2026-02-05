@@ -6,7 +6,10 @@ import { Player } from '../../types/dnd';
 import { CurrencyInput } from './CurrencyInput';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 
-type Currency = 'gold' | 'silver' | 'copper';
+type Currency = 'gold' | 'silver' | 'copper' | 'electrum' | 'platinum';
+
+const leftCurrencies: Currency[] = ['gold', 'silver', 'copper'];
+const rightCurrencies: Currency[] = ['electrum', 'platinum'];
 
 interface GoldManagerProps {
   player: Player;
@@ -34,6 +37,17 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
     }
   };
 
+  const renderCurrencyList = (currencies: Currency[]) =>
+    currencies.map(curr => (
+      <CurrencyInput
+        key={curr}
+        currency={curr}
+        value={(player[curr] as number) || 0}
+        onAdd={(n) => handleCurrencyChange(curr, n, true)}
+        onSpend={(n) => handleCurrencyChange(curr, n, false)}
+      />
+    ));
+
   return (
     <div className={device === 'desktop' ? '' : 'stat-card !bg-gray-800/70'}>
       {device !== 'desktop' && (
@@ -42,17 +56,20 @@ export function GoldManager({ player, onPlayerUpdate }: GoldManagerProps) {
           <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Mon argent</h2>
         </div>
       )}
-      <div className={device === 'desktop' ? 'space-y-2 max-w-lg mx-auto' : 'p-4 space-y-2'}>
-        {(['gold', 'silver', 'copper'] as Currency[]).map(curr => (
-          <CurrencyInput
-            key={curr}
-            currency={curr}
-            value={(player[curr] as number) || 0}
-            onAdd={(n) => handleCurrencyChange(curr, n, true)}
-            onSpend={(n) => handleCurrencyChange(curr, n, false)}
-          />
-        ))}
-      </div>
+      {device === 'desktop' ? (
+        <div className="flex gap-8">
+          <div className="flex-1 space-y-2">
+            {renderCurrencyList(leftCurrencies)}
+          </div>
+          <div className="flex-1 space-y-2">
+            {renderCurrencyList(rightCurrencies)}
+          </div>
+        </div>
+      ) : (
+        <div className="p-4 space-y-2">
+          {renderCurrencyList([...leftCurrencies, ...rightCurrencies])}
+        </div>
+      )}
     </div>
   );
 }

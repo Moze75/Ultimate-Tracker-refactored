@@ -252,6 +252,8 @@ export interface Player {
   gold: number;
   silver: number;
   copper: number;
+  electrum: number;
+  platinum: number;
 
   created_at: string;
 

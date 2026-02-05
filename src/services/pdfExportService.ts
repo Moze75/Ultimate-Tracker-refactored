@@ -284,7 +284,7 @@ export const generateCharacterSheet = async (player: Player) => {
         setTxt(`weapons${r}4`, m.properties || '');
     });
     setTxt('equipment', items.filter((i: any) => !weapons.slice(0, 6).find((w: any) => w.id === i.id)).map((i: any) => i.name).join(', '));
-    setTxt('gp', String(player.gold || 0)); setTxt('sp', String(player.silver || 0)); setTxt('cp', String(player.copper || 0)); setTxt('ep', "0"); setTxt('pp', "0");
+    setTxt('gp', String(player.gold || 0)); setTxt('sp', String(player.silver || 0)); setTxt('cp', String(player.copper || 0)); setTxt('ep', String(player.electrum || 0)); setTxt('pp', String(player.platinum || 0));
 
     // --- SORTS (V18 : Cache + Formatage Portée/Temps + Anti-Crash) ---
     const spells = spellRes.data || [];

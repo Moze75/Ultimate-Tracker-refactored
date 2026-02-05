@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-type Currency = 'gold' | 'silver' | 'copper';
+type Currency = 'gold' | 'silver' | 'copper' | 'electrum' | 'platinum';
 
 interface CurrencyInputProps {
   currency: Currency;
@@ -16,6 +16,8 @@ export function CurrencyInput({ currency, value, onAdd, onSpend }: CurrencyInput
     if (c === 'gold') return 'text-yellow-500';
     if (c === 'silver') return 'text-gray-300';
     if (c === 'copper') return 'text-orange-400';
+    if (c === 'electrum') return 'text-blue-300';
+    if (c === 'platinum') return 'text-cyan-200';
     return '';
   };
 
@@ -23,6 +25,8 @@ export function CurrencyInput({ currency, value, onAdd, onSpend }: CurrencyInput
     if (c === 'gold') return 'Or';
     if (c === 'silver') return 'Argent';
     if (c === 'copper') return 'Cuivre';
+    if (c === 'electrum') return 'Electrum';
+    if (c === 'platinum') return 'Platine';
     return c;
   };
 
