@@ -43,7 +43,7 @@ export function CurrencyInput({ currency, value, onAdd, onSpend }: CurrencyInput
       <div className={`w-16 text-center font-medium ${getColor(currency)}`}>
         {getName(currency)}
       </div>
-      <div className="w-16 h-full text-center bg-gray-700/60 rounded-md flex items-center justify-center font-bold border border-gray-600/40">
+      <div className="w-16 h-full text-center flex items-center justify-center font-bold text-white">
         {value}
       </div>
       <div className="flex-1 flex items-center justify-end gap-1">
