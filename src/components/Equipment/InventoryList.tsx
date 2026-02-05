@@ -252,15 +252,6 @@ export function InventoryList({
                       {meta?.type === 'jewelry' && <span className="text-xs px-2 py-0.5 rounded bg-yellow-900/30 text-yellow-300 whitespace-nowrap">Bijou</span>}
                       {meta?.type === 'potion' && <span className="text-xs px-2 py-0.5 rounded bg-green-900/30 text-green-300 whitespace-nowrap">Potion/Poison</span>}
                       {meta?.type === 'other' && <span className="text-xs px-2 py-0.5 rounded bg-slate-900/30 text-slate-300 whitespace-nowrap">Autre</span>}
-                      {showProficiencyBadge && (
-                        <span
-                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/30 text-emerald-400 border border-emerald-700/30 whitespace-nowrap"
-                          title={isWeapon ? 'Arme maîtrisée' : isShield ? 'Bouclier maîtrisé' : 'Armure maîtrisée'}
-                        >
-                          {isWeapon ? <Swords size={10} /> : <ShieldCheck size={10} />}
-                          Maîtrise
-                        </span>
-                      )}
                     </div>
                     {expanded[item.id] && (
                       <div className="mt-2 space-y-2">
@@ -274,6 +265,13 @@ export function InventoryList({
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
+                          </div>
+                        )}
+
+                        {showProficiencyBadge && (
+                          <div className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-emerald-900/25 text-emerald-400 border border-emerald-700/30">
+                            {isWeapon ? <Swords size={12} /> : <ShieldCheck size={12} />}
+                            {isWeapon ? 'Arme maîtrisée' : isShield ? 'Bouclier maîtrisé' : 'Armure maîtrisée'}
                           </div>
                         )}
 
