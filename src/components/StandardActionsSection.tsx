@@ -125,10 +125,14 @@ export function StandardActionsSection({ player, onUpdate }: StandardActionsSect
   };
 
   return (
-    <div className="stat-card">
+    <div className={deviceType === 'desktop' ? '' : 'stat-card'}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 rounded-lg transition-colors"
+        className={`w-full flex items-center justify-between p-4 transition-colors ${
+          deviceType === 'desktop'
+            ? 'bg-gray-800/40 hover:bg-gray-800/50 border-b border-gray-700/30 rounded-t-md'
+            : 'hover:bg-gray-800/50 rounded-lg'
+        }`}
       >
         <div className="flex items-center gap-3">
           <Book className="text-orange-500" size={20} />

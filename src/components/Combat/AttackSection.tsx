@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Settings, Trash2, Sword } from 'lucide-react';
 import BowIcon from '../icons/BowIcon';
 import { Player } from '../../types/dnd';
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 
 type Attack = any;
 
@@ -38,6 +39,8 @@ export function AttackSection({
   setAmmoCount,
   isEmptyLabel
 }: AttackSectionProps) {
+  const device = useResponsiveLayout();
+  const isDesktop = device === 'desktop';
 
   // --- LOGIQUE ATTAQUE SANS ARME ---
   const getMartialArtsDie = (level: number) => {
@@ -222,8 +225,11 @@ export function AttackSection({
   };
 
   return (
-    <div className="stat-card">
-      <div className="stat-header flex items-center justify-between">
+    <div className={isDesktop ? '' : 'stat-card'}>
+      <div className={isDesktop
+        ? 'flex items-center justify-between bg-gray-800/40 border-b border-gray-700/30 p-4 rounded-t-md'
+        : 'stat-header flex items-center justify-between'
+      }>
         <div className="flex items-center gap-3">
           <Sword className="w-5 h-5 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-100">Attaques</h3>

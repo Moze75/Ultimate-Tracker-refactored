@@ -3,6 +3,7 @@ import { User, ChevronDown, ChevronRight } from 'lucide-react';
 import { Condition, Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 export const CONDITIONS: Condition[] = [
   {
@@ -168,13 +169,19 @@ interface ConditionsSectionProps {
 export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) {
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [conditionsExpanded, setConditionsExpanded] = useState(true);
+  const device = useResponsiveLayout();
+  const isDesktop = device === 'desktop';
 
   if (!player) {
     return (
-      <div className="stat-card">
+      <div className={isDesktop ? '' : 'stat-card'}>
         <button
           onClick={() => setConditionsExpanded(!conditionsExpanded)}
-          className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 rounded-lg transition-colors"
+          className={`w-full flex items-center justify-between p-4 transition-colors ${
+            isDesktop
+              ? 'bg-gray-800/40 hover:bg-gray-800/50 border-b border-gray-700/30 rounded-t-md'
+              : 'hover:bg-gray-800/50 rounded-lg'
+          }`}
         >
           <div className="flex items-center gap-3">
             <User className="text-orange-500" size={20} />
@@ -249,10 +256,14 @@ export function ConditionsSection({ player, onUpdate }: ConditionsSectionProps) 
   };
 
   return (
-    <div className="stat-card">
+    <div className={isDesktop ? '' : 'stat-card'}>
       <button
         onClick={() => setConditionsExpanded(!conditionsExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 rounded-lg transition-colors"
+        className={`w-full flex items-center justify-between p-4 transition-colors ${
+          isDesktop
+            ? 'bg-gray-800/40 hover:bg-gray-800/50 border-b border-gray-700/30 rounded-t-md'
+            : 'hover:bg-gray-800/50 rounded-lg'
+        }`}
       >
         <div className="flex items-center gap-3">
           <User className="text-blue-500" size={20} />
