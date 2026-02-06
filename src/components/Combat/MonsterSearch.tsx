@@ -122,7 +122,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
             ref={inputRef}
-            className="w-full pl-9 pr-8 py-2.5 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none transition-colors"
+            className="w-full pl-9 pr-8 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none transition-colors"
             placeholder="Rechercher un monstre..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}

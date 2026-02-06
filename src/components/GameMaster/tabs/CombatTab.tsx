@@ -189,6 +189,24 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   };
 
+  const handleAddMonstersFromSearchToEncounter = async (entries: SelectedMonsterEntry[]) => {
+    if (!encounter) return;
+    for (const entry of entries) {
+      try {
+        const detail = await monsterService.fetchMonsterDetail(entry.monster.slug);
+        let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
+        if (!existing) {
+          existing = await monsterService.saveToCampaign(campaignId, detail);
+          setSavedMonsters((prev) => [...prev, existing!]);
+        }
+        await handleAddMonsterToEncounter({ ...detail, id: existing.id }, entry.quantity);
+      } catch (err) {
+        console.error(err);
+        toast.error(`Impossible de charger ${entry.monster.name}`);
+      }
+    }
+  };
+
   const handleAddSavedMonsterToPrep = (monster: Monster, count: number) => {
     const newEntries: CombatPreparationEntry[] = [];
     for (let i = 0; i < count; i++) {
@@ -529,8 +547,8 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
 
         {panelView === 'search' && (
           <MonsterSearch
-            selectionMode={!isActive}
-            onAddToCombat={!isActive ? handleAddMonstersFromSearch : undefined}
+            selectionMode
+            onAddToCombat={isActive ? handleAddMonstersFromSearchToEncounter : handleAddMonstersFromSearch}
             onSelect={handleSelectMonsterFromSearch}
           />
         )}
@@ -638,7 +656,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
 
       {/* RIGHT: Unified combat panel */}
       <div className="space-y-4">
-        <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -695,7 +713,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
           {!isActive && (
             <div className="px-4 py-2">
               <input
-                className="w-full px-3 py-2 bg-black/30 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none"
                 placeholder="Nom du combat (optionnel)"
                 value={encounterName}
                 onChange={(e) => setEncounterName(e.target.value)}
@@ -726,7 +744,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                   type="number"
                   min={1}
                   max={20}
-                  className="w-14 px-2 py-1.5 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+                  className="w-14 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
                   value={addCount}
                   onChange={(e) => setAddCount(Math.max(1, parseInt(e.target.value) || 1))}
                 />
@@ -880,10 +898,10 @@ function PrepRow({
 
   return (
     <div className={`flex items-center gap-2 px-2.5 py-2 rounded-lg transition-colors ${
-      isPlayer ? 'bg-sky-900/10 hover:bg-sky-900/20' : 'bg-red-900/10 hover:bg-red-900/20'
+      isPlayer ? 'bg-sky-900/30 hover:bg-sky-900/40' : 'bg-red-900/30 hover:bg-red-900/40'
     }`}>
       <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-        isPlayer ? 'bg-sky-900/40' : 'bg-red-900/40'
+        isPlayer ? 'bg-sky-900/60' : 'bg-red-900/60'
       }`}>
         {isPlayer
           ? <User size={11} className="text-sky-400" />
@@ -924,7 +942,7 @@ function PrepRow({
           type="number"
           min={0}
           max={30}
-          className="w-12 px-1.5 py-1 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+          className="w-12 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
           value={entry.initiative || ''}
           onChange={(e) => onUpdateInitiative(entry.id, parseInt(e.target.value) || 0)}
         />
@@ -1035,10 +1053,10 @@ function ActiveParticipantsList({
             key={p.id}
             className={`px-3 py-2.5 transition-all ${
               isCurrentTurn
-                ? 'bg-amber-900/20'
+                ? 'bg-amber-900/40'
                 : isDead
-                ? 'bg-gray-900/50 opacity-60'
-                : 'hover:bg-gray-800/30'
+                ? 'bg-gray-800 opacity-60'
+                : 'hover:bg-gray-800/80'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -1087,7 +1105,7 @@ function ActiveParticipantsList({
               <div className="flex items-center gap-1 shrink-0">
                 <input
                   type="number"
-                  className="w-14 px-1.5 py-1 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+                  className="w-14 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
                   placeholder="0"
                   value={hpDelta[p.id] || ''}
                   onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}

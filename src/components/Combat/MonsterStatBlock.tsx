@@ -1,7 +1,11 @@
 import { Monster } from '../../types/campaign';
-import { Shield, Heart, Zap, Eye, MessageSquare, Star, Swords, BookOpen } from 'lucide-react';
 
 function mod(score: number): string {
+  const m = Math.floor((score - 10) / 2);
+  return m >= 0 ? `+${m}` : `${m}`;
+}
+
+function saveMod(score: number): string {
   const m = Math.floor((score - 10) / 2);
   return m >= 0 ? `+${m}` : `${m}`;
 }
@@ -15,25 +19,40 @@ const ABILITY_LABELS = [
   { key: 'cha' as const, label: 'CHA' },
 ];
 
-function SectionDivider() {
+function TaperRule() {
   return (
-    <div className="flex items-center gap-2 my-3">
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-700/60 to-transparent" />
-    </div>
+    <svg className="w-full h-[5px] my-2" viewBox="0 0 400 5" preserveAspectRatio="none">
+      <polyline points="0,0 400,2.5 0,5" fill="#922610" />
+    </svg>
   );
 }
 
 function EntryList({ entries }: { entries: Array<{ name: string; description: string }> }) {
   if (!entries || entries.length === 0) return null;
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {entries.map((entry, i) => (
-        <div key={i} className="text-sm text-gray-200 leading-relaxed">
-          <span className="font-semibold text-amber-200 italic">{entry.name}.</span>{' '}
-          {entry.description}
-        </div>
+        <p key={i} className="text-[13px] leading-[1.5] text-[#1a1a1a]">
+          <span className="font-bold italic text-[#1a1a1a]">{entry.name}.</span>{' '}
+          <span dangerouslySetInnerHTML={{ __html: entry.description }} />
+        </p>
       ))}
     </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <svg className="w-full h-[5px] mt-3 mb-1" viewBox="0 0 400 5" preserveAspectRatio="none">
+        <polyline points="0,0 400,2.5 0,5" fill="#922610" />
+      </svg>
+      <h4 className="text-[15px] font-normal text-[#922610] border-b border-[#922610] pb-0.5 mb-1.5"
+        style={{ fontVariant: 'small-caps', letterSpacing: '0.05em' }}
+      >
+        {children}
+      </h4>
+    </>
   );
 }
 
@@ -47,174 +66,163 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
     .map(([k, v]) => (k === 'marche' ? v : `${k} ${v}`))
     .join(', ');
 
+  const initMod = Math.floor((monster.abilities.dex - 10) / 2);
+  const initText = initMod >= 0 ? `+${initMod}` : `${initMod}`;
+  const initPassive = 10 + initMod;
+
   return (
-    <div className="bg-gradient-to-b from-[#1a1510] to-[#15120d] border border-amber-900/40 rounded-xl overflow-hidden">
-      <div className="bg-gradient-to-r from-amber-900/40 via-amber-800/30 to-amber-900/40 px-5 py-4 border-b border-amber-900/30">
-        <h3 className="text-xl font-bold text-amber-100 tracking-wide">{monster.name}</h3>
-        <p className="text-sm text-amber-300/70 italic mt-0.5">
+    <div
+      className="border-2 border-[#922610] rounded-sm overflow-hidden"
+      style={{
+        background: '#fdf1dc',
+        boxShadow: '0 0 8px rgba(0,0,0,0.3)',
+      }}
+    >
+      <div className="px-4 pt-3 pb-0">
+        <h3
+          className="text-[20px] font-bold text-[#922610] leading-tight"
+          style={{ fontVariant: 'small-caps', letterSpacing: '0.05em' }}
+        >
+          {monster.name}
+        </h3>
+        <p className="text-[12px] italic text-[#58180d] mb-0.5">
           {monster.type} de taille {monster.size}
           {monster.alignment ? `, ${monster.alignment}` : ''}
         </p>
       </div>
 
-      <div className="px-5 py-4 space-y-0">
-        <div className="grid grid-cols-3 gap-3 mb-1">
-          <div className="flex items-center gap-2">
-            <Shield size={14} className="text-amber-500 shrink-0" />
-            <span className="text-sm text-gray-400">CA</span>
-            <span className="text-sm font-semibold text-gray-100">
-              {monster.armor_class}
+      <div className="px-4">
+        <TaperRule />
+
+        <div className="space-y-0.5 text-[13px] text-[#58180d]">
+          <div className="flex justify-between">
+            <div>
+              <span className="font-bold">CA</span> {monster.armor_class}
               {monster.armor_desc ? ` (${monster.armor_desc})` : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Heart size={14} className="text-red-500 shrink-0" />
-            <span className="text-sm text-gray-400">PV</span>
-            <span className="text-sm font-semibold text-gray-100">
-              {monster.hit_points}
-              {monster.hit_points_formula ? ` (${monster.hit_points_formula})` : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Zap size={14} className="text-sky-400 shrink-0" />
-            <span className="text-sm text-gray-400">VIT</span>
-            <span className="text-sm font-semibold text-gray-100">{speedText || '-'}</span>
-          </div>
-        </div>
-
-        <SectionDivider />
-
-        <div className="grid grid-cols-6 gap-1 text-center">
-          {ABILITY_LABELS.map(({ key, label }) => (
-            <div key={key} className="bg-black/30 rounded-lg py-2 px-1">
-              <div className="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">{label}</div>
-              <div className="text-lg font-bold text-gray-100">{monster.abilities[key]}</div>
-              <div className="text-xs text-gray-400">{mod(monster.abilities[key])}</div>
             </div>
-          ))}
+            <div>
+              <span className="font-bold">Initiative</span> {initText} ({initPassive})
+            </div>
+          </div>
+          <div>
+            <span className="font-bold">PV</span> {monster.hit_points}
+            {monster.hit_points_formula ? ` (${monster.hit_points_formula})` : ''}
+          </div>
+          <div>
+            <span className="font-bold">Vitesse</span> {speedText || '—'}
+          </div>
         </div>
 
-        <SectionDivider />
+        <TaperRule />
+
+        <table className="w-full text-center text-[12px] mb-0.5">
+          <thead>
+            <tr className="text-[#58180d]">
+              {ABILITY_LABELS.map(({ label }) => (
+                <th key={label} className="font-bold px-1 pb-0.5 w-1/6">{label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="text-[#58180d] font-bold">
+              {ABILITY_LABELS.map(({ key }) => (
+                <td key={key} className="px-1">{monster.abilities[key]}</td>
+              ))}
+            </tr>
+            <tr className="text-[#58180d]">
+              {ABILITY_LABELS.map(({ key }) => (
+                <td key={key} className="px-1 text-[11px]">
+                  {mod(monster.abilities[key])}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-t border-[#922610]/30">
+              <td colSpan={6} className="pt-0.5">
+                <div className="flex justify-around text-[11px] text-[#58180d]">
+                  {ABILITY_LABELS.map(({ key }) => (
+                    <span key={key}>{saveMod(monster.abilities[key])}</span>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <TaperRule />
 
         {!compact && (
-          <div className="space-y-1.5 text-sm">
+          <div className="space-y-0.5 text-[13px] text-[#58180d]">
             {monster.saving_throws && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">JdS</span>
-                <span className="text-gray-300">{monster.saving_throws}</span>
-              </div>
+              <div><span className="font-bold">JdS</span> {monster.saving_throws}</div>
             )}
             {monster.skills && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">Comp.</span>
-                <span className="text-gray-300">{monster.skills}</span>
-              </div>
+              <div><span className="font-bold">Comp.</span> {monster.skills}</div>
             )}
             {monster.vulnerabilities && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">Vuln.</span>
-                <span className="text-gray-300">{monster.vulnerabilities}</span>
-              </div>
+              <div><span className="font-bold">Vuln.</span> {monster.vulnerabilities}</div>
             )}
             {monster.resistances && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">Rés.</span>
-                <span className="text-gray-300">{monster.resistances}</span>
-              </div>
+              <div><span className="font-bold">Res.</span> {monster.resistances}</div>
             )}
             {monster.damage_immunities && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">Imm. dégâts</span>
-                <span className="text-gray-300">{monster.damage_immunities}</span>
-              </div>
+              <div><span className="font-bold">Imm. degats</span> {monster.damage_immunities}</div>
             )}
             {monster.condition_immunities && (
-              <div className="flex gap-2">
-                <span className="text-amber-400 font-medium shrink-0">Imm. états</span>
-                <span className="text-gray-300">{monster.condition_immunities}</span>
-              </div>
+              <div><span className="font-bold">Imm. etats</span> {monster.condition_immunities}</div>
             )}
             {monster.senses && (
-              <div className="flex gap-2">
-                <Eye size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                <span className="text-gray-300">{monster.senses}</span>
-              </div>
+              <div><span className="font-bold">Sens</span> {monster.senses}</div>
             )}
             {monster.languages && (
-              <div className="flex gap-2">
-                <MessageSquare size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                <span className="text-gray-300">{monster.languages}</span>
-              </div>
+              <div><span className="font-bold">Langues</span> {monster.languages}</div>
             )}
-            <div className="flex gap-2">
-              <Star size={14} className="text-amber-500 shrink-0 mt-0.5" />
-              <span className="text-gray-300">
-                FP {monster.challenge_rating}
-                {monster.xp ? ` (${monster.xp.toLocaleString('fr-FR')} XP)` : ''}
-              </span>
+            <div>
+              <span className="font-bold">FP</span> {monster.challenge_rating}
+              {monster.xp ? ` (PX ${monster.xp.toLocaleString('fr-FR')}` : ''}
+              {monster.xp && monster.challenge_rating ? ` ; BM +${Math.max(2, Math.ceil(parseFloat(monster.challenge_rating) / 4) + 1)})` : ''}
             </div>
           </div>
         )}
 
         {!compact && monster.traits && monster.traits.length > 0 && (
           <>
-            <SectionDivider />
-            <div className="flex items-center gap-2 mb-2">
-              <BookOpen size={14} className="text-amber-500" />
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Traits</h4>
-            </div>
+            <SectionTitle>Traits</SectionTitle>
             <EntryList entries={monster.traits} />
           </>
         )}
 
         {monster.actions && monster.actions.length > 0 && (
           <>
-            <SectionDivider />
-            <div className="flex items-center gap-2 mb-2">
-              <Swords size={14} className="text-red-500" />
-              <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider">Actions</h4>
-            </div>
+            <SectionTitle>Actions</SectionTitle>
             <EntryList entries={monster.actions} />
           </>
         )}
 
         {!compact && monster.bonus_actions && monster.bonus_actions.length > 0 && (
           <>
-            <SectionDivider />
-            <div className="flex items-center gap-2 mb-2">
-              <Zap size={14} className="text-sky-500" />
-              <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider">Actions bonus</h4>
-            </div>
+            <SectionTitle>Actions bonus</SectionTitle>
             <EntryList entries={monster.bonus_actions} />
           </>
         )}
 
         {!compact && monster.reactions && monster.reactions.length > 0 && (
           <>
-            <SectionDivider />
-            <div className="flex items-center gap-2 mb-2">
-              <Shield size={14} className="text-emerald-500" />
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Reactions</h4>
-            </div>
+            <SectionTitle>Reactions</SectionTitle>
             <EntryList entries={monster.reactions} />
           </>
         )}
 
         {!compact && monster.legendary_actions && monster.legendary_actions.length > 0 && (
           <>
-            <SectionDivider />
-            <div className="flex items-center gap-2 mb-2">
-              <Star size={14} className="text-yellow-500" />
-              <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider">Actions legendaires</h4>
-            </div>
+            <SectionTitle>Actions legendaires</SectionTitle>
             {monster.legendary_description && (
-              <p className="text-sm text-gray-400 italic mb-2">{monster.legendary_description}</p>
+              <p className="text-[12px] italic text-[#58180d] mb-1.5">{monster.legendary_description}</p>
             )}
             <EntryList entries={monster.legendary_actions} />
           </>
         )}
 
-        <div className="h-2" />
+        <div className="h-3" />
       </div>
     </div>
   );
