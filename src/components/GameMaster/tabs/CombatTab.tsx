@@ -114,22 +114,39 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   }, [encounter, members]);
 
+  const refreshMonsterFromSource = async (monster: Monster) => {
+    if (!monster.slug || monster.source === 'custom') {
+      setSelectedMonster(monster);
+      setPanelView('detail');
+      return;
+    }
+    try {
+      setLoadingDetail(true);
+      setPanelView('detail');
+      const fresh = await monsterService.fetchMonsterDetail(monster.slug);
+      const merged: Monster = { ...monster, ...fresh, id: monster.id, source: monster.source || 'aidedd' };
+      setSelectedMonster(merged);
+      if (monster.id) {
+        await monsterService.updateCampaignMonster(monster.id, fresh);
+        setSavedMonsters((prev) => prev.map((m) => (m.id === monster.id ? merged : m)));
+      }
+    } catch {
+      setSelectedMonster(monster);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const viewMonsterBySlug = (slug?: string) => {
     if (!slug) return;
     const monster = savedMonsters.find((m) => m.slug === slug);
-    if (monster) {
-      setSelectedMonster(monster);
-      setPanelView('detail');
-    }
+    if (monster) refreshMonsterFromSource(monster);
   };
 
   const viewMonsterById = (id?: string) => {
     if (!id) return;
     const monster = savedMonsters.find((m) => m.id === id);
-    if (monster) {
-      setSelectedMonster(monster);
-      setPanelView('detail');
-    }
+    if (monster) refreshMonsterFromSource(monster);
   };
 
   const handleAddMonstersFromSearch = async (entries: SelectedMonsterEntry[]) => {
@@ -693,14 +710,22 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                 />
                 <div className="flex gap-1 flex-1 overflow-x-auto">
                   {savedMonsters.slice(0, 5).map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => handleAddMonsterToEncounter(m, addCount)}
-                      className="shrink-0 px-2.5 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs rounded-lg border border-red-800/40 transition-colors truncate max-w-[110px]"
-                      title={`Ajouter ${addCount}x ${m.name}`}
-                    >
-                      + {m.name}
-                    </button>
+                    <div key={m.id} className="shrink-0 flex items-center bg-red-900/30 rounded-lg border border-red-800/40 overflow-hidden">
+                      <button
+                        onClick={() => refreshMonsterFromSource(m)}
+                        className="px-2 py-1.5 text-red-300 text-xs hover:bg-red-900/50 transition-colors truncate max-w-[90px]"
+                        title={`Voir ${m.name}`}
+                      >
+                        {m.name}
+                      </button>
+                      <button
+                        onClick={() => handleAddMonsterToEncounter(m, addCount)}
+                        className="px-1.5 py-1.5 text-red-400 hover:bg-red-900/60 hover:text-red-200 transition-colors border-l border-red-800/40"
+                        title={`Ajouter ${addCount}x ${m.name}`}
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
