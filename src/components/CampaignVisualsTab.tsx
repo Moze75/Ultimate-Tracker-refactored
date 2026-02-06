@@ -186,7 +186,7 @@ export function CampaignVisualsTab({ playerId, userId, onOpenVisual }: CampaignV
                   <img
                     src={visual.image_url}
                     alt={visual.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <Eye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
