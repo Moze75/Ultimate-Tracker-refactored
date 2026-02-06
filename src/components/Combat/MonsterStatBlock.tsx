@@ -43,14 +43,20 @@ function ClickableText({ text, onRollDice, monsterName, contextName }: Clickable
 
   const diceRegex = /(\d+d\d+(?:\s*[+\-]\s*\d+)?)/gi;
   const attackBonusRegex = /([+\-]\d+)\s*(?:pour toucher|au toucher|to hit)/gi;
+  const attackModifierRegex = /:\s*([+\-]\d+)(?=\s*,)/gi;
 
   let lastIndex = 0;
   const parts: (string | JSX.Element)[] = [];
   let keyCounter = 0;
 
-  const processedText = text.replace(attackBonusRegex, (match, bonus) => {
+  let processedText = text.replace(attackBonusRegex, (match, bonus) => {
     const modifier = parseInt(bonus);
     return `<span class="dice-roll-trigger" data-formula="1d20" data-modifier="${modifier}" data-type="attack" data-name="Attaque">${match}</span>`;
+  });
+
+  processedText = processedText.replace(attackModifierRegex, (match, bonus) => {
+    const modifier = parseInt(bonus);
+    return `: <span class="dice-roll-trigger" data-formula="1d20" data-modifier="${modifier}" data-type="attack" data-name="Attaque">${bonus}</span>`;
   });
 
   const tempDiv = document.createElement('div');
