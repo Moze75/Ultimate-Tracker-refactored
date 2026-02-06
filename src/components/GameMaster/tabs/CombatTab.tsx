@@ -325,6 +325,47 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     }
   };
 
+  const handleSavePreparation = async () => {
+    if (prepEntries.length === 0) return;
+    try {
+      setLaunching(true);
+      const finalName = encounterName.trim() || 'Combat sauvegardé';
+
+      const enc = await monsterService.createEncounter(campaignId, finalName);
+      await monsterService.updateEncounter(enc.id, {
+        status: 'completed',
+        saved: true
+      });
+
+      const sortedPrep = [...prepEntries].sort((a, b) => b.initiative - a.initiative);
+      const participantData = sortedPrep.map((entry, i) => ({
+        encounter_id: enc.id,
+        participant_type: entry.type as 'player' | 'monster',
+        monster_id: entry.monsterId || undefined,
+        player_member_id: entry.memberId || undefined,
+        display_name: entry.name,
+        initiative_roll: entry.initiative,
+        current_hp: entry.hp,
+        max_hp: entry.maxHp,
+        armor_class: entry.ac,
+        conditions: [] as string[],
+        sort_order: i,
+        is_active: true,
+        notes: '',
+      }));
+      await monsterService.addParticipants(participantData);
+
+      setPrepEntries([]);
+      setEncounterName('');
+      toast.success('Combat sauvegardé');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur sauvegarde du combat');
+    } finally {
+      setLaunching(false);
+    }
+  };
+
   const handleSaveEncounter = async () => {
     if (!encounter) return;
     try {
@@ -766,37 +807,6 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                   Trier par initiative
                 </button>
               </div>
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500 shrink-0">Nb:</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  className="w-14 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
-                  value={addCount}
-                  onChange={(e) => setAddCount(Math.max(1, parseInt(e.target.value) || 1))}
-                />
-                <div className="flex gap-1 flex-1 overflow-x-auto">
-                  {savedMonsters.slice(0, 5).map((m) => (
-                    <div key={m.id} className="shrink-0 flex items-center bg-red-900/30 rounded-lg border border-red-800/40 overflow-hidden">
-                      <button
-                        onClick={() => refreshMonsterFromSource(m)}
-                        className="px-2 py-1.5 text-red-300 text-xs hover:bg-red-900/50 transition-colors truncate max-w-[90px]"
-                        title={`Voir ${m.name}`}
-                      >
-                        {m.name}
-                      </button>
-                      <button
-                        onClick={() => handleAddMonsterToEncounter(m, addCount)}
-                        className="px-1.5 py-1.5 text-red-400 hover:bg-red-900/60 hover:text-red-200 transition-colors border-l border-red-800/40"
-                        title={`Ajouter ${addCount}x ${m.name}`}
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 
@@ -826,7 +836,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 
           {/* Footer: Launch / empty state */}
           {!isActive && (
-            <div className="px-4 py-3 border-t border-gray-800">
+            <div className="px-4 py-3 border-t border-gray-800 space-y-2">
               <button
                 onClick={handleLaunchCombat}
                 disabled={prepEntries.length === 0 || launching}
@@ -834,6 +844,14 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               >
                 {launching ? <Loader2 size={16} className="animate-spin" /> : <Swords size={16} />}
                 Lancer le combat
+              </button>
+              <button
+                onClick={handleSavePreparation}
+                disabled={prepEntries.length === 0 || launching}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-900/40 hover:bg-blue-900/60 disabled:bg-gray-700 disabled:text-gray-500 text-blue-300 font-medium rounded-lg border border-blue-800/50 transition-colors text-sm"
+              >
+                <Save size={14} />
+                Sauvegarder pour plus tard
               </button>
             </div>
           )}
