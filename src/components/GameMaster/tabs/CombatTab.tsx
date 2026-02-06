@@ -525,23 +525,13 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                 : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <Search size={12} className="inline mr-1" /> Chercher AideDD
-          </button>
-          <button
-            onClick={() => setPanelView('saved')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              panelView === 'saved'
-                ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <BookOpen size={12} className="inline mr-1" /> Bestiaire ({savedMonsters.length})
+            <Search size={12} className="inline mr-1" /> Rechercher monstres
           </button>
           <button
             onClick={() => { setEditingMonster(null); setShowCustomModal(true); }}
             className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
           >
-            <Plus size={12} className="inline mr-1" /> Custom
+            <Plus size={12} className="inline mr-1" /> Creer monstre
           </button>
         </div>
 
@@ -550,6 +540,9 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
             selectionMode
             onAddToCombat={isActive ? handleAddMonstersFromSearchToEncounter : handleAddMonstersFromSearch}
             onSelect={handleSelectMonsterFromSearch}
+            savedMonsters={savedMonsters}
+            onEditMonster={(m) => { setEditingMonster(m); setShowCustomModal(true); }}
+            onDeleteMonster={handleDeleteMonster}
           />
         )}
 
@@ -595,53 +588,6 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                 </div>
               </div>
             ) : null}
-          </div>
-        )}
-
-        {panelView === 'saved' && (
-          <div className="space-y-1">
-            {savedMonsters.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">
-                Aucun monstre sauvegarde
-              </div>
-            ) : (
-              savedMonsters.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors group"
-                >
-                  <button
-                    onClick={() => { setSelectedMonster(m); setPanelView('detail'); }}
-                    className="text-left flex-1 min-w-0"
-                  >
-                    <div className="text-sm font-medium text-gray-200 group-hover:text-amber-200 truncate">{m.name}</div>
-                    <div className="text-xs text-gray-500">FP {m.challenge_rating} | CA {m.armor_class} | PV {m.hit_points}</div>
-                  </button>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => isActive ? handleAddMonsterToEncounter(m, addCount) : handleAddSavedMonsterToPrep(m, 1)}
-                      className="px-2 py-1 text-xs bg-red-900/30 text-red-300 rounded hover:bg-red-900/50 transition-colors"
-                    >
-                      + Combat
-                    </button>
-                    {m.source === 'custom' && (
-                      <button
-                        onClick={() => { setEditingMonster(m); setShowCustomModal(true); }}
-                        className="p-1.5 text-gray-400 hover:text-amber-400 transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <Edit3 size={12} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteMonster(m.id!)}
-                      className="p-1.5 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus, ChevronUp } from 'lucide-react';
+import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus, ChevronUp, Edit3, Trash2 } from 'lucide-react';
 import { MonsterListItem, Monster } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
 import { MonsterStatBlock } from './MonsterStatBlock';
@@ -14,6 +14,9 @@ interface MonsterSearchProps {
   onSelect?: (item: MonsterListItem) => void;
   onAddToCombat?: (entries: SelectedMonsterEntry[]) => void;
   selectionMode?: boolean;
+  savedMonsters?: Monster[];
+  onEditMonster?: (monster: Monster) => void;
+  onDeleteMonster?: (id: string) => void;
 }
 
 const CR_OPTIONS = [
@@ -28,13 +31,23 @@ const TYPE_OPTIONS = [
   'Plante', 'Vase',
 ];
 
-export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }: MonsterSearchProps) {
+const SOURCE_OPTIONS = ['Tous', 'AideDD', 'Custom'];
+
+export function MonsterSearch({
+  onSelect,
+  onAddToCombat,
+  selectionMode = false,
+  savedMonsters = [],
+  onEditMonster,
+  onDeleteMonster,
+}: MonsterSearchProps) {
   const [query, setQuery] = useState('');
-  const [allMonsters, setAllMonsters] = useState<MonsterListItem[]>([]);
+  const [aideDDMonsters, setAideDDMonsters] = useState<MonsterListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [crFilter, setCrFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('Tous');
   const [selected, setSelected] = useState<Map<string, number>>(new Map());
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [expandedMonster, setExpandedMonster] = useState<Monster | null>(null);
@@ -49,7 +62,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
     try {
       setLoading(true);
       const list = await monsterService.fetchMonsterList();
-      setAllMonsters(list);
+      setAideDDMonsters(list);
     } catch (err) {
       console.error(err);
       toast.error('Impossible de charger le bestiaire AideDD');
@@ -57,6 +70,24 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
       setLoading(false);
     }
   };
+
+  const allMonsters = useMemo(() => {
+    const customListItems: MonsterListItem[] = savedMonsters
+      .filter(m => m.source === 'custom')
+      .map(m => ({
+        slug: m.slug || `custom-${m.id}`,
+        name: m.name,
+        type: m.type || '',
+        size: m.size || '',
+        cr: m.challenge_rating || '0',
+        ac: m.armor_class,
+        hp: m.hit_points,
+        source: 'custom' as const,
+        id: m.id,
+      }));
+
+    return [...aideDDMonsters, ...customListItems];
+  }, [aideDDMonsters, savedMonsters]);
 
   const filtered = useMemo(() => {
     let result = allMonsters;
@@ -75,16 +106,25 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
       result = result.filter((m) => m.type.toLowerCase().includes(t));
     }
 
-    return result.slice(0, 50);
-  }, [allMonsters, query, crFilter, typeFilter]);
+    if (sourceFilter !== 'Tous') {
+      if (sourceFilter === 'Custom') {
+        result = result.filter((m) => m.source === 'custom');
+      } else if (sourceFilter === 'AideDD') {
+        result = result.filter((m) => !m.source || m.source === 'aidedd');
+      }
+    }
+
+    return result.slice(0, 100);
+  }, [allMonsters, query, crFilter, typeFilter, sourceFilter]);
 
   const clearFilters = () => {
     setQuery('');
     setCrFilter('');
     setTypeFilter('');
+    setSourceFilter('Tous');
   };
 
-  const hasActiveFilters = crFilter || typeFilter || query;
+  const hasActiveFilters = crFilter || typeFilter || query || sourceFilter !== 'Tous';
 
   const toggleSelect = (slug: string) => {
     setSelected((prev) => {
@@ -117,20 +157,31 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
     setSelected(new Map());
   };
 
-  const handleExpandMonster = async (slug: string) => {
-    if (expandedSlug === slug) {
+  const handleExpandMonster = async (m: MonsterListItem) => {
+    const identifier = m.slug || `custom-${m.id}`;
+
+    if (expandedSlug === identifier) {
       setExpandedSlug(null);
       setExpandedMonster(null);
       return;
     }
 
-    setExpandedSlug(slug);
+    setExpandedSlug(identifier);
     setExpandedMonster(null);
     setLoadingDetail(true);
 
     try {
-      const detail = await monsterService.fetchMonsterDetail(slug);
-      setExpandedMonster(detail);
+      if (m.source === 'custom' && m.id) {
+        const customMonster = savedMonsters.find(sm => sm.id === m.id);
+        if (customMonster) {
+          setExpandedMonster(customMonster);
+        } else {
+          throw new Error('Monstre custom introuvable');
+        }
+      } else {
+        const detail = await monsterService.fetchMonsterDetail(m.slug);
+        setExpandedMonster(detail);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Impossible de charger les details');
@@ -166,7 +217,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
-            showFilters || crFilter || typeFilter
+            showFilters || crFilter || typeFilter || sourceFilter !== 'Tous'
               ? 'bg-amber-900/30 border-amber-700 text-amber-300'
               : 'bg-gray-800 border-gray-600 text-gray-400 hover:text-gray-300'
           }`}
@@ -178,7 +229,19 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
 
       {showFilters && (
         <div className="flex gap-3 flex-wrap items-end">
-          <div className="flex-1 min-w-[120px]">
+          <div className="flex-1 min-w-[100px]">
+            <label className="block text-xs text-gray-500 mb-1">Source</label>
+            <select
+              className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+            >
+              {SOURCE_OPTIONS.map((src) => (
+                <option key={src} value={src}>{src}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[100px]">
             <label className="block text-xs text-gray-500 mb-1">FP</label>
             <select
               className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
@@ -191,7 +254,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
               ))}
             </select>
           </div>
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-[120px]">
             <label className="block text-xs text-gray-500 mb-1">Type</label>
             <select
               className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
@@ -250,12 +313,14 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
             </div>
           ) : (
             filtered.map((m) => {
-              const isSelected = selected.has(m.slug);
-              const isExpanded = expandedSlug === m.slug;
-              const qty = selected.get(m.slug) || 1;
+              const identifier = m.slug || `custom-${m.id}`;
+              const isSelected = selected.has(identifier);
+              const isExpanded = expandedSlug === identifier;
+              const qty = selected.get(identifier) || 1;
+              const isCustom = m.source === 'custom';
 
               return (
-                <div key={m.slug} className="border-b border-gray-800 last:border-b-0">
+                <div key={identifier} className="border-b border-gray-800 last:border-b-0 group">
                   <div
                     className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
                       isSelected
@@ -267,7 +332,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
                   >
                     {selectionMode && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleSelect(m.slug); }}
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(identifier); }}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
                           isSelected
                             ? 'bg-red-600 border-red-500 text-white'
@@ -279,12 +344,17 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
                     )}
 
                     <button
-                      onClick={() => handleExpandMonster(m.slug)}
+                      onClick={() => handleExpandMonster(m)}
                       className="flex-1 text-left min-w-0"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-200 hover:text-amber-300 truncate transition-colors">
                           {m.name}
+                          {isCustom && (
+                            <span className="ml-2 text-[10px] bg-purple-900/40 text-purple-300 px-1.5 py-0.5 rounded">
+                              Custom
+                            </span>
+                          )}
                         </span>
                         <div className="flex items-center gap-2 shrink-0 ml-2">
                           <span className="text-xs bg-amber-900/50 text-amber-300 px-2 py-0.5 rounded-full">
@@ -305,17 +375,46 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
                       </div>
                     </button>
 
+                    {isCustom && onEditMonster && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const fullMonster = savedMonsters.find(sm => sm.id === m.id);
+                          if (fullMonster) onEditMonster(fullMonster);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-amber-400 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Editer"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                    )}
+
+                    {isCustom && onDeleteMonster && m.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Supprimer ${m.name} ?`)) {
+                            onDeleteMonster(m.id!);
+                          }
+                        }}
+                        className="p-1.5 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+
                     {selectionMode && isSelected && (
                       <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={(e) => { e.stopPropagation(); updateQuantity(m.slug, qty - 1); }}
+                          onClick={(e) => { e.stopPropagation(); updateQuantity(identifier, qty - 1); }}
                           className="w-6 h-6 flex items-center justify-center rounded bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 transition-colors"
                         >
                           <Minus size={10} />
                         </button>
                         <span className="w-6 text-center text-sm font-bold text-red-300">{qty}</span>
                         <button
-                          onClick={(e) => { e.stopPropagation(); updateQuantity(m.slug, qty + 1); }}
+                          onClick={(e) => { e.stopPropagation(); updateQuantity(identifier, qty + 1); }}
                           className="w-6 h-6 flex items-center justify-center rounded bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 transition-colors"
                         >
                           <Plus size={10} />

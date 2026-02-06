@@ -5,11 +5,6 @@ function mod(score: number): string {
   return m >= 0 ? `+${m}` : `${m}`;
 }
 
-function saveMod(score: number): string {
-  const m = Math.floor((score - 10) / 2);
-  return m >= 0 ? `+${m}` : `${m}`;
-}
-
 const ABILITY_LABELS = [
   { key: 'str' as const, label: 'FOR' },
   { key: 'dex' as const, label: 'DEX' },
@@ -115,38 +110,45 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
 
         <TaperRule />
 
-        <table className="w-full text-center text-[12px] mb-0.5">
-          <thead>
-            <tr className="text-[#58180d]">
-              {ABILITY_LABELS.map(({ label }) => (
-                <th key={label} className="font-bold px-1 pb-0.5 w-1/6">{label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="text-[#58180d] font-bold">
-              {ABILITY_LABELS.map(({ key }) => (
-                <td key={key} className="px-1">{monster.abilities[key]}</td>
-              ))}
-            </tr>
-            <tr className="text-[#58180d]">
-              {ABILITY_LABELS.map(({ key }) => (
-                <td key={key} className="px-1 text-[11px]">
-                  {mod(monster.abilities[key])}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-t border-[#922610]/30">
-              <td colSpan={6} className="pt-0.5">
-                <div className="flex justify-around text-[11px] text-[#58180d]">
-                  {ABILITY_LABELS.map(({ key }) => (
-                    <span key={key}>{saveMod(monster.abilities[key])}</span>
-                  ))}
+        <div className="grid grid-cols-6 gap-0.5 text-center text-[11px] mb-0.5">
+          {ABILITY_LABELS.map(({ key, label }) => {
+            const score = monster.abilities[key];
+            const modValue = Math.floor((score - 10) / 2);
+            const modText = modValue >= 0 ? `+${modValue}` : `${modValue}`;
+            const saveText = modValue >= 0 ? `+${modValue}` : `${modValue}`;
+
+            return (
+              <div key={key} className="border border-[#922610]/20 bg-[#f5e8d0]">
+                <div className="font-bold text-[#58180d] border-b border-[#922610]/20 py-0.5">
+                  {label}
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <div className="py-1">
+                  <div className="font-bold text-[#58180d] text-[15px]">
+                    {score}
+                  </div>
+                  <div className="flex items-center justify-center gap-3 mt-0.5 px-1">
+                    <div>
+                      <div className="text-[9px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
+                        Mod
+                      </div>
+                      <div className="font-semibold text-[#58180d]">
+                        {modText}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
+                        JS
+                      </div>
+                      <div className="font-semibold text-[#58180d]">
+                        {saveText}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         <TaperRule />
 
