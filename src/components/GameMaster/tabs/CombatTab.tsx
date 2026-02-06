@@ -513,10 +513,10 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* LEFT: Search / Bestiary */}
       <div className="space-y-4">
-        <div className="flex gap-2 border-b border-gray-800 pb-2">
+        <div className="flex gap-2 border-b border-gray-700 pb-2">
           <button
             onClick={() => setPanelView('search')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
@@ -656,6 +656,9 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
 
       {/* RIGHT: Unified combat panel */}
       <div className="space-y-4">
+        <div className="flex items-center border-b border-gray-700 pb-2">
+          <span className="text-xs font-medium text-gray-400">Gestion du combat</span>
+        </div>
         <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">

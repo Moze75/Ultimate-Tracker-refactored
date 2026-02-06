@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus } from 'lucide-react';
-import { MonsterListItem } from '../../types/campaign';
+import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus, ChevronUp } from 'lucide-react';
+import { MonsterListItem, Monster } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
+import { MonsterStatBlock } from './MonsterStatBlock';
 import toast from 'react-hot-toast';
 
 interface SelectedMonsterEntry {
@@ -35,6 +36,9 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
   const [crFilter, setCrFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [selected, setSelected] = useState<Map<string, number>>(new Map());
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const [expandedMonster, setExpandedMonster] = useState<Monster | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,6 +117,29 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
     setSelected(new Map());
   };
 
+  const handleExpandMonster = async (slug: string) => {
+    if (expandedSlug === slug) {
+      setExpandedSlug(null);
+      setExpandedMonster(null);
+      return;
+    }
+
+    setExpandedSlug(slug);
+    setExpandedMonster(null);
+    setLoadingDetail(true);
+
+    try {
+      const detail = await monsterService.fetchMonsterDetail(slug);
+      setExpandedMonster(detail);
+    } catch (err) {
+      console.error(err);
+      toast.error('Impossible de charger les details');
+      setExpandedSlug(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const totalSelected = Array.from(selected.values()).reduce((a, b) => a + b, 0);
 
   return (
@@ -141,7 +168,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
             showFilters || crFilter || typeFilter
               ? 'bg-amber-900/30 border-amber-700 text-amber-300'
-              : 'bg-black/40 border-gray-700 text-gray-400 hover:text-gray-300'
+              : 'bg-gray-800 border-gray-600 text-gray-400 hover:text-gray-300'
           }`}
         >
           <Filter size={14} />
@@ -154,7 +181,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           <div className="flex-1 min-w-[120px]">
             <label className="block text-xs text-gray-500 mb-1">FP</label>
             <select
-              className="w-full px-2 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
+              className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
               value={crFilter}
               onChange={(e) => setCrFilter(e.target.value)}
             >
@@ -167,7 +194,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           <div className="flex-1 min-w-[140px]">
             <label className="block text-xs text-gray-500 mb-1">Type</label>
             <select
-              className="w-full px-2 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
+              className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -189,7 +216,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
       )}
 
       {selectionMode && selected.size > 0 && (
-        <div className="flex items-center gap-3 px-3 py-2.5 bg-red-900/20 border border-red-800/40 rounded-lg">
+        <div className="flex items-center gap-3 px-3 py-2.5 bg-red-900/40 border border-red-800/50 rounded-lg">
           <span className="text-sm text-red-300 font-medium flex-1">
             {selected.size} monstre{selected.size > 1 ? 's' : ''} ({totalSelected} au total)
           </span>
@@ -214,7 +241,7 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           Chargement du bestiaire...
         </div>
       ) : (
-        <div className="max-h-[360px] overflow-y-auto rounded-lg border border-gray-800 divide-y divide-gray-800/50">
+        <div className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900">
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-gray-500 text-sm">
               {allMonsters.length === 0
@@ -224,71 +251,89 @@ export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }
           ) : (
             filtered.map((m) => {
               const isSelected = selected.has(m.slug);
+              const isExpanded = expandedSlug === m.slug;
               const qty = selected.get(m.slug) || 1;
 
               return (
-                <div
-                  key={m.slug}
-                  className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
-                    isSelected
-                      ? 'bg-red-900/15 hover:bg-red-900/25'
-                      : 'hover:bg-amber-900/15'
-                  }`}
-                >
-                  {selectionMode && (
-                    <button
-                      onClick={() => toggleSelect(m.slug)}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-                        isSelected
-                          ? 'bg-red-600 border-red-500 text-white'
-                          : 'border-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      {isSelected && <Check size={12} />}
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      if (selectionMode) {
-                        toggleSelect(m.slug);
-                      } else if (onSelect) {
-                        onSelect(m);
-                      }
-                    }}
-                    className="flex-1 text-left min-w-0"
+                <div key={m.slug} className="border-b border-gray-800 last:border-b-0">
+                  <div
+                    className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
+                      isSelected
+                        ? 'bg-red-900/30'
+                        : isExpanded
+                        ? 'bg-amber-900/20'
+                        : 'hover:bg-gray-800'
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-200 truncate">
-                        {m.name}
-                      </span>
-                      <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded-full shrink-0 ml-2">
-                        FP {m.cr}
-                      </span>
-                    </div>
-                    <div className="flex gap-3 mt-0.5 text-xs text-gray-500">
-                      <span>{m.type}</span>
-                      <span>{m.size}</span>
-                      {m.ac && <span>CA {m.ac}</span>}
-                      {m.hp && <span>PV {m.hp}</span>}
-                    </div>
-                  </button>
+                    {selectionMode && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(m.slug); }}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+                          isSelected
+                            ? 'bg-red-600 border-red-500 text-white'
+                            : 'border-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        {isSelected && <Check size={12} />}
+                      </button>
+                    )}
 
-                  {selectionMode && isSelected && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => updateQuantity(m.slug, qty - 1)}
-                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-                      >
-                        <Minus size={10} />
-                      </button>
-                      <span className="w-6 text-center text-sm font-bold text-red-300">{qty}</span>
-                      <button
-                        onClick={() => updateQuantity(m.slug, qty + 1)}
-                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-                      >
-                        <Plus size={10} />
-                      </button>
+                    <button
+                      onClick={() => handleExpandMonster(m.slug)}
+                      className="flex-1 text-left min-w-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-200 hover:text-amber-300 truncate transition-colors">
+                          {m.name}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className="text-xs bg-amber-900/50 text-amber-300 px-2 py-0.5 rounded-full">
+                            FP {m.cr}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp size={14} className="text-amber-400" />
+                          ) : (
+                            <ChevronDown size={14} className="text-gray-500" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-0.5 text-xs text-gray-500">
+                        <span>{m.type}</span>
+                        <span>{m.size}</span>
+                        {m.ac && <span>CA {m.ac}</span>}
+                        {m.hp && <span>PV {m.hp}</span>}
+                      </div>
+                    </button>
+
+                    {selectionMode && isSelected && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); updateQuantity(m.slug, qty - 1); }}
+                          className="w-6 h-6 flex items-center justify-center rounded bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span className="w-6 text-center text-sm font-bold text-red-300">{qty}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); updateQuantity(m.slug, qty + 1); }}
+                          className="w-6 h-6 flex items-center justify-center rounded bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <Plus size={10} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {isExpanded && (
+                    <div className="px-3 pb-3 pt-1">
+                      {loadingDetail ? (
+                        <div className="flex items-center justify-center py-6 text-gray-400">
+                          <Loader2 size={18} className="animate-spin mr-2" />
+                          Chargement...
+                        </div>
+                      ) : expandedMonster ? (
+                        <MonsterStatBlock monster={expandedMonster} />
+                      ) : null}
                     </div>
                   )}
                 </div>
