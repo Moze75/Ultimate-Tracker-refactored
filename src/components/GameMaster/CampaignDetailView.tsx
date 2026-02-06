@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Package, Send, Crown, Image, FileText } from 'lucide-react';
+import { ArrowLeft, Users, Package, Send, Crown, Image, FileText, Swords } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation, CampaignGift, CampaignGiftClaim } from '../../types/campaign';
 import { campaignService } from '../../services/campaignService';
@@ -10,6 +10,7 @@ import { CampaignVisual } from '../../services/campaignVisualsService';
 import { MembersTab } from './tabs/MembersTab';
 import { InventoryTab } from './tabs/InventoryTab';
 import { GiftsTab } from './tabs/GiftsTab';
+import { CombatTab } from './tabs/CombatTab';
 import toast from 'react-hot-toast';
 
 const BG_URL = '/background/ddbground.png';
@@ -21,7 +22,7 @@ interface CampaignDetailViewProps {
 }
 
 export function CampaignDetailView({ campaign, session, onBack }: CampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'visuals' | 'notes'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'inventory' | 'gifts' | 'visuals' | 'notes' | 'combat'>('members');
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const [inventory, setInventory] = useState<CampaignInventoryItem[]>([]);
   const [invitations, setInvitations] = useState<CampaignInvitation[]>([]);
@@ -116,6 +117,7 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
     { key: 'gifts' as const, icon: Send, label: 'Envois' },
     { key: 'visuals' as const, icon: Image, label: 'Visuels' },
     { key: 'notes' as const, icon: FileText, label: 'Notes' },
+    { key: 'combat' as const, icon: Swords, label: 'Combat' },
   ];
 
   return (
@@ -171,6 +173,9 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
           <CampaignVisualsTab playerId={campaign.id} userId={session?.user?.id || ''} onOpenVisual={openVisualWindow} />
         )}
         {activeTab === 'notes' && <CampaignNotesTab campaignId={campaign.id} />}
+        {activeTab === 'combat' && (
+          <CombatTab campaignId={campaign.id} members={members} onReload={loadMembers} />
+        )}
       </div>
 
       <DraggableVisualWindows windows={draggableWindows} onClose={closeVisualWindow} onUpdatePosition={updateWindowPosition} />
