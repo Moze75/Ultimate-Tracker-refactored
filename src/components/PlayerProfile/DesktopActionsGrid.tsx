@@ -67,25 +67,25 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
 
   return (
     <>
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mr-4 auto-rows-fr">
+      <div className="flex flex-wrap gap-2 mr-4 justify-end">
         <button
           onClick={handleLongRest}
-          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
+          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
         >
           <span className="text-xm whitespace-nowrap">Repos long</span>
-          <Moon className="w-4 h-4 ml-2" />
+          <Moon className="w-4 h-4 ml-2 shrink-0" />
         </button>
 
         <button
           onClick={() => setShowRestModal(true)}
-          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]"
+          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
         >
           <span className="text-xm whitespace-nowrap">Repos court</span>
-          <Sun className="w-4 h-4 ml-2" />
+          <Sun className="w-4 h-4 ml-2 shrink-0" />
         </button>
 
         {player.hit_dice && (
-          <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50 min-w-[115px]">
+          <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50">
             <span className="text-xm text-gray-400 whitespace-nowrap">Des de vie</span>
             <span className="text-gray-300 font-medium text-sm ml-2">
               {player.hit_dice.total - player.hit_dice.used}/{player.hit_dice.total}
@@ -93,7 +93,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
           </div>
         )}
 
-        <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-[115px]">
+        <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50">
           <div className="text-gray-400 text-xs flex items-center gap-1">
             <span className="whitespace-nowrap text-sm">Inspi</span>
           </div>
@@ -174,7 +174,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
               toast.error('Erreur lors de la modification de la concentration');
             }
           }}
-          className={`h-10 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 min-w-[115px] ${
+          className={`h-10 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 ${
             player.is_concentrating
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-lg shadow-purple-500/20 animate-pulse'
               : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50'
@@ -186,7 +186,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
 
         <button
           onClick={onOpenCampaigns}
-          className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3 min-w-[115px]"
+          className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3"
         >
           <span className="text-xm whitespace-nowrap">Campagnes</span>
           <Scroll className="w-4 h-4 ml-2" />
