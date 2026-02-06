@@ -164,6 +164,7 @@ export interface CampaignEncounter {
   status: EncounterStatus;
   round_number: number;
   current_turn_index: number;
+  saved: boolean;
   created_at: string;
   updated_at: string;
 }

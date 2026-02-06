@@ -174,6 +174,36 @@ export const monsterService = {
     if (error) throw error;
   },
 
+  async saveEncounter(encounterId: string): Promise<void> {
+    const { error } = await supabase
+      .from('campaign_encounters')
+      .update({ saved: true, updated_at: new Date().toISOString() })
+      .eq('id', encounterId);
+
+    if (error) throw error;
+  },
+
+  async getSavedEncounters(campaignId: string): Promise<CampaignEncounter[]> {
+    const { data, error } = await supabase
+      .from('campaign_encounters')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .eq('saved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []) as CampaignEncounter[];
+  },
+
+  async deleteEncounter(encounterId: string): Promise<void> {
+    const { error } = await supabase
+      .from('campaign_encounters')
+      .delete()
+      .eq('id', encounterId);
+
+    if (error) throw error;
+  },
+
   async getEncounterParticipants(
     encounterId: string
   ): Promise<EncounterParticipant[]> {

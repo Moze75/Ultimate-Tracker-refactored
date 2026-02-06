@@ -325,6 +325,17 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     }
   };
 
+  const handleSaveEncounter = async () => {
+    if (!encounter) return;
+    try {
+      await monsterService.saveEncounter(encounter.id);
+      toast.success('Combat sauvegardé');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur sauvegarde du combat');
+    }
+  };
+
   const handleEndCombat = async () => {
     if (!encounter) return;
     try {
@@ -701,6 +712,12 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
                   >
                     <SkipForward size={12} /> Tour suivant
+                  </button>
+                  <button
+                    onClick={handleSaveEncounter}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+                  >
+                    <Save size={12} /> Sauvegarder
                   </button>
                   <button
                     onClick={handleEndCombat}

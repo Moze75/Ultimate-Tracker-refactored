@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, Swords, Calendar } from 'lucide-react';
+import { X, Loader2, Swords, Calendar, Trash2 } from 'lucide-react';
 import { CampaignEncounter } from '../../../types/campaign';
-import { supabase } from '../../../lib/supabase';
+import { monsterService } from '../../../services/monsterService';
 import toast from 'react-hot-toast';
 
 interface LoadEncounterModalProps {
@@ -21,20 +21,27 @@ export function LoadEncounterModal({ campaignId, onClose, onLoad }: LoadEncounte
   const loadEncounters = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('campaign_encounters')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setEncounters(data || []);
+      const data = await monsterService.getSavedEncounters(campaignId);
+      setEncounters(data);
     } catch (err) {
       console.error(err);
       toast.error('Erreur chargement des combats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (encounterId: string, encounterName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Supprimer le combat "${encounterName}" ?`)) return;
+
+    try {
+      await monsterService.deleteEncounter(encounterId);
+      setEncounters(prev => prev.filter(enc => enc.id !== encounterId));
+      toast.success('Combat supprimé');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur suppression du combat');
     }
   };
 
@@ -82,32 +89,43 @@ export function LoadEncounterModal({ campaignId, onClose, onLoad }: LoadEncounte
           ) : (
             <div className="space-y-3">
               {encounters.map((encounter) => (
-                <button
+                <div
                   key={encounter.id}
-                  onClick={() => onLoad(encounter.id)}
-                  className="w-full p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg transition-colors text-left"
+                  className="flex items-center gap-2"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium text-base mb-1">
-                        {encounter.name}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <Calendar size={12} />
-                          {formatDate(encounter.created_at)}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Swords size={12} />
-                          Round {encounter.round_number}
+                  <button
+                    onClick={() => onLoad(encounter.id)}
+                    className="flex-1 p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg transition-colors text-left"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-white font-medium text-base mb-1">
+                          {encounter.name}
+                        </h3>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={12} />
+                            {formatDate(encounter.created_at)}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Swords size={12} />
+                            Round {encounter.round_number}
+                          </div>
                         </div>
                       </div>
+                      <div className="ml-4">
+                        <ChevronRight className="text-gray-500" size={20} />
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <ChevronRight className="text-gray-500" size={20} />
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(encounter.id, encounter.name, e)}
+                    className="p-3 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

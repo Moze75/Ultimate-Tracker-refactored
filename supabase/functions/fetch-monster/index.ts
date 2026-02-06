@@ -433,6 +433,8 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
       imageUrl = src;
     } else if (src.startsWith('/')) {
       imageUrl = `https://www.aidedd.org${src}`;
+    } else if (src.startsWith('img/')) {
+      imageUrl = `https://www.aidedd.org/monster/${src}`;
     } else {
       imageUrl = `https://www.aidedd.org/monster/fr/${src}`;
     }
