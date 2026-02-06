@@ -106,28 +106,32 @@ async function fetchMonsterList(): Promise<MonsterListItem[]> {
   const html = await res.text();
   const monsters: MonsterListItem[] = [];
 
-  const rowRegex =
-    /<tr[^>]*>\s*<td[^>]*>\s*<a\s+href="fr\/([^"]+)"[^>]*>([^<]+)<\/a>/gi;
-  let match;
+  const tbodyMatch = html.match(/<tbody>([\s\S]*?)<\/tbody>/i);
+  if (!tbodyMatch) return monsters;
 
-  while ((match = rowRegex.exec(html)) !== null) {
-    const slug = match[1];
-    const name = extractTextContent(match[2]);
+  const tbody = tbodyMatch[1];
+  const rows = tbody.split(/<\/tr>/i);
 
-    const rowEnd = html.indexOf("</tr>", match.index);
-    const rowHtml = html.substring(match.index, rowEnd);
+  for (const row of rows) {
+    const linkMatch = row.match(
+      /<a\s+href=['"](fr\/([^'"]+))['"][^>]*>([^<]+)<\/a>/i
+    );
+    if (!linkMatch) continue;
 
-    const cells = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    const slug = linkMatch[2];
+    const name = extractTextContent(linkMatch[3]);
+
+    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
 
     monsters.push({
       name,
       slug,
-      cr: cells[4] ? extractTextContent(cells[4][1]) : "",
-      type: cells[5] ? extractTextContent(cells[5][1]) : "",
-      size: cells[6] ? extractTextContent(cells[6][1]) : "",
-      ac: cells[7] ? extractTextContent(cells[7][1]) : "",
-      hp: cells[8] ? extractTextContent(cells[8][1]) : "",
-      source: cells[14] ? extractTextContent(cells[14][1]) : "",
+      cr: cells.length > 5 ? extractTextContent(cells[5][1]) : "",
+      type: cells.length > 6 ? extractTextContent(cells[6][1]) : "",
+      size: cells.length > 7 ? extractTextContent(cells[7][1]) : "",
+      ac: cells.length > 8 ? extractTextContent(cells[8][1]) : "",
+      hp: cells.length > 9 ? extractTextContent(cells[9][1]) : "",
+      source: cells.length > 20 ? extractTextContent(cells[20][1]) : "",
     });
   }
 
