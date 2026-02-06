@@ -15,8 +15,13 @@ import {
   Dices,
   Shield,
   Heart,
-  Minus,
   User,
+  ChevronRight,
+  SkipForward,
+  Square,
+  Minus,
+  Eye,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   CampaignMember,
@@ -24,12 +29,12 @@ import {
   EncounterParticipant,
   Monster,
   MonsterListItem,
+  DND_CONDITIONS,
 } from '../../../types/campaign';
 import { monsterService } from '../../../services/monsterService';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
-import { InitiativeTracker } from '../../Combat/InitiativeTracker';
 import toast from 'react-hot-toast';
 
 interface CombatTabProps {
@@ -44,6 +49,7 @@ interface CombatPreparationEntry {
   name: string;
   memberId?: string;
   monsterSlug?: string;
+  monsterId?: string;
   hp: number;
   ac: number;
   initiative: number;
@@ -64,10 +70,12 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [editingMonster, setEditingMonster] = useState<Monster | null>(null);
   const [addCount, setAddCount] = useState(1);
-
   const [prepEntries, setPrepEntries] = useState<CombatPreparationEntry[]>([]);
   const [encounterName, setEncounterName] = useState('');
   const [launching, setLaunching] = useState(false);
+  const [hpDelta, setHpDelta] = useState<Record<string, string>>({});
+
+  const isActive = !!encounter;
 
   const loadData = useCallback(async () => {
     try {
@@ -78,7 +86,6 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       ]);
       setEncounter(enc);
       setSavedMonsters(monsters);
-
       if (enc) {
         const parts = await monsterService.getEncounterParticipants(enc.id);
         setParticipants(parts);
@@ -91,13 +98,11 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   }, [campaignId]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
     if (!encounter && members.length > 0 && prepEntries.length === 0) {
-      const playerEntries: CombatPreparationEntry[] = members.map((m) => ({
+      setPrepEntries(members.map((m) => ({
         id: `prep-player-${m.id}`,
         type: 'player' as const,
         name: m.player_name || m.email || 'Joueur',
@@ -105,24 +110,38 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         hp: 0,
         ac: 10,
         initiative: 0,
-      }));
-      setPrepEntries(playerEntries);
+      })));
     }
   }, [encounter, members]);
 
+  const viewMonsterBySlug = (slug?: string) => {
+    if (!slug) return;
+    const monster = savedMonsters.find((m) => m.slug === slug);
+    if (monster) {
+      setSelectedMonster(monster);
+      setPanelView('detail');
+    }
+  };
+
+  const viewMonsterById = (id?: string) => {
+    if (!id) return;
+    const monster = savedMonsters.find((m) => m.id === id);
+    if (monster) {
+      setSelectedMonster(monster);
+      setPanelView('detail');
+    }
+  };
+
   const handleAddMonstersFromSearch = async (entries: SelectedMonsterEntry[]) => {
     const newEntries: CombatPreparationEntry[] = [];
-
     for (const entry of entries) {
       try {
         const detail = await monsterService.fetchMonsterDetail(entry.monster.slug);
-
         let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
         if (!existing) {
           existing = await monsterService.saveToCampaign(campaignId, detail);
           setSavedMonsters((prev) => [...prev, existing!]);
         }
-
         for (let i = 0; i < entry.quantity; i++) {
           prepIdCounter++;
           newEntries.push({
@@ -130,6 +149,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
             type: 'monster',
             name: entry.quantity > 1 ? `${detail.name} ${i + 1}` : detail.name,
             monsterSlug: detail.slug,
+            monsterId: existing.id,
             hp: detail.hit_points,
             ac: detail.armor_class,
             initiative: 0,
@@ -140,11 +160,9 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         toast.error(`Impossible de charger ${entry.monster.name}`);
       }
     }
-
     setPrepEntries((prev) => [...prev, ...newEntries]);
-    const totalAdded = newEntries.length;
-    if (totalAdded > 0) {
-      toast.success(`${totalAdded} monstre${totalAdded > 1 ? 's' : ''} ajoute${totalAdded > 1 ? 's' : ''}`);
+    if (newEntries.length > 0) {
+      toast.success(`${newEntries.length} monstre${newEntries.length > 1 ? 's' : ''} ajoute${newEntries.length > 1 ? 's' : ''}`);
     }
   };
 
@@ -157,6 +175,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         type: 'monster',
         name: count > 1 ? `${monster.name} ${i + 1}` : monster.name,
         monsterSlug: monster.slug,
+        monsterId: monster.id,
         hp: monster.hit_points,
         ac: monster.armor_class,
         initiative: 0,
@@ -171,18 +190,11 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
   };
 
   const handleUpdatePrepInitiative = (id: string, value: number) => {
-    setPrepEntries((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, initiative: value } : e))
-    );
+    setPrepEntries((prev) => prev.map((e) => (e.id === id ? { ...e, initiative: value } : e)));
   };
 
   const handleRollAllInitiative = () => {
-    setPrepEntries((prev) =>
-      prev.map((e) => ({
-        ...e,
-        initiative: Math.floor(Math.random() * 20) + 1,
-      }))
-    );
+    setPrepEntries((prev) => prev.map((e) => ({ ...e, initiative: Math.floor(Math.random() * 20) + 1 })));
   };
 
   const handleLaunchCombat = async () => {
@@ -190,37 +202,26 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       toast.error('Ajoutez des participants avant de lancer le combat');
       return;
     }
-
     try {
       setLaunching(true);
       const name = encounterName.trim() || 'Combat';
       const enc = await monsterService.createEncounter(campaignId, name);
-
       const sorted = [...prepEntries].sort((a, b) => b.initiative - a.initiative);
-
-      const participantData = sorted.map((entry, i) => {
-        const isMonster = entry.type === 'monster';
-        const monster = isMonster
-          ? savedMonsters.find((m) => m.slug === entry.monsterSlug)
-          : null;
-
-        return {
-          encounter_id: enc.id,
-          participant_type: entry.type as 'player' | 'monster',
-          monster_id: monster?.id || undefined,
-          player_member_id: entry.memberId || undefined,
-          display_name: entry.name,
-          initiative_roll: entry.initiative,
-          current_hp: entry.hp,
-          max_hp: entry.hp,
-          armor_class: entry.ac,
-          conditions: [] as string[],
-          sort_order: i,
-          is_active: true,
-          notes: '',
-        };
-      });
-
+      const participantData = sorted.map((entry, i) => ({
+        encounter_id: enc.id,
+        participant_type: entry.type as 'player' | 'monster',
+        monster_id: entry.monsterId || undefined,
+        player_member_id: entry.memberId || undefined,
+        display_name: entry.name,
+        initiative_roll: entry.initiative,
+        current_hp: entry.hp,
+        max_hp: entry.hp,
+        armor_class: entry.ac,
+        conditions: [] as string[],
+        sort_order: i,
+        is_active: true,
+        notes: '',
+      }));
       const added = await monsterService.addParticipants(participantData);
       setEncounter(enc);
       setParticipants(added);
@@ -241,7 +242,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       await monsterService.endEncounter(encounter.id);
       setEncounter(null);
       setParticipants([]);
-      const playerEntries: CombatPreparationEntry[] = members.map((m) => ({
+      setPrepEntries(members.map((m) => ({
         id: `prep-player-${m.id}`,
         type: 'player' as const,
         name: m.player_name || m.email || 'Joueur',
@@ -249,8 +250,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         hp: 0,
         ac: 10,
         initiative: 0,
-      }));
-      setPrepEntries(playerEntries);
+      })));
       toast.success('Combat termine');
     } catch (err) {
       console.error(err);
@@ -323,10 +323,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   };
 
-  const handleUpdateParticipant = async (
-    id: string,
-    updates: Partial<EncounterParticipant>
-  ) => {
+  const handleUpdateParticipant = async (id: string, updates: Partial<EncounterParticipant>) => {
     try {
       const updated = await monsterService.updateParticipant(id, updates);
       setParticipants((prev) => prev.map((p) => (p.id === id ? updated : p)));
@@ -341,14 +338,6 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       setParticipants((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const handleViewMonster = (monsterId: string) => {
-    const monster = savedMonsters.find((m) => m.id === monsterId);
-    if (monster) {
-      setSelectedMonster(monster);
-      setPanelView('detail');
     }
   };
 
@@ -372,18 +361,16 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       let saved = monster;
       if (!monster.id) {
         saved = await monsterService.saveToCampaign(campaignId, monster);
-        const monsters = await monsterService.getCampaignMonsters(campaignId);
-        setSavedMonsters(monsters);
+        setSavedMonsters(await monsterService.getCampaignMonsters(campaignId));
       }
       const newParticipants = [];
       for (let i = 0; i < count; i++) {
-        const label = count > 1 ? `${monster.name} ${i + 1}` : monster.name;
         newParticipants.push({
           encounter_id: encounter.id,
           participant_type: 'monster' as const,
           monster_id: saved.id!,
           player_member_id: undefined,
-          display_name: label,
+          display_name: count > 1 ? `${monster.name} ${i + 1}` : monster.name,
           initiative_roll: 0,
           current_hp: monster.hit_points,
           max_hp: monster.hit_points,
@@ -438,6 +425,24 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   };
 
+  const applyHp = (p: EncounterParticipant, mode: 'damage' | 'heal') => {
+    const val = parseInt(hpDelta[p.id] || '0', 10);
+    if (!val || val <= 0) return;
+    const newHp = mode === 'damage'
+      ? Math.max(0, p.current_hp - val)
+      : Math.min(p.max_hp, p.current_hp + val);
+    handleUpdateParticipant(p.id, { current_hp: newHp });
+    setHpDelta((prev) => ({ ...prev, [p.id]: '' }));
+  };
+
+  const toggleCondition = (p: EncounterParticipant, condition: string) => {
+    const current = p.conditions || [];
+    const next = current.includes(condition)
+      ? current.filter((c) => c !== condition)
+      : [...current, condition];
+    handleUpdateParticipant(p.id, { conditions: next });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 text-gray-400">
@@ -447,43 +452,12 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     );
   }
 
-  if (encounter) {
-    return (
-      <ActiveCombatView
-        encounter={encounter}
-        participants={participants}
-        savedMonsters={savedMonsters}
-        panelView={panelView}
-        setPanelView={setPanelView}
-        selectedMonster={selectedMonster}
-        setSelectedMonster={setSelectedMonster}
-        loadingDetail={loadingDetail}
-        addCount={addCount}
-        setAddCount={setAddCount}
-        showCustomModal={showCustomModal}
-        setShowCustomModal={setShowCustomModal}
-        editingMonster={editingMonster}
-        setEditingMonster={setEditingMonster}
-        onNextTurn={handleNextTurn}
-        onEndCombat={handleEndCombat}
-        onUpdateParticipant={handleUpdateParticipant}
-        onRemoveParticipant={handleRemoveParticipant}
-        onViewMonster={handleViewMonster}
-        onSortByInitiative={handleSortByInitiative}
-        onAddPlayersToEncounter={handleAddPlayersToEncounter}
-        onSelectMonsterFromSearch={handleSelectMonsterFromSearch}
-        onSaveMonster={handleSaveMonster}
-        onDeleteMonster={handleDeleteMonster}
-        onAddMonsterToEncounter={handleAddMonsterToEncounter}
-      />
-    );
-  }
-
-  const playerEntries = prepEntries.filter((e) => e.type === 'player');
-  const monsterEntries = prepEntries.filter((e) => e.type === 'monster');
+  const playerPrep = prepEntries.filter((e) => e.type === 'player');
+  const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* LEFT: Search / Bestiary */}
       <div className="space-y-4">
         <div className="flex gap-2 border-b border-gray-800 pb-2">
           <button
@@ -516,8 +490,8 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
 
         {panelView === 'search' && (
           <MonsterSearch
-            selectionMode
-            onAddToCombat={handleAddMonstersFromSearch}
+            selectionMode={!isActive}
+            onAddToCombat={!isActive ? handleAddMonstersFromSearch : undefined}
             onSelect={handleSelectMonsterFromSearch}
           />
         )}
@@ -546,15 +520,21 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                       <Save size={14} /> Sauvegarder
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      handleAddSavedMonsterToPrep(selectedMonster, 1);
-                      setPanelView('search');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
-                  >
-                    <Swords size={14} /> Ajouter au combat
-                  </button>
+                  {isActive ? (
+                    <button
+                      onClick={() => handleAddMonsterToEncounter(selectedMonster, addCount)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <Swords size={14} /> Ajouter au combat ({addCount})
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { handleAddSavedMonsterToPrep(selectedMonster, 1); setPanelView('search'); }}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <Swords size={14} /> Ajouter au combat
+                    </button>
+                  )}
                 </div>
               </div>
             ) : null}
@@ -577,16 +557,12 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
                     onClick={() => { setSelectedMonster(m); setPanelView('detail'); }}
                     className="text-left flex-1 min-w-0"
                   >
-                    <div className="text-sm font-medium text-gray-200 group-hover:text-amber-200 truncate">
-                      {m.name}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      FP {m.challenge_rating} | CA {m.armor_class} | PV {m.hit_points}
-                    </div>
+                    <div className="text-sm font-medium text-gray-200 group-hover:text-amber-200 truncate">{m.name}</div>
+                    <div className="text-xs text-gray-500">FP {m.challenge_rating} | CA {m.armor_class} | PV {m.hit_points}</div>
                   </button>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => handleAddSavedMonsterToPrep(m, 1)}
+                      onClick={() => isActive ? handleAddMonsterToEncounter(m, addCount) : handleAddSavedMonsterToPrep(m, 1)}
                       className="px-2 py-1 text-xs bg-red-900/30 text-red-300 rounded hover:bg-red-900/50 transition-colors"
                     >
                       + Combat
@@ -621,110 +597,239 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         )}
       </div>
 
+      {/* RIGHT: Unified combat panel */}
       <div className="space-y-4">
         <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
+          {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-red-900/30 rounded-lg flex items-center justify-center">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                isActive ? 'bg-red-600/40' : 'bg-red-900/30'
+              }`}>
                 <Swords size={16} className="text-red-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm">Preparation du combat</h3>
-                <p className="text-[11px] text-gray-500">{prepEntries.length} participant{prepEntries.length > 1 ? 's' : ''}</p>
+                <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                  {isActive ? encounter.name : 'Preparation du combat'}
+                  {isActive && (
+                    <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded">
+                      Round {encounter.round_number}
+                    </span>
+                  )}
+                </h3>
+                <p className="text-[11px] text-gray-500">
+                  {isActive
+                    ? `${participants.length} participant${participants.length > 1 ? 's' : ''}`
+                    : `${prepEntries.length} participant${prepEntries.length > 1 ? 's' : ''}`
+                  }
+                </p>
               </div>
             </div>
-            <button
-              onClick={handleRollAllInitiative}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
-              title="Lancer l'initiative pour tous"
-            >
-              <Dices size={12} /> Initiatives
-            </button>
-          </div>
-
-          <div className="px-4 py-2">
-            <input
-              className="w-full px-3 py-2 bg-black/30 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none"
-              placeholder="Nom du combat (optionnel)"
-              value={encounterName}
-              onChange={(e) => setEncounterName(e.target.value)}
-            />
-          </div>
-
-          {playerEntries.length > 0 && (
-            <div className="px-4 py-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={12} className="text-sky-400" />
-                <span className="text-xs font-semibold text-sky-300 uppercase tracking-wider">Joueurs</span>
-              </div>
-              <div className="space-y-1">
-                {playerEntries.map((entry) => (
-                  <PrepEntryRow
-                    key={entry.id}
-                    entry={entry}
-                    onUpdateInitiative={handleUpdatePrepInitiative}
-                    onRemove={handleRemovePrepEntry}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {monsterEntries.length > 0 && (
-            <div className="px-4 py-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Skull size={12} className="text-red-400" />
-                <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">Monstres</span>
-              </div>
-              <div className="space-y-1">
-                {monsterEntries.map((entry) => (
-                  <PrepEntryRow
-                    key={entry.id}
-                    entry={entry}
-                    onUpdateInitiative={handleUpdatePrepInitiative}
-                    onRemove={handleRemovePrepEntry}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {prepEntries.length === 0 && (
-            <div className="px-4 py-8 text-center text-gray-500 text-sm">
-              Ajoutez des monstres depuis la recherche
-            </div>
-          )}
-
-          <div className="px-4 py-3 border-t border-gray-800">
-            <button
-              onClick={handleLaunchCombat}
-              disabled={prepEntries.length === 0 || launching}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold rounded-lg transition-colors text-sm"
-            >
-              {launching ? (
-                <Loader2 size={16} className="animate-spin" />
+            <div className="flex gap-2">
+              {isActive ? (
+                <>
+                  <button
+                    onClick={handleNextTurn}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                  >
+                    <SkipForward size={12} /> Tour suivant
+                  </button>
+                  <button
+                    onClick={handleEndCombat}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                  >
+                    <Square size={12} /> Fin
+                  </button>
+                </>
               ) : (
-                <Swords size={16} />
+                <button
+                  onClick={handleRollAllInitiative}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
+                >
+                  <Dices size={12} /> Initiatives
+                </button>
               )}
-              Lancer le combat
-            </button>
+            </div>
           </div>
+
+          {/* Encounter name (prep only) */}
+          {!isActive && (
+            <div className="px-4 py-2">
+              <input
+                className="w-full px-3 py-2 bg-black/30 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none"
+                placeholder="Nom du combat (optionnel)"
+                value={encounterName}
+                onChange={(e) => setEncounterName(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Active combat: add controls */}
+          {isActive && (
+            <div className="px-4 py-2 border-b border-gray-800 space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddPlayersToEncounter}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-sky-900/30 hover:bg-sky-900/50 text-sky-300 text-xs font-medium rounded-lg border border-sky-800/40 transition-colors"
+                >
+                  <Users size={12} /> Ajouter joueurs
+                </button>
+                <button
+                  onClick={handleSortByInitiative}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
+                >
+                  Trier par initiative
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-500 shrink-0">Nb:</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  className="w-14 px-2 py-1.5 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+                  value={addCount}
+                  onChange={(e) => setAddCount(Math.max(1, parseInt(e.target.value) || 1))}
+                />
+                <div className="flex gap-1 flex-1 overflow-x-auto">
+                  {savedMonsters.slice(0, 5).map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => handleAddMonsterToEncounter(m, addCount)}
+                      className="shrink-0 px-2.5 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs rounded-lg border border-red-800/40 transition-colors truncate max-w-[110px]"
+                      title={`Ajouter ${addCount}x ${m.name}`}
+                    >
+                      + {m.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Participants list */}
+          <div className="max-h-[500px] overflow-y-auto">
+            {isActive ? (
+              <ActiveParticipantsList
+                encounter={encounter}
+                participants={participants}
+                hpDelta={hpDelta}
+                setHpDelta={setHpDelta}
+                onApplyHp={applyHp}
+                onToggleCondition={toggleCondition}
+                onRemove={handleRemoveParticipant}
+                onViewMonster={viewMonsterById}
+              />
+            ) : (
+              <PrepParticipantsList
+                playerEntries={playerPrep}
+                monsterEntries={monsterPrep}
+                onUpdateInitiative={handleUpdatePrepInitiative}
+                onRemove={handleRemovePrepEntry}
+                onClickMonster={viewMonsterBySlug}
+              />
+            )}
+          </div>
+
+          {/* Footer: Launch / empty state */}
+          {!isActive && (
+            <div className="px-4 py-3 border-t border-gray-800">
+              <button
+                onClick={handleLaunchCombat}
+                disabled={prepEntries.length === 0 || launching}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold rounded-lg transition-colors text-sm"
+              >
+                {launching ? <Loader2 size={16} className="animate-spin" /> : <Swords size={16} />}
+                Lancer le combat
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function PrepEntryRow({
+/* ── Prep mode participant list ── */
+
+function PrepParticipantsList({
+  playerEntries,
+  monsterEntries,
+  onUpdateInitiative,
+  onRemove,
+  onClickMonster,
+}: {
+  playerEntries: CombatPreparationEntry[];
+  monsterEntries: CombatPreparationEntry[];
+  onUpdateInitiative: (id: string, value: number) => void;
+  onRemove: (id: string) => void;
+  onClickMonster: (slug?: string) => void;
+}) {
+  if (playerEntries.length === 0 && monsterEntries.length === 0) {
+    return (
+      <div className="px-4 py-8 text-center text-gray-500 text-sm">
+        Ajoutez des monstres depuis la recherche
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {playerEntries.length > 0 && (
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={12} className="text-sky-400" />
+            <span className="text-xs font-semibold text-sky-300 uppercase tracking-wider">Joueurs</span>
+          </div>
+          <div className="space-y-1">
+            {playerEntries.map((entry) => (
+              <PrepRow
+                key={entry.id}
+                entry={entry}
+                onUpdateInitiative={onUpdateInitiative}
+                onRemove={onRemove}
+                onClick={undefined}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {monsterEntries.length > 0 && (
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Skull size={12} className="text-red-400" />
+            <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">Monstres</span>
+          </div>
+          <div className="space-y-1">
+            {monsterEntries.map((entry) => (
+              <PrepRow
+                key={entry.id}
+                entry={entry}
+                onUpdateInitiative={onUpdateInitiative}
+                onRemove={onRemove}
+                onClick={() => onClickMonster(entry.monsterSlug)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PrepRow({
   entry,
   onUpdateInitiative,
   onRemove,
+  onClick,
 }: {
   entry: CombatPreparationEntry;
   onUpdateInitiative: (id: string, value: number) => void;
   onRemove: (id: string) => void;
+  onClick: (() => void) | undefined;
 }) {
   const isPlayer = entry.type === 'player';
+  const clickable = !!onClick;
 
   return (
     <div className={`flex items-center gap-2 px-2.5 py-2 rounded-lg transition-colors ${
@@ -733,32 +838,39 @@ function PrepEntryRow({
       <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
         isPlayer ? 'bg-sky-900/40' : 'bg-red-900/40'
       }`}>
-        {isPlayer ? (
-          <User size={11} className="text-sky-400" />
-        ) : (
-          <Skull size={11} className="text-red-400" />
-        )}
+        {isPlayer
+          ? <User size={11} className="text-sky-400" />
+          : <Skull size={11} className="text-red-400" />
+        }
       </div>
 
-      <div className="flex-1 min-w-0">
+      <button
+        onClick={onClick}
+        disabled={!clickable}
+        className={`flex-1 min-w-0 text-left ${clickable ? 'cursor-pointer' : ''}`}
+      >
         <span className={`text-sm font-medium truncate block ${
           isPlayer ? 'text-sky-200' : 'text-red-200'
-        }`}>
+        } ${clickable ? 'hover:underline' : ''}`}>
           {entry.name}
         </span>
-      </div>
+      </button>
 
       {!isPlayer && (
         <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
-          <span className="flex items-center gap-0.5">
-            <Shield size={10} className="text-gray-500" />
-            {entry.ac}
-          </span>
-          <span className="flex items-center gap-0.5">
-            <Heart size={10} className="text-red-500" />
-            {entry.hp}
-          </span>
+          <span className="flex items-center gap-0.5"><Shield size={10} className="text-gray-500" />{entry.ac}</span>
+          <span className="flex items-center gap-0.5"><Heart size={10} className="text-red-500" />{entry.hp}</span>
         </div>
+      )}
+
+      {clickable && (
+        <button
+          onClick={onClick}
+          className="p-1 text-gray-500 hover:text-amber-400 transition-colors shrink-0"
+          title="Voir les stats"
+        >
+          <Eye size={12} />
+        </button>
       )}
 
       <div className="flex items-center gap-1 shrink-0">
@@ -783,233 +895,186 @@ function PrepEntryRow({
   );
 }
 
-function ActiveCombatView({
+/* ── Active combat participant list ── */
+
+function HpBar({ current, max }: { current: number; max: number }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  let color = 'bg-emerald-500';
+  if (pct <= 25) color = 'bg-red-500';
+  else if (pct <= 50) color = 'bg-amber-500';
+  return (
+    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+      <div className={`h-full ${color} transition-all duration-300 rounded-full`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+function ConditionBadges({ conditions, onToggle }: { conditions: string[]; onToggle: (c: string) => void }) {
+  const [showPicker, setShowPicker] = useState(false);
+  return (
+    <div className="relative">
+      <div className="flex flex-wrap gap-1 items-center">
+        {conditions.map((c) => (
+          <span
+            key={c}
+            onClick={() => onToggle(c)}
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-900/40 text-orange-300 text-[10px] rounded cursor-pointer hover:bg-orange-900/60 transition-colors"
+          >
+            {c}<X size={8} />
+          </span>
+        ))}
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-amber-400 border border-dashed border-gray-700 rounded transition-colors"
+        >+</button>
+      </div>
+      {showPicker && (
+        <div className="absolute z-20 mt-1 left-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 w-48 max-h-48 overflow-y-auto">
+          {DND_CONDITIONS.map((c) => {
+            const active = conditions.includes(c);
+            return (
+              <button
+                key={c}
+                onClick={() => { onToggle(c); setShowPicker(false); }}
+                className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
+                  active ? 'bg-orange-900/40 text-orange-300' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                }`}
+              >
+                {active ? '- ' : '+ '}{c}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActiveParticipantsList({
   encounter,
   participants,
-  savedMonsters,
-  panelView,
-  setPanelView,
-  selectedMonster,
-  setSelectedMonster,
-  loadingDetail,
-  addCount,
-  setAddCount,
-  showCustomModal,
-  setShowCustomModal,
-  editingMonster,
-  setEditingMonster,
-  onNextTurn,
-  onEndCombat,
-  onUpdateParticipant,
-  onRemoveParticipant,
+  hpDelta,
+  setHpDelta,
+  onApplyHp,
+  onToggleCondition,
+  onRemove,
   onViewMonster,
-  onSortByInitiative,
-  onAddPlayersToEncounter,
-  onSelectMonsterFromSearch,
-  onSaveMonster,
-  onDeleteMonster,
-  onAddMonsterToEncounter,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
-  savedMonsters: Monster[];
-  panelView: PanelView;
-  setPanelView: (v: PanelView) => void;
-  selectedMonster: Monster | null;
-  setSelectedMonster: (m: Monster | null) => void;
-  loadingDetail: boolean;
-  addCount: number;
-  setAddCount: (n: number) => void;
-  showCustomModal: boolean;
-  setShowCustomModal: (v: boolean) => void;
-  editingMonster: Monster | null;
-  setEditingMonster: (m: Monster | null) => void;
-  onNextTurn: () => void;
-  onEndCombat: () => void;
-  onUpdateParticipant: (id: string, updates: Partial<EncounterParticipant>) => void;
-  onRemoveParticipant: (id: string) => void;
-  onViewMonster: (monsterId: string) => void;
-  onSortByInitiative: () => void;
-  onAddPlayersToEncounter: () => void;
-  onSelectMonsterFromSearch: (item: MonsterListItem) => void;
-  onSaveMonster: (monster: Monster) => void;
-  onDeleteMonster: (id: string) => void;
-  onAddMonsterToEncounter: (monster: Monster, count: number) => void;
+  hpDelta: Record<string, string>;
+  setHpDelta: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  onApplyHp: (p: EncounterParticipant, mode: 'damage' | 'heal') => void;
+  onToggleCondition: (p: EncounterParticipant, condition: string) => void;
+  onRemove: (id: string) => void;
+  onViewMonster: (monsterId?: string) => void;
 }) {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <div className="lg:col-span-2 space-y-4">
-        <InitiativeTracker
-          encounter={encounter}
-          participants={participants}
-          onNextTurn={onNextTurn}
-          onEndCombat={onEndCombat}
-          onUpdateParticipant={onUpdateParticipant}
-          onRemoveParticipant={onRemoveParticipant}
-          onViewMonster={onViewMonster}
-        />
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <button
-              onClick={onAddPlayersToEncounter}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-sky-900/30 hover:bg-sky-900/50 text-sky-300 text-xs font-medium rounded-lg border border-sky-800/40 transition-colors"
-            >
-              <Users size={12} /> Ajouter joueurs
-            </button>
-            <button
-              onClick={onSortByInitiative}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
-            >
-              Trier par initiative
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500 shrink-0">Nb:</label>
-            <input
-              type="number"
-              min={1}
-              max={20}
-              className="w-14 px-2 py-1.5 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
-              value={addCount}
-              onChange={(e) => setAddCount(Math.max(1, parseInt(e.target.value) || 1))}
-            />
-            <div className="flex gap-1 flex-1 overflow-x-auto">
-              {savedMonsters.slice(0, 6).map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => onAddMonsterToEncounter(m, addCount)}
-                  className="shrink-0 px-2.5 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs rounded-lg border border-red-800/40 transition-colors truncate max-w-[120px]"
-                  title={`Ajouter ${addCount}x ${m.name}`}
-                >
-                  + {m.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+  if (participants.length === 0) {
+    return (
+      <div className="px-4 py-8 text-center text-gray-500 text-sm">
+        Ajoutez des participants pour commencer le combat
       </div>
+    );
+  }
 
-      <div className="lg:col-span-3 space-y-3">
-        <div className="flex gap-2 border-b border-gray-800 pb-2">
-          <button
-            onClick={() => setPanelView('search')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              panelView === 'search'
-                ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
-                : 'text-gray-400 hover:text-gray-200'
+  return (
+    <div className="divide-y divide-gray-800/50">
+      {participants.map((p, idx) => {
+        const isCurrentTurn = idx === encounter.current_turn_index;
+        const isDead = p.current_hp <= 0 && p.max_hp > 0;
+        const isMonster = p.participant_type === 'monster';
+        const clickable = isMonster && !!p.monster_id;
+
+        return (
+          <div
+            key={p.id}
+            className={`px-3 py-2.5 transition-all ${
+              isCurrentTurn
+                ? 'bg-amber-900/20'
+                : isDead
+                ? 'bg-gray-900/50 opacity-60'
+                : 'hover:bg-gray-800/30'
             }`}
           >
-            <Search size={12} className="inline mr-1" /> Chercher
-          </button>
-          <button
-            onClick={() => setPanelView('saved')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              panelView === 'saved'
-                ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <Skull size={12} className="inline mr-1" /> Bestiaire ({savedMonsters.length})
-          </button>
-          <button
-            onClick={() => { setEditingMonster(null); setShowCustomModal(true); }}
-            className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
-          >
-            <Plus size={12} className="inline mr-1" /> Custom
-          </button>
-        </div>
-
-        {panelView === 'search' && (
-          <MonsterSearch onSelect={onSelectMonsterFromSearch} />
-        )}
-
-        {panelView === 'detail' && (
-          <div className="space-y-3">
-            <button
-              onClick={() => setPanelView('search')}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft size={12} /> Retour
-            </button>
-            {loadingDetail ? (
-              <div className="flex items-center justify-center py-12 text-gray-400">
-                <Loader2 size={20} className="animate-spin mr-2" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-black/40 text-xs font-bold text-gray-400 shrink-0">
+                {isCurrentTurn
+                  ? <ChevronRight size={14} className="text-amber-400" />
+                  : <span>{p.initiative_roll}</span>
+                }
               </div>
-            ) : selectedMonster ? (
-              <div className="space-y-3">
-                <MonsterStatBlock monster={selectedMonster} />
-                <div className="flex gap-2">
-                  {!selectedMonster.id && (
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => clickable && onViewMonster(p.monster_id)}
+                    disabled={!clickable}
+                    className={`text-sm font-medium truncate ${
+                      isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-300' : 'text-sky-300'
+                    } ${clickable ? 'hover:underline cursor-pointer' : ''}`}
+                  >
+                    {p.display_name}
+                  </button>
+                  {isDead && <Skull size={12} className="text-gray-500 shrink-0" />}
+                  {clickable && (
                     <button
-                      onClick={() => onSaveMonster(selectedMonster)}
-                      className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+                      onClick={() => onViewMonster(p.monster_id)}
+                      className="text-gray-500 hover:text-amber-400 transition-colors"
+                      title="Voir les stats"
                     >
-                      <Save size={14} /> Sauvegarder
+                      <Eye size={12} />
                     </button>
                   )}
-                  <button
-                    onClick={() => onAddMonsterToEncounter(selectedMonster, addCount)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
-                  >
-                    <Swords size={14} /> Ajouter au combat ({addCount})
-                  </button>
                 </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {panelView === 'saved' && (
-          <div className="space-y-1">
-            {savedMonsters.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">
-                Aucun monstre sauvegarde
-              </div>
-            ) : (
-              savedMonsters.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors group"
-                >
-                  <button
-                    onClick={() => { setSelectedMonster(m); setPanelView('detail'); }}
-                    className="text-left flex-1 min-w-0"
-                  >
-                    <div className="text-sm font-medium text-gray-200 group-hover:text-amber-200 truncate">
-                      {m.name}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      FP {m.challenge_rating} | CA {m.armor_class} | PV {m.hit_points}
-                    </div>
-                  </button>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => onAddMonsterToEncounter(m, addCount)}
-                      className="px-2 py-1 text-xs bg-red-900/30 text-red-300 rounded hover:bg-red-900/50 transition-colors"
-                    >
-                      + Combat
-                    </button>
-                    <button
-                      onClick={() => onDeleteMonster(m.id!)}
-                      className="p-1.5 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                <div className="flex items-center gap-3 mt-0.5">
+                  <div className="flex items-center gap-1 text-xs">
+                    <Heart size={10} className={isDead ? 'text-gray-600' : 'text-red-500'} />
+                    <span className={isDead ? 'text-gray-600' : 'text-gray-400'}>{p.current_hp}/{p.max_hp}</span>
                   </div>
+                  <div className="flex items-center gap-1 text-xs">
+                    <Shield size={10} className="text-gray-500" />
+                    <span className="text-gray-400">{p.armor_class}</span>
+                  </div>
+                  <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} /></div>
                 </div>
-              ))
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <input
+                  type="number"
+                  className="w-14 px-1.5 py-1 bg-black/40 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+                  placeholder="0"
+                  value={hpDelta[p.id] || ''}
+                  onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
+                />
+                <button onClick={() => onApplyHp(p, 'damage')} className="p-1 text-red-500 hover:bg-red-900/30 rounded transition-colors" title="Infliger degats">
+                  <Minus size={12} />
+                </button>
+                <button onClick={() => onApplyHp(p, 'heal')} className="p-1 text-emerald-500 hover:bg-emerald-900/30 rounded transition-colors" title="Soigner">
+                  <Plus size={12} />
+                </button>
+                <button onClick={() => onRemove(p.id)} className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors" title="Retirer">
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+
+            {(p.conditions?.length > 0 || isCurrentTurn) && (
+              <div className="mt-1.5 ml-10">
+                <ConditionBadges conditions={p.conditions || []} onToggle={(c) => onToggleCondition(p, c)} />
+              </div>
+            )}
+
+            {p.conditions?.includes('Concentration') && isCurrentTurn && (
+              <div className="mt-1 ml-10 flex items-center gap-1 text-[10px] text-amber-400">
+                <AlertTriangle size={10} />
+                Concentration active
+              </div>
             )}
           </div>
-        )}
-
-        {showCustomModal && (
-          <CustomMonsterModal
-            onClose={() => { setShowCustomModal(false); setEditingMonster(null); }}
-            onSave={onSaveMonster}
-            editMonster={editingMonster}
-          />
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 }
