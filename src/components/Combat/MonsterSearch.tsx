@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus, ChevronUp, Edit3, Trash2 } from 'lucide-react';
 import { MonsterListItem, Monster } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
-import { MonsterStatBlock } from './MonsterStatBlock';
+import { MonsterStatBlock, DiceRollData } from './MonsterStatBlock';
 import toast from 'react-hot-toast';
 
 interface SelectedMonsterEntry {
@@ -17,6 +17,7 @@ interface MonsterSearchProps {
   savedMonsters?: Monster[];
   onEditMonster?: (monster: Monster) => void;
   onDeleteMonster?: (id: string) => void;
+  onRollDice?: (data: DiceRollData) => void;
 }
 
 const CR_OPTIONS = [
@@ -40,6 +41,7 @@ export function MonsterSearch({
   savedMonsters = [],
   onEditMonster,
   onDeleteMonster,
+  onRollDice,
 }: MonsterSearchProps) {
   const [query, setQuery] = useState('');
   const [aideDDMonsters, setAideDDMonsters] = useState<MonsterListItem[]>([]);
@@ -431,7 +433,7 @@ export function MonsterSearch({
                           Chargement...
                         </div>
                       ) : expandedMonster ? (
-                        <MonsterStatBlock monster={expandedMonster} />
+                        <MonsterStatBlock monster={expandedMonster} onRollDice={onRollDice} />
                       ) : null}
                     </div>
                   )}

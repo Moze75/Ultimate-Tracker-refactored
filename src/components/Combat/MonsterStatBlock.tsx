@@ -1,17 +1,24 @@
 import { Monster } from '../../types/campaign';
 
+export interface DiceRollData {
+  type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+  attackName: string;
+  diceFormula: string;
+  modifier: number;
+}
+
 function mod(score: number): string {
   const m = Math.floor((score - 10) / 2);
   return m >= 0 ? `+${m}` : `${m}`;
 }
 
 const ABILITY_LABELS = [
-  { key: 'str' as const, label: 'FOR' },
-  { key: 'dex' as const, label: 'DEX' },
-  { key: 'con' as const, label: 'CON' },
-  { key: 'int' as const, label: 'INT' },
-  { key: 'wis' as const, label: 'SAG' },
-  { key: 'cha' as const, label: 'CHA' },
+  { key: 'str' as const, label: 'FOR', fullName: 'Force' },
+  { key: 'dex' as const, label: 'DEX', fullName: 'Dexterite' },
+  { key: 'con' as const, label: 'CON', fullName: 'Constitution' },
+  { key: 'int' as const, label: 'INT', fullName: 'Intelligence' },
+  { key: 'wis' as const, label: 'SAG', fullName: 'Sagesse' },
+  { key: 'cha' as const, label: 'CHA', fullName: 'Charisme' },
 ];
 
 function TaperRule() {
@@ -22,14 +29,154 @@ function TaperRule() {
   );
 }
 
-function EntryList({ entries }: { entries: Array<{ name: string; description: string }> }) {
+interface ClickableTextProps {
+  text: string;
+  onRollDice?: (data: DiceRollData) => void;
+  monsterName: string;
+  contextName?: string;
+}
+
+function ClickableText({ text, onRollDice, monsterName, contextName }: ClickableTextProps) {
+  if (!onRollDice) {
+    return <span dangerouslySetInnerHTML={{ __html: text }} />;
+  }
+
+  const diceRegex = /(\d+d\d+(?:\s*[+\-]\s*\d+)?)/gi;
+  const attackBonusRegex = /([+\-]\d+)\s*(?:pour toucher|au toucher|to hit)/gi;
+
+  let lastIndex = 0;
+  const parts: (string | JSX.Element)[] = [];
+  let keyCounter = 0;
+
+  const processedText = text.replace(attackBonusRegex, (match, bonus) => {
+    const modifier = parseInt(bonus);
+    return `<span class="dice-roll-trigger" data-formula="1d20" data-modifier="${modifier}" data-type="attack" data-name="Attaque">${match}</span>`;
+  });
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = processedText;
+
+  const walkTextNodes = (node: Node, parent: Element | null) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const nodeText = node.textContent || '';
+      let match;
+      let nodeLastIndex = 0;
+      const nodeParts: (string | JSX.Element)[] = [];
+
+      diceRegex.lastIndex = 0;
+      while ((match = diceRegex.exec(nodeText)) !== null) {
+        if (match.index > nodeLastIndex) {
+          nodeParts.push(nodeText.slice(nodeLastIndex, match.index));
+        }
+
+        const fullFormula = match[1].replace(/\s/g, '');
+        const formulaMatch = fullFormula.match(/^(\d+d\d+)([+\-]\d+)?$/i);
+
+        if (formulaMatch) {
+          const diceFormula = formulaMatch[1];
+          const modifier = formulaMatch[2] ? parseInt(formulaMatch[2]) : 0;
+
+          nodeParts.push(
+            <button
+              key={`dice-${keyCounter++}`}
+              onClick={() => onRollDice({
+                type: 'damage',
+                attackName: contextName ? `${monsterName} - ${contextName}` : `${monsterName} - Degats`,
+                diceFormula,
+                modifier,
+              })}
+              className="inline-flex items-center px-1 py-0.5 mx-0.5 rounded bg-red-900/30 hover:bg-red-900/50 text-red-800 font-bold cursor-pointer transition-colors border border-red-900/30 hover:border-red-700"
+              title={`Lancer ${fullFormula}`}
+            >
+              {fullFormula}
+            </button>
+          );
+        } else {
+          nodeParts.push(match[0]);
+        }
+
+        nodeLastIndex = match.index + match[0].length;
+      }
+
+      if (nodeLastIndex < nodeText.length) {
+        nodeParts.push(nodeText.slice(nodeLastIndex));
+      }
+
+      return nodeParts.length > 0 ? nodeParts : [nodeText];
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+
+      if (element.classList?.contains('dice-roll-trigger')) {
+        const formula = element.getAttribute('data-formula') || '1d20';
+        const modifier = parseInt(element.getAttribute('data-modifier') || '0');
+        const rollType = element.getAttribute('data-type') as DiceRollData['type'] || 'attack';
+        const rollName = element.getAttribute('data-name') || 'Attaque';
+
+        return [
+          <button
+            key={`attack-${keyCounter++}`}
+            onClick={() => onRollDice({
+              type: rollType,
+              attackName: `${monsterName} - ${rollName}`,
+              diceFormula: formula,
+              modifier,
+            })}
+            className="inline-flex items-center px-1 py-0.5 mx-0.5 rounded bg-amber-900/30 hover:bg-amber-900/50 text-amber-800 font-bold cursor-pointer transition-colors border border-amber-900/30 hover:border-amber-700"
+            title={`Lancer 1d20${modifier >= 0 ? '+' : ''}${modifier}`}
+          >
+            {element.textContent}
+          </button>
+        ];
+      }
+
+      const childParts: (string | JSX.Element)[] = [];
+      const tagName = element.tagName.toLowerCase();
+
+      element.childNodes.forEach(child => {
+        const result = walkTextNodes(child, element);
+        childParts.push(...result);
+      });
+
+      if (tagName === 'b' || tagName === 'strong') {
+        return [<strong key={`strong-${keyCounter++}`}>{childParts}</strong>];
+      } else if (tagName === 'i' || tagName === 'em') {
+        return [<em key={`em-${keyCounter++}`}>{childParts}</em>];
+      } else if (tagName === 'br') {
+        return [<br key={`br-${keyCounter++}`} />];
+      } else {
+        return childParts;
+      }
+    }
+    return [];
+  };
+
+  const result: (string | JSX.Element)[] = [];
+  tempDiv.childNodes.forEach(node => {
+    result.push(...walkTextNodes(node, null));
+  });
+
+  return <>{result}</>;
+}
+
+interface EntryListProps {
+  entries: Array<{ name: string; description: string }>;
+  onRollDice?: (data: DiceRollData) => void;
+  monsterName: string;
+}
+
+function EntryList({ entries, onRollDice, monsterName }: EntryListProps) {
   if (!entries || entries.length === 0) return null;
   return (
     <div className="space-y-1.5">
       {entries.map((entry, i) => (
         <p key={i} className="text-[13px] leading-[1.5] text-[#1a1a1a]">
           <span className="font-bold italic text-[#1a1a1a]">{entry.name}.</span>{' '}
-          <span dangerouslySetInnerHTML={{ __html: entry.description }} />
+          <ClickableText
+            text={entry.description}
+            onRollDice={onRollDice}
+            monsterName={monsterName}
+            contextName={entry.name}
+          />
         </p>
       ))}
     </div>
@@ -54,9 +201,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 interface MonsterStatBlockProps {
   monster: Monster;
   compact?: boolean;
+  onRollDice?: (data: DiceRollData) => void;
 }
 
-export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
+export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBlockProps) {
   const speedText = Object.entries(monster.speed || {})
     .map(([k, v]) => (k === 'marche' ? v : `${k} ${v}`))
     .join(', ');
@@ -64,6 +212,36 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
   const initMod = Math.floor((monster.abilities.dex - 10) / 2);
   const initText = initMod >= 0 ? `+${initMod}` : `${initMod}`;
   const initPassive = 10 + initMod;
+
+  const handleAbilityRoll = (label: string, fullName: string, modifier: number) => {
+    if (!onRollDice) return;
+    onRollDice({
+      type: 'ability',
+      attackName: `${monster.name} - ${fullName}`,
+      diceFormula: '1d20',
+      modifier,
+    });
+  };
+
+  const handleSaveRoll = (label: string, fullName: string, modifier: number) => {
+    if (!onRollDice) return;
+    onRollDice({
+      type: 'saving-throw',
+      attackName: `${monster.name} - JdS ${fullName}`,
+      diceFormula: '1d20',
+      modifier,
+    });
+  };
+
+  const handleInitiativeRoll = () => {
+    if (!onRollDice) return;
+    onRollDice({
+      type: 'ability',
+      attackName: `${monster.name} - Initiative`,
+      diceFormula: '1d20',
+      modifier: initMod,
+    });
+  };
 
   return (
     <div
@@ -95,13 +273,49 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
               <span className="font-bold">CA</span> {monster.armor_class}
               {monster.armor_desc ? ` (${monster.armor_desc})` : ''}
             </div>
-            <div>
-              <span className="font-bold">Initiative</span> {initText} ({initPassive})
+            <div className="flex items-center gap-1">
+              <span className="font-bold">Initiative</span>{' '}
+              {onRollDice ? (
+                <button
+                  onClick={handleInitiativeRoll}
+                  className="px-1.5 py-0.5 rounded bg-amber-900/30 hover:bg-amber-900/50 text-amber-800 font-bold cursor-pointer transition-colors border border-amber-900/30 hover:border-amber-700"
+                  title="Lancer l'initiative"
+                >
+                  {initText}
+                </button>
+              ) : (
+                <span>{initText}</span>
+              )}{' '}
+              ({initPassive})
             </div>
           </div>
           <div>
             <span className="font-bold">PV</span> {monster.hit_points}
-            {monster.hit_points_formula ? ` (${monster.hit_points_formula})` : ''}
+            {monster.hit_points_formula && onRollDice ? (
+              <>
+                {' ('}
+                <button
+                  onClick={() => {
+                    const match = monster.hit_points_formula?.match(/^(\d+d\d+)([+\-]\d+)?$/);
+                    if (match) {
+                      onRollDice({
+                        type: 'damage',
+                        attackName: `${monster.name} - Points de vie`,
+                        diceFormula: match[1],
+                        modifier: match[2] ? parseInt(match[2]) : 0,
+                      });
+                    }
+                  }}
+                  className="px-1 py-0.5 rounded bg-red-900/30 hover:bg-red-900/50 text-red-800 font-bold cursor-pointer transition-colors border border-red-900/30 hover:border-red-700"
+                  title={`Lancer ${monster.hit_points_formula}`}
+                >
+                  {monster.hit_points_formula}
+                </button>
+                {')'}
+              </>
+            ) : monster.hit_points_formula ? (
+              ` (${monster.hit_points_formula})`
+            ) : null}
           </div>
           <div>
             <span className="font-bold">Vitesse</span> {speedText || '—'}
@@ -111,7 +325,7 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
         <TaperRule />
 
         <div className="grid grid-cols-6 gap-0.5 text-center text-[11px] mb-0.5">
-          {ABILITY_LABELS.map(({ key, label }) => {
+          {ABILITY_LABELS.map(({ key, label, fullName }) => {
             const score = monster.abilities[key];
             const modValue = Math.floor((score - 10) / 2);
             const modText = modValue >= 0 ? `+${modValue}` : `${modValue}`;
@@ -126,22 +340,38 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
                   <div className="font-bold text-[#58180d] text-[15px]">
                     {score}
                   </div>
-                  <div className="flex items-center justify-center gap-3 mt-0.5 px-1">
+                  <div className="flex items-center justify-center gap-2 mt-0.5 px-0.5">
                     <div>
-                      <div className="text-[9px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
+                      <div className="text-[8px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
                         Mod
                       </div>
-                      <div className="font-semibold text-[#58180d]">
-                        {modText}
-                      </div>
+                      {onRollDice ? (
+                        <button
+                          onClick={() => handleAbilityRoll(label, fullName, modValue)}
+                          className="font-semibold text-[#58180d] hover:text-amber-700 hover:bg-amber-200/50 px-1 rounded cursor-pointer transition-colors"
+                          title={`Test ${fullName}`}
+                        >
+                          {modText}
+                        </button>
+                      ) : (
+                        <div className="font-semibold text-[#58180d]">{modText}</div>
+                      )}
                     </div>
                     <div>
-                      <div className="text-[9px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
+                      <div className="text-[8px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
                         JS
                       </div>
-                      <div className="font-semibold text-[#58180d]">
-                        {saveText}
-                      </div>
+                      {onRollDice ? (
+                        <button
+                          onClick={() => handleSaveRoll(label, fullName, modValue)}
+                          className="font-semibold text-[#58180d] hover:text-red-700 hover:bg-red-200/50 px-1 rounded cursor-pointer transition-colors"
+                          title={`JdS ${fullName}`}
+                        >
+                          {saveText}
+                        </button>
+                      ) : (
+                        <div className="font-semibold text-[#58180d]">{saveText}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -189,28 +419,28 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
         {!compact && monster.traits && monster.traits.length > 0 && (
           <>
             <SectionTitle>Traits</SectionTitle>
-            <EntryList entries={monster.traits} />
+            <EntryList entries={monster.traits} onRollDice={onRollDice} monsterName={monster.name} />
           </>
         )}
 
         {monster.actions && monster.actions.length > 0 && (
           <>
             <SectionTitle>Actions</SectionTitle>
-            <EntryList entries={monster.actions} />
+            <EntryList entries={monster.actions} onRollDice={onRollDice} monsterName={monster.name} />
           </>
         )}
 
         {!compact && monster.bonus_actions && monster.bonus_actions.length > 0 && (
           <>
             <SectionTitle>Actions bonus</SectionTitle>
-            <EntryList entries={monster.bonus_actions} />
+            <EntryList entries={monster.bonus_actions} onRollDice={onRollDice} monsterName={monster.name} />
           </>
         )}
 
         {!compact && monster.reactions && monster.reactions.length > 0 && (
           <>
             <SectionTitle>Reactions</SectionTitle>
-            <EntryList entries={monster.reactions} />
+            <EntryList entries={monster.reactions} onRollDice={onRollDice} monsterName={monster.name} />
           </>
         )}
 
@@ -220,7 +450,7 @@ export function MonsterStatBlock({ monster, compact }: MonsterStatBlockProps) {
             {monster.legendary_description && (
               <p className="text-[12px] italic text-[#58180d] mb-1.5">{monster.legendary_description}</p>
             )}
-            <EntryList entries={monster.legendary_actions} />
+            <EntryList entries={monster.legendary_actions} onRollDice={onRollDice} monsterName={monster.name} />
           </>
         )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Users, Package, Send, Crown, Image, FileText, Swords } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation, CampaignGift, CampaignGiftClaim } from '../../types/campaign';
@@ -11,6 +11,9 @@ import { MembersTab } from './tabs/MembersTab';
 import { InventoryTab } from './tabs/InventoryTab';
 import { GiftsTab } from './tabs/GiftsTab';
 import { CombatTab } from './tabs/CombatTab';
+import { DiceBox3D } from '../DiceBox3D';
+import { DiceHistoryProvider } from '../../hooks/useDiceHistoryContext';
+import { DiceRollData } from '../Combat/MonsterStatBlock';
 import toast from 'react-hot-toast';
 
 const BG_URL = '/background/ddbground.png';
@@ -29,6 +32,11 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
   const [gifts, setGifts] = useState<(CampaignGift & { claims?: CampaignGiftClaim[] })[]>([]);
   const [giftsLoading, setGiftsLoading] = useState(false);
   const [draggableWindows, setDraggableWindows] = useState<DraggableWindowData[]>([]);
+  const [diceRollData, setDiceRollData] = useState<DiceRollData | null>(null);
+
+  const handleRollDice = useCallback((data: DiceRollData) => {
+    setDiceRollData(data);
+  }, []);
 
   useEffect(() => {
     loadMembers();
@@ -174,11 +182,19 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
         )}
         {activeTab === 'notes' && <CampaignNotesTab campaignId={campaign.id} />}
         {activeTab === 'combat' && (
-          <CombatTab campaignId={campaign.id} members={members} onReload={loadMembers} />
+          <CombatTab campaignId={campaign.id} members={members} onReload={loadMembers} onRollDice={handleRollDice} />
         )}
       </div>
 
       <DraggableVisualWindows windows={draggableWindows} onClose={closeVisualWindow} onUpdatePosition={updateWindowPosition} />
+
+      <DiceHistoryProvider>
+        <DiceBox3D
+          isOpen={!!diceRollData}
+          onClose={() => setDiceRollData(null)}
+          rollData={diceRollData}
+        />
+      </DiceHistoryProvider>
     </div>
   );
 }

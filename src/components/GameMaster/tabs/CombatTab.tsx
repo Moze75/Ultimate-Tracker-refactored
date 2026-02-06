@@ -34,7 +34,7 @@ import {
 import { monsterService } from '../../../services/monsterService';
 import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
-import { MonsterStatBlock } from '../../Combat/MonsterStatBlock';
+import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,7 @@ interface CombatTabProps {
   campaignId: string;
   members: CampaignMember[];
   onReload: () => void;
+  onRollDice?: (data: DiceRollData) => void;
 }
 
 interface CombatPreparationEntry {
@@ -62,7 +63,7 @@ type PanelView = 'search' | 'detail' | 'saved';
 
 let prepIdCounter = 0;
 
-export function CombatTab({ campaignId, members }: CombatTabProps) {
+export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
   const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
   const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
@@ -543,6 +544,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
             savedMonsters={savedMonsters}
             onEditMonster={(m) => { setEditingMonster(m); setShowCustomModal(true); }}
             onDeleteMonster={handleDeleteMonster}
+            onRollDice={onRollDice}
           />
         )}
 
