@@ -1,11 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Loader2, X, Filter, ChevronDown } from 'lucide-react';
+import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus } from 'lucide-react';
 import { MonsterListItem } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
 import toast from 'react-hot-toast';
 
+interface SelectedMonsterEntry {
+  monster: MonsterListItem;
+  quantity: number;
+}
+
 interface MonsterSearchProps {
-  onSelect: (item: MonsterListItem) => void;
+  onSelect?: (item: MonsterListItem) => void;
+  onAddToCombat?: (entries: SelectedMonsterEntry[]) => void;
+  selectionMode?: boolean;
 }
 
 const CR_OPTIONS = [
@@ -20,13 +27,14 @@ const TYPE_OPTIONS = [
   'Plante', 'Vase',
 ];
 
-export function MonsterSearch({ onSelect }: MonsterSearchProps) {
+export function MonsterSearch({ onSelect, onAddToCombat, selectionMode = false }: MonsterSearchProps) {
   const [query, setQuery] = useState('');
   const [allMonsters, setAllMonsters] = useState<MonsterListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [crFilter, setCrFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [selected, setSelected] = useState<Map<string, number>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -73,6 +81,39 @@ export function MonsterSearch({ onSelect }: MonsterSearchProps) {
   };
 
   const hasActiveFilters = crFilter || typeFilter || query;
+
+  const toggleSelect = (slug: string) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      if (next.has(slug)) {
+        next.delete(slug);
+      } else {
+        next.set(slug, 1);
+      }
+      return next;
+    });
+  };
+
+  const updateQuantity = (slug: string, qty: number) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      next.set(slug, Math.max(1, Math.min(20, qty)));
+      return next;
+    });
+  };
+
+  const handleAddToCombat = () => {
+    if (!onAddToCombat || selected.size === 0) return;
+    const entries: SelectedMonsterEntry[] = [];
+    selected.forEach((quantity, slug) => {
+      const monster = allMonsters.find((m) => m.slug === slug);
+      if (monster) entries.push({ monster, quantity });
+    });
+    onAddToCombat(entries);
+    setSelected(new Map());
+  };
+
+  const totalSelected = Array.from(selected.values()).reduce((a, b) => a + b, 0);
 
   return (
     <div className="space-y-3">
@@ -147,6 +188,26 @@ export function MonsterSearch({ onSelect }: MonsterSearchProps) {
         </div>
       )}
 
+      {selectionMode && selected.size > 0 && (
+        <div className="flex items-center gap-3 px-3 py-2.5 bg-red-900/20 border border-red-800/40 rounded-lg">
+          <span className="text-sm text-red-300 font-medium flex-1">
+            {selected.size} monstre{selected.size > 1 ? 's' : ''} ({totalSelected} au total)
+          </span>
+          <button
+            onClick={() => setSelected(new Map())}
+            className="text-xs text-gray-400 hover:text-white transition-colors"
+          >
+            Tout deselectionner
+          </button>
+          <button
+            onClick={handleAddToCombat}
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Plus size={14} /> Ajouter au combat
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-8 text-gray-400">
           <Loader2 size={20} className="animate-spin mr-2" />
@@ -157,32 +218,82 @@ export function MonsterSearch({ onSelect }: MonsterSearchProps) {
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-gray-500 text-sm">
               {allMonsters.length === 0
-                ? 'Aucun monstre chargé'
-                : 'Aucun résultat'}
+                ? 'Aucun monstre charge'
+                : 'Aucun resultat'}
             </div>
           ) : (
-            filtered.map((m) => (
-              <button
-                key={m.slug}
-                onClick={() => onSelect(m)}
-                className="w-full text-left px-4 py-3 hover:bg-amber-900/20 transition-colors group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-200 group-hover:text-amber-200 transition-colors">
-                    {m.name}
-                  </span>
-                  <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded-full">
-                    FP {m.cr}
-                  </span>
+            filtered.map((m) => {
+              const isSelected = selected.has(m.slug);
+              const qty = selected.get(m.slug) || 1;
+
+              return (
+                <div
+                  key={m.slug}
+                  className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
+                    isSelected
+                      ? 'bg-red-900/15 hover:bg-red-900/25'
+                      : 'hover:bg-amber-900/15'
+                  }`}
+                >
+                  {selectionMode && (
+                    <button
+                      onClick={() => toggleSelect(m.slug)}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+                        isSelected
+                          ? 'bg-red-600 border-red-500 text-white'
+                          : 'border-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      {isSelected && <Check size={12} />}
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (selectionMode) {
+                        toggleSelect(m.slug);
+                      } else if (onSelect) {
+                        onSelect(m);
+                      }
+                    }}
+                    className="flex-1 text-left min-w-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-200 truncate">
+                        {m.name}
+                      </span>
+                      <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                        FP {m.cr}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 mt-0.5 text-xs text-gray-500">
+                      <span>{m.type}</span>
+                      <span>{m.size}</span>
+                      {m.ac && <span>CA {m.ac}</span>}
+                      {m.hp && <span>PV {m.hp}</span>}
+                    </div>
+                  </button>
+
+                  {selectionMode && isSelected && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => updateQuantity(m.slug, qty - 1)}
+                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+                      >
+                        <Minus size={10} />
+                      </button>
+                      <span className="w-6 text-center text-sm font-bold text-red-300">{qty}</span>
+                      <button
+                        onClick={() => updateQuantity(m.slug, qty + 1)}
+                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-3 mt-0.5 text-xs text-gray-500">
-                  <span>{m.type}</span>
-                  <span>{m.size}</span>
-                  {m.ac && <span>CA {m.ac}</span>}
-                  {m.hp && <span>PV {m.hp}</span>}
-                </div>
-              </button>
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -195,3 +306,5 @@ export function MonsterSearch({ onSelect }: MonsterSearchProps) {
     </div>
   );
 }
+
+export type { SelectedMonsterEntry };
