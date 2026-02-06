@@ -27,9 +27,11 @@ export interface CampaignMember {
   player_id?: string;
   joined_at: string;
   is_active: boolean;
-  // Données enrichies (via JOIN)
   email?: string;
   player_name?: string;
+  max_hp?: number;
+  current_hp?: number;
+  armor_class?: number;
 }
 
 export interface CampaignInventoryItem {

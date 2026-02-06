@@ -32,6 +32,7 @@ import {
   DND_CONDITIONS,
 } from '../../../types/campaign';
 import { monsterService } from '../../../services/monsterService';
+import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
@@ -48,9 +49,11 @@ interface CombatPreparationEntry {
   type: 'player' | 'monster';
   name: string;
   memberId?: string;
+  playerId?: string;
   monsterSlug?: string;
   monsterId?: string;
   hp: number;
+  maxHp: number;
   ac: number;
   initiative: number;
 }
@@ -107,8 +110,10 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         type: 'player' as const,
         name: m.player_name || m.email || 'Joueur',
         memberId: m.id,
-        hp: 0,
-        ac: 10,
+        playerId: m.player_id,
+        hp: m.current_hp ?? 0,
+        maxHp: m.max_hp ?? 0,
+        ac: m.armor_class ?? 10,
         initiative: 0,
       })));
     }
@@ -168,6 +173,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
             monsterSlug: detail.slug,
             monsterId: existing.id,
             hp: detail.hit_points,
+            maxHp: detail.hit_points,
             ac: detail.armor_class,
             initiative: 0,
           });
@@ -194,6 +200,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         monsterSlug: monster.slug,
         monsterId: monster.id,
         hp: monster.hit_points,
+        maxHp: monster.hit_points,
         ac: monster.armor_class,
         initiative: 0,
       });
@@ -232,7 +239,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         display_name: entry.name,
         initiative_roll: entry.initiative,
         current_hp: entry.hp,
-        max_hp: entry.hp,
+        max_hp: entry.maxHp,
         armor_class: entry.ac,
         conditions: [] as string[],
         sort_order: i,
@@ -264,8 +271,10 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
         type: 'player' as const,
         name: m.player_name || m.email || 'Joueur',
         memberId: m.id,
-        hp: 0,
-        ac: 10,
+        playerId: m.player_id,
+        hp: m.current_hp ?? 0,
+        maxHp: m.max_hp ?? 0,
+        ac: m.armor_class ?? 10,
         initiative: 0,
       })));
       toast.success('Combat termine');
@@ -421,9 +430,9 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
           player_member_id: m.id,
           display_name: m.player_name || m.email || 'Joueur',
           initiative_roll: 0,
-          current_hp: 0,
-          max_hp: 0,
-          armor_class: 10,
+          current_hp: m.current_hp ?? 0,
+          max_hp: m.max_hp ?? 0,
+          armor_class: m.armor_class ?? 10,
           conditions: [] as string[],
           sort_order: participants.length + i,
           is_active: true,
@@ -442,7 +451,7 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
     }
   };
 
-  const applyHp = (p: EncounterParticipant, mode: 'damage' | 'heal') => {
+  const applyHp = async (p: EncounterParticipant, mode: 'damage' | 'heal') => {
     const val = parseInt(hpDelta[p.id] || '0', 10);
     if (!val || val <= 0) return;
     const newHp = mode === 'damage'
@@ -450,6 +459,19 @@ export function CombatTab({ campaignId, members }: CombatTabProps) {
       : Math.min(p.max_hp, p.current_hp + val);
     handleUpdateParticipant(p.id, { current_hp: newHp });
     setHpDelta((prev) => ({ ...prev, [p.id]: '' }));
+
+    if (p.participant_type === 'player' && p.player_member_id) {
+      const member = members.find((m) => m.id === p.player_member_id);
+      if (member?.player_id) {
+        supabase
+          .from('players')
+          .update({ current_hp: newHp })
+          .eq('id', member.player_id)
+          .then(({ error }) => {
+            if (error) console.error('Erreur sync HP joueur:', error);
+          });
+      }
+    }
   };
 
   const toggleCondition = (p: EncounterParticipant, condition: string) => {
@@ -881,12 +903,10 @@ function PrepRow({
         </span>
       </button>
 
-      {!isPlayer && (
-        <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
-          <span className="flex items-center gap-0.5"><Shield size={10} className="text-gray-500" />{entry.ac}</span>
-          <span className="flex items-center gap-0.5"><Heart size={10} className="text-red-500" />{entry.hp}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
+        <span className="flex items-center gap-0.5"><Shield size={10} className="text-gray-500" />{entry.ac}</span>
+        <span className="flex items-center gap-0.5"><Heart size={10} className="text-red-500" />{entry.hp}/{entry.maxHp}</span>
+      </div>
 
       {clickable && (
         <button

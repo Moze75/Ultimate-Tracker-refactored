@@ -357,7 +357,7 @@ async getCampaignInvitations(campaignId: string): Promise<any[]> {
       .from('campaign_members')
       .select(`
       *,
-      player:players(name, adventurer_name)
+      player:players(name, adventurer_name, max_hp, current_hp, stats)
     `)
       .eq('campaign_id', campaignId)
       .eq('is_active', true);
@@ -368,6 +368,9 @@ async getCampaignInvitations(campaignId: string): Promise<any[]> {
       ...member,
       email: member.player_email || 'Email inconnu',
       player_name: member.player?.adventurer_name || member.player?.name,
+      max_hp: member.player?.max_hp ?? 0,
+      current_hp: member.player?.current_hp ?? 0,
+      armor_class: member.player?.stats?.armor_class ?? 10,
     }));
   },
 
