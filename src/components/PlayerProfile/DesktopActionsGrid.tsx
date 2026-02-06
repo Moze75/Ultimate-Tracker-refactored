@@ -67,35 +67,35 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
 
   return (
     <>
-      <div className="grid gap-2 mr-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mr-4 auto-rows-fr overflow-hidden">
         <button
           onClick={handleLongRest}
-          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
+          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-0 overflow-hidden"
         >
-          <span className="text-xm whitespace-nowrap">Repos long</span>
+          <span className="text-xm truncate">Repos long</span>
           <Moon className="w-4 h-4 ml-2 shrink-0" />
         </button>
 
         <button
           onClick={() => setShowRestModal(true)}
-          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
+          className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-0 overflow-hidden"
         >
-          <span className="text-xm whitespace-nowrap">Repos court</span>
+          <span className="text-xm truncate">Repos court</span>
           <Sun className="w-4 h-4 ml-2 shrink-0" />
         </button>
 
         {player.hit_dice && (
-          <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50">
-            <span className="text-xm text-gray-400 whitespace-nowrap">Des de vie</span>
-            <span className="text-gray-300 font-medium text-sm ml-2">
+          <div className="h-10 px-3 py-1 text-sm bg-gray-800/30 rounded flex items-center justify-between border border-gray-700/50 min-w-0 overflow-hidden">
+            <span className="text-xm text-gray-400 truncate">Des de vie</span>
+            <span className="text-gray-300 font-medium text-sm ml-2 shrink-0">
               {player.hit_dice.total - player.hit_dice.used}/{player.hit_dice.total}
             </span>
           </div>
         )}
 
-        <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50">
+        <div className="h-10 rounded text-sm bg-gray-800/50 flex items-center justify-between px-3 border border-gray-700/50 min-w-0 overflow-hidden">
           <div className="text-gray-400 text-xs flex items-center gap-1">
-            <span className="whitespace-nowrap text-sm">Inspi</span>
+            <span className="truncate text-sm">Inspi</span>
           </div>
           <div className="flex items-center gap-0.5">
             <button
@@ -174,22 +174,22 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
               toast.error('Erreur lors de la modification de la concentration');
             }
           }}
-          className={`h-10 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 ${
+          className={`h-10 rounded text-sm flex items-center justify-between px-3 transition-all duration-200 min-w-0 overflow-hidden ${
             player.is_concentrating
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-lg shadow-purple-500/20 animate-pulse'
               : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50'
           }`}
         >
-          <span className="text-xm whitespace-nowrap">Concentration</span>
-          <Brain className={`w-4 h-4 ml-2 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
+          <span className="text-xm truncate">Concentration</span>
+          <Brain className={`w-4 h-4 ml-2 shrink-0 ${player.is_concentrating ? 'text-purple-400' : 'text-gray-400'}`} />
         </button>
 
         <button
           onClick={onOpenCampaigns}
-          className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3"
+          className="h-10 rounded text-sm bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-purple-300 hover:from-purple-600/30 hover:to-blue-600/30 flex items-center justify-between px-3 min-w-0 overflow-hidden"
         >
-          <span className="text-xm whitespace-nowrap">Campagnes</span>
-          <Scroll className="w-4 h-4 ml-2" />
+          <span className="text-xm truncate">Campagnes</span>
+          <Scroll className="w-4 h-4 ml-2 shrink-0" />
         </button>
       </div>
 

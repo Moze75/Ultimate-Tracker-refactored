@@ -44,7 +44,7 @@ export function DesktopHeader({
           />
         </div>
 
-        <div className="w-auto">
+        <div className="min-w-0 shrink">
           <DesktopActionsGrid
             player={player}
             onUpdate={onUpdate}
