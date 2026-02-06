@@ -270,6 +270,19 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
         </p>
       </div>
 
+      {monster.image_url && (
+        <div className="px-4 pt-2 pb-0">
+          <img
+            src={monster.image_url}
+            alt={monster.name}
+            className="w-full h-auto rounded border border-[#922610]/30"
+            style={{ maxHeight: '250px', objectFit: 'contain' }}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        </div>
+      )}
+
       <div className="px-4">
         <TaperRule />
 

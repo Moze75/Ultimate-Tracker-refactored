@@ -91,6 +91,7 @@ interface MonsterDetail {
   reactions: Array<{ name: string; description: string }>;
   legendary_actions: Array<{ name: string; description: string }>;
   legendary_description: string;
+  image_url?: string;
 }
 
 async function fetchMonsterList(): Promise<MonsterListItem[]> {
@@ -424,6 +425,19 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     }
   }
 
+  let imageUrl: string | undefined;
+  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+  if (imgMatch) {
+    const src = imgMatch[1];
+    if (src.startsWith('http')) {
+      imageUrl = src;
+    } else if (src.startsWith('/')) {
+      imageUrl = `https://www.aidedd.org${src}`;
+    } else {
+      imageUrl = `https://www.aidedd.org/monster/fr/${src}`;
+    }
+  }
+
   return {
     name,
     slug,
@@ -452,6 +466,7 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     reactions,
     legendary_actions: legendaryActions,
     legendary_description: legendaryDescription,
+    image_url: imageUrl,
   };
 }
 

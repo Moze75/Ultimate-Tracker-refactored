@@ -36,6 +36,7 @@ import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
+import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import toast from 'react-hot-toast';
 
 interface CombatTabProps {
@@ -78,6 +79,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [encounterName, setEncounterName] = useState('');
   const [launching, setLaunching] = useState(false);
   const [hpDelta, setHpDelta] = useState<Record<string, string>>({});
+  const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
 
   const isActive = !!encounter;
 
@@ -103,6 +105,50 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   }, [campaignId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const handleLoadEncounter = async (encounterId: string) => {
+    try {
+      setShowLoadEncounterModal(false);
+      setLoading(true);
+
+      const { data: encounterData, error: encounterError } = await supabase
+        .from('campaign_encounters')
+        .select('*')
+        .eq('id', encounterId)
+        .single();
+
+      if (encounterError) throw encounterError;
+
+      const { data: participantsData, error: participantsError } = await supabase
+        .from('encounter_participants')
+        .select('*')
+        .eq('encounter_id', encounterId)
+        .order('sort_order');
+
+      if (participantsError) throw participantsError;
+
+      const prepEntries: CombatPreparationEntry[] = (participantsData || []).map((p) => ({
+        id: `prep-${p.participant_type}-${p.id}`,
+        type: p.participant_type as 'player' | 'monster',
+        name: p.display_name,
+        memberId: p.player_member_id || undefined,
+        monsterId: p.monster_id || undefined,
+        hp: p.current_hp,
+        maxHp: p.max_hp,
+        ac: p.armor_class,
+        initiative: p.initiative_roll,
+      }));
+
+      setPrepEntries(prepEntries);
+      setEncounterName(encounterData.name);
+      toast.success(`Combat "${encounterData.name}" chargé`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors du chargement du combat');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!encounter && members.length > 0 && prepEntries.length === 0) {
@@ -514,7 +560,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* LEFT: Search / Bestiary */}
       <div className="space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
@@ -533,6 +579,12 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
           >
             <Plus size={12} className="inline mr-1" /> Creer monstre
+          </button>
+          <button
+            onClick={() => setShowLoadEncounterModal(true)}
+            className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+          >
+            <BookOpen size={12} className="inline mr-1" /> Charger combat
           </button>
         </div>
 
@@ -600,10 +652,21 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             editMonster={editingMonster}
           />
         )}
+
+        {showLoadEncounterModal && (
+          <LoadEncounterModal
+            campaignId={campaignId}
+            onClose={() => setShowLoadEncounterModal(false)}
+            onLoad={handleLoadEncounter}
+          />
+        )}
       </div>
 
       {/* RIGHT: Unified combat panel */}
-      <div>
+      <div className="space-y-4">
+        <div className="border-b border-gray-700 pb-2">
+          <span className="text-xs font-medium text-transparent">Alignement</span>
+        </div>
         <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
