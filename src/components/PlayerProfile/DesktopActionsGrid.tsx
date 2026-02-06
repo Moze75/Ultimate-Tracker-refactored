@@ -67,7 +67,7 @@ export function DesktopActionsGrid({ player, onUpdate, onOpenCampaigns }: Deskto
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mr-4 justify-end">
+      <div className="grid gap-2 mr-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
         <button
           onClick={handleLongRest}
           className="h-10 rounded text-sm bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 flex items-center justify-between px-3 border border-gray-700/50"
