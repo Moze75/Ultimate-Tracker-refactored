@@ -95,7 +95,7 @@ return (
           </button>
         </div>
 
-          {/* Tabs */}
+          {/* Tabs */} 
           <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab('settings')}
