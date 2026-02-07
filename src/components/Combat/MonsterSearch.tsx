@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Search, Loader2, X, Filter, ChevronDown, Check, Plus, Minus, ChevronUp, Edit3, Trash2 } from 'lucide-react';
 import { MonsterListItem, Monster } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
@@ -54,7 +54,9 @@ export function MonsterSearch({
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [expandedMonster, setExpandedMonster] = useState<Monster | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(50);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadList();
@@ -116,8 +118,26 @@ export function MonsterSearch({
       }
     }
 
-    return result.slice(0, 100);
+    return result;
   }, [allMonsters, query, crFilter, typeFilter, sourceFilter]);
+
+  const displayedMonsters = useMemo(() => {
+    return filtered.slice(0, displayLimit);
+  }, [filtered, displayLimit]);
+
+  const hasMore = displayedMonsters.length < filtered.length;
+
+  useEffect(() => {
+    setDisplayLimit(50);
+  }, [query, crFilter, typeFilter, sourceFilter]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+    if (scrollBottom < 100 && hasMore) {
+      setDisplayLimit(prev => Math.min(prev + 50, filtered.length));
+    }
+  }, [hasMore, filtered.length]);
 
   const clearFilters = () => {
     setQuery('');
@@ -306,7 +326,11 @@ export function MonsterSearch({
           Chargement du bestiaire...
         </div>
       ) : (
-        <div className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900">
+        <div
+          ref={listContainerRef}
+          onScroll={handleScroll}
+          className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900"
+        >
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-gray-500 text-sm">
               {allMonsters.length === 0
@@ -314,7 +338,8 @@ export function MonsterSearch({
                 : 'Aucun resultat'}
             </div>
           ) : (
-            filtered.map((m) => {
+            <>
+            {displayedMonsters.map((m) => {
               const identifier = m.slug || `custom-${m.id}`;
               const isSelected = selected.has(identifier);
               const isExpanded = expandedSlug === identifier;
@@ -439,14 +464,26 @@ export function MonsterSearch({
                   )}
                 </div>
               );
-            })
+            })}
+            {hasMore && (
+              <div className="py-3 text-center text-gray-500 text-xs">
+                Scrollez pour voir plus ({filtered.length - displayedMonsters.length} restants)
+              </div>
+            )}
+            </>
           )}
         </div>
       )}
 
       <div className="text-xs text-gray-600 text-right">
         {allMonsters.length > 0 && (
-          <span>{filtered.length} / {allMonsters.length} monstres</span>
+          <span>
+            {displayedMonsters.length === filtered.length
+              ? `${filtered.length} monstres`
+              : `${displayedMonsters.length} / ${filtered.length} monstres affiches`
+            }
+            {filtered.length < allMonsters.length && ` (${allMonsters.length} total)`}
+          </span>
         )}
       </div>
     </div>
