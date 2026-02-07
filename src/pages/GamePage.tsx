@@ -25,6 +25,7 @@ import { loadAbilitySections } from '../services/classesContent';
 import { PlayerProfileSettingsModal } from '../components/PlayerProfileSettingsModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
+import { usePlayerRealtimeSync } from '../hooks/usePlayerRealtimeSync';
 import { DiceBox3D } from '../components/DiceBox3D';
 import { DesktopView } from '../components/DesktopView';
 
@@ -130,6 +131,27 @@ export function GamePage({
   const hasFetchedRef = useRef(false);
   const FETCH_THROTTLE_MS = 30000; // 30 secondes
   const prevPlayerId = useRef<string | null>(selectedCharacter?.id ?? null);
+
+  const handleRealtimePlayerUpdate = useCallback((updates: Partial<Player>) => {
+    setCurrentPlayer(prev => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...updates };
+      try {
+        localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(merged));
+      } catch {}
+      return merged;
+    });
+  }, []);
+
+  const fxVolume = (diceSettings.fxVolume ?? 50) / 100;
+
+  const { markLocalUpdate } = usePlayerRealtimeSync({
+    playerId: currentPlayer?.id ?? '',
+    currentPlayer: currentPlayer ?? selectedCharacter,
+    onPlayerUpdated: handleRealtimePlayerUpdate,
+    soundsEnabled: diceSettings.soundsEnabled ?? true,
+    fxVolume,
+  });
 
   // ✅ Écouter l'événement de sauvegarde des paramètres pour déclencher le reload du DiceBox
   useEffect(() => {
@@ -416,14 +438,15 @@ export function GamePage({
   }, []);
 
   /* ---------------- Update player ---------------- */
-  const applyPlayerUpdate = useCallback( 
+  const applyPlayerUpdate = useCallback(
     (updated: Player) => {
       if (isExiting) return;
+      markLocalUpdate();
       setCurrentPlayer(updated);
       try { onUpdateCharacter?.(updated); } catch (e) {}
       try { localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(updated)); } catch (e) {}
     },
-    [onUpdateCharacter, isExiting, currentPlayer]
+    [onUpdateCharacter, isExiting, currentPlayer, markLocalUpdate]
   );
 
   const handleBackgroundChange = useCallback((url: string) => {

@@ -613,6 +613,19 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
       ? current.filter((c) => c !== condition)
       : [...current, condition];
     handleUpdateParticipant(p.id, { conditions: next });
+
+    if (p.participant_type === 'player' && p.player_member_id) {
+      const member = members.find((m) => m.id === p.player_member_id);
+      if (member?.player_id) {
+        supabase
+          .from('players')
+          .update({ conditions: next })
+          .eq('id', member.player_id)
+          .then(({ error }) => {
+            if (error) console.error('Erreur sync conditions joueur:', error);
+          });
+      }
+    }
   };
 
   if (loading) {
