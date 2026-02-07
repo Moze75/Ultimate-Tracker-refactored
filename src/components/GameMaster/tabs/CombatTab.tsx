@@ -39,6 +39,7 @@ import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
+import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import toast from 'react-hot-toast';
 
 interface CombatTabProps {
@@ -83,6 +84,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [hpDelta, setHpDelta] = useState<Record<string, string>>({});
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
 
   const isActive = !!encounter;
 
@@ -202,6 +204,17 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     if (!id) return;
     const monster = savedMonsters.find((m) => m.id === id);
     if (monster) refreshMonsterFromSource(monster);
+  };
+
+  const viewPlayerById = (memberId?: string) => {
+    if (!memberId) return;
+    const member = members.find((m) => m.id === memberId);
+    if (member?.player_id) {
+      setSelectedPlayerDetails({
+        id: member.player_id,
+        name: member.player_name || 'Personnage',
+      });
+    }
   };
 
   const handleAddMonstersFromSearch = async (entries: SelectedMonsterEntry[]) => {
@@ -844,6 +857,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 onToggleCondition={toggleCondition}
                 onRemove={handleRemoveParticipant}
                 onViewMonster={viewMonsterById}
+                onViewPlayer={viewPlayerById}
               />
             ) : (
               <PrepParticipantsList
@@ -879,6 +893,20 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
         </div>
       </div>
+
+      {selectedPlayerDetails && (
+        <PlayerDetailsModal
+          playerId={selectedPlayerDetails.id}
+          playerName={selectedPlayerDetails.name}
+          onClose={() => setSelectedPlayerDetails(null)}
+          onPlayerUpdated={async () => {
+            if (encounter) {
+              const parts = await monsterService.getEncounterParticipants(encounter.id);
+              setParticipants(parts);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1090,6 +1118,7 @@ function ActiveParticipantsList({
   onToggleCondition,
   onRemove,
   onViewMonster,
+  onViewPlayer,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1099,6 +1128,7 @@ function ActiveParticipantsList({
   onToggleCondition: (p: EncounterParticipant, condition: string) => void;
   onRemove: (id: string) => void;
   onViewMonster: (monsterId?: string) => void;
+  onViewPlayer: (memberId?: string) => void;
 }) {
   if (participants.length === 0) {
     return (
@@ -1114,7 +1144,8 @@ function ActiveParticipantsList({
         const isCurrentTurn = idx === encounter.current_turn_index;
         const isDead = p.current_hp <= 0 && p.max_hp > 0;
         const isMonster = p.participant_type === 'monster';
-        const clickable = isMonster && !!p.monster_id;
+        const isPlayer = p.participant_type === 'player';
+        const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
 
         return (
           <div
@@ -1138,7 +1169,11 @@ function ActiveParticipantsList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => clickable && onViewMonster(p.monster_id)}
+                    onClick={() => {
+                      if (!clickable) return;
+                      if (isMonster) onViewMonster(p.monster_id);
+                      else if (isPlayer) onViewPlayer(p.player_member_id);
+                    }}
                     disabled={!clickable}
                     className={`text-sm font-medium truncate ${
                       isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-300' : 'text-sky-300'
@@ -1147,15 +1182,6 @@ function ActiveParticipantsList({
                     {p.display_name}
                   </button>
                   {isDead && <Skull size={12} className="text-gray-500 shrink-0" />}
-                  {clickable && (
-                    <button
-                      onClick={() => onViewMonster(p.monster_id)}
-                      className="text-gray-500 hover:text-amber-400 transition-colors"
-                      title="Voir les stats"
-                    >
-                      <Eye size={12} />
-                    </button>
-                  )}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
                   <div className="flex items-center gap-1 text-xs">
