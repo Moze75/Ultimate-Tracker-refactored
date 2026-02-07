@@ -279,4 +279,147 @@ export const monsterService = {
       if (error) throw error;
     }
   },
+
+  parseMonsterFromJSON(json: unknown): Monster {
+    const data = json as Record<string, unknown>;
+    const stats = data.stats as Record<string, unknown> | undefined;
+    const flavor = data.flavor as Record<string, unknown> | undefined;
+
+    if (!stats || !data.name) {
+      throw new Error('Format JSON invalide: champs requis manquants');
+    }
+
+    const abilityScores = stats.abilityScores as Record<string, number> | undefined;
+    const savingThrows = stats.savingThrows as Array<{ ability: string; modifier: number }> | undefined;
+    const skills = stats.skills as Array<{ name: string; modifier: number }> | undefined;
+    const additionalAbilities = stats.additionalAbilities as Array<{ name: string; description: string }> | undefined;
+    const actions = stats.actions as Array<{ name: string; description: string }> | undefined;
+    const reactions = stats.reactions as Array<{ name: string; description: string }> | undefined;
+    const legendaryActions = stats.legendaryActions as Array<{ name: string; description: string }> | undefined;
+
+    const name = String(data.name);
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const speedRaw = stats.speed;
+    let speed: Record<string, string> = {};
+    if (typeof speedRaw === 'string') {
+      speed = { walk: speedRaw };
+    } else if (typeof speedRaw === 'object' && speedRaw !== null) {
+      speed = speedRaw as Record<string, string>;
+    }
+
+    const formatSavingThrows = (st: typeof savingThrows): string => {
+      if (!st || st.length === 0) return '';
+      return st.map(s => {
+        const abbr = s.ability.slice(0, 3).charAt(0).toUpperCase() + s.ability.slice(1, 3);
+        const mod = s.modifier >= 0 ? `+${s.modifier}` : `${s.modifier}`;
+        return `${abbr} ${mod}`;
+      }).join(', ');
+    };
+
+    const formatSkills = (sk: typeof skills): string => {
+      if (!sk || sk.length === 0) return '';
+      return sk.map(s => {
+        const mod = s.modifier >= 0 ? `+${s.modifier}` : `${s.modifier}`;
+        return `${s.name} ${mod}`;
+      }).join(', ');
+    };
+
+    const stripHtml = (str: string): string => {
+      return str.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    };
+
+    const formatEntries = (entries: Array<{ name: string; description: string }> | undefined): { name: string; description: string }[] => {
+      if (!entries || entries.length === 0) return [];
+      return entries.map(e => ({
+        name: e.name || '',
+        description: stripHtml(e.description || ''),
+      }));
+    };
+
+    const joinArray = (arr: unknown): string => {
+      if (Array.isArray(arr)) return arr.join(', ');
+      if (typeof arr === 'string') return arr;
+      return '';
+    };
+
+    const numHitDie = Number(stats.numHitDie) || 1;
+    const hitDieSize = Number(stats.hitDieSize) || 8;
+    const conMod = abilityScores ? Math.floor((Number(abilityScores.constitution || 10) - 10) / 2) : 0;
+    const extraHp = numHitDie * conMod;
+    const hitPointsFormula = `${numHitDie}d${hitDieSize}${extraHp >= 0 ? ` + ${extraHp}` : ` - ${Math.abs(extraHp)}`}`;
+
+    return {
+      source: 'custom',
+      slug,
+      name,
+      size: String(stats.size || 'Medium'),
+      type: String(stats.race || 'Unknown'),
+      alignment: String(stats.alignment || 'Unaligned'),
+      armor_class: Number(stats.armorClass) || 10,
+      armor_desc: String(stats.armorType || stats.armorTypeStr || ''),
+      hit_points: Number(stats.hitPoints) || 10,
+      hit_points_formula: hitPointsFormula,
+      speed,
+      abilities: {
+        str: abilityScores?.strength || 10,
+        dex: abilityScores?.dexterity || 10,
+        con: abilityScores?.constitution || 10,
+        int: abilityScores?.intelligence || 10,
+        wis: abilityScores?.wisdom || 10,
+        cha: abilityScores?.charisma || 10,
+      },
+      saving_throws: formatSavingThrows(savingThrows),
+      skills: formatSkills(skills),
+      vulnerabilities: joinArray(stats.damageVulnerabilities),
+      resistances: joinArray(stats.damageResistances),
+      damage_immunities: joinArray(stats.damageImmunities),
+      condition_immunities: joinArray(stats.conditionImmunities),
+      senses: joinArray(stats.senses),
+      languages: joinArray(stats.languages),
+      challenge_rating: String(stats.challengeRating ?? '0'),
+      xp: Number(stats.experiencePoints) || 0,
+      traits: formatEntries(additionalAbilities),
+      actions: formatEntries(actions),
+      bonus_actions: [],
+      reactions: formatEntries(reactions),
+      legendary_actions: formatEntries(legendaryActions),
+      legendary_description: String(stats.legendaryActionsDescription || ''),
+      image_url: flavor?.imageUrl ? String(flavor.imageUrl) : undefined,
+    };
+  },
+
+  async importMonstersFromJSON(
+    campaignId: string,
+    jsonData: unknown[],
+    existingNames: string[]
+  ): Promise<{ imported: Monster[]; errors: string[] }> {
+    const imported: Monster[] = [];
+    const errors: string[] = [];
+
+    for (const json of jsonData) {
+      try {
+        const monster = this.parseMonsterFromJSON(json);
+
+        let finalName = monster.name;
+        let counter = 2;
+        while (existingNames.includes(finalName)) {
+          finalName = `${monster.name} (${counter})`;
+          counter++;
+        }
+        monster.name = finalName;
+        monster.slug = finalName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        existingNames.push(finalName);
+
+        const saved = await this.saveToCampaign(campaignId, monster);
+        imported.push(saved);
+      } catch (err) {
+        const name = (json as Record<string, unknown>)?.name || 'Inconnu';
+        errors.push(`${name}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
+    }
+
+    return { imported, errors };
+  },
 };

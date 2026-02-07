@@ -22,6 +22,7 @@ import {
   Minus,
   Eye,
   AlertTriangle,
+  Upload,
 } from 'lucide-react';
 import {
   CampaignMember,
@@ -36,6 +37,7 @@ import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
+import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import toast from 'react-hot-toast';
 
@@ -80,6 +82,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [launching, setLaunching] = useState(false);
   const [hpDelta, setHpDelta] = useState<Record<string, string>>({});
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const isActive = !!encounter;
 
@@ -633,6 +636,12 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             <Plus size={12} className="inline mr-1" /> Creer monstre
           </button>
           <button
+            onClick={() => setShowImportModal(true)}
+            className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+          >
+            <Upload size={12} className="inline mr-1" /> Importer
+          </button>
+          <button
             onClick={() => setShowLoadEncounterModal(true)}
             className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
           >
@@ -710,6 +719,17 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             campaignId={campaignId}
             onClose={() => setShowLoadEncounterModal(false)}
             onLoad={handleLoadEncounter}
+          />
+        )}
+
+        {showImportModal && (
+          <ImportMonsterModal
+            campaignId={campaignId}
+            existingMonsterNames={savedMonsters.map(m => m.name)}
+            onClose={() => setShowImportModal(false)}
+            onImportComplete={(imported) => {
+              setSavedMonsters(prev => [...prev, ...imported]);
+            }}
           />
         )}
       </div>
