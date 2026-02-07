@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Swords,
   Plus,
@@ -40,6 +40,7 @@ import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
+import { useCombatPlayersRealtimeSync } from '../hooks/useCombatPlayersRealtimeSync';
 import toast from 'react-hot-toast';
 
 interface CombatTabProps {
@@ -110,6 +111,31 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   }, [campaignId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const handlePlayerHPUpdateFromRealtime = useCallback(
+    async (participantId: string, updates: { current_hp: number; temporary_hp: number }) => {
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.id === participantId ? { ...p, current_hp: updates.current_hp, temporary_hp: updates.temporary_hp } : p
+        )
+      );
+      try {
+        await supabase
+          .from('encounter_participants')
+          .update({ current_hp: updates.current_hp, temporary_hp: updates.temporary_hp })
+          .eq('id', participantId);
+      } catch (err) {
+        console.error('Erreur sync participant HP:', err);
+      }
+    },
+    []
+  );
+
+  const { markLocalUpdate } = useCombatPlayersRealtimeSync({
+    members,
+    participants,
+    onParticipantHPUpdate: handlePlayerHPUpdateFromRealtime,
+  });
 
   const handleLoadEncounter = async (encounterId: string) => {
     try {
@@ -554,27 +580,42 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     if (!encounter) return;
     try {
       const existingNames = new Set(participants.map((p) => p.display_name));
-      const newParticipants = members
-        .filter((m) => !existingNames.has(m.player_name || m.email || ''))
-        .map((m, i) => ({
-          encounter_id: encounter.id,
-          participant_type: 'player' as const,
-          monster_id: undefined,
-          player_member_id: m.id,
-          display_name: m.player_name || m.email || 'Joueur',
-          initiative_roll: 0,
-          current_hp: m.current_hp ?? 0,
-          max_hp: m.max_hp ?? 0,
-          armor_class: m.armor_class ?? 10,
-          conditions: [] as string[],
-          sort_order: participants.length + i,
-          is_active: true,
-          notes: '',
-        }));
-      if (newParticipants.length === 0) {
+      const membersToAdd = members.filter((m) => !existingNames.has(m.player_name || m.email || ''));
+
+      if (membersToAdd.length === 0) {
         toast('Tous les joueurs sont deja dans le combat');
         return;
       }
+
+      const playerIds = membersToAdd.map((m) => m.player_id).filter(Boolean) as string[];
+      let playerTempHpMap: Record<string, number> = {};
+      if (playerIds.length > 0) {
+        const { data: playersData } = await supabase
+          .from('players')
+          .select('id, temporary_hp')
+          .in('id', playerIds);
+        if (playersData) {
+          playerTempHpMap = Object.fromEntries(playersData.map((p) => [p.id, p.temporary_hp || 0]));
+        }
+      }
+
+      const newParticipants = membersToAdd.map((m, i) => ({
+        encounter_id: encounter.id,
+        participant_type: 'player' as const,
+        monster_id: undefined,
+        player_member_id: m.id,
+        display_name: m.player_name || m.email || 'Joueur',
+        initiative_roll: 0,
+        current_hp: m.current_hp ?? 0,
+        max_hp: m.max_hp ?? 0,
+        temporary_hp: m.player_id ? (playerTempHpMap[m.player_id] || 0) : 0,
+        armor_class: m.armor_class ?? 10,
+        conditions: [] as string[],
+        sort_order: participants.length + i,
+        is_active: true,
+        notes: '',
+      }));
+
       const added = await monsterService.addParticipants(newParticipants);
       setParticipants((prev) => [...prev, ...added]);
       toast.success(`${newParticipants.length} joueur(s) ajoute(s)`);
@@ -596,6 +637,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
       if (member?.player_id) {
+        markLocalUpdate(member.player_id);
         supabase
           .from('players')
           .update({ current_hp: newHp })
@@ -1069,14 +1111,16 @@ function PrepRow({
 
 /* ── Active combat participant list ── */
 
-function HpBar({ current, max }: { current: number; max: number }) {
+function HpBar({ current, max, temp = 0 }: { current: number; max: number; temp?: number }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  const tempPct = max > 0 ? Math.max(0, Math.min(100 - pct, (temp / max) * 100)) : 0;
   let color = 'bg-emerald-500';
   if (pct <= 25) color = 'bg-red-500';
   else if (pct <= 50) color = 'bg-amber-500';
   return (
-    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-      <div className={`h-full ${color} transition-all duration-300 rounded-full`} style={{ width: `${pct}%` }} />
+    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden flex">
+      <div className={`h-full ${color} transition-all duration-300`} style={{ width: `${pct}%` }} />
+      {temp > 0 && <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${tempPct}%` }} />}
     </div>
   );
 }
@@ -1199,13 +1243,16 @@ function ActiveParticipantsList({
                 <div className="flex items-center gap-3 mt-0.5">
                   <div className="flex items-center gap-1 text-xs">
                     <Heart size={10} className={isDead ? 'text-gray-600' : 'text-red-500'} />
-                    <span className={isDead ? 'text-gray-600' : 'text-gray-400'}>{p.current_hp}/{p.max_hp}</span>
+                    <span className={isDead ? 'text-gray-600' : 'text-gray-400'}>
+                      {p.current_hp}/{p.max_hp}
+                      {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400"> +{p.temporary_hp}</span>}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
                     <Shield size={10} className="text-gray-500" />
                     <span className="text-gray-400">{p.armor_class}</span>
                   </div>
-                  <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} /></div>
+                  <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} /></div>
                 </div>
               </div>
 

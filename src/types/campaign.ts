@@ -181,6 +181,7 @@ export interface EncounterParticipant {
   initiative_roll: number;
   current_hp: number;
   max_hp: number;
+  temporary_hp: number;
   armor_class: number;
   conditions: string[];
   sort_order: number;
