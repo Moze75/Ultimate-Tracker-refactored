@@ -619,6 +619,14 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
       {/* LEFT: Search / Bestiary */}
       <div className="space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
+          {panelView === 'detail' && (
+            <button
+              onClick={() => setPanelView('search')}
+              className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+            >
+              <ArrowLeft size={12} className="inline mr-1" /> Retour
+            </button>
+          )}
           <button
             onClick={() => setPanelView('search')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
@@ -663,12 +671,6 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 
         {panelView === 'detail' && (
           <div className="space-y-3">
-            <button
-              onClick={() => setPanelView('search')}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft size={12} /> Retour
-            </button>
             {loadingDetail ? (
               <div className="flex items-center justify-center py-12 text-gray-400">
                 <Loader2 size={20} className="animate-spin mr-2" />
@@ -735,10 +737,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
       </div>
 
       {/* RIGHT: Unified combat panel */}
-      <div className="space-y-4">
-        <div className="border-b border-gray-700 pb-2">
-          <span className="text-xs font-medium text-transparent">Alignement</span>
-        </div>
+      <div>
         <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
