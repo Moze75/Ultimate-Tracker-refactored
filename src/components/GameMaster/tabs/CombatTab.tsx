@@ -86,6 +86,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const isActive = !!encounter;
 
@@ -684,8 +685,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* LEFT: Search / Bestiary */}
-      <div className="space-y-4">
+      {/* LEFT: Search / Bestiary - Desktop only */}
+      <div className="hidden lg:block space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
           {panelView === 'detail' && (
             <button
@@ -776,53 +777,27 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           </div>
         )}
 
-        {showCustomModal && (
-          <CustomMonsterModal
-            onClose={() => { setShowCustomModal(false); setEditingMonster(null); }}
-            onSave={handleSaveMonster}
-            editMonster={editingMonster}
-          />
-        )}
-
-        {showLoadEncounterModal && (
-          <LoadEncounterModal
-            campaignId={campaignId}
-            onClose={() => setShowLoadEncounterModal(false)}
-            onLoad={handleLoadEncounter}
-          />
-        )}
-
-        {showImportModal && (
-          <ImportMonsterModal
-            campaignId={campaignId}
-            existingMonsterNames={savedMonsters.map(m => m.name)}
-            onClose={() => setShowImportModal(false)}
-            onImportComplete={(imported) => {
-              setSavedMonsters(prev => [...prev, ...imported]);
-            }}
-          />
-        )}
       </div>
 
       {/* RIGHT: Unified combat panel */}
       <div className="space-y-4">
-        <div className="flex gap-2 border-b border-gray-700 pb-2">
+        <div className="hidden lg:flex gap-2 border-b border-gray-700 pb-2">
           <span className="px-3 py-1.5 text-xs invisible">Alignement</span>
         </div>
         <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 isActive ? 'bg-red-600/40' : 'bg-red-900/30'
               }`}>
                 <Swords size={16} className="text-red-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-                  {isActive ? encounter.name : 'Preparation du combat'}
+                  <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
-                    <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded">
+                    <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
                       Round {encounter.round_number}
                     </span>
                   )}
@@ -835,26 +810,26 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
               {isActive ? (
                 <>
                   <button
                     onClick={handleNextTurn}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
                   >
-                    <SkipForward size={12} /> Tour suivant
+                    <SkipForward size={12} className="shrink-0" /> <span className="sm:hidden">Suivant</span><span className="hidden sm:inline">Tour suivant</span>
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
                   >
-                    <Save size={12} /> Sauvegarder
+                    <Save size={12} className="shrink-0" /> <span className="sm:hidden">Sauver</span><span className="hidden sm:inline">Sauvegarder</span>
                   </button>
                   <button
                     onClick={handleEndCombat}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
                   >
-                    <Square size={12} /> Fin
+                    <Square size={12} className="shrink-0" /> Fin
                   </button>
                 </>
               ) : (
@@ -866,6 +841,99 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Mobile-only: integrated search toolbar */}
+          <div className="lg:hidden border-b border-gray-800">
+            <div className="px-4 py-2 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => { setMobileSearchOpen(!mobileSearchOpen); if (!mobileSearchOpen) setPanelView('search'); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  mobileSearchOpen
+                    ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
+                    : 'text-gray-400 hover:text-amber-300 border border-gray-700'
+                }`}
+              >
+                <Search size={12} /> Rechercher
+              </button>
+              <button
+                onClick={() => { setEditingMonster(null); setShowCustomModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 border border-gray-700 rounded-lg transition-colors"
+              >
+                <Plus size={12} /> Creer
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 border border-gray-700 rounded-lg transition-colors"
+              >
+                <Upload size={12} /> Importer
+              </button>
+              <button
+                onClick={() => setShowLoadEncounterModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 border border-gray-700 rounded-lg transition-colors"
+              >
+                <BookOpen size={12} /> Charger
+              </button>
+            </div>
+            {mobileSearchOpen && (
+              <div className="px-4 pb-3 max-h-[50vh] overflow-y-auto">
+                {panelView === 'search' && (
+                  <MonsterSearch
+                    selectionMode
+                    onAddToCombat={isActive ? handleAddMonstersFromSearchToEncounter : handleAddMonstersFromSearch}
+                    onSelect={handleSelectMonsterFromSearch}
+                    savedMonsters={savedMonsters}
+                    onEditMonster={(m) => { setEditingMonster(m); setShowCustomModal(true); }}
+                    onDeleteMonster={handleDeleteMonster}
+                    onRollDice={onRollDice}
+                  />
+                )}
+                {panelView === 'detail' && (
+                  <div className="space-y-3">
+                    {loadingDetail ? (
+                      <div className="flex items-center justify-center py-8 text-gray-400">
+                        <Loader2 size={20} className="animate-spin mr-2" />
+                      </div>
+                    ) : selectedMonster ? (
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setPanelView('search')}
+                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+                        >
+                          <ArrowLeft size={12} /> Retour recherche
+                        </button>
+                        <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+                        <div className="flex gap-2">
+                          {!selectedMonster.id && (
+                            <button
+                              onClick={() => handleSaveMonster(selectedMonster)}
+                              className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              <Save size={14} /> Sauvegarder
+                            </button>
+                          )}
+                          {isActive ? (
+                            <button
+                              onClick={() => handleAddMonsterToEncounter(selectedMonster, addCount)}
+                              className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              <Swords size={14} /> Ajouter au combat ({addCount})
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => { handleAddSavedMonsterToPrep(selectedMonster, 1); setPanelView('search'); }}
+                              className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              <Swords size={14} /> Ajouter au combat
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Encounter name (prep only) */}
@@ -948,6 +1016,33 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
         </div>
       </div>
+
+      {showCustomModal && (
+        <CustomMonsterModal
+          onClose={() => { setShowCustomModal(false); setEditingMonster(null); }}
+          onSave={handleSaveMonster}
+          editMonster={editingMonster}
+        />
+      )}
+
+      {showLoadEncounterModal && (
+        <LoadEncounterModal
+          campaignId={campaignId}
+          onClose={() => setShowLoadEncounterModal(false)}
+          onLoad={handleLoadEncounter}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportMonsterModal
+          campaignId={campaignId}
+          existingMonsterNames={savedMonsters.map(m => m.name)}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={(imported) => {
+            setSavedMonsters(prev => [...prev, ...imported]);
+          }}
+        />
+      )}
 
       {selectedPlayerDetails && (
         <PlayerDetailsModal

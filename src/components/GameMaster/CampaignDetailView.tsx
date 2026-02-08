@@ -151,18 +151,18 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
             </div>
           </div>
 
-          <div className="flex flex-wrap md:flex-nowrap gap-2 border-b border-gray-700">
+          <div className="grid grid-cols-3 lg:flex lg:flex-nowrap gap-x-1 gap-y-0 lg:gap-2 border-b border-gray-700">
             {tabs.map(({ key, icon: Icon, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`pb-2 md:px-4 px-2 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+                className={`pb-2 px-1 lg:px-4 flex items-center justify-center lg:justify-start gap-1 lg:gap-2 border-b-2 transition-colors whitespace-nowrap text-xs lg:text-sm ${
                   activeTab === key
                     ? 'border-purple-500 text-purple-400'
                     : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
-                <Icon size={20} /> {label}
+                <Icon size={16} className="shrink-0" /> {label}
               </button>
             ))}
           </div>
