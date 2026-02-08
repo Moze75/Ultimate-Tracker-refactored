@@ -16,7 +16,7 @@ import { DiceHistoryProvider } from '../../hooks/useDiceHistoryContext';
 import { DiceRollData } from '../Combat/MonsterStatBlock';
 import toast from 'react-hot-toast';
 
-const BG_URL = '/background/ddbground.png';
+const BG_URL = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png';
 
 interface CampaignDetailViewProps {
   campaign: Campaign;
