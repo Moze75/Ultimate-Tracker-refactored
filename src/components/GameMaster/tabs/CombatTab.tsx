@@ -812,26 +812,26 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             </div>
             <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
               {isActive ? (
-                <>
+                <div className="hidden sm:flex gap-2">
                   <button
                     onClick={handleNextTurn}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
                   >
-                    <SkipForward size={12} className="shrink-0" /> <span className="sm:hidden">Suivant</span><span className="hidden sm:inline">Tour suivant</span>
+                    <SkipForward size={12} className="shrink-0" /> Tour suivant
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
                   >
-                    <Save size={12} className="shrink-0" /> <span className="sm:hidden">Sauver</span><span className="hidden sm:inline">Sauvegarder</span>
+                    <Save size={12} className="shrink-0" /> Sauvegarder
                   </button>
                   <button
                     onClick={handleEndCombat}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
                   >
                     <Square size={12} className="shrink-0" /> Fin
                   </button>
-                </>
+                </div>
               ) : (
                 <button
                   onClick={handleRollAllInitiative}
@@ -965,6 +965,30 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                   Trier par initiative
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Mobile-only: combat action buttons close to participants */}
+          {isActive && (
+            <div className="sm:hidden px-4 py-2 border-b border-gray-800 flex gap-1.5">
+              <button
+                onClick={handleNextTurn}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                <SkipForward size={12} className="shrink-0" /> Suivant
+              </button>
+              <button
+                onClick={handleSaveEncounter}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+              >
+                <Save size={12} className="shrink-0" /> Sauver
+              </button>
+              <button
+                onClick={handleEndCombat}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+              >
+                <Square size={12} className="shrink-0" /> Fin
+              </button>
             </div>
           )}
 

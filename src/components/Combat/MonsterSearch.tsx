@@ -301,10 +301,7 @@ export function MonsterSearch({
       )}
 
       {selectionMode && selected.size > 0 && (
-        <div className="flex items-center gap-3 px-3 py-2.5 bg-red-900/40 border border-red-800/50 rounded-lg">
-          <span className="text-sm text-red-300 font-medium flex-1">
-            {selected.size} monstre{selected.size > 1 ? 's' : ''} ({totalSelected} au total)
-          </span>
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-900/40 border border-red-800/50 rounded-lg">
           <button
             onClick={() => setSelected(new Map())}
             className="text-xs text-gray-400 hover:text-white transition-colors"
@@ -313,7 +310,7 @@ export function MonsterSearch({
           </button>
           <button
             onClick={handleAddToCombat}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Plus size={14} /> Ajouter au combat
           </button>
