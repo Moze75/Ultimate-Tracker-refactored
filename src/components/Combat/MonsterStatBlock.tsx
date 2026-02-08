@@ -343,7 +343,7 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
 
         <TaperRule />
 
-        <div className="grid grid-cols-6 text-center text-[11px] mb-0.5" style={{ gap: '1px' }}>
+        <div className="grid grid-cols-6 text-center mb-0.5" style={{ gap: '1px' }}>
           {ABILITY_LABELS.map(({ key, label, fullName }) => {
             const score = monster.abilities[key];
             const modValue = Math.floor((score - 10) / 2);
@@ -352,40 +352,40 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
 
             return (
               <div key={key} className="border border-[#922610]/20 bg-[#f5e8d0] min-w-0 overflow-hidden">
-                <div className="font-bold text-[#58180d] border-b border-[#922610]/20 py-0.5 text-[10px]">
+                <div className="font-bold text-[#58180d] border-b border-[#922610]/20 py-0.5 text-[11px]">
                   {label}
                 </div>
                 <div className="py-1">
-                  <div className="font-bold text-[#58180d] text-[14px] leading-tight">
+                  <div className="font-bold text-[#58180d] text-[15px] leading-tight">
                     {score}
                   </div>
                   <div className="flex flex-col items-center mt-0.5">
                     <div className="flex items-center gap-0.5">
-                      <span className="text-[7px] text-[#922610] uppercase leading-none">Mod</span>
+                      <span className="text-[8px] text-[#922610] uppercase leading-none">Mod</span>
                       {onRollDice ? (
                         <button
                           onClick={() => handleAbilityRoll(label, fullName, modValue)}
-                          className="font-semibold text-[#58180d] hover:text-amber-700 hover:bg-amber-200/50 rounded cursor-pointer transition-colors text-[11px] leading-none"
+                          className="font-semibold text-[#58180d] hover:text-amber-700 hover:bg-amber-200/50 rounded cursor-pointer transition-colors text-[13px] leading-tight"
                           title={`Test ${fullName}`}
                         >
                           {modText}
                         </button>
                       ) : (
-                        <span className="font-semibold text-[#58180d] text-[11px] leading-none">{modText}</span>
+                        <span className="font-semibold text-[#58180d] text-[13px] leading-tight">{modText}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-0.5">
-                      <span className="text-[7px] text-[#922610] uppercase leading-none">JS</span>
+                      <span className="text-[8px] text-[#922610] uppercase leading-none">JS</span>
                       {onRollDice ? (
                         <button
                           onClick={() => handleSaveRoll(label, fullName, modValue)}
-                          className="font-semibold text-[#58180d] hover:text-red-700 hover:bg-red-200/50 rounded cursor-pointer transition-colors text-[11px] leading-none"
+                          className="font-semibold text-[#58180d] hover:text-red-700 hover:bg-red-200/50 rounded cursor-pointer transition-colors text-[13px] leading-tight"
                           title={`JdS ${fullName}`}
                         >
                           {saveText}
                         </button>
                       ) : (
-                        <span className="font-semibold text-[#58180d] text-[11px] leading-none">{saveText}</span>
+                        <span className="font-semibold text-[#58180d] text-[13px] leading-tight">{saveText}</span>
                       )}
                     </div>
                   </div>
