@@ -79,7 +79,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
               <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
                 <Crown className="w-6 h-6 text-purple-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white">Gestion des Campagnes</h1>
+              <h1 className="text-3xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Gestion des Campagnes</h1>
             </div>
 
             <button
@@ -107,14 +107,14 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
 
               <div onClick={() => setSelectedCampaign(campaign)} className="cursor-pointer">
                 <div className="mb-3 pr-10">
-                  <h3 className="text-xl font-bold text-white">{campaign.name}</h3>
+                  <h3 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)', lineHeight: 1.15 }}>{campaign.name}</h3>
                 </div>
 
                 {campaign.description && (
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2">{campaign.description}</p>
+                  <p className="text-sm mb-4 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
                   <span>Créée le {new Date(campaign.created_at).toLocaleDateString('fr-FR')}</span>
                   <Crown className="w-4 h-4 text-purple-400" />
                 </div>
@@ -125,8 +125,8 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
           {campaigns.length === 0 && (
             <div className="col-span-full bg-gray-900/60 backdrop-blur-sm border-2 border-dashed border-gray-700 rounded-xl p-12 text-center">
               <Crown className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">Aucune campagne créée</h3>
-              <p className="text-gray-500 mb-6">Créez votre première campagne pour commencer à gérer vos joueurs et votre inventaire</p>
+              <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8' }}>Aucune campagne créée</h3>
+              <p className="mb-6" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Créez votre première campagne pour commencer à gérer vos joueurs et votre inventaire</p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="btn-primary px-6 py-3 rounded-lg inline-flex items-center gap-2"
