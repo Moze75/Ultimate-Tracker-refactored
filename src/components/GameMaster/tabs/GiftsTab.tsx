@@ -58,7 +58,7 @@ export function GiftsTab({ campaignId, members, inventory, gifts, giftsLoading, 
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-white">Envoyer aux joueurs</h2>
+      <h2 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Envoyer aux joueurs</h2>
 
       <div className="flex gap-2">
         <button onClick={() => setSendModalType('item')} className="px-3 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-sm font-medium flex items-center gap-1.5 transition-colors">
@@ -74,7 +74,7 @@ export function GiftsTab({ campaignId, members, inventory, gifts, giftsLoading, 
 
       <div className="bg-gray-900/30 border border-gray-700 rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8' }}>
             <History size={18} /> Historique des envois
           </h3>
           <div className="flex items-center gap-2">

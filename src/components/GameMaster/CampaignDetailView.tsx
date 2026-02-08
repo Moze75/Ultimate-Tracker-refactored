@@ -143,8 +143,8 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
             </button>
 
             <div>
-              <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
-              {campaign.description && <p className="text-gray-400 text-sm mt-1">{campaign.description}</p>}
+              <h1 className="text-3xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>{campaign.name}</h1>
+              {campaign.description && <p className="text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>}
             </div>
           </div>
         </div>

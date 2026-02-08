@@ -23,7 +23,7 @@ export function MembersTab({ campaignId, members, invitations, onReload }: Membe
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-white">Joueurs de la campagne</h2>
+        <h2 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Joueurs de la campagne</h2>
         <button
           onClick={() => setShowInviteModal(true)}
           className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
@@ -75,11 +75,11 @@ export function MembersTab({ campaignId, members, invitations, onReload }: Membe
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-white group-hover:text-blue-300 transition-colors">
+                <h3 className="font-semibold group-hover:text-blue-300 transition-colors" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', lineHeight: 1.15 }}>
                   {member.player_name || 'Personnage non défini'}
                 </h3>
-                <p className="text-sm text-gray-400 mt-1">{member.email}</p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)' }}>{member.email}</p>
+                <p className="text-xs mt-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
                   Rejoint le {new Date(member.joined_at).toLocaleDateString('fr-FR')}
                 </p>
                 {member.player_id && (

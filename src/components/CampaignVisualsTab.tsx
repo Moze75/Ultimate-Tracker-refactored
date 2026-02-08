@@ -100,7 +100,7 @@ export function CampaignVisualsTab({ playerId, userId, onOpenVisual }: CampaignV
       <div className="stat-header flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ImageIcon className="text-purple-500" size={24} />
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-100">Visuels de Campagne</h2>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Visuels de Campagne</h2>
         </div>
         {! isAdding && (
           <button

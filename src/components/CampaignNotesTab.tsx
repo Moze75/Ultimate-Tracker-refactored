@@ -418,7 +418,7 @@ export function CampaignNotesTab({ campaignId }: CampaignNotesTabProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-400" />
-          <h2 className="text-lg font-semibold text-white">Notes de campagne</h2>
+          <h2 className="text-lg font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Notes de campagne</h2>
           <span className="text-sm text-gray-500">({notes.length})</span>
         </div>
         <button

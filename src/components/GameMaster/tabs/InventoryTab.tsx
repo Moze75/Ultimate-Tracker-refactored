@@ -47,7 +47,7 @@ export function InventoryTab({ campaignId, inventory, members, onReload }: Inven
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-xl font-semibold text-white">Inventaire de la campagne</h2>
+        <h2 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Inventaire de la campagne</h2>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowList(true)} className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2">
             <Plus size={20} />
@@ -100,7 +100,7 @@ export function InventoryTab({ campaignId, inventory, members, onReload }: Inven
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="font-semibold text-white truncate">{item.name}</h3>
+                      <h3 className="font-semibold truncate" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', lineHeight: 1.15 }}>{item.name}</h3>
                       {meta?.type === 'armor' && <span className="text-xs px-2 py-0.5 rounded bg-purple-900/30 text-purple-300 border border-purple-500/30">Armure</span>}
                       {meta?.type === 'shield' && <span className="text-xs px-2 py-0.5 rounded bg-blue-900/30 text-blue-300 border border-blue-500/30">Bouclier</span>}
                       {meta?.type === 'weapon' && <span className="text-xs px-2 py-0.5 rounded bg-red-900/30 text-red-300 border border-red-500/30">Arme</span>}
@@ -127,10 +127,10 @@ export function InventoryTab({ campaignId, inventory, members, onReload }: Inven
                 )}
 
                 {getVisibleDescription(item.description) && (
-                  <p className="text-sm text-gray-400 line-clamp-2 mb-2">{getVisibleDescription(item.description)}</p>
+                  <p className="text-sm line-clamp-2 mb-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)' }}>{getVisibleDescription(item.description)}</p>
                 )}
 
-                <div className="mt-3 text-xs text-gray-500">
+                <div className="mt-3 text-xs" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
                   Ajouté le {new Date(item.created_at).toLocaleDateString('fr-FR')}
                 </div>
               </div>
