@@ -16,7 +16,6 @@ import {
   Shield,
   Heart,
   User,
-  ChevronRight,
   SkipForward,
   Square,
   Minus,
@@ -278,6 +277,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     }
     setPrepEntries((prev) => [...prev, ...newEntries]);
     if (newEntries.length > 0) {
+      setMobileSearchOpen(false);
       toast.success(`${newEntries.length} monstre${newEntries.length > 1 ? 's' : ''} ajoute${newEntries.length > 1 ? 's' : ''}`);
     }
   };
@@ -298,6 +298,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
         toast.error(`Impossible de charger ${entry.monster.name}`);
       }
     }
+    setMobileSearchOpen(false);
   };
 
   const handleAddSavedMonsterToPrep = (monster: Monster, count: number) => {
@@ -530,6 +531,15 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     }
   };
 
+  const handleUpdateActiveInitiative = async (id: string, value: number) => {
+    setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, initiative_roll: value } : p)));
+    try {
+      await monsterService.updateParticipant(id, { initiative_roll: value });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSortByInitiative = async () => {
     if (!encounter) return;
     const sorted = [...participants].sort((a, b) => b.initiative_roll - a.initiative_roll);
@@ -573,6 +583,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
       const added = await monsterService.addParticipants(newParticipants);
       setParticipants((prev) => [...prev, ...added]);
       setAddCount(1);
+      setMobileSearchOpen(false);
       toast.success(`${count > 1 ? count + 'x ' : ''}${monster.name} ajoute(s)`);
     } catch (err) {
       console.error(err);
@@ -895,7 +906,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                   <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
-                    <span className="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+                    <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                       Round {encounter.round_number}
                     </span>
                   )}
@@ -913,13 +924,13 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <div className="hidden sm:flex gap-2">
                   <button
                     onClick={handleNextTurn}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
                     <SkipForward size={12} className="shrink-0" /> Tour suivant
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
                     <Save size={12} className="shrink-0" /> Sauvegarder
                   </button>
@@ -953,19 +964,18 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             </div>
           )}
 
-          {/* Active combat: add controls */}
           {isActive && (
             <div className="px-4 py-2 border-b border-gray-800 space-y-2">
               <div className="flex gap-2">
                 <button
                   onClick={handleAddPlayersToEncounter}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-sky-900/30 hover:bg-sky-900/50 text-sky-300 text-xs font-medium rounded-lg border border-sky-800/40 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                 >
                   <Users size={12} /> Ajouter joueurs
                 </button>
                 <button
                   onClick={handleSortByInitiative}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                 >
                   Trier par initiative
                 </button>
@@ -973,18 +983,17 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             </div>
           )}
 
-          {/* Mobile-only: combat action buttons close to participants */}
           {isActive && (
             <div className="sm:hidden px-4 py-2 border-b border-gray-800 flex gap-1.5">
               <button
                 onClick={handleNextTurn}
-                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
               >
                 <SkipForward size={12} className="shrink-0" /> Suivant
               </button>
               <button
                 onClick={handleSaveEncounter}
-                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 text-xs font-medium rounded-lg border border-blue-800/50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
               >
                 <Save size={12} className="shrink-0" /> Sauver
               </button>
@@ -1010,6 +1019,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 onRemove={handleRemoveParticipant}
                 onViewMonster={viewMonsterById}
                 onViewPlayer={viewPlayerById}
+                onUpdateInitiative={handleUpdateActiveInitiative}
                 selectedMonster={selectedMonster}
                 loadingDetail={loadingDetail}
                 onRollDice={onRollDice}
@@ -1141,8 +1151,8 @@ function PrepParticipantsList({
       {playerEntries.length > 0 && (
         <div className="px-4 py-2">
           <div className="flex items-center gap-2 mb-2">
-            <Users size={12} className="text-sky-400" />
-            <span className="text-xs font-semibold text-sky-300 uppercase tracking-wider">Joueurs</span>
+            <Users size={12} className="text-gray-400" />
+            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Joueurs</span>
           </div>
           <div className="space-y-1">
             {playerEntries.map((entry) => (
@@ -1214,14 +1224,14 @@ function PrepRow({
 
   return (
     <div className={`rounded-lg transition-colors ${
-      isPlayer ? 'bg-sky-900/30 hover:bg-sky-900/40' : 'bg-red-900/30 hover:bg-red-900/40'
+      isPlayer ? 'bg-gray-800/50 hover:bg-gray-800/70' : 'bg-red-900/20 hover:bg-red-900/30'
     }`}>
       <div className="flex items-center gap-2 px-2.5 py-2">
         <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-          isPlayer ? 'bg-sky-900/60' : 'bg-red-900/60'
+          isPlayer ? 'bg-gray-800' : 'bg-red-900/40'
         }`}>
           {isPlayer
-            ? <User size={11} className="text-sky-400" />
+            ? <User size={11} className="text-gray-400" />
             : <Skull size={11} className="text-red-400" />
           }
         </div>
@@ -1232,7 +1242,7 @@ function PrepRow({
           className={`flex-1 min-w-0 text-left ${clickable ? 'cursor-pointer' : ''}`}
         >
           <span className={`text-sm font-medium truncate block ${
-            isPlayer ? 'text-sky-200' : 'text-red-200'
+            isPlayer ? 'text-white' : 'text-red-300'
           } ${clickable ? 'hover:underline' : ''}`}>
             {entry.name}
           </span>
@@ -1269,7 +1279,7 @@ function PrepRow({
           onClick={() => onRemove(entry.id)}
           className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors shrink-0"
         >
-          <X size={12} />
+          <Trash2 size={12} />
         </button>
       </div>
 
@@ -1307,14 +1317,14 @@ function ConditionBadges({ conditions, onToggle }: { conditions: string[]; onTog
           <span
             key={c}
             onClick={() => onToggle(c)}
-            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-900/40 text-orange-300 text-[10px] rounded cursor-pointer hover:bg-orange-900/60 transition-colors"
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-900/30 text-red-300 text-[10px] rounded cursor-pointer hover:bg-red-900/50 border border-red-800/30 transition-colors"
           >
             {c}<X size={8} />
           </span>
         ))}
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-amber-400 border border-dashed border-gray-700 rounded transition-colors"
+          className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 border border-dashed border-gray-700 rounded transition-colors"
         >+</button>
       </div>
       {showPicker && (
@@ -1326,7 +1336,7 @@ function ConditionBadges({ conditions, onToggle }: { conditions: string[]; onTog
                 key={c}
                 onClick={() => { onToggle(c); setShowPicker(false); }}
                 className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
-                  active ? 'bg-orange-900/40 text-orange-300' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  active ? 'bg-red-900/30 text-red-300' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                 }`}
               >
                 {active ? '- ' : '+ '}{c}
@@ -1349,6 +1359,7 @@ function ActiveParticipantsList({
   onRemove,
   onViewMonster,
   onViewPlayer,
+  onUpdateInitiative,
   selectedMonster,
   loadingDetail,
   onRollDice,
@@ -1362,6 +1373,7 @@ function ActiveParticipantsList({
   onRemove: (id: string) => void;
   onViewMonster: (monsterId?: string) => void;
   onViewPlayer: (memberId?: string) => void;
+  onUpdateInitiative: (id: string, value: number) => void;
   selectedMonster: Monster | null;
   loadingDetail: boolean;
   onRollDice?: (data: DiceRollData) => void;
@@ -1405,19 +1417,22 @@ function ActiveParticipantsList({
             key={p.id}
             className={`px-3 py-2.5 transition-all ${
               isCurrentTurn
-                ? 'bg-amber-900/40'
+                ? 'bg-amber-900/30 border-l-2 border-l-amber-500'
                 : isDead
                 ? 'bg-gray-800 opacity-60'
-                : 'hover:bg-gray-800/80'
+                : 'hover:bg-gray-800/50'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-black/40 text-xs font-bold text-gray-400 shrink-0">
-                {isCurrentTurn
-                  ? <ChevronRight size={14} className="text-amber-400" />
-                  : <span>{p.initiative_roll}</span>
-                }
-              </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={30}
+                className="w-8 h-7 px-0 py-0 bg-black/30 border border-gray-700 rounded text-[11px] text-center text-gray-300 focus:border-amber-600 focus:outline-none shrink-0"
+                value={p.initiative_roll || ''}
+                onChange={(e) => onUpdateInitiative(p.id, parseInt(e.target.value) || 0)}
+                title="Initiative"
+              />
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -1425,7 +1440,7 @@ function ActiveParticipantsList({
                     onClick={handleParticipantClick}
                     disabled={!clickable}
                     className={`text-sm font-medium truncate ${
-                      isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-300' : 'text-sky-300'
+                      isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-400' : 'text-white'
                     } ${clickable ? 'hover:underline cursor-pointer' : ''}`}
                   >
                     {p.display_name}
@@ -1434,7 +1449,7 @@ function ActiveParticipantsList({
                   {isMonster && clickable && (
                     <button
                       onClick={handleParticipantClick}
-                      className="text-gray-500 hover:text-amber-400 transition-colors shrink-0"
+                      className="text-gray-500 hover:text-gray-300 transition-colors shrink-0"
                       title="Voir les stats"
                     >
                       <Eye size={12} />
@@ -1446,7 +1461,7 @@ function ActiveParticipantsList({
                     <Heart size={10} className={isDead ? 'text-gray-600' : 'text-red-500'} />
                     <span className={isDead ? 'text-gray-600' : 'text-gray-400'}>
                       {p.current_hp}/{p.max_hp}
-                      {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400"> +{p.temporary_hp}</span>}
+                      {(p.temporary_hp || 0) > 0 && <span className="text-gray-300"> +{p.temporary_hp}</span>}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -1460,20 +1475,20 @@ function ActiveParticipantsList({
               <div className="flex items-center gap-1 shrink-0">
                 <input
                   type="number"
-                  className="w-14 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+                  className="w-12 px-1 py-1 bg-black/30 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-red-600 focus:outline-none"
                   placeholder="0"
                   value={hpDelta[p.id] || ''}
                   onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
                   onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
                 />
-                <button onClick={() => onApplyHp(p, 'damage')} className="p-1 text-red-500 hover:bg-red-900/30 rounded transition-colors" title="Infliger degats">
+                <button onClick={() => onApplyHp(p, 'damage')} className="p-1 text-red-500 hover:bg-red-900/30 rounded transition-colors" title="Degats">
                   <Minus size={12} />
                 </button>
-                <button onClick={() => onApplyHp(p, 'heal')} className="p-1 text-emerald-500 hover:bg-emerald-900/30 rounded transition-colors" title="Soigner">
+                <button onClick={() => onApplyHp(p, 'heal')} className="p-1 text-green-500 hover:bg-green-900/30 rounded transition-colors" title="Soins">
                   <Plus size={12} />
                 </button>
-                <button onClick={() => onRemove(p.id)} className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors" title="Retirer">
-                  <X size={12} />
+                <button onClick={() => onRemove(p.id)} className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors" title="Supprimer">
+                  <Trash2 size={12} />
                 </button>
               </div>
             </div>

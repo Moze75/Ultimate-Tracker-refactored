@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Users, Package, Send, Crown, Image, FileText, Swords } from 'lucide-react';
+import { ArrowLeft, Users, Package, Send, Image, FileText, Swords } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation, CampaignGift, CampaignGiftClaim } from '../../types/campaign';
 import { campaignService } from '../../services/campaignService';
@@ -141,30 +141,27 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
             <ArrowLeft size={20} /> Retour aux campagnes
           </button>
 
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-              <Crown className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
-              {campaign.description && <p className="text-gray-400 text-sm mt-1">{campaign.description}</p>}
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
+            {campaign.description && <p className="text-gray-400 text-sm mt-1">{campaign.description}</p>}
           </div>
 
-          <div className="grid grid-cols-3 lg:flex lg:flex-nowrap gap-x-1 gap-y-0 lg:gap-2 border-b border-gray-700">
-            {tabs.map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`pb-2 px-1 lg:px-4 flex items-center justify-center lg:justify-start gap-1 lg:gap-2 border-b-2 transition-colors whitespace-nowrap text-xs lg:text-sm ${
-                  activeTab === key
-                    ? 'border-purple-500 text-purple-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                <Icon size={16} className="shrink-0" /> {label}
-              </button>
-            ))}
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-2 py-2 border border-gray-700/50">
+            <div className="grid grid-cols-3 lg:flex lg:flex-nowrap gap-x-1 gap-y-2 lg:gap-2">
+              {tabs.map(({ key, icon: Icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`py-2 px-1 lg:px-4 flex items-center justify-center lg:justify-start gap-1 lg:gap-2 rounded-lg transition-colors whitespace-nowrap text-xs lg:text-sm ${
+                    activeTab === key
+                      ? 'bg-red-900/50 text-red-300 border border-red-700/50'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+                  }`}
+                >
+                  <Icon size={16} className="shrink-0" /> {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
