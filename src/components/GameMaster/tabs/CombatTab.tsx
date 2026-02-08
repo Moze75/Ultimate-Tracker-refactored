@@ -233,10 +233,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const viewMonsterById = (id?: string) => {
     if (!id) return;
     const monster = savedMonsters.find((m) => m.id === id);
-    if (monster) {
-      setMobileSearchOpen(true);
-      refreshMonsterFromSource(monster);
-    }
+    if (monster) refreshMonsterFromSource(monster);
   };
 
   const viewPlayerById = (memberId?: string) => {
@@ -1001,7 +998,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
 
           {/* Participants list */}
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[70vh] overflow-y-auto">
             {isActive ? (
               <ActiveParticipantsList
                 encounter={encounter}
@@ -1013,6 +1010,9 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 onRemove={handleRemoveParticipant}
                 onViewMonster={viewMonsterById}
                 onViewPlayer={viewPlayerById}
+                selectedMonster={selectedMonster}
+                loadingDetail={loadingDetail}
+                onRollDice={onRollDice}
               />
             ) : (
               <PrepParticipantsList
@@ -1021,6 +1021,9 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 onUpdateInitiative={handleUpdatePrepInitiative}
                 onRemove={handleRemovePrepEntry}
                 onClickMonster={viewMonsterBySlug}
+                selectedMonster={selectedMonster}
+                loadingDetail={loadingDetail}
+                onRollDice={onRollDice}
               />
             )}
           </div>
@@ -1101,13 +1104,21 @@ function PrepParticipantsList({
   onUpdateInitiative,
   onRemove,
   onClickMonster,
+  selectedMonster,
+  loadingDetail,
+  onRollDice,
 }: {
   playerEntries: CombatPreparationEntry[];
   monsterEntries: CombatPreparationEntry[];
   onUpdateInitiative: (id: string, value: number) => void;
   onRemove: (id: string) => void;
   onClickMonster: (slug?: string) => void;
+  selectedMonster: Monster | null;
+  loadingDetail: boolean;
+  onRollDice?: (data: DiceRollData) => void;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (playerEntries.length === 0 && monsterEntries.length === 0) {
     return (
       <div className="px-4 py-8 text-center text-gray-500 text-sm">
@@ -1115,6 +1126,15 @@ function PrepParticipantsList({
       </div>
     );
   }
+
+  const handleMonsterClick = (entry: CombatPreparationEntry) => {
+    if (expandedId === entry.id) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(entry.id);
+      onClickMonster(entry.monsterSlug);
+    }
+  };
 
   return (
     <div>
@@ -1132,6 +1152,8 @@ function PrepParticipantsList({
                 onUpdateInitiative={onUpdateInitiative}
                 onRemove={onRemove}
                 onClick={undefined}
+                expanded={false}
+                expandedContent={null}
               />
             ))}
           </div>
@@ -1150,7 +1172,19 @@ function PrepParticipantsList({
                 entry={entry}
                 onUpdateInitiative={onUpdateInitiative}
                 onRemove={onRemove}
-                onClick={() => onClickMonster(entry.monsterSlug)}
+                onClick={() => handleMonsterClick(entry)}
+                expanded={expandedId === entry.id}
+                expandedContent={
+                  expandedId === entry.id ? (
+                    loadingDetail ? (
+                      <div className="flex items-center justify-center py-6 text-gray-400">
+                        <Loader2 size={18} className="animate-spin mr-2" />
+                      </div>
+                    ) : selectedMonster ? (
+                      <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+                    ) : null
+                  ) : null
+                }
               />
             ))}
           </div>
@@ -1165,73 +1199,85 @@ function PrepRow({
   onUpdateInitiative,
   onRemove,
   onClick,
+  expanded,
+  expandedContent,
 }: {
   entry: CombatPreparationEntry;
   onUpdateInitiative: (id: string, value: number) => void;
   onRemove: (id: string) => void;
   onClick: (() => void) | undefined;
+  expanded: boolean;
+  expandedContent: React.ReactNode;
 }) {
   const isPlayer = entry.type === 'player';
   const clickable = !!onClick;
 
   return (
-    <div className={`flex items-center gap-2 px-2.5 py-2 rounded-lg transition-colors ${
+    <div className={`rounded-lg transition-colors ${
       isPlayer ? 'bg-sky-900/30 hover:bg-sky-900/40' : 'bg-red-900/30 hover:bg-red-900/40'
     }`}>
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-        isPlayer ? 'bg-sky-900/60' : 'bg-red-900/60'
-      }`}>
-        {isPlayer
-          ? <User size={11} className="text-sky-400" />
-          : <Skull size={11} className="text-red-400" />
-        }
-      </div>
+      <div className="flex items-center gap-2 px-2.5 py-2">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+          isPlayer ? 'bg-sky-900/60' : 'bg-red-900/60'
+        }`}>
+          {isPlayer
+            ? <User size={11} className="text-sky-400" />
+            : <Skull size={11} className="text-red-400" />
+          }
+        </div>
 
-      <button
-        onClick={onClick}
-        disabled={!clickable}
-        className={`flex-1 min-w-0 text-left ${clickable ? 'cursor-pointer' : ''}`}
-      >
-        <span className={`text-sm font-medium truncate block ${
-          isPlayer ? 'text-sky-200' : 'text-red-200'
-        } ${clickable ? 'hover:underline' : ''}`}>
-          {entry.name}
-        </span>
-      </button>
-
-      <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
-        <span className="flex items-center gap-0.5"><Shield size={10} className="text-gray-500" />{entry.ac}</span>
-        <span className="flex items-center gap-0.5"><Heart size={10} className="text-red-500" />{entry.hp}/{entry.maxHp}</span>
-      </div>
-
-      {clickable && (
         <button
           onClick={onClick}
-          className="p-1 text-gray-500 hover:text-amber-400 transition-colors shrink-0"
-          title="Voir les stats"
+          disabled={!clickable}
+          className={`flex-1 min-w-0 text-left ${clickable ? 'cursor-pointer' : ''}`}
         >
-          <Eye size={12} />
+          <span className={`text-sm font-medium truncate block ${
+            isPlayer ? 'text-sky-200' : 'text-red-200'
+          } ${clickable ? 'hover:underline' : ''}`}>
+            {entry.name}
+          </span>
         </button>
-      )}
 
-      <div className="flex items-center gap-1 shrink-0">
-        <label className="text-[10px] text-gray-500">Init:</label>
-        <input
-          type="number"
-          min={0}
-          max={30}
-          className="w-12 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
-          value={entry.initiative || ''}
-          onChange={(e) => onUpdateInitiative(entry.id, parseInt(e.target.value) || 0)}
-        />
+        <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
+          <span className="flex items-center gap-0.5"><Shield size={10} className="text-gray-500" />{entry.ac}</span>
+          <span className="flex items-center gap-0.5"><Heart size={10} className="text-red-500" />{entry.hp}/{entry.maxHp}</span>
+        </div>
+
+        {clickable && (
+          <button
+            onClick={onClick}
+            className="p-1 text-gray-500 hover:text-amber-400 transition-colors shrink-0"
+            title="Voir les stats"
+          >
+            <Eye size={12} />
+          </button>
+        )}
+
+        <div className="flex items-center gap-1 shrink-0">
+          <label className="text-[10px] text-gray-500">Init:</label>
+          <input
+            type="number"
+            min={0}
+            max={30}
+            className="w-12 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+            value={entry.initiative || ''}
+            onChange={(e) => onUpdateInitiative(entry.id, parseInt(e.target.value) || 0)}
+          />
+        </div>
+
+        <button
+          onClick={() => onRemove(entry.id)}
+          className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors shrink-0"
+        >
+          <X size={12} />
+        </button>
       </div>
 
-      <button
-        onClick={() => onRemove(entry.id)}
-        className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors shrink-0"
-      >
-        <X size={12} />
-      </button>
+      {expanded && expandedContent && (
+        <div className="px-2.5 pb-2">
+          {expandedContent}
+        </div>
+      )}
     </div>
   );
 }
@@ -1303,6 +1349,9 @@ function ActiveParticipantsList({
   onRemove,
   onViewMonster,
   onViewPlayer,
+  selectedMonster,
+  loadingDetail,
+  onRollDice,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1313,7 +1362,12 @@ function ActiveParticipantsList({
   onRemove: (id: string) => void;
   onViewMonster: (monsterId?: string) => void;
   onViewPlayer: (memberId?: string) => void;
+  selectedMonster: Monster | null;
+  loadingDetail: boolean;
+  onRollDice?: (data: DiceRollData) => void;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (participants.length === 0) {
     return (
       <div className="px-4 py-8 text-center text-gray-500 text-sm">
@@ -1330,6 +1384,21 @@ function ActiveParticipantsList({
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
         const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
+        const isExpanded = expandedId === p.id && isMonster;
+
+        const handleParticipantClick = () => {
+          if (!clickable) return;
+          if (isMonster) {
+            if (expandedId === p.id) {
+              setExpandedId(null);
+            } else {
+              setExpandedId(p.id);
+              onViewMonster(p.monster_id);
+            }
+          } else if (isPlayer) {
+            onViewPlayer(p.player_member_id);
+          }
+        };
 
         return (
           <div
@@ -1353,11 +1422,7 @@ function ActiveParticipantsList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      if (!clickable) return;
-                      if (isMonster) onViewMonster(p.monster_id);
-                      else if (isPlayer) onViewPlayer(p.player_member_id);
-                    }}
+                    onClick={handleParticipantClick}
                     disabled={!clickable}
                     className={`text-sm font-medium truncate ${
                       isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-300' : 'text-sky-300'
@@ -1366,6 +1431,15 @@ function ActiveParticipantsList({
                     {p.display_name}
                   </button>
                   {isDead && <Skull size={12} className="text-gray-500 shrink-0" />}
+                  {isMonster && clickable && (
+                    <button
+                      onClick={handleParticipantClick}
+                      className="text-gray-500 hover:text-amber-400 transition-colors shrink-0"
+                      title="Voir les stats"
+                    >
+                      <Eye size={12} />
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
                   <div className="flex items-center gap-1 text-xs">
@@ -1414,6 +1488,18 @@ function ActiveParticipantsList({
               <div className="mt-1 ml-10 flex items-center gap-1 text-[10px] text-amber-400">
                 <AlertTriangle size={10} />
                 Concentration active
+              </div>
+            )}
+
+            {isExpanded && (
+              <div className="mt-2 ml-0 sm:ml-10">
+                {loadingDetail ? (
+                  <div className="flex items-center justify-center py-6 text-gray-400">
+                    <Loader2 size={18} className="animate-spin mr-2" />
+                  </div>
+                ) : selectedMonster ? (
+                  <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+                ) : null}
               </div>
             )}
           </div>

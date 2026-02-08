@@ -343,7 +343,7 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
 
         <TaperRule />
 
-        <div className="grid grid-cols-6 gap-0.5 text-center text-[11px] mb-0.5">
+        <div className="grid grid-cols-6 text-center text-[11px] mb-0.5" style={{ gap: '1px' }}>
           {ABILITY_LABELS.map(({ key, label, fullName }) => {
             const score = monster.abilities[key];
             const modValue = Math.floor((score - 10) / 2);
@@ -351,45 +351,41 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
             const saveText = modValue >= 0 ? `+${modValue}` : `${modValue}`;
 
             return (
-              <div key={key} className="border border-[#922610]/20 bg-[#f5e8d0]">
-                <div className="font-bold text-[#58180d] border-b border-[#922610]/20 py-0.5">
+              <div key={key} className="border border-[#922610]/20 bg-[#f5e8d0] min-w-0 overflow-hidden">
+                <div className="font-bold text-[#58180d] border-b border-[#922610]/20 py-0.5 text-[10px]">
                   {label}
                 </div>
                 <div className="py-1">
-                  <div className="font-bold text-[#58180d] text-[15px]">
+                  <div className="font-bold text-[#58180d] text-[14px] leading-tight">
                     {score}
                   </div>
-                  <div className="flex items-center justify-center gap-2 mt-0.5 px-0.5">
-                    <div>
-                      <div className="text-[8px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
-                        Mod
-                      </div>
+                  <div className="flex flex-col items-center mt-0.5">
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-[7px] text-[#922610] uppercase leading-none">Mod</span>
                       {onRollDice ? (
                         <button
                           onClick={() => handleAbilityRoll(label, fullName, modValue)}
-                          className="font-semibold text-[#58180d] hover:text-amber-700 hover:bg-amber-200/50 px-1 rounded cursor-pointer transition-colors"
+                          className="font-semibold text-[#58180d] hover:text-amber-700 hover:bg-amber-200/50 rounded cursor-pointer transition-colors text-[11px] leading-none"
                           title={`Test ${fullName}`}
                         >
                           {modText}
                         </button>
                       ) : (
-                        <div className="font-semibold text-[#58180d]">{modText}</div>
+                        <span className="font-semibold text-[#58180d] text-[11px] leading-none">{modText}</span>
                       )}
                     </div>
-                    <div>
-                      <div className="text-[8px] text-[#922610] uppercase" style={{ letterSpacing: '0.02em' }}>
-                        JS
-                      </div>
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-[7px] text-[#922610] uppercase leading-none">JS</span>
                       {onRollDice ? (
                         <button
                           onClick={() => handleSaveRoll(label, fullName, modValue)}
-                          className="font-semibold text-[#58180d] hover:text-red-700 hover:bg-red-200/50 px-1 rounded cursor-pointer transition-colors"
+                          className="font-semibold text-[#58180d] hover:text-red-700 hover:bg-red-200/50 rounded cursor-pointer transition-colors text-[11px] leading-none"
                           title={`JdS ${fullName}`}
                         >
                           {saveText}
                         </button>
                       ) : (
-                        <div className="font-semibold text-[#58180d]">{saveText}</div>
+                        <span className="font-semibold text-[#58180d] text-[11px] leading-none">{saveText}</span>
                       )}
                     </div>
                   </div>
