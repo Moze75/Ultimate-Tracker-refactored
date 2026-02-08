@@ -135,35 +135,39 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
     >
       <div className="absolute inset-0 bg-black/50" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4">
-        <div className="mb-8">
-          <button onClick={onBack} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6">
-            <ArrowLeft size={20} /> Retour aux campagnes
-          </button>
-
+      <div className="relative z-10">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
-            {campaign.description && <p className="text-gray-400 text-sm mt-1">{campaign.description}</p>}
-          </div>
+            <button onClick={onBack} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6">
+              <ArrowLeft size={20} /> Retour aux campagnes
+            </button>
 
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-2 py-2 border border-gray-700/50">
-            <div className="grid grid-cols-3 lg:flex lg:flex-nowrap gap-x-1 gap-y-2 lg:gap-2">
-              {tabs.map(({ key, icon: Icon, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key)}
-                  className={`py-2 px-1 lg:px-4 flex items-center justify-center lg:justify-start gap-1 lg:gap-2 rounded-lg transition-colors whitespace-nowrap text-xs lg:text-sm ${
-                    activeTab === key
-                      ? 'bg-red-900/50 text-red-300 border border-red-700/50'
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
-                  }`}
-                >
-                  <Icon size={16} className="shrink-0" /> {label}
-                </button>
-              ))}
+            <div>
+              <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
+              {campaign.description && <p className="text-gray-400 text-sm mt-1">{campaign.description}</p>}
             </div>
           </div>
         </div>
+
+        <div className="bg-black/40 backdrop-blur-sm px-4 py-2 border-y border-gray-700/50 mb-8">
+          <div className="grid grid-cols-3 lg:flex lg:flex-nowrap gap-x-1 gap-y-2 lg:gap-2 max-w-6xl mx-auto">
+            {tabs.map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`py-2 px-1 lg:px-4 flex items-center justify-center lg:justify-start gap-1 lg:gap-2 rounded-lg transition-colors whitespace-nowrap text-xs lg:text-sm ${
+                  activeTab === key
+                    ? 'bg-red-900/50 text-red-300 border border-red-700/50'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+                }`}
+              >
+                <Icon size={16} className="shrink-0" /> {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4">
 
         {activeTab === 'members' && (
           <MembersTab campaignId={campaign.id} members={members} invitations={invitations} onReload={() => { loadMembers(); loadInvitations(); }} />
@@ -181,6 +185,7 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
         {activeTab === 'combat' && (
           <CombatTab campaignId={campaign.id} members={members} onReload={loadMembers} onRollDice={handleRollDice} />
         )}
+        </div>
       </div>
 
       <DraggableVisualWindows windows={draggableWindows} onClose={closeVisualWindow} onUpdatePosition={updateWindowPosition} />

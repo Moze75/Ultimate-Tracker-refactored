@@ -1269,7 +1269,7 @@ function PrepRow({
             type="number"
             min={0}
             max={30}
-            className="w-12 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none"
+            className="w-12 px-1.5 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-center text-gray-200 focus:border-amber-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             value={entry.initiative || ''}
             onChange={(e) => onUpdateInitiative(entry.id, parseInt(e.target.value) || 0)}
           />
@@ -1423,12 +1423,12 @@ function ActiveParticipantsList({
                 : 'hover:bg-gray-800/50'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               <input
                 type="number"
                 min={0}
                 max={30}
-                className="w-8 h-7 px-0 py-0 bg-black/30 border border-gray-700 rounded text-[11px] text-center text-gray-300 focus:border-amber-600 focus:outline-none shrink-0"
+                className="w-8 h-7 px-0 py-0 bg-black/30 border border-gray-700 rounded text-[11px] text-center text-gray-300 focus:border-amber-600 focus:outline-none shrink-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={p.initiative_roll || ''}
                 onChange={(e) => onUpdateInitiative(p.id, parseInt(e.target.value) || 0)}
                 title="Initiative"
@@ -1456,7 +1456,7 @@ function ActiveParticipantsList({
                     </button>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-0.5">
+                <div className="flex items-center gap-3 mt-1">
                   <div className="flex items-center gap-1 text-xs">
                     <Heart size={10} className={isDead ? 'text-gray-600' : 'text-red-500'} />
                     <span className={isDead ? 'text-gray-600' : 'text-gray-400'}>
@@ -1472,10 +1472,10 @@ function ActiveParticipantsList({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0 mt-0.5">
                 <input
                   type="number"
-                  className="w-12 px-1 py-1 bg-black/30 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-red-600 focus:outline-none"
+                  className="w-12 px-1 py-1 bg-black/30 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0"
                   value={hpDelta[p.id] || ''}
                   onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
