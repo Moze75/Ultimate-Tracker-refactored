@@ -2071,6 +2071,8 @@ return (
   characterLevel={characterLevel}
   abilityModifier={abilityMod}
   onRoll={triggerDiceRoll}
+  customBonuses={spellBonuses[spell.id] || { attackBonus: 0, damageBonus: 0 }}
+  onUpdateBonus={(type, value) => updateSpellBonus(spell.id, type, value)}
 />
 
         ))}
