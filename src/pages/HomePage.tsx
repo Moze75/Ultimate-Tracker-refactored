@@ -309,10 +309,18 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       {/* --- SECTION 4 : POUR QUI ? --- */}
       <div className="bg-gradient-to-b from-transparent to-black/60 py-24">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-5xl font-bold text-center text-white mb-4">
-            Une appli. Deux profils.
-          </h2>
-          <p className="text-xl text-center text-gray-400 mb-16">Zéro friction.</p>
+       <h2 
+  className="text-3xl md:text-5xl font-semibold text-center text-[#EFE6D8] mb-4"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Une appli. Deux profils.
+</h2>
+<p 
+  className="text-xl text-center text-gray-400 mb-16"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Zéro friction.
+</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-24">
             {/* Carte Joueurs */}
