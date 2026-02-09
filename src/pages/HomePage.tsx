@@ -476,11 +476,18 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-4">
                   App mobile
                </div>
-               <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-                 Le jeu dans la main, dans votre langue,<br/>
-                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                   Préparez votre campagne sur PC, partez à l’aventure sur mobile.
-                 </span>
+<h3 
+  className="text-3xl md:text-4xl font-semibold text-[#EFE6D8] mb-6 leading-tight"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Le jeu dans la main, dans votre langue,<br/>
+  <span 
+    className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400"
+    style={{ fontFamily: 'Cinzel, serif' }}
+  >
+    Préparez votre campagne sur PC, partez à l'aventure sur mobile.
+  </span>
+</h3>an>
                </h3>
                <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
                  <p>
