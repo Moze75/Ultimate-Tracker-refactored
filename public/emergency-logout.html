@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Déconnexion d'urgence</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .status {
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 30px;
+        }
+        .btn {
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: #ea580c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨</h1>
+        <h2>Déconnexion d'urgence</h2>
+        <p id="message">Nettoyage en cours...</p>
+        <div id="details"></div>
+        <button id="redirect-btn" class="btn" style="display:none" onclick="window.location.href='/'">
+            Retour à l'accueil
+        </button>
+    </div>
+
+    <script>
+        const messageEl = document.getElementById('message');
+        const detailsEl = document.getElementById('details');
+        const redirectBtn = document.getElementById('redirect-btn');
+
+        // ÉTAPE 1: Supprimer immédiatement la reconnexion auto
+        try {
+            localStorage.removeItem('selectedCharacter');
+            sessionStorage.removeItem('selectedCharacter');
+            messageEl.textContent = '✓ Reconnexion auto désactivée';
+        } catch (e) {
+            messageEl.textContent = '⚠️ Erreur partielle';
+            detailsEl.textContent = e.message;
+        }
+
+        // ÉTAPE 2: Nettoyage complet après 500ms
+        setTimeout(async () => {
+            try {
+                // Nettoyer tout le storage
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Nettoyer les caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+
+                // Désenregistrer les service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+
+                messageEl.textContent = '✓ Nettoyage complet terminé !';
+                detailsEl.innerHTML = '<p class="status">Vous pouvez maintenant vous reconnecter</p>';
+                redirectBtn.style.display = 'inline-block';
+
+                // Redirection auto après 2 secondes
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+
+            } catch (error) {
+                messageEl.textContent = '⚠️ Nettoyage partiel';
+                detailsEl.innerHTML = `<p>Erreur: ${error.message}</p><p class="status">Mais la reconnexion auto est désactivée</p>`;
+                redirectBtn.style.display = 'inline-block';
+            }
+        }, 500);
+    </script>
+</body>
+</html>

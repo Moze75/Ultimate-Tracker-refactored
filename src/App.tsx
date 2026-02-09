@@ -11,6 +11,7 @@ import { flushHPQueue } from './services/hpSyncQueue';
 import { getPlayerSnapshot } from './services/playerLocalStore';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { ClearCachePage } from './pages/ClearCachePage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { welcomeEmailService } from './services/welcomeEmailService';
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
@@ -593,84 +594,85 @@ useEffect(() => {
 
   // Rendu principal
   return (
-    <DiceSettingsProvider> {/* ✅ AJOUT DU PROVIDER ICI */}
-      <DiceHistoryProvider>
-        <Toaster position="top-right" />
-        <InstallPrompt />
+    <ErrorBoundary>
+      <DiceSettingsProvider>
+        <DiceHistoryProvider>
+          <Toaster position="top-right" />
+          <InstallPrompt />
 
-         {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
-      {(() => {
-      const currentPath = window.location.pathname;
+          {(() => {
+            const currentPath = window.location.pathname;
 
-      if (currentPath === '/clear-cache') {
-        return <ClearCachePage />;
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
-
-      if (isPaymentSuccess && session) {
-        return (
-          <PaymentSuccessPage
-            onBackToDashboard={() => {
-              setShowHomePage(false);
-            }}
-          />
-        );
-      }
-
-      if (showHomePage) {
-        return <HomePage onGetStarted={() => setShowHomePage(false)} />;
-      }
-
-      if (!session) {
-        return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
-      }
-
-      if (! selectedCharacter) {
-      return (
-          <CharacterSelectionPage
-            session={session}
-            onCharacterSelect={(p: Player) => {
-              try {
-                sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
-              } catch {
-                // no-op
-              }
-              setSelectedCharacter(p);
-            }}
-            onBackToHome={() => setShowHomePage(true)}
-          />
-        );
-      }
-
-      return (
-        <GamePage
-          session={session}
-          selectedCharacter={selectedCharacter}
-          onBackToSelection={() => {
-            try {
-              sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
-              appContextService.setContext('selection');
-            } catch {
-              // no-op
+            if (currentPath === '/clear-cache') {
+              return <ClearCachePage />;
             }
-            setSelectedCharacter(null);
-          }}
-          onUpdateCharacter={(p: Player) => {
-            setSelectedCharacter(p);
-            try {
-              localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
-              appContextService.setContext('game');
-            } catch {
-              // no-op
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
+
+            if (isPaymentSuccess && session) {
+              return (
+                <PaymentSuccessPage
+                  onBackToDashboard={() => {
+                    setShowHomePage(false);
+                  }}
+                />
+              );
             }
-          }}
-        />
-      );
-    })()}
-      </DiceHistoryProvider>
-    </DiceSettingsProvider>
+
+            if (showHomePage) {
+              return <HomePage onGetStarted={() => setShowHomePage(false)} />;
+            }
+
+            if (!session) {
+              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            }
+
+            if (!selectedCharacter) {
+              return (
+                <CharacterSelectionPage
+                  session={session}
+                  onCharacterSelect={(p: Player) => {
+                    try {
+                      sessionStorage.removeItem(SKIP_AUTO_RESUME_ONCE);
+                    } catch {
+                      // no-op
+                    }
+                    setSelectedCharacter(p);
+                  }}
+                  onBackToHome={() => setShowHomePage(true)}
+                />
+              );
+            }
+
+            return (
+              <GamePage
+                session={session}
+                selectedCharacter={selectedCharacter}
+                onBackToSelection={() => {
+                  try {
+                    sessionStorage.setItem(SKIP_AUTO_RESUME_ONCE, '1');
+                    appContextService.setContext('selection');
+                  } catch {
+                    // no-op
+                  }
+                  setSelectedCharacter(null);
+                }}
+                onUpdateCharacter={(p: Player) => {
+                  setSelectedCharacter(p);
+                  try {
+                    localStorage.setItem(LAST_SELECTED_CHARACTER_SNAPSHOT, JSON.stringify(p));
+                    appContextService.setContext('game');
+                  } catch {
+                    // no-op
+                  }
+                }}
+              />
+            );
+          })()}
+        </DiceHistoryProvider>
+      </DiceSettingsProvider>
+    </ErrorBoundary>
   );
   
 }
