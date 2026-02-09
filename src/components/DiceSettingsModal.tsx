@@ -644,7 +644,7 @@ function BackgroundTab({
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/War.png', name: 'War', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/War%202.png', name: 'War 2', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/War%203.png', name: 'War 3', type: 'image' as const },
-    { url: '/fondecran/Ascendance.jpg', name: 'Ascendance', type: 'image' as const },
+    { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Ascendance.jpg', name: 'Ascendance', type: 'image' as const },
   ];
 
   // 🆕 Liste des fonds de couleur
