@@ -488,15 +488,18 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     Préparez votre campagne sur PC, partez à l'aventure sur mobile.
   </span>
 </h3>
-               <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
-                 <p>
-                   Le Compagnon s’adapte à votre façon de jouer, sans compromis.
-                 </p>
-                 <p>
+           <div 
+  className="space-y-6 text-lg text-gray-300 leading-relaxed"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  <p>
+    Le Compagnon s'adapte à votre façon de jouer, sans compromis.
+  </p>
+  <p>
 Pas de version comprimée ou bricolée après coup :
-                       </p> 
-                 <p>
-chaque détail a été pensé pour la fluidité, la lisibilité, et l’accessibilité, même en pleine partie.
+        </p> 
+  <p>
+chaque détail a été pensé pour la fluidité, la lisibilité, et l'accessibilité, même en pleine partie.
 
 Et contrairement à d’autres outils, ici tout est en français, dès le premier clic.
 Pas de traductions à la volée, pas de confusion :
