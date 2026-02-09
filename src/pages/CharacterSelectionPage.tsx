@@ -98,21 +98,14 @@ function WelcomeModal({ open, characterName, onContinue }: WelcomeModalProps) {
           </div>
 
           <div className="space-y-3">
-<h2 
-  className="text-2xl font-semibold text-[#EFE6D8]"
-  style={{ fontFamily: 'Cinzel, serif' }}
->
-  Bienvenue {characterName}
-</h2>
-<p
-  className="text-lg text-gray-300 font-medium"
-  style={{ 
-    fontFamily: 'Inter, sans-serif',
-    textShadow: '0 0 10px rgba(255,255,255,0.2)' 
-  }}
->
-  L'aventure commence ici
-</p>
+            <h2 className="text-2xl font-bold text-red-400">Bienvenue {characterName}</h2>
+            <div className="flex items-center justify-center gap-2">
+              <p
+                className="text-lg text-gray-200 font-medium"
+                style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}
+              >
+                L'aventure commence ici 
+              </p> 
               <Dices className="w-6 h-6 text-purple-400" />
             </div>
           </div>
