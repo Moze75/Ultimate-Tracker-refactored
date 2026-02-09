@@ -727,10 +727,13 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
       {/* --- SECTION 9 : REMERCIEMENTS --- */}
       <div className="py-16 bg-black/60 border-t border-white/5">
         <div className="container mx-auto px-4 text-center max-w-3xl">
-          <p className="text-gray-300 mb-6 leading-relaxed">
-            Merci d’avoir lu jusqu’ici. Si vous êtes encore là, c’est probablement que vous aimez autant que nous l’univers du jeu de rôle.
-            On vous souhaite des parties mémorables, des jets de dés chanceux, et des aventures épiques.
-          </p>
+<p 
+  className="text-gray-300 mb-6 leading-relaxed"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Merci d'avoir lu jusqu'ici. Si vous êtes encore là, c'est probablement que vous aimez autant que nous l'univers du jeu de rôle.
+  On vous souhaite des parties mémorables, des jets de dés chanceux, et des aventures épiques.
+</p>
           
           {/* 4. CRÉDITS MODIFIÉS */}
           <div className="p-6 bg-white/5 rounded-xl border border-yellow-500/20 inline-block">
