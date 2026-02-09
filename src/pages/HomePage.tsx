@@ -295,9 +295,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
               <div className="p-3 rounded-lg bg-blue-500/20 text-blue-400 shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
                 {benefit.icon}
               </div>
-              <p className="text-lg text-gray-200 font-medium pt-1">
-                {benefit.text}
-              </p>
+<p 
+  className="text-lg text-gray-300 pt-1"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  {benefit.text}
+</p>
             </div>
           ))}
         </div>
