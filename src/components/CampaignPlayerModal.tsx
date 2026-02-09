@@ -1034,12 +1034,13 @@ return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
       <div 
 className="fixed inset-0 sm:left-1/2 sm:-translate-x-1/2 sm:w-[min(42rem,95vw)] sm:h-[100vh] sm:rounded-xl overflow-hidden border-0 sm:border sm:border-gray-700 shadow-2xl"
-        style={{
-          backgroundImage: 'url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
+style={{
+  backgroundImage: 'url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png)',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat'
+}}
+
       >
         {/* Overlay blanc avec opacité */}
         <div className="absolute inset-0 bg-white/20 pointer-events-none" />
