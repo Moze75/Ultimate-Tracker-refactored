@@ -206,11 +206,14 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   L'outil ultime pour D&D 5e, pensé pour les francophones
 </h2>
         
-        <p className="text-lg text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
-          Fiches persos. Objets. Combats. Jets. Sorts. Campagnes.<br/>
-          Tout est là, <span className="text-white font-semibold">automatisé, fluide, et 100% en français</span>. 
-          Plus besoin de perdre du temps avec des outils lourds ou en anglais.
-        </p>
+<p 
+  className="text-lg text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  Fiches persos. Objets. Combats. Jets. Sorts. Campagnes.<br/>
+  Tout est là, <span className="text-white font-semibold" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>automatisé, fluide, et 100% en français</span>. 
+  Plus besoin de perdre du temps avec des outils lourds ou en anglais.
+</p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
