@@ -350,9 +350,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Crown size={120} />
               </div>
-              <h3 className="text-2xl font-bold text-purple-400 mb-6 flex items-center gap-3">
-                <Crown /> Pour les Maîtres du Jeu
-              </h3>
+<h3 
+  className="text-2xl font-semibold text-purple-400 mb-6 flex items-center gap-3"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  <Crown /> Pour les Maîtres du Jeu
+</h3>
               <ul className="space-y-4 text-gray-300">
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Création de campagnes et invitations des joueurs</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-purple-500 shrink-0"/> Envoi d’objets customs</li>
