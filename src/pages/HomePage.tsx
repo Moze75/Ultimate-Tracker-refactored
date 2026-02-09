@@ -551,7 +551,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
               </div>
               <div className="p-6 flex-grow">
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> 1 personnage max</li>
+<li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> 1 personnage max</li>
                   <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités disponibles</li>
                   <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Test complet sans CB</li>
                 </ul>
