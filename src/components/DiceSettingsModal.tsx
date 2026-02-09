@@ -624,12 +624,12 @@ function BackgroundTab({
   // 🆕 Liste des fonds d'écran (images)
   const backgroundImages = [ 
     { url: '/fondecran/Averne 1.png', name: 'Averne 1', type: 'image' as const },
-    { url: '/fondecran/Averne_2.png', name: 'Averne 2', type: 'image' as const },
+    { url: '/fondecran/Averne 2.png', name: 'Averne 2', type: 'image' as const },
     { url: '/fondecran/Cave.png', name: 'Cave', type: 'image' as const },
-    { url: '/fondecran/Desert_1.png', name: 'Desert 1', type: 'image' as const },
-    { url: '/fondecran/Desert_2.png', name: 'Desert 2', type: 'image' as const },
-    { url: '/fondecran/Dragon_1.png', name: 'Dragon 1', type: 'image' as const },
-    { url: '/fondecran/Dragon_2.png', name: 'Dragon 2', type: 'image' as const },
+    { url: '/fondecran/Desert 1.png', name: 'Desert 1', type: 'image' as const },
+    { url: '/fondecran/Desert 2.png', name: 'Desert 2', type: 'image' as const },
+    { url: '/fondecran/Dragon 1.png', name: 'Dragon 1', type: 'image' as const },
+    { url: '/fondecran/Dragon 2.png', name: 'Dragon 2', type: 'image' as const },
     { url: '/fondecran/Forest_1.png', name: 'Forest 1', type: 'image' as const },
     { url: '/fondecran/Forest_2.png', name: 'Forest 2', type: 'image' as const },
     { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const },
