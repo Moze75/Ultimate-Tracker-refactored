@@ -335,7 +335,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   <Users /> Pour les Joueurs
 </h3>
               <ul className="space-y-4 text-gray-300">
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 persos en plan héro</li>
+<li 
+  className="flex items-center gap-3"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 persos en plan héro
+</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Accès rapide aux stats, jets, inventaire</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Dice roller 3D intégré</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Suivi de la concentration et des états</li>
