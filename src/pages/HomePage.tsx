@@ -656,9 +656,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
       {/* --- SECTION 7 : FAQ --- */}
       <div className="py-24 bg-black/40 border-t border-white/5">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Questions fréquentes
-          </h2>
+<h2 
+  className="text-3xl font-semibold text-center text-[#EFE6D8] mb-12"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Questions fréquentes
+</h2>
           
           <div className="space-y-4">
             {faqs.map((faq, index) => (
