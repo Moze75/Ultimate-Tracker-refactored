@@ -792,14 +792,15 @@ await new Promise(resolve => setTimeout(resolve, 300));
           {/* Titre & Contexte */}
           <div className="text-center mb-12">
             
-            <h1
-              className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight"
-              style={{
-                textShadow: '0 0 30px rgba(255,255,255,0.2)',
-              }}
-            >
-              Mes Personnages
-            </h1>
+<h1
+  className="text-4xl md:text-5xl font-semibold text-[#EFE6D8] mb-4 tracking-tight"
+  style={{
+    fontFamily: 'Cinzel, serif',
+    textShadow: '0 0 30px rgba(239,230,216,0.3)',
+  }}
+>
+  Mes Personnages
+</h1>
             
             <p className="text-lg text-gray-300 font-light">
               {players.length > 0
