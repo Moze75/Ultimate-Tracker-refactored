@@ -230,9 +230,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       <div className="bg-black/60 backdrop-blur-md py-20 border-y border-white/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
-              Pourquoi gérer vos parties est devenu une corvée ?
-            </h2>
+<h2 
+  className="text-3xl md:text-4xl font-semibold text-[#EFE6D8] mb-8"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Pourquoi gérer vos parties est devenu une corvée ?
+</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
               <p>
                 Entre les feuilles volantes, les applis traduites à moitié, ou les logiciels trop techniques, vous perdez du temps…
