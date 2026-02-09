@@ -189,9 +189,15 @@ export function HomePage({ onGetStarted }: HomePageProps) {
         </div>
         
         {/* 1. TITRE MODIFIÉ */}
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]">
-          Le Compagnon
-        </h1>
+<h1 
+  className="text-5xl md:text-7xl font-semibold text-[#EFE6D8] mb-4 tracking-tight" 
+  style={{ 
+    fontFamily: 'Cinzel, serif',
+    textShadow: '0 0 30px rgba(239,230,216,0.4)'
+  }}
+>
+  Le Compagnon
+</h1>
 
         <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
           L'outil ultime pour D&D 5e, pensé pour les francophones
