@@ -634,7 +634,7 @@ function BackgroundTab({
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Forest%202.png', name: 'Forest 2', type: 'image' as const },
     { url: '/fondecran/forest.png', name: 'forest', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Magic.png', name: 'Magic', type: 'image' as const },
-    { url: '/fondecran/Mountain_1.png', name: 'Mountain 1', type: 'image' as const },
+    { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Mountain%201.png', name: 'Mountain 1', type: 'image' as const },
     { url: '/fondecran/Mountain_2.png', name: 'Mountain 2', type: 'image' as const },
     { url: '/fondecran/Mountain_3.png', name: 'Mountain 3', type: 'image' as const },
     { url: '/fondecran/Table.png', name: 'Table', type: 'image' as const },
