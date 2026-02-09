@@ -955,9 +955,12 @@ onClick={() => {
                             {player.class ? (
                               <div className="flex items-center gap-2 mb-2">
                                 {getClassIcon(player.class)}
-                                <span className="text-sm text-slate-200">
-                                  {displayClassName(player.class)} niveau {player.level}
-                                </span>
+<span 
+  className="text-sm text-gray-400"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  {displayClassName(player.class)} niveau {player.level}
+</span>
                               </div>
                             ) : (
                               <p className="text-sm text-slate-300 mb-2">Personnage non configuré</p>
