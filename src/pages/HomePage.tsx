@@ -341,9 +341,24 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 >
   <CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 persos en plan héro
 </li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Accès rapide aux stats, jets, inventaire</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Dice roller 3D intégré</li>
-                <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Suivi de la concentration et des états</li>
+<li 
+  className="flex items-center gap-3"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Accès rapide aux stats, jets, inventaire
+</li>
+<li 
+  className="flex items-center gap-3"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Dice roller 3D intégré
+</li>
+<li 
+  className="flex items-center gap-3"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Suivi de la concentration et des états
+</li>
               </ul>
               <button onClick={scrollToSubscription} className="mt-8 w-full py-3 rounded-lg border border-blue-500/50 text-blue-300 hover:bg-blue-500/10 transition-colors">
                 Voir les abonnements
