@@ -624,7 +624,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
               <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">POPULAIRE</div>
               <div className="p-6 bg-purple-900/30 border-b border-purple-500/30">
                 <Crown className="w-10 h-10 text-purple-400 mb-4" />
-                <h3 className="text-2xl font-bold text-white">Maître du Jeu</h3>
+           <h3 
+  className="text-2xl font-semibold text-[#EFE6D8]"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Maître du Jeu
+</h3>
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">15€</span>
                   <span className="text-gray-400 text-sm ml-2">/ an</span>
