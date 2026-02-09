@@ -687,10 +687,30 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
               </div>
               <div className="p-6 flex-grow">
                 <ul className="space-y-3 mb-6">
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> <strong>Personnages illimités</strong></li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Support ultra-prioritaire</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Accès anticipé aux nouveautés</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Toutes fonctionnalités Héros + MJ</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> <strong>Personnages illimités</strong>
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Support ultra-prioritaire
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Accès anticipé aux nouveautés
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-yellow-500 mt-0.5 shrink-0"/> Toutes fonctionnalités Héros + MJ
+</li>
                 </ul>
                 
                 <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-2">
