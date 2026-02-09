@@ -640,7 +640,7 @@ function BackgroundTab({
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table.png', name: 'Table', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Toits.png', name: 'Toits', type: 'image' as const },
     { url: '/fondecran/Toits_copy.png', name: 'Toits copy', type: 'image' as const },
-    { url: '/fondecran/Underwater.png', name: 'Underwater', type: 'image' as const },
+    { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Underwater.png', name: 'Underwater', type: 'image' as const },
     { url: '/fondecran/War.png', name: 'War', type: 'image' as const },
     { url: '/fondecran/War_2.png', name: 'War 2', type: 'image' as const },
     { url: '/fondecran/War_3.png', name: 'War 3', type: 'image' as const },
