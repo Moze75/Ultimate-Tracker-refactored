@@ -634,9 +634,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
                 </ul>
                 
                 <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-2">
-                  <p className="text-xs text-yellow-200 italic leading-relaxed">
-                    En choisissant Céleste, vous devenez un pilier du projet. Votre soutien nous aide à maintenir l’app et à la faire évoluer. Merci de faire partie de cette aventure.
-                  </p>
+<p 
+  className="text-xs text-yellow-200 italic leading-relaxed"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  En choisissant Céleste, vous devenez un pilier du projet. Votre soutien nous aide à maintenir l'app et à la faire évoluer. Merci de faire partie de cette aventure.
+</p>
                 </div>
               </div>
               <div className="p-6 pt-0 mt-auto">
