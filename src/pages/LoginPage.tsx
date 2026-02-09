@@ -434,13 +434,16 @@ const toggleForgotPassword = () => {
               className="space-y-4" 
               onSubmit={isForgotPassword ? handleResetPassword : isSignUp ? handleEmailSignUp : handleEmailSignIn}
             >
-              <h3 className="text-lg font-semibold text-gray-100 text-center">
-                {isForgotPassword 
-                  ? 'Mot de passe oublié' 
-                  : isSignUp 
-                  ? 'Créer un compte' 
-                  : 'Se connecter'}
-              </h3>
+<h3 
+  className="text-lg font-semibold text-[#EFE6D8] text-center"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  {isForgotPassword 
+    ? 'Mot de passe oublié' 
+    : isSignUp 
+    ? 'Créer un compte' 
+    : 'Se connecter'}
+</h3>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
