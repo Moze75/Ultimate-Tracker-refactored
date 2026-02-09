@@ -670,7 +670,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
                   onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                   className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
                 >
-                  <span className="font-semibold text-gray-200">{faq.question}</span>
+                <span 
+  className="font-semibold text-[#EFE6D8]"
+  style={{ fontFamily: 'Cinzel, serif', fontWeight: 600 }}
+>
+  {faq.question}
+</span>
                   {openFaqIndex === index ? <ChevronUp className="text-blue-400"/> : <ChevronDown className="text-gray-500"/>}
                 </button>
                 {openFaqIndex === index && (
