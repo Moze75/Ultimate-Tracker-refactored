@@ -626,7 +626,7 @@ function BackgroundTab({
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Averne%201.png', name: 'Averne 1', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Averne%202.png', name: 'Averne 2', type: 'image' as const },
     { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Cave.png', name: 'Cave', type: 'image' as const },
-    { url: '/fondecran/Desert 1.png', name: 'Desert 1', type: 'image' as const },
+    { url: 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Desert%201.png', name: 'Desert 1', type: 'image' as const },
     { url: '/fondecran/Desert 2.png', name: 'Desert 2', type: 'image' as const },
     { url: '/fondecran/Dragon 1.png', name: 'Dragon 1', type: 'image' as const },
     { url: '/fondecran/Dragon 2.png', name: 'Dragon 2', type: 'image' as const },
