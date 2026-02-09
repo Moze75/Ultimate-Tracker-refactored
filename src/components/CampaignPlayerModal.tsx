@@ -1042,8 +1042,7 @@ style={{
 }}
 
       >
-        {/* Overlay blanc avec opacité */}
-        <div className="absolute inset-0 bg-white/20 pointer-events-none" />
+
         
         {/* Overlay gris foncé pour contraste */}
         <div className="absolute inset-0 bg-gray-900/80 pointer-events-none" />
