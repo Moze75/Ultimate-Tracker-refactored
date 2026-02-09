@@ -679,9 +679,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
                   {openFaqIndex === index ? <ChevronUp className="text-blue-400"/> : <ChevronDown className="text-gray-500"/>}
                 </button>
                 {openFaqIndex === index && (
-                  <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-white/5 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {faq.answer}
-                  </div>
+<div 
+  className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-white/5 pt-4 animate-in fade-in slide-in-from-top-2 duration-200"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  {faq.answer}
+</div>
                 )}
               </div>
             ))}
