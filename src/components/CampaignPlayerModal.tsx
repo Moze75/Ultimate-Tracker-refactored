@@ -1044,8 +1044,7 @@ style={{
       >
 
         
-        {/* Overlay gris foncé pour contraste */}
-        <div className="absolute inset-0 bg-gray-900/80 pointer-events-none" />
+
 
         {/* Contenu par-dessus les overlays */}
         <div className="relative z-10 h-full flex flex-col">
