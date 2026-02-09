@@ -236,18 +236,24 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 >
   Pourquoi gérer vos parties est devenu une corvée ?
 </h2>
-            <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
-              <p>
-                Entre les feuilles volantes, les applis traduites à moitié, ou les logiciels trop techniques, vous perdez du temps…
-                Résultat ? Vos parties ralentissent, et vous perdez le flow.
-              </p>
-              <p className="font-medium text-white text-xl">
-                Le vrai problème ?
-              </p>
-              <p>
-                Les outils classiques ne sont pas conçus pour vous. Ni pour les MJ francophones. Ni pour les joueurs qui veulent juste... jouer. Nickel.
-              </p>
-            </div>
+            <div 
+  className="space-y-6 text-lg text-gray-300 leading-relaxed"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  <p>
+    Entre les feuilles volantes, les applis traduites à moitié, ou les logiciels trop techniques, vous perdez du temps…
+    Résultat ? Vos parties ralentissent, et vous perdez le flow.
+  </p>
+  <p 
+    className="font-semibold text-[#EFE6D8] text-xl"
+    style={{ fontFamily: 'Cinzel, serif' }}
+  >
+    Le vrai problème ?
+  </p>
+  <p>
+    Les outils classiques ne sont pas conçus pour vous. Ni pour les MJ francophones. Ni pour les joueurs qui veulent juste... jouer. Nickel.
+  </p>
+</div>
             
             <div className="mt-12 p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-500/20">
               <p className="text-xl md:text-2xl font-semibold text-blue-200">
