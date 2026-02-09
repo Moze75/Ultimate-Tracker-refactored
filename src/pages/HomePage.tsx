@@ -757,9 +757,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
 </p>
           </div>
           
-          <p className="mt-8 text-blue-400 italic font-medium">
-            À bientôt dans le multivers du Compagnon DnD
-          </p>
+<p 
+  className="mt-8 text-blue-400 italic font-medium"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  À bientôt dans le multivers du Compagnon DnD
+</p>
         </div>
       </div>
 
