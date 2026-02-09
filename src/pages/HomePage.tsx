@@ -567,7 +567,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
             <div className="relative bg-blue-900/20 backdrop-blur-sm border border-blue-500/30 rounded-xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02]">
               <div className="p-6 bg-blue-900/30 border-b border-blue-500/30">
                 <Sparkles className="w-10 h-10 text-blue-400 mb-4" />
-                <h3 className="text-2xl font-bold text-white">Héros</h3>
+               <h3 
+  className="text-2xl font-semibold text-[#EFE6D8]"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Héros
+</h3>
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">10€</span>
                   <span className="text-gray-400 text-sm ml-2">/ an</span>
