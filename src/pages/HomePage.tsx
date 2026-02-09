@@ -256,12 +256,18 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 </div>
             
             <div className="mt-12 p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-500/20">
-              <p className="text-xl md:text-2xl font-semibold text-blue-200">
-                C’est exactement pour ça que Le Compagnon a été créé.
-              </p>
-              <p className="mt-4 text-blue-100/80">
-                une appli 100% ligne, légère et toujours à jours. Pensée pour le plaisir du jeu, sans prise de tête. 
-              </p>
+<p 
+  className="text-xl md:text-2xl font-semibold text-blue-200"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  C'est exactement pour ça que Le Compagnon a été créé.
+</p>
+<p 
+  className="mt-4 text-blue-100/80"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  une appli 100% ligne, légère et toujours à jours. Pensée pour le plaisir du jeu, sans prise de tête. 
+</p>
             </div>
           </div>
         </div>
