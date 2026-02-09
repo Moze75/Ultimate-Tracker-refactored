@@ -695,9 +695,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
       {/* --- SECTION 8 : CTA FINAL --- */}
       <div className="py-24 bg-gradient-to-t from-blue-900/20 to-transparent">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Prêt à simplifier vos parties de D&D ?
-          </h2>
+<h2 
+  className="text-4xl font-semibold text-[#EFE6D8] mb-4"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Prêt à simplifier vos parties de D&D ?
+</h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
             Que vous soyez joueur ou MJ, Le Compagnon est là pour vous faire gagner du temps… et du plaisir de jeu.
           </p>
