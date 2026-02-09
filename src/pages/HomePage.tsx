@@ -637,10 +637,30 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
               </div>
               <div className="p-6 flex-grow">
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Jusqu’à 15 personnages</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> <strong>Accès complet outils MJ</strong></li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Campagnes, Envois d'objets, Gestion Joueurs</li>
-                  <li className="flex items-start gap-3 text-gray-300 italic text-sm"><CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités Héros incluses</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Jusqu'à 15 personnages
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> <strong>Accès complet outils MJ</strong>
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Campagnes, Envois d'objets, Gestion Joueurs
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300 italic text-sm"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  <CheckCircle2 size={18} className="text-purple-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités Héros incluses
+</li>
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
