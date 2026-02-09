@@ -1141,12 +1141,20 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
       {showFirstWelcome && (
   <div className="fixed inset-0 z-[210] bg-black/80 flex items-center justify-center">
     <div className="bg-gradient-to-br from-purple-900 via-purple-800 to-gray-900 border border-purple-400/30 rounded-xl max-w-md w-full p-8 shadow-2xl text-center">
-      <h2 className="text-3xl font-bold text-purple-300 mb-3">Bienvenue !</h2>
-      <p className="text-gray-200 mb-5">
-        Merci de rejoindre Le Compagnon D&D 🎲<br/>
-        Votre période d'essai de 15 jours commence maintenant.<br/>
-        <b>Créez votre premier personnage !</b>
-      </p>
+<h2 
+  className="text-3xl font-semibold text-[#EFE6D8] mb-3"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Bienvenue !
+</h2>
+<p 
+  className="text-gray-300 mb-5"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Merci de rejoindre Le Compagnon D&D 🎲<br/>
+  Votre période d'essai de 15 jours commence maintenant.<br/>
+  <b style={{ fontFamily: 'Cinzel, serif', color: '#EFE6D8' }}>Créez votre premier personnage !</b>
+</p>
       <button
         onClick={() => setShowFirstWelcome(false)}
         className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-700 to-purple-500 text-white font-semibold hover:from-purple-600 hover:to-purple-400 transition-all text-lg"
