@@ -518,9 +518,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
       <div id="abonnements" className="py-24 scroll-mt-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Choisissez votre équipement avant d’entrer dans l’arène
-            </h2>
+<h2 
+  className="text-3xl md:text-4xl font-semibold text-[#EFE6D8] mb-4"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Choisissez votre équipement avant d'entrer dans l'arène
+</h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Quel que soit votre niveau, il y a un plan pour vous accompagner dans vos aventures.
             </p>
