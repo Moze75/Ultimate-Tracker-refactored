@@ -412,15 +412,20 @@ const toggleForgotPassword = () => {
   <div className="leading-tight">Le Compagnon</div>
   <div className="leading-tight">D&D</div>
 </h1>
-          <p className="text-gray-200 mb-2" style={{
-            textShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
-          }}>
-            {isForgotPassword 
-              ? 'Réinitialiser votre mot de passe'
-              : isSignUp 
-              ? 'Créez votre compte' 
-              : 'Gérez vos personnages et vos parties'}
-          </p>
+<p 
+  className="text-gray-300 mb-2" 
+  style={{
+    fontFamily: 'Inter, sans-serif',
+    fontWeight: 300,
+    textShadow: '0 0 10px rgba(255, 255, 255, 0.2)'
+  }}
+>
+  {isForgotPassword 
+    ? 'Réinitialiser votre mot de passe'
+    : isSignUp 
+    ? 'Créez votre compte' 
+    : 'Gérez vos personnages et vos parties'}
+</p>
         </div>
 
         <div className="stat-card">
