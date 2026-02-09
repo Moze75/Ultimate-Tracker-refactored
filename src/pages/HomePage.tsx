@@ -524,9 +524,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
 >
   Choisissez votre équipement avant d'entrer dans l'arène
 </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Quel que soit votre niveau, il y a un plan pour vous accompagner dans vos aventures.
-            </p>
+<p 
+  className="text-xl text-gray-400 max-w-2xl mx-auto"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Quel que soit votre niveau, il y a un plan pour vous accompagner dans vos aventures.
+</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
