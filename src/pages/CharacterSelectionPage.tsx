@@ -979,10 +979,13 @@ onClick={() => {
                                 style={{ width: `${ratio}%` }}
                               />
                             </div>
-                            <p className="text-xs text-slate-200">
-                              {currHp} / {maxHp} PV
-                              {tempHp > 0 && <span className="text-blue-300 ml-1">(+{tempHp})</span>}
-                            </p>
+<p 
+  className="text-xs text-gray-400"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  {currHp} / {maxHp} PV
+  {tempHp > 0 && <span className="text-blue-300 ml-1">(+{tempHp})</span>}
+</p>
                           </div>
                         </div>
                       </div>
