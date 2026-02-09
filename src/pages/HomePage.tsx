@@ -737,11 +737,24 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
           
           {/* 4. CRÉDITS MODIFIÉS */}
           <div className="p-6 bg-white/5 rounded-xl border border-yellow-500/20 inline-block">
-             <p className="text-gray-400 text-sm mb-3">Un grand merci à mes incroyables joueur·euse·s et testeurs :</p>
-             <p className="text-yellow-400 font-medium mb-2 text-lg">
-               Grut, Mhuggen, Philomène, Riane, Draniak et Bluemoown
-             </p>
-             <p className="text-gray-500 text-xs">Et à toute la communauté du discord Nantais ! 🎲</p>
+<p 
+  className="text-gray-400 text-sm mb-3"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  Un grand merci à mes incroyables joueur·euse·s et testeurs :
+</p>
+<p 
+  className="text-yellow-400 font-semibold mb-2 text-lg"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Grut, Mhuggen, Philomène, Riane, Draniak et Bluemoown
+</p>
+<p 
+  className="text-gray-500 text-xs"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Et à toute la communauté du discord Nantais ! 🎲
+</p>
           </div>
           
           <p className="mt-8 text-blue-400 italic font-medium">
