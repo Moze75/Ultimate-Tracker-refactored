@@ -1127,11 +1127,19 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
       {showTrialLimitModal && (
   <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center">
     <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-yellow-400/30 rounded-xl max-w-sm w-full p-8 shadow-2xl text-center">
-      <h2 className="text-2xl font-bold text-yellow-400 mb-4">Limite atteinte</h2>
-      <p className="text-gray-200 mb-6">
-        Les comptes gratuits sont limités à un seul personnage.<br/>
-        Passez sur un plan supérieur pour en créer d’autres.
-      </p>
+<h2 
+  className="text-2xl font-semibold text-[#EFE6D8] mb-4"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Limite atteinte
+</h2>
+<p 
+  className="text-gray-300 mb-6"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Les comptes gratuits sont limités à un seul personnage.<br/>
+  Passez sur un plan supérieur pour en créer d'autres.
+</p>
       <button
         onClick={() => {
           setShowTrialLimitModal(false);
