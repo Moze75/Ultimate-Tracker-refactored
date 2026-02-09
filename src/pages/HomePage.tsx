@@ -427,7 +427,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                     </div>
                     {/* Légende */}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
-                      <span className="text-white font-bold text-lg drop-shadow-md">{img.alt}</span>
+                    <span 
+  className="text-[#EFE6D8] font-semibold text-lg drop-shadow-md"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  {img.alt}
+</span>
                     </div>
                   </div>
                 </div>
