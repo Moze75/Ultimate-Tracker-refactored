@@ -1024,10 +1024,18 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
                     <Plus className="w-8 h-8 text-green-500" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-bold text-gray-100 mb-2">Nouveau Personnage</h3>
-                    <p className="text-sm text-slate-200">
-                      Créez un nouveau personnage pour vos aventures
-                    </p>
+<h3 
+  className="text-lg font-semibold text-[#EFE6D8] mb-2"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Nouveau Personnage
+</h3>
+<p 
+  className="text-sm text-gray-400"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Créez un nouveau personnage pour vos aventures
+</p>
                   </div>
                 </div>
               </div>
