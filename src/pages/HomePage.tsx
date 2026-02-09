@@ -538,7 +538,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
             <div className="relative bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02]">
               <div className="p-6 bg-gray-800/50 border-b border-gray-700">
                 <Shield className="w-10 h-10 text-gray-400 mb-4" />
-                <h3 className="text-2xl font-bold text-white">Essai Gratuit</h3>
+             <h3 
+  className="text-2xl font-semibold text-[#EFE6D8]"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  Essai Gratuit
+</h3>
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">0€</span>
                   <span className="text-gray-400 text-sm ml-2">/ 15 jours</span>
