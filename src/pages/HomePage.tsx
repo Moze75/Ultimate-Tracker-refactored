@@ -701,9 +701,12 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
 >
   Prêt à simplifier vos parties de D&D ?
 </h2>
-          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Que vous soyez joueur ou MJ, Le Compagnon est là pour vous faire gagner du temps… et du plaisir de jeu.
-          </p>
+<p 
+  className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Que vous soyez joueur ou MJ, Le Compagnon est là pour vous faire gagner du temps… et du plaisir de jeu.
+</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               onClick={onGetStarted}
