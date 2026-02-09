@@ -963,7 +963,12 @@ onClick={() => {
 </span>
                               </div>
                             ) : (
-                              <p className="text-sm text-slate-300 mb-2">Personnage non configuré</p>
+                             <p 
+  className="text-sm text-gray-400 mb-2"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  Personnage non configuré
+</p>
                             )}
                           </div>
 
