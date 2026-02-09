@@ -328,9 +328,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Sword size={120} />
               </div>
-              <h3 className="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-3">
-                <Users /> Pour les Joueurs
-              </h3>
+<h3 
+  className="text-2xl font-semibold text-blue-400 mb-6 flex items-center gap-3"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  <Users /> Pour les Joueurs
+</h3>
               <ul className="space-y-4 text-gray-300">
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Générez 5 persos en plan héro</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={18} className="text-blue-500 shrink-0"/> Accès rapide aux stats, jets, inventaire</li>
