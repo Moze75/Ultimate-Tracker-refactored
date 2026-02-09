@@ -802,11 +802,11 @@ await new Promise(resolve => setTimeout(resolve, 300));
   Mes Personnages
 </h1>
             
-            <p className="text-lg text-gray-300 font-light">
-              {players.length > 0
-                ? `${players.length} personnage${players.length > 1 ? 's' : ''} prêt${players.length > 1 ? 's' : ''} pour l'aventure`
-                : 'Aucun personnage pour le moment'}
-            </p>
+<p className="text-lg text-gray-300 font-light" style={{ fontFamily: 'Inter, sans-serif' }}>
+  {players.length > 0
+    ? `${players.length} personnage${players.length > 1 ? 's' : ''} prêt${players.length > 1 ? 's' : ''} pour l'aventure`
+    : 'Aucun personnage pour le moment'}
+</p>
 
             {/* Action MJ */}
            {(currentSubscription?.tier === 'game_master' || currentSubscription?.tier === 'celestial') && (
