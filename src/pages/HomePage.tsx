@@ -580,11 +580,36 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
               </div>
               <div className="p-6 flex-grow">
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Jusqu’à 5 personnages</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Création d’objets personnalisés</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Suivi de l’état, de la concentration</li>
-                  <li className="flex items-start gap-3 text-gray-300"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Dice Roller & Character Wizard</li>
-                  <li className="flex items-start gap-3 text-gray-300 italic text-sm"><CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Tous les outils pour le joueur régulier</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Jusqu'à 5 personnages
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Création d'objets personnalisés
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Suivi de l'état, de la concentration
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Dice Roller & Character Wizard
+</li>
+<li 
+  className="flex items-start gap-3 text-gray-300 italic text-sm"
+  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+>
+  <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0"/> Tous les outils pour le joueur régulier
+</li>
                 </ul>
               </div>
               <div className="p-6 pt-0 mt-auto">
