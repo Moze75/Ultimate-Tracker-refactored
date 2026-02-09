@@ -397,17 +397,21 @@ const toggleForgotPassword = () => {
         <div className="text-center">
 
           
-          <h1 className="text-4xl font-bold text-white mb-6" style={{
-            textShadow: `
-              0 0 15px rgba(255, 255, 255, 0.9),
-              0 0 20px rgba(255, 255, 255, 0.6),
-              0 0 30px rgba(255, 255, 255, 0.4),
-              0 0 40px rgba(255, 255, 255, 0.2)
-            `
-          }}>
-            <div className="leading-tight">Le Compagnon</div>
-            <div className="leading-tight">D&D</div>
-          </h1>
+<h1 
+  className="text-4xl font-semibold text-[#EFE6D8] mb-6" 
+  style={{
+    fontFamily: 'Cinzel, serif',
+    textShadow: `
+      0 0 15px rgba(239, 230, 216, 0.9),
+      0 0 20px rgba(239, 230, 216, 0.6),
+      0 0 30px rgba(239, 230, 216, 0.4),
+      0 0 40px rgba(239, 230, 216, 0.2)
+    `
+  }}
+>
+  <div className="leading-tight">Le Compagnon</div>
+  <div className="leading-tight">D&D</div>
+</h1>
           <p className="text-gray-200 mb-2" style={{
             textShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
           }}>
