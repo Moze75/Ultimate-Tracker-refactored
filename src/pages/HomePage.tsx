@@ -199,9 +199,12 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   Le Compagnon
 </h1>
 
-        <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
-          L'outil ultime pour D&D 5e, pensé pour les francophones
-        </h2>
+<h2 
+  className="text-2xl md:text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  L'outil ultime pour D&D 5e, pensé pour les francophones
+</h2>
         
         <p className="text-lg text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
           Fiches persos. Objets. Combats. Jets. Sorts. Campagnes.<br/>
