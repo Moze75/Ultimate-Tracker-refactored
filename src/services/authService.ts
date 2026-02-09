@@ -69,6 +69,37 @@ export const authService = {
     return await supabase.auth.signOut();
   },
 
+  async clearCacheAndSignOut() {
+    try {
+      console.log('🧹 Nettoyage du cache et déconnexion...');
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('✅ Cache PWA nettoyé');
+      }
+
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+        console.log('✅ Service Workers désenregistrés');
+      }
+
+      await supabase.auth.signOut();
+      console.log('✅ Déconnexion réussie');
+
+      window.location.href = '/';
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erreur lors du nettoyage:', error);
+      return { success: false, error };
+    }
+  },
+
   onAuthStateChange(callback: (session: any) => void) {
     return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session);

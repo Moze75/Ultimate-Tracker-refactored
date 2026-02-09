@@ -8,8 +8,9 @@ import { HomePage } from './pages/HomePage';
 import { DiceHistoryProvider } from './hooks/useDiceHistoryContext';
 import { DiceSettingsProvider } from './hooks/useDiceSettings'; // ✅ AJOUT
 import { flushHPQueue } from './services/hpSyncQueue';
-import { getPlayerSnapshot } from './services/playerLocalStore'; 
+import { getPlayerSnapshot } from './services/playerLocalStore';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import { ClearCachePage } from './pages/ClearCachePage';
 import { welcomeEmailService } from './services/welcomeEmailService';
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
@@ -599,7 +600,12 @@ useEffect(() => {
 
          {/* ✅ NOUVEAU : Afficher la HomePage si showHomePage est true et pas de session */}
       {(() => {
-      // Détecter si on est sur /payment-success
+      const currentPath = window.location.pathname;
+
+      if (currentPath === '/clear-cache') {
+        return <ClearCachePage />;
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
 
@@ -608,7 +614,6 @@ useEffect(() => {
           <PaymentSuccessPage
             onBackToDashboard={() => {
               setShowHomePage(false);
-              // L'utilisateur revient au dashboard (sélection de personnage)
             }}
           />
         );

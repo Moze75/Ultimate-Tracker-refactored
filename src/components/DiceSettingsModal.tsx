@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, History, Trash2, Image } from 'lucide-react';
+import { X, Settings, History, Trash2, Image, RefreshCw } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS, useDiceSettings } from '../hooks/useDiceSettings';
 import { formatRelativeTime, type DiceRollHistoryEntry } from '../hooks/useDiceHistory';
 import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
+import { authService } from '../services/authService';
  
 interface DiceSettingsModalProps {
   open: boolean;
@@ -525,8 +526,30 @@ function SettingsTab({
         </div>
       </div>
 
+      <div className="mt-8 pt-6 border-t border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-300 mb-3">🔧 Dépannage</h3>
+        <div className="bg-gray-900/50 rounded-lg p-4 space-y-3">
+          <p className="text-xs text-gray-400">
+            Si vous rencontrez des problèmes de connexion ou d'affichage, vous pouvez nettoyer complètement le cache de l'application.
+          </p>
+          <button
+            onClick={async () => {
+              if (window.confirm('⚠️ Cette action va :\n\n• Nettoyer tout le cache\n• Vous déconnecter\n• Recharger l\'application\n\nVoulez-vous continuer ?')) {
+                await authService.clearCacheAndSignOut();
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            <RefreshCw size={16} />
+            Nettoyer le cache et redémarrer
+          </button>
+          <p className="text-xs text-gray-500 italic">
+            ⚠️ Vous devrez vous reconnecter après cette action
+          </p>
+        </div>
+      </div>
 
-      
+
     </div>
   );
 }
