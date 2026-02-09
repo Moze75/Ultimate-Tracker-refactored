@@ -10,7 +10,8 @@ interface AccountPageProps {
   onBack: () => void;
 }
 
-const BG_URL = '/background/ddbground.png';  
+const BG_URL = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png';
+
 
 export function AccountPage({ session, onBack }: AccountPageProps) {
   const [loading, setLoading] = useState(true);
