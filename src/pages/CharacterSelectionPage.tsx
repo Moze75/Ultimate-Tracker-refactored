@@ -945,9 +945,12 @@ onClick={() => {
 
                         <div className="flex-1 min-w-0">
                           <div className="mb-3">
-                            <h3 className="text-lg font-bold text-gray-100 mb-1 truncate">
-                              {player.adventurer_name || player.name}
-                            </h3>
+<h3 
+  className="text-lg font-semibold text-[#EFE6D8] mb-1 truncate"
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  {player.adventurer_name || player.name}
+</h3>
 
                             {player.class ? (
                               <div className="flex items-center gap-2 mb-2">
