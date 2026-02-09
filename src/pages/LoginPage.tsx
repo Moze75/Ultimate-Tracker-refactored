@@ -570,13 +570,16 @@ const toggleForgotPassword = () => {
                 </div>
               </div>
               
-              {isSignUp && (
-                <div className="text-xs text-gray-400 text-center">
-                  En créant un compte, vous acceptez nos conditions d'utilisation.
-                  <br />
-                  Un email de confirmation sera envoyé à votre adresse.
-                </div>
-              )}
+{isSignUp && (
+  <div 
+    className="text-xs text-gray-400 text-center"
+    style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
+  >
+    En créant un compte, vous acceptez nos conditions d'utilisation.
+    <br />
+    Un email de confirmation sera envoyé à votre adresse.
+  </div>
+)}
             </form>
 
              {/* Liens légaux : Politique de confidentialité / Conditions */}
