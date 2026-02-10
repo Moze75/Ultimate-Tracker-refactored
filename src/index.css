@@ -376,7 +376,7 @@ body::before {
 /* Sous-cartes arrondies (bg-gray-800/50, bg-gray-800/30, etc.) */
 .frame-card .bg-gray-800\/50,
 .frame-card .bg-gray-800\/30,
-.frame-card .bg-gray-800\/40,
+.frame-card .bg-gAmbreray-800\/40,
 .frame-card--light .bg-gray-800\/50,
 .frame-card--light .bg-gray-800\/30,
 .frame-card--light .bg-gray-800\/40 {
@@ -435,7 +435,7 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.70;
+  opacity: 0.50;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
