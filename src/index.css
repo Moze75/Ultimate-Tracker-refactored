@@ -554,6 +554,38 @@ select {
   transform: rotate(45deg);
 }
 
+/* Indicateur de sélection pour les cartes de sorts */
+.spell-card-selected {
+  border: 2px solid #B87333 !important;
+  box-shadow: 0 0 0 3px rgba(184, 115, 51, 0.2),
+              0 0 12px rgba(184, 115, 51, 0.4) !important;
+}
+
+/* Cartes de sorts transparentes dans les frame-card */
+.frame-card .spell-card,
+.frame-card--light .spell-card {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: rgba(184, 115, 51, 0.15) !important;
+}
+
+/* En-têtes de niveau de sort */
+.frame-card .spell-level-header,
+.frame-card--light .spell-level-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(184, 115, 51, 0.2) !important;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+}
+
+/* Sections de sorts repliables */
+.frame-card .spell-section-expanded,
+.frame-card--light .spell-section-expanded {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(184, 115, 51, 0.12) !important;
+}
+
  /* ========================================
    Background pour le créateur de personnage
    ======================================== */
