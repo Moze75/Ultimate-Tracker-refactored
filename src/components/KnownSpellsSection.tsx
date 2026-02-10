@@ -851,7 +851,6 @@ function SpellCard({
   };
 
   return (
-    <div
 <div
   className={`spell-card bg-transparent border rounded-lg overflow-hidden transition-all duration-300 relative ${
     isExpanded ? 'spell-card-selected border-[#B87333] ring-2 ring-[#B87333]/30 shadow-lg shadow-[#B87333]/20' : 'border-[#B87333]/15 hover:bg-[#B87333]/5'
