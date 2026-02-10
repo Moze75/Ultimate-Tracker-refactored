@@ -76,17 +76,18 @@ export function TabbedPanel({
       {/* Onglets horizontaux en haut */}
       <div className="flex border-b border-gray-700 mb-4">
         {visibleTabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key as TabKey)}
-            className={`px-4 py-2 text-base font-medium transition-colors relative ${
-              activeTab === tab.key
-                ? 'text-purple-400 border-b-2 border-purple-500'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            {tab.label}
-          </button>
+<button
+  key={tab.key}
+  onClick={() => setActiveTab(tab.key as TabKey)}
+  className={`px-4 py-2 text-base font-semibold transition-colors relative ${
+    activeTab === tab.key
+      ? 'text-[#EFE6D8] border-b-2 border-purple-500'
+      : 'text-gray-400 hover:text-gray-300'
+  }`}
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  {tab.label}
+</button>
         ))}
       </div>
 
