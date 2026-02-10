@@ -188,7 +188,7 @@ export function DesktopView({
           > 
 
             {/* Header */}
-            <div className="bg-gray-800/70 rounded-lg border border-gray-700 backdrop-blur-sm p-4">
+            <div className="frame-card p-4">
               <DesktopHeader
                 player={player}
                 inventory={inventory}
