@@ -228,7 +228,7 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-size: 200%;            /* dézoomé : la texture est 2× plus large que le cadre */
+  background-size: cover;
   background-repeat: no-repeat;
   opacity: 0.70;
   border-radius: inherit;
