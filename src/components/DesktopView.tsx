@@ -204,7 +204,7 @@ export function DesktopView({
             {/* Grille HP + Abilities */}
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="bg-gray-800/40 rounded-lg border border-gray-700 backdrop-blur-sm p-4 h-full">
+                <div className="frame-card--light p-4 h-full">
                   <HPManagerConnected 
                     player={player}
                     onUpdate={onPlayerUpdate}
