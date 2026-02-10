@@ -323,7 +323,7 @@ body::before {
   letter-spacing: 0.02em;
 }
 
-/* Texte courant reste en Inter (déjà par défaut via body) */
+/* Texte courant reste en Inter, couleur ivoire chaud */
 .frame-card p,
 .frame-card li,
 .frame-card span:not(.font-semibold),
@@ -331,6 +331,43 @@ body::before {
 .frame-card--light li,
 .frame-card--light span:not(.font-semibold) {
   font-family: 'Inter', system-ui, sans-serif;
+  color: #E8DFD2;
+}
+
+/* Couleur ivoire globale dans les frame-card */
+.frame-card,
+.frame-card--light {
+  color: #E8DFD2;
+}
+
+.frame-card .text-white,
+.frame-card--light .text-white {
+  color: #EFE6D8 !important;
+}
+
+.frame-card .text-gray-100,
+.frame-card--light .text-gray-100 {
+  color: #EFE6D8 !important;
+}
+
+.frame-card .text-gray-200,
+.frame-card--light .text-gray-200 {
+  color: #E8DFD2 !important;
+}
+
+.frame-card .text-gray-300,
+.frame-card--light .text-gray-300 {
+  color: #D4C4A8 !important;
+}
+
+.frame-card .text-gray-400,
+.frame-card--light .text-gray-400 {
+  color: #B8A88A !important;
+}
+
+.frame-card .text-gray-500,
+.frame-card--light .text-gray-500 {
+  color: #9A8B6E !important;
 }
 
 /* Valeurs numériques (scores, bonus, HP) : rester en sans-serif pour lisibilité */
