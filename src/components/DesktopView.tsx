@@ -255,7 +255,7 @@ export function DesktopView({
               </div>
 
               <div className="col-span-8 flex">
-                <div className="frame-card p-4 w-full flex flex-col max-h-[880px]">
+                <div className="frame-card frame-card--tex2 p-4 w-full flex flex-col max-h-[880px]">
                   <TabbedPanel
                     player={player}
                     inventory={inventory}
