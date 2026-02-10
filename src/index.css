@@ -198,47 +198,62 @@ body::before {
 
 /* ========================================
    Frame Card - Cadre unifié pour tous les panneaux
+   Utilise border-image (9-slice) pour le contour décoratif
    ======================================== */
 
-/* --- Base commune --- */
+/* --- Base commune : contour par border-image --- */
 .frame-card,
 .frame-card--light {
   position: relative;
   border-style: solid;
-  border-width: 12px;
+  border-width: 10px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
-  border-image-slice: 40 fill;
+  border-image-slice: 40;
   border-image-repeat: round;
-  background: transparent;             /* le fill du border-image gère le fond */
-  overflow: visible;                    /* ne pas couper les coins du border-image */
+  border-radius: 0;                    /* border-image incompatible avec border-radius */
+  background-color: rgba(20, 18, 14, 0.85);  /* fond sombre derrière la texture */
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
 }
 
-/* Le pseudo-élément texture n'est plus nécessaire pour le fond
-   car border-image-slice: fill remplit le centre.
-   On le garde uniquement pour la texture de fond additionnelle. */
+/* --- Texture de fond (pseudo-élément) --- */
 .frame-card::before,
 .frame-card--light::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre1.webp');
   background-size: cover;
-  background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.55;                       /* réduit car le border-image fill ajoute déjà une texture */
+  opacity: 0.55;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Contenu au-dessus */
+/* Texture par défaut : BGambre1 */
+.frame-card::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre1.webp');
+  background-position: center center;
+}
+
+.frame-card--light::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre1.webp');
+  background-position: center center;
+  opacity: 0.45;                       /* plus léger pour la variante light */
+}
+
+/* Variante light : fond un peu plus transparent */
+.frame-card--light {
+  background-color: rgba(20, 18, 14, 0.65);
+}
+
+/* --- Contenu au-dessus de la texture --- */
 .frame-card > *,
 .frame-card--light > * {
   position: relative;
   z-index: 1;
 }
 
-/* --- Variantes de texture (panachage) --- */
+/* --- Variantes de texture (panachage par conteneur) --- */
 .frame-card--tex2::before {
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp') !important;
   background-position: top left !important;
@@ -252,190 +267,6 @@ body::before {
 .frame-card--tex4::before {
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp') !important;
   background-position: center top !important;
-}
-
-/* ========================================
-   Desktop: conteneurs intérieurs transparents
-   pour laisser voir la texture du frame-card parent
-   ======================================== */
-
-/* ========================================
-   Typographie D&D - Cinzel dans les frame-card
-   ======================================== */
-
-/* Titres de section : Cinzel semi-bold, teinte parchemin */
-.frame-card h2,
-.frame-card h3,
-.frame-card--light h2,
-.frame-card--light h3 {
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  color: #EFE6D8;
-  letter-spacing: 0.02em;
-}
-
-/* Sous-titres : Cinzel regular, parchemin plus foncé */
-.frame-card h4,
-.frame-card--light h4 {
-  font-family: 'Cinzel', serif;
-  font-weight: 400;
-  color: #D4C4A8;
-  letter-spacing: 0.01em;
-}
-
-/* Labels de section (span.font-semibold utilisés comme titres) */
-.frame-card span.font-semibold,
-.frame-card--light span.font-semibold {
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  color: #EFE6D8;
-}
-
-/* Stat-header : titres dans les en-têtes de cartes intérieures */
-.frame-card .stat-header h3,
-.frame-card--light .stat-header h3 {
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  color: #EFE6D8;
-}
-
-/* Boutons principaux dans les frame-card */
-.frame-card .btn-primary,
-.frame-card--light .btn-primary {
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-}
-
-/* Labels des onglets (TabNavigation dans TabbedPanel) */
-.frame-card button[role="tab"],
-.frame-card--light button[role="tab"] {
-  font-family: 'Cinzel', serif;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-/* Texte courant reste en Inter (déjà par défaut via body) */
-.frame-card p,
-.frame-card li,
-.frame-card span:not(.font-semibold),
-.frame-card--light p,
-.frame-card--light li,
-.frame-card--light span:not(.font-semibold) {
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-/* Valeurs numériques (scores, bonus, HP) : rester en sans-serif pour lisibilité */
-.frame-card input,
-.frame-card select,
-.frame-card--light input,
-.frame-card--light select {
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-/* Rendre les stat-card / stats-card transparents à l'intérieur des frame-card */
-.frame-card .stat-card,
-.frame-card .stats-card,
-.frame-card--light .stat-card,
-.frame-card--light .stats-card {
-  background-color: transparent;
-  background-image: none;
-  border-color: transparent;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-/* Rendre les stat-header transparents */
-.frame-card .stat-header,
-.frame-card--light .stat-header {
-  background: transparent;
-  border-bottom-color: rgba(212, 170, 96, 0.15);   /* filet doré très subtil */
-}
-
-/* Sous-conteneurs avec fond gris inline (Tailwind) */
-.frame-card [class*="bg-gray-800"],
-.frame-card--light [class*="bg-gray-800"] {
-  background-color: transparent !important;
-}
-
-/* Bordures internes grises → transparentes */
-.frame-card [class*="border-gray-700"],
-.frame-card--light [class*="border-gray-700"] {
-  border-color: rgba(212, 170, 96, 0.12) !important;
-}
-
-/* Sous-cartes arrondies (bg-gray-800/50, bg-gray-800/30, etc.) */
-.frame-card .bg-gray-800\/50,
-.frame-card .bg-gray-800\/30,
-.frame-card .bg-gray-800\/40,
-.frame-card--light .bg-gray-800\/50,
-.frame-card--light .bg-gray-800\/30,
-.frame-card--light .bg-gray-800\/40 {
-  background-color: rgba(0, 0, 0, 0.15) !important;
-  border-color: rgba(212, 170, 96, 0.10) !important;
-}
-
-/* --- Texture par défaut (BGambre1) --- */
-.frame-card::before,
-.frame-card--light::before {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre1.webp');
-  background-position: center center;
-}
-
-/* --- Variantes de texture (panachage) --- */
-.frame-card--tex2::before {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp') !important;
-  background-position: top left !important;
-}
-
-.frame-card--tex3::before {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre3.webp') !important;
-  background-position: bottom right !important;
-}
-
-.frame-card--tex4::before {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp') !important;
-  background-position: center top !important;
-}
-
-/* Le contenu doit passer au-dessus du pseudo-élément */
-.frame-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Variante plus transparente (ex: zone HP) */
-.frame-card--light {
-  position: relative;
-  background-color: rgba(31, 41, 55, 0.40);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 7px;
-  border: 1px solid rgba(212, 170, 96, 0.35);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 235, 180, 0.12),
-    0 6px 18px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-}
-
-.frame-card--light::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.70;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.frame-card--light > * {
-  position: relative;
-  z-index: 1;
 }
 
 .stat-header {
