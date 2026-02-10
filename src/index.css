@@ -228,7 +228,7 @@ body::before {
   border-image-width: 150px;
   border-image-repeat: stretch;
   border-style: solid;
-  border-width: 20px;
+  border-width: 12px;
   pointer-events: none;
   z-index: 10;
 }
