@@ -223,7 +223,7 @@ body::before {
   border-image-width: 12px;
   border-image-repeat: stretch;
   border-style: solid;
-  border-width: 12px;
+  border-width: 120px;
   pointer-events: none;
   z-index: 10;
 }
