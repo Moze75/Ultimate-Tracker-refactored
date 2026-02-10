@@ -103,7 +103,7 @@ const DEFAULT_ABILITIES: Ability[] = [
     skills: []
   },
   {
-    name: 'Intelligenc',
+    name: 'Intelligence', 
     score: 10,
     modifier: 0,
     savingThrow: 0,
