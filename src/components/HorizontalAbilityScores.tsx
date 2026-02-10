@@ -33,7 +33,7 @@ const calculateUnarmoredACFromAbilities = (
   }
 
   if (playerClass === 'Barbare') {
-    const conAbility = abilities.find(a => a.name === 'Constitution');
+    const conAbility = abilities.find(a => a.name === 'Const.');
     const baseConMod = conAbility ? getModifier(conAbility.score) : 0;
     const conMod = baseConMod + (equipmentBonuses.Constitution || 0);
     return 10 + dexMod + conMod;
