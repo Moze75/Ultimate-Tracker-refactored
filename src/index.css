@@ -243,6 +243,54 @@ body::before {
   z-index: 1;
 }
 
+/* ========================================
+   Desktop: conteneurs intérieurs transparents
+   pour laisser voir la texture du frame-card parent
+   ======================================== */
+
+/* Rendre les stat-card / stats-card transparents à l'intérieur des frame-card */
+.frame-card .stat-card,
+.frame-card .stats-card,
+.frame-card--light .stat-card,
+.frame-card--light .stats-card {
+  background-color: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Rendre les stat-header transparents */
+.frame-card .stat-header,
+.frame-card--light .stat-header {
+  background: transparent;
+  border-bottom-color: rgba(212, 170, 96, 0.15);   /* filet doré très subtil */
+}
+
+/* Sous-conteneurs avec fond gris inline (Tailwind) */
+.frame-card [class*="bg-gray-800"],
+.frame-card--light [class*="bg-gray-800"] {
+  background-color: transparent !important;
+}
+
+/* Bordures internes grises → transparentes */
+.frame-card [class*="border-gray-700"],
+.frame-card--light [class*="border-gray-700"] {
+  border-color: rgba(212, 170, 96, 0.12) !important;
+}
+
+/* Sous-cartes arrondies (bg-gray-800/50, bg-gray-800/30, etc.) */
+.frame-card .bg-gray-800\/50,
+.frame-card .bg-gray-800\/30,
+.frame-card .bg-gray-800\/40,
+.frame-card--light .bg-gray-800\/50,
+.frame-card--light .bg-gray-800\/30,
+.frame-card--light .bg-gray-800\/40 {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(212, 170, 96, 0.10) !important;
+}
+
 /* --- Texture par défaut (BGambre1) --- */
 .frame-card::before,
 .frame-card--light::before {
