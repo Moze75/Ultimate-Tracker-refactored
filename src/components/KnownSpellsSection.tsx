@@ -852,10 +852,11 @@ function SpellCard({
 
   return (
     <div
-      className={`bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden transition-all duration-300 relative ${
-        isExpanded ? 'ring-2 ring-purple-500/30 shadow-lg shadow-purple-900/20' : 'hover:bg-gray-700/50'
-      } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
-    >
+<div
+  className={`spell-card bg-transparent border rounded-lg overflow-hidden transition-all duration-300 relative ${
+    isExpanded ? 'spell-card-selected border-[#B87333] ring-2 ring-[#B87333]/30 shadow-lg shadow-[#B87333]/20' : 'border-[#B87333]/15 hover:bg-[#B87333]/5'
+  } ${spell.is_prepared ? 'border-green-500/30 bg-green-900/10' : ''}`}
+>
       <button
         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
         className="w-full text-left p-2 transition-all duration-200"
