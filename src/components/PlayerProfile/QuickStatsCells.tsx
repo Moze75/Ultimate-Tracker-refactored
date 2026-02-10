@@ -170,7 +170,7 @@ return (
         </span>
       </div>
       <div 
-        className="text-xs uppercase tracking-wide text-gray-500 -mt-12"
+        className="text-xs uppercase tracking-wide text-gray-500 -mt-2"
         style={{ marginLeft: '0px' }}
       >
         CA
