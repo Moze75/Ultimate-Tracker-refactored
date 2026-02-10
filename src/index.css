@@ -220,7 +220,7 @@ body::before {
   content: '';
   position: absolute;
   top: -60px;
-  bottom: -70px;
+  bottom: -72px;
   left: -60px;
   right: -60px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
