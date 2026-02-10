@@ -188,7 +188,7 @@ export function DesktopView({
           > 
 
             {/* Header */}
-            <div className="frame-card frame-card--tex3 p-4 h-full min-h-[180px]">
+            <div className="frame-card frame-card--tex2 p-4 h-full min-h-[180px]">
               <DesktopHeader
                 player={player}
                 inventory={inventory}
