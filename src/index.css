@@ -210,7 +210,7 @@ body::before {
   border-radius: 0;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   overflow: visible;
-  padding-top: 16px;                    /* empêche le contenu de chevaucher le cadre haut */
+  padding-top: 26px;                    /* empêche le contenu de chevaucher le cadre haut */
   padding-bottom: 6px;                 /* empêche le contenu de chevaucher le cadre bas */
 }
 
