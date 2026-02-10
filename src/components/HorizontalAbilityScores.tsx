@@ -299,7 +299,7 @@ return (
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-        filter: 'sepia(1) saturate(3) hue-rotate(10deg) brightness(1.1)'
+        filter: 'sepia(0.6) saturate(1.5) hue-rotate(-10deg) brightness(0.95)'
       }}
                 onClick={() => !editing && onAbilityClick && onAbilityClick(ability)}
                 title={editing ? '' : `Cliquer pour lancer 1d20+${ability.modifier}`}
