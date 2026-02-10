@@ -288,22 +288,18 @@ const handleSave = async () => {
           const baseModifier = getModifier(ability.score);
           const displayModifier = baseModifier + totalBonus;
 
-return (
-  <div key={ability.name} className="flex flex-col items-center">
-    <div
-      className={`relative w-24 h-32 flex flex-col items-center justify-start transition-all border-2 ${
-        editing 
-          ? 'opacity-60 border-yellow-600' 
-          : 'cursor-pointer hover:opacity-80 border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]'
-      } rounded-lg`}
-      style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.2)', // Un fond sombre léger pour faire ressortir l'or
-      }}
-    >
-      {/* Contenu */}
-    </div>
-  </div>
-);
+          return (
+            <div key={ability.name} className="flex flex-col items-center">
+              <div
+                className={`relative w-24 h-32 flex flex-col items-center justify-start transition-opacity ${
+                  editing ? 'opacity-60' : 'cursor-pointer hover:opacity-80'
+                }`}
+                style={{
+                  backgroundImage: 'url(/background/contenant_stats.png)',
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center'
+                }} 
                 onClick={() => !editing && onAbilityClick && onAbilityClick(ability)}
                 title={editing ? '' : `Cliquer pour lancer 1d20+${ability.modifier}`}
               >
