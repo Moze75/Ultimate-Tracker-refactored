@@ -219,7 +219,7 @@ body::before {
   position: absolute;
   inset: -60px;                         /* déborde de 6px de chaque côté */
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
-  border-image-slice: 45%;
+  border-image-slice: 15%;
   border-image-width: 150px;
   border-image-repeat: stretch;
   border-style: solid;
