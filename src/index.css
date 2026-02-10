@@ -214,7 +214,7 @@ body::before {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
-/* Le pseudo-élément texture n'est plus nécessaire pour le fond
+/* Le pseudo-élément texture n'est plus nécessaire pour le fond 
    car border-image-slice: fill remplit le centre.
    On le garde uniquement pour la texture de fond additionnelle. */
 .frame-card::before,
@@ -240,7 +240,7 @@ body::before {
 
 /* --- Variantes de texture (panachage) --- */
 .frame-card--tex2::before {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp') !important; 
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp') !important;
   background-position: top left !important;
 }
 
