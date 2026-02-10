@@ -217,7 +217,7 @@ body::before {
 .frame-card--light::after {
   content: '';
   position: absolute;
-  inset: -6px;                         /* déborde de 6px de chaque côté */
+  inset: -60px;                         /* déborde de 6px de chaque côté */
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
   border-image-slice: 45%;
   border-image-width: 120px;
