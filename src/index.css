@@ -209,7 +209,7 @@ body::before {
 
   /* Contour décoratif par border-image (9-slice) */
   border-style: solid;
-  border-width: 120px;
+  border-width: 20px; 
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
   border-image-slice: 30%;
   border-image-repeat: stretch;
