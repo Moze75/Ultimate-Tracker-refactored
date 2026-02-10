@@ -246,7 +246,7 @@ export function DesktopView({
             {/* Grille Skills + TabbedPanel */}
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4 flex">
-                <div className="frame-card frame-card--tex2 p-4 w-full max-h-[880px]">
+                <div className="frame-card--light frame-card--tex2 p-4 w-full max-h-[880px]">
                   <StandaloneSkillsSection
                     player={player}
                     onSkillClick={handleSkillClick}
