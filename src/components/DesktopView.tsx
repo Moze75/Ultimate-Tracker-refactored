@@ -220,7 +220,7 @@ export function DesktopView({
  
               
 <div className="col-span-8">
-  <div className="frame-card frame-card--tex2 p-4 h-full min-h-[180px]">
+  <div className="frame-card--light frame-card--tex2 p-4 h-full min-h-[180px]">
     {abilities.length > 0 ? (
       <HorizontalAbilityScores
         abilities={abilities}
