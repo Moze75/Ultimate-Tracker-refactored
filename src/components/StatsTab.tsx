@@ -188,7 +188,7 @@ const getAbilityShortName = (abilityName: string): string => {
       return 'Dex.';
     case 'Constitution':
       return 'Cons.';
-    case 'Intelligence':
+    case 'Intelligene':
       return 'Int.';
     case 'Sagesse':
       return 'Sag.';
