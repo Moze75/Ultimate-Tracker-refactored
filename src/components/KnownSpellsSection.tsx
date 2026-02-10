@@ -863,9 +863,12 @@ function SpellCard({
         {/* Ligne 1 : Nom + badges niveau/préparé + chevron */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <h4 className={`font-medium ${spell.is_prepared ? 'text-green-100' : 'text-gray-100'} truncate`}>
-              {spell.spell_name}
-            </h4>
+<h4 
+  className={`font-semibold ${spell.is_prepared ? 'text-green-100' : 'text-[#EFE6D8]'} truncate`}
+  style={{ fontFamily: 'Cinzel, serif' }}
+>
+  {spell.spell_name}
+</h4>
             {spell.is_prepared && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />}
           </div>
           
