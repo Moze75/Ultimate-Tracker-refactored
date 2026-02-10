@@ -219,7 +219,7 @@ body::before {
 .frame-card--light::after {
   content: '';
   position: absolute;
-  top: -62px;
+  top: -64px;
   bottom: -72px;
   left: -60px;
   right: -60px;
