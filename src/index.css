@@ -206,17 +206,26 @@ body::before {
   position: relative;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-
-  /* Contour décoratif par border-image (9-slice) */
-  border-style: solid;
-  border-width: 20px; 
-  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
-  border-image-slice: 30%;
-  border-image-repeat: stretch;
-  border-radius: 0;                    /* incompatible avec border-image */
-
+  border: none;
+  border-radius: 0;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
+  overflow: visible;                   /* laisser le cadre dépasser si besoin */
+}
+
+/* Cadre décoratif superposé via ::after */
+.frame-card::after,
+.frame-card--light::after {
+  content: '';
+  position: absolute;
+  inset: -6px;                         /* déborde de 6px de chaque côté */
+  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
+  border-image-slice: 45%;
+  border-image-width: 12px;
+  border-image-repeat: stretch;
+  border-style: solid;
+  border-width: 12px;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .frame-card {
