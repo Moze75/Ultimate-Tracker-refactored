@@ -248,6 +248,80 @@ body::before {
    pour laisser voir la texture du frame-card parent
    ======================================== */
 
+/* ========================================
+   Typographie D&D - Cinzel dans les frame-card
+   ======================================== */
+
+/* Titres de section : Cinzel semi-bold, teinte parchemin */
+.frame-card h2,
+.frame-card h3,
+.frame-card--light h2,
+.frame-card--light h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+  letter-spacing: 0.02em;
+}
+
+/* Sous-titres : Cinzel regular, parchemin plus foncé */
+.frame-card h4,
+.frame-card--light h4 {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  color: #D4C4A8;
+  letter-spacing: 0.01em;
+}
+
+/* Labels de section (span.font-semibold utilisés comme titres) */
+.frame-card span.font-semibold,
+.frame-card--light span.font-semibold {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+}
+
+/* Stat-header : titres dans les en-têtes de cartes intérieures */
+.frame-card .stat-header h3,
+.frame-card--light .stat-header h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+}
+
+/* Boutons principaux dans les frame-card */
+.frame-card .btn-primary,
+.frame-card--light .btn-primary {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Labels des onglets (TabNavigation dans TabbedPanel) */
+.frame-card button[role="tab"],
+.frame-card--light button[role="tab"] {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Texte courant reste en Inter (déjà par défaut via body) */
+.frame-card p,
+.frame-card li,
+.frame-card span:not(.font-semibold),
+.frame-card--light p,
+.frame-card--light li,
+.frame-card--light span:not(.font-semibold) {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Valeurs numériques (scores, bonus, HP) : rester en sans-serif pour lisibilité */
+.frame-card input,
+.frame-card select,
+.frame-card--light input,
+.frame-card--light select {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
 /* Rendre les stat-card / stats-card transparents à l'intérieur des frame-card */
 .frame-card .stat-card,
 .frame-card .stats-card,
