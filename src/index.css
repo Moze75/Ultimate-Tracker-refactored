@@ -199,43 +199,11 @@ body::before {
 /* ========================================
    Frame Card - Cadre unifié pour tous les panneaux
    ======================================== */
-.frame-card {
-  position: relative;
-  background-color: rgba(31, 41, 55, 0.70);        /* bg-gray-800/70 */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 7px;
-  border: 1px solid rgba(212, 170, 96, 0.35);       /* trait principal doré */
-  box-shadow:
-    inset 0 1px 0 rgba(255, 235, 180, 0.12),        /* highlight interne */
-    0 6px 18px rgba(0, 0, 0, 0.45);                  /* ombre externe */
-  overflow: hidden;
-}
 
-.frame-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.70;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Le contenu doit passer au-dessus du pseudo-élément */
-.frame-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Variante plus transparente (ex: zone HP) */
+/* --- Propriétés communes (base) --- */
+.frame-card,
 .frame-card--light {
   position: relative;
-  background-color: rgba(31, 41, 55, 0.40);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 7px;
@@ -246,13 +214,21 @@ body::before {
   overflow: hidden;
 }
 
+.frame-card {
+  background-color: rgba(31, 41, 55, 0.70);
+}
+
+.frame-card--light {
+  background-color: rgba(31, 41, 55, 0.40);
+}
+
+/* --- Pseudo-élément texture (partagé) --- */
+.frame-card::before,
 .frame-card--light::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp');
-  background-size: cover;
-  background-position: center;
+  background-size: 200%;            /* dézoomé : la texture est 2× plus large que le cadre */
   background-repeat: no-repeat;
   opacity: 0.70;
   border-radius: inherit;
@@ -260,9 +236,34 @@ body::before {
   z-index: 0;
 }
 
+/* --- Contenu au-dessus de la texture --- */
+.frame-card > *,
 .frame-card--light > * {
   position: relative;
   z-index: 1;
+}
+
+/* --- Texture par défaut (BGambre1) --- */
+.frame-card::before,
+.frame-card--light::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre1.webp');
+  background-position: center center;
+}
+
+/* --- Variantes de texture (panachage) --- */
+.frame-card--tex2::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp') !important;
+  background-position: top left !important;
+}
+
+.frame-card--tex3::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre3.webp') !important;
+  background-position: bottom right !important;
+}
+
+.frame-card--tex4::before {
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGambre4.webp') !important;
+  background-position: center top !important;
 }
 
 .stat-header {
