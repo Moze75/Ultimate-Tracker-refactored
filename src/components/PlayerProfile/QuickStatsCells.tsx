@@ -164,7 +164,7 @@ return (
         />
         <span 
           className="absolute text-xl font-bold text-gray-100"
-          style={{ top: '45%', left: '50%', transform: 'translate(-50%, -50%)' }}
+          style={{ top: '15%', left: '50%', transform: 'translate(-50%, -50%)' }}
         >
           {totalAC}
         </span>
