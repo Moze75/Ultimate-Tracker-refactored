@@ -197,7 +197,7 @@ body::before {
 }
 
 /* ========================================
-   Frame Card - Cadre unifié pour tous les panneaux
+   Frame Card - Cadre unifié pour tous les panneaux 
    ======================================== */
 
 /* --- Propriétés communes (base) --- */
@@ -228,13 +228,14 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-size: cover;
+  background-size: 200%;            /* dézoomé : la texture est 2× plus large que le cadre */
   background-repeat: no-repeat;
   opacity: 0.70;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
 }
+
 /* --- Contenu au-dessus de la texture --- */
 .frame-card > *,
 .frame-card--light > * {
