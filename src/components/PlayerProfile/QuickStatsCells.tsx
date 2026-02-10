@@ -154,7 +154,7 @@ return (
         }}
       >
         <img 
-          src="/background/shield_gris.png" 
+          src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BouclierOrCompress.png" 
           alt="CA"
           style={{
             width: '100%',
