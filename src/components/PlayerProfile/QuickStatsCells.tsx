@@ -164,13 +164,13 @@ return (
         />
         <span 
           className="absolute text-xl font-bold text-gray-100"
-          style={{ top: '15%', left: '50%', transform: 'translate(-50%, -50%)' }}
+          style={{ top: '45%', left: '50%', transform: 'translate(-50%, -50%)' }}
         >
           {totalAC}
         </span>
       </div>
       <div 
-        className="text-xs uppercase tracking-wide text-gray-500 -mt-6"
+        className="text-xs uppercase tracking-wide text-gray-500 -mt-10"
         style={{ marginLeft: '5px' }}
       >
         CA
