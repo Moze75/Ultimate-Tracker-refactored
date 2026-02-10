@@ -288,18 +288,19 @@ const handleSave = async () => {
           const baseModifier = getModifier(ability.score);
           const displayModifier = baseModifier + totalBonus;
 
-          return (
-            <div key={ability.name} className="flex flex-col items-center">
-              <div
-                className={`relative w-24 h-32 flex flex-col items-center justify-start transition-opacity ${
-                  editing ? 'opacity-60' : 'cursor-pointer hover:opacity-80'
-                }`}
-                style={{
-                  backgroundImage: 'url(/background/contenant_stats.png)',
-                  backgroundSize: 'contain',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center'
-                }} 
+return (
+  <div key={ability.name} className="flex flex-col items-center">
+    <div
+      className={`relative w-24 h-32 flex flex-col items-center justify-start transition-opacity ${
+        editing ? 'opacity-60' : 'cursor-pointer hover:opacity-80'
+      }`}
+      style={{
+        backgroundImage: 'url(/background/contenant_stats.png)',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        filter: 'sepia(1) saturate(3) hue-rotate(10deg) brightness(1.1)'
+      }}
                 onClick={() => !editing && onAbilityClick && onAbilityClick(ability)}
                 title={editing ? '' : `Cliquer pour lancer 1d20+${ability.modifier}`}
               >
