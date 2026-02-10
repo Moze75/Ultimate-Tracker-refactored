@@ -209,7 +209,9 @@ body::before {
   border: none;
   border-radius: 0;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-  overflow: visible;                   /* laisser le cadre dépasser si besoin */
+  overflow: visible;
+  padding-top: 6px;                    /* empêche le contenu de chevaucher le cadre haut */
+  padding-bottom: 6px;                 /* empêche le contenu de chevaucher le cadre bas */
 }
 
 /* Cadre décoratif superposé via ::after */
@@ -217,7 +219,10 @@ body::before {
 .frame-card--light::after {
   content: '';
   position: absolute;
-  inset: -60px;                         /* déborde de 6px de chaque côté */
+  top: -60px;
+  bottom: -60px;
+  left: -60px;
+  right: -60px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
   border-image-slice: 45%;
   border-image-width: 150px;
