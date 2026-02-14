@@ -1006,15 +1006,7 @@ case 'Magicien':
 
       <div className="stats-card">
                 <div className="p-4">
-          <button
-            onClick={() => setShowSpellbook(true)}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <Book size={20} />
-              Ouvrir le grimoire
-            </div>
-          </button>
+
         </div>
       </div>
 
