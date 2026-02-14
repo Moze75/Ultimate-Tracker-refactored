@@ -167,7 +167,7 @@ export function CompactActionsRow({ player, onUpdate, onOpenCampaigns }: Compact
 
         <div
           className="px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-300 flex items-center gap-2"
-          title="Des de vioq"
+          title="Des de vie"
         >
           <Dice6 className="w-4 h-4" />
           <span className="text-sm">{availableHitDice}/{player.hit_dice?.total || player.level}</span>
