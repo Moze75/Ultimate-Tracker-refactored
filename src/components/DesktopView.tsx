@@ -274,13 +274,13 @@ export function DesktopView({
             {/* Bouton Retour aux personnages - À LA FIN DE LA ZONE SCROLLABLE */}
             {onBackToSelection && (
               <div className="w-full mt-6 pb-6">
-                <button
-                  onClick={onBackToSelection}
-                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
-                >
-                  <LogOut size={20} />
-                  Retour aux personnages
-                </button>
+<button
+  onClick={onBackToSelection}
+  className="w-full btn-transparent-cinzel rounded-lg flex items-center justify-center gap-2 px-4 py-2"
+>
+  <LogOut size={20} />
+  Retour aux personnages
+</button>
               </div>
             )}
 
