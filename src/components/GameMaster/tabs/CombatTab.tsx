@@ -1385,6 +1385,7 @@ function ActiveParticipantsList({
   selectedMonster,
   loadingDetail,
   onRollDice,
+  isDesktop,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1399,6 +1400,7 @@ function ActiveParticipantsList({
   selectedMonster: Monster | null;
   loadingDetail: boolean;
   onRollDice?: (data: DiceRollData) => void;
+  isDesktop: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
