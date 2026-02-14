@@ -152,7 +152,7 @@ export function PlayerActionsPanel({ player, onUpdate, onOpenCampaigns }: Player
 
         {player.hit_dice && (
           <div className="w-32 px-2 py-1 text-sm bg-gray-800/30 rounded flex flex-col items-center">
-            <span className="text-gray-400 mb-0.5">Des de vie</span>
+            <span className="text-gray-400 mb-0.5">Des de viee</span>
             <span className="text-gray-300 font-medium text-center">
               {player.hit_dice.total - player.hit_dice.used} / {player.hit_dice.total}
             </span>
