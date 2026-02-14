@@ -1031,41 +1031,70 @@ export function GamePage({
                         toast.success('Mode onglets activé');
                       }}
                     />
-                  ) : (
+                   ) : (
                     <>
-                      <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
+                      <div className="frame-card--light frame-card--tex2 frame-card--no-frame p-3 sm:p-4">
+                        <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
+                      </div>
 
-                      <div
-                        ref={stageRef}
-                        className="relative"
-                        onTouchStart={onTouchStart}
-                        onTouchMove={onTouchMove}
-                        onTouchEnd={onTouchEnd}
-                        onTouchCancel={() => {
-                          fullAbortInteraction();
-                        }}
-                        style={{
-                          touchAction: 'pan-y',
-                          height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-                          transition: heightLocking ? 'height 280ms ease' : undefined,
-                        }}
-                      >
-                        {Array.from(visitedTabs).map((key) => {
-                          const isActive = key === activeTab;
-                          const isNeighbor =
-                            (neighborType === 'next' && key === nextKey) ||
-                            (neighborType === 'prev' && key === prevKey);
+                      <div className="frame-card--light frame-card--tex2 p-3 sm:p-4">
+                        <div
+                          ref={stageRef}
+                          className="relative"
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          onTouchCancel={() => {
+                            fullAbortInteraction();
+                          }}
+                          style={{
+                            touchAction: 'pan-y',
+                            height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                            transition: heightLocking ? 'height 280ms ease' : undefined,
+                          }}
+                        >
+                          {Array.from(visitedTabs).map((key) => {
+                            const isActive = key === activeTab;
+                            const isNeighbor =
+                              (neighborType === 'next' && key === nextKey) ||
+                              (neighborType === 'prev' && key === prevKey);
 
-                          if (showAsStatic) {
+                            if (showAsStatic) {
+                              return (
+                                <div
+                                  key={key}
+                                  ref={(el) => { paneRefs.current[key] = el; }}
+                                  data-tab={key}
+                                  style={{
+                                    display: isActive ? 'block' : 'none',
+                                    position: 'relative',
+                                    transform: 'none'
+                                  }}
+                                >
+                                  {key === 'class' && classSections === null
+                                    ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
+                                    : renderPane(key)}
+                                </div>
+                              );
+                            }
+
+                            const display = isActive || isNeighbor ? 'block' : 'none';
+                            let transform = 'translate3d(0,0,0)';
+                            if (isActive) transform = currentTransform;
+                            if (isNeighbor && neighborTransform) transform = neighborTransform;
+
                             return (
                               <div
                                 key={key}
                                 ref={(el) => { paneRefs.current[key] = el; }}
                                 data-tab={key}
+                                className={animating ? 'sv-anim' : undefined}
                                 style={{
-                                  display: isActive ? 'block' : 'none',
-                                  position: 'relative',
-                                  transform: 'none'
+                                  position: 'absolute',
+                                  inset: 0,
+                                  display,
+                                  transform,
+                                  willChange: isActive || isNeighbor ? 'transform' : undefined
                                 }}
                               >
                                 {key === 'class' && classSections === null
@@ -1073,33 +1102,8 @@ export function GamePage({
                                   : renderPane(key)}
                               </div>
                             );
-                          }
-
-                          const display = isActive || isNeighbor ? 'block' : 'none';
-                          let transform = 'translate3d(0,0,0)';
-                          if (isActive) transform = currentTransform;
-                          if (isNeighbor && neighborTransform) transform = neighborTransform;
-
-                          return (
-                            <div
-                              key={key}
-                              ref={(el) => { paneRefs.current[key] = el; }}
-                              data-tab={key}
-                              className={animating ? 'sv-anim' : undefined}
-                              style={{
-                                position: 'absolute',
-                                inset: 0,
-                                display,
-                                transform,
-                                willChange: isActive || isNeighbor ? 'transform' : undefined
-                              }}
-                            >
-                              {key === 'class' && classSections === null
-                                ? <div className="py-12 text-center text-white/70">Chargement des aptitudes…</div>
-                                : renderPane(key)}
-                            </div>
-                          );
-                        })}
+                          })}
+                        </div>
                       </div>
                     </>
                   )}
