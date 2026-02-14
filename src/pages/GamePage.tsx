@@ -853,7 +853,7 @@ export function GamePage({
             )}
           </div>
           <div 
-            className="fixed inset-0 pointer-events-none bg-gray-900/40"
+            className="fixed inset-0 pointer-events-none bg-gray-900/70"
             style={{
               zIndex: 1,
             }}
@@ -1008,10 +1008,11 @@ export function GamePage({
               {currentPlayer && (
                 <PlayerContext.Provider value={currentPlayer}>
                   {!isGridMode && (
-                    <PlayerProfile 
-                      player={currentPlayer} 
-                      onUpdate={applyPlayerUpdate} 
-                      inventory={inventory} 
+                    <div className="frame-card--light frame-card--tex2 frame-card--no-frame p-3 sm:p-4">
+                      <PlayerProfile 
+                        player={currentPlayer} 
+                        onUpdate={applyPlayerUpdate} 
+                      inventory={inventory}
                       currentBackground={backgroundImage}
                       onBackgroundChange={handleBackgroundChange}
                     />
@@ -1032,27 +1033,24 @@ export function GamePage({
                       }}
                     />
                   ) : (
-                                     <>
-                      <div className="frame-card--light frame-card--tex2 p-3 sm:p-4">
-                        <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
-                      </div>
+                    <>
+                      <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
 
-                      <div className="frame-card--light frame-card--tex2 p-3 sm:p-4">
-                        <div
-                          ref={stageRef}
-                          className="relative"
-                          onTouchStart={onTouchStart}
-                          onTouchMove={onTouchMove}
-                          onTouchEnd={onTouchEnd}
-                          onTouchCancel={() => {
-                            fullAbortInteraction();
-                          }}
-                          style={{
-                            touchAction: 'pan-y',
-                            height: (isInteracting || animating || heightLocking) ? containerH : undefined,
-                            transition: heightLocking ? 'height 280ms ease' : undefined,
-                          }}
-                        >
+                      <div
+                        ref={stageRef}
+                        className="relative"
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                        onTouchCancel={() => {
+                          fullAbortInteraction();
+                        }}
+                        style={{
+                          touchAction: 'pan-y',
+                          height: (isInteracting || animating || heightLocking) ? containerH : undefined,
+                          transition: heightLocking ? 'height 280ms ease' : undefined,
+                        }}
+                      >
                         {Array.from(visitedTabs).map((key) => {
                           const isActive = key === activeTab;
                           const isNeighbor =
@@ -1102,8 +1100,7 @@ export function GamePage({
                                 : renderPane(key)}
                             </div>
                           );
-                                            })}
-                        </div>
+                        })}
                       </div>
                     </>
                   )}
