@@ -1007,11 +1007,10 @@ export function GamePage({
             <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}> 
               {currentPlayer && (
                 <PlayerContext.Provider value={currentPlayer}>
-                                 {!isGridMode && (
-                    <div className="frame-card--light frame-card--tex2 frame-card--no-frame p-3 sm:p-4">
-                      <PlayerProfile 
-                        player={currentPlayer} 
-                        onUpdate={applyPlayerUpdate} 
+                  {!isGridMode && ( 
+                    <PlayerProfile 
+                      player={currentPlayer} 
+                      onUpdate={applyPlayerUpdate} 
                       inventory={inventory}
                       currentBackground={backgroundImage} 
                       onBackgroundChange={handleBackgroundChange}
