@@ -1417,17 +1417,25 @@ function ActiveParticipantsList({
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Auto-scroll vers le participant actif quand le tour change (en haut du conteneur)
+  // setTimeout pour laisser le DOM se mettre à jour (repli de la carte précédente)
   useEffect(() => {
     if (participants.length === 0) return;
     const currentParticipant = participants[encounter.current_turn_index];
     if (!currentParticipant) return;
-    const el = participantRefs.current[currentParticipant.id];
-    if (el && scrollContainerRef?.current) {
-      const container = scrollContainerRef.current;
-      // Petit offset de 8px pour ne pas coller au bord supérieur
-      const scrollTarget = el.offsetTop - 8;
-      container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
-    }
+
+    // Replier toute carte dépliée quand le tour change
+    setExpandedId(null);
+
+    const timer = setTimeout(() => {
+      const el = participantRefs.current[currentParticipant.id];
+      if (el && scrollContainerRef?.current) {
+        const container = scrollContainerRef.current;
+        const scrollTarget = el.offsetTop - 8;
+        container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, [encounter.current_turn_index, participants, scrollContainerRef]);
 
   if (participants.length === 0) {
