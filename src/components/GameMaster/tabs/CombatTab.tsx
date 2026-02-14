@@ -1416,7 +1416,7 @@ function ActiveParticipantsList({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Auto-scroll vers le participant actif quand le tour change
+  // Auto-scroll vers le participant actif quand le tour change (en haut du conteneur)
   useEffect(() => {
     if (participants.length === 0) return;
     const currentParticipant = participants[encounter.current_turn_index];
@@ -1424,10 +1424,8 @@ function ActiveParticipantsList({
     const el = participantRefs.current[currentParticipant.id];
     if (el && scrollContainerRef?.current) {
       const container = scrollContainerRef.current;
-      const elTop = el.offsetTop;
-      const elHeight = el.offsetHeight;
-      const containerHeight = container.clientHeight;
-      const scrollTarget = elTop - containerHeight / 2 + elHeight / 2;
+      // Petit offset de 8px pour ne pas coller au bord supérieur
+      const scrollTarget = el.offsetTop - 8;
       container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
     }
   }, [encounter.current_turn_index, participants, scrollContainerRef]);
