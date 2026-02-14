@@ -1027,7 +1027,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
 
           {/* Participants list */}
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="max-h-[70vh] overflow-y-auto" ref={scrollContainerRef}>
             {isActive ? (
               <ActiveParticipantsList
                 encounter={encounter}
