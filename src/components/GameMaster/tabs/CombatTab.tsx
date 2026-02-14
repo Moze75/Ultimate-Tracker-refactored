@@ -1044,6 +1044,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 loadingDetail={loadingDetail}
                 onRollDice={onRollDice}
                 isDesktop={isDesktop}
+                scrollContainerRef={scrollContainerRef}
               />
             ) : (
               <PrepParticipantsList
