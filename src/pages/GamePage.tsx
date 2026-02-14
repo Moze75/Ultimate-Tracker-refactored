@@ -1015,6 +1015,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
                         inventory={inventory}
                         currentBackground={backgroundImage}
                         onBackgroundChange={handleBackgroundChange}
+                        onOpenCampaigns={() => setShowCampaignModal(true)}
                       /> 
                     </div>
                   )}
