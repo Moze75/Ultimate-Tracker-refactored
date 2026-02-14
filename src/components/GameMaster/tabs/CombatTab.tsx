@@ -98,7 +98,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isDesktop = useIsDesktop();
   const isActive = !!encounter;
 
