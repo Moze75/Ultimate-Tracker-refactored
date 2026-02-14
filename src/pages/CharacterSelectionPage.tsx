@@ -898,9 +898,10 @@ await new Promise(resolve => setTimeout(resolve, 300));
 
                 return (
                   <div
-                    key={player.id}
-                    className="w-full max-w-sm relative group bg-slate-800/60 backdrop-blur-sm border border-slate-600/40 rounded-xl shadow-lg overflow-hidden hover:bg-slate-700/70 transition-all duration-200"
-                  >
+<div
+  key={player.id}
+  className="frame-card frame-card--tex2 p-0 group"
+>
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
