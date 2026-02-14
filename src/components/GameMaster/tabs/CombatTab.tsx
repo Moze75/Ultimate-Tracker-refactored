@@ -1151,7 +1151,6 @@ function PrepParticipantsList({
   loadingDetail: boolean;
   onRollDice?: (data: DiceRollData) => void;
   isDesktop: boolean;
-  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
