@@ -1394,6 +1394,7 @@ function ActiveParticipantsList({
   loadingDetail,
   onRollDice,
   isDesktop,
+  scrollContainerRef,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
