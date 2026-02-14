@@ -17,7 +17,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   ];
 
   return (
-    <div className="grid grid-cols-6 gap-1 mb-6">
+    <div className="grid grid-cols-6 gap-1 mb-0">
       {tabs.map((tab) => (
         <button
           key={tab.id}
