@@ -897,7 +897,6 @@ await new Promise(resolve => setTimeout(resolve, 300));
                   maxHp > 0 ? Math.min(100, Math.max(0, ((currHp + tempHp) / maxHp) * 100)) : 0;
 
                 return (
-                  <div
 <div
   key={player.id}
   className="frame-card frame-card--tex2 p-0 group"
