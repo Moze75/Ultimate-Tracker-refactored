@@ -403,10 +403,60 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   if (firstSectionStart > 0) {
     const preSection = block.substring(0, firstSectionStart);
     const crIndex = preSection.lastIndexOf("FP");
-    const afterCrMatch = crIndex > -1 ? preSection.indexOf("<br", crIndex) : -1;
-    if (afterCrMatch > -1) {
-      const traitBlock = preSection.substring(afterCrMatch);
-      traits = parseNameDescPairs(traitBlock);
+    if (crIndex > -1) {
+      // Chercher le premier <br ou <p après le FP + XP (en sautant la ligne du FP elle-même)
+      const afterFP = preSection.substring(crIndex);
+      // Trouver la fin de la ligne FP (après les parenthèses XP)
+      const fpLineEnd = afterFP.search(/\)\s*<(?:br|\/p|p[\s>])/i);
+      let traitStartOffset = -1;
+      
+      if (fpLineEnd > -1) {
+        // Chercher le début du contenu des traits après la ligne FP
+        const afterFPLine = afterFP.substring(fpLineEnd);
+        const traitContentStart = afterFPLine.search(/<(?:br|p[\s>])/i);
+        if (traitContentStart > -1) {
+          traitStartOffset = crIndex + fpLineEnd + traitContentStart;
+        }
+      }
+      
+      // Fallback: chercher le premier <br après FP (ancien comportement)
+      if (traitStartOffset === -1) {
+        const brMatch = preSection.substring(crIndex).search(/<br[\s\/]*>/i);
+        if (brMatch > -1) {
+          traitStartOffset = crIndex + brMatch;
+        }
+      }
+      
+      // Fallback 2: si on ne trouve toujours rien, prendre tout ce qui a des <strong><em> ou <p> après le FP
+      if (traitStartOffset === -1) {
+        const pAfterFP = preSection.substring(crIndex).search(/<p[\s>]/i);
+        if (pAfterFP > -1) {
+          traitStartOffset = crIndex + pAfterFP;
+        }
+      }
+      
+      if (traitStartOffset > -1) {
+        const traitBlock = preSection.substring(traitStartOffset);
+        traits = parseNameDescPairs(traitBlock);
+      }
+    }
+  }
+
+  // Fallback 3: si aucun trait n'a été trouvé, chercher une section "rub" nommée "trait" ou sans titre
+  if (traits.length === 0) {
+    for (const sec of sections) {
+      const title = sec.title;
+      if (
+        title.includes("trait") ||
+        title === "" ||
+        (!title.includes("action") && !title.includes("réaction") && !title.includes("reaction") && !title.includes("légendaire"))
+      ) {
+        const parsed = parseNameDescPairs(sec.content);
+        if (parsed.length > 0 && !title.includes("action")) {
+          traits = parsed;
+          break;
+        }
+      }
     }
   }
 
