@@ -262,6 +262,11 @@ body::before {
   z-index: 1;
 }
 
+/* Variante sans le cadre PNG décoratif (garde fond + liseré doré) */
+.frame-card--no-frame::after {
+  display: none !important;
+}
+
 /* ========================================
    Desktop: conteneurs intérieurs transparents
    pour laisser voir la texture du frame-card parent
