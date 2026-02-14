@@ -1420,7 +1420,7 @@ function ActiveParticipantsList({
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
         const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
-        const isExpanded = expandedId === p.id && isMonster;
+              const isExpanded = !isDesktop && expandedId === p.id && isMonster;
 
              const handleParticipantClick = () => {
           if (!clickable) return;
