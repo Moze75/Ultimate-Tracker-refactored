@@ -1019,7 +1019,7 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
   }
 `}
               >
-                <div className="p-6 flex items-center justify-center gap-6 min-h-[140px]">
+                <div className="p-20 flex items-center justify-center gap-6 min-h-[140px]">
                   <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center">
                     <Plus className="w-8 h-8 text-green-500" />
                   </div>
