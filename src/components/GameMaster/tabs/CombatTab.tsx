@@ -1473,6 +1473,7 @@ function ActiveParticipantsList({
         return (
           <div
             key={p.id}
+            ref={(el) => { participantRefs.current[p.id] = el; }}
             className={`px-3 py-2.5 transition-all ${
               isCurrentTurn
                 ? 'bg-amber-900/30 border-l-2 border-l-amber-500'
