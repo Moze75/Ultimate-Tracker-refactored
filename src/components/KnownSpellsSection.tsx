@@ -1958,7 +1958,7 @@ const characterLevel = useMemo(() => {
 
           <button
             onClick={() => setShowSpellbook(true)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg shadow-blue-900/20 inline-flex items-center gap-2"
+            className="btn-amber--accent px-3 py-2 rounded-lg font-medium flex items-center gap-1"
           >
             <Plus size={16} />
             Ajouter
