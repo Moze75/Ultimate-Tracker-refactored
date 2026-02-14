@@ -1020,12 +1020,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
                         onOpenCampaigns={() => setShowCampaignModal(true)}
                       /> 
                     </div>
-                  <CampaignPlayerModal
-  open={showCampaignModal}
-  onClose={() => setShowCampaignModal(false)}
-  player={currentPlayer}
-  onUpdate={applyPlayerUpdate}
-/>
+                   
                   )}
 
                   {isGridMode && deviceType === 'desktop' ? (
