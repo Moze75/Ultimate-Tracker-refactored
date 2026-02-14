@@ -100,6 +100,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const isDesktop = useIsDesktop();
+  const isActive = !!encounter;
 
   const loadData = useCallback(async () => {
     try {
