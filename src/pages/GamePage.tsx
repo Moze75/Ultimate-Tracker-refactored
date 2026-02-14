@@ -1035,7 +1035,7 @@ export function GamePage({
                     />
                    ) : (
                     <>
-                      <div className="frame-card--light frame-card--tex2 frame-card--no-frame p-3 sm:p-4">
+                    <div className="frame-card--light frame-card--tex2 frame-card--no-frame px-2 py-2">
                         <TabNavigation activeTab={activeTab} onTabChange={handleTabClickChange} />
                       </div>
 
