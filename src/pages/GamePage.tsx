@@ -123,7 +123,7 @@ export function GamePage({
   } | null>(null);
 
   const { settings: diceSettings, isLoading: isDiceSettingsLoading } = useDiceSettings();
-
+const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [campaignMembers, setCampaignMembers] = useState<CampaignMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>('');
