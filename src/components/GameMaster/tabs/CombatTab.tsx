@@ -1198,16 +1198,16 @@ function PrepParticipantsList({
             <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">Monstres</span>
           </div>
           <div className="space-y-1">
-            {monsterEntries.map((entry) => (
+                     {monsterEntries.map((entry) => (
               <PrepRow
                 key={entry.id}
                 entry={entry}
                 onUpdateInitiative={onUpdateInitiative}
                 onRemove={onRemove}
                 onClick={() => handleMonsterClick(entry)}
-                expanded={expandedId === entry.id}
+                expanded={!isDesktop && expandedId === entry.id}
                 expandedContent={
-                  expandedId === entry.id ? (
+                  !isDesktop && expandedId === entry.id ? (
                     loadingDetail ? (
                       <div className="flex items-center justify-center py-6 text-gray-400">
                         <Loader2 size={18} className="animate-spin mr-2" />
