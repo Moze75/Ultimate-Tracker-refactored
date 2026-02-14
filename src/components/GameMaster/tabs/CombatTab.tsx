@@ -1154,11 +1154,17 @@ function PrepParticipantsList({
   }
 
   const handleMonsterClick = (entry: CombatPreparationEntry) => {
-    if (expandedId === entry.id) {
-      setExpandedId(null);
-    } else {
-      setExpandedId(entry.id);
+    if (isDesktop) {
+      // En desktop, on affiche le détail dans le panneau de gauche, pas de dépliement
       onClickMonster(entry.monsterSlug);
+    } else {
+      // En mobile, on déplie/replie sous le monstre
+      if (expandedId === entry.id) {
+        setExpandedId(null);
+      } else {
+        setExpandedId(entry.id);
+        onClickMonster(entry.monsterSlug);
+      }
     }
   };
 
