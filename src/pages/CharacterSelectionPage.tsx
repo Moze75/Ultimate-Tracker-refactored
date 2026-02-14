@@ -41,7 +41,7 @@ const PENDING_PLAN_KEY = 'pending_plan_selection'; // Clé utilisée dans la Hom
 
 const BG_URL =
   (import.meta as any)?.env?.VITE_SELECTION_BG_URL ||
-  'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/tmpoofee5sh.png';
+ 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png';
 
 type CreatorModalProps = {
   open: boolean;
