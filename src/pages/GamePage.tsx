@@ -1116,16 +1116,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
                   )}
                 </PlayerContext.Provider>
               )}
-                )}
-          <CampaignPlayerModal
-            open={showCampaignModal}
-            onClose={() => setShowCampaignModal(false)}
-            player={currentPlayer}
-            onUpdate={applyPlayerUpdate}
-            campaignId={campaignId}
-            campaignMembers={campaignMembers}
-            currentUserId={currentUserId}
-          />
+               
             </div>
 
             <div className="w-full max-w-md mx-auto mt-6 px-4 relative z-50">
