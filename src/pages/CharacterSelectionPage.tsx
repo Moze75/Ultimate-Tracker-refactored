@@ -919,7 +919,7 @@ await new Promise(resolve => setTimeout(resolve, 300));
                     </button>
 
                     <div
-className={`p-6 cursor-pointer hover:scale-[1.02] transition-all duration-200 relative z-10 ${
+className={`px-6 pb-6 pt-2 cursor-pointer hover:scale-[1.02] transition-all duration-200 relative z-10 ${
   currentSubscription?.tier === 'free' && currentSubscription?.status === 'expired' ? 'opacity-60 pointer-events-auto' : ''
 }`}
 onClick={() => {
