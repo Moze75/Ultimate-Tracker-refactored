@@ -1430,7 +1430,9 @@ function ActiveParticipantsList({
       const el = participantRefs.current[currentParticipant.id];
       if (el && scrollContainerRef?.current) {
         const container = scrollContainerRef.current;
-        const scrollTarget = el.offsetTop - 8;
+        const elRect = el.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const scrollTarget = container.scrollTop + (elRect.top - containerRect.top);
         container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
       }
     }, 50);
