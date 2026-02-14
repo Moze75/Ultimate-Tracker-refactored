@@ -1047,6 +1047,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 selectedMonster={selectedMonster}
                 loadingDetail={loadingDetail}
                 onRollDice={onRollDice}
+                isDesktop={isDesktop}
               />
             )}
           </div>
