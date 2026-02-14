@@ -1131,6 +1131,7 @@ function PrepParticipantsList({
   selectedMonster,
   loadingDetail,
   onRollDice,
+  isDesktop,
 }: {
   playerEntries: CombatPreparationEntry[];
   monsterEntries: CombatPreparationEntry[];
@@ -1140,6 +1141,7 @@ function PrepParticipantsList({
   selectedMonster: Monster | null;
   loadingDetail: boolean;
   onRollDice?: (data: DiceRollData) => void;
+  isDesktop: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
