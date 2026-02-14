@@ -1013,11 +1013,11 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
                         player={currentPlayer} 
                         onUpdate={applyPlayerUpdate} 
                         inventory={inventory}
-                        currentBackground={backgroundImage}
-                        onBackgroundChange={handleBackgroundChange}
-                      />
-                    </div>
-                  )}
+    currentBackground={backgroundImage}
+    onBackgroundChange={handleBackgroundChange}
+    onOpenCampaigns={() => setShowCampaignModal(true)}
+  />
+</div>
 
                   {isGridMode && deviceType === 'desktop' ? (
                     <ResponsiveGameLayout
