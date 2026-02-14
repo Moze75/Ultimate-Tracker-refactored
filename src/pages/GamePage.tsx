@@ -15,7 +15,7 @@ import { AbilitiesTab } from '../components/AbilitiesTab';
 import { StatsTab } from '../components/StatsTab';
 import { ClassesTabWrapper } from '../components/ClassesTabWrapper';
 import { PlayerContext } from '../contexts/PlayerContext';
-
+import { CampaignPlayerModal } from '../components/CampaignPlayerModal';
 import { ResponsiveGameLayout, DiceRollContext } from '../components/ResponsiveGameLayout';
 import { Grid3x3 } from 'lucide-react';
 
