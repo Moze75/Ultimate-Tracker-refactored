@@ -1422,14 +1422,20 @@ function ActiveParticipantsList({
         const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
         const isExpanded = expandedId === p.id && isMonster;
 
-        const handleParticipantClick = () => {
+             const handleParticipantClick = () => {
           if (!clickable) return;
           if (isMonster) {
-            if (expandedId === p.id) {
-              setExpandedId(null);
-            } else {
-              setExpandedId(p.id);
+            if (isDesktop) {
+              // En desktop, afficher dans le panneau de gauche uniquement
               onViewMonster(p.monster_id);
+            } else {
+              // En mobile, déplier/replier sous le monstre
+              if (expandedId === p.id) {
+                setExpandedId(null);
+              } else {
+                setExpandedId(p.id);
+                onViewMonster(p.monster_id);
+              }
             }
           } else if (isPlayer) {
             onViewPlayer(p.player_member_id);
