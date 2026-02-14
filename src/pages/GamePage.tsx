@@ -1021,12 +1021,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
                       /> 
                     </div>
                                      )}
-  <CampaignPlayerModal
-    open={showCampaignModal}
-    onClose={() => setShowCampaignModal(false)}
-    player={currentPlayer}
-    onUpdate={applyPlayerUpdate}
-  />
+ 
                   {isGridMode && deviceType === 'desktop' ? (
                     <ResponsiveGameLayout
                       player={currentPlayer}
