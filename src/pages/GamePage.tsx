@@ -853,7 +853,7 @@ export function GamePage({
             )}
           </div>
           <div 
-            className="fixed inset-0 pointer-events-none bg-gray-900/70"
+            className="fixed inset-0 pointer-events-none bg-gray-900/40"
             style={{
               zIndex: 1,
             }}
