@@ -899,7 +899,7 @@ await new Promise(resolve => setTimeout(resolve, 300));
                 return (
 <div
   key={player.id}
-  className="frame-card frame-card--tex2 p-0 group"
+  className="frame-card--light frame-card--tex2 p-0 group"
 >
                     <button
                       onMouseDown={(e) => {
