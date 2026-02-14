@@ -98,7 +98,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isDesktop = useIsDesktop();
   const isActive = !!encounter;
 
@@ -1480,7 +1480,7 @@ function ActiveParticipantsList({
                 : isDead
                 ? 'bg-gray-800 opacity-60'
                 : 'hover:bg-gray-800/50'
-            }`}
+            }`}const [mobileSearchOpen, setMobileSearchOpen] = u
           >
             <div className="flex items-start gap-2">
               <input
