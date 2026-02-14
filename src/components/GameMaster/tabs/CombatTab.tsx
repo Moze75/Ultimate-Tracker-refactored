@@ -1412,8 +1412,26 @@ function ActiveParticipantsList({
   loadingDetail: boolean;
   onRollDice?: (data: DiceRollData) => void;
   isDesktop: boolean;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Auto-scroll vers le participant actif quand le tour change
+  useEffect(() => {
+    if (participants.length === 0) return;
+    const currentParticipant = participants[encounter.current_turn_index];
+    if (!currentParticipant) return;
+    const el = participantRefs.current[currentParticipant.id];
+    if (el && scrollContainerRef?.current) {
+      const container = scrollContainerRef.current;
+      const elTop = el.offsetTop;
+      const elHeight = el.offsetHeight;
+      const containerHeight = container.clientHeight;
+      const scrollTarget = elTop - containerHeight / 2 + elHeight / 2;
+      container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+    }
+  }, [encounter.current_turn_index, participants, scrollContainerRef]);
 
   if (participants.length === 0) {
     return (
