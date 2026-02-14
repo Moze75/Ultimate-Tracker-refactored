@@ -1004,12 +1004,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
               </div>
             )}
 
-<CampaignPlayerModal
-  open={showCampaignModal}
-  onClose={() => setShowCampaignModal(false)}
-  player={currentPlayer}
-  onUpdate={applyPlayerUpdate}
-/>
+ 
             
             <div className={`w-full mx-auto space-y-4 sm:space-y-6 ${isGridMode ? 'max-w-full px-2 sm:px-4' : 'max-w-6xl'} relative z-10`}> 
               {currentPlayer && (
