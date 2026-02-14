@@ -244,7 +244,10 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const viewMonsterById = (id?: string) => {
     if (!id) return;
     const monster = savedMonsters.find((m) => m.id === id);
-    if (monster) refreshMonsterFromSource(monster);
+    if (monster) {
+      setMobileSearchOpen(true);
+      refreshMonsterFromSource(monster);
+    }
   };
 
   const viewPlayerById = (memberId?: string) => {
