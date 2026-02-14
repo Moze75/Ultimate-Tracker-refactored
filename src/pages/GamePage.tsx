@@ -1008,13 +1008,15 @@ export function GamePage({
               {currentPlayer && (
                 <PlayerContext.Provider value={currentPlayer}>
                   {!isGridMode && (
-                    <PlayerProfile 
-                      player={currentPlayer} 
-                      onUpdate={applyPlayerUpdate} 
-                      inventory={inventory}
-                      currentBackground={backgroundImage}
-                      onBackgroundChange={handleBackgroundChange}
-                    />
+                    <div className="frame-card--light frame-card--tex2 p-3 sm:p-4">
+                      <PlayerProfile 
+                        player={currentPlayer} 
+                        onUpdate={applyPlayerUpdate} 
+                        inventory={inventory}
+                        currentBackground={backgroundImage}
+                        onBackgroundChange={handleBackgroundChange}
+                      />
+                    </div>
                   )}
 
                   {isGridMode && deviceType === 'desktop' ? (
