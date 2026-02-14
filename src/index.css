@@ -525,6 +525,21 @@ select {
   --btn-glass-hover-border: rgba(255, 255, 255, 0.18);
 }
 
+.btn-transparent-cinzel {
+  background: rgba(255,255,255,0.05);
+  color: #EFE6D8;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.2s;
+  box-shadow: none !important;
+}
+
+.btn-transparent-cinzel:hover {
+  background: rgba(255,255,255,0.12);
+  color: #FFF8E7;
+}
+
 /* Boutons d'action "accent" (ex: Ajouter des sorts) */
 .btn-amber--accent {
   background: rgba(255, 255, 255, 0.08) !important;
