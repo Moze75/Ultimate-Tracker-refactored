@@ -237,7 +237,9 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     if (!slug) return;
     const monster = savedMonsters.find((m) => m.slug === slug);
     if (monster) {
-      setMobileSearchOpen(true);
+      if (isDesktop) {
+        setMobileSearchOpen(true);
+      }
       refreshMonsterFromSource(monster);
     }
   };
