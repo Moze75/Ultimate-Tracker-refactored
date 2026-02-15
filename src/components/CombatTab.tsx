@@ -160,7 +160,7 @@ return createPortal(
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Dés de dégâts</label>
+            <label className="block text-sm font-medium mb-2">Dés de dégâts</label>
             <input
               type="text"
               value={formData.damage_dice}
