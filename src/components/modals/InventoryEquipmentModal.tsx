@@ -101,7 +101,7 @@ export function InventoryEquipmentModal({
     return null;
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999]">
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
       <div className="fixed inset-0 bg-gray-900 flex flex-col" style={{ height: '100dvh' }}>
