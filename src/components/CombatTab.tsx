@@ -142,10 +142,19 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
 
 return createPortal(
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="frame-card frame-card--light rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-<h3 className="text-lg font-semibold mb-6">
-  {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
-</h3>
+    <div className="frame-card frame-card--light frame-card--no-frame rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+      {/* Bouton fermer */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors"
+        aria-label="Fermer"
+      >
+        <X size={20} />
+      </button>
+
+      <h3 className="text-lg font-semibold mb-6 pr-8">
+        {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
+      </h3>
 
         <div className="space-y-4">
           <div>
