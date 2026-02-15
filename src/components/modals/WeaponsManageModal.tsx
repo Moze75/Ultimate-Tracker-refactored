@@ -266,7 +266,7 @@ export function WeaponsManageModal({
     </div>
   );
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-[10050]"
@@ -318,6 +318,7 @@ export function WeaponsManageModal({
         onConfirm={handleProficiencyWarningConfirm}
         onCancel={handleProficiencyWarningCancel}
       />
-    </>
+    </>,
+    document.body
   );
 }
