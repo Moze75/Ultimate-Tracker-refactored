@@ -230,25 +230,26 @@ const BLOOD_SPLASH = (() => {
 
   const MAX_SLASH_RAD = (MAX_SLASH_DEG * Math.PI) / 180;
 
-  function newSlashGeom() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+ function newSlashGeom() {
+  // ✅ Utiliser le viewport réel au lieu de window.inner*
+  const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
-    const angle = Math.random() * 2 * MAX_SLASH_RAD - MAX_SLASH_RAD;
+  const angle = Math.random() * 2 * MAX_SLASH_RAD - MAX_SLASH_RAD;
 
-    const cx = vw * (0.4 + Math.random() * 0.2);
-    const cy = vh * (0.3 + Math.random() * 0.4);
+  const cx = vw * (0.4 + Math.random() * 0.2);
+  const cy = vh * (0.3 + Math.random() * 0.4);
 
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    const halfLen = Math.sqrt(vw * vw + vh * vh) * 0.6;
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  const halfLen = Math.sqrt(vw * vw + vh * vh) * 0.6;
 
-    const x1 = cx - dx * halfLen;
-    const y1 = cy - dy * halfLen;
-    const x2 = cx + dx * halfLen;
-    const y2 = cy + dy * halfLen;
-    return { x1, y1, x2, y2 };
-  }
+  const x1 = cx - dx * halfLen;
+  const y1 = cy - dy * halfLen;
+  const x2 = cx + dx * halfLen;
+  const y2 = cy + dy * halfLen;
+  return { x1, y1, x2, y2 };
+}
 
   function pickPointOnSlash() {
     if (!slashGeom) slashGeom = newSlashGeom();
