@@ -195,37 +195,38 @@ const BLOOD_SPLASH = (() => {
    
 
   function triggerShake() {
-    function jitter(n: number) {
-      const x = ((Math.random() * 2 - 1) * n).toFixed(1) + "px";
-      const y = ((Math.random() * 2 - 1) * n).toFixed(1) + "px";
-      return { x, y };
-    }
-
-    const j1 = jitter(SHAKE_INTENSITY);
-    const j2 = jitter(SHAKE_INTENSITY * 0.6);
-    const j3 = jitter(SHAKE_INTENSITY * 0.3);
-
-    // 🔧 CORRECTION : Chercher un conteneur existant ou utiliser le body
-    const target = document.querySelector('.blood-shake-wrapper') as HTMLElement 
-      || document.querySelector('#root') as HTMLElement 
-      || document.body;
-
-    target.style.setProperty("--shakeX1", j1.x);
-    target.style.setProperty("--shakeY1", j1.y);
-    target.style.setProperty("--shakeX2", j2.x);
-    target.style.setProperty("--shakeY2", j2.y);
-    target.style.setProperty("--shakeX3", j3.x);
-    target.style.setProperty("--shakeY3", j3.y);
-
-    // 🔧 CORRECTION : Ajouter la classe directement sans wrapper
-    if (!target.classList.contains('blood-shake-wrapper')) {
-      target.classList.add('blood-shake-wrapper');
-    }
-
-    target.classList.remove("blood-shake-go");
-    void target.offsetWidth;
-    target.classList.add("blood-shake-go");
+  function jitter(n: number) {
+    const x = ((Math.random() * 2 - 1) * n).toFixed(1) + "px";
+    const y = ((Math.random() * 2 - 1) * n).toFixed(1) + "px";
+    return { x, y };
   }
+
+  const j1 = jitter(SHAKE_INTENSITY);
+  const j2 = jitter(SHAKE_INTENSITY * 0.6);
+  const j3 = jitter(SHAKE_INTENSITY * 0.3);
+
+  // ✅ CORRECTION : Toujours utiliser le body pour éviter les problèmes de contexte
+  const target = document.body;
+
+  target.style.setProperty("--shakeX1", j1.x);
+  target.style.setProperty("--shakeY1", j1.y);
+  target.style.setProperty("--shakeX2", j2.x);
+  target.style.setProperty("--shakeY2", j2.y);
+  target.style.setProperty("--shakeX3", j3.x);
+  target.style.setProperty("--shakeY3", j3.y);
+
+  // ✅ Ajouter la classe au body
+  target.classList.add('blood-shake-wrapper');
+  target.classList.remove("blood-shake-go");
+  void target.offsetWidth; // Force reflow
+  target.classList.add("blood-shake-go");
+  
+  // ✅ Retirer les classes après l'animation
+  setTimeout(() => {
+    target.classList.remove("blood-shake-go");
+    target.classList.remove("blood-shake-wrapper");
+  }, SHAKE_DURATION_MS + 50);
+}
 
   const MAX_SLASH_RAD = (MAX_SLASH_DEG * Math.PI) / 180;
 
