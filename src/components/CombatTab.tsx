@@ -305,7 +305,8 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
