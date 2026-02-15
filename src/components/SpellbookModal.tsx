@@ -514,7 +514,7 @@ if (
 
   const modalContent = (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] border border-gray-700/50 overflow-hidden flex flex-col">
+      <div className="frame-card frame-card--light frame-card--no-frame rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-gray-700/50 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
