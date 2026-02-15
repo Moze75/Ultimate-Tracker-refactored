@@ -516,7 +516,7 @@ if (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="frame-card frame-card--light frame-card--no-frame rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-gray-700/50 p-4 flex-shrink-0">
+        <div className="bg-transparent border-b border-gray-700/30 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Book className="w-6 h-6 text-blue-400" />
