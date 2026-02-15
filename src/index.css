@@ -255,6 +255,14 @@ body::before {
   z-index: 0;
 }
 
+/* Pour les modales plein écran, texture répétée sans bandes */
+.fixed.inset-0 .frame-card--light::before,
+.max-w-4xl .frame-card--light::before {
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
 /* --- Contenu au-dessus de la texture --- */
 .frame-card > *,
 .frame-card--light > * {
