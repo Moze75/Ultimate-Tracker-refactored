@@ -245,7 +245,7 @@ return createPortal(
           </div>
 
           <div className="border-t border-gray-700 pt-4 mt-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+           <label className="block text-sm font-medium mb-2">
               Bonus de l'arme
               <span className="text-xs text-gray-500 ml-2">(défini dans l'onglet Équipement)</span>
             </label>
