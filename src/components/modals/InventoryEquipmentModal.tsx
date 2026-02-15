@@ -189,6 +189,7 @@ export function InventoryEquipmentModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
