@@ -149,7 +149,7 @@ return createPortal(
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Nom de l&apos;attaque</label>
+            <label className="block text-sm font-medium mb-2">Nom de l&apos;attaque</label>
             <input
               type="text"
               value={formData.name}
