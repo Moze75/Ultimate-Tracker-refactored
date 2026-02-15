@@ -198,8 +198,8 @@ export function CustomItemModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5 space-y-4">
+           {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Nom */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Nom</label>
