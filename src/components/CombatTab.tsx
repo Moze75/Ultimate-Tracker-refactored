@@ -139,7 +139,8 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
       weapon_bonus: formData.weapon_bonus
     });
   };
-
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="frame-card frame-card--light frame-card--no-frame rounded-lg max-w-md w-full" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header avec titre et bouton fermer */}
       <div className="flex items-center justify-between mb-4 px-6 pt-6 flex-shrink-0">
