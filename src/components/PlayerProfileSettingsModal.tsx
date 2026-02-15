@@ -936,7 +936,7 @@ useEffect(() => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-        <div className="max-w-4xl mx-auto p-4 py-8 space-y-6">
+         <div className="max-w-4xl mx-auto p-4 py-8 space-y-6" style={{ fontFamily: "'Cinzel', serif" }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-2xl font-bold text-gray-100">Paramètres du personnage</h2>
             <button
