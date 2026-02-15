@@ -4,6 +4,7 @@ import { X, Save, TrendingUp, Triangle, Plus, ChevronDown, Sword, Shield, CheckS
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Avatar } from './Avatar';
+import { invalidateAvatarCache, cacheAvatar } from '../services/avatarCacheService';
 import { LevelUpModal } from './LevelUpModal';
 import { MulticlassSelectionModal } from './MulticlassSelectionModal';
 import type { DndClass, Player, PlayerBackground, PlayerStats } from '../types/dnd';
