@@ -613,7 +613,7 @@ export function EquipmentListModal({
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-3xl max-h-[85vh] overflow-hidden bg-gray-900 border border-gray-800 rounded-xl shadow-xl flex flex-col"
+        className="frame-card frame-card--light frame-card--no-frame w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-xl shadow-xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
