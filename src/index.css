@@ -736,3 +736,29 @@ select {
 .animate-scale-in {
   animation: scale-in 0.3s ease-out;
 } 
+
+/* Cartes transparentes pour le modal de paramètres avec fond parchemin */
+.parchment-modal .stat-card {
+  background: transparent !important;
+  border: 1px solid rgba(139, 92, 46, 0.3) !important;
+  box-shadow: none !important;
+}
+
+.parchment-modal .stat-header {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border-bottom: 1px solid rgba(139, 92, 46, 0.2) !important;
+}
+
+.parchment-modal .input-dark,
+.parchment-modal select,
+.parchment-modal textarea {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(139, 92, 46, 0.3) !important;
+}
+
+.parchment-modal .input-dark:focus,
+.parchment-modal select:focus,
+.parchment-modal textarea:focus {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(139, 92, 46, 0.5) !important;
+}
