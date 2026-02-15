@@ -956,15 +956,42 @@ useEffect(() => {
                 <div className="flex flex-col">
                   <label className="block text-sm font-medium text-gray-300 mb-2">Avatar</label>
                   <div className="w-40 h-56 rounded-lg overflow-hidden bg-gray-800/50 mx-auto">
-                    <Avatar
-                      url={avatarUrl}
-                      playerId={player.id}
-                      onAvatarUpdate={(url) => {
-                        setAvatarUrl(url);
-                        setDirty(true);
-                      }}
-                      size="lg"
-                      editable
+<Avatar
+  url={avatarUrl}
+  playerId={player.id}
+  onAvatarUpdate={async (url) => {
+    setAvatarUrl(url);
+    setDirty(true);
+    
+    // ✅ Invalider le cache de l'ancien avatar
+    invalidateAvatarCache(player.id);
+    
+    // ✅ Mettre en cache le nouvel avatar
+    await cacheAvatar(player.id, url);
+    
+    // ✅ Sauvegarder immédiatement dans la base de données
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ avatar_url: url })
+        .eq('id', player.id);
+      
+      if (error) throw error;
+      
+      // ✅ Notifier le composant parent
+      onUpdate({
+        ...player,
+        avatar_url: url
+      });
+      
+      toast.success('Avatar mis à jour');
+    } catch (error) {
+      console.error('Erreur mise à jour avatar:', error);
+      toast.error('Erreur lors de la mise à jour de l\'avatar');
+    }
+  }}
+  size="lg"
+  editable
                     />
                   </div>
                 </div>
