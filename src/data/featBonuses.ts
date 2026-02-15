@@ -1,8 +1,8 @@
 // Mapping des dons généraux vers leurs bonus de caractéristiques possibles
 // Format: nom du don (normalisé) -> liste des caractéristiques pouvant recevoir +1
 
-export type AbilityName = 'Force' | 'Dextérité' | 'Constitut' | 'Intelligence' | 'Sagesse' | 'Charisme';
-
+export type AbilityName = 'Force' | 'Dextérité' | 'Constitution' | 'Intelligence' | 'Sagesse' | 'Charisme';
+ 
 export interface FeatBonus {
   choices: AbilityName[];  // Caractéristiques au choix
   amount: number;          // Montant du bonus (généralement 1)
