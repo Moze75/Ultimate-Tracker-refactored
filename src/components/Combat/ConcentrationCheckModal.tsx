@@ -48,7 +48,7 @@ export function ConcentrationCheckModal({ player, concentrationDC, onUpdate, onC
   const conAbility = abilities.find(a => a.name === 'Constitution');
   const conMod = conAbility?.modifier || 0;
 
-  return (
+   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full border border-purple-500/40 shadow-xl shadow-purple-500/20">
         <div className="flex items-center gap-3 mb-4">
