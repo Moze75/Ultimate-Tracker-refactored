@@ -298,10 +298,12 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
               Maîtrise (ajoute le bonus de maîtrise)
             </label>
           </div>
+            </div>
       </div>
-      </div>
-          <div className="flex gap-3 pt-4">
-            <button onClick={handleSave} className="btn-primary flex-1 px-4 py-2 rounded-lg">
+
+      {/* Boutons d'action fixés en bas */}
+      <div className="flex gap-3 px-6 pb-6 pt-4 flex-shrink-0 border-t border-gray-700/30">
+        <button onClick={handleSave} className="btn-primary flex-1 px-4 py-2 rounded-lg">
               Sauvegarder
             </button>
             {attack && onDelete && (
