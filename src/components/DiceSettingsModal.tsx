@@ -163,7 +163,7 @@ const modalContent = (
 
           {/* Footer - seulement pour l'onglet paramètres */}
           {activeTab === 'settings' && (
-            <div className="flex items-center justify-between p-4 border-t border-gray-700">
+                  <div className="flex items-center justify-between p-4 border-t border-gray-700/30 bg-black/10">
               <button
                 type="button"
                 onClick={handleReset}
