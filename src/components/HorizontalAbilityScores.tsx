@@ -305,9 +305,9 @@ return (
                 title={editing ? '' : `Cliquer pour lancer 1d20+${ability.modifier}`}
               >
                 <div className="absolute top-5 left-0 right-0 flex flex-col items-center pointer-events-none">
-                  <h4 className="text-xs font-semibold text-gray-100 capitalize tracking-wide">
-                    {ability.name}
-                  </h4>
+<h4 className="text-[10px] font-semibold text-gray-100 capitalize leading-tight truncate w-full text-center">
+  {ability.name}
+</h4>
                 </div>
 
                 {totalBonus !== 0 && (
