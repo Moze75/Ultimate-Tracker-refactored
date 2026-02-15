@@ -578,7 +578,8 @@ const handleSave = async () => {
           <button onClick={handleSave} className="btn-primary px-4 py-2 rounded-lg">Sauvegarder</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
