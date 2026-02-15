@@ -183,7 +183,7 @@ export function CustomItemModal({
       }}
     >
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-xl"
+        className="frame-card frame-card--light frame-card--no-frame w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
