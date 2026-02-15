@@ -919,11 +919,19 @@ useEffect(() => {
   const modalContent = (
     <div
       className={`
-        fixed inset-0 z-50 bg-gray-900 overflow-y-auto
+        fixed inset-0 z-50 overflow-y-auto
         transform transition-transform duration-300 ease-out
         ${enter ? 'translate-x-0' : initialTranslate}
       `}
-      style={{ touchAction: 'pan-y' }}
+      style={{ 
+        touchAction: 'pan-y',
+        backgroundImage: 'url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre3.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        fontFamily: "'Cinzel', serif"
+      }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
