@@ -496,7 +496,7 @@ export function CustomItemModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-800">
+              <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-700/30 bg-black/10">
           <button onClick={onClose} className="btn-secondary px-4 py-2 rounded-lg">
             Annuler
           </button>
