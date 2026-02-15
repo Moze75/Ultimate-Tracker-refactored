@@ -171,7 +171,7 @@ return createPortal(
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Type de dégâts</label>
+           <label className="block text-sm font-medium mb-2">Type de dégâts</label>
             <select
               value={formData.damage_type}
               onChange={(e) => setFormData({ ...formData, damage_type: e.target.value as PhysicalDamage })}
