@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useMemo } from 'react'; 
 import { Search, X, Check } from 'lucide-react';
 import { InventoryItem } from '../../types/dnd';
 
