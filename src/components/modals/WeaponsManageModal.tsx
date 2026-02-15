@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, Sword, AlertTriangle } from 'lucide-react';
 import { InventoryItem } from '../../types/dnd';
 // ✅ AJOUT : Imports pour la vérification des maîtrises
