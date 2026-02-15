@@ -3,6 +3,23 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { MarkdownLite, type MarkdownCtx } from '../../../lib/markdownLite';
 import { AbilitySection, slug, sentenceCase } from './ClassUtilsModal';
 
+// Fonction pour formater les titres correctement
+function formatTitle(title: string): string {
+  // Gestion spéciale pour les titres qui commencent par "Niveau X"
+  const levelMatch = title.match(/^(niveau\s+\d+)\s*:\s*(.+)$/i);
+  if (levelMatch) {
+    const level = levelMatch[1].charAt(0).toUpperCase() + levelMatch[1].slice(1).toLowerCase();
+    const rest = levelMatch[2]
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    return `${level} : ${rest}`;
+  }
+  
+  // Pour les autres titres, utiliser sentenceCase
+  return sentenceCase(title);
+}
+
 /* ===========================================================
    UI: cartes & rendu
    =========================================================== */
