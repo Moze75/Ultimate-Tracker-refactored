@@ -140,21 +140,23 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
     });
   };
 
-return createPortal(
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="frame-card frame-card--light frame-card--no-frame rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
-      {/* Bouton fermer */}
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors"
-        aria-label="Fermer"
-      >
-        <X size={20} /> 
-      </button>
+    <div className="frame-card frame-card--light frame-card--no-frame rounded-lg max-w-md w-full" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header avec titre et bouton fermer */}
+      <div className="flex items-center justify-between mb-4 px-6 pt-6 flex-shrink-0">
+        <h3 className="text-lg font-semibold flex-1">
+          {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
+        </h3>
+        <button
+          onClick={onClose}
+          className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors ml-4 flex-shrink-0"
+          aria-label="Fermer"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-      <h3 className="text-lg font-semibold mb-6 pr-8">
-        {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
-      </h3> 
+      {/* Zone scrollable */}
+      <div className="overflow-y-auto px-6 pb-6 flex-1">
 
         <div className="space-y-4">
           <div>
@@ -295,7 +297,8 @@ return createPortal(
               Maîtrise (ajoute le bonus de maîtrise)
             </label>
           </div>
-
+      </div>
+      </div>
           <div className="flex gap-3 pt-4">
             <button onClick={handleSave} className="btn-primary flex-1 px-4 py-2 rounded-lg">
               Sauvegarder
