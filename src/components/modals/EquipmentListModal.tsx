@@ -759,7 +759,7 @@ export function EquipmentListModal({
         </div>
 
         {/* Footer */}
-               <div className="flex items-center justify-between px-5 py-3 border-b border-gray-700/30 flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-700/30 flex-shrink-0 bg-black/10">
           <div className="text-sm text-gray-400">
             {filtered.length} équipement{filtered.length > 1 ? 's' : ''}
             {addedItems.size > 0 && (
