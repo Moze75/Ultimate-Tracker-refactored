@@ -142,15 +142,31 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
 
 return createPortal(
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="frame-card frame-card--light frame-card--no-frame rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
-      {/* Bouton fermer */}
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors"
-        aria-label="Fermer"
-      >
-        <X size={20} />
-      </button>
+    <div 
+      className="frame-card frame-card--light frame-card--no-frame rounded-lg w-full max-w-md relative"
+      style={{
+        maxHeight: '90vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      {/* Bouton fermer - fixé en haut à droite */}
+      <div className="flex items-center justify-between mb-4 flex-shrink-0 px-6 pt-6">
+        <h3 className="text-lg font-semibold flex-1">
+          {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
+        </h3>
+        <button
+          onClick={onClose}
+          className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors ml-4 flex-shrink-0"
+          aria-label="Fermer"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Zone scrollable */}
+      <div className="overflow-y-auto px-6 pb-6 flex-1">
+        <div className="space-y-4">
 
       <h3 className="text-lg font-semibold mb-6 pr-8">
         {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
