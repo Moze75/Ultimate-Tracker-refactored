@@ -114,6 +114,7 @@ export function ConcentrationCheckModal({ player, concentrationDC, onUpdate, onC
           Fermer (je gère plus tard)
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
