@@ -182,14 +182,14 @@ export function InventoryEquipmentModal({
                       <Check className="w-4 h-4" />
                       {isEquipped ? 'Équipé' : 'Équiper'}
                     </button>
-                  </div>
-                </div>
-              );
+      </div>
+    </div>,
+    document.body
+  );
             })
           )}
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
