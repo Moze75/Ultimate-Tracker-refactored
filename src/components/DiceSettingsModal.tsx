@@ -82,7 +82,7 @@ const handleChange = (key: keyof DiceSettings, value: any) => {
 const modalContent = (
   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
+        <div className="frame-card frame-card--light frame-card--no-frame rounded-lg shadow-xl max-w-md w-full my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div>
