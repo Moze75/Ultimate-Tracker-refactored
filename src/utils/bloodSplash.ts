@@ -251,23 +251,31 @@ const BLOOD_SPLASH = (() => {
   return { x1, y1, x2, y2 };
 }
 
-  function pickPointOnSlash() {
-    if (!slashGeom) slashGeom = newSlashGeom();
-    const { x1, y1, x2, y2 } = slashGeom;
+function pickPointOnSlash() {
+  if (!slashGeom) slashGeom = newSlashGeom();
+  const { x1, y1, x2, y2 } = slashGeom;
 
-    const t = Math.random();
-    const baseX = x1 + (x2 - x1) * t;
-    const baseY = y1 + (y2 - y1) * t;
+  const t = Math.random();
+  const baseX = x1 + (x2 - x1) * t;
+  const baseY = y1 + (y2 - y1) * t;
 
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
 
-    const wobble = (Math.random() - 0.5) * 60;
-    const jitterX = baseX + nx * wobble;
-    const jitterY = baseY + ny * wobble;
+  const wobble = (Math.random() - 0.5) * 60;
+  const jitterX = baseX + nx * wobble;
+  const jitterY = baseY + ny * wobble;
+
+  // ✅ NE PAS ajouter window.scrollX/Y sur mobile
+  return {
+    x: jitterX,
+    y: jitterY,
+    flashAnchor: { x: baseX, y: baseY }
+  };
+}
 
     return {
       x: window.scrollX + jitterX,
