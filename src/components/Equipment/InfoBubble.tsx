@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Settings } from 'lucide-react';
 import { InventoryItem } from '../../types/dnd';
 
