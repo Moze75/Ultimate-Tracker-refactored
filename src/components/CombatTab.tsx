@@ -154,7 +154,7 @@ return createPortal(
 
       <h3 className="text-lg font-semibold mb-6 pr-8">
         {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
-      </h3>
+      </h3> 
 
         <div className="space-y-4">
           <div>
