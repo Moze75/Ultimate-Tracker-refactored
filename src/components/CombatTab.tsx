@@ -319,7 +319,7 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
             </button>
           </div>
         </div>
-      </div>
+      </div>,
 
     document.body
   );
