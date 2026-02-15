@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Brain } from 'lucide-react';
 import { Player } from '../../types/dnd';
 import { supabase } from '../../lib/supabase';
