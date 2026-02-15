@@ -413,7 +413,7 @@ export function InventoryList({
                 </label>
               ))}
             </div>
-            <div className="mt-3 text-right">
+                      <div className="mt-3 pt-3 text-right border-t border-gray-700/30">
               <button onClick={() => setFiltersOpen(false)} className="btn-primary px-3 py-2 rounded-lg">Fermer</button>
             </div>
           </div>
