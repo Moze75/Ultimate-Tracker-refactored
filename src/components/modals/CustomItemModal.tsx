@@ -187,7 +187,7 @@ export function CustomItemModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700/30">
           <h3 className="text-lg font-semibold text-white">Objet personnalisé</h3>
           <button
             onClick={onClose}
