@@ -280,7 +280,7 @@ const handleSave = async () => {
         )}
       </div>
 
-      <div className="grid grid-cols-6 gap-15 flex-1">
+      <div className="grid grid-cols-6 gap-3 flex-1">
         {displayAbilities.map((ability, index) => {
           const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
           const featBonus = featBonuses[ability.name as keyof typeof featBonuses] || 0;
