@@ -55,7 +55,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAva
       </div>
 
       {/* ✅ Boutons Éditer et Paramètres côte à côte */}
-      <div className="absolute top-0 left-[8.5rem] flex gap-1 z-10">
+      <div className="absolute top-0 left-[8.5rem] flex gap-1 z-50">
         <button
           onClick={onEdit}
           className="px-2 py-1 rounded bg-transparent text-white hover:bg-gray-800/50 flex items-center gap-1 transition-colors text-xs"

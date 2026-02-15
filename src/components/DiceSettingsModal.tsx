@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Settings, History, Trash2, Image, RefreshCw } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS, useDiceSettings } from '../hooks/useDiceSettings';
@@ -77,8 +78,8 @@ const handleChange = (key: keyof DiceSettings, value: any) => {
   const handleRemoveEntry = (id: string) => {
     removeEntry(id);
   };
- 
-return ( 
+
+const modalContent = (
   <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl max-w-md w-full my-8">
@@ -185,14 +186,16 @@ return (
                 >
                   💾 Enregistrer
                 </button> 
-              </div> 
+              </div>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-} 
+
+  return createPortal(modalContent, document.body);
+}
 
 // Composant pour l'onglet Paramètres
 function SettingsTab({

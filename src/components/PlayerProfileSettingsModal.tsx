@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, TrendingUp, Triangle, Plus, ChevronDown, Sword, Shield, CheckSquare, Square, Download, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -914,7 +915,7 @@ useEffect(() => {
 
   if (!open) return null;
 
-  return (
+  const modalContent = (
     <div
       className={`
         fixed inset-0 z-50 bg-gray-900 overflow-y-auto
@@ -1837,4 +1838,6 @@ useEffect(() => {
         </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
