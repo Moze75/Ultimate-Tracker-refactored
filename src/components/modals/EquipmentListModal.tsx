@@ -637,7 +637,7 @@ export function EquipmentListModal({
         </div>
 
         {/* Barre de recherche et filtres */}
-        <div className="px-5 py-3 border-b border-gray-800 space-y-3 flex-shrink-0">
+                <div className="px-5 py-3 border-b border-gray-700/30 space-y-3 flex-shrink-0 bg-black/10">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 text-gray-400" />
             <input
