@@ -919,11 +919,14 @@ useEffect(() => {
   const modalContent = (
     <div
       className={`
-        fixed inset-0 z-50 bg-gray-900 overflow-y-auto
+        fixed inset-0 z-50 overflow-y-auto
         transform transition-transform duration-300 ease-out
         ${enter ? 'translate-x-0' : initialTranslate}
       `}
-      style={{ touchAction: 'pan-y' }}
+      style={{ 
+        touchAction: 'pan-y',
+        background: '#111827' // bg-gray-900 en dur pour éviter toute transparence
+      }}
 
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
