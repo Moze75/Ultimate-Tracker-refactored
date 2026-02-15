@@ -57,7 +57,7 @@ export function AbilityCard({
           {/* Étiquette de niveau supprimée pour éviter le doublon */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-white font-semibold text-base sm:text-lg truncate">{sentenceCase(section.title)}</h3>
+                  <h3 className="text-white font-semibold text-base sm:text-lg truncate">{formatTitle(section.title)}</h3>
               <OriginPill origin={section.origin} />
             </div>
           </div>
