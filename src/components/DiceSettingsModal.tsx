@@ -84,7 +84,7 @@ const modalContent = (
     <div className="min-h-screen flex items-center justify-center p-4">
         <div className="frame-card frame-card--light frame-card--no-frame rounded-lg shadow-xl max-w-md w-full my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+               <div className="flex items-center justify-between p-4 border-b border-gray-700/30">
           <div>
             <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
             <p className="text-xs text-gray-500 mt-1">Version 1.5.3</p>
