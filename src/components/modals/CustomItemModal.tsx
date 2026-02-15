@@ -183,7 +183,8 @@ export function CustomItemModal({
       }}
     >
       <div
-        className="frame-card frame-card--light frame-card--no-frame w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-xl"
+      <div
+        className="frame-card frame-card--light frame-card--no-frame w-full max-w-lg max-h-[90vh] rounded-xl shadow-xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
