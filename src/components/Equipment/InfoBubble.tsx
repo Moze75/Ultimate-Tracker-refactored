@@ -99,8 +99,7 @@ export function InfoBubble({
   inventory = []
 }: InfoBubbleProps) {
   return (
-  return createPortal(
-    <div className="fixed inset-0 z-[9999]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-[9999]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>  
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-900/95 text-sm text-gray-300 rounded-lg shadow-lg w-[min(32rem,95vw)] border border-gray-700/50">
         <div className="flex items-center justify-between mb-2">
@@ -274,7 +273,6 @@ export function InfoBubble({
           )
         )}
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
