@@ -143,9 +143,9 @@ const AttackEditModal = ({ attack, onClose, onSave, onDelete }: AttackEditModalP
 return createPortal(
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="frame-card frame-card--light rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-100 mb-6">
-          {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
-        </h3>
+<h3 className="text-lg font-semibold mb-6">
+  {attack ? "Modifier l'attaque" : 'Nouvelle attaque'}
+</h3>
 
         <div className="space-y-4">
           <div>
