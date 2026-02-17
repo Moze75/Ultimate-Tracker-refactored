@@ -218,7 +218,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
     }
   };
 
-  const selectMonsterAsFamiliar = (monster: Monster) => {
+  const selectMonsterAsFamiliar = async (monster: Monster) => {
     const fam: FamiliarData = {
       name: monster.name,
       slug: monster.slug,
@@ -234,15 +234,27 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
       senses: monster.senses,
       languages: monster.languages,
       challenge_rating: monster.challenge_rating,
-       traits: monster.traits || [],
-       actions: monster.actions || [],
-       saving_throws: monster.saving_throws,
-       skills: monster.skills,
-       image_url: monster.image_url || undefined,
+      traits: monster.traits || [],
+      actions: monster.actions || [],
+      saving_throws: monster.saving_throws,
+      skills: monster.skills,
+      image_url: monster.image_url || undefined,
     };
     setCurrentFamiliar(fam);
     setView('manage');
-    toast.success(`${monster.name} sélectionné comme familier`);
+
+    // Sauvegarde immédiate dans Supabase
+    try {
+      await supabase
+        .from('players')
+        .update({ familiar: fam })
+        .eq('id', playerId);
+      onSave(fam);
+      toast.success(`${monster.name} choisi comme familier`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur sauvegarde du familier');
+    }
   };
 
   const handleCreateFamiliar = () => {
