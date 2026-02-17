@@ -428,7 +428,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                    {renderPlanFeatures(plan.id)}
                 </div>
 
-                <div className="p-6 pt-0 mt-auto">
+                              <div className="relative z-10 p-6 pt-0 mt-auto">
                    {isCurrentPlan ? (
                     <button
                       disabled
