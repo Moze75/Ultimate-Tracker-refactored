@@ -21,6 +21,7 @@ interface HPManagerConnectedProps {
   player: Player;
   onUpdate: (player: Player) => void;
   onConcentrationCheck: (dc: number) => void;
+  markLocalUpdate?: () => void;
 }
 
 export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: HPManagerConnectedProps) {
