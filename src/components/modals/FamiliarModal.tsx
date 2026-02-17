@@ -529,6 +529,13 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
               {/* Actions */}
               <div className="flex gap-2">
                 <button
+                  onClick={() => setEditing(!editing)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-900/40 hover:bg-amber-900/60 text-amber-300 font-medium rounded-lg border border-amber-800/50 transition-colors"
+                >
+                  {editing ? <ChevronUp size={14} /> : <Plus size={14} />}
+                  {editing ? 'Replier' : 'Éditer'}
+                </button>
+                <button
                   onClick={handleSave}
                   disabled={saving}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors"
