@@ -15,14 +15,12 @@ interface PlayerAvatarProps {
   };
   onEdit: () => void;
   onOpenDiceSettings?: () => void;
+  onOpenFamiliar?: () => void; // ✅ Nouvelle prop
 }
 
-export function PlayerAvatar({ player, onEdit, onOpenDiceSettings }: PlayerAvatarProps) {
+export function PlayerAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamiliar }: PlayerAvatarProps) {
   return (
     <div 
-      // CORRECTION : Suppression de "md:aspect-[auto] md:h-[60vh] lg:h-[70vh]"
-      // On garde uniquement l'aspect ratio pour que l'image reste un rectangle "Portrait"
-      // quelle que soit la taille de l'écran (comportement mobile partout).
       className="relative w-full min-w-0 aspect-[7/10] sm:aspect-[2/3] rounded-lg overflow-hidden bg-gray-800/50 flex items-center justify-center"
     >
       <button
@@ -43,6 +41,21 @@ export function PlayerAvatar({ player, onEdit, onOpenDiceSettings }: PlayerAvata
         secondaryLevel={player.secondary_level}
         onOpenDiceSettings={onOpenDiceSettings}
       />
+
+      {/* ✅ Bouton Familier en bas à droite de l'avatar (mobile) */}
+      {onOpenFamiliar && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpenFamiliar(); }}
+          className="absolute bottom-16 right-3 w-10 h-10 rounded-full bg-gray-900/60 backdrop-blur-sm hover:bg-gray-800/80 flex items-center justify-center z-10 transition-colors border border-gray-600/50"
+          title="Gérer le familier"
+        >
+          <img
+            src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
+            alt="Familier"
+            className="w-6 h-6"
+          />
+        </button>
+      )}
 
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pointer-events-none">
         <div className="text-white">
