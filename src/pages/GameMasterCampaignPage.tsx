@@ -131,7 +131,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
                 </div>
 
                 {campaign.description && (
-                  <p className="text-sm mb-4 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
+                  <p className="text-sm mb-6 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
                 )}
 
                 <div className="text-xs mb-3" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
