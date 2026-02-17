@@ -1,4 +1,5 @@
 import React from 'react';
+import { Settings, Dices } from 'lucide-react';
 import { Player } from '../../types/dnd';
 import { CompactAvatar } from './CompactAvatar';
 import { QuickStatsCells } from './QuickStatsCells';
