@@ -192,9 +192,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
 
       onUpdate(optimisticPlayer);
       console.log('[HPManagerConnected] onUpdate finished');
-    } catch (e) {
-      console.error('[HPManagerConnected] Erreur applyDamage offline:', e);
-    }
 
     setDamageValue('');
 
