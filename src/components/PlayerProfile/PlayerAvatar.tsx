@@ -46,13 +46,13 @@ export function PlayerAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamilia
       {onOpenFamiliar && (
         <button
           onClick={(e) => { e.stopPropagation(); onOpenFamiliar(); }}
-          className="absolute bottom-16 right-3 w-10 h-10 rounded-full bg-gray-900/60 backdrop-blur-sm hover:bg-gray-800/80 flex items-center justify-center z-10 transition-colors border border-gray-600/50"
+          className="absolute bottom-3 right-3 z-10 transition-transform hover:scale-110"
           title="Gérer le familier"
         >
           <img
             src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
             alt="Familier"
-            className="w-6 h-6"
+            className="w-10 h-10 drop-shadow-lg"
           />
         </button>
       )}
