@@ -293,7 +293,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
        image_url: createImageUrl.trim() || undefined,
      };
     setCurrentFamiliar(fam);
-    setView('manage');
+    setView('manage'); 
 
     // Sauvegarde immédiate dans Supabase
     try {
