@@ -85,7 +85,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamili
         </h2>
         {player.class && (
           <div className="space-y-0.5">
-            <p className="text-base text-gray-300">
+            <p className="text-sm text-gray-300">
               {player.class} niveau {player.level}
             </p>
             {player.secondary_class && player.secondary_level && (
