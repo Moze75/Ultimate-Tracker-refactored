@@ -79,7 +79,7 @@ export function TabbedPanel({
 <button
   key={tab.key}
   onClick={() => setActiveTab(tab.key as TabKey)}
-  className={`px-4 py-2 text-base font-semibold transition-all relative ${
+  className={`px-4 py-2 text-base font-semibold transition-colors duration-200 relative ${
     activeTab === tab.key
       ? 'text-[#EFE6D8] tab-indicator-active'
       : 'text-gray-400 hover:text-gray-300'
