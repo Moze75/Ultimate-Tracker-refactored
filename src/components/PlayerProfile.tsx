@@ -37,6 +37,9 @@ export function PlayerProfile({
   const [isDiceSettingsOpen, setIsDiceSettingsOpen] = useState(false);
   const { settings: diceSettings, saveSettings: saveDiceSettings } = useDiceSettings();
   const deviceType = useResponsiveLayout(); // 🆕
+    // State pour le familier
+  const [showFamiliarModal, setShowFamiliarModal] = useState(false);
+  const [familiar, setFamiliar] = useState<FamiliarData | null>((player as any).familiar || null);
 
   return (
     <>
