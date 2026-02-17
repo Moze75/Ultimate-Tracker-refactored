@@ -18,6 +18,8 @@ import { monsterService } from '../../services/monsterService';
 import { MonsterStatBlock } from '../Combat/MonsterStatBlock';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { DiceRollContext } from '../ResponsiveGameLayout';
+import { DiceRollData } from '../Combat/MonsterStatBlock';
 
 /* ── Types ── */
 
