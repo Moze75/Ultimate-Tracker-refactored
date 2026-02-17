@@ -784,13 +784,12 @@ select {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* Indicateur d'onglet actif avec effet glow ambre */
+/* Indicateur d'onglet actif - uniquement trait en bas avec glow */
 .tab-indicator-active {
+  position: relative;
   border-bottom: 2px solid rgba(212, 170, 96, 0.9);
-  box-shadow: 
-    0 2px 8px rgba(212, 170, 96, 0.6),
-    0 4px 16px rgba(212, 170, 96, 0.4),
-    0 0 20px rgba(212, 170, 96, 0.3);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .tab-indicator-active::after {
@@ -802,21 +801,28 @@ select {
   height: 2px;
   background: linear-gradient(90deg, 
     transparent 0%, 
-    rgba(255, 223, 140, 0.8) 20%, 
+    rgba(255, 223, 140, 0.6) 20%, 
     rgba(255, 223, 140, 1) 50%, 
-    rgba(255, 223, 140, 0.8) 80%, 
+    rgba(255, 223, 140, 0.6) 80%, 
     transparent 100%
   );
-  animation: tab-glow 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 8px rgba(212, 170, 96, 0.8),
+    0 0 16px rgba(212, 170, 96, 0.5),
+    0 0 24px rgba(212, 170, 96, 0.3);
+  animation: tab-glow-pulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
-@keyframes tab-glow {
+@keyframes tab-glow-pulse {
   0%, 100% {
-    opacity: 0.7;
-    filter: blur(0px);
+    opacity: 0.8;
   }
   50% {
     opacity: 1;
-    filter: blur(1px);
+    box-shadow: 
+      0 0 12px rgba(212, 170, 96, 0.9),
+      0 0 20px rgba(212, 170, 96, 0.6),
+      0 0 32px rgba(212, 170, 96, 0.4);
   }
 }
