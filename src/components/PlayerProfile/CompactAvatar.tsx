@@ -13,12 +13,13 @@ interface CompactAvatarProps {
     secondary_level?: number | null;
   };
   onEdit: () => void;
-  onOpenDiceSettings?: () => void; // ✅ Nouvelle prop
+  onOpenDiceSettings?: () => void;
+  onOpenFamiliar?: () => void; // ✅ Nouvelle prop
 }
 
 const DEFAULT_CUSTOM_CLASS_IMAGE = '/sans_classe.png';
 
-export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAvatarProps) {
+export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamiliar }: CompactAvatarProps) {
   const getClassImage = (className: string | undefined) => {
     if (!className) return DEFAULT_CUSTOM_CLASS_IMAGE;
     const classMap: Record<string, string> = {
@@ -93,6 +94,21 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings }: CompactAva
               </p>
             )}
           </div>
+        )}
+        {/* ✅ Bouton Familier en dessous de classe/niveau (desktop) */}
+        {onOpenFamiliar && (
+          <button
+            onClick={onOpenFamiliar}
+            className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-emerald-900/30 transition-colors group"
+            title="Gérer le familier"
+          >
+            <img
+              src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
+              alt="Familier"
+              className="w-5 h-5"
+            />
+            <span className="text-xs text-gray-400 group-hover:text-emerald-300 transition-colors">Familier</span>
+          </button>
         )}
       </div>
     </div>
