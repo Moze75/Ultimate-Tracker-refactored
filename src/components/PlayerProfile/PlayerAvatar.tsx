@@ -52,7 +52,7 @@ export function PlayerAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamilia
           <img
             src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
             alt="Familier"
-            className="w-15 h-15 drop-shadow-lg"
+            className="w-11 h-11 drop-shadow-lg"
           />
         </button>
       )}
