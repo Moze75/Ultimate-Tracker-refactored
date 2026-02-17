@@ -31,7 +31,7 @@ export function DesktopHeader({
   return (
     <div className="bg-gray-800/30 rounded-lg border border-gray-700 p-4 relative">
       {/* Boutons Éditer / Paramètres en haut à droite */}
-      <div className="absolute top-2 right-4 flex gap-1 z-50 mb-2">
+      <div className="absolute top-2 right-6 flex gap-1 z-50 mb-2">
         <button
           onClick={onEdit}
           className="px-2 py-1 rounded bg-transparent text-white hover:bg-gray-800/50 flex items-center gap-1 transition-colors text-xs"
