@@ -662,7 +662,6 @@ export default function CombatTab({ player, inventory, onUpdate }: CombatTabProp
       setConcentrationDC(dc);
       setShowConcentrationCheck(true);
     }}
-    markLocalUpdate={markLocalUpdate}
   />
 )}
 
