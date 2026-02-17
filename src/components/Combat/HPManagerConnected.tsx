@@ -259,6 +259,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     if (tempHP <= 0) return;
 
     // 1) Calcul local des PV temporaires
+        markLocalUpdate();
     const { current_hp, temporary_hp } = computeTempHP(player, tempHP);
 
     try {
