@@ -150,6 +150,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
   const [createCr, setCreateCr] = useState('0');
   const [createTraits, setCreateTraits] = useState<MonsterEntry[]>([]);
   const [createActions, setCreateActions] = useState<MonsterEntry[]>([{ name: '', description: '' }]);
+    const [createImageUrl, setCreateImageUrl] = useState('');
 
   useEffect(() => {
     const prev = document.body.style.overflow;
