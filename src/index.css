@@ -813,6 +813,7 @@ select {
     0 2px 60px rgba(255, 223, 140, 0.5);
   animation: tab-glow-intense 1.5s ease-in-out infinite;
   pointer-events: none;
+  will-change: box-shadow;
 }
 
 @keyframes tab-glow-intense {
