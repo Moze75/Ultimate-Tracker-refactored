@@ -526,6 +526,151 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
                />
                                       </div>
 
+              {/* Formulaire d'édition */}
+              {editing && (
+                <div className="space-y-4 border-t border-gray-700 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Nom</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.name}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Type</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.type}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, type: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Taille</label>
+                      <select
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.size}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, size: e.target.value })}
+                      >
+                        {sizes.map((s) => (
+                          <option key={s.value} value={s.value}>{s.label} ({s.value})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">FP</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.challenge_rating}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, challenge_rating: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">CA</label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.armor_class}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, armor_class: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">PV max</label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.max_hp}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          setCurrentFamiliar({
+                            ...currentFamiliar,
+                            max_hp: val,
+                            hit_points: val,
+                            current_hp: Math.min(currentFamiliar.current_hp, val),
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Vitesse</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={Object.entries(currentFamiliar.speed || {}).map(([k, v]) => k === 'marche' ? v : `${k} ${v}`).join(', ')}
+                        onChange={(e) => {
+                          const speed: Record<string, string> = {};
+                          const parts = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                          for (const part of parts) {
+                            const named = part.match(/^(nage|vol|fouissement|escalade|creusement)\s+(.+)$/i);
+                            if (named) {
+                              speed[named[1].toLowerCase()] = named[2];
+                            } else if (!speed['marche']) {
+                              speed['marche'] = part;
+                            }
+                          }
+                          setCurrentFamiliar({ ...currentFamiliar, speed });
+                        }}
+                        placeholder="9 m, vol 18 m"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Caractéristiques</label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {abilityFields.map(({ key, label }) => (
+                        <div key={key} className="text-center">
+                          <div className="text-xs text-emerald-400 font-bold mb-1">{label}</div>
+                          <input
+                            type="number"
+                            className="w-full px-1 py-2 bg-black/40 border border-gray-700 rounded text-center text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                            value={currentFamiliar.abilities[key]}
+                            onChange={(e) => setCurrentFamiliar({
+                              ...currentFamiliar,
+                              abilities: { ...currentFamiliar.abilities, [key]: parseInt(e.target.value) || 0 },
+                            })}
+                          />
+                          <div className="text-xs text-gray-500 mt-0.5">{mod(currentFamiliar.abilities[key])}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Sens</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.senses || ''}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, senses: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Langues</label>
+                      <input
+                        className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-emerald-600 focus:outline-none"
+                        value={currentFamiliar.languages || ''}
+                        onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, languages: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <DynamicEntryList
+                    label="Traits"
+                    entries={currentFamiliar.traits || []}
+                    onChange={(traits) => setCurrentFamiliar({ ...currentFamiliar, traits })}
+                  />
+                  <DynamicEntryList
+                    label="Actions"
+                    entries={currentFamiliar.actions || []}
+                    onChange={(actions) => setCurrentFamiliar({ ...currentFamiliar, actions })}
+                  />
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-2">
                 <button
