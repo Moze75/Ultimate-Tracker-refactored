@@ -839,3 +839,59 @@ select {
   0%, 100% { opacity: 0.5; }
   50%      { opacity: 1; }
 }
+
+/* ========================================
+   Reset couleurs pour MonsterStatBlock dans la modale familier
+   Le frame-card--light force les textes en ivoire, mais le statblock
+   a son propre fond clair → on restaure les couleurs d'origine
+   ======================================== */
+
+.familiar-statblock-reset .text-white {
+  color: #1f2937 !important; /* gray-800 */
+}
+
+.familiar-statblock-reset .text-gray-100 {
+  color: #1f2937 !important;
+}
+
+.familiar-statblock-reset .text-gray-200 {
+  color: #374151 !important; /* gray-700 */
+}
+
+.familiar-statblock-reset .text-gray-300 {
+  color: #4b5563 !important; /* gray-600 */
+}
+
+.familiar-statblock-reset .text-gray-400 {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+.familiar-statblock-reset .text-gray-500 {
+  color: #9ca3af !important; /* gray-400 */
+}
+
+.familiar-statblock-reset span.font-semibold {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  color: #1f2937 !important;
+}
+
+.familiar-statblock-reset h2,
+.familiar-statblock-reset h3,
+.familiar-statblock-reset h4 {
+  color: #1f2937 !important;
+}
+
+.familiar-statblock-reset p,
+.familiar-statblock-reset li,
+.familiar-statblock-reset span:not(.font-semibold) {
+  color: #374151 !important;
+}
+
+/* Empêcher le frame-card de rendre les bg transparents dans le statblock */
+.familiar-statblock-reset [class*="bg-gray-800"] {
+  background-color: revert !important;
+}
+
+.familiar-statblock-reset [class*="border-gray-700"] {
+  border-color: revert !important;
+}
