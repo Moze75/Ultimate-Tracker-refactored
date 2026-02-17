@@ -22,7 +22,7 @@ function CollapsibleSection({ icon, title, children, defaultOpen = false }: Coll
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-gray-800/40 border border-gray-700 rounded-xl overflow-hidden">
+    <div className="bg-black/10 border border-amber-600/20 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/30 transition-colors"
