@@ -591,7 +591,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
                               ) : expandedMonster ? (
                                 <>
                                                               <div className="familiar-statblock-reset">
-                                     <MonsterStatBlock monster={expandedMonster} />
+                                                               <MonsterStatBlock monster={expandedMonster} onRollDice={handleRollDice} />
                                    </div>
                                   <button
                                     onClick={() => selectMonsterAsFamiliar(expandedMonster)}
