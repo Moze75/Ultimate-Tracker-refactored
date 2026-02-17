@@ -33,6 +33,7 @@ export function DesktopHeader({
           player={player} 
           onEdit={onEdit}
           onOpenDiceSettings={onOpenDiceSettings} // ✅ Passer la prop
+          onOpenFamiliar={onOpenFamiliar}
         />
 
         <div className="flex-1 flex items-center justify-center">
