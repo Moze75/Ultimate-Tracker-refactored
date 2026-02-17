@@ -254,8 +254,11 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
     const tempHP = parseInt(tempHpValue) || 0;
     if (tempHP <= 0) return;
 
+    // ✅ Marquer l'update local AVANT toute écriture Supabase pour éviter le double son Realtime
+    markLocalUpdate?.();
+
     // 1) Calcul local des PV temporaires
-     const { current_hp, temporary_hp } = computeTempHP(player, tempHP);
+    const { current_hp, temporary_hp } = computeTempHP(player, tempHP);
 
     try {
       // 2) Mise à jour offline-first + player optimistic
