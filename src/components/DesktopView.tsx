@@ -322,6 +322,15 @@ export function DesktopView({
         onBackgroundChange={handleBackgroundChange}
         deviceType="desktop"
       />
+
+      {showFamiliarModal && (
+        <FamiliarModal
+          playerId={player.id}
+          familiar={familiar}
+          onClose={() => setShowFamiliarModal(false)}
+          onSave={(fam) => setFamiliar(fam)}
+        />
+      )}
       
       {showConcentrationCheck && (
         <ConcentrationCheckModal
