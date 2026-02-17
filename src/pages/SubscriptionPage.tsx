@@ -392,8 +392,20 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
             return (
               <div
                 key={plan.id}
-                className={`relative backdrop-blur-sm border rounded-xl overflow-hidden flex flex-col transition-all duration-300 ${getCardStyle(plan.id)} ${isExpiredTrial ? 'opacity-60 grayscale' : ''}`}
+                className={`relative overflow-visible flex flex-col transition-all duration-300 hover:scale-[1.02] ${getCardStyle(plan.id)} ${isExpiredTrial ? 'opacity-60 grayscale' : ''}`}
               >
+                {/* Overlay coloré pour distinguer les plans */}
+                <div 
+                  className="absolute inset-0 pointer-events-none rounded-xl"
+                  style={{
+                    background: 
+                      plan.id === 'hero' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.12) 100%)' :
+                      plan.id === 'game_master' ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(147, 51, 234, 0.12) 100%)' :
+                      plan.id === 'celestial' ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(202, 138, 4, 0.12) 100%)' :
+                      'transparent',
+                    zIndex: 1
+                  }}
+                />
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
                     POPULAIRE
