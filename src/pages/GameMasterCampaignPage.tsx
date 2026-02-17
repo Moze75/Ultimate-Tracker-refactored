@@ -104,23 +104,34 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
           {campaigns.map((campaign) => (
             <div
               key={campaign.id}
-              className="frame-card frame-card--light frame-card--no-frame rounded-xl p-6 pb-8 hover:scale-[1.02] transition-all duration-200 group relative cursor-pointer"
+              onClick={() => setSelectedCampaign(campaign)}
+              className="frame-card frame-card--light frame-card--no-frame rounded-xl p-6 pb-8 hover:scale-[1.02] transition-all duration-200 group cursor-pointer"
+              style={{ position: 'relative' }}
             >
               <button
-                onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); }}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors z-10"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setEditingCampaign(campaign); 
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  zIndex: 10
+                }}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                 title="Paramètres de la campagne"
               >
                 <Settings size={18} />
               </button>
 
-              <div onClick={() => setSelectedCampaign(campaign)} className="cursor-pointer">
+              <div>
                 <div className="mb-3 pr-14">
                   <h3 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)', lineHeight: 1.15 }}>{campaign.name}</h3>
                 </div>
 
                 {campaign.description && (
-                  <p className="text-sm mb-4 line-clamp-2 pr-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
+                  <p className="text-sm mb-4 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
                 )}
 
                 <div className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
