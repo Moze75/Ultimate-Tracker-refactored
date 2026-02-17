@@ -7,7 +7,7 @@ import { triggerBloodSplash } from '../../utils/bloodSplash';
 import { triggerHealingAura } from '../../utils/healingAura';
 import { audioManager } from '../../utils/audioManager';
 import { useDiceSettings } from '../../hooks/useDiceSettings';
-import { usePlayerRealtimeSync } from '../../hooks/usePlayerRealtimeSync';
+
 
 // 🔁 service offline-first HP
 import {
