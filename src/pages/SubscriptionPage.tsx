@@ -416,7 +416,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                   <div className={`${getHeaderStyle(plan.id).split(' ')[2]} mb-4`}>
                     {getPlanIcon(plan.id)}
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
+                                  <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Cinzel, serif', color: '#EFE6D8' }}>{plan.name}</h3>
                   <div className="mt-2">
                      <span className="text-3xl font-bold text-white">{plan.price}€</span>
                      <span className="text-gray-300 text-sm ml-1">{plan.price === 0 ? "/ 15 jours" : "/ an"}</span>
