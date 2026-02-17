@@ -783,3 +783,40 @@ select {
 .animate-glow {
   animation: glow-pulse 3s ease-in-out infinite;
 }
+
+/* Indicateur d'onglet actif avec effet glow ambre */
+.tab-indicator-active {
+  border-bottom: 2px solid rgba(212, 170, 96, 0.9);
+  box-shadow: 
+    0 2px 8px rgba(212, 170, 96, 0.6),
+    0 4px 16px rgba(212, 170, 96, 0.4),
+    0 0 20px rgba(212, 170, 96, 0.3);
+}
+
+.tab-indicator-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 223, 140, 0.8) 20%, 
+    rgba(255, 223, 140, 1) 50%, 
+    rgba(255, 223, 140, 0.8) 80%, 
+    transparent 100%
+  );
+  animation: tab-glow 2s ease-in-out infinite;
+}
+
+@keyframes tab-glow {
+  0%, 100% {
+    opacity: 0.7;
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(1px);
+  }
+}
