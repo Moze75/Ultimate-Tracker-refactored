@@ -99,13 +99,13 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamili
         {onOpenFamiliar && (
           <button
             onClick={onOpenFamiliar}
-            className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-emerald-900/30 transition-colors group"
+            className="mt-1 flex items-center gap-1 hover:opacity-80 transition-opacity group"
             title="Gérer le familier"
           >
             <img
               src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
               alt="Familier"
-              className="w-10 h-10"
+              className="w-8 h-8 -ml-1"
             />
             <span className="text-xs text-gray-400 group-hover:text-emerald-300 transition-colors">Familier</span>
           </button>
