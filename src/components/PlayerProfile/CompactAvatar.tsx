@@ -80,7 +80,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamili
 
       {/* Infos personnage */}
       <div className="flex-1 min-w-0">
-        <h2 className="text-2xl font-bold text-gray-100 truncate">
+         <h2 className="text-2xl font-bold text-gray-100 truncate mt-2">
           {player.adventurer_name || player.name}
         </h2>
         {player.class && (
