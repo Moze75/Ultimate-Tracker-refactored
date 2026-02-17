@@ -382,11 +382,9 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
 
   const modalContent = (
     <div
-      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity ${
-        diceRolling ? 'pointer-events-none opacity-40' : ''
-      }`}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
       style={{ zIndex: 9990 }}
-      onClick={(e) => { if (e.target === e.currentTarget && !diceRolling) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
        <div
          className="frame-card--light frame-card--no-frame w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-xl shadow-xl flex flex-col"
