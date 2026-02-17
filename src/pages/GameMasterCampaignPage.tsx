@@ -127,12 +127,22 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
               <Crown className="w-16 h-16 mx-auto mb-4 text-gray-600" />
               <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8' }}>Aucune campagne créée</h3>
               <p className="mb-6" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Créez votre première campagne pour commencer à gérer vos joueurs et votre inventaire</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn-primary px-6 py-3 rounded-lg inline-flex items-center gap-2"
-              >
-                <Plus size={20} /> Créer ma première campagne
-              </button>
+                         <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-6 py-3 rounded-lg flex items-center gap-2 hover:scale-105 transition-all"
+              style={{
+                fontFamily: 'Cinzel, serif',
+                fontWeight: 600,
+                letterSpacing: '0.02em',
+                color: '#FFE8B8',
+                background: 'linear-gradient(135deg, rgba(212, 170, 96, 0.3) 0%, rgba(184, 115, 51, 0.4) 100%)',
+                border: '2px solid rgba(212, 170, 96, 0.6)',
+                boxShadow: '0 0 20px rgba(212, 170, 96, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
+                textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <Plus size={20} /> Nouvelle campagne
+            </button>
             </div>
           )}
         </div>
