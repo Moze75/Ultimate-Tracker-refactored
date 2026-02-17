@@ -257,7 +257,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
     }
   };
 
-  const handleCreateFamiliar = () => {
+  const handleCreateFamiliar = async () => {
     if (!createName.trim()) return;
     const parseSpeed = (): Record<string, string> => {
       const speed: Record<string, string> = {};
