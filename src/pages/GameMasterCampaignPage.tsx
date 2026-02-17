@@ -116,7 +116,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
 
                 <div className="flex items-center justify-between text-xs" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
                   <span>Créée le {new Date(campaign.created_at).toLocaleDateString('fr-FR')}</span>
-                  <Crown className="w-4 h-4 text-purple-400" />
+                           <Crown className="w-4 h-4 text-amber-400" />
                 </div>
               </div>
             </div>
