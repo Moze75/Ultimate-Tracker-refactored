@@ -70,7 +70,7 @@ export function DesktopHeader({
           />
         </div>
 
-        <div className="min-w-0 shrink">
+        <div className="min-w-0 shrink pt-6">
           <DesktopActionsGrid
             player={player}
             onUpdate={onUpdate}
