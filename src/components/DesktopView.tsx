@@ -51,6 +51,8 @@ export function DesktopView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [showDiceSettings, setShowDiceSettings] = useState(false);
+    const [showFamiliarModal, setShowFamiliarModal] = useState(false);
+  const [familiar, setFamiliar] = useState<FamiliarData | null>((player as any).familiar || null);
 
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
