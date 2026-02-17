@@ -63,6 +63,7 @@ export function PlayerProfile({
                 player={player} 
                 onEdit={() => setEditing(true)}
                 onOpenDiceSettings={() => setIsDiceSettingsOpen(true)}
+                onOpenFamiliar={() => setShowFamiliarModal(true)}
               />
 
               <PlayerActionsPanel
