@@ -196,6 +196,7 @@ export function DesktopView({
                 onEdit={() => setSettingsOpen(true)}
                 onOpenCampaigns={() => setShowCampaignModal(true)}
                 onOpenDiceSettings={() => setShowDiceSettings(true)}
+                onOpenFamiliar={() => setShowFamiliarModal(true)}
                 activeTooltip={activeTooltip}
                 setActiveTooltip={setActiveTooltip}
               />
