@@ -467,6 +467,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
               {/* Stat block */}
                      <div className="familiar-statblock-reset">
                <MonsterStatBlock
+                 onRollDice={handleRollDice}
                  monster={{
                   name: currentFamiliar.name,
                   slug: currentFamiliar.slug || '',
