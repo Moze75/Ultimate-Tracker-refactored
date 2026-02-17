@@ -220,6 +220,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     if (healing <= 0) return;
 
     // ✅ Jouer le son de guérison et déclencher l'aura
+        markLocalUpdate();
     playHealingSound();
     triggerHealingAura(healing);
 
