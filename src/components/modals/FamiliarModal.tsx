@@ -352,7 +352,7 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div className="flex items-center gap-3">
             <img src={FAMILIAR_ICON} alt="Familier" className="w-7 h-7" />
-            <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-white" style={{ fontFamily: "'Cinzel', serif" }}>
               {view === 'manage' && currentFamiliar ? currentFamiliar.name : view === 'create' ? 'Créer un familier' : 'Choisir un familier'}
             </h3>
           </div>
