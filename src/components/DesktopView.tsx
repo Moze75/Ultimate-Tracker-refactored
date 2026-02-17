@@ -13,6 +13,7 @@ import { DiceRollContext } from './ResponsiveGameLayout';
 import { ConcentrationCheckModal } from './Combat/ConcentrationCheckModal';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useDiceSettings } from '../hooks/useDiceSettings';
+import { FamiliarModal, FamiliarData } from './modals/FamiliarModal';
 
 
 interface CampaignMember {
