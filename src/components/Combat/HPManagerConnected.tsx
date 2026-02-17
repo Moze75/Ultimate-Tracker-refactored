@@ -172,6 +172,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
     }
 
     // ✅ Jouer le son AVANT les effets visuels
+          markLocalUpdate();
     playSwordSliceSound();
     triggerBloodSplash(damage);
 
