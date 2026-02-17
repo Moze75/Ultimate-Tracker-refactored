@@ -401,9 +401,29 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
         <div className="flex-1 overflow-y-auto p-5">
           {/* ── MANAGE VIEW ── */}
           {view === 'manage' && currentFamiliar && (
-            <div className="space-y-4">
-              {/* HP management */}
-              <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+              <div className="space-y-4">
+               {/* Avatar du familier */}
+               <div className="flex items-center gap-4">
+                 {currentFamiliar.image_url && (
+                   <img
+                     src={currentFamiliar.image_url}
+                     alt={currentFamiliar.name}
+                     className="w-16 h-16 object-cover rounded-lg border border-gray-700 shrink-0"
+                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                   />
+                 )}
+                 <div className="flex-1 min-w-0">
+                   <input
+                     className="w-full px-3 py-1.5 bg-black/30 border border-gray-700 rounded-lg text-xs text-gray-300 placeholder-gray-500 focus:border-emerald-600 focus:outline-none"
+                     placeholder="URL de l'image (optionnel)"
+                     value={currentFamiliar.image_url || ''}
+                     onChange={(e) => setCurrentFamiliar({ ...currentFamiliar, image_url: e.target.value })}
+                   />
+                 </div>
+               </div>
+
+               {/* HP management */}
+               <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Heart size={16} className={currentFamiliar.current_hp <= 0 ? 'text-gray-600' : 'text-red-500'} />
