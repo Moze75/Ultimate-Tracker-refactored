@@ -423,7 +423,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                   </div>
                 </div>
 
-                <div className="p-6 flex-grow">
+                            <div className="relative z-10 p-6 flex-grow" style={{ fontFamily: 'Inter, sans-serif' }}>
                    {/* Rendu des features spécifiques */}
                    {renderPlanFeatures(plan.id)}
                 </div>
