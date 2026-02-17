@@ -294,8 +294,20 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
      };
     setCurrentFamiliar(fam);
     setView('manage');
-    toast.success(`Familier "${createName}" créé`);
-  }; 
+
+    // Sauvegarde immédiate dans Supabase
+    try {
+      await supabase
+        .from('players')
+        .update({ familiar: fam })
+        .eq('id', playerId);
+      onSave(fam);
+      toast.success(`Familier "${createName}" créé et sauvegardé`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur sauvegarde du familier');
+    }
+  };
 
   const applyHpChange = (mode: 'damage' | 'heal') => {
     if (!currentFamiliar) return;
