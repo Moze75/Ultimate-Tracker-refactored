@@ -105,7 +105,7 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamili
             <img
               src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/familier.png"
               alt="Familier"
-              className="w-5 h-5"
+              className="w-7 h-7"
             />
             <span className="text-xs text-gray-400 group-hover:text-emerald-300 transition-colors">Familier</span>
           </button>
