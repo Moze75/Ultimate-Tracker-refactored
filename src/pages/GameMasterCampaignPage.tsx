@@ -131,8 +131,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
           ))}
 
           {campaigns.length === 0 && (
-            <div className="col-span-full frame-card frame-card--light frame-card--no-frame border-2 border-dashed border-amber-600/30 rounded-xl p-12 text-center">
-              <Crown className="w-16 h-16 mx-auto mb-4 text-amber-600/50" />
+                  <div className="col-span-full frame-card frame-card--light frame-card--no-frame border-2 border-dashed border-amber-600/30 rounded-xl p-12 text-center">
               <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8' }}>Aucune campagne créée</h3>
               <p className="mb-6" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Créez votre première campagne pour commencer à gérer vos joueurs et votre inventaire</p>
                          <button
