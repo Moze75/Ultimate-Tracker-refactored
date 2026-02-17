@@ -104,28 +104,15 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
           {campaigns.map((campaign) => (
             <div
               key={campaign.id}
-              className="frame-card frame-card--light frame-card--no-frame rounded-xl p-6 hover:scale-[1.02] transition-all duration-200 group relative cursor-pointer"
+              className="frame-card frame-card--light frame-card--no-frame rounded-xl p-6 pb-8 hover:scale-[1.02] transition-all duration-200 group relative cursor-pointer"
             >
               <button
                 onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); }}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors z-10"
                 title="Paramètres de la campagne"
               >
                 <Settings size={18} />
               </button>
-
-                            <button
-                onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); }}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
-                title="Paramètres de la campagne"
-              >
-                <Settings size={18} />
-              </button>
-
-              {/* Icône couronne en bas à droite */}
-              <div className="absolute bottom-4 right-4">
-                <Crown className="w-5 h-5 text-amber-400/60" />
-              </div>
 
               <div onClick={() => setSelectedCampaign(campaign)} className="cursor-pointer">
                 <div className="mb-3 pr-10">
