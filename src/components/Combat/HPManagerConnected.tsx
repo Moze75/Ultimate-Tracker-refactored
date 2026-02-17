@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Player } from '../../types/dnd';
 import { HPManager } from '../HPManager';
-import { supabase } from '../../lib/supabase';
+
 import toast from 'react-hot-toast';
 import { triggerBloodSplash } from '../../utils/bloodSplash';
 import { triggerHealingAura } from '../../utils/healingAura';
@@ -84,68 +84,7 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
     return 'from-green-500 to-green-600';
   };
 
-  // ✅ Ref pour le debounce des updates HP
-  const updateHPTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const pendingHPUpdateRef = React.useRef<{ current_hp: number; temporary_hp: number } | null>(null);
 
-  /**
-   * ✅ OPTIMISÉ : updateHP avec debounce de 1. 5s
-   * Regroupe plusieurs clics rapides en un seul appel Supabase
-   */
-  const updateHP = async (newCurrentHP: number, newTempHP?: number) => {
-    // 🔇 Offline : la queue + applyHPUpdateOfflineFirst suffisent
-    if (!navigator. onLine) {
-      return;
-    }
-
-    const clampedHP = Math.max(0, Math.min(player.max_hp, newCurrentHP));
-    const clampedTempHP = Math.max(0, newTempHP ??  player.temporary_hp);
-
-    // Stocker les valeurs pendantes
-    pendingHPUpdateRef.current = { 
-      current_hp: clampedHP, 
-      temporary_hp: clampedTempHP 
-    };
-
-    // Annuler le timeout précédent s'il existe
-    if (updateHPTimeoutRef.current) {
-      clearTimeout(updateHPTimeoutRef.current);
-    }
-
-    // Programmer l'update Supabase après 1.5 secondes d'inactivité
-    updateHPTimeoutRef.current = setTimeout(async () => {
-      const pending = pendingHPUpdateRef.current;
-      if (! pending) return;
-
-      try {
-        console.log('[HPManagerConnected] 💾 Synchro HP vers Supabase:', pending);
-        
-        const { error } = await supabase. from('players')
-          .update({ 
-            current_hp: pending.current_hp, 
-            temporary_hp: pending.temporary_hp 
-          })
-          .eq('id', player.id);
-
-        if (error) throw error;
-        
-        console.log('[HPManagerConnected] ✅ HP synchronisés');
-      } catch (error) {
-        console.warn('[HPManagerConnected] Erreur synchro Supabase (HP):', error);
-      } finally {
-        pendingHPUpdateRef.current = null;
-      }
-    }, 1500); // 1.5 secondes de debounce
-  };
-
-  // Cleanup du timeout au démontage
-  React.useEffect(() => {
-    return () => {
-      if (updateHPTimeoutRef.current) {
-        clearTimeout(updateHPTimeoutRef.current);
-      }
-    };
-  }, []); 
 
     const applyDamage = async () => {
     const damage = parseInt(damageValue) || 0;
