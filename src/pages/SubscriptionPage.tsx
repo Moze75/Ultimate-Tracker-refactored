@@ -404,10 +404,14 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                       plan.id === 'celestial' ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(202, 138, 4, 0.12) 100%)' :
                       'transparent',
                     zIndex: 1
-                  
-
-                
-
+                  }}
+                />
+                {plan.popular && (
+                  <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
+                    POPULAIRE
+                  </div>
+                )}
+ 
                         <div className="relative z-10 p-6 border-b border-gray-700/20 bg-black/10" style={{ fontFamily: 'Cinzel, serif' }}>
                   <div className={`${getHeaderStyle(plan.id).split(' ')[2]} mb-4`}>
                     {getPlanIcon(plan.id)}
