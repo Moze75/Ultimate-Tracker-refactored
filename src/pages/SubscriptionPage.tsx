@@ -404,7 +404,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                       plan.id === 'celestial' ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(202, 138, 4, 0.12) 100%)' :
                       'transparent',
                     zIndex: 1
-                  }}
+                  
 
                 
 
