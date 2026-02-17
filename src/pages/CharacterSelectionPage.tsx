@@ -813,11 +813,22 @@ await new Promise(resolve => setTimeout(resolve, 300));
                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
                     onClick={() => setShowCampaigns(true)}
-                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-700 to-orange-800 text-white font-semibold text-lg shadow-xl shadow-orange-900/20 border border-orange-500/20 overflow-hidden transition-all hover:scale-105 hover:shadow-orange-900/40"
+                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl overflow-hidden transition-all hover:scale-105"
+                    style={{
+                      fontFamily: 'Cinzel, serif',
+                      fontWeight: 700,
+                      fontSize: '1.125rem',
+                      letterSpacing: '0.05em',
+                      color: '#FFE8B8',
+                      background: 'linear-gradient(135deg, rgba(212, 170, 96, 0.25) 0%, rgba(184, 115, 51, 0.35) 100%)',
+                      border: '2px solid rgba(212, 170, 96, 0.5)',
+                      boxShadow: '0 0 20px rgba(212, 170, 96, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 232, 184, 0.3)'
+                    }}
                   >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    <Scroll size={20} />
-                    <span>Gérer mes Campagnes</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <Crown size={22} className="relative z-10 text-yellow-300 drop-shadow-lg" />
+                    <span className="relative z-10">Gérer mes Campagnes</span>
                   </button>
                </div>
             )}
