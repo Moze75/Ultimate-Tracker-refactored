@@ -428,7 +428,7 @@ const toggleForgotPassword = () => {
 </p>
         </div>
 
-        <div className="stat-card">
+             <div className="frame-card frame-card--light frame-card--no-frame stat-card">
           <div className="p-6 space-y-6">
             <form 
               className="space-y-4" 
