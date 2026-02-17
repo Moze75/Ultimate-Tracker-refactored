@@ -82,10 +82,19 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
               <h1 className="text-3xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Gestion des Campagnes</h1>
             </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
-            >
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 rounded-lg inline-flex items-center gap-2 hover:scale-105 transition-all"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                  fontWeight: 600,
+                  color: '#FFE8B8',
+                  background: 'linear-gradient(135deg, rgba(212, 170, 96, 0.3) 0%, rgba(184, 115, 51, 0.4) 100%)',
+                  border: '2px solid rgba(212, 170, 96, 0.6)',
+                  boxShadow: '0 0 20px rgba(212, 170, 96, 0.4)',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)'
+                }}
+              >
               <Plus size={20} /> Nouvelle campagne
             </button>
           </div>
