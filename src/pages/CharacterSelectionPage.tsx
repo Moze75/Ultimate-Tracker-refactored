@@ -1048,7 +1048,13 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
         <div className="w-full max-w-md mx-auto px-4">
           <button
             onClick={handleSignOut}
-            className="w-full btn-secondary px-4 py-3 rounded-lg flex items-center justify-center gap-2 shadow-lg"
+            className="w-full btn-transparent-cinzel rounded-lg flex items-center justify-center gap-2 px-4 py-3"
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontWeight: 600,
+              letterSpacing: '0.02em',
+              color: '#EFE6D8'
+            }}
           >
             <LogOut size={20} />
             Déconnexion
