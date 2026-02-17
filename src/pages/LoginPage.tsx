@@ -333,7 +333,7 @@ const toggleForgotPassword = () => {
             </h1>
           </div>
 
-          <div className="stat-card">
+               <div className="frame-card frame-card--light frame-card--no-frame stat-card">
             <div className="p-6 text-center space-y-4">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-8 h-8 text-green-500" />
