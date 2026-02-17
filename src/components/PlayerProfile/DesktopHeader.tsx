@@ -23,6 +23,8 @@ export function DesktopHeader({
   onEdit, 
   onOpenCampaigns, 
   onOpenDiceSettings,
+  onOpenFamiliar,
+  activeTooltip, 
   activeTooltip, 
   setActiveTooltip 
 }: DesktopHeaderProps) {
