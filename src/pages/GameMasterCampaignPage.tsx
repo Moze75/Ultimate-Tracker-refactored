@@ -44,7 +44,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative text-center">
-          <Crown className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-pulse" />
+          <Crown className="w-12 h-12 mx-auto mb-4 text-amber-400 animate-pulse" />
           <p className="text-gray-200">Chargement...</p>
         </div>
       </div>
