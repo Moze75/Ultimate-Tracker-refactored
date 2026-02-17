@@ -295,7 +295,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(48rem,95vw)] max-h-[90vh] overflow-hidden bg-gray-900/95 border border-gray-700 rounded-xl shadow-2xl flex flex-col">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(48rem,95vw)] max-h-[90vh] overflow-hidden frame-card frame-card--light frame-card--no-frame rounded-xl shadow-2xl flex flex-col">
         <div className="sticky top-0 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700 px-4 sm:px-6 py-4 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
