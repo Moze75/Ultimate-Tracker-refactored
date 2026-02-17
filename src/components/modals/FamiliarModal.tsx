@@ -220,10 +220,11 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
       senses: monster.senses,
       languages: monster.languages,
       challenge_rating: monster.challenge_rating,
-      traits: monster.traits || [],
-      actions: monster.actions || [],
-      saving_throws: monster.saving_throws,
-      skills: monster.skills,
+       traits: monster.traits || [],
+       actions: monster.actions || [],
+       saving_throws: monster.saving_throws,
+       skills: monster.skills,
+       image_url: monster.image_url || undefined,
     };
     setCurrentFamiliar(fam);
     setView('manage');
