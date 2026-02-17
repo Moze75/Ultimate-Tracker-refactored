@@ -267,6 +267,9 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
 
       // 4) Synchro Supabase en arrière-plan
       updateHP(current_hp, temporary_hp);
+
+      // 4) Synchro Supabase en arrière-plan
+      updateHP(current_hp, temporary_hp);
     } catch (e) {
       console.error('[HPManagerConnected] Erreur applyTempHP offline:', e);
     }
