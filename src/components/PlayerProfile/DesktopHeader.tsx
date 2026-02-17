@@ -25,7 +25,6 @@ export function DesktopHeader({
   onOpenDiceSettings,
   onOpenFamiliar,
   activeTooltip, 
-  activeTooltip, 
   setActiveTooltip 
 }: DesktopHeaderProps) {
   return (
