@@ -34,6 +34,17 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: H
 
   const totalHP = player.current_hp + player.temporary_hp;
 
+    // ✅ Synchro Realtime : markLocalUpdate empêche le double son
+  const { markLocalUpdate } = usePlayerRealtimeSync({
+    playerId: player.id,
+    currentPlayer: player,
+    onPlayerUpdated: (updates) => {
+      onUpdate({ ...player, ...updates });
+    },
+    soundsEnabled: settings.soundsEnabled,
+    fxVolume,
+  });
+
   // ✅ Fonction pour jouer le son de dégâts
   const playSwordSliceSound = () => {
     if (settings.soundsEnabled) {
