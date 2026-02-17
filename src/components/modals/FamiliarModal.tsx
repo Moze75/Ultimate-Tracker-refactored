@@ -494,9 +494,10 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
                   reactions: [],
                   legendary_actions: [],
                   legendary_description: '',
-                  source: currentFamiliar.source,
-                }}
-              />
+                   source: currentFamiliar.source,
+                   image_url: currentFamiliar.image_url,
+                 }}
+               />
                                       </div>
 
               {/* Actions */}
