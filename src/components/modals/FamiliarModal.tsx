@@ -127,7 +127,8 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
   const [view, setView] = useState<ViewMode>(familiar ? 'manage' : 'search');
   const [currentFamiliar, setCurrentFamiliar] = useState<FamiliarData | null>(familiar);
   const [hpDelta, setHpDelta] = useState('');
-   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
 
 
   // Connexion au DiceBox3D via le contexte
