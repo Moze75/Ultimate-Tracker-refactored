@@ -132,13 +132,8 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
 
   // Connexion au DiceBox3D via le contexte
   const { rollDice } = React.useContext(DiceRollContext);
-  const [diceRolling, setDiceRolling] = useState(false);
-
   const handleRollDice = (data: DiceRollData) => {
-    setDiceRolling(true);
     rollDice(data);
-    // Le DiceBox gère sa propre fermeture, on ré-active après un délai
-    setTimeout(() => setDiceRolling(false), 6000);
   };
   
   // Search state
