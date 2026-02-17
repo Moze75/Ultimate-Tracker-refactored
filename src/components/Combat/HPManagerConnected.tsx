@@ -213,8 +213,10 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
     const healing = parseInt(healValue) || 0;
     if (healing <= 0) return;
 
-    // ✅ Jouer le son de guérison et déclencher l'aura
+    // ✅ Marquer l'update local AVANT toute écriture Supabase pour éviter le double son Realtime
+    markLocalUpdate?.();
 
+    // ✅ Jouer le son de guérison et déclencher l'aura
     playHealingSound();
     triggerHealingAura(healing);
 
