@@ -55,31 +55,10 @@ export function CompactAvatar({ player, onEdit, onOpenDiceSettings, onOpenFamili
         />
       </div>
 
-      {/* ✅ Boutons Éditer et Paramètres côte à côte */}
-      <div className="absolute top-0 left-[8.5rem] flex gap-1 z-50">
-        <button
-          onClick={onEdit}
-          className="px-2 py-1 rounded bg-transparent text-white hover:bg-gray-800/50 flex items-center gap-1 transition-colors text-xs"
-          title="Éditer le profil"
-        >
-          <Settings className="w-3 h-3" />
-          <span>Éditer</span>
-        </button>
-
-        {onOpenDiceSettings && (
-          <button
-            onClick={onOpenDiceSettings}
-            className="px-2 py-1 rounded bg-transparent text-purple-300 hover:bg-purple-800/30 flex items-center gap-1 transition-colors text-xs"
-            title="Paramètres des dés"
-          >
-            <Dices className="w-3 h-3" />
-            <span>Paramètres</span>
-          </button>
-        )}
-      </div>
+  
 
       {/* Infos personnage */}
-      <div className="flex-1 min-w-0 pt-6">
+         <div className="flex-1 min-w-0">
         <h2 className="text-2xl font-bold text-gray-100 truncate">
           {player.adventurer_name || player.name}
         </h2>
