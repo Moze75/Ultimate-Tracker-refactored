@@ -115,12 +115,12 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
               </button>
 
               <div onClick={() => setSelectedCampaign(campaign)} className="cursor-pointer">
-                <div className="mb-3 pr-10">
+                <div className="mb-3 pr-14">
                   <h3 className="text-xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)', lineHeight: 1.15 }}>{campaign.name}</h3>
                 </div>
 
                 {campaign.description && (
-                  <p className="text-sm mb-4 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
+                  <p className="text-sm mb-4 line-clamp-2 pr-2" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>
                 )}
 
                 <div className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.5)' }}>
