@@ -474,8 +474,8 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
               </div>
 
               {player.abilities && player.abilities.length > 0 && (
-                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <div className="bg-black/10 border border-amber-600/20 rounded-xl p-4">
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif', color: '#EFE6D8' }}>
                     <Swords className="w-4 h-4 text-red-400" />
                     Caractéristiques
                   </h4>
