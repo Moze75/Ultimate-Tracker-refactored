@@ -784,7 +784,7 @@ select {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* Indicateur d'onglet actif - trait subtil avec glow INTENSE */
+/* Indicateur d'onglet actif - trait subtil avec glow (GPU-friendly) */
 .tab-indicator-active {
   position: relative;
   border-bottom: 2px solid rgba(212, 170, 96, 0.6);
@@ -792,6 +792,7 @@ select {
   box-shadow: none !important;
 }
 
+/* Trait lumineux visible */
 .tab-indicator-active::after {
   content: '';
   position: absolute;
@@ -806,28 +807,29 @@ select {
     rgba(255, 223, 140, 0.4) 80%, 
     transparent 100%
   );
-  box-shadow: 
-    0 0 15px rgba(255, 223, 140, 1),
-    0 0 30px rgba(212, 170, 96, 0.8),
-    0 0 45px rgba(212, 170, 96, 0.6),
-    0 2px 60px rgba(255, 223, 140, 0.5);
-  animation: tab-glow-intense 1.5s ease-in-out infinite;
   pointer-events: none;
-  will-change: box-shadow;
 }
 
-@keyframes tab-glow-intense {
-  0%, 100% {
-    box-shadow: 
-      0 0 15px rgba(255, 223, 140, 0.7),
-      0 0 30px rgba(212, 170, 96, 0.56),
-      0 0 45px rgba(212, 170, 96, 0.42);
-  }
-  50% {
-    box-shadow: 
-      0 0 25px rgba(255, 235, 180, 1),
-      0 0 50px rgba(255, 223, 140, 0.9),
-      0 0 75px rgba(212, 170, 96, 0.7),
-      0 2px 100px rgba(255, 223, 140, 0.6);
-  }
+/* Halo glow via un pseudo-élément séparé (GPU-accelerated) */
+.tab-indicator-active::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: -10px;
+  right: -10px;
+  height: 14px;
+  background: radial-gradient(ellipse at center, 
+    rgba(255, 223, 140, 0.8) 0%, 
+    rgba(212, 170, 96, 0.4) 40%, 
+    transparent 70%
+  );
+  filter: blur(8px);
+  animation: tab-glow-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+@keyframes tab-glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
 }
