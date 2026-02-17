@@ -24,7 +24,7 @@ interface HPManagerConnectedProps {
   markLocalUpdate?: () => void;
 }
 
-export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, markLocalUpdate }: HPManagerConnectedProps) {
+export function HPManagerConnected({ player, onUpdate, onConcentrationCheck }: HPManagerConnectedProps) { 
   const [damageValue, setDamageValue] = useState('');
   const [healValue, setHealValue] = useState('');
   const [tempHpValue, setTempHpValue] = useState('');
