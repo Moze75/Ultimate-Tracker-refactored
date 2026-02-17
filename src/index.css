@@ -784,10 +784,10 @@ select {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* Indicateur d'onglet actif - trait en bas avec glow RENFORCÉ */
+/* Indicateur d'onglet actif - trait subtil avec glow INTENSE */
 .tab-indicator-active {
   position: relative;
-  border-bottom: 3px solid rgba(212, 170, 96, 1);
+  border-bottom: 2px solid rgba(212, 170, 96, 0.6);
   background: transparent !important;
   box-shadow: none !important;
 }
@@ -795,15 +795,15 @@ select {
 .tab-indicator-active::after {
   content: '';
   position: absolute;
-  bottom: -3px;
+  bottom: -2px;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, 
     transparent 0%, 
-    rgba(255, 223, 140, 0.8) 15%, 
-    rgba(255, 235, 180, 1) 50%, 
-    rgba(255, 223, 140, 0.8) 85%, 
+    rgba(255, 223, 140, 0.4) 20%, 
+    rgba(255, 235, 180, 0.6) 50%, 
+    rgba(255, 223, 140, 0.4) 80%, 
     transparent 100%
   );
   box-shadow: 
