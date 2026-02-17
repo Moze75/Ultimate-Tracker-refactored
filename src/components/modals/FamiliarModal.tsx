@@ -262,8 +262,9 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
       languages: createLanguages,
       challenge_rating: createCr,
       traits: createTraits.filter((t) => t.name.trim()),
-      actions: createActions.filter((a) => a.name.trim()),
-    };
+       actions: createActions.filter((a) => a.name.trim()),
+       image_url: createImageUrl.trim() || undefined,
+     };
     setCurrentFamiliar(fam);
     setView('manage');
     toast.success(`Familier "${createName}" créé`);
