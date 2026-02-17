@@ -95,7 +95,7 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
           {campaigns.map((campaign) => (
             <div
               key={campaign.id}
-              className="bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:bg-gray-800/80 hover:border-purple-500/50 transition-all duration-200 group relative"
+              className="frame-card frame-card--light frame-card--no-frame rounded-xl p-6 hover:scale-[1.02] transition-all duration-200 group relative cursor-pointer"
             >
               <button
                 onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); }}
