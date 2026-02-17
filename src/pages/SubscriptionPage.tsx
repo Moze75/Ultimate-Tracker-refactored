@@ -406,7 +406,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                     zIndex: 1
                   }}
 
-                )}
+                
 
                         <div className="relative z-10 p-6 border-b border-gray-700/20 bg-black/10" style={{ fontFamily: 'Cinzel, serif' }}>
                   <div className={`${getHeaderStyle(plan.id).split(' ')[2]} mb-4`}>
