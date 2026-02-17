@@ -405,11 +405,7 @@ export function SubscriptionPage({ session, onBack }: SubscriptionPageProps) {
                       'transparent',
                     zIndex: 1
                   }}
-                />
-                {plan.popular && (
-                  <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
-                    POPULAIRE
-                  </div>
+
                 )}
 
                         <div className="relative z-10 p-6 border-b border-gray-700/20 bg-black/10" style={{ fontFamily: 'Cinzel, serif' }}>
