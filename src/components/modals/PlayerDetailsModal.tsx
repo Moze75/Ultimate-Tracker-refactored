@@ -303,7 +303,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                 <User className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">{playerName}</h3>
+                        <h3 className="text-xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: '#EFE6D8' }}>{playerName}</h3>
                 <p className="text-sm text-gray-400">Fiche de personnage</p>
               </div>
             </div>
