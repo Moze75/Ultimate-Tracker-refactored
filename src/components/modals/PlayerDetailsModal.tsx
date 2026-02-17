@@ -29,7 +29,7 @@ function CollapsibleSection({ icon, title, children, defaultOpen = false }: Coll
       >
         <div className="flex items-center gap-2">
           {icon}
-          <span className="text-sm font-semibold text-gray-300">{title}</span>
+          <span className="text-sm font-semibold" style={{ fontFamily: 'Cinzel, serif', color: '#EFE6D8' }}>{title}</span>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
