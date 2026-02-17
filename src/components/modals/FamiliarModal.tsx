@@ -38,6 +38,7 @@ export interface FamiliarData {
   challenge_rating: string;
   traits: MonsterEntry[];
   actions: MonsterEntry[];
+  image_url?: string;
   [key: string]: any;
 }
 
