@@ -230,9 +230,6 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
 
       // 3) Mise à jour immédiate de l'UI
       onUpdate(optimisticPlayer);
-
-      // 4) Synchro Supabase en arrière-plan
-      updateHP(current_hp, temporary_hp);
     } catch (e) {
       console.error('[HPManagerConnected] Erreur applyHealing offline:', e);
     }
