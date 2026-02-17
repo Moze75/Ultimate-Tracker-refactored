@@ -587,7 +587,9 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
                                 </div>
                               ) : expandedMonster ? (
                                 <>
-                                  <MonsterStatBlock monster={expandedMonster} />
+                                                              <div className="familiar-statblock-reset">
+                                     <MonsterStatBlock monster={expandedMonster} />
+                                   </div>
                                   <button
                                     onClick={() => selectMonsterAsFamiliar(expandedMonster)}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
