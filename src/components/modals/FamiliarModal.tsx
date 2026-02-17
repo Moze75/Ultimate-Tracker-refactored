@@ -129,6 +129,13 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
   const [hpDelta, setHpDelta] = useState('');
   const [saving, setSaving] = useState(false);
 
+
+  // Connexion au DiceBox3D via le contexte
+  const { rollDice } = React.useContext(DiceRollContext);
+  const handleRollDice = (data: DiceRollData) => {
+    rollDice(data);
+  };
+  
   // Search state
   const [query, setQuery] = useState('');
   const [monsterList, setMonsterList] = useState<MonsterListItem[]>([]);
