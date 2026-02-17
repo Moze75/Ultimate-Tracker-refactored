@@ -11,7 +11,7 @@ interface DesktopHeaderProps {
   onUpdate: (player: Player) => void;
   onEdit: () => void;
   onOpenCampaigns: () => void;
-  onOpenDiceSettings?: () => void;
+  onOpenFamiliar?: () => void;
   activeTooltip?: 'ac' | 'speed' | null;
   setActiveTooltip?: (tooltip: 'ac' | 'speed' | null) => void;
 }
