@@ -385,7 +385,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                               <div className="bg-black/10 border border-amber-600/20 rounded-lg px-3 py-2 text-center">
                       <Heart className="w-4 h-4 text-red-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">PV</div>
                       <div className="font-bold text-white text-sm">
@@ -396,13 +396,13 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-black/10 border border-amber-600/20 rounded-lg px-3 py-2 text-center">
                       <Shield className="w-4 h-4 text-blue-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">CA</div>
                       <div className="font-bold text-white text-sm">{player.stats?.armor_class || 10}</div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-black/10 border border-amber-600/20 rounded-lg px-3 py-2 text-center">
                       <Zap className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">Init.</div>
                       <div className="font-bold text-white text-sm">
@@ -410,7 +410,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                       </div>
                     </div>
 
-                    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-center">
+                    <div className="bg-black/10 border border-amber-600/20 rounded-lg px-3 py-2 text-center">
                       <Star className="w-4 h-4 text-amber-400 mx-auto mb-1" />
                       <div className="text-[10px] text-gray-500 uppercase">Maitrise</div>
                       <div className="font-bold text-white text-sm">+{player.stats?.proficiency_bonus || 2}</div>
@@ -436,8 +436,8 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
                     </div>
                   </div>
 
-                  <div className="mt-4 p-3 bg-gray-800/60 border border-gray-700 rounded-lg">
-                    <div className="text-xs text-gray-400 mb-2 font-medium">Modifier les PV (MJ)</div>
+                  <div className="mt-4 p-3 bg-black/10 border border-amber-600/20 rounded-lg">
+                    <div className="text-xs mb-2 font-medium" style={{ fontFamily: 'Cinzel, serif', color: '#D4C4A8' }}>Modifier les PV (MJ)</div>
                     <div className="flex flex-wrap items-center gap-2">
                       <input
                         type="number"
