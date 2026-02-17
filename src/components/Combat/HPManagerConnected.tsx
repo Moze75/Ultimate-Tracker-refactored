@@ -163,8 +163,10 @@ export function HPManagerConnected({ player, onUpdate, onConcentrationCheck, mar
       onConcentrationCheck(dc);
     }
 
+    // ✅ Marquer l'update local AVANT toute écriture Supabase pour éviter le double son Realtime
+    markLocalUpdate?.();
+
     // ✅ Jouer le son AVANT les effets visuels
- 
     playSwordSliceSound();
     triggerBloodSplash(damage);
 
