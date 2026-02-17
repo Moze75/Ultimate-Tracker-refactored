@@ -464,8 +464,9 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
               </div>
 
               {/* Stat block */}
-              <MonsterStatBlock
-                monster={{
+                       <div className="familiar-statblock-reset">
+               <MonsterStatBlock
+                 monster={{
                   name: currentFamiliar.name,
                   slug: currentFamiliar.slug || '',
                   type: currentFamiliar.type,
