@@ -383,12 +383,13 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
            >
             <Search size={12} className="inline mr-1" /> Rechercher
           </button>
-          <button
-            onClick={() => setView('create')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              view === 'create' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400 hover:text-gray-200'
-            }`}
-          >
+           <button
+             onClick={() => setView('create')}
+             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+               view === 'create' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400 hover:text-gray-200'
+             }`}
+             style={{ fontFamily: "'Cinzel', serif" }}
+           >
             <Plus size={12} className="inline mr-1" /> Créer un familier
           </button>
         </div>
