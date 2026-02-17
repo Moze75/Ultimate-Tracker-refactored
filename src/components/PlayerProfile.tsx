@@ -10,6 +10,7 @@ import { QuickStatsDisplay } from './PlayerProfile/QuickStatsDisplay';
 import { DiceSettingsModal } from './DiceSettingsModal';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'; // 🆕
+import { FamiliarModal, FamiliarData } from './modals/FamiliarModal';
 
 export interface PlayerProfileProps {
   player: Player;
