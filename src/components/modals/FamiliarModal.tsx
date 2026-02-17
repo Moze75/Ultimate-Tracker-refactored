@@ -698,9 +698,30 @@ export function FamiliarModal({ playerId, familiar, onClose, onSave }: FamiliarM
                     placeholder="comprend le commun"
                   />
                 </div>
-              </div>
+                       </div>
 
-              <div className="border-t border-gray-800 pt-4 space-y-4">
+               <div>
+                 <label className="block text-xs text-gray-400 mb-1">Image (URL)</label>
+                 <input
+                   className="w-full px-3 py-2 bg-black/40 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-emerald-600 focus:outline-none"
+                   value={createImageUrl}
+                   onChange={(e) => setCreateImageUrl(e.target.value)}
+                   placeholder="https://exemple.com/image-familier.png"
+                 />
+                 {createImageUrl.trim() && (
+                   <div className="mt-2 flex justify-center">
+                     <img
+                       src={createImageUrl.trim()}
+                       alt="Aperçu"
+                       className="w-20 h-20 object-cover rounded-lg border border-gray-700"
+                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                       onLoad={(e) => { e.currentTarget.style.display = 'block'; }}
+                     />
+                   </div>
+                 )}
+               </div>
+
+               <div className="border-t border-gray-800 pt-4 space-y-4">
                 <DynamicEntryList label="Traits" entries={createTraits} onChange={setCreateTraits} />
                 <DynamicEntryList label="Actions" entries={createActions} onChange={setCreateActions} />
               </div>
