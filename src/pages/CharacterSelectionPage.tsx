@@ -433,135 +433,64 @@ const fetchPlayers = async () => {
 
 const handleSignOut = async () => {
   console.log('=== [SignOut] 🚪 DÉBUT DÉCONNEXION ===');
-  console.log('[SignOut] User ID:', session?.user?.id);
-  console.log('[SignOut] User email:', session?.user?.email);
-  
+
   try {
-    // Étape 1 : Nettoyer le cache Service Worker
-    console.log('[SignOut] 1️⃣ Nettoyage cache Service Worker.. .');
-    await clearServiceWorkerCache();
-    console.log('[SignOut] ✅ Cache Service Worker nettoyé');
-    
-    // Étape 2 : Nettoyer les contextes
-    console. log('[SignOut] 2️⃣ Nettoyage contextes.. .');
+    // 1. Nettoyer immédiatement tout le state local (non bloquant, instantané)
     appContextService.clearContext();
     appContextService.clearWizardSnapshot();
-    console.log('[SignOut] ✅ Contextes nettoyés');
-    
-    // Étape 3 :  Nettoyer localStorage
-    console.log('[SignOut] 3️⃣ Nettoyage localStorage...');
+
+    // 2. Nettoyer localStorage
     try {
-      const userId = session?.user?. id;
-      
-      // Lister ce qu'on va supprimer
-      console.log('[SignOut] - Suppression selectedCharacter:', localStorage.getItem('selectedCharacter') ? 'PRÉSENT' : 'ABSENT');
-      console.log('[SignOut] - Suppression lastSelectedCharacterSnapshot:', localStorage.getItem('lastSelectedCharacterSnapshot') ? 'PRÉSENT' : 'ABSENT');
-      
+      const userId = session?.user?.id;
       localStorage.removeItem('selectedCharacter');
       localStorage.removeItem('lastSelectedCharacterSnapshot');
       localStorage.removeItem(PENDING_PLAN_KEY);
-      
+
       if (userId) {
-        localStorage.removeItem(`ut:players-list: ${userId}`);
-        localStorage.removeItem(`ut:players-list:ts: ${userId}`);
-        
-        // Supprimer tous les caches player
+        localStorage.removeItem(`ut:players-list:${userId}`);
+        localStorage.removeItem(`ut:players-list:ts:${userId}`);
         const keys = Object.keys(localStorage);
-        const playerKeys = keys. filter(key => key.startsWith('ut:player:'));
-        console.log('[SignOut] - Suppression de', playerKeys.length, 'clés player cache');
-        playerKeys.forEach(key => localStorage.removeItem(key));
+        keys.filter(key => key.startsWith('ut:player:')).forEach(key => localStorage.removeItem(key));
       }
-      
-      console.log('[SignOut] ✅ localStorage nettoyé');
+
+      // Supprimer les clés Supabase locales (déconnexion côté client garantie)
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('sb-') || key.includes('supabase'))
+        .forEach(key => localStorage.removeItem(key));
     } catch (e) {
       console.warn('[SignOut] ⚠️ Erreur nettoyage localStorage:', e);
     }
 
-    // Étape 4 :  Marquer le logout explicite AVANT de clear sessionStorage
-    console. log('[SignOut] 4️⃣ Marquage logout explicite...');
-    sessionStorage. setItem('ut: explicit-logout', 'true');
-    console.log('[SignOut] ✅ Flag ut:explicit-logout posé');
-    
-// Étape 5 : Déconnexion Supabase PATCH Firefox-friendly
-console.log('[SignOut] 5️⃣ Appel supabase.auth.signOut({ scope: "global" })...');
-let signOutDone = false;
-try {
-  const { error } = await Promise.race([
-    supabase.auth.signOut({ scope: 'global' }),
-    new Promise(resolve => setTimeout(() => resolve({ error: 'timeout' }), 1200)), // force 1.2s timeout
-  ]);
-  signOutDone = true;
-  if (error && error !== 'timeout') {
-    if (error.message && error.message.includes('NetworkError')) {
-      console.log('[Logout] NetworkError ignorée (Firefox déconnexion rapide).');
-    } else {
-      toast.error('Erreur réseau lors de la déconnexion. Essayez de rafraîchir.');
-    }
-  }
-} catch (err: any) {
-  if (err.message && err.message.includes('NetworkError')) {
-    console.log('[Logout] NetworkError ignorée (behaviour Firefox).');
-  } else {
-    toast.error('Erreur réseau à la déconnexion');
-    console.error('[SignOut] ❌ ERREUR:', err);
-  }
-}
-    // Petite attente pour laisser finir les pending fetch avant redir (Firefox friendly)
-await new Promise(resolve => setTimeout(resolve, 300));
+    // 3. Marquer le logout explicite
+    sessionStorage.setItem('ut:explicit-logout', 'true');
 
-    // Étape 6 :  Vérifier que la session est bien nulle
-    console. log('[SignOut] 6️⃣ Vérification session post-signOut...');
-    const { data: checkData } = await supabase.auth.getSession();
-    console.log('[SignOut] Session après signOut:', checkData.session ?  'ENCORE ACTIVE ⚠️' :  'NULLE ✅');
-    
-    if (checkData.session) {
-      console.log('[SignOut] ⚠️ Session encore active !  Tentative de force logout...');
-      // Forcer la suppression des tokens locaux
-      try {
-        // Supprimer manuellement les clés Supabase du localStorage
-        const supabaseKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith('sb-') || key.includes('supabase')
-        );
-        console.log('[SignOut] Suppression de', supabaseKeys.length, 'clés Supabase');
-        supabaseKeys.forEach(key => localStorage.removeItem(key));
-      } catch {}
+    // 4. Nettoyer cache Service Worker (non bloquant, fire-and-forget)
+    clearServiceWorkerCache().catch(() => {});
+
+    // 5. SignOut Supabase avec scope LOCAL (pas de requête serveur = instantané)
+    //    Le token expirera naturellement côté serveur.
+    //    Les clés localStorage Supabase sont déjà supprimées au-dessus → session morte côté client.
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: 'local' }),
+        new Promise(resolve => setTimeout(resolve, 800)),
+      ]);
+    } catch (err: any) {
+      // Ignorer les NetworkError Firefox
+      if (!err?.message?.includes('NetworkError')) {
+        console.warn('[SignOut] signOut error (ignoré):', err);
+      }
     }
 
     toast.success('Déconnexion réussie');
-
-    // Étape 7 :  Attendre et rediriger
-    console.log('[SignOut] 7️⃣ Attente 300ms avant redirection.. .');
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    console.log('[SignOut] 8️⃣ Redirection vers:', window.location.origin);
-    console.log('[SignOut] === FIN DÉCONNEXION ===');
-    
-    window.location.replace(window.location. origin); 
-    
-  } catch (error:  any) {
+  } catch (error: any) {
     console.error('[SignOut] ❌ ERREUR:', error);
     toast.error('Erreur lors de la déconnexion');
-    
-    // Forcer la déconnexion même en cas d'erreur
-    try {
-      console.log('[SignOut] 🔄 Tentative de récupération.. .');
-      sessionStorage.setItem('ut:explicit-logout', 'true');
-      
-      // Supprimer toutes les clés Supabase
-      const supabaseKeys = Object.keys(localStorage).filter(key => 
-        key.startsWith('sb-') || key.includes('supabase')
-      );
-      supabaseKeys.forEach(key => localStorage. removeItem(key));
-      
-      await supabase.auth.signOut({ scope: 'global' });
-    } catch (e) {
-      console. error('[SignOut] ❌ Échec récupération:', e);
-    }
-    
-    setTimeout(() => {
-      window.location.replace(window.location. origin);
-    }, 500);
   }
+
+  // 6. Redirection immédiate (pas de délai)
+  console.log('=== [SignOut] ✅ FIN — Redirection ===');
+  window.location.replace(window.location.origin);
 };
 
   const handleDeleteCharacter = async (character: Player) => {
