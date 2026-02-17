@@ -76,8 +76,8 @@ export function GameMasterCampaignPage({ session, onBack }: GameMasterCampaignPa
 
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                <Crown className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
+                <Crown className="w-6 h-6 text-amber-400" />
               </div>
               <h1 className="text-3xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>Gestion des Campagnes</h1>
             </div>
