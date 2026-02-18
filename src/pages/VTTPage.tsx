@@ -9,6 +9,7 @@ import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
 import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
 import { AddTokenModal } from '../components/VTT/AddTokenModal';
 import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
+import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
 import { vttService } from '../services/vttService';
 import type {
@@ -66,7 +67,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [calibrationPoints, setCalibrationPoints] = useState<{ x: number; y: number }[]>([]);
   const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [showAddToken, setShowAddToken] = useState(false);
+  const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
 
@@ -372,6 +375,23 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'UPDATE_MAP', config: changes });
   }, []);
 
+  const handleSceneRightClick = useCallback((sceneId: string) => {
+    const scene = scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    setSceneConfigEdit({ sceneId, config: scene.config });
+  }, [scenes]);
+
+  const handleSaveSceneConfig = useCallback(async (sceneId: string, changes: Partial<VTTRoomConfig>) => {
+    const scene = scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    const newConfig = { ...scene.config, ...changes };
+    await supabase.from('vtt_scenes').update({ config: newConfig }).eq('id', sceneId);
+    setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, config: newConfig } : s));
+    if (sceneId === activeSceneId) {
+      handleUpdateMap(changes);
+    }
+  }, [scenes, activeSceneId, handleUpdateMap]);
+
   const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
     setCalibrationPoints(prev => {
       if (prev.length >= 2) return [pt];
@@ -442,17 +462,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
-      {role === 'gm' && (
-        <VTTSceneBar
-          scenes={scenes}
-          activeSceneId={activeSceneId}
-          onSwitchScene={handleSwitchScene}
-          onCreateScene={handleCreateScene}
-          onRenameScene={handleRenameScene}
-          onDeleteScene={handleDeleteScene}
-        />
-      )}
-
       <div className="flex flex-1 overflow-hidden">
         <VTTLeftToolbar
           role={role}
@@ -474,7 +483,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         />
 
         <div
-          className="flex-1 relative"
+          className="flex-1 relative overflow-hidden"
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
@@ -487,8 +496,24 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             }
           }}
         >
+          {role === 'gm' && scenes.length > 0 && (
+            <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+              <div className="pointer-events-auto inline-flex">
+                <VTTSceneBar
+                  scenes={scenes}
+                  activeSceneId={activeSceneId}
+                  onSwitchScene={handleSwitchScene}
+                  onCreateScene={handleCreateScene}
+                  onRenameScene={handleRenameScene}
+                  onDeleteScene={handleDeleteScene}
+                  onRightClickScene={handleSceneRightClick}
+                />
+              </div>
+            </div>
+          )}
+
           {!connected && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-red-900/80 border border-red-700/60 rounded-lg text-sm text-red-200 flex items-center gap-2">
+            <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-red-900/80 border border-red-700/60 rounded-lg text-sm text-red-200 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
               Reconnexion en cours...
             </div>
@@ -506,7 +531,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onMoveToken={handleMoveToken}
             onRevealFog={handleRevealFog}
             selectedTokenId={selectedTokenId}
-            onSelectToken={setSelectedTokenId}
+            onSelectToken={(id) => { setSelectedTokenId(id); if (id && !selectedTokenIds.includes(id)) setSelectedTokenIds([id]); }}
+            selectedTokenIds={selectedTokenIds}
+            onSelectTokens={setSelectedTokenIds}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
             onAddTokenAtPos={handleAddTokenAtPos}
@@ -555,8 +582,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           ))}
 
           {activeSceneId && scenes.length > 0 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
-              <div className="px-4 py-1.5 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-sm text-gray-300 font-medium shadow-lg">
+            <div className="absolute bottom-4 left-4 pointer-events-none z-10">
+              <div className="px-3 py-1 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-xs text-gray-400 shadow-lg">
                 {scenes.find(s => s.id === activeSceneId)?.name ?? ''}
               </div>
             </div>
@@ -617,8 +644,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
-          onResize={(size: number) => { handleUpdateToken(contextMenu.token.id, { size }); setContextMenu(null); }}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {sceneConfigEdit && (
+        <VTTSceneConfigModal
+          sceneName={scenes.find(s => s.id === sceneConfigEdit.sceneId)?.name ?? ''}
+          config={sceneConfigEdit.config}
+          onSave={changes => handleSaveSceneConfig(sceneConfigEdit.sceneId, changes)}
+          onClose={() => setSceneConfigEdit(null)}
         />
       )}
     </div>

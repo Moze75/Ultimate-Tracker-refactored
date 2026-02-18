@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, Compass } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 
 interface VTTTokenEditModalProps {
@@ -19,20 +19,22 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [label, setLabel] = useState(token.label);
   const [imageUrl, setImageUrl] = useState(token.imageUrl || '');
   const [color, setColor] = useState(token.color);
-  const [size, setSize] = useState<number>(token.size);
   const [visible, setVisible] = useState(token.visible);
   const [hp, setHp] = useState(token.hp != null ? String(token.hp) : '');
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
+  const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
+  const [imageOffsetY, setImageOffsetY] = useState(token.imageOffsetY ?? 0);
 
   const handleSave = () => {
     onSave({
       label: label.trim() || token.label,
       imageUrl: imageUrl.trim() || null,
       color,
-      size,
       visible,
       hp: hp !== '' ? parseInt(hp) : undefined,
       maxHp: maxHp !== '' ? parseInt(maxHp) : undefined,
+      imageOffsetX,
+      imageOffsetY,
     });
     onClose();
   };
@@ -80,6 +82,64 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
             </div>
           </div>
 
+          {imageUrl && (
+            <div>
+              <label className="block text-xs text-gray-400 mb-2">Position de l'image dans le token</label>
+              <div className="flex gap-4 items-start">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 shrink-0 border-2 border-gray-600">
+                  <img
+                    src={imageUrl}
+                    alt=""
+                    className="w-full h-full"
+                    style={{
+                      objectFit: 'cover',
+                      objectPosition: `${50 + imageOffsetX * 50}% ${50 + imageOffsetY * 50}%`,
+                    }}
+                    onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
+                  />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                      <span>Horizontal</span>
+                      <span className="text-gray-400">{imageOffsetX > 0 ? '+' : ''}{Math.round(imageOffsetX * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={-1}
+                      max={1}
+                      step={0.05}
+                      value={imageOffsetX}
+                      onChange={e => setImageOffsetX(Number(e.target.value))}
+                      className="w-full accent-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                      <span>Vertical</span>
+                      <span className="text-gray-400">{imageOffsetY > 0 ? '+' : ''}{Math.round(imageOffsetY * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={-1}
+                      max={1}
+                      step={0.05}
+                      value={imageOffsetY}
+                      onChange={e => setImageOffsetY(Number(e.target.value))}
+                      className="w-full accent-amber-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { setImageOffsetX(0); setImageOffsetY(0); }}
+                    className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    Centrer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-xs text-gray-400 mb-1">PV</label>
@@ -102,26 +162,6 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                 min={0}
                 className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
               />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Taille</label>
-            <div className="flex gap-1.5">
-              {([1, 2, 3]).map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSize(s)}
-                  className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors ${
-                    size === s
-                      ? 'bg-amber-600 border-amber-500 text-white'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  {s}×{s}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -154,13 +194,6 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
               </button>
             </div>
           )}
-
-          <div className="pt-1 border-t border-gray-700/60">
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <Compass size={12} />
-              <span>Vision — disponible prochainement</span>
-            </div>
-          </div>
         </div>
 
         <div className="flex gap-2 px-4 pb-4">

@@ -17,6 +17,8 @@ interface VTTCanvasProps {
   onRevealFog: (stroke: VTTFogStroke) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
+  selectedTokenIds?: string[];
+  onSelectTokens?: (ids: string[]) => void;
   onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
   onMapDimensions?: (w: number, h: number) => void;
   onDropToken?: (tokenId: string, worldPos: { x: number; y: number }) => void;
@@ -38,6 +40,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onRevealFog,
   selectedTokenId,
   onSelectToken,
+  selectedTokenIds = [],
+  onSelectTokens,
   onRightClickToken,
   onMapDimensions,
   onDropToken,
@@ -68,11 +72,17 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     },
   }));
 
-  const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
   const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
   const isPaintingFogRef = useRef(false);
   const lastPanRef = useRef<{ x: number; y: number } | null>(null);
   const isPanningRef = useRef(false);
+  const selectionRectRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const isDragSelectingRef = useRef(false);
+  const selectedTokenIdsRef = useRef(selectedTokenIds);
+  selectedTokenIdsRef.current = selectedTokenIds;
+  const onSelectTokensRef = useRef(onSelectTokens);
+  onSelectTokensRef.current = onSelectTokens;
 
   const [mapLoading, setMapLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -233,6 +243,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const curRole = roleRef.current;
     const curUserId = userIdRef.current;
     const currentSelectedId = selectedTokenIdRef.current;
+    const multiIds = selectedTokenIdsRef.current;
 
     ctx.clearRect(0, 0, W, H);
     ctx.save();
@@ -288,7 +299,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.clip();
         if (img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, -r, -r, r * 2, r * 2);
+          const ox = (token.imageOffsetX || 0) * r;
+          const oy = (token.imageOffsetY || 0) * r;
+          ctx.drawImage(img, -r + ox, -r + oy, r * 2, r * 2);
         } else {
           ctx.fillStyle = token.color || '#3b82f6';
           ctx.fill();
@@ -304,6 +317,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       ctx.save();
       ctx.translate(cx, cy);
+
+      if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
+        const pad = 4 / vp.scale;
+        ctx.strokeStyle = 'rgba(99,179,237,0.9)';
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+        ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+        ctx.setLineDash([]);
+      }
 
       if (token.id === currentSelectedId) {
         const pad = 5 / vp.scale;
@@ -425,6 +447,21 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
+    const selRect = selectionRectRef.current;
+    if (selRect) {
+      const sx = Math.min(selRect.x1, selRect.x2);
+      const sy = Math.min(selRect.y1, selRect.y2);
+      const sw = Math.abs(selRect.x2 - selRect.x1);
+      const sh = Math.abs(selRect.y2 - selRect.y1);
+      ctx.fillStyle = 'rgba(59,130,246,0.12)';
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.strokeStyle = 'rgba(96,165,250,0.85)';
+      ctx.lineWidth = 1.5 / vp.scale;
+      ctx.setLineDash([5 / vp.scale, 3 / vp.scale]);
+      ctx.strokeRect(sx, sy, sw, sh);
+      ctx.setLineDash([]);
+    }
+
     ctx.restore();
   }, []);
 
@@ -474,7 +511,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [fogState.strokes, config.mapWidth, config.mapHeight]);
 
   // Redraw when visual state changes
-  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, config, calibrationPoints]);
+  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints]);
 
   // Resize observer
   useEffect(() => {
@@ -535,15 +572,35 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         if (token) {
           const canMove = roleRef.current === 'gm' || token.ownerUserId === userIdRef.current;
           if (canMove) {
-            draggingTokenRef.current = {
-              id: token.id,
-              offsetX: wp.x - token.position.x,
-              offsetY: wp.y - token.position.y,
-            };
+            const multiSel = selectedTokenIdsRef.current;
+            if (multiSel.length > 1 && multiSel.includes(token.id)) {
+              const initialPositions = new Map<string, { x: number; y: number }>();
+              tokensRef.current.forEach(t => {
+                if (multiSel.includes(t.id)) initialPositions.set(t.id, { ...t.position });
+              });
+              draggingTokenRef.current = {
+                id: token.id,
+                offsetX: wp.x - token.position.x,
+                offsetY: wp.y - token.position.y,
+                multiInitial: initialPositions,
+              };
+            } else {
+              draggingTokenRef.current = {
+                id: token.id,
+                offsetX: wp.x - token.position.x,
+                offsetY: wp.y - token.position.y,
+              };
+            }
           }
           onSelectTokenRef.current(token.id);
+          if (!selectedTokenIdsRef.current.includes(token.id)) {
+            onSelectTokensRef.current?.([token.id]);
+          }
         } else {
+          isDragSelectingRef.current = true;
+          selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
           onSelectTokenRef.current(null);
+          onSelectTokensRef.current?.([]);
         }
       } else if ((tool === 'fog-reveal' || tool === 'fog-erase') && roleRef.current === 'gm') {
         isPaintingFogRef.current = true;
@@ -611,13 +668,30 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         return;
       }
 
-      if (draggingTokenRef.current) {
+      if (isDragSelectingRef.current && selectionRectRef.current) {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
-        const nx = wp.x - draggingTokenRef.current.offsetX;
-        const ny = wp.y - draggingTokenRef.current.offsetY;
+        selectionRectRef.current.x2 = wp.x;
+        selectionRectRef.current.y2 = wp.y;
+        drawRef.current();
+      } else if (draggingTokenRef.current) {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const drag = draggingTokenRef.current;
+        const nx = wp.x - drag.offsetX;
+        const ny = wp.y - drag.offsetY;
         const snapped = snapToGrid(nx, ny);
-        onMoveTokenRef.current(draggingTokenRef.current.id, snapped);
+        if (drag.multiInitial && drag.multiInitial.size > 1) {
+          const primaryInit = drag.multiInitial.get(drag.id)!;
+          const dx = snapped.x - primaryInit.x;
+          const dy = snapped.y - primaryInit.y;
+          drag.multiInitial.forEach((initPos, tid) => {
+            const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
+            onMoveTokenRef.current(tid, newPos);
+          });
+        } else {
+          onMoveTokenRef.current(drag.id, snapped);
+        }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm') {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
@@ -626,11 +700,36 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     };
 
     const onMouseUp = () => {
+      if (isDragSelectingRef.current && selectionRectRef.current) {
+        const rect = selectionRectRef.current;
+        const x1 = Math.min(rect.x1, rect.x2);
+        const y1 = Math.min(rect.y1, rect.y2);
+        const x2 = Math.max(rect.x1, rect.x2);
+        const y2 = Math.max(rect.y1, rect.y2);
+        const minSize = 5 / viewportRef.current.scale;
+        if (x2 - x1 > minSize || y2 - y1 > minSize) {
+          const cfg = configRef.current;
+          const CELL2 = cfg.gridSize || 50;
+          const found = tokensRef.current.filter(t => {
+            if (roleRef.current === 'player' && !t.visible) return false;
+            const ts = (t.size || 1) * CELL2;
+            return t.position.x < x2 && t.position.x + ts > x1 &&
+                   t.position.y < y2 && t.position.y + ts > y1;
+          });
+          if (found.length > 0) {
+            onSelectTokensRef.current?.(found.map(t => t.id));
+            onSelectTokenRef.current(found[0].id);
+          }
+        }
+      }
+      isDragSelectingRef.current = false;
+      selectionRectRef.current = null;
       draggingTokenRef.current = null;
       resizingTokenRef.current = null;
       isPaintingFogRef.current = false;
       isPanningRef.current = false;
       lastPanRef.current = null;
+      drawRef.current();
     };
 
     const onMouseLeave = () => {

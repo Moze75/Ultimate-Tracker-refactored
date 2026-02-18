@@ -13,6 +13,8 @@ export interface VTTToken {
   color: string;
   hp?: number;
   maxHp?: number;
+  imageOffsetX?: number;
+  imageOffsetY?: number;
 }
 
 export interface VTTRoomConfig {

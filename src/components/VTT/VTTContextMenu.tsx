@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -11,7 +11,7 @@ interface VTTContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
-  onResize: (size: number) => void;
+  onResize?: (size: number) => void;
   onClose: () => void;
 }
 
@@ -24,7 +24,6 @@ export function VTTContextMenu({
   onEdit,
   onDelete,
   onToggleVisibility,
-  onResize,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -76,28 +75,6 @@ export function VTTContextMenu({
           onClick={() => { onToggleVisibility(); onClose(); }}
         />
       )}
-
-      <div className="px-3 py-1.5 border-t border-gray-700/60 mt-1">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Maximize2 size={11} className="text-gray-500" />
-          <span className="text-[10px] text-gray-500 font-medium">Taille</span>
-        </div>
-        <div className="flex gap-1">
-          {([1, 2, 3]).map(s => (
-            <button
-              key={s}
-              onClick={() => { onResize(s); onClose(); }}
-              className={`flex-1 py-1 rounded text-[11px] font-medium transition-colors border ${
-                token.size === s
-                  ? 'bg-amber-600 border-amber-500 text-white'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white'
-              }`}
-            >
-              {s}×{s}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {role === 'gm' && (
         <div className="border-t border-gray-700/60 mt-1 pt-1">
