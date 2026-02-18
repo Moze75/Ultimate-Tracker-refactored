@@ -1,12 +1,15 @@
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { createMollieClient } = require('@mollie/api-client');
 const { createClient } = require('@supabase/supabase-js');
+const { initVTTWebSocket, initVTTRoutes } = require('./vttServer');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
 const mollieClient = createMollieClient({
@@ -223,10 +226,14 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res. json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app. listen(PORT, () => {
-  console.log(`🚀 Backend Mollie démarré sur le port ${PORT}`);
+initVTTRoutes(app);
+initVTTWebSocket(server);
+
+server.listen(PORT, () => {
+  console.log(`🚀 Backend démarré sur le port ${PORT}`);
   console.log(`📡 Webhook URL: ${process.env.BACKEND_URL}/api/webhook`);
+  console.log(`🗺️  VTT WebSocket: ws://localhost:${PORT}/vtt`);
 });

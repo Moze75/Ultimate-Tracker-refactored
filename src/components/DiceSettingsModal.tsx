@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Settings, History, Trash2, Image, RefreshCw } from 'lucide-react';
+import { X, Settings, History, Trash2, Image, RefreshCw, Map } from 'lucide-react';
 import type { DiceSettings } from '../hooks/useDiceSettings';
 import { DEFAULT_DICE_SETTINGS, useDiceSettings } from '../hooks/useDiceSettings';
 import { formatRelativeTime, type DiceRollHistoryEntry } from '../hooks/useDiceHistory';
@@ -10,24 +10,23 @@ import { authService } from '../services/authService';
 interface DiceSettingsModalProps {
   open: boolean;
   onClose: () => void;
-  // settings et onSave deviennent optionnels et ne sont plus nécessaires
   settings?: DiceSettings;
   onSave?: (settings: DiceSettings) => void;
   currentBackground?: string;
   onBackgroundChange?: (backgroundUrl: string) => void;
-  deviceType?: 'mobile' | 'tablet' | 'desktop'; // 🆕
+  deviceType?: 'mobile' | 'tablet' | 'desktop';
 }
 
 type TabType = 'settings' | 'history' | 'background'; 
 
-export function DiceSettingsModal({ 
-  open, 
-  onClose, 
-  settings, 
-  onSave, 
-  currentBackground, 
+export function DiceSettingsModal({
+  open,
+  onClose,
+  settings,
+  onSave,
+  currentBackground,
   onBackgroundChange,
-  deviceType // 🆕  
+  deviceType,
 }: DiceSettingsModalProps) {
   const { settings: contextSettings, updateSettings } = useDiceSettings();
   const effectiveSettings = contextSettings ?? settings ?? DEFAULT_DICE_SETTINGS;
@@ -549,6 +548,15 @@ function SettingsTab({
           <p className="text-xs text-gray-500 italic">
             ⚠️ Vous devrez vous reconnecter après cette action
           </p>
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-vtt'));
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors text-sm font-medium border border-gray-600"
+          >
+            <Map size={16} />
+            VTT Beta
+          </button>
         </div>
       </div>
 

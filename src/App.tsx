@@ -62,8 +62,10 @@ function App() {
   const [LoginPage, setLoginPage] = useState<React.ComponentType<any> | null>(null);
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
   const [GamePage, setGamePage] = useState<React.ComponentType<any> | null>(null);
+  const [VTTPage, setVTTPage] = useState<React.ComponentType<any> | null>(null);
   const [hardLoggedOut, setHardLoggedOut] = useState(false);
-  const [showHomePage, setShowHomePage] = useState(true); // ✅ NOUVEAU : État pour afficher la homepage
+  const [showHomePage, setShowHomePage] = useState(true);
+  const [showVTT, setShowVTT] = useState(false);
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
@@ -78,6 +80,13 @@ function App() {
     selectedCharacterRef.current = selectedCharacter;
   }, [selectedCharacter]);
 
+  useEffect(() => {
+    const handler = () => setShowVTT(true);
+    window.addEventListener('open-vtt', handler);
+    return () => window.removeEventListener('open-vtt', handler);
+  }, []);
+
+
 // ✅ MODIFIÉ : Charger dynamiquement les pages avec retry limité
 useEffect(() => {
   let currentRetry = 0;
@@ -89,10 +98,11 @@ useEffect(() => {
     try {
       console.log(`[App] 🔄 Tentative de chargement des composants (${currentRetry + 1}/${MAX_RETRIES})...`);
       
-      const [loginModule, characterSelectionModule, gamePageModule] = await Promise.all([
+      const [loginModule, characterSelectionModule, gamePageModule, vttPageModule] = await Promise.all([
         import('./pages/LoginPage'),
         import('./pages/CharacterSelectionPage'),
-        import('./pages/GamePage')
+        import('./pages/GamePage'),
+        import('./pages/VTTPage'),
       ]);
 
       if (isCancelled) return;
@@ -102,6 +112,7 @@ useEffect(() => {
         () => (characterSelectionModule as any).CharacterSelectionPage ?? (characterSelectionModule as any).default
       );
       setGamePage(() => (gamePageModule as any).GamePage ?? (gamePageModule as any).default);
+      setVTTPage(() => (vttPageModule as any).VTTPage ?? (vttPageModule as any).default);
       
       console.log('[App] ✅ Composants chargés avec succès');
       setComponentLoadError(false);
@@ -626,6 +637,15 @@ useEffect(() => {
 
             if (!session) {
               return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            }
+
+            if (showVTT && VTTPage) {
+              return (
+                <VTTPage
+                  session={session}
+                  onBack={() => setShowVTT(false)}
+                />
+              );
             }
 
             if (!selectedCharacter) {
