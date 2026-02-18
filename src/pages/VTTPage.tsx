@@ -61,7 +61,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [connectedCount, setConnectedCount] = useState(1);
   const [connected, setConnected] = useState(false);
 
-  const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase'>('select');
+  const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate'>('select');
+  const [calibrationPoints, setCalibrationPoints] = useState<{ x: number; y: number }[]>([]);
   const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [showAddToken, setShowAddToken] = useState(false);
@@ -71,6 +72,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const switchingSceneRef = useRef(false);
+
+  // Always-current refs for scene save (avoid stale closure)
+  const configRef = useRef(config);
+  configRef.current = config;
+  const fogStateRef = useRef(fogState);
+  fogStateRef.current = fogState;
+  const tokensRef = useRef(tokens);
+  tokensRef.current = tokens;
+  const activeSceneIdRef = useRef(activeSceneId);
+  activeSceneIdRef.current = activeSceneId;
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
@@ -164,19 +175,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     await supabase
       .from('vtt_scenes')
       .update({
-        config,
-        fog_state: fogState,
-        tokens,
+        config: configRef.current,
+        fog_state: fogStateRef.current,
+        tokens: tokensRef.current,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
-  }, [config, fogState, tokens, roomId]);
+  }, [roomId]);
 
   const handleSwitchScene = useCallback(async (sceneId: string) => {
-    if (sceneId === activeSceneId || switchingSceneRef.current) return;
+    if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
     switchingSceneRef.current = true;
     try {
-      if (activeSceneId) await saveCurrentSceneState(activeSceneId);
+      if (activeSceneIdRef.current) await saveCurrentSceneState(activeSceneIdRef.current);
+
       const { data } = await supabase
         .from('vtt_scenes')
         .select('*')
@@ -185,9 +197,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       if (!data) return;
       const scene = dbSceneToVTTScene(data);
 
-      const currentTokenIds = tokens.map(t => t.id);
+      // Broadcast scene change to other clients (suppress local echo to avoid conflicts)
+      vttService.suppressLocalNotifications(true);
+      const currentTokenIds = tokensRef.current.map(t => t.id);
       currentTokenIds.forEach(id => vttService.send({ type: 'REMOVE_TOKEN', tokenId: id }));
-
       vttService.send({ type: 'UPDATE_MAP', config: scene.config });
       vttService.send({ type: 'RESET_FOG' });
       if (scene.fogState.strokes && scene.fogState.strokes.length > 0) {
@@ -200,13 +213,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         void _id;
         vttService.send({ type: 'ADD_TOKEN', token: rest });
       });
+      vttService.suppressLocalNotifications(false);
 
+      // Update local React state directly (don't wait for broadcast echo)
+      setConfig(scene.config);
+      setFogState({ revealedCells: [], strokes: scene.fogState.strokes || [] });
+      setTokens(scene.tokens);
       setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
     } finally {
       switchingSceneRef.current = false;
     }
-  }, [activeSceneId, tokens, saveCurrentSceneState]);
+  }, [saveCurrentSceneState]);
 
   const handleCreateScene = useCallback(async (name: string) => {
     if (!roomId) return;
@@ -238,12 +256,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     await supabase.from('vtt_scenes').delete().eq('id', sceneId);
     setScenes(prev => {
       const next = prev.filter(s => s.id !== sceneId);
-      if (activeSceneId === sceneId && next.length > 0) {
+      if (activeSceneIdRef.current === sceneId && next.length > 0) {
         handleSwitchScene(next[0].id);
       }
       return next;
     });
-  }, [activeSceneId, handleSwitchScene]);
+  }, [handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
     setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, position } : t));
@@ -272,6 +290,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     vttService.send({ type: 'ADD_TOKEN', token });
   }, []);
+
+  const handleDropToken = useCallback((tokenId: string, worldPos: { x: number; y: number }) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    if (!token) return;
+    const canMove = role === 'gm' || token.ownerUserId === userId;
+    if (!canMove) return;
+    handleMoveToken(tokenId, worldPos);
+  }, [role, userId, handleMoveToken]);
 
   const handleRemoveToken = useCallback((tokenId: string) => {
     const token = tokens.find(t => t.id === tokenId);
@@ -306,6 +332,36 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setConfig(prev => ({ ...prev, ...changes }));
     vttService.send({ type: 'UPDATE_MAP', config: changes });
   }, []);
+
+  const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
+    setCalibrationPoints(prev => [...prev, pt]);
+  }, []);
+
+  const handleClearCalibration = useCallback(() => {
+    setCalibrationPoints([]);
+  }, []);
+
+  const handleApplyCalibration = useCallback(() => {
+    if (calibrationPoints.length < 2) return;
+    const pts = calibrationPoints;
+    const distances: number[] = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[j].x - pts[i].x;
+        const dy = pts[j].y - pts[i].y;
+        distances.push(Math.sqrt(dx * dx + dy * dy));
+      }
+    }
+    distances.sort((a, b) => a - b);
+    const minDist = distances[0];
+    if (minDist < 10) return;
+    const estimatedCell = Math.round(minDist);
+    const ox = ((pts[0].x % estimatedCell) + estimatedCell) % estimatedCell;
+    const oy = ((pts[0].y % estimatedCell) + estimatedCell) % estimatedCell;
+    handleUpdateMap({ gridSize: estimatedCell, gridOffsetX: Math.round(ox), gridOffsetY: Math.round(oy) });
+    setCalibrationPoints([]);
+    setActiveTool('select');
+  }, [calibrationPoints, handleUpdateMap]);
 
   const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
@@ -369,6 +425,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onResetFog={handleResetFog}
           onUpdateMap={handleUpdateMap}
           onBack={leaveRoom}
+          calibrationPoints={calibrationPoints}
+          onCalibrationPoint={handleCalibrationPoint}
+          onClearCalibration={handleClearCalibration}
+          onApplyCalibration={handleApplyCalibration}
         />
 
         <div
@@ -405,6 +465,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             selectedTokenId={selectedTokenId}
             onSelectToken={setSelectedTokenId}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
+            onDropToken={handleDropToken}
+            calibrationPoints={calibrationPoints}
+            onCalibrationPoint={handleCalibrationPoint}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
