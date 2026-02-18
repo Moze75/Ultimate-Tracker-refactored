@@ -76,7 +76,7 @@ export function VTTSceneBar({
                 e.preventDefault();
                 onRightClickScene?.(scene.id, e.clientX, e.clientY);
               }}
-              className={`flex items-center gap-1.5 h-8 px-5 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[100px] justify-center ${
+              className={`flex items-center gap-1.5 h-8 px-6 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[160px] justify-center ${
                 scene.id === activeSceneId
                   ? 'bg-amber-600/90 text-white shadow-sm'
                   : 'bg-gray-800/70 text-gray-300 hover:text-white hover:bg-gray-700/80 backdrop-blur-sm'

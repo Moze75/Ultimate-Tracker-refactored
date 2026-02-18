@@ -307,12 +307,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [role, userId, handleMoveToken]);
 
   const handleRemoveToken = useCallback((tokenId: string) => {
-    const token = tokens.find(t => t.id === tokenId);
+    const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
     if (role !== 'gm' && token.ownerUserId !== userId) return;
     vttService.send({ type: 'REMOVE_TOKEN', tokenId });
+    setTokens(prev => prev.filter(t => t.id !== tokenId));
     setSelectedTokenId(id => id === tokenId ? null : id);
-  }, [tokens, role, userId]);
+    setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
+  }, [role, userId]);
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 
@@ -96,20 +96,37 @@ export function VTTSidebar({
     }
   }, [config.mapImageUrl]);
 
+  const hasExistingMap = !!config.mapImageUrl;
+
+  const confirmReplace = (action: () => void) => {
+    if (hasExistingMap) {
+      if (!window.confirm('Une carte est déjà chargée. Voulez-vous la remplacer ?')) return;
+    }
+    action();
+  };
+
+  const handleApplyUrl = () => {
+    const trimmed = mapUrl.trim();
+    if (!trimmed) return;
+    confirmReplace(() => onUpdateMap({ mapImageUrl: trimmed }));
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setCompressing(true);
-    try {
-      const { dataUrl, width, height } = await compressImageToDataUrl(file);
-      onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
-      setMapUrl('(fichier local)');
-    } catch {
-      alert('Erreur lors du chargement.');
-    } finally {
-      setCompressing(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    confirmReplace(async () => {
+      setCompressing(true);
+      try {
+        const { dataUrl, width, height } = await compressImageToDataUrl(file);
+        onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
+        setMapUrl('(fichier local)');
+      } catch {
+        alert('Erreur lors du chargement.');
+      } finally {
+        setCompressing(false);
+      }
+    });
   };
 
   return (
@@ -214,19 +231,47 @@ export function VTTSidebar({
         )}
 
         {activeTab === 'map' && (
-          <div className="p-3 space-y-4">
+          <div className="p-3 space-y-3">
+            {config.mapImageUrl && (
+              <div className="relative rounded-lg overflow-hidden border border-gray-700/60 bg-gray-800">
+                <img
+                  src={config.mapImageUrl}
+                  alt="Carte actuelle"
+                  className="w-full h-28 object-cover"
+                  onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
+                />
+                <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent">
+                  <p className="text-[10px] text-gray-300 truncate">
+                    {config.mapImageUrl.startsWith('data:') ? 'Fichier local' : config.mapImageUrl}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { if (window.confirm('Supprimer la carte ?')) onUpdateMap({ mapImageUrl: '' }); }}
+                  className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-red-900/70 rounded text-gray-300 hover:text-red-300 transition-colors"
+                  title="Retirer la carte"
+                >
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">URL de la carte</label>
+              <label className="block text-xs text-gray-400 mb-1 font-medium">
+                {hasExistingMap ? (
+                  <span className="flex items-center gap-1"><RefreshCw size={10} /> Remplacer par URL</span>
+                ) : 'URL de la carte'}
+              </label>
               <div className="flex gap-1">
                 <input
                   type="text"
                   value={mapUrl}
                   onChange={e => setMapUrl(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleApplyUrl(); }}
                   placeholder="https://..."
                   className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
                 />
                 <button
-                  onClick={() => onUpdateMap({ mapImageUrl: mapUrl })}
+                  onClick={handleApplyUrl}
                   className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs transition-colors"
                 >
                   OK
@@ -236,7 +281,9 @@ export function VTTSidebar({
 
             <div>
               <label className="block text-xs text-gray-400 mb-1 font-medium">
-                Fichier local <span className="text-gray-600">(compressé)</span>
+                {hasExistingMap ? (
+                  <span className="flex items-center gap-1"><RefreshCw size={10} /> Remplacer par fichier</span>
+                ) : <span>Fichier local <span className="text-gray-600">(compressé)</span></span>}
               </label>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               <button

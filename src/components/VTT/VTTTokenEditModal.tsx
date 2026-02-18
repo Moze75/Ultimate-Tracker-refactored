@@ -30,15 +30,16 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const handlePreviewMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     isDraggingPreview.current = true;
+    let lastX = e.clientX;
+    let lastY = e.clientY;
     const onMove = (me: MouseEvent) => {
-      if (!isDraggingPreview.current || !previewRef.current) return;
-      const rect = previewRef.current.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = (me.clientX - cx) / (rect.width * 0.5);
-      const dy = (me.clientY - cy) / (rect.height * 0.5);
-      setImageOffsetX(prev => Math.max(-1, Math.min(1, prev - dx * 0.05)));
-      setImageOffsetY(prev => Math.max(-1, Math.min(1, prev - dy * 0.05)));
+      if (!isDraggingPreview.current) return;
+      const dx = me.clientX - lastX;
+      const dy = me.clientY - lastY;
+      lastX = me.clientX;
+      lastY = me.clientY;
+      setImageOffsetX(prev => Math.max(-1, Math.min(1, prev - dx / 40)));
+      setImageOffsetY(prev => Math.max(-1, Math.min(1, prev - dy / 40)));
     };
     const onUp = () => {
       isDraggingPreview.current = false;
