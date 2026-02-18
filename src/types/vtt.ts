@@ -48,7 +48,7 @@ export interface VTTServerState {
 
 export type VTTClientEvent =
   | { type: 'MOVE_TOKEN_REQUEST'; tokenId: string; position: { x: number; y: number } }
-  | { type: 'REVEAL_FOG'; cells: string[] }
+  | { type: 'REVEAL_FOG'; cells: string[]; erase?: boolean }
   | { type: 'RESET_FOG' }
   | { type: 'ADD_TOKEN'; token: Omit<VTTToken, 'id'> }
   | { type: 'REMOVE_TOKEN'; tokenId: string }

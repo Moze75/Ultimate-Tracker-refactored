@@ -1,10 +1,19 @@
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTServerState } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
 
-const VTT_SERVER_URL = import.meta.env.VITE_VTT_SERVER_URL || 'http://localhost:3002';
+const DEFAULT_CONFIG: VTTRoomConfig = {
+  mapImageUrl: '',
+  gridSize: 60,
+  snapToGrid: true,
+  fogEnabled: true,
+  fogPersistent: false,
+  mapWidth: 3000,
+  mapHeight: 2000,
+};
 
 function generateRoomId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -15,77 +24,209 @@ function generateRoomId(): string {
   return result;
 }
 
+function generateTokenId(): string {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+interface LocalState {
+  config: VTTRoomConfig;
+  tokens: VTTToken[];
+  fogState: VTTFogState;
+}
+
 class VTTService {
-  private ws: WebSocket | null = null;
+  private channel: RealtimeChannel | null = null;
   private roomId: string | null = null;
   private userId: string | null = null;
-  private token: string | null = null;
+  private isGM = false;
   private messageHandlers: MessageHandler[] = [];
   private connectionHandlers: ConnectionHandler[] = [];
-  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private reconnectDelay = 1000;
-  private maxReconnectDelay = 16000;
-  private shouldReconnect = false;
+  private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] } };
+  private persistDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  connect(roomId: string, userId: string, authToken: string) {
+  connect(roomId: string, userId: string, _authToken: string) {
     this.roomId = roomId;
     this.userId = userId;
-    this.token = authToken;
-    this.shouldReconnect = true;
-    this._connect();
+    this._connectAsync().catch(e => console.error('[VTT] connect error:', e));
   }
 
-  private _connect() {
-    if (this.ws) {
-      this.ws.close();
+  private async _connectAsync() {
+    const roomId = this.roomId!;
+    const userId = this.userId!;
+
+    const { data, error } = await supabase
+      .from('vtt_rooms')
+      .select('gm_user_id, state_json, name')
+      .eq('id', roomId)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error('[VTT] Room not found:', error);
+      this.messageHandlers.forEach(h => h({ type: 'ERROR', message: 'Room introuvable.' }));
+      return;
     }
 
-    const url = `${VTT_SERVER_URL.replace(/^http/, 'ws')}/vtt?roomId=${this.roomId}&userId=${this.userId}&token=${this.token}`;
+    this.isGM = data.gm_user_id === userId;
+    const stateJson = data.state_json as Partial<LocalState> || {};
+    this.localState = {
+      config: { ...DEFAULT_CONFIG, ...(stateJson.config || {}) },
+      tokens: stateJson.tokens || [],
+      fogState: stateJson.fogState || { revealedCells: [] },
+    };
 
-    try {
-      this.ws = new WebSocket(url);
+    const initialEvent: VTTServerEvent = {
+      type: 'STATE_SYNC',
+      state: {
+        room: {
+          id: roomId,
+          name: data.name,
+          gmUserId: data.gm_user_id,
+          config: this.localState.config,
+          tokens: this.localState.tokens,
+          fogState: this.localState.fogState,
+          connectedUsers: [userId],
+          lastSnapshot: Date.now(),
+        },
+        yourRole: this.isGM ? 'gm' : 'player',
+        yourUserId: userId,
+      },
+    };
+    this.messageHandlers.forEach(h => h(initialEvent));
 
-      this.ws.onopen = () => {
-        this.reconnectDelay = 1000;
-        this.connectionHandlers.forEach(h => h(true));
-      };
+    this.channel = supabase.channel(`vtt-room-${roomId}`, {
+      config: { broadcast: { self: false }, presence: { key: userId } },
+    });
 
-      this.ws.onmessage = (event) => {
-        try {
-          const data: VTTServerEvent = JSON.parse(event.data);
-          this.messageHandlers.forEach(h => h(data));
-        } catch (e) {
-          console.error('[VTT] Parse error:', e);
+    this.channel
+      .on('broadcast', { event: 'vtt' }, ({ payload }) => {
+        const serverEvent = payload as VTTServerEvent;
+        if (serverEvent.type === 'TOKEN_ADDED') {
+          this.localState.tokens = [...this.localState.tokens, serverEvent.token];
+        } else if (serverEvent.type === 'TOKEN_MOVED') {
+          this.localState.tokens = this.localState.tokens.map(t =>
+            t.id === serverEvent.tokenId ? { ...t, position: serverEvent.position } : t
+          );
+        } else if (serverEvent.type === 'TOKEN_REMOVED') {
+          this.localState.tokens = this.localState.tokens.filter(t => t.id !== serverEvent.tokenId);
+        } else if (serverEvent.type === 'TOKEN_UPDATED') {
+          this.localState.tokens = this.localState.tokens.map(t =>
+            t.id === serverEvent.tokenId ? { ...t, ...serverEvent.changes } : t
+          );
+        } else if (serverEvent.type === 'FOG_UPDATED') {
+          this.localState.fogState = serverEvent.fogState;
+        } else if (serverEvent.type === 'MAP_UPDATED') {
+          this.localState.config = { ...this.localState.config, ...serverEvent.config };
         }
-      };
-
-      this.ws.onclose = () => {
-        this.connectionHandlers.forEach(h => h(false));
-        if (this.shouldReconnect) {
-          this.reconnectTimer = setTimeout(() => {
-            this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
-            this._connect();
-          }, this.reconnectDelay);
+        this.messageHandlers.forEach(h => h(serverEvent));
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        newPresences.forEach((p: { user_id?: string }) => {
+          if (p.user_id && p.user_id !== userId) {
+            this.messageHandlers.forEach(h => h({ type: 'USER_JOINED', userId: p.user_id! }));
+          }
+        });
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        leftPresences.forEach((p: { user_id?: string }) => {
+          if (p.user_id) {
+            this.messageHandlers.forEach(h => h({ type: 'USER_LEFT', userId: p.user_id! }));
+          }
+        });
+      })
+      .subscribe(async (status) => {
+        const ok = status === 'SUBSCRIBED';
+        this.connectionHandlers.forEach(h => h(ok));
+        if (ok) {
+          await this.channel?.track({ user_id: userId, online_at: new Date().toISOString() });
         }
-      };
-
-      this.ws.onerror = (err) => {
-        console.error('[VTT] WebSocket error:', err);
-      };
-    } catch (e) {
-      console.error('[VTT] Connection failed:', e);
-      if (this.shouldReconnect) {
-        this.reconnectTimer = setTimeout(() => {
-          this._connect();
-        }, this.reconnectDelay);
-      }
-    }
+      });
   }
 
   send(event: VTTClientEvent) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(event));
+    if (!this.channel || !this.roomId) return;
+
+    let serverEvent: VTTServerEvent | null = null;
+
+    switch (event.type) {
+      case 'MOVE_TOKEN_REQUEST':
+        serverEvent = { type: 'TOKEN_MOVED', tokenId: event.tokenId, position: event.position };
+        this.localState.tokens = this.localState.tokens.map(t =>
+          t.id === event.tokenId ? { ...t, position: event.position } : t
+        );
+        this._schedulePersist();
+        break;
+
+      case 'ADD_TOKEN': {
+        const token: VTTToken = { ...event.token, id: generateTokenId() };
+        serverEvent = { type: 'TOKEN_ADDED', token };
+        this.localState.tokens = [...this.localState.tokens, token];
+        this._persistNow();
+        break;
+      }
+
+      case 'REMOVE_TOKEN':
+        serverEvent = { type: 'TOKEN_REMOVED', tokenId: event.tokenId };
+        this.localState.tokens = this.localState.tokens.filter(t => t.id !== event.tokenId);
+        this._persistNow();
+        break;
+
+      case 'UPDATE_TOKEN':
+        serverEvent = { type: 'TOKEN_UPDATED', tokenId: event.tokenId, changes: event.changes };
+        this.localState.tokens = this.localState.tokens.map(t =>
+          t.id === event.tokenId ? { ...t, ...event.changes } : t
+        );
+        this._persistNow();
+        break;
+
+      case 'REVEAL_FOG': {
+        const revealed = new Set(this.localState.fogState.revealedCells);
+        if (event.erase) {
+          event.cells.forEach(c => revealed.delete(c));
+        } else {
+          event.cells.forEach(c => revealed.add(c));
+        }
+        const newFog: VTTFogState = { revealedCells: Array.from(revealed) };
+        serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
+        this.localState.fogState = newFog;
+        this._schedulePersist();
+        break;
+      }
+
+      case 'RESET_FOG': {
+        const newFog: VTTFogState = { revealedCells: [] };
+        serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
+        this.localState.fogState = newFog;
+        this._persistNow();
+        break;
+      }
+
+      case 'UPDATE_MAP':
+        this.localState.config = { ...this.localState.config, ...event.config };
+        serverEvent = { type: 'MAP_UPDATED', config: event.config };
+        this._persistNow();
+        break;
     }
+
+    if (serverEvent) {
+      this.channel.send({ type: 'broadcast', event: 'vtt', payload: serverEvent }).catch(console.error);
+    }
+  }
+
+  private _schedulePersist() {
+    if (this.persistDebounce) clearTimeout(this.persistDebounce);
+    this.persistDebounce = setTimeout(() => this._persistNow(), 500);
+  }
+
+  private _persistNow() {
+    if (!this.roomId) return;
+    const state = { ...this.localState };
+    supabase
+      .from('vtt_rooms')
+      .update({ state_json: state, updated_at: new Date().toISOString() })
+      .eq('id', this.roomId)
+      .then(({ error }) => {
+        if (error) console.error('[VTT] Persist error:', error);
+      });
   }
 
   onMessage(handler: MessageHandler) {
@@ -103,24 +244,23 @@ class VTTService {
   }
 
   disconnect() {
-    this.shouldReconnect = false;
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+    if (this.persistDebounce) {
+      clearTimeout(this.persistDebounce);
+      this._persistNow();
     }
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
+    if (this.channel) {
+      supabase.removeChannel(this.channel);
+      this.channel = null;
     }
     this.roomId = null;
     this.userId = null;
-    this.token = null;
     this.messageHandlers = [];
     this.connectionHandlers = [];
+    this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] } };
   }
 
   isConnected() {
-    return this.ws?.readyState === WebSocket.OPEN;
+    return this.channel !== null;
   }
 }
 

@@ -129,16 +129,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, []);
 
   const handleRevealFog = useCallback((cells: string[]) => {
+    const erase = activeTool === 'fog-erase';
     setFogState(prev => {
       const revealed = new Set(prev.revealedCells);
-      if (activeTool === 'fog-reveal') {
-        cells.forEach(c => revealed.add(c));
-      } else {
+      if (erase) {
         cells.forEach(c => revealed.delete(c));
+      } else {
+        cells.forEach(c => revealed.add(c));
       }
       return { revealedCells: Array.from(revealed) };
     });
-    vttService.send({ type: 'REVEAL_FOG', cells });
+    vttService.send({ type: 'REVEAL_FOG', cells, erase });
   }, [activeTool]);
 
   const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
