@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
@@ -179,13 +179,10 @@ class VTTService {
         break;
 
       case 'REVEAL_FOG': {
-        const revealed = new Set(this.localState.fogState.revealedCells);
-        if (event.erase) {
-          event.cells.forEach(c => revealed.delete(c));
-        } else {
-          event.cells.forEach(c => revealed.add(c));
-        }
-        const newFog: VTTFogState = { revealedCells: Array.from(revealed) };
+        const stroke = (event as VTTClientEvent & { stroke?: VTTFogStroke }).stroke;
+        const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || [])];
+        if (stroke) strokes.push(stroke);
+        const newFog: VTTFogState = { revealedCells: this.localState.fogState.revealedCells, strokes };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
         this._schedulePersist();
@@ -193,7 +190,7 @@ class VTTService {
       }
 
       case 'RESET_FOG': {
-        const newFog: VTTFogState = { revealedCells: [] };
+        const newFog: VTTFogState = { revealedCells: [], strokes: [] };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
         this._persistNow();
@@ -209,7 +206,13 @@ class VTTService {
 
     if (serverEvent) {
       this.channel.send({ type: 'broadcast', event: 'vtt', payload: serverEvent }).catch(console.error);
+      this._notifyLocal(serverEvent);
     }
+  }
+
+  private _notifyLocal(event: VTTServerEvent) {
+    if (event.type === 'FOG_UPDATED') return;
+    this.messageHandlers.forEach(h => h(event));
   }
 
   private _schedulePersist() {

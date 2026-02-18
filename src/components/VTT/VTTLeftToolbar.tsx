@@ -64,7 +64,11 @@ export function VTTLeftToolbar({
               icon={<Cloud size={17} />}
               label="Brouillard de guerre"
               active={isFogTool || fogPopupOpen}
-              onClick={() => setFogPopupOpen(v => !v)}
+              onClick={() => {
+                const opening = !fogPopupOpen;
+                setFogPopupOpen(opening);
+                if (opening && !isFogTool) onToolChange('fog-reveal');
+              }}
             />
           </div>
         </>

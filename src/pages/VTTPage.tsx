@@ -15,6 +15,7 @@ import type {
   VTTToken,
   VTTRoomConfig,
   VTTFogState,
+  VTTFogStroke,
   VTTScene,
   VTTServerEvent,
   VTTProp,
@@ -189,8 +190,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
       vttService.send({ type: 'UPDATE_MAP', config: scene.config });
       vttService.send({ type: 'RESET_FOG' });
-      if (scene.fogState.revealedCells.length > 0) {
-        vttService.send({ type: 'REVEAL_FOG', cells: scene.fogState.revealedCells });
+      if (scene.fogState.strokes && scene.fogState.strokes.length > 0) {
+        for (const stroke of scene.fogState.strokes) {
+          vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
+        }
       }
       scene.tokens.forEach(token => {
         const { id: _id, ...rest } = token;
@@ -258,16 +261,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     moveThrottleRef.current.set(tokenId, timer);
   }, []);
 
-  const handleRevealFog = useCallback((cells: string[]) => {
-    const erase = activeTool === 'fog-erase';
-    setFogState(prev => {
-      const revealed = new Set(prev.revealedCells);
-      if (erase) { cells.forEach(c => revealed.delete(c)); }
-      else { cells.forEach(c => revealed.add(c)); }
-      return { revealedCells: Array.from(revealed) };
-    });
-    vttService.send({ type: 'REVEAL_FOG', cells, erase });
-  }, [activeTool]);
+  const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
+    setFogState(prev => ({
+      revealedCells: prev.revealedCells,
+      strokes: [...(prev.strokes || []), stroke],
+    }));
+    vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
+  }, []);
 
   const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     vttService.send({ type: 'ADD_TOKEN', token });
@@ -299,7 +299,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (role !== 'gm') return;
     if (!window.confirm('Réinitialiser tout le brouillard de guerre ?')) return;
     vttService.send({ type: 'RESET_FOG' });
-    setFogState(DEFAULT_FOG);
+    setFogState({ revealedCells: [], strokes: [] });
   }, [role]);
 
   const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {

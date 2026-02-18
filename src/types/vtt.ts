@@ -25,8 +25,16 @@ export interface VTTRoomConfig {
   mapHeight: number;
 }
 
+export interface VTTFogStroke {
+  x: number;
+  y: number;
+  r: number;
+  erase: boolean;
+}
+
 export interface VTTFogState {
   revealedCells: string[];
+  strokes?: VTTFogStroke[];
 }
 
 export interface VTTProp {
@@ -69,7 +77,7 @@ export interface VTTServerState {
 
 export type VTTClientEvent =
   | { type: 'MOVE_TOKEN_REQUEST'; tokenId: string; position: { x: number; y: number } }
-  | { type: 'REVEAL_FOG'; cells: string[]; erase?: boolean }
+  | { type: 'REVEAL_FOG'; cells: string[]; erase?: boolean; stroke?: VTTFogStroke }
   | { type: 'RESET_FOG' }
   | { type: 'ADD_TOKEN'; token: Omit<VTTToken, 'id'> }
   | { type: 'REMOVE_TOKEN'; tokenId: string }

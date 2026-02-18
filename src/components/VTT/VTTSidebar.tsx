@@ -115,22 +115,10 @@ export function VTTSidebar({
   return (
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
       <div className="flex border-b border-gray-700/60 shrink-0">
-        <TabBtn active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')}>
-          <Users size={13} />
-          Tokens
-        </TabBtn>
-        <TabBtn active={activeTab === 'map'} onClick={() => setActiveTab('map')}>
-          <Map size={13} />
-          Carte
-        </TabBtn>
-        <TabBtn active={activeTab === 'props'} onClick={() => setActiveTab('props')}>
-          <Package size={13} />
-          Props
-        </TabBtn>
-        <TabBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>
-          <Settings size={13} />
-          Config
-        </TabBtn>
+        <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
+        <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
+        <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
+        <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -339,17 +327,21 @@ export function VTTSidebar({
   );
 }
 
-function TabBtn({ children, active, onClick }: { children: React.ReactNode; active: boolean; onClick: () => void }) {
+function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors border-b-2 ${
+      title={title}
+      className={`relative group flex-1 flex items-center justify-center py-2.5 transition-colors border-b-2 ${
         active
           ? 'text-amber-400 border-amber-500 bg-amber-500/5'
           : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/50'
       }`}
     >
-      {children}
+      {icon}
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
+        {title}
+      </span>
     </button>
   );
 }

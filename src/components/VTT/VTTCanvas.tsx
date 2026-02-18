@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import type { VTTToken, VTTRoomConfig, VTTFogState, VTTRole } from '../../types/vtt';
+import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole } from '../../types/vtt';
 
 interface VTTCanvasProps {
   config: VTTRoomConfig;
@@ -10,7 +10,7 @@ interface VTTCanvasProps {
   activeTool: 'select' | 'fog-reveal' | 'fog-erase';
   fogBrushSize: number;
   onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
-  onRevealFog: (cells: string[]) => void;
+  onRevealFog: (stroke: VTTFogStroke) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
   onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
@@ -75,6 +75,9 @@ export function VTTCanvas({
   const onMapDimensionsRef = useRef(onMapDimensions);
   onMapDimensionsRef.current = onMapDimensions;
 
+  const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
+
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
 
@@ -112,24 +115,63 @@ export function VTTCanvas({
     return { x: Math.round(wx / c) * c, y: Math.round(wy / c) * c };
   };
 
-  const FOG_RES = 8;
-
   const paintFogAt = (wx: number, wy: number) => {
-    const brushRadius = fogBrushSizeRef.current;
-    const fcx = Math.floor(wx / FOG_RES);
-    const fcy = Math.floor(wy / FOG_RES);
-    const cellRadius = Math.ceil(brushRadius / FOG_RES);
-    const cells: string[] = [];
-    for (let dy = -cellRadius; dy <= cellRadius; dy++) {
-      for (let dx = -cellRadius; dx <= cellRadius; dx++) {
-        const worldDx = dx * FOG_RES;
-        const worldDy = dy * FOG_RES;
-        if (worldDx * worldDx + worldDy * worldDy <= brushRadius * brushRadius) {
-          cells.push(`${fcx + dx},${fcy + dy}`);
-        }
+    const erase = activeToolRef.current === 'fog-erase';
+    const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
+    applyStrokeToFogCanvas(stroke);
+    onRevealFogRef.current(stroke);
+  };
+
+  const buildFogCanvas = (strokes: VTTFogStroke[], mapW: number, mapH: number) => {
+    let fc = fogCanvasRef.current;
+    if (!fc || fogCanvasSizeRef.current.w !== mapW || fogCanvasSizeRef.current.h !== mapH) {
+      fc = document.createElement('canvas');
+      fc.width = mapW;
+      fc.height = mapH;
+      fogCanvasRef.current = fc;
+      fogCanvasSizeRef.current = { w: mapW, h: mapH };
+    }
+    const fctx = fc.getContext('2d')!;
+    fctx.clearRect(0, 0, mapW, mapH);
+    fctx.fillStyle = '#000';
+    fctx.fillRect(0, 0, mapW, mapH);
+    fctx.globalCompositeOperation = 'destination-out';
+    for (const s of strokes) {
+      if (!s.erase) {
+        fctx.beginPath();
+        fctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        fctx.fill();
       }
     }
-    onRevealFogRef.current(cells);
+    fctx.globalCompositeOperation = 'source-over';
+    for (const s of strokes) {
+      if (s.erase) {
+        fctx.beginPath();
+        fctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        fctx.fillStyle = '#000';
+        fctx.fill();
+      }
+    }
+    fctx.globalCompositeOperation = 'source-over';
+  };
+
+  const applyStrokeToFogCanvas = (stroke: VTTFogStroke) => {
+    const fc = fogCanvasRef.current;
+    if (!fc) return;
+    const fctx = fc.getContext('2d')!;
+    if (!stroke.erase) {
+      fctx.globalCompositeOperation = 'destination-out';
+      fctx.beginPath();
+      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+      fctx.fill();
+    } else {
+      fctx.globalCompositeOperation = 'source-over';
+      fctx.fillStyle = '#000';
+      fctx.beginPath();
+      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+      fctx.fill();
+    }
+    fctx.globalCompositeOperation = 'source-over';
   };
 
   const draw = useCallback(() => {
@@ -268,16 +310,19 @@ export function VTTCanvas({
     });
 
     if (cfg.fogEnabled) {
-      const FR = 8;
-      const fcols = Math.ceil(mapW / FR);
-      const frows = Math.ceil(mapH / FR);
-      const revealed = new Set(fog.revealedCells);
-      ctx.fillStyle = curRole === 'gm' ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.92)';
-      for (let row = 0; row < frows; row++) {
-        for (let col = 0; col < fcols; col++) {
-          if (!revealed.has(`${col},${row}`)) {
-            ctx.fillRect(col * FR, row * FR, FR, FR);
-          }
+      const strokes = fog.strokes || [];
+      if (fogCanvasRef.current &&
+          fogCanvasSizeRef.current.w === mapW &&
+          fogCanvasSizeRef.current.h === mapH) {
+        ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
+        ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
+        ctx.globalAlpha = 1;
+      } else {
+        buildFogCanvas(strokes, mapW, mapH);
+        if (fogCanvasRef.current) {
+          ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
+          ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
+          ctx.globalAlpha = 1;
         }
       }
     }
@@ -312,8 +357,17 @@ export function VTTCanvas({
     img.src = config.mapImageUrl;
   }, [config.mapImageUrl, draw]);
 
+  // Rebuild fog canvas when strokes change (network sync, scene switch, reset)
+  useEffect(() => {
+    const strokes = fogState.strokes || [];
+    const mapW = config.mapWidth || 2000;
+    const mapH = config.mapHeight || 2000;
+    buildFogCanvas(strokes, mapW, mapH);
+    drawRef.current();
+  }, [fogState.strokes, config.mapWidth, config.mapHeight]);
+
   // Redraw when visual state changes
-  useEffect(() => { draw(); }, [draw, tokens, fogState, selectedTokenId, config]);
+  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, config]);
 
   // Resize observer
   useEffect(() => {
