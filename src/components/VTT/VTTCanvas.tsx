@@ -299,9 +299,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.clip();
         if (img.complete && img.naturalWidth > 0) {
-          const ox = (token.imageOffsetX || 0) * r;
-          const oy = (token.imageOffsetY || 0) * r;
-          ctx.drawImage(img, -r + ox, -r + oy, r * 2, r * 2);
+          const ZOOM = 1.8;
+          const drawR = r * ZOOM;
+          const ox = -(token.imageOffsetX || 0) * (drawR - r);
+          const oy = -(token.imageOffsetY || 0) * (drawR - r);
+          ctx.drawImage(img, -drawR + ox, -drawR + oy, drawR * 2, drawR * 2);
         } else {
           ctx.fillStyle = token.color || '#3b82f6';
           ctx.fill();
@@ -593,7 +595,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
             }
           }
           onSelectTokenRef.current(token.id);
-          if (!selectedTokenIdsRef.current.includes(token.id)) {
+          if (selectedTokenIdsRef.current.length <= 1 || !selectedTokenIdsRef.current.includes(token.id)) {
             onSelectTokensRef.current?.([token.id]);
           }
         } else {

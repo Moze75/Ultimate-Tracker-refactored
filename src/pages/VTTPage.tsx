@@ -531,9 +531,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onMoveToken={handleMoveToken}
             onRevealFog={handleRevealFog}
             selectedTokenId={selectedTokenId}
-            onSelectToken={(id) => { setSelectedTokenId(id); if (id && !selectedTokenIds.includes(id)) setSelectedTokenIds([id]); }}
+            onSelectToken={setSelectedTokenId}
             selectedTokenIds={selectedTokenIds}
-            onSelectTokens={setSelectedTokenIds}
+            onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
             onAddTokenAtPos={handleAddTokenAtPos}

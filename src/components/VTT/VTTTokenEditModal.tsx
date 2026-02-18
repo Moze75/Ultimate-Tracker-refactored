@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 
@@ -24,6 +24,30 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
   const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
   const [imageOffsetY, setImageOffsetY] = useState(token.imageOffsetY ?? 0);
+  const isDraggingPreview = useRef(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const handlePreviewMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingPreview.current = true;
+    const onMove = (me: MouseEvent) => {
+      if (!isDraggingPreview.current || !previewRef.current) return;
+      const rect = previewRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (me.clientX - cx) / (rect.width * 0.5);
+      const dy = (me.clientY - cy) / (rect.height * 0.5);
+      setImageOffsetX(prev => Math.max(-1, Math.min(1, prev - dx * 0.05)));
+      setImageOffsetY(prev => Math.max(-1, Math.min(1, prev - dy * 0.05)));
+    };
+    const onUp = () => {
+      isDraggingPreview.current = false;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, []);
 
   const handleSave = () => {
     onSave({
@@ -84,21 +108,40 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
 
           {imageUrl && (
             <div>
-              <label className="block text-xs text-gray-400 mb-2">Position de l'image dans le token</label>
+              <label className="block text-xs text-gray-400 mb-2">Position de l'image <span className="text-gray-600">(glisser pour ajuster)</span></label>
               <div className="flex gap-4 items-start">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 shrink-0 border-2 border-gray-600">
-                  <img
-                    src={imageUrl}
-                    alt=""
-                    className="w-full h-full"
-                    style={{
-                      objectFit: 'cover',
-                      objectPosition: `${50 + imageOffsetX * 50}% ${50 + imageOffsetY * 50}%`,
-                    }}
-                    onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
-                  />
+                <div
+                  ref={previewRef}
+                  className="w-32 h-32 rounded-full overflow-hidden bg-gray-700 shrink-0 border-2 border-gray-600 relative cursor-grab active:cursor-grabbing select-none"
+                  onMouseDown={handlePreviewMouseDown}
+                  title="Glisser pour repositionner"
+                >
+                  {(() => {
+                    const ZOOM = 1.8;
+                    const containerSize = 128;
+                    const drawSize = containerSize * ZOOM;
+                    const excess = drawSize - containerSize;
+                    const imgLeft = -(excess / 2) - imageOffsetX * (excess / 2);
+                    const imgTop = -(excess / 2) - imageOffsetY * (excess / 2);
+                    return (
+                      <img
+                        src={imageUrl}
+                        alt=""
+                        className="absolute pointer-events-none"
+                        style={{
+                          width: drawSize,
+                          height: drawSize,
+                          left: imgLeft,
+                          top: imgTop,
+                        }}
+                        draggable={false}
+                        onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
+                      />
+                    );
+                  })()}
+                  <div className="absolute inset-0 rounded-full ring-1 ring-white/10 pointer-events-none" />
                 </div>
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-2 pt-1">
                   <div>
                     <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
                       <span>Horizontal</span>
@@ -131,7 +174,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                   </div>
                   <button
                     onClick={() => { setImageOffsetX(0); setImageOffsetY(0); }}
-                    className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                    className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors underline"
                   >
                     Centrer
                   </button>

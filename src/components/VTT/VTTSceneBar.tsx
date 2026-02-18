@@ -48,7 +48,7 @@ export function VTTSceneBar({
   };
 
   return (
-    <div className="flex items-center h-9 px-2 gap-0.5 overflow-x-auto shrink-0 scrollbar-hide">
+    <div className="flex items-center h-10 px-2 gap-1.5 overflow-x-auto shrink-0 scrollbar-hide">
       {scenes.map(scene => (
         <div key={scene.id} className="relative group shrink-0">
           {editingId === scene.id ? (
@@ -76,7 +76,7 @@ export function VTTSceneBar({
                 e.preventDefault();
                 onRightClickScene?.(scene.id, e.clientX, e.clientY);
               }}
-              className={`flex items-center gap-1 h-7 px-3 rounded text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 h-8 px-5 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[100px] justify-center ${
                 scene.id === activeSceneId
                   ? 'bg-amber-600/90 text-white shadow-sm'
                   : 'bg-gray-800/70 text-gray-300 hover:text-white hover:bg-gray-700/80 backdrop-blur-sm'
@@ -128,7 +128,7 @@ export function VTTSceneBar({
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="flex items-center gap-1 h-7 px-2 rounded bg-gray-800/50 text-gray-400 hover:text-gray-200 hover:bg-gray-700/70 transition-colors shrink-0 text-xs backdrop-blur-sm"
+          className="flex items-center gap-1 h-8 px-3 rounded-md bg-gray-800/60 text-gray-400 hover:text-gray-200 hover:bg-gray-700/80 transition-colors shrink-0 text-xs backdrop-blur-sm border border-gray-700/40"
           title="Nouvelle scène"
         >
           <Plus size={12} />
