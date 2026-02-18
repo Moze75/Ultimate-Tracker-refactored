@@ -7,7 +7,7 @@ export interface VTTToken {
   label: string;
   imageUrl: string | null;
   position: { x: number; y: number };
-  size: 1 | 2 | 3;
+  size: number;
   rotation: number;
   visible: boolean;
   color: string;
@@ -26,6 +26,7 @@ export interface VTTRoomConfig {
 }
 
 export interface VTTFogStroke {
+  gridLineWidth?: number;
   x: number;
   y: number;
   r: number;

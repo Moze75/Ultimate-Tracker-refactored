@@ -329,6 +329,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
   }, [role, userId]);
 
+  const handleResizeToken = useCallback((tokenId: string, size: number) => {
+    handleUpdateToken(tokenId, { size });
+  }, [handleUpdateToken]);
+
+  const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
+    vttService.send({ type: 'ADD_TOKEN', token: { ...tokenData, position: worldPos } });
+  }, []);
+
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
     if (!window.confirm('Réinitialiser tout le brouillard de guerre ?')) return;
@@ -475,6 +483,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onSelectToken={setSelectedTokenId}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
+            onAddTokenAtPos={handleAddTokenAtPos}
+            onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
             onCalibrationPoint={handleCalibrationPoint}
             onMapDimensions={(w, h) => {
@@ -580,7 +590,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
-          onResize={(size) => { handleUpdateToken(contextMenu.token.id, { size }); setContextMenu(null); }}
+          onResize={(size: number) => { handleUpdateToken(contextMenu.token.id, { size }); setContextMenu(null); }}
           onClose={() => setContextMenu(null)}
         />
       )}

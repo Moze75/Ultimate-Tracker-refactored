@@ -19,7 +19,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [label, setLabel] = useState(token.label);
   const [imageUrl, setImageUrl] = useState(token.imageUrl || '');
   const [color, setColor] = useState(token.color);
-  const [size, setSize] = useState<1 | 2 | 3>(token.size);
+  const [size, setSize] = useState<number>(token.size);
   const [visible, setVisible] = useState(token.visible);
   const [hp, setHp] = useState(token.hp != null ? String(token.hp) : '');
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
@@ -108,7 +108,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
           <div>
             <label className="block text-xs text-gray-400 mb-1">Taille</label>
             <div className="flex gap-1.5">
-              {([1, 2, 3] as const).map(s => (
+              {([1, 2, 3]).map(s => (
                 <button
                   key={s}
                   type="button"

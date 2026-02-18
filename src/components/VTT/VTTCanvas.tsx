@@ -16,6 +16,8 @@ interface VTTCanvasProps {
   onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
   onMapDimensions?: (w: number, h: number) => void;
   onDropToken?: (tokenId: string, worldPos: { x: number; y: number }) => void;
+  onAddTokenAtPos?: (token: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => void;
+  onResizeToken?: (tokenId: string, size: number) => void;
   calibrationPoints?: { x: number; y: number }[];
   onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
 }
@@ -35,6 +37,8 @@ export function VTTCanvas({
   onRightClickToken,
   onMapDimensions,
   onDropToken,
+  onAddTokenAtPos,
+  onResizeToken,
   calibrationPoints,
   onCalibrationPoint,
 }: VTTCanvasProps) {
@@ -49,6 +53,7 @@ export function VTTCanvas({
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
   const isPaintingFogRef = useRef(false);
   const lastPanRef = useRef<{ x: number; y: number } | null>(null);
   const isPanningRef = useRef(false);
@@ -85,6 +90,10 @@ export function VTTCanvas({
   onMapDimensionsRef.current = onMapDimensions;
   const onDropTokenRef = useRef(onDropToken);
   onDropTokenRef.current = onDropToken;
+  const onAddTokenAtPosRef = useRef(onAddTokenAtPos);
+  onAddTokenAtPosRef.current = onAddTokenAtPos;
+  const onResizeTokenRef = useRef(onResizeToken);
+  onResizeTokenRef.current = onResizeToken;
   const onCalibrationPointRef = useRef(onCalibrationPoint);
   onCalibrationPointRef.current = onCalibrationPoint;
   const calibrationPointsRef = useRef(calibrationPoints);
@@ -229,7 +238,7 @@ export function VTTCanvas({
       const ox = ((cfg.gridOffsetX || 0) % CELL + CELL) % CELL;
       const oy = ((cfg.gridOffsetY || 0) % CELL + CELL) % CELL;
       ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 1 / vp.scale;
+      ctx.lineWidth = (cfg.gridLineWidth || 1) / vp.scale;
       for (let gx = ox; gx <= mapW; gx += CELL) {
         ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, mapH); ctx.stroke();
       }
@@ -287,6 +296,26 @@ export function VTTCanvas({
         ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
         ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
         ctx.setLineDash([]);
+
+        const hx = size / 2 + pad;
+        const hy = size / 2 + pad;
+        const hr = 7 / vp.scale;
+        ctx.beginPath();
+        ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+        ctx.fillStyle = '#facc15';
+        ctx.fill();
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 1.5 / vp.scale;
+        ctx.stroke();
+        const lw = 2.5 / vp.scale;
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 1.2 / vp.scale;
+        ctx.beginPath();
+        ctx.moveTo(hx - lw, hy + lw * 0.4);
+        ctx.lineTo(hx + lw * 0.4, hy - lw);
+        ctx.moveTo(hx - lw * 0.4, hy + lw);
+        ctx.lineTo(hx + lw, hy - lw * 0.4);
+        ctx.stroke();
       }
 
       const owned = token.ownerUserId === curUserId;
@@ -465,6 +494,27 @@ export function VTTCanvas({
       const tool = activeToolRef.current;
 
       if (tool === 'select') {
+        const selId = selectedTokenIdRef.current;
+        if (selId) {
+          const selToken = tokensRef.current.find(t => t.id === selId);
+          if (selToken) {
+            const CELL2 = configRef.current.gridSize || 50;
+            const tokenPxSize = (selToken.size || 1) * CELL2;
+            const vp2 = viewportRef.current;
+            const pad2 = 5 / vp2.scale;
+            const handleWx = selToken.position.x + tokenPxSize + pad2;
+            const handleWy = selToken.position.y + tokenPxSize + pad2;
+            const distPx = Math.sqrt(
+              Math.pow((wp.x - handleWx) * vp2.scale, 2) +
+              Math.pow((wp.y - handleWy) * vp2.scale, 2)
+            );
+            if (distPx < 12) {
+              resizingTokenRef.current = { id: selId, tokenPx: selToken.position.x, tokenPy: selToken.position.y };
+              return;
+            }
+          }
+        }
+
         const token = getTokenAt(wp.x, wp.y);
         if (token) {
           const canMove = roleRef.current === 'gm' || token.ownerUserId === userIdRef.current;
@@ -534,6 +584,22 @@ export function VTTCanvas({
         return;
       }
 
+      if (resizingTokenRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const { id: rId, tokenPx, tokenPy } = resizingTokenRef.current;
+        const CELLR = configRef.current.gridSize || 50;
+        const rawPx = Math.max(wp2.x - tokenPx, wp2.y - tokenPy, CELLR * 0.25);
+        let newSize = rawPx / CELLR;
+        if (configRef.current.snapToGrid) {
+          newSize = Math.max(Math.round(newSize), 1);
+        } else {
+          newSize = Math.max(Math.round(newSize * 4) / 4, 0.25);
+        }
+        onResizeTokenRef.current?.(rId, newSize);
+        return;
+      }
+
       if (draggingTokenRef.current) {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
@@ -550,6 +616,7 @@ export function VTTCanvas({
 
     const onMouseUp = () => {
       draggingTokenRef.current = null;
+      resizingTokenRef.current = null;
       isPaintingFogRef.current = false;
       isPanningRef.current = false;
       lastPanRef.current = null;
@@ -615,7 +682,10 @@ export function VTTCanvas({
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes('application/vtt-token-id')) {
+    if (
+      e.dataTransfer.types.includes('application/vtt-token-id') ||
+      e.dataTransfer.types.includes('application/vtt-new-token')
+    ) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       setIsDragOver(true);
@@ -630,8 +700,6 @@ export function VTTCanvas({
 
   const handleDrop = (e: React.DragEvent) => {
     setIsDragOver(false);
-    const tokenId = e.dataTransfer.getData('application/vtt-token-id');
-    if (!tokenId || !onDropTokenRef.current) return;
     e.preventDefault();
     const sp = getCanvasXY(e.clientX, e.clientY);
     const wp = screenToWorld(sp.x, sp.y);
@@ -640,12 +708,22 @@ export function VTTCanvas({
     const ox = ((cfg.gridOffsetX || 0) % CELL + CELL) % CELL;
     const oy = ((cfg.gridOffsetY || 0) % CELL + CELL) % CELL;
     const snapped = cfg.snapToGrid
-      ? {
-          x: Math.round((wp.x - ox) / CELL) * CELL + ox,
-          y: Math.round((wp.y - oy) / CELL) * CELL + oy,
-        }
+      ? { x: Math.round((wp.x - ox) / CELL) * CELL + ox, y: Math.round((wp.y - oy) / CELL) * CELL + oy }
       : wp;
-    onDropTokenRef.current(tokenId, snapped);
+
+    const newTokenData = e.dataTransfer.getData('application/vtt-new-token');
+    if (newTokenData && onAddTokenAtPosRef.current) {
+      try {
+        const tokenTemplate = JSON.parse(newTokenData) as Omit<VTTToken, 'id'>;
+        onAddTokenAtPosRef.current(tokenTemplate, snapped);
+      } catch {}
+      return;
+    }
+
+    const tokenId = e.dataTransfer.getData('application/vtt-token-id');
+    if (tokenId && onDropTokenRef.current) {
+      onDropTokenRef.current(tokenId, snapped);
+    }
   };
 
   return (
@@ -676,7 +754,7 @@ export function VTTCanvas({
             <img
               src="/icons/wmremove-transformed.png"
               alt="Chargement..."
-              className="w-16 h-16 object-contain animate-pulse opacity-80"
+              className="w-16 h-16 object-contain animate-spin opacity-80"
             />
             <span className="text-gray-400 text-sm">Chargement de la carte...</span>
           </div>

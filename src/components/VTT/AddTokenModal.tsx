@@ -29,7 +29,7 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
   const [label, setLabel] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [size, setSize] = useState<1 | 2 | 3>(1);
+  const [size, setSize] = useState<number>(1);
   const [color, setColor] = useState(TOKEN_COLORS[0]);
   const [hp, setHp] = useState('');
   const [maxHp, setMaxHp] = useState('');
@@ -183,7 +183,7 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
             <div>
               <label className="block text-sm text-gray-300 mb-2">Taille</label>
               <div className="flex gap-2">
-                {([1, 2, 3] as const).map(s => (
+                {([1, 2, 3]).map(s => (
                   <button
                     key={s}
                     type="button"

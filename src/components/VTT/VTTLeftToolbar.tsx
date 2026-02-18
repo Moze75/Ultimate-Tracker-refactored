@@ -250,6 +250,22 @@ export function VTTLeftToolbar({
 
             <div>
               <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-400">Épaisseur du trait</span>
+                <span className="text-xs font-mono text-amber-400 font-bold">{config.gridLineWidth ?? 1}px</span>
+              </div>
+              <input
+                type="range" min={1} max={6} step={0.5}
+                value={config.gridLineWidth ?? 1}
+                onChange={e => onUpdateMap({ gridLineWidth: parseFloat(e.target.value) })}
+                className="w-full accent-amber-500"
+              />
+              <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                <span>1px</span><span>6px</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-400">Décalage X</span>
                 <span className="text-xs font-mono text-gray-400">{config.gridOffsetX ?? 0}px</span>
               </div>

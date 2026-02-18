@@ -11,7 +11,7 @@ interface VTTContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
-  onResize: (size: 1 | 2 | 3) => void;
+  onResize: (size: number) => void;
   onClose: () => void;
 }
 
@@ -83,7 +83,7 @@ export function VTTContextMenu({
           <span className="text-[10px] text-gray-500 font-medium">Taille</span>
         </div>
         <div className="flex gap-1">
-          {([1, 2, 3] as const).map(s => (
+          {([1, 2, 3]).map(s => (
             <button
               key={s}
               onClick={() => { onResize(s); onClose(); }}

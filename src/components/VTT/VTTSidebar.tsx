@@ -1,9 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, User } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
+import { supabase } from '../../lib/supabase';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
+
+interface PlayerCharacter {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  class: string | null;
+  level: number | null;
+  current_hp: number | null;
+  max_hp: number | null;
+}
 
 interface VTTSidebarProps {
   role: 'gm' | 'player';
@@ -78,8 +89,20 @@ export function VTTSidebar({
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
+  const [characters, setCharacters] = useState<PlayerCharacter[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase
+      .from('players')
+      .select('id, name, avatar_url, class, level, current_hp, max_hp')
+      .eq('user_id', userId)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setCharacters(data);
+      });
+  }, [userId]);
 
   useEffect(() => {
     if (!selectedTokenId || !tokenListRef.current) return;
@@ -112,6 +135,20 @@ export function VTTSidebar({
     }
   };
 
+  const buildNewTokenData = (char: PlayerCharacter) => ({
+    characterId: char.id,
+    ownerUserId: userId,
+    label: char.name || 'Token',
+    imageUrl: char.avatar_url || null,
+    position: { x: 0, y: 0 },
+    size: 1,
+    rotation: 0,
+    visible: true,
+    color: '#3b82f6',
+    hp: char.current_hp ?? undefined,
+    maxHp: char.max_hp ?? undefined,
+  });
+
   return (
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
       <div className="flex border-b border-gray-700/60 shrink-0">
@@ -123,91 +160,142 @@ export function VTTSidebar({
 
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'tokens' && (
-          <div ref={tokenListRef} className="p-2 space-y-1">
-            {tokens.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-4">Aucun token</p>
-            )}
-            {tokens.map(token => {
-              const canEdit = role === 'gm' || token.ownerUserId === userId;
-              const isSelected = token.id === selectedTokenId;
-              return (
-                <div
-                  key={token.id}
-                  data-token-id={token.id}
-                  draggable
-                  onDragStart={e => {
-                    e.dataTransfer.setData('application/vtt-token-id', token.id);
-                    e.dataTransfer.effectAllowed = 'move';
-                  }}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
-                    isSelected
-                      ? 'bg-amber-500/15 border border-amber-500/40'
-                      : 'hover:bg-gray-800 border border-transparent'
-                  }`}
-                  onClick={() => onSelectToken(isSelected ? null : token.id)}
-                >
-                  <div
-                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white overflow-hidden"
-                    style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
-                  >
-                    {token.imageUrl ? (
-                      <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
-                    ) : (
-                      token.label.slice(0, 2)
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-gray-300'}`}>
-                      {token.label}
-                    </p>
-                    {token.maxHp != null && token.hp != null && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100))}%`,
-                              backgroundColor: token.hp / token.maxHp > 0.5 ? '#22c55e' : token.hp / token.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
-                            }}
+          <div className="flex flex-col">
+            {characters.length > 0 && (
+              <div className="p-2 border-b border-gray-700/40">
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide px-1 mb-1.5">
+                  Glisser sur la carte
+                </p>
+                <div className="space-y-1">
+                  {characters.map(char => (
+                    <div
+                      key={char.id}
+                      draggable
+                      onDragStart={e => {
+                        const data = buildNewTokenData(char);
+                        e.dataTransfer.setData('application/vtt-new-token', JSON.stringify(data));
+                        e.dataTransfer.effectAllowed = 'copy';
+                      }}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing hover:bg-gray-800 border border-transparent hover:border-gray-700/60 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-full shrink-0 overflow-hidden bg-gray-700 flex items-center justify-center border border-gray-600">
+                        {char.avatar_url ? (
+                          <img
+                            src={char.avatar_url}
+                            alt={char.name}
+                            draggable={false}
+                            className="w-full h-full object-cover pointer-events-none"
                           />
+                        ) : (
+                          <User size={12} className="text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-300 truncate">{char.name}</p>
+                        {char.class && (
+                          <p className="text-[9px] text-gray-500 truncate">{char.class}{char.level ? ` · Niv.${char.level}` : ''}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div ref={tokenListRef} className="p-2 space-y-1">
+              {tokens.length > 0 && (
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide px-1 mb-1.5">
+                  Sur la carte
+                </p>
+              )}
+              {tokens.length === 0 && characters.length === 0 && (
+                <p className="text-xs text-gray-500 text-center py-4">Aucun token</p>
+              )}
+              {tokens.length === 0 && characters.length > 0 && (
+                <p className="text-xs text-gray-500 text-center py-2">Glissez un personnage sur la carte</p>
+              )}
+              {tokens.map(token => {
+                const canEdit = role === 'gm' || token.ownerUserId === userId;
+                const isSelected = token.id === selectedTokenId;
+                return (
+                  <div
+                    key={token.id}
+                    data-token-id={token.id}
+                    draggable
+                    onDragStart={e => {
+                      e.dataTransfer.setData('application/vtt-token-id', token.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
+                      isSelected
+                        ? 'bg-amber-500/15 border border-amber-500/40'
+                        : 'hover:bg-gray-800 border border-transparent'
+                    }`}
+                    onClick={() => onSelectToken(isSelected ? null : token.id)}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white overflow-hidden"
+                      style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
+                    >
+                      {token.imageUrl ? (
+                        <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
+                      ) : (
+                        token.label.slice(0, 2)
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-gray-300'}`}>
+                        {token.label}
+                      </p>
+                      {token.maxHp != null && token.hp != null && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100))}%`,
+                                backgroundColor: token.hp / token.maxHp > 0.5 ? '#22c55e' : token.hp / token.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
+                              }}
+                            />
+                          </div>
+                          <span className="text-[9px] text-gray-500">{token.hp}/{token.maxHp}</span>
                         </div>
-                        <span className="text-[9px] text-gray-500">{token.hp}/{token.maxHp}</span>
+                      )}
+                    </div>
+                    {!token.visible && <EyeOff size={11} className="text-gray-500 shrink-0" />}
+                    {canEdit && (
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        {role === 'gm' && (
+                          <button
+                            onClick={e => { e.stopPropagation(); onToggleVisibility(token.id); }}
+                            className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                            title={token.visible ? 'Masquer' : 'Afficher'}
+                          >
+                            {token.visible ? <Eye size={11} /> : <EyeOff size={11} />}
+                          </button>
+                        )}
+                        <button
+                          onClick={e => { e.stopPropagation(); onEditToken(token); }}
+                          className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                          title="Éditer"
+                        >
+                          <Settings size={11} />
+                        </button>
+                        {role === 'gm' && (
+                          <button
+                            onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
+                            className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
-                  {!token.visible && <EyeOff size={11} className="text-gray-500 shrink-0" />}
-                  {canEdit && (
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      {role === 'gm' && (
-                        <button
-                          onClick={e => { e.stopPropagation(); onToggleVisibility(token.id); }}
-                          className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
-                          title={token.visible ? 'Masquer' : 'Afficher'}
-                        >
-                          {token.visible ? <Eye size={11} /> : <EyeOff size={11} />}
-                        </button>
-                      )}
-                      <button
-                        onClick={e => { e.stopPropagation(); onEditToken(token); }}
-                        className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
-                        title="Éditer"
-                      >
-                        <Settings size={11} />
-                      </button>
-                      {role === 'gm' && (
-                        <button
-                          onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
-                          className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -245,27 +333,6 @@ export function VTTSidebar({
                 <Upload size={12} />
                 {compressing ? 'Compression...' : 'Choisir une image...'}
               </button>
-            </div>
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">Grille : {config.gridSize}px</label>
-              <input
-                type="range"
-                min={20}
-                max={120}
-                step={5}
-                value={config.gridSize}
-                onChange={e => onUpdateMap({ gridSize: parseInt(e.target.value) })}
-                className="w-full accent-amber-500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Toggle
-                label="Snap to grid"
-                value={config.snapToGrid}
-                onChange={v => onUpdateMap({ snapToGrid: v })}
-              />
             </div>
           </div>
         )}
@@ -327,19 +394,5 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
         {title}
       </span>
     </button>
-  );
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-gray-400">{label}</span>
-      <button
-        onClick={() => onChange(!value)}
-        className={`w-9 h-5 rounded-full transition-colors ${value ? 'bg-amber-600' : 'bg-gray-700'}`}
-      >
-        <span className={`block w-3.5 h-3.5 rounded-full bg-white mx-0.5 transition-transform ${value ? 'translate-x-4' : 'translate-x-0'}`} />
-      </button>
-    </div>
   );
 }
