@@ -229,6 +229,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onRevealFog={handleRevealFog}
           selectedTokenId={selectedTokenId}
           onSelectToken={setSelectedTokenId}
+          onMapDimensions={(w, h) => {
+            if (config.mapWidth !== w || config.mapHeight !== h) {
+              setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
+            }
+          }}
         />
 
         {role === 'gm' && (
@@ -254,6 +259,30 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   );
 }
 
+function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', quality), width: w, height: h });
+      };
+      img.onerror = reject;
+      img.src = e.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function GMPanel({
   config,
   roomId,
@@ -265,6 +294,28 @@ function GMPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
+  const [compressing, setCompressing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMapUrl(config.mapImageUrl);
+  }, [config.mapImageUrl]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCompressing(true);
+    try {
+      const { dataUrl, width, height } = await compressImageToDataUrl(file);
+      onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
+      setMapUrl('(fichier local)');
+    } catch {
+      alert('Erreur lors du chargement du fichier.');
+    } finally {
+      setCompressing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   if (!open) {
     return (
@@ -278,7 +329,7 @@ function GMPanel({
   }
 
   return (
-    <div className="absolute bottom-4 right-4 bg-gray-900/95 border border-gray-700 rounded-xl shadow-2xl p-4 w-72 space-y-3">
+    <div className="absolute bottom-4 right-4 bg-gray-900/95 border border-gray-700 rounded-xl shadow-2xl p-4 w-80 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-200">Paramètres carte</h3>
         <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-lg leading-none">✕</button>
@@ -288,7 +339,7 @@ function GMPanel({
         <label className="block text-xs text-gray-400 mb-1">URL de la carte</label>
         <div className="flex gap-1">
           <input
-            type="url"
+            type="text"
             value={mapUrl}
             onChange={e => setMapUrl(e.target.value)}
             placeholder="https://..."
@@ -301,6 +352,26 @@ function GMPanel({
             OK
           </button>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">
+          Fichier local <span className="text-gray-500">(compressé, partagé aux joueurs)</span>
+        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={compressing}
+          className="w-full px-2 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 border border-gray-600 text-gray-300 rounded text-xs text-center transition-colors"
+        >
+          {compressing ? 'Compression...' : 'Choisir une image...'}
+        </button>
       </div>
 
       <div>

@@ -13,6 +13,7 @@ interface VTTCanvasProps {
   onRevealFog: (cells: string[]) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
+  onMapDimensions?: (w: number, h: number) => void;
 }
 
 export function VTTCanvas({
@@ -27,12 +28,14 @@ export function VTTCanvas({
   onRevealFog,
   selectedTokenId,
   onSelectToken,
+  onMapDimensions,
 }: VTTCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fogCanvasRef = useRef<HTMLCanvasElement>(null);
   const mapImgRef = useRef<HTMLImageElement | null>(null);
   const mapLoadedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
   const viewportRef = useRef(viewport);
@@ -74,10 +77,12 @@ export function VTTCanvas({
       return;
     }
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => {
       mapImgRef.current = img;
       mapLoadedRef.current = true;
+      if (onMapDimensions && img.naturalWidth > 0) {
+        onMapDimensions(img.naturalWidth, img.naturalHeight);
+      }
       draw();
     };
     img.onerror = () => {
@@ -145,13 +150,22 @@ export function VTTCanvas({
       ctx.rotate((token.rotation || 0) * Math.PI / 180);
 
       if (token.imageUrl) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = token.imageUrl;
+        let img = tokenImageCache.current.get(token.imageUrl);
+        if (!img) {
+          img = new Image();
+          img.onload = () => draw();
+          img.src = token.imageUrl;
+          tokenImageCache.current.set(token.imageUrl, img);
+        }
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(img, -r, -r, r * 2, r * 2);
+        if (img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, -r, -r, r * 2, r * 2);
+        } else {
+          ctx.fillStyle = token.color || '#3b82f6';
+          ctx.fill();
+        }
         ctx.restore();
       } else {
         ctx.beginPath();
