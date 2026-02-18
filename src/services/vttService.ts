@@ -43,6 +43,7 @@ class VTTService {
   private connectionHandlers: ConnectionHandler[] = [];
   private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] } };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
+  private suppressNotifs = false;
 
   connect(roomId: string, userId: string, _authToken: string) {
     this.roomId = roomId;
@@ -210,7 +211,12 @@ class VTTService {
     }
   }
 
+  suppressLocalNotifications(suppress: boolean) {
+    this.suppressNotifs = suppress;
+  }
+
   private _notifyLocal(event: VTTServerEvent) {
+    if (this.suppressNotifs) return;
     if (event.type === 'FOG_UPDATED') return;
     this.messageHandlers.forEach(h => h(event));
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User } from 'lucide-react';
+import { X, User, GripVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { VTTToken } from '../../types/vtt';
 
@@ -33,6 +33,7 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
   const [color, setColor] = useState(TOKEN_COLORS[0]);
   const [hp, setHp] = useState('');
   const [maxHp, setMaxHp] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     supabase
@@ -52,6 +53,20 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
     setHp(char.current_hp != null ? String(char.current_hp) : '');
     setMaxHp(char.max_hp != null ? String(char.max_hp) : '');
   };
+
+  const buildTokenData = (char: PlayerCharacter): Omit<VTTToken, 'id'> => ({
+    characterId: char.id,
+    ownerUserId: userId,
+    label: char.name || 'Token',
+    imageUrl: char.avatar_url || null,
+    position: { x: 0, y: 0 },
+    size: 1,
+    rotation: 0,
+    visible: true,
+    color: TOKEN_COLORS[0],
+    hp: char.current_hp ?? undefined,
+    maxHp: char.max_hp ?? undefined,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +88,16 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700 max-h-[90vh] flex flex-col">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all ${
+        isDragging ? 'bg-black/5 pointer-events-none' : 'bg-black/70'
+      }`}
+    >
+      <div
+        className={`bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700 max-h-[90vh] flex flex-col transition-all ${
+          isDragging ? 'opacity-30 pointer-events-none scale-95' : 'opacity-100'
+        }`}
+      >
         <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
           <h3 className="text-white font-semibold">Ajouter un token</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
@@ -85,14 +108,30 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
         <div className="overflow-y-auto flex-1">
           {characters.length > 0 && (
             <div className="p-4 border-b border-gray-700">
-              <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">Mes personnages</p>
+              <p className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Mes personnages</p>
+              <p className="text-[11px] text-amber-400/70 mb-2 flex items-center gap-1">
+                <GripVertical size={11} />
+                Glisser sur la carte pour placer directement
+              </p>
               <div className="space-y-2">
                 {characters.map(char => (
-                  <button
+                  <div
                     key={char.id}
-                    type="button"
+                    draggable
+                    onDragStart={e => {
+                      const data = buildTokenData(char);
+                      e.dataTransfer.setData('application/vtt-new-token', JSON.stringify(data));
+                      e.dataTransfer.effectAllowed = 'copy';
+                      setIsDragging(true);
+                    }}
+                    onDragEnd={e => {
+                      setIsDragging(false);
+                      if (e.dataTransfer.dropEffect !== 'none') {
+                        onClose();
+                      }
+                    }}
                     onClick={() => selectCharacter(char)}
-                    className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all text-left ${
+                    className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
                       selectedCharId === char.id
                         ? 'border-amber-500 bg-amber-500/10'
                         : 'border-gray-600 hover:border-gray-500 bg-gray-700/50 hover:bg-gray-700'
@@ -103,7 +142,8 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
                         <img
                           src={char.avatar_url}
                           alt={char.name}
-                          className="w-full h-full object-cover"
+                          draggable={false}
+                          className="w-full h-full object-cover pointer-events-none"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                           }}
@@ -112,16 +152,17 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
                         <User size={18} className="text-gray-400" />
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm text-white font-medium truncate">{char.name}</p>
                       <p className="text-xs text-gray-400">
                         {[char.class, char.level ? `Niv. ${char.level}` : null].filter(Boolean).join(' · ')}
                       </p>
                     </div>
+                    <GripVertical size={14} className="text-gray-500 shrink-0" />
                     {selectedCharId === char.id && (
-                      <div className="ml-auto w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                      <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>

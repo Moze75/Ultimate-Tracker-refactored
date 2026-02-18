@@ -46,8 +46,8 @@ export function VTTSceneBar({
   };
 
   return (
-    <div className="flex items-center h-9 bg-gray-900/95 border-b border-gray-700/60 px-1 gap-0.5 overflow-x-auto shrink-0 scrollbar-hide">
-      <Map size={14} className="text-gray-500 shrink-0 ml-1 mr-1" />
+    <div className="flex items-center h-10 bg-gray-900/95 border-b border-gray-700/60 px-2 gap-1 overflow-x-auto shrink-0 scrollbar-hide">
+      <Map size={14} className="text-gray-500 shrink-0 mr-1" />
 
       {scenes.map(scene => (
         <div key={scene.id} className="relative group shrink-0">
@@ -72,7 +72,7 @@ export function VTTSceneBar({
           ) : (
             <button
               onClick={() => onSwitchScene(scene.id)}
-              className={`flex items-center gap-1 h-7 px-3 rounded text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[80px] ${
                 scene.id === activeSceneId
                   ? 'bg-amber-600 text-white shadow-sm'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
