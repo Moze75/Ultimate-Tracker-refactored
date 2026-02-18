@@ -148,27 +148,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [phase, roomId, userId, authToken, handleServerEvent]);
 
   useEffect(() => {
-    if (phase !== 'room') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
-      const selToken = selectedTokenId;
-      const selProp = selectedPropId;
-      if (selToken && role === 'gm') {
-        e.preventDefault();
-        handleRemoveToken(selToken);
-      } else if (selProp && role === 'gm') {
-        e.preventDefault();
-        setProps(prev => prev.filter(p => p.id !== selProp));
-        setSelectedPropId(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
-
-  useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
     supabase
       .from('vtt_scenes')
@@ -336,6 +315,26 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedTokenId(id => id === tokenId ? null : id);
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
   }, [role, userId]);
+
+  useEffect(() => {
+    if (phase !== 'room') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      if (role !== 'gm') return;
+      if (selectedTokenId) {
+        e.preventDefault();
+        handleRemoveToken(selectedTokenId);
+      } else if (selectedPropId) {
+        e.preventDefault();
+        setProps(prev => prev.filter(p => p.id !== selectedPropId));
+        setSelectedPropId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;
