@@ -17,6 +17,7 @@ import type {
   VTTFogState,
   VTTScene,
   VTTServerEvent,
+  VTTProp,
 } from '../types/vtt';
 
 interface VTTPageProps {
@@ -60,7 +61,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [connected, setConnected] = useState(false);
 
   const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase'>('select');
-  const [fogBrushSize, setFogBrushSize] = useState(2);
+  const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [showAddToken, setShowAddToken] = useState(false);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
@@ -69,6 +70,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const switchingSceneRef = useRef(false);
+
+  const [props, setProps] = useState<VTTProp[]>([]);
+  const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
 
   const userId = session.user.id;
   const authToken = session.access_token;
@@ -303,6 +307,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'UPDATE_MAP', config: changes });
   }, []);
 
+  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+    const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
+    setProps(prev => [...prev, newProp]);
+  }, []);
+
+  const handleRemoveProp = useCallback((propId: string) => {
+    setProps(prev => prev.filter(p => p.id !== propId));
+    setSelectedPropId(id => id === propId ? null : id);
+  }, []);
+
+  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+    setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
+  }, []);
+
   const leaveRoom = () => {
     setPhase('lobby');
     setRoomId(null);
@@ -311,6 +329,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedTokenId(null);
     setScenes([]);
     setActiveSceneId(null);
+    setProps([]);
+    setSelectedPropId(null);
   };
 
   if (phase === 'lobby') {
@@ -351,7 +371,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onBack={leaveRoom}
         />
 
-        <div className="flex-1 relative">
+        <div
+          className="flex-1 relative"
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => {
+            e.preventDefault();
+            const propId = e.dataTransfer.getData('application/vtt-prop-id');
+            if (propId) {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              handleUpdateProp(propId, { position: { x, y } });
+            }
+          }}
+        >
           {!connected && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-red-900/80 border border-red-700/60 rounded-lg text-sm text-red-200 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
@@ -379,6 +412,40 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             }}
           />
 
+          {props.map(prop => (
+            <div
+              key={prop.id}
+              className={`absolute pointer-events-auto cursor-move select-none ${selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''}`}
+              style={{
+                left: prop.position.x,
+                top: prop.position.y,
+                width: prop.width,
+                height: prop.height,
+                opacity: prop.opacity,
+                zIndex: 5,
+              }}
+              draggable={role === 'gm' && !prop.locked}
+              onDragStart={e => {
+                e.dataTransfer.setData('application/vtt-prop-id', prop.id);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
+            >
+              {prop.imageUrl ? (
+                <img
+                  src={prop.imageUrl}
+                  alt={prop.label}
+                  className="w-full h-full object-contain pointer-events-none"
+                  draggable={false}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
+                  <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
+                </div>
+              )}
+            </div>
+          ))}
+
           {activeSceneId && scenes.length > 0 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
               <div className="px-4 py-1.5 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-sm text-gray-300 font-medium shadow-lg">
@@ -404,6 +471,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onUpdateMap={handleUpdateMap}
           onResetFog={handleResetFog}
           onBack={leaveRoom}
+          props={props}
+          selectedPropId={selectedPropId}
+          onSelectProp={setSelectedPropId}
+          onAddProp={handleAddProp}
+          onRemoveProp={handleRemoveProp}
+          onUpdateProp={handleUpdateProp}
         />
       </div>
 

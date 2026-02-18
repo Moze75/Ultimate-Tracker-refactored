@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, RefreshCw, LogOut } from 'lucide-react';
-import type { VTTToken, VTTRoomConfig } from '../../types/vtt';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, RefreshCw, LogOut, Package } from 'lucide-react';
+import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
+import { VTTPropsPanel } from './VTTPropsPanel';
 
-type SidebarTab = 'tokens' | 'map' | 'settings';
+type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
 
 interface VTTSidebarProps {
   role: 'gm' | 'player';
@@ -20,6 +21,12 @@ interface VTTSidebarProps {
   onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
   onResetFog: () => void;
   onBack: () => void;
+  props: VTTProp[];
+  selectedPropId: string | null;
+  onSelectProp: (id: string | null) => void;
+  onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
+  onRemoveProp: (propId: string) => void;
+  onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -61,6 +68,12 @@ export function VTTSidebar({
   onUpdateMap,
   onResetFog,
   onBack,
+  props,
+  selectedPropId,
+  onSelectProp,
+  onAddProp,
+  onRemoveProp,
+  onUpdateProp,
 }: VTTSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
@@ -109,6 +122,10 @@ export function VTTSidebar({
         <TabBtn active={activeTab === 'map'} onClick={() => setActiveTab('map')}>
           <Map size={13} />
           Carte
+        </TabBtn>
+        <TabBtn active={activeTab === 'props'} onClick={() => setActiveTab('props')}>
+          <Package size={13} />
+          Props
         </TabBtn>
         <TabBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>
           <Settings size={13} />
@@ -258,6 +275,18 @@ export function VTTSidebar({
               />
             </div>
           </div>
+        )}
+
+        {activeTab === 'props' && (
+          <VTTPropsPanel
+            props={props}
+            selectedPropId={selectedPropId}
+            role={role}
+            onSelectProp={onSelectProp}
+            onAddProp={onAddProp}
+            onRemoveProp={onRemoveProp}
+            onUpdateProp={onUpdateProp}
+          />
         )}
 
         {activeTab === 'settings' && (

@@ -29,6 +29,17 @@ export interface VTTFogState {
   revealedCells: string[];
 }
 
+export interface VTTProp {
+  id: string;
+  label: string;
+  imageUrl: string | null;
+  position: { x: number; y: number };
+  width: number;
+  height: number;
+  opacity: number;
+  locked: boolean;
+}
+
 export interface VTTScene {
   id: string;
   roomId: string;
@@ -63,7 +74,10 @@ export type VTTClientEvent =
   | { type: 'ADD_TOKEN'; token: Omit<VTTToken, 'id'> }
   | { type: 'REMOVE_TOKEN'; tokenId: string }
   | { type: 'UPDATE_MAP'; config: Partial<VTTRoomConfig> }
-  | { type: 'UPDATE_TOKEN'; tokenId: string; changes: Partial<VTTToken> };
+  | { type: 'UPDATE_TOKEN'; tokenId: string; changes: Partial<VTTToken> }
+  | { type: 'ADD_PROP'; prop: Omit<VTTProp, 'id'> }
+  | { type: 'REMOVE_PROP'; propId: string }
+  | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> };
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }

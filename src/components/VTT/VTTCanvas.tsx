@@ -112,16 +112,20 @@ export function VTTCanvas({
     return { x: Math.round(wx / c) * c, y: Math.round(wy / c) * c };
   };
 
+  const FOG_RES = 8;
+
   const paintFogAt = (wx: number, wy: number) => {
-    const c = configRef.current.gridSize || 50;
-    const bx = Math.floor(wx / c);
-    const by = Math.floor(wy / c);
-    const brushSize = fogBrushSizeRef.current;
+    const brushRadius = fogBrushSizeRef.current;
+    const fcx = Math.floor(wx / FOG_RES);
+    const fcy = Math.floor(wy / FOG_RES);
+    const cellRadius = Math.ceil(brushRadius / FOG_RES);
     const cells: string[] = [];
-    for (let dy = -brushSize + 1; dy < brushSize; dy++) {
-      for (let dx = -brushSize + 1; dx < brushSize; dx++) {
-        if (dx * dx + dy * dy < brushSize * brushSize) {
-          cells.push(`${bx + dx},${by + dy}`);
+    for (let dy = -cellRadius; dy <= cellRadius; dy++) {
+      for (let dx = -cellRadius; dx <= cellRadius; dx++) {
+        const worldDx = dx * FOG_RES;
+        const worldDy = dy * FOG_RES;
+        if (worldDx * worldDx + worldDy * worldDy <= brushRadius * brushRadius) {
+          cells.push(`${fcx + dx},${fcy + dy}`);
         }
       }
     }
@@ -264,14 +268,15 @@ export function VTTCanvas({
     });
 
     if (cfg.fogEnabled) {
-      const cols = Math.ceil(mapW / CELL);
-      const rows = Math.ceil(mapH / CELL);
+      const FR = 8;
+      const fcols = Math.ceil(mapW / FR);
+      const frows = Math.ceil(mapH / FR);
       const revealed = new Set(fog.revealedCells);
       ctx.fillStyle = curRole === 'gm' ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.92)';
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
+      for (let row = 0; row < frows; row++) {
+        for (let col = 0; col < fcols; col++) {
           if (!revealed.has(`${col},${row}`)) {
-            ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
+            ctx.fillRect(col * FR, row * FR, FR, FR);
           }
         }
       }
@@ -385,7 +390,7 @@ export function VTTCanvas({
         const isFog = tool === 'fog-reveal' || tool === 'fog-erase';
         if (isFog) {
           const vp = viewportRef.current;
-          const brushPx = fogBrushSizeRef.current * (configRef.current.gridSize || 50) * vp.scale;
+          const brushPx = fogBrushSizeRef.current * vp.scale;
           overlay.style.display = 'block';
           overlay.style.left = `${e.clientX}px`;
           overlay.style.top = `${e.clientY}px`;

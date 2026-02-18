@@ -127,20 +127,20 @@ export function VTTLeftToolbar({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-400">Taille du pinceau</span>
-                <span className="text-xs font-mono text-amber-400 font-bold">{fogBrushSize}</span>
+                <span className="text-xs text-gray-400">Rayon du pinceau</span>
+                <span className="text-xs font-mono text-amber-400 font-bold">{fogBrushSize}px</span>
               </div>
               <input
                 type="range"
-                min={1}
-                max={8}
-                step={1}
+                min={4}
+                max={120}
+                step={2}
                 value={fogBrushSize}
                 onChange={e => onFogBrushSizeChange(parseInt(e.target.value))}
                 className="w-full accent-amber-500"
               />
               <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
-                <span>Petit</span><span>Grand</span>
+                <span>4px</span><span>120px</span>
               </div>
             </div>
 
