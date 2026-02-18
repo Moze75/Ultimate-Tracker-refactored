@@ -199,6 +199,24 @@ export function VTTCanvas({
       ctx.textBaseline = 'middle';
       ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
 
+      if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
+        const barW = r * 1.6;
+        const barH = Math.max(4, size * 0.07) / vp.scale;
+        const barY = r + 6 / vp.scale;
+        const pct = Math.max(0, Math.min(1, token.hp / token.maxHp));
+        const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.beginPath();
+        ctx.roundRect(-barW / 2, barY, barW, barH, barH / 2);
+        ctx.fill();
+        if (pct > 0) {
+          ctx.fillStyle = hpColor;
+          ctx.beginPath();
+          ctx.roundRect(-barW / 2, barY, barW * pct, barH, barH / 2);
+          ctx.fill();
+        }
+      }
+
       if (!token.visible) {
         ctx.fillStyle = 'rgba(0,0,0,0.4)';
         ctx.beginPath();
