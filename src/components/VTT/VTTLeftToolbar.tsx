@@ -276,7 +276,7 @@ export function VTTLeftToolbar({
 
             <div className="pt-2 border-t border-gray-700/60 space-y-2">
               <p className="text-[10px] text-gray-500 leading-relaxed">
-                Cliquez sur plusieurs intersections de cases adjacentes (horizontalement ou verticalement). La grille s'ajuste automatiquement à partir de 2 points.
+                Méthode : cliquez sur 2 intersections adjacentes <strong className="text-gray-400">horizontalement ou verticalement</strong>. Un 3e clic repart de zéro. La distance = taille d'une case.
               </p>
               <button
                 onClick={() => {

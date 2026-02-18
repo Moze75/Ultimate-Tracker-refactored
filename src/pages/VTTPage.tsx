@@ -321,6 +321,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'UPDATE_TOKEN', tokenId: editingToken.id, changes });
   }, [editingToken, role, userId]);
 
+  const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    if (!token) return;
+    const canEdit = role === 'gm' || token.ownerUserId === userId;
+    if (!canEdit) return;
+    vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
+  }, [role, userId]);
+
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
     if (!window.confirm('Réinitialiser tout le brouillard de guerre ?')) return;
@@ -334,7 +342,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, []);
 
   const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
-    setCalibrationPoints(prev => [...prev, pt]);
+    setCalibrationPoints(prev => {
+      if (prev.length >= 2) return [pt];
+      return [...prev, pt];
+    });
   }, []);
 
   const handleClearCalibration = useCallback(() => {
@@ -343,39 +354,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleApplyCalibration = useCallback(() => {
     if (calibrationPoints.length < 2) return;
-    const pts = calibrationPoints;
+    const [p1, p2] = calibrationPoints;
 
-    // Compute all pairwise distances, keep those >= 15px
-    const distances: number[] = [];
-    for (let i = 0; i < pts.length - 1; i++) {
-      for (let j = i + 1; j < pts.length; j++) {
-        const dx = pts[j].x - pts[i].x;
-        const dy = pts[j].y - pts[i].y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d >= 15) distances.push(d);
-      }
-    }
-    if (distances.length === 0) return;
-
-    // Use median distance for robustness against diagonal clicks
-    distances.sort((a, b) => a - b);
-    const medianDist = distances[Math.floor(distances.length / 2)];
-
-    // Filter distances that are close to the median (within 30%) to exclude diagonals
-    const filtered = distances.filter(d => Math.abs(d - medianDist) / medianDist < 0.3);
-    const cellSize = Math.round(filtered.reduce((s, d) => s + d, 0) / filtered.length);
+    // Use the larger axis component to determine cell size
+    // This handles purely horizontal, purely vertical, or slightly diagonal clicks
+    const dx = Math.abs(p2.x - p1.x);
+    const dy = Math.abs(p2.y - p1.y);
+    const cellSize = Math.round(Math.max(dx, dy));
     if (cellSize < 10) return;
 
-    // Compute grid offset using circular mean across all points for robustness
-    const twoPi = 2 * Math.PI;
-    const sinSumX = pts.reduce((s, p) => s + Math.sin(twoPi * p.x / cellSize), 0);
-    const cosSumX = pts.reduce((s, p) => s + Math.cos(twoPi * p.x / cellSize), 0);
-    const sinSumY = pts.reduce((s, p) => s + Math.sin(twoPi * p.y / cellSize), 0);
-    const cosSumY = pts.reduce((s, p) => s + Math.cos(twoPi * p.y / cellSize), 0);
-    const rawOx = (Math.atan2(sinSumX, cosSumX) / twoPi) * cellSize;
-    const rawOy = (Math.atan2(sinSumY, cosSumY) / twoPi) * cellSize;
-    const ox = Math.round(((rawOx % cellSize) + cellSize) % cellSize);
-    const oy = Math.round(((rawOy % cellSize) + cellSize) % cellSize);
+    // Compute offset from the first point (which lies on a grid intersection)
+    const ox = Math.round(((p1.x % cellSize) + cellSize) % cellSize);
+    const oy = Math.round(((p1.y % cellSize) + cellSize) % cellSize);
 
     handleUpdateMap({ gridSize: cellSize, gridOffsetX: ox, gridOffsetY: oy });
     setCalibrationPoints([]);
@@ -590,6 +580,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onResize={(size) => { handleUpdateToken(contextMenu.token.id, { size }); setContextMenu(null); }}
           onClose={() => setContextMenu(null)}
         />
       )}

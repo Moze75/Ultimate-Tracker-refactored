@@ -401,7 +401,6 @@ export function VTTCanvas({
     draw();
 
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => {
       mapImgRef.current = img;
       mapLoadedRef.current = true;

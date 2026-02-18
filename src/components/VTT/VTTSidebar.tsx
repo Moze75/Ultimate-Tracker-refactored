@@ -151,7 +151,7 @@ export function VTTSidebar({
                     style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
                   >
                     {token.imageUrl ? (
-                      <img src={token.imageUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                      <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
                     ) : (
                       token.label.slice(0, 2)
                     )}
