@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3X3, Crosshair, Trash2 } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3X3, Crosshair, Trash2, Sun, Moon } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 interface VTTLeftToolbarProps {
@@ -11,6 +11,8 @@ interface VTTLeftToolbarProps {
   onFogBrushSizeChange: (size: number) => void;
   onAddToken: () => void;
   onResetFog: () => void;
+  onRevealAll?: () => void;
+  onMaskAll?: () => void;
   onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
   onBack: () => void;
   calibrationPoints?: { x: number; y: number }[];
@@ -27,6 +29,8 @@ export function VTTLeftToolbar({
   onFogBrushSizeChange,
   onAddToken,
   onResetFog,
+  onRevealAll,
+  onMaskAll,
   onUpdateMap,
   calibrationPoints = [],
   onClearCalibration,
@@ -38,6 +42,8 @@ export function VTTLeftToolbar({
   const fogBtnRef = useRef<HTMLDivElement>(null);
   const gridPopupRef = useRef<HTMLDivElement>(null);
   const gridBtnRef = useRef<HTMLDivElement>(null);
+  const activeToolRef = useRef(activeTool);
+  activeToolRef.current = activeTool;
 
   useEffect(() => {
     if (!fogPopupOpen && !gridPopupOpen) return;
@@ -49,6 +55,7 @@ export function VTTLeftToolbar({
         setFogPopupOpen(false);
       }
       if (gridPopupOpen &&
+        activeToolRef.current !== 'grid-calibrate' &&
         gridPopupRef.current && !gridPopupRef.current.contains(target) &&
         gridBtnRef.current && !gridBtnRef.current.contains(target)) {
         setGridPopupOpen(false);
@@ -172,7 +179,23 @@ export function VTTLeftToolbar({
               </div>
             </div>
 
-            <div className="pt-1 border-t border-gray-700/60">
+            <div className="pt-1 border-t border-gray-700/60 space-y-1.5">
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => { onRevealAll?.(); setFogPopupOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-amber-600/40 text-gray-400 hover:text-amber-300 rounded text-xs transition-colors"
+                >
+                  <Sun size={11} />
+                  Tout révéler
+                </button>
+                <button
+                  onClick={() => { onMaskAll?.(); setFogPopupOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-blue-800/60 text-gray-400 hover:text-blue-400 rounded text-xs transition-colors"
+                >
+                  <Moon size={11} />
+                  Tout masquer
+                </button>
+              </div>
               <button
                 onClick={() => { onResetFog(); setFogPopupOpen(false); }}
                 className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-red-800/60 text-gray-400 hover:text-red-400 rounded text-xs transition-colors"

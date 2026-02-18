@@ -348,6 +348,21 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setFogState({ revealedCells: [], strokes: [] });
   }, [role]);
 
+  const handleRevealAll = useCallback(() => {
+    if (role !== 'gm') return;
+    const mapW = configRef.current.mapWidth || 3000;
+    const mapH = configRef.current.mapHeight || 2000;
+    const r = Math.sqrt(mapW * mapW + mapH * mapH);
+    const stroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
+    vttService.send({ type: 'RESET_FOG' });
+    vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
+  }, [role]);
+
+  const handleMaskAll = useCallback(() => {
+    if (role !== 'gm') return;
+    vttService.send({ type: 'RESET_FOG' });
+  }, [role]);
+
   const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
     setConfig(prev => ({ ...prev, ...changes }));
     vttService.send({ type: 'UPDATE_MAP', config: changes });
@@ -444,6 +459,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onFogBrushSizeChange={setFogBrushSize}
           onAddToken={() => setShowAddToken(true)}
           onResetFog={handleResetFog}
+          onRevealAll={handleRevealAll}
+          onMaskAll={handleMaskAll}
           onUpdateMap={handleUpdateMap}
           onBack={leaveRoom}
           calibrationPoints={calibrationPoints}
@@ -572,6 +589,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           userId={userId}
           onConfirm={handleAddToken}
           onClose={() => setShowAddToken(false)}
+          onCharDragStart={() => setShowAddToken(false)}
         />
       )}
 

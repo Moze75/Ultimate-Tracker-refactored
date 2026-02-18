@@ -7,6 +7,7 @@ interface AddTokenModalProps {
   onConfirm: (token: Omit<VTTToken, 'id'>) => void;
   onClose: () => void;
   userId: string;
+  onCharDragStart?: () => void;
 }
 
 interface PlayerCharacter {
@@ -24,7 +25,7 @@ const TOKEN_COLORS = [
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
 ];
 
-export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps) {
+export function AddTokenModal({ onConfirm, onClose, userId, onCharDragStart }: AddTokenModalProps) {
   const [characters, setCharacters] = useState<PlayerCharacter[]>([]);
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
   const [label, setLabel] = useState('');
@@ -33,7 +34,6 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
   const [color, setColor] = useState(TOKEN_COLORS[0]);
   const [hp, setHp] = useState('');
   const [maxHp, setMaxHp] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     supabase
@@ -88,16 +88,8 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all ${
-        isDragging ? 'bg-black/5 pointer-events-none' : 'bg-black/70'
-      }`}
-    >
-      <div
-        className={`bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700 max-h-[90vh] flex flex-col transition-all ${
-          isDragging ? 'opacity-30 pointer-events-none scale-95' : 'opacity-100'
-        }`}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700 max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
           <h3 className="text-white font-semibold">Ajouter un token</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
@@ -122,13 +114,7 @@ export function AddTokenModal({ onConfirm, onClose, userId }: AddTokenModalProps
                       const data = buildTokenData(char);
                       e.dataTransfer.setData('application/vtt-new-token', JSON.stringify(data));
                       e.dataTransfer.effectAllowed = 'copy';
-                      setIsDragging(true);
-                    }}
-                    onDragEnd={e => {
-                      setIsDragging(false);
-                      if (e.dataTransfer.dropEffect !== 'none') {
-                        onClose();
-                      }
+                      onCharDragStart?.();
                     }}
                     onClick={() => selectCharacter(char)}
                     className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
