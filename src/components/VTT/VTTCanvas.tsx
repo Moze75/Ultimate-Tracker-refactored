@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole } from '../../types/vtt';
+import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
@@ -11,7 +11,7 @@ interface VTTCanvasProps {
   fogState: VTTFogState;
   role: VTTRole;
   userId: string;
-  activeTool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate';
+  activeTool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw';
   fogBrushSize: number;
   onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
   onRevealFog: (stroke: VTTFogStroke) => void;
@@ -26,6 +26,37 @@ interface VTTCanvasProps {
   onResizeToken?: (tokenId: string, size: number) => void;
   calibrationPoints?: { x: number; y: number }[];
   onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
+  walls?: VTTWall[];
+  onWallAdded?: (wall: VTTWall) => void;
+}
+
+function segmentsIntersect(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
+  const d1x = bx - ax, d1y = by - ay;
+  const d2x = dx - cx, d2y = dy - cy;
+  const cross = d1x * d2y - d1y * d2x;
+  if (Math.abs(cross) < 1e-10) return false;
+  const t = ((cx - ax) * d2y - (cy - ay) * d2x) / cross;
+  const u = ((cx - ax) * d1y - (cy - ay) * d1x) / cross;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+function wallBlocksToken(newX: number, newY: number, sizeInPx: number, walls: VTTWall[]): boolean {
+  const rx = newX, ry = newY, rw = sizeInPx, rh = sizeInPx;
+  const boxEdges: [number, number, number, number][] = [
+    [rx, ry, rx + rw, ry],
+    [rx + rw, ry, rx + rw, ry + rh],
+    [rx + rw, ry + rh, rx, ry + rh],
+    [rx, ry + rh, rx, ry],
+  ];
+  for (const wall of walls) {
+    for (let i = 0; i < wall.points.length - 1; i++) {
+      const p1 = wall.points[i], p2 = wall.points[i + 1];
+      for (const [ex1, ey1, ex2, ey2] of boxEdges) {
+        if (segmentsIntersect(p1.x, p1.y, p2.x, p2.y, ex1, ey1, ex2, ey2)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
@@ -49,6 +80,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onResizeToken,
   calibrationPoints,
   onCalibrationPoint,
+  walls,
+  onWallAdded,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,6 +157,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onCalibrationPointRef.current = onCalibrationPoint;
   const calibrationPointsRef = useRef(calibrationPoints);
   calibrationPointsRef.current = calibrationPoints;
+  const wallsRef = useRef(walls);
+  wallsRef.current = walls;
+  const onWallAddedRef = useRef(onWallAdded);
+  onWallAddedRef.current = onWallAdded;
+  const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
+  const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
@@ -455,6 +494,59 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
+    if (curRole === 'gm' && activeToolRef.current === 'wall-draw') {
+      const committedWalls = wallsRef.current || [];
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (const wall of committedWalls) {
+        if (wall.points.length < 2) continue;
+        ctx.strokeStyle = 'rgba(239,68,68,0.9)';
+        ctx.lineWidth = 3 / vp.scale;
+        ctx.beginPath();
+        ctx.moveTo(wall.points[0].x, wall.points[0].y);
+        for (let i = 1; i < wall.points.length; i++) {
+          ctx.lineTo(wall.points[i].x, wall.points[i].y);
+        }
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(239,68,68,0.85)';
+        for (const pt of wall.points) {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 4 / vp.scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      const wPts = wallPointsRef.current;
+      if (wPts.length > 0) {
+        ctx.strokeStyle = 'rgba(251,146,60,0.85)';
+        ctx.lineWidth = 2.5 / vp.scale;
+        ctx.setLineDash([6 / vp.scale, 4 / vp.scale]);
+        ctx.beginPath();
+        ctx.moveTo(wPts[0].x, wPts[0].y);
+        for (let i = 1; i < wPts.length; i++) {
+          ctx.lineTo(wPts[i].x, wPts[i].y);
+        }
+        const preview = wallPreviewPosRef.current;
+        if (preview) ctx.lineTo(preview.x, preview.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#fb923c';
+        for (const pt of wPts) {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 5 / vp.scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (wPts.length > 0) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+          ctx.lineWidth = 1.5 / vp.scale;
+          ctx.beginPath();
+          ctx.arc(wPts[0].x, wPts[0].y, 8 / vp.scale, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+    }
+
     const selRect = selectionRectRef.current;
     if (selRect) {
       const sx = Math.min(selRect.x1, selRect.x2);
@@ -615,6 +707,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         paintFogAt(wp.x, wp.y);
       } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
         onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
+      } else if (tool === 'wall-draw' && roleRef.current === 'gm') {
+        wallPointsRef.current = [...wallPointsRef.current, { x: wp.x, y: wp.y }];
+        wallPreviewPosRef.current = null;
+        drawRef.current();
       }
     };
 
@@ -654,6 +750,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         } else {
           overlay.style.display = 'none';
         }
+      }
+
+      if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        wallPreviewPosRef.current = wp2;
+        drawRef.current();
       }
 
       if (isPanningRef.current && lastPanRef.current) {
@@ -698,6 +801,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
             onMoveTokenRef.current(tid, newPos);
           });
         } else {
+          const movingToken = tokensRef.current.find(t => t.id === drag.id);
+          const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
+          const currentWalls = wallsRef.current || [];
+          if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls)) {
+            return;
+          }
           onMoveTokenRef.current(drag.id, snapped);
         }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm') {
@@ -776,7 +885,25 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // Arrow key token movement
   useEffect(() => {
+    if (activeTool !== 'wall-draw') {
+      wallPointsRef.current = [];
+      wallPreviewPosRef.current = null;
+      drawRef.current();
+    }
+  }, [activeTool]);
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
+        const pts = wallPointsRef.current;
+        if (pts.length >= 2) {
+          onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+        }
+        wallPointsRef.current = [];
+        wallPreviewPosRef.current = null;
+        drawRef.current();
+        return;
+      }
       const selId = selectedTokenIdRef.current;
       if (!selId) return;
       const token = tokensRef.current.find(t => t.id === selId);
@@ -798,6 +925,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, []);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
+  const isWallTool = activeTool === 'wall-draw';
 
   const handleDragOver = (e: React.DragEvent) => {
     if (e.dataTransfer.types.includes('application/vtt-token-id')) {
@@ -856,7 +984,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
-        style={{ cursor: isFogTool ? 'none' : 'default' }}
+        style={{ cursor: isFogTool ? 'none' : isWallTool ? 'crosshair' : 'default' }}
       />
 
       {isDragOver && (

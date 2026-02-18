@@ -40,6 +40,11 @@ export interface VTTFogState {
   strokes?: VTTFogStroke[];
 }
 
+export interface VTTWall {
+  id: string;
+  points: { x: number; y: number }[];
+}
+
 export interface VTTProp {
   id: string;
   label: string;
@@ -59,6 +64,7 @@ export interface VTTScene {
   config: VTTRoomConfig;
   fogState: VTTFogState;
   tokens: VTTToken[];
+  walls: VTTWall[];
 }
 
 export interface VTTRoom {

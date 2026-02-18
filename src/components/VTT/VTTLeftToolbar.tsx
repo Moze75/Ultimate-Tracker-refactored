@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3X3, Crosshair, Trash2, Sun, Moon } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3X3, Crosshair, Trash2, Sun, Moon, Ruler } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
-  activeTool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate';
+  activeTool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw';
   fogBrushSize: number;
   config: VTTRoomConfig;
-  onToolChange: (tool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate') => void;
+  onToolChange: (tool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw') => void;
   onFogBrushSizeChange: (size: number) => void;
   onAddToken: () => void;
   onResetFog: () => void;
@@ -18,6 +18,8 @@ interface VTTLeftToolbarProps {
   calibrationPoints?: { x: number; y: number }[];
   onClearCalibration?: () => void;
   onApplyCalibration?: () => void;
+  wallCount?: number;
+  onClearWalls?: () => void;
 }
 
 export function VTTLeftToolbar({
@@ -35,18 +37,23 @@ export function VTTLeftToolbar({
   calibrationPoints = [],
   onClearCalibration,
   onApplyCalibration,
+  wallCount = 0,
+  onClearWalls,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
+  const [wallPopupOpen, setWallPopupOpen] = useState(false);
   const fogPopupRef = useRef<HTMLDivElement>(null);
   const fogBtnRef = useRef<HTMLDivElement>(null);
   const gridPopupRef = useRef<HTMLDivElement>(null);
   const gridBtnRef = useRef<HTMLDivElement>(null);
+  const wallPopupRef = useRef<HTMLDivElement>(null);
+  const wallBtnRef = useRef<HTMLDivElement>(null);
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
   useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen) return;
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
@@ -60,26 +67,40 @@ export function VTTLeftToolbar({
         gridBtnRef.current && !gridBtnRef.current.contains(target)) {
         setGridPopupOpen(false);
       }
+      if (wallPopupOpen &&
+        wallPopupRef.current && !wallPopupRef.current.contains(target) &&
+        wallBtnRef.current && !wallBtnRef.current.contains(target)) {
+        setWallPopupOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen]);
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen]);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
+  const isWallTool = activeTool === 'wall-draw';
 
   return (
-    <div className="relative flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 py-2 gap-1 shrink-0">
+    <div className="relative flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 shrink-0" style={{ paddingTop: '4px', paddingBottom: '8px', gap: '4px' }}>
+
+      {/* Future app icon placeholder */}
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center opacity-20 pointer-events-none mb-1">
+        <div className="w-5 h-5 rounded-md bg-gray-500" />
+      </div>
+
+      <div className="w-6 h-px bg-gray-700/70 my-0.5" />
+
       <ToolBtn
         icon={<MousePointer2 size={17} />}
         label="Sélection"
         active={activeTool === 'select'}
-        onClick={() => { onToolChange('select'); setFogPopupOpen(false); setGridPopupOpen(false); }}
+        onClick={() => { onToolChange('select'); setFogPopupOpen(false); setGridPopupOpen(false); setWallPopupOpen(false); }}
       />
 
       {role === 'gm' && (
         <>
-          <div className="w-6 h-px bg-gray-700 my-1" />
+          <div className="w-6 h-px bg-gray-700/70 my-0.5" />
 
           <div ref={fogBtnRef} className="w-full flex flex-col items-center">
             <ToolBtn
@@ -90,6 +111,7 @@ export function VTTLeftToolbar({
                 const opening = !fogPopupOpen;
                 setFogPopupOpen(opening);
                 setGridPopupOpen(false);
+                setWallPopupOpen(false);
                 if (opening && !isFogTool) onToolChange('fog-reveal');
               }}
             />
@@ -104,14 +126,30 @@ export function VTTLeftToolbar({
                 const opening = !gridPopupOpen;
                 setGridPopupOpen(opening);
                 setFogPopupOpen(false);
+                setWallPopupOpen(false);
                 if (!opening && isGridTool) onToolChange('select');
+              }}
+            />
+          </div>
+
+          <div ref={wallBtnRef} className="w-full flex flex-col items-center">
+            <ToolBtn
+              icon={<Ruler size={17} />}
+              label="Tracer des murs"
+              active={isWallTool || wallPopupOpen}
+              onClick={() => {
+                const opening = !wallPopupOpen;
+                setWallPopupOpen(opening);
+                setFogPopupOpen(false);
+                setGridPopupOpen(false);
+                if (opening && !isWallTool) onToolChange('wall-draw');
               }}
             />
           </div>
         </>
       )}
 
-      <div className="w-6 h-px bg-gray-700 my-1" />
+      <div className="w-6 h-px bg-gray-700/70 my-0.5" />
 
       <ToolBtn
         icon={<UserPlus size={17} />}
@@ -124,7 +162,7 @@ export function VTTLeftToolbar({
         <div
           ref={fogPopupRef}
           className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-56"
-          style={{ top: '60px' }}
+          style={{ top: '88px' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-200">Brouillard de guerre</span>
@@ -212,7 +250,7 @@ export function VTTLeftToolbar({
         <div
           ref={gridPopupRef}
           className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64"
-          style={{ top: '108px' }}
+          style={{ top: '136px' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-200">Paramètres de grille</span>
@@ -346,6 +384,58 @@ export function VTTLeftToolbar({
                     <Trash2 size={12} />
                   </button>
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {wallPopupOpen && role === 'gm' && (
+        <div
+          ref={wallPopupRef}
+          className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-56"
+          style={{ top: '184px' }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-gray-200">Murs de collision</span>
+            <button onClick={() => setWallPopupOpen(false)} className="p-0.5 text-gray-500 hover:text-gray-300 rounded">
+              <X size={13} />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-900/40">
+              <p className="text-[11px] text-red-300/80 leading-relaxed">
+                <strong className="text-red-300">Cliquer</strong> sur la carte pour poser des points.<br />
+                <strong className="text-red-300">Échap</strong> pour terminer le mur en cours.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Murs tracés</span>
+              <span className="text-xs font-mono text-red-400 font-bold">{wallCount}</span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 border-t border-gray-700/60">
+              <button
+                onClick={() => { onToolChange(isWallTool ? 'select' : 'wall-draw'); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs transition-colors border ${
+                  isWallTool
+                    ? 'bg-red-700/30 border-red-600/60 text-red-300'
+                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-red-300 hover:border-red-700/40'
+                }`}
+              >
+                <Ruler size={12} />
+                {isWallTool ? 'Traçage actif' : 'Tracer'}
+              </button>
+              {wallCount > 0 && (
+                <button
+                  onClick={() => { onClearWalls?.(); }}
+                  className="p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-red-400 transition-colors"
+                  title="Effacer tous les murs"
+                >
+                  <Trash2 size={12} />
+                </button>
               )}
             </div>
           </div>

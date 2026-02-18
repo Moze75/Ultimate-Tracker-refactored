@@ -21,6 +21,7 @@ import type {
   VTTScene,
   VTTServerEvent,
   VTTProp,
+  VTTWall,
 } from '../types/vtt';
 
 interface VTTPageProps {
@@ -49,6 +50,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     config: { ...DEFAULT_CONFIG, ...(row.config as Partial<VTTRoomConfig>) },
     fogState: (row.fog_state as VTTFogState) || DEFAULT_FOG,
     tokens: (row.tokens as VTTToken[]) || [],
+    walls: (row.walls as VTTWall[]) || [],
   };
 }
 
@@ -63,7 +65,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [connectedCount, setConnectedCount] = useState(1);
   const [connected, setConnected] = useState(false);
 
-  const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate'>('select');
+  const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw'>('select');
   const [calibrationPoints, setCalibrationPoints] = useState<{ x: number; y: number }[]>([]);
   const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
@@ -89,6 +91,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
+  const [walls, setWalls] = useState<VTTWall[]>([]);
+  const wallsRef = useRef<VTTWall[]>([]);
+  wallsRef.current = walls;
 
   const userId = session.user.id;
   const authToken = session.access_token;
@@ -158,7 +163,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         if (data && data.length > 0) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
-          if (!activeSceneId) setActiveSceneId(parsed[0].id);
+          if (!activeSceneId) {
+            setActiveSceneId(parsed[0].id);
+            setWalls(parsed[0].walls || []);
+          }
         } else {
           supabase
             .from('vtt_scenes')
@@ -184,6 +192,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         config: configRef.current,
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
+        walls: wallsRef.current,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
@@ -225,6 +234,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setConfig(scene.config);
       setFogState({ revealedCells: [], strokes: scene.fogState.strokes || [] });
       setTokens(scene.tokens);
+      setWalls(scene.walls || []);
       setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
     } finally {
@@ -459,6 +469,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
   }, []);
 
+  const handleWallAdded = useCallback((wall: VTTWall) => {
+    setWalls(prev => [...prev, wall]);
+  }, []);
+
+  const handleClearWalls = useCallback(() => {
+    setWalls([]);
+  }, []);
+
   const leaveRoom = () => {
     setPhase('lobby');
     setRoomId(null);
@@ -469,6 +487,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveSceneId(null);
     setProps([]);
     setSelectedPropId(null);
+    setWalls([]);
   };
 
   if (phase === 'lobby') {
@@ -502,6 +521,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onCalibrationPoint={handleCalibrationPoint}
           onClearCalibration={handleClearCalibration}
           onApplyCalibration={handleApplyCalibration}
+          wallCount={walls.length}
+          onClearWalls={handleClearWalls}
         />
 
         <div
@@ -562,6 +583,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
             onCalibrationPoint={handleCalibrationPoint}
+            walls={walls}
+            onWallAdded={handleWallAdded}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
