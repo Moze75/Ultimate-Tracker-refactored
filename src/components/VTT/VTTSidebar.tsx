@@ -64,6 +64,16 @@ export function VTTSidebar({
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tokenListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedTokenId || !tokenListRef.current) return;
+    const el = tokenListRef.current.querySelector(`[data-token-id="${selectedTokenId}"]`);
+    if (el) {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      if (activeTab !== 'tokens') setActiveTab('tokens');
+    }
+  }, [selectedTokenId]);
 
   useEffect(() => {
     if (!config.mapImageUrl.startsWith('data:')) {
@@ -102,7 +112,7 @@ export function VTTSidebar({
 
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'tokens' && (
-          <div className="p-2 space-y-1">
+          <div ref={tokenListRef} className="p-2 space-y-1">
             {tokens.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-4">Aucun token</p>
             )}
@@ -112,6 +122,7 @@ export function VTTSidebar({
               return (
                 <div
                   key={token.id}
+                  data-token-id={token.id}
                   className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer group transition-colors ${
                     isSelected
                       ? 'bg-amber-500/15 border border-amber-500/40'

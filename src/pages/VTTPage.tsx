@@ -5,6 +5,7 @@ import { VTTCanvas } from '../components/VTT/VTTCanvas';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
 import { VTTSidebar } from '../components/VTT/VTTSidebar';
 import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
+import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
 import { AddTokenModal } from '../components/VTT/AddTokenModal';
 import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
@@ -63,6 +64,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [showAddToken, setShowAddToken] = useState(false);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -340,9 +342,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           role={role}
           activeTool={activeTool}
           fogBrushSize={fogBrushSize}
+          config={config}
           onToolChange={setActiveTool}
           onFogBrushSizeChange={setFogBrushSize}
           onAddToken={() => setShowAddToken(true)}
+          onResetFog={handleResetFog}
+          onUpdateMap={handleUpdateMap}
           onBack={leaveRoom}
         />
 
@@ -366,13 +371,21 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onRevealFog={handleRevealFog}
             selectedTokenId={selectedTokenId}
             onSelectToken={setSelectedTokenId}
-            onRightClickToken={setEditingToken}
+            onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
           />
+
+          {activeSceneId && scenes.length > 0 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
+              <div className="px-4 py-1.5 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-sm text-gray-300 font-medium shadow-lg">
+                {scenes.find(s => s.id === activeSceneId)?.name ?? ''}
+              </div>
+            </div>
+          )}
         </div>
 
         <VTTSidebar
@@ -408,6 +421,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onSave={handleEditTokenSave}
           onRemove={() => handleRemoveToken(editingToken.id)}
           onClose={() => setEditingToken(null)}
+        />
+      )}
+
+      {contextMenu && (
+        <VTTContextMenu
+          token={contextMenu.token}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          role={role}
+          userId={userId}
+          onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
+          onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
+          onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onClose={() => setContextMenu(null)}
         />
       )}
     </div>

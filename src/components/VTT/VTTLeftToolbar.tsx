@@ -1,14 +1,17 @@
-import React from 'react';
-import { MousePointer2, Eye, EyeOff, Plus, ChevronLeft, Minus } from 'lucide-react';
-import type { VTTRole } from '../../types/vtt';
+import React, { useState, useRef, useEffect } from 'react';
+import { MousePointer2, Eye, EyeOff, Plus, ChevronLeft, RefreshCw, X } from 'lucide-react';
+import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
   activeTool: 'select' | 'fog-reveal' | 'fog-erase';
   fogBrushSize: number;
+  config: VTTRoomConfig;
   onToolChange: (tool: 'select' | 'fog-reveal' | 'fog-erase') => void;
   onFogBrushSizeChange: (size: number) => void;
   onAddToken: () => void;
+  onResetFog: () => void;
+  onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
   onBack: () => void;
 }
 
@@ -16,76 +19,161 @@ export function VTTLeftToolbar({
   role,
   activeTool,
   fogBrushSize,
+  config,
   onToolChange,
   onFogBrushSizeChange,
   onAddToken,
+  onResetFog,
+  onUpdateMap,
   onBack,
 }: VTTLeftToolbarProps) {
+  const [fogPopupOpen, setFogPopupOpen] = useState(false);
+  const fogPopupRef = useRef<HTMLDivElement>(null);
+  const fogBtnRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!fogPopupOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        fogPopupRef.current && !fogPopupRef.current.contains(e.target as Node) &&
+        fogBtnRef.current && !fogBtnRef.current.contains(e.target as Node)
+      ) {
+        setFogPopupOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [fogPopupOpen]);
+
+  const handleFogToolClick = (tool: 'fog-reveal' | 'fog-erase') => {
+    if (activeTool === tool) {
+      setFogPopupOpen(v => !v);
+    } else {
+      onToolChange(tool);
+      setFogPopupOpen(true);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 py-2 gap-1 shrink-0">
-      <button
+    <div className="relative flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 py-2 gap-1 shrink-0">
+      <ToolBtn
+        icon={<ChevronLeft size={18} />}
+        label="Retour au lobby"
+        active={false}
         onClick={onBack}
-        title="Retour au lobby"
-        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors mb-1"
-      >
-        <ChevronLeft size={18} />
-      </button>
+      />
 
       <div className="w-6 h-px bg-gray-700 my-1" />
 
       <ToolBtn
         icon={<MousePointer2 size={17} />}
-        label="Sélection (S)"
+        label="Sélection — déplacer les tokens"
         active={activeTool === 'select'}
-        onClick={() => onToolChange('select')}
+        onClick={() => { onToolChange('select'); setFogPopupOpen(false); }}
       />
 
       {role === 'gm' && (
-        <>
+        <div ref={fogBtnRef} className="flex flex-col items-center gap-1 w-full">
           <ToolBtn
             icon={<Eye size={17} />}
-            label="Révéler brouillard (R)"
+            label="Révéler le brouillard"
             active={activeTool === 'fog-reveal'}
-            onClick={() => onToolChange('fog-reveal')}
+            onClick={() => handleFogToolClick('fog-reveal')}
           />
           <ToolBtn
             icon={<EyeOff size={17} />}
-            label="Masquer brouillard (E)"
+            label="Masquer le brouillard"
             active={activeTool === 'fog-erase'}
-            onClick={() => onToolChange('fog-erase')}
+            onClick={() => handleFogToolClick('fog-erase')}
           />
-        </>
+        </div>
       )}
 
       <div className="w-6 h-px bg-gray-700 my-1" />
 
       <ToolBtn
         icon={<Plus size={17} />}
-        label="Ajouter token (T)"
+        label="Ajouter un token"
         active={false}
         onClick={onAddToken}
       />
 
-      {role === 'gm' && (activeTool === 'fog-reveal' || activeTool === 'fog-erase') && (
-        <>
-          <div className="w-6 h-px bg-gray-700 my-1" />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[9px] text-gray-500 uppercase tracking-wide">Taille</span>
+      {fogPopupOpen && role === 'gm' && (
+        <div
+          ref={fogPopupRef}
+          className="absolute left-full top-0 ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-52"
+          style={{ top: '88px' }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-gray-200">Brouillard de guerre</span>
             <button
-              onClick={() => onFogBrushSizeChange(Math.min(6, fogBrushSize + 1))}
-              className="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs"
+              onClick={() => setFogPopupOpen(false)}
+              className="p-0.5 text-gray-500 hover:text-gray-300 rounded"
             >
-              +
-            </button>
-            <span className="text-xs text-gray-300 font-mono">{fogBrushSize}</span>
-            <button
-              onClick={() => onFogBrushSizeChange(Math.max(1, fogBrushSize - 1))}
-              className="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs"
-            >
-              <Minus size={12} />
+              <X size={13} />
             </button>
           </div>
-        </>
+
+          <div className="space-y-3">
+            <div className="flex gap-1">
+              <button
+                onClick={() => onToolChange('fog-reveal')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors ${
+                  activeTool === 'fog-reveal' ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                }`}
+              >
+                <Eye size={11} /> Révéler
+              </button>
+              <button
+                onClick={() => onToolChange('fog-erase')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors ${
+                  activeTool === 'fog-erase' ? 'bg-red-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                }`}
+              >
+                <EyeOff size={11} /> Masquer
+              </button>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-400">Taille du pinceau</span>
+                <span className="text-xs font-mono text-amber-400 font-bold">{fogBrushSize}</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={8}
+                step={1}
+                value={fogBrushSize}
+                onChange={e => onFogBrushSizeChange(parseInt(e.target.value))}
+                className="w-full accent-amber-500"
+              />
+              <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                <span>Petit</span><span>Grand</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Brouillard activé</span>
+              <button
+                onClick={() => onUpdateMap({ fogEnabled: !config.fogEnabled })}
+                className={`w-9 h-5 rounded-full transition-colors ${config.fogEnabled ? 'bg-amber-600' : 'bg-gray-700'}`}
+              >
+                <span className={`block w-3.5 h-3.5 rounded-full bg-white mx-0.5 transition-transform ${config.fogEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            <div className="pt-1 border-t border-gray-700/60">
+              <button
+                onClick={() => { onResetFog(); setFogPopupOpen(false); }}
+                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-red-800/60 text-gray-400 hover:text-red-400 rounded text-xs transition-colors"
+              >
+                <RefreshCw size={12} />
+                Réinitialiser le brouillard
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -99,17 +187,30 @@ function ToolBtn({
   active: boolean;
   onClick: () => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <button
-      onClick={onClick}
-      title={label}
-      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
-        active
-          ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/40'
-          : 'text-gray-400 hover:text-white hover:bg-gray-700'
-      }`}
-    >
-      {icon}
-    </button>
+    <div className="relative w-full flex justify-center">
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+          active
+            ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/40'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700'
+        }`}
+      >
+        {icon}
+      </button>
+      {hovered && (
+        <div className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-50 whitespace-nowrap">
+          <div className="bg-gray-800 border border-gray-700/80 text-gray-200 text-xs px-2.5 py-1 rounded-lg shadow-xl">
+            {label}
+          </div>
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-700/80" />
+        </div>
+      )}
+    </div>
   );
 }

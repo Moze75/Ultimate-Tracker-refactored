@@ -13,7 +13,7 @@ interface VTTCanvasProps {
   onRevealFog: (cells: string[]) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
-  onRightClickToken?: (token: VTTToken) => void;
+  onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
   onMapDimensions?: (w: number, h: number) => void;
 }
 
@@ -176,11 +176,12 @@ export function VTTCanvas({
       ctx.translate(cx, cy);
 
       if (token.id === selectedTokenIdRef.current) {
-        ctx.beginPath();
-        ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
+        const pad = 5 / vp.scale;
         ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 3 / vp.scale;
-        ctx.stroke();
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
+        ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+        ctx.setLineDash([]);
       }
 
       const owned = token.ownerUserId === userId;
@@ -354,7 +355,7 @@ export function VTTCanvas({
     const token = getTokenAt(wp.x, wp.y);
     if (token) {
       const canEdit = role === 'gm' || token.ownerUserId === userId;
-      if (canEdit) onRightClickToken(token);
+      if (canEdit) onRightClickToken(token, e.clientX, e.clientY);
     }
   }, [role, userId, screenToWorld, getTokenAt, onRightClickToken]);
 
