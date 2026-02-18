@@ -1,5 +1,9 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole } from '../../types/vtt';
+
+export interface VTTCanvasHandle {
+  getViewportCenter: () => { x: number; y: number };
+}
 
 interface VTTCanvasProps {
   config: VTTRoomConfig;
@@ -22,7 +26,7 @@ interface VTTCanvasProps {
   onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
 }
 
-export function VTTCanvas({
+export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
   config,
   tokens,
   fogState,
@@ -41,7 +45,7 @@ export function VTTCanvas({
   onResizeToken,
   calibrationPoints,
   onCalibrationPoint,
-}: VTTCanvasProps) {
+}: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const brushOverlayRef = useRef<HTMLDivElement>(null);
@@ -51,6 +55,18 @@ export function VTTCanvas({
   const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
+
+  useImperativeHandle(ref, () => ({
+    getViewportCenter: () => {
+      const vp = viewportRef.current;
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+      return {
+        x: (canvas.width / 2 - vp.x) / vp.scale,
+        y: (canvas.height / 2 - vp.y) / vp.scale,
+      };
+    },
+  }));
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
@@ -682,12 +698,13 @@ export function VTTCanvas({
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (
-      e.dataTransfer.types.includes('application/vtt-token-id') ||
-      e.dataTransfer.types.includes('application/vtt-new-token')
-    ) {
+    if (e.dataTransfer.types.includes('application/vtt-token-id')) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
+      setIsDragOver(true);
+    } else if (e.dataTransfer.types.includes('application/vtt-new-token')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
       setIsDragOver(true);
     }
   };
@@ -768,4 +785,6 @@ export function VTTCanvas({
       />
     </div>
   );
-}
+});
+
+VTTCanvas.displayName = 'VTTCanvas';

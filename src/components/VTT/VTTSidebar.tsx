@@ -1,20 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, User } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
-import { supabase } from '../../lib/supabase';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
-
-interface PlayerCharacter {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-  class: string | null;
-  level: number | null;
-  current_hp: number | null;
-  max_hp: number | null;
-}
 
 interface VTTSidebarProps {
   role: 'gm' | 'player';
@@ -89,20 +78,8 @@ export function VTTSidebar({
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
-  const [characters, setCharacters] = useState<PlayerCharacter[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    supabase
-      .from('players')
-      .select('id, name, avatar_url, class, level, current_hp, max_hp')
-      .eq('user_id', userId)
-      .order('name')
-      .then(({ data }) => {
-        if (data) setCharacters(data);
-      });
-  }, [userId]);
 
   useEffect(() => {
     if (!selectedTokenId || !tokenListRef.current) return;
@@ -135,20 +112,6 @@ export function VTTSidebar({
     }
   };
 
-  const buildNewTokenData = (char: PlayerCharacter) => ({
-    characterId: char.id,
-    ownerUserId: userId,
-    label: char.name || 'Token',
-    imageUrl: char.avatar_url || null,
-    position: { x: 0, y: 0 },
-    size: 1,
-    rotation: 0,
-    visible: true,
-    color: '#3b82f6',
-    hp: char.current_hp ?? undefined,
-    maxHp: char.max_hp ?? undefined,
-  });
-
   return (
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
       <div className="flex border-b border-gray-700/60 shrink-0">
@@ -161,58 +124,9 @@ export function VTTSidebar({
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'tokens' && (
           <div className="flex flex-col">
-            {characters.length > 0 && (
-              <div className="p-2 border-b border-gray-700/40">
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide px-1 mb-1.5">
-                  Glisser sur la carte
-                </p>
-                <div className="space-y-1">
-                  {characters.map(char => (
-                    <div
-                      key={char.id}
-                      draggable
-                      onDragStart={e => {
-                        const data = buildNewTokenData(char);
-                        e.dataTransfer.setData('application/vtt-new-token', JSON.stringify(data));
-                        e.dataTransfer.effectAllowed = 'copy';
-                      }}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing hover:bg-gray-800 border border-transparent hover:border-gray-700/60 transition-colors"
-                    >
-                      <div className="w-7 h-7 rounded-full shrink-0 overflow-hidden bg-gray-700 flex items-center justify-center border border-gray-600">
-                        {char.avatar_url ? (
-                          <img
-                            src={char.avatar_url}
-                            alt={char.name}
-                            draggable={false}
-                            className="w-full h-full object-cover pointer-events-none"
-                          />
-                        ) : (
-                          <User size={12} className="text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-300 truncate">{char.name}</p>
-                        {char.class && (
-                          <p className="text-[9px] text-gray-500 truncate">{char.class}{char.level ? ` · Niv.${char.level}` : ''}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div ref={tokenListRef} className="p-2 space-y-1">
-              {tokens.length > 0 && (
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide px-1 mb-1.5">
-                  Sur la carte
-                </p>
-              )}
-              {tokens.length === 0 && characters.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">Aucun token</p>
-              )}
-              {tokens.length === 0 && characters.length > 0 && (
-                <p className="text-xs text-gray-500 text-center py-2">Glissez un personnage sur la carte</p>
+              {tokens.length === 0 && (
+                <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
               )}
               {tokens.map(token => {
                 const canEdit = role === 'gm' || token.ownerUserId === userId;

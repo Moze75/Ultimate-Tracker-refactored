@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { VTTCanvas } from '../components/VTT/VTTCanvas';
+import type { VTTCanvasHandle } from '../components/VTT/VTTCanvas';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
 import { VTTSidebar } from '../components/VTT/VTTSidebar';
 import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
@@ -88,6 +89,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const userId = session.user.id;
   const authToken = session.access_token;
+
+  const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -288,7 +291,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, []);
 
   const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
-    vttService.send({ type: 'ADD_TOKEN', token });
+    const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
+    vttService.send({ type: 'ADD_TOKEN', token: { ...token, position: center } });
   }, []);
 
   const handleDropToken = useCallback((tokenId: string, worldPos: { x: number; y: number }) => {
@@ -470,6 +474,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           )}
 
           <VTTCanvas
+            ref={vttCanvasRef}
             config={config}
             tokens={tokens}
             fogState={fogState}

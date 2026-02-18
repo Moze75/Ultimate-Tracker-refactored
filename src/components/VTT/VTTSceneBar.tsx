@@ -72,7 +72,7 @@ export function VTTSceneBar({
           ) : (
             <button
               onClick={() => onSwitchScene(scene.id)}
-              className={`flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[80px] ${
+              className={`flex items-center gap-1.5 h-8 px-5 rounded-md text-xs font-medium transition-all whitespace-nowrap min-w-[110px] justify-center ${
                 scene.id === activeSceneId
                   ? 'bg-amber-600 text-white shadow-sm'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
