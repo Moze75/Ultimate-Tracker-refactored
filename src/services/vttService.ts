@@ -1,9 +1,19 @@
+import { supabase } from '../lib/supabase';
 import type { VTTClientEvent, VTTServerEvent, VTTServerState } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
 
 const VTT_SERVER_URL = import.meta.env.VITE_VTT_SERVER_URL || 'http://localhost:3002';
+
+function generateRoomId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 
 class VTTService {
   private ws: WebSocket | null = null;
@@ -116,30 +126,30 @@ class VTTService {
 
 export const vttService = new VTTService();
 
-export async function createVTTRoom(name: string, userId: string, authToken: string): Promise<{ roomId: string }> {
-  const res = await fetch(`${VTT_SERVER_URL}/api/vtt/rooms`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
-    },
-    body: JSON.stringify({ name, gmUserId: userId }),
-  });
-  if (!res.ok) throw new Error('Erreur création room VTT');
-  return res.json();
+export async function createVTTRoom(name: string, userId: string, _authToken: string): Promise<{ roomId: string }> {
+  const roomId = generateRoomId();
+  const { error } = await supabase
+    .from('vtt_rooms')
+    .insert({ id: roomId, name, gm_user_id: userId, state_json: {} });
+  if (error) throw new Error('Erreur création room VTT: ' + error.message);
+  return { roomId };
 }
 
-export async function listVTTRooms(userId: string, authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string }>> {
-  const res = await fetch(`${VTT_SERVER_URL}/api/vtt/rooms?userId=${userId}`, {
-    headers: { 'Authorization': `Bearer ${authToken}` },
-  });
-  if (!res.ok) return [];
-  return res.json();
+export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string }>> {
+  const { data, error } = await supabase
+    .from('vtt_rooms')
+    .select('id, name, gm_user_id, created_at')
+    .eq('gm_user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return (data || []).map(r => ({
+    id: r.id,
+    name: r.name,
+    gmUserId: r.gm_user_id,
+    createdAt: r.created_at,
+  }));
 }
 
-export async function deleteVTTRoom(roomId: string, authToken: string): Promise<void> {
-  await fetch(`${VTT_SERVER_URL}/api/vtt/rooms/${roomId}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${authToken}` },
-  });
+export async function deleteVTTRoom(roomId: string, _authToken: string): Promise<void> {
+  await supabase.from('vtt_rooms').delete().eq('id', roomId);
 }
