@@ -605,13 +605,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         const wp2 = screenToWorld(sp2.x, sp2.y);
         const { id: rId, tokenPx, tokenPy } = resizingTokenRef.current;
         const CELLR = configRef.current.gridSize || 50;
-        const rawPx = Math.max(wp2.x - tokenPx, wp2.y - tokenPy, CELLR * 0.25);
-        let newSize = rawPx / CELLR;
-        if (configRef.current.snapToGrid) {
-          newSize = Math.max(Math.round(newSize), 1);
-        } else {
-          newSize = Math.max(Math.round(newSize * 4) / 4, 0.25);
-        }
+        const rawPx = Math.max(wp2.x - tokenPx, wp2.y - tokenPy, CELLR * 0.1);
+        const newSize = Math.max(Math.round((rawPx / CELLR) * 10) / 10, 0.1);
         onResizeTokenRef.current?.(rId, newSize);
         return;
       }

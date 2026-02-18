@@ -114,7 +114,7 @@ export function AddTokenModal({ onConfirm, onClose, userId, onCharDragStart }: A
                       const data = buildTokenData(char);
                       e.dataTransfer.setData('application/vtt-new-token', JSON.stringify(data));
                       e.dataTransfer.effectAllowed = 'copy';
-                      onCharDragStart?.();
+                      setTimeout(() => onCharDragStart?.(), 0);
                     }}
                     onClick={() => selectCharacter(char)}
                     className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${

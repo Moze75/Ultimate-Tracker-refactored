@@ -354,12 +354,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const mapH = configRef.current.mapHeight || 2000;
     const r = Math.sqrt(mapW * mapW + mapH * mapH);
     const stroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
+    const newFog = { revealedCells: [], strokes: [stroke] };
+    setFogState(newFog);
     vttService.send({ type: 'RESET_FOG' });
     vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
   }, [role]);
 
   const handleMaskAll = useCallback(() => {
     if (role !== 'gm') return;
+    const newFog = { revealedCells: [], strokes: [] };
+    setFogState(newFog);
     vttService.send({ type: 'RESET_FOG' });
   }, [role]);
 
