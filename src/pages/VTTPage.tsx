@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { VTTCanvas } from '../components/VTT/VTTCanvas';
-import { VTTToolbar } from '../components/VTT/VTTToolbar';
+import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
+import { VTTSidebar } from '../components/VTT/VTTSidebar';
+import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
 import { AddTokenModal } from '../components/VTT/AddTokenModal';
+import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
 import { vttService } from '../services/vttService';
 import type {
@@ -10,6 +14,7 @@ import type {
   VTTToken,
   VTTRoomConfig,
   VTTFogState,
+  VTTScene,
   VTTServerEvent,
 } from '../types/vtt';
 
@@ -30,6 +35,18 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
 
 const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
 
+function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
+  return {
+    id: row.id as string,
+    roomId: row.room_id as string,
+    name: row.name as string,
+    orderIndex: row.order_index as number,
+    config: { ...DEFAULT_CONFIG, ...(row.config as Partial<VTTRoomConfig>) },
+    fogState: (row.fog_state as VTTFogState) || DEFAULT_FOG,
+    tokens: (row.tokens as VTTToken[]) || [],
+  };
+}
+
 export function VTTPage({ session, onBack }: VTTPageProps) {
   const [phase, setPhase] = useState<'lobby' | 'room'>('lobby');
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -45,6 +62,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [fogBrushSize, setFogBrushSize] = useState(2);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [showAddToken, setShowAddToken] = useState(false);
+  const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
+
+  const [scenes, setScenes] = useState<VTTScene[]>([]);
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const switchingSceneRef = useRef(false);
 
   const userId = session.user.id;
   const authToken = session.access_token;
@@ -95,27 +117,130 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   useEffect(() => {
     if (phase !== 'room' || !roomId) return;
-
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
-
     vttService.connect(roomId, userId, authToken);
-
-    return () => {
-      unsub();
-      unsubConn();
-      vttService.disconnect();
-    };
+    return () => { unsub(); unsubConn(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, handleServerEvent]);
+
+  useEffect(() => {
+    if (phase !== 'room' || !roomId || role !== 'gm') return;
+    supabase
+      .from('vtt_scenes')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('order_index')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const parsed = data.map(dbSceneToVTTScene);
+          setScenes(parsed);
+          if (!activeSceneId) setActiveSceneId(parsed[0].id);
+        } else {
+          supabase
+            .from('vtt_scenes')
+            .insert({ room_id: roomId, name: 'Scène 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
+            .select()
+            .maybeSingle()
+            .then(({ data: s }) => {
+              if (s) {
+                const scene = dbSceneToVTTScene(s);
+                setScenes([scene]);
+                setActiveSceneId(scene.id);
+              }
+            });
+        }
+      });
+  }, [phase, roomId, role]);
+
+  const saveCurrentSceneState = useCallback(async (sceneId: string) => {
+    if (!sceneId || !roomId) return;
+    await supabase
+      .from('vtt_scenes')
+      .update({
+        config,
+        fog_state: fogState,
+        tokens,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sceneId);
+  }, [config, fogState, tokens, roomId]);
+
+  const handleSwitchScene = useCallback(async (sceneId: string) => {
+    if (sceneId === activeSceneId || switchingSceneRef.current) return;
+    switchingSceneRef.current = true;
+    try {
+      if (activeSceneId) await saveCurrentSceneState(activeSceneId);
+      const { data } = await supabase
+        .from('vtt_scenes')
+        .select('*')
+        .eq('id', sceneId)
+        .maybeSingle();
+      if (!data) return;
+      const scene = dbSceneToVTTScene(data);
+
+      const currentTokenIds = tokens.map(t => t.id);
+      currentTokenIds.forEach(id => vttService.send({ type: 'REMOVE_TOKEN', tokenId: id }));
+
+      vttService.send({ type: 'UPDATE_MAP', config: scene.config });
+      vttService.send({ type: 'RESET_FOG' });
+      if (scene.fogState.revealedCells.length > 0) {
+        vttService.send({ type: 'REVEAL_FOG', cells: scene.fogState.revealedCells });
+      }
+      scene.tokens.forEach(token => {
+        const { id: _id, ...rest } = token;
+        void _id;
+        vttService.send({ type: 'ADD_TOKEN', token: rest });
+      });
+
+      setActiveSceneId(sceneId);
+      setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
+    } finally {
+      switchingSceneRef.current = false;
+    }
+  }, [activeSceneId, tokens, saveCurrentSceneState]);
+
+  const handleCreateScene = useCallback(async (name: string) => {
+    if (!roomId) return;
+    const orderIndex = scenes.length;
+    const { data } = await supabase
+      .from('vtt_scenes')
+      .insert({
+        room_id: roomId,
+        name,
+        order_index: orderIndex,
+        config: DEFAULT_CONFIG,
+        fog_state: DEFAULT_FOG,
+        tokens: [],
+      })
+      .select()
+      .maybeSingle();
+    if (data) {
+      const scene = dbSceneToVTTScene(data);
+      setScenes(prev => [...prev, scene]);
+    }
+  }, [roomId, scenes.length]);
+
+  const handleRenameScene = useCallback(async (sceneId: string, name: string) => {
+    await supabase.from('vtt_scenes').update({ name }).eq('id', sceneId);
+    setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, name } : s));
+  }, []);
+
+  const handleDeleteScene = useCallback(async (sceneId: string) => {
+    await supabase.from('vtt_scenes').delete().eq('id', sceneId);
+    setScenes(prev => {
+      const next = prev.filter(s => s.id !== sceneId);
+      if (activeSceneId === sceneId && next.length > 0) {
+        handleSwitchScene(next[0].id);
+      }
+      return next;
+    });
+  }, [activeSceneId, handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
     setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, position } : t));
-
     pendingMovesRef.current.set(tokenId, position);
-
     const existing = moveThrottleRef.current.get(tokenId);
     if (existing) clearTimeout(existing);
-
     const timer = setTimeout(() => {
       const pos = pendingMovesRef.current.get(tokenId);
       if (pos) {
@@ -124,7 +249,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       }
       moveThrottleRef.current.delete(tokenId);
     }, 50);
-
     moveThrottleRef.current.set(tokenId, timer);
   }, []);
 
@@ -132,11 +256,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const erase = activeTool === 'fog-erase';
     setFogState(prev => {
       const revealed = new Set(prev.revealedCells);
-      if (erase) {
-        cells.forEach(c => revealed.delete(c));
-      } else {
-        cells.forEach(c => revealed.add(c));
-      }
+      if (erase) { cells.forEach(c => revealed.delete(c)); }
+      else { cells.forEach(c => revealed.add(c)); }
       return { revealedCells: Array.from(revealed) };
     });
     vttService.send({ type: 'REVEAL_FOG', cells, erase });
@@ -146,21 +267,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'ADD_TOKEN', token });
   }, []);
 
-  const handleRemoveToken = useCallback(() => {
-    if (!selectedTokenId) return;
-    const token = tokens.find(t => t.id === selectedTokenId);
+  const handleRemoveToken = useCallback((tokenId: string) => {
+    const token = tokens.find(t => t.id === tokenId);
     if (!token) return;
     if (role !== 'gm' && token.ownerUserId !== userId) return;
-    vttService.send({ type: 'REMOVE_TOKEN', tokenId: selectedTokenId });
-    setSelectedTokenId(null);
-  }, [selectedTokenId, tokens, role, userId]);
+    vttService.send({ type: 'REMOVE_TOKEN', tokenId });
+    setSelectedTokenId(id => id === tokenId ? null : id);
+  }, [tokens, role, userId]);
 
-  const handleToggleTokenVisibility = useCallback(() => {
-    if (!selectedTokenId || role !== 'gm') return;
-    const token = tokens.find(t => t.id === selectedTokenId);
+  const handleToggleVisibility = useCallback((tokenId: string) => {
+    if (role !== 'gm') return;
+    const token = tokens.find(t => t.id === tokenId);
     if (!token) return;
-    vttService.send({ type: 'UPDATE_TOKEN', tokenId: selectedTokenId, changes: { visible: !token.visible } });
-  }, [selectedTokenId, tokens, role]);
+    vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes: { visible: !token.visible } });
+  }, [tokens, role]);
+
+  const handleEditTokenSave = useCallback((changes: Partial<VTTToken>) => {
+    if (!editingToken) return;
+    const canEdit = role === 'gm' || editingToken.ownerUserId === userId;
+    if (!canEdit) return;
+    vttService.send({ type: 'UPDATE_TOKEN', tokenId: editingToken.id, changes });
+  }, [editingToken, role, userId]);
 
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
@@ -169,17 +296,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setFogState(DEFAULT_FOG);
   }, [role]);
 
-  const selectedToken = tokens.find(t => t.id === selectedTokenId) ?? null;
+  const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
+    setConfig(prev => ({ ...prev, ...changes }));
+    vttService.send({ type: 'UPDATE_MAP', config: changes });
+  }, []);
+
+  const leaveRoom = () => {
+    setPhase('lobby');
+    setRoomId(null);
+    setTokens([]);
+    setFogState(DEFAULT_FOG);
+    setSelectedTokenId(null);
+    setScenes([]);
+    setActiveSceneId(null);
+  };
 
   if (phase === 'lobby') {
     return (
       <VTTRoomLobby
         userId={userId}
         authToken={authToken}
-        onJoinRoom={(id) => {
-          setRoomId(id);
-          setPhase('room');
-        }}
+        onJoinRoom={(id) => { setRoomId(id); setPhase('room'); }}
         onBack={onBack}
       />
     );
@@ -187,65 +324,73 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
-      <VTTToolbar
-        role={role}
-        activeTool={activeTool}
-        fogBrushSize={fogBrushSize}
-        connectedCount={connectedCount}
-        connected={connected}
-        selectedToken={selectedToken}
-        onToolChange={setActiveTool}
-        onFogBrushSizeChange={setFogBrushSize}
-        onAddToken={() => setShowAddToken(true)}
-        onRemoveToken={handleRemoveToken}
-        onToggleTokenVisibility={handleToggleTokenVisibility}
-        onResetFog={handleResetFog}
-        onBack={() => {
-          setPhase('lobby');
-          setRoomId(null);
-          setTokens([]);
-          setFogState(DEFAULT_FOG);
-          setSelectedTokenId(null);
-        }}
-      />
+      {role === 'gm' && (
+        <VTTSceneBar
+          scenes={scenes}
+          activeSceneId={activeSceneId}
+          onSwitchScene={handleSwitchScene}
+          onCreateScene={handleCreateScene}
+          onRenameScene={handleRenameScene}
+          onDeleteScene={handleDeleteScene}
+        />
+      )}
 
-      <div className="flex-1 relative">
-        {!connected && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-red-900/80 border border-red-700/60 rounded-lg text-sm text-red-200 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-            Reconnexion en cours...
-          </div>
-        )}
-
-        <VTTCanvas
-          config={config}
-          tokens={tokens}
-          fogState={fogState}
+      <div className="flex flex-1 overflow-hidden">
+        <VTTLeftToolbar
           role={role}
-          userId={userId}
           activeTool={activeTool}
           fogBrushSize={fogBrushSize}
-          onMoveToken={handleMoveToken}
-          onRevealFog={handleRevealFog}
-          selectedTokenId={selectedTokenId}
-          onSelectToken={setSelectedTokenId}
-          onMapDimensions={(w, h) => {
-            if (config.mapWidth !== w || config.mapHeight !== h) {
-              setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
-            }
-          }}
+          onToolChange={setActiveTool}
+          onFogBrushSizeChange={setFogBrushSize}
+          onAddToken={() => setShowAddToken(true)}
+          onBack={leaveRoom}
         />
 
-        {role === 'gm' && (
-          <GMPanel
+        <div className="flex-1 relative">
+          {!connected && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-red-900/80 border border-red-700/60 rounded-lg text-sm text-red-200 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+              Reconnexion en cours...
+            </div>
+          )}
+
+          <VTTCanvas
             config={config}
-            roomId={roomId!}
-            onUpdateMap={(changes) => {
-              setConfig(prev => ({ ...prev, ...changes }));
-              vttService.send({ type: 'UPDATE_MAP', config: changes });
+            tokens={tokens}
+            fogState={fogState}
+            role={role}
+            userId={userId}
+            activeTool={activeTool}
+            fogBrushSize={fogBrushSize}
+            onMoveToken={handleMoveToken}
+            onRevealFog={handleRevealFog}
+            selectedTokenId={selectedTokenId}
+            onSelectToken={setSelectedTokenId}
+            onRightClickToken={setEditingToken}
+            onMapDimensions={(w, h) => {
+              if (config.mapWidth !== w || config.mapHeight !== h) {
+                setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
+              }
             }}
           />
-        )}
+        </div>
+
+        <VTTSidebar
+          role={role}
+          tokens={tokens}
+          config={config}
+          selectedTokenId={selectedTokenId}
+          userId={userId}
+          roomId={roomId!}
+          connected={connected}
+          connectedCount={connectedCount}
+          onSelectToken={setSelectedTokenId}
+          onEditToken={setEditingToken}
+          onRemoveToken={handleRemoveToken}
+          onToggleVisibility={handleToggleVisibility}
+          onUpdateMap={handleUpdateMap}
+          onResetFog={handleResetFog}
+        />
       </div>
 
       {showAddToken && (
@@ -255,162 +400,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onClose={() => setShowAddToken(false)}
         />
       )}
-    </div>
-  );
-}
 
-function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve({ dataUrl: canvas.toDataURL('image/jpeg', quality), width: w, height: h });
-      };
-      img.onerror = reject;
-      img.src = e.target!.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function GMPanel({
-  config,
-  roomId,
-  onUpdateMap,
-}: {
-  config: VTTRoomConfig;
-  roomId: string;
-  onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
-  const [compressing, setCompressing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setMapUrl(config.mapImageUrl);
-  }, [config.mapImageUrl]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCompressing(true);
-    try {
-      const { dataUrl, width, height } = await compressImageToDataUrl(file);
-      onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
-      setMapUrl('(fichier local)');
-    } catch {
-      alert('Erreur lors du chargement du fichier.');
-    } finally {
-      setCompressing(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="absolute bottom-4 right-4 px-3 py-2 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 text-gray-300 text-sm rounded-lg transition-colors shadow-lg"
-      >
-        Paramètres carte
-      </button>
-    );
-  }
-
-  return (
-    <div className="absolute bottom-4 right-4 bg-gray-900/95 border border-gray-700 rounded-xl shadow-2xl p-4 w-80 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-200">Paramètres carte</h3>
-        <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-lg leading-none">✕</button>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-400 mb-1">URL de la carte</label>
-        <div className="flex gap-1">
-          <input
-            type="text"
-            value={mapUrl}
-            onChange={e => setMapUrl(e.target.value)}
-            placeholder="https://..."
-            className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-          />
-          <button
-            onClick={() => onUpdateMap({ mapImageUrl: mapUrl })}
-            className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs"
-          >
-            OK
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-400 mb-1">
-          Fichier local <span className="text-gray-500">(compressé, partagé aux joueurs)</span>
-        </label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
+      {editingToken && (
+        <VTTTokenEditModal
+          token={editingToken}
+          role={role}
+          onSave={handleEditTokenSave}
+          onRemove={() => handleRemoveToken(editingToken.id)}
+          onClose={() => setEditingToken(null)}
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={compressing}
-          className="w-full px-2 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 border border-gray-600 text-gray-300 rounded text-xs text-center transition-colors"
-        >
-          {compressing ? 'Compression...' : 'Choisir une image...'}
-        </button>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-400 mb-1">Taille de la grille : {config.gridSize}px</label>
-        <input
-          type="range"
-          min={20}
-          max={120}
-          step={5}
-          value={config.gridSize}
-          onChange={e => onUpdateMap({ gridSize: parseInt(e.target.value) })}
-          className="w-full accent-amber-500"
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">Snap to grid</span>
-        <button
-          onClick={() => onUpdateMap({ snapToGrid: !config.snapToGrid })}
-          className={`w-10 h-5 rounded-full transition-colors ${config.snapToGrid ? 'bg-amber-600' : 'bg-gray-600'}`}
-        >
-          <span className={`block w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${config.snapToGrid ? 'translate-x-5' : 'translate-x-0'}`} />
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">Brouillard de guerre</span>
-        <button
-          onClick={() => onUpdateMap({ fogEnabled: !config.fogEnabled })}
-          className={`w-10 h-5 rounded-full transition-colors ${config.fogEnabled ? 'bg-amber-600' : 'bg-gray-600'}`}
-        >
-          <span className={`block w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${config.fogEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-        </button>
-      </div>
-
-      <div className="pt-1 border-t border-gray-700">
-        <p className="text-xs text-gray-500">ID Room : <span className="font-mono text-gray-300">{roomId}</span></p>
-        <p className="text-xs text-gray-500 mt-0.5">Partagez cet ID avec vos joueurs</p>
-      </div>
+      )}
     </div>
   );
 }

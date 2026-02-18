@@ -29,6 +29,16 @@ export interface VTTFogState {
   revealedCells: string[];
 }
 
+export interface VTTScene {
+  id: string;
+  roomId: string;
+  name: string;
+  orderIndex: number;
+  config: VTTRoomConfig;
+  fogState: VTTFogState;
+  tokens: VTTToken[];
+}
+
 export interface VTTRoom {
   id: string;
   name: string;

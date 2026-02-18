@@ -13,6 +13,7 @@ interface VTTCanvasProps {
   onRevealFog: (cells: string[]) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
+  onRightClickToken?: (token: VTTToken) => void;
   onMapDimensions?: (w: number, h: number) => void;
 }
 
@@ -28,30 +29,34 @@ export function VTTCanvas({
   onRevealFog,
   selectedTokenId,
   onSelectToken,
+  onRightClickToken,
   onMapDimensions,
 }: VTTCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fogCanvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapImgRef = useRef<HTMLImageElement | null>(null);
   const mapLoadedRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
   const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
 
+  const [brushPos, setBrushPos] = useState<{ x: number; y: number } | null>(null);
+
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const isPaintingFogRef = useRef(false);
   const lastPanRef = useRef<{ x: number; y: number } | null>(null);
   const isPanningRef = useRef(false);
 
-  const CELL = config.gridSize || 50;
+  const tokensRef = useRef(tokens);
+  tokensRef.current = tokens;
+  const selectedTokenIdRef = useRef(selectedTokenId);
+  selectedTokenIdRef.current = selectedTokenId;
 
-  const worldToScreen = useCallback((wx: number, wy: number) => {
-    const vp = viewportRef.current;
-    return { x: wx * vp.scale + vp.x, y: wy * vp.scale + vp.y };
-  }, []);
+  const CELL = config.gridSize || 50;
+  const CELLRef = useRef(CELL);
+  CELLRef.current = CELL;
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
     const vp = viewportRef.current;
@@ -60,15 +65,14 @@ export function VTTCanvas({
 
   const snapToGrid = useCallback((wx: number, wy: number) => {
     if (!config.snapToGrid) return { x: wx, y: wy };
-    return {
-      x: Math.round(wx / CELL) * CELL,
-      y: Math.round(wy / CELL) * CELL,
-    };
-  }, [config.snapToGrid, CELL]);
+    const c = CELLRef.current;
+    return { x: Math.round(wx / c) * c, y: Math.round(wy / c) * c };
+  }, [config.snapToGrid]);
 
   const worldCellKey = useCallback((wx: number, wy: number) => {
-    return `${Math.floor(wx / CELL)},${Math.floor(wy / CELL)}`;
-  }, [CELL]);
+    const c = CELLRef.current;
+    return `${Math.floor(wx / c)},${Math.floor(wy / c)}`;
+  }, []);
 
   useEffect(() => {
     if (!config.mapImageUrl) {
@@ -98,10 +102,10 @@ export function VTTCanvas({
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     const W = canvas.width;
     const H = canvas.height;
     const vp = viewportRef.current;
+    const CELL = CELLRef.current;
 
     ctx.clearRect(0, 0, W, H);
     ctx.save();
@@ -119,25 +123,18 @@ export function VTTCanvas({
     }
 
     if (config.gridSize > 0) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1 / vp.scale;
       for (let gx = 0; gx <= mapW; gx += CELL) {
-        ctx.beginPath();
-        ctx.moveTo(gx, 0);
-        ctx.lineTo(gx, mapH);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, mapH); ctx.stroke();
       }
       for (let gy = 0; gy <= mapH; gy += CELL) {
-        ctx.beginPath();
-        ctx.moveTo(0, gy);
-        ctx.lineTo(mapW, gy);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(mapW, gy); ctx.stroke();
       }
     }
 
-    tokens.forEach(token => {
+    tokensRef.current.forEach(token => {
       if (!token.visible && role === 'player') return;
-
       const px = token.position.x;
       const py = token.position.y;
       const size = (token.size || 1) * CELL;
@@ -178,7 +175,7 @@ export function VTTCanvas({
       ctx.save();
       ctx.translate(cx, cy);
 
-      if (token.id === selectedTokenId) {
+      if (token.id === selectedTokenIdRef.current) {
         ctx.beginPath();
         ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
         ctx.strokeStyle = '#facc15';
@@ -231,14 +228,10 @@ export function VTTCanvas({
     });
 
     if (config.fogEnabled) {
-      const mapW = config.mapWidth || 2000;
-      const mapH = config.mapHeight || 2000;
       const cols = Math.ceil(mapW / CELL);
       const rows = Math.ceil(mapH / CELL);
       const revealed = new Set(fogState.revealedCells);
-
       ctx.fillStyle = role === 'gm' ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.92)';
-
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           if (!revealed.has(`${col},${row}`)) {
@@ -249,22 +242,16 @@ export function VTTCanvas({
     }
 
     ctx.restore();
-  }, [config, tokens, fogState, role, userId, selectedTokenId, CELL]);
+  }, [config, fogState, role, userId, CELL]);
 
-  useEffect(() => {
-    draw();
-  }, [draw]);
+  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => { draw(); }, [viewport]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-
-    const resize = () => {
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      draw();
-    };
+    const resize = () => { canvas.width = container.clientWidth; canvas.height = container.clientHeight; draw(); };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(container);
@@ -279,16 +266,56 @@ export function VTTCanvas({
   };
 
   const getTokenAt = useCallback((wx: number, wy: number): VTTToken | null => {
-    for (let i = tokens.length - 1; i >= 0; i--) {
-      const t = tokens[i];
-      const size = (t.size || 1) * CELL;
+    const toks = tokensRef.current;
+    const c = CELLRef.current;
+    for (let i = toks.length - 1; i >= 0; i--) {
+      const t = toks[i];
+      const size = (t.size || 1) * c;
       if (wx >= t.position.x && wx <= t.position.x + size &&
           wy >= t.position.y && wy <= t.position.y + size) {
         return t;
       }
     }
     return null;
-  }, [tokens, CELL]);
+  }, []);
+
+  const paintFogAt = useCallback((wx: number, wy: number) => {
+    const c = CELLRef.current;
+    const bx = Math.floor(wx / c);
+    const by = Math.floor(wy / c);
+    const cells: string[] = [];
+    for (let dy = -fogBrushSize + 1; dy < fogBrushSize; dy++) {
+      for (let dx = -fogBrushSize + 1; dx < fogBrushSize; dx++) {
+        if (dx * dx + dy * dy < fogBrushSize * fogBrushSize) {
+          cells.push(`${bx + dx},${by + dy}`);
+        }
+      }
+    }
+    onRevealFog(cells);
+  }, [fogBrushSize, onRevealFog]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const selId = selectedTokenIdRef.current;
+      if (!selId) return;
+      const token = tokensRef.current.find(t => t.id === selId);
+      if (!token) return;
+      const canMove = role === 'gm' || token.ownerUserId === userId;
+      if (!canMove) return;
+      const c = CELLRef.current;
+      let dx = 0, dy = 0;
+      if (e.key === 'ArrowLeft')  { dx = -c; }
+      else if (e.key === 'ArrowRight') { dx = c; }
+      else if (e.key === 'ArrowUp')   { dy = -c; }
+      else if (e.key === 'ArrowDown') { dy = c; }
+      else return;
+      e.preventDefault();
+      const newPos = { x: token.position.x + dx, y: token.position.y + dy };
+      onMoveToken(selId, newPos);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [role, userId, onMoveToken]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -296,6 +323,8 @@ export function VTTCanvas({
       isPanningRef.current = true;
       return;
     }
+
+    if (e.button === 2) return;
 
     const sp = getCanvasPos(e);
     const wp = screenToWorld(sp.x, sp.y);
@@ -305,37 +334,37 @@ export function VTTCanvas({
       if (token) {
         const canMove = role === 'gm' || token.ownerUserId === userId;
         if (canMove) {
-          draggingTokenRef.current = {
-            id: token.id,
-            offsetX: wp.x - token.position.x,
-            offsetY: wp.y - token.position.y,
-          };
-          onSelectToken(token.id);
-        } else {
-          onSelectToken(token.id);
+          draggingTokenRef.current = { id: token.id, offsetX: wp.x - token.position.x, offsetY: wp.y - token.position.y };
         }
+        onSelectToken(token.id);
       } else {
         onSelectToken(null);
       }
     } else if ((activeTool === 'fog-reveal' || activeTool === 'fog-erase') && role === 'gm') {
       isPaintingFogRef.current = true;
-      const cell = worldCellKey(wp.x, wp.y);
-      const cells: string[] = [];
-      const bx = Math.floor(wp.x / CELL);
-      const by = Math.floor(wp.y / CELL);
-      for (let dy = -fogBrushSize + 1; dy < fogBrushSize; dy++) {
-        for (let dx = -fogBrushSize + 1; dx < fogBrushSize; dx++) {
-          if (dx * dx + dy * dy < fogBrushSize * fogBrushSize) {
-            cells.push(`${bx + dx},${by + dy}`);
-          }
-        }
-      }
-      onRevealFog(cells);
-      void cell;
+      paintFogAt(wp.x, wp.y);
     }
-  }, [activeTool, role, userId, screenToWorld, getTokenAt, onSelectToken, onRevealFog, worldCellKey, fogBrushSize, CELL]);
+  }, [activeTool, role, userId, screenToWorld, getTokenAt, onSelectToken, paintFogAt]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!onRightClickToken) return;
+    const sp = getCanvasPos(e);
+    const wp = screenToWorld(sp.x, sp.y);
+    const token = getTokenAt(wp.x, wp.y);
+    if (token) {
+      const canEdit = role === 'gm' || token.ownerUserId === userId;
+      if (canEdit) onRightClickToken(token);
+    }
+  }, [role, userId, screenToWorld, getTokenAt, onRightClickToken]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (activeTool === 'fog-reveal' || activeTool === 'fog-erase') {
+      setBrushPos({ x: e.clientX, y: e.clientY });
+    } else {
+      setBrushPos(null);
+    }
+
     if (isPanningRef.current && lastPanRef.current) {
       const dx = e.clientX - lastPanRef.current.x;
       const dy = e.clientY - lastPanRef.current.y;
@@ -354,19 +383,9 @@ export function VTTCanvas({
     } else if (isPaintingFogRef.current && role === 'gm') {
       const sp = getCanvasPos(e);
       const wp = screenToWorld(sp.x, sp.y);
-      const bx = Math.floor(wp.x / CELL);
-      const by = Math.floor(wp.y / CELL);
-      const cells: string[] = [];
-      for (let dy = -fogBrushSize + 1; dy < fogBrushSize; dy++) {
-        for (let dx = -fogBrushSize + 1; dx < fogBrushSize; dx++) {
-          if (dx * dx + dy * dy < fogBrushSize * fogBrushSize) {
-            cells.push(`${bx + dx},${by + dy}`);
-          }
-        }
-      }
-      onRevealFog(cells);
+      paintFogAt(wp.x, wp.y);
     }
-  }, [screenToWorld, snapToGrid, onMoveToken, onRevealFog, role, fogBrushSize, CELL]);
+  }, [activeTool, screenToWorld, snapToGrid, onMoveToken, paintFogAt, role]);
 
   const handleMouseUp = useCallback(() => {
     draggingTokenRef.current = null;
@@ -374,6 +393,11 @@ export function VTTCanvas({
     isPanningRef.current = false;
     lastPanRef.current = null;
   }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    handleMouseUp();
+    setBrushPos(null);
+  }, [handleMouseUp]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -383,24 +407,14 @@ export function VTTCanvas({
       const newScale = Math.max(0.2, Math.min(4, v.scale * delta));
       const wx = (sp.x - v.x) / v.scale;
       const wy = (sp.y - v.y) / v.scale;
-      return {
-        scale: newScale,
-        x: sp.x - wx * newScale,
-        y: sp.y - wy * newScale,
-      };
+      return { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
     });
   }, []);
 
-  useEffect(() => {
-    draw();
-  }, [viewport, draw]);
+  const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
+  const brushRadiusPx = fogBrushSize * CELL * viewportRef.current.scale;
 
-  const cursor =
-    activeTool === 'fog-reveal' ? 'crosshair' :
-    activeTool === 'fog-erase' ? 'cell' :
-    draggingTokenRef.current ? 'grabbing' :
-    isPanningRef.current ? 'grabbing' :
-    'default';
+  const cursor = isFogTool ? 'none' : draggingTokenRef.current || isPanningRef.current ? 'grabbing' : 'default';
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-gray-950">
@@ -411,10 +425,23 @@ export function VTTCanvas({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onContextMenu={handleContextMenu}
         onWheel={handleWheel}
       />
-      <canvas ref={fogCanvasRef} className="hidden" />
+      {isFogTool && brushPos && (
+        <div
+          className="pointer-events-none absolute rounded-full border-2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: brushPos.x,
+            top: brushPos.y,
+            width: brushRadiusPx * 2,
+            height: brushRadiusPx * 2,
+            borderColor: activeTool === 'fog-reveal' ? 'rgba(251,191,36,0.8)' : 'rgba(239,68,68,0.8)',
+            backgroundColor: activeTool === 'fog-reveal' ? 'rgba(251,191,36,0.08)' : 'rgba(239,68,68,0.08)',
+          }}
+        />
+      )}
     </div>
   );
 }
