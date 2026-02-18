@@ -300,10 +300,16 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         ctx.clip();
         if (img.complete && img.naturalWidth > 0) {
           const ZOOM = 1.8;
-          const drawR = r * ZOOM;
-          const ox = -(token.imageOffsetX || 0) * (drawR - r);
-          const oy = -(token.imageOffsetY || 0) * (drawR - r);
-          ctx.drawImage(img, -drawR + ox, -drawR + oy, drawR * 2, drawR * 2);
+          const side = r * 2 * ZOOM;
+          const excess = side - r * 2;
+          const ox = -(token.imageOffsetX || 0) * (excess / 2);
+          const oy = -(token.imageOffsetY || 0) * (excess / 2);
+          const aspect = img.naturalWidth / img.naturalHeight;
+          let dw: number, dh: number;
+          if (aspect >= 1) { dw = side; dh = side / aspect; } else { dw = side * aspect; dh = side; }
+          const dx = -r - excess / 2 + ox + (side - dw) / 2;
+          const dy = -r - excess / 2 + oy + (side - dh) / 2;
+          ctx.drawImage(img, dx, dy, dw, dh);
         } else {
           ctx.fillStyle = token.color || '#3b82f6';
           ctx.fill();

@@ -148,6 +148,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [phase, roomId, userId, authToken, handleServerEvent]);
 
   useEffect(() => {
+    if (phase !== 'room') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      const selToken = selectedTokenId;
+      const selProp = selectedPropId;
+      if (selToken && role === 'gm') {
+        e.preventDefault();
+        handleRemoveToken(selToken);
+      } else if (selProp && role === 'gm') {
+        e.preventDefault();
+        setProps(prev => prev.filter(p => p.id !== selProp));
+        setSelectedPropId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
+
+  useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
     supabase
       .from('vtt_scenes')

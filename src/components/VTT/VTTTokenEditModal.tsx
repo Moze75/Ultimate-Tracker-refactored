@@ -10,6 +10,28 @@ interface VTTTokenEditModalProps {
   onClose: () => void;
 }
 
+function PreviewImage({ src, offsetX, offsetY, containerSize }: { src: string; offsetX: number; offsetY: number; containerSize: number }) {
+  const [aspect, setAspect] = React.useState(1);
+  const ZOOM = 1.8;
+  const side = containerSize * ZOOM;
+  const excess = side - containerSize;
+  const dw = aspect >= 1 ? side : side * aspect;
+  const dh = aspect >= 1 ? side / aspect : side;
+  const left = -(excess / 2) - offsetX * (excess / 2) + (side - dw) / 2;
+  const top = -(excess / 2) - offsetY * (excess / 2) + (side - dh) / 2;
+  return (
+    <img
+      src={src}
+      alt=""
+      className="absolute pointer-events-none"
+      style={{ width: dw, height: dh, left, top }}
+      draggable={false}
+      onLoad={e => { const img = e.target as HTMLImageElement; setAspect(img.naturalWidth / img.naturalHeight); }}
+      onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
+    />
+  );
+}
+
 const TOKEN_COLORS = [
   '#3b82f6', '#ef4444', '#22c55e', '#f59e0b',
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
@@ -117,29 +139,12 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                   onMouseDown={handlePreviewMouseDown}
                   title="Glisser pour repositionner"
                 >
-                  {(() => {
-                    const ZOOM = 1.8;
-                    const containerSize = 128;
-                    const drawSize = containerSize * ZOOM;
-                    const excess = drawSize - containerSize;
-                    const imgLeft = -(excess / 2) - imageOffsetX * (excess / 2);
-                    const imgTop = -(excess / 2) - imageOffsetY * (excess / 2);
-                    return (
-                      <img
-                        src={imageUrl}
-                        alt=""
-                        className="absolute pointer-events-none"
-                        style={{
-                          width: drawSize,
-                          height: drawSize,
-                          left: imgLeft,
-                          top: imgTop,
-                        }}
-                        draggable={false}
-                        onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
-                      />
-                    );
-                  })()}
+                  <PreviewImage
+                    src={imageUrl}
+                    offsetX={imageOffsetX}
+                    offsetY={imageOffsetY}
+                    containerSize={128}
+                  />
                   <div className="absolute inset-0 rounded-full ring-1 ring-white/10 pointer-events-none" />
                 </div>
                 <div className="flex-1 space-y-2 pt-1">
