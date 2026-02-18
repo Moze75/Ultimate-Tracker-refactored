@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Settings, RefreshCw, Eye, EyeOff, Trash2, Upload } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, RefreshCw, LogOut } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig } from '../../types/vtt';
 
-type SidebarTab = 'tokens' | 'settings';
+type SidebarTab = 'tokens' | 'map' | 'settings';
 
 interface VTTSidebarProps {
   role: 'gm' | 'player';
@@ -19,6 +19,7 @@ interface VTTSidebarProps {
   onToggleVisibility: (tokenId: string) => void;
   onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
   onResetFog: () => void;
+  onBack: () => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -59,6 +60,7 @@ export function VTTSidebar({
   onToggleVisibility,
   onUpdateMap,
   onResetFog,
+  onBack,
 }: VTTSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
@@ -101,12 +103,16 @@ export function VTTSidebar({
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
       <div className="flex border-b border-gray-700/60 shrink-0">
         <TabBtn active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')}>
-          <Users size={14} />
+          <Users size={13} />
           Tokens
         </TabBtn>
-        <TabBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>
-          <Settings size={14} />
+        <TabBtn active={activeTab === 'map'} onClick={() => setActiveTab('map')}>
+          <Map size={13} />
           Carte
+        </TabBtn>
+        <TabBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>
+          <Settings size={13} />
+          Config
         </TabBtn>
       </div>
 
@@ -178,7 +184,7 @@ export function VTTSidebar({
                       >
                         <Settings size={11} />
                       </button>
-                      {(role === 'gm') && (
+                      {role === 'gm' && (
                         <button
                           onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
                           className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
@@ -195,7 +201,7 @@ export function VTTSidebar({
           </div>
         )}
 
-        {activeTab === 'settings' && (
+        {activeTab === 'map' && (
           <div className="p-3 space-y-4">
             <div>
               <label className="block text-xs text-gray-400 mb-1 font-medium">URL de la carte</label>
@@ -250,35 +256,55 @@ export function VTTSidebar({
                 value={config.snapToGrid}
                 onChange={v => onUpdateMap({ snapToGrid: v })}
               />
-              <Toggle
-                label="Brouillard de guerre"
-                value={config.fogEnabled}
-                onChange={v => onUpdateMap({ fogEnabled: v })}
-              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="p-3 space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-300 mb-2">Brouillard de guerre</p>
+              <div className="space-y-2">
+                <Toggle
+                  label="Activer"
+                  value={config.fogEnabled}
+                  onChange={v => onUpdateMap({ fogEnabled: v })}
+                />
+              </div>
+              {role === 'gm' && (
+                <button
+                  onClick={onResetFog}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-gray-300 rounded text-xs transition-colors"
+                >
+                  <RefreshCw size={12} />
+                  Réinitialiser le brouillard
+                </button>
+              )}
             </div>
 
-            {role === 'gm' && (
-              <button
-                onClick={onResetFog}
-                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-gray-300 rounded text-xs transition-colors"
-              >
-                <RefreshCw size={12} />
-                Réinitialiser le brouillard
-              </button>
-            )}
-
             <div className="pt-2 border-t border-gray-700/60">
-              <p className="text-xs text-gray-500">
-                ID Room : <span className="font-mono text-gray-400">{roomId}</span>
+              <p className="text-xs text-gray-500 mb-3">
+                ID Room : <span className="font-mono text-gray-400 break-all">{roomId}</span>
               </p>
             </div>
           </div>
         )}
       </div>
 
-      <div className={`px-3 py-2 border-t border-gray-700/60 flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-        {connected ? `${connectedCount} connecté${connectedCount > 1 ? 's' : ''}` : 'Déconnecté'}
+      <div className="border-t border-gray-700/60 shrink-0">
+        {activeTab === 'settings' && (
+          <button
+            onClick={onBack}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-xs font-medium border-b border-gray-700/60"
+          >
+            <LogOut size={13} />
+            Retour à l'accueil
+          </button>
+        )}
+        <div className={`px-3 py-2 flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+          {connected ? `${connectedCount} connecté${connectedCount > 1 ? 's' : ''}` : 'Déconnecté'}
+        </div>
       </div>
     </div>
   );
@@ -288,7 +314,7 @@ function TabBtn({ children, active, onClick }: { children: React.ReactNode; acti
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2 ${
+      className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors border-b-2 ${
         active
           ? 'text-amber-400 border-amber-500 bg-amber-500/5'
           : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/50'

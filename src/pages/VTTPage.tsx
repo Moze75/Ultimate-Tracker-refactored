@@ -403,6 +403,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onToggleVisibility={handleToggleVisibility}
           onUpdateMap={handleUpdateMap}
           onResetFog={handleResetFog}
+          onBack={leaveRoom}
         />
       </div>
 

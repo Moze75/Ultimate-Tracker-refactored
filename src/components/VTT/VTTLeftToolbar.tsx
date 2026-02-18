@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, Plus, ChevronLeft, RefreshCw, X } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 interface VTTLeftToolbarProps {
@@ -25,7 +25,6 @@ export function VTTLeftToolbar({
   onAddToken,
   onResetFog,
   onUpdateMap,
-  onBack,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const fogPopupRef = useRef<HTMLDivElement>(null);
@@ -45,26 +44,10 @@ export function VTTLeftToolbar({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [fogPopupOpen]);
 
-  const handleFogToolClick = (tool: 'fog-reveal' | 'fog-erase') => {
-    if (activeTool === tool) {
-      setFogPopupOpen(v => !v);
-    } else {
-      onToolChange(tool);
-      setFogPopupOpen(true);
-    }
-  };
+  const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
 
   return (
     <div className="relative flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 py-2 gap-1 shrink-0">
-      <ToolBtn
-        icon={<ChevronLeft size={18} />}
-        label="Retour au lobby"
-        active={false}
-        onClick={onBack}
-      />
-
-      <div className="w-6 h-px bg-gray-700 my-1" />
-
       <ToolBtn
         icon={<MousePointer2 size={17} />}
         label="Sélection — déplacer les tokens"
@@ -73,27 +56,25 @@ export function VTTLeftToolbar({
       />
 
       {role === 'gm' && (
-        <div ref={fogBtnRef} className="flex flex-col items-center gap-1 w-full">
-          <ToolBtn
-            icon={<Eye size={17} />}
-            label="Révéler le brouillard"
-            active={activeTool === 'fog-reveal'}
-            onClick={() => handleFogToolClick('fog-reveal')}
-          />
-          <ToolBtn
-            icon={<EyeOff size={17} />}
-            label="Masquer le brouillard"
-            active={activeTool === 'fog-erase'}
-            onClick={() => handleFogToolClick('fog-erase')}
-          />
-        </div>
+        <>
+          <div className="w-6 h-px bg-gray-700 my-1" />
+
+          <div ref={fogBtnRef} className="w-full flex flex-col items-center">
+            <ToolBtn
+              icon={<Cloud size={17} />}
+              label="Brouillard de guerre"
+              active={isFogTool || fogPopupOpen}
+              onClick={() => setFogPopupOpen(v => !v)}
+            />
+          </div>
+        </>
       )}
 
       <div className="w-6 h-px bg-gray-700 my-1" />
 
       <ToolBtn
-        icon={<Plus size={17} />}
-        label="Ajouter un token"
+        icon={<UserPlus size={17} />}
+        label="Ajouter un personnage"
         active={false}
         onClick={onAddToken}
       />
@@ -101,8 +82,8 @@ export function VTTLeftToolbar({
       {fogPopupOpen && role === 'gm' && (
         <div
           ref={fogPopupRef}
-          className="absolute left-full top-0 ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-52"
-          style={{ top: '88px' }}
+          className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-56"
+          style={{ top: '48px' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-200">Brouillard de guerre</span>
@@ -115,6 +96,16 @@ export function VTTLeftToolbar({
           </div>
 
           <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Activer</span>
+              <button
+                onClick={() => onUpdateMap({ fogEnabled: !config.fogEnabled })}
+                className={`w-9 h-5 rounded-full transition-colors ${config.fogEnabled ? 'bg-amber-600' : 'bg-gray-700'}`}
+              >
+                <span className={`block w-3.5 h-3.5 rounded-full bg-white mx-0.5 transition-transform ${config.fogEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
             <div className="flex gap-1">
               <button
                 onClick={() => onToolChange('fog-reveal')}
@@ -151,16 +142,6 @@ export function VTTLeftToolbar({
               <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
                 <span>Petit</span><span>Grand</span>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Brouillard activé</span>
-              <button
-                onClick={() => onUpdateMap({ fogEnabled: !config.fogEnabled })}
-                className={`w-9 h-5 rounded-full transition-colors ${config.fogEnabled ? 'bg-amber-600' : 'bg-gray-700'}`}
-              >
-                <span className={`block w-3.5 h-3.5 rounded-full bg-white mx-0.5 transition-transform ${config.fogEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
             </div>
 
             <div className="pt-1 border-t border-gray-700/60">
