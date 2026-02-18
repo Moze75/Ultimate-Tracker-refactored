@@ -344,21 +344,40 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleApplyCalibration = useCallback(() => {
     if (calibrationPoints.length < 2) return;
     const pts = calibrationPoints;
+
+    // Compute all pairwise distances, keep those >= 15px
     const distances: number[] = [];
     for (let i = 0; i < pts.length - 1; i++) {
       for (let j = i + 1; j < pts.length; j++) {
         const dx = pts[j].x - pts[i].x;
         const dy = pts[j].y - pts[i].y;
-        distances.push(Math.sqrt(dx * dx + dy * dy));
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d >= 15) distances.push(d);
       }
     }
+    if (distances.length === 0) return;
+
+    // Use median distance for robustness against diagonal clicks
     distances.sort((a, b) => a - b);
-    const minDist = distances[0];
-    if (minDist < 10) return;
-    const estimatedCell = Math.round(minDist);
-    const ox = ((pts[0].x % estimatedCell) + estimatedCell) % estimatedCell;
-    const oy = ((pts[0].y % estimatedCell) + estimatedCell) % estimatedCell;
-    handleUpdateMap({ gridSize: estimatedCell, gridOffsetX: Math.round(ox), gridOffsetY: Math.round(oy) });
+    const medianDist = distances[Math.floor(distances.length / 2)];
+
+    // Filter distances that are close to the median (within 30%) to exclude diagonals
+    const filtered = distances.filter(d => Math.abs(d - medianDist) / medianDist < 0.3);
+    const cellSize = Math.round(filtered.reduce((s, d) => s + d, 0) / filtered.length);
+    if (cellSize < 10) return;
+
+    // Compute grid offset using circular mean across all points for robustness
+    const twoPi = 2 * Math.PI;
+    const sinSumX = pts.reduce((s, p) => s + Math.sin(twoPi * p.x / cellSize), 0);
+    const cosSumX = pts.reduce((s, p) => s + Math.cos(twoPi * p.x / cellSize), 0);
+    const sinSumY = pts.reduce((s, p) => s + Math.sin(twoPi * p.y / cellSize), 0);
+    const cosSumY = pts.reduce((s, p) => s + Math.cos(twoPi * p.y / cellSize), 0);
+    const rawOx = (Math.atan2(sinSumX, cosSumX) / twoPi) * cellSize;
+    const rawOy = (Math.atan2(sinSumY, cosSumY) / twoPi) * cellSize;
+    const ox = Math.round(((rawOx % cellSize) + cellSize) % cellSize);
+    const oy = Math.round(((rawOy % cellSize) + cellSize) % cellSize);
+
+    handleUpdateMap({ gridSize: cellSize, gridOffsetX: ox, gridOffsetY: oy });
     setCalibrationPoints([]);
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);

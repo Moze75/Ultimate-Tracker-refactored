@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole } from '../../types/vtt';
 
 interface VTTCanvasProps {
@@ -7,7 +7,7 @@ interface VTTCanvasProps {
   fogState: VTTFogState;
   role: VTTRole;
   userId: string;
-  activeTool: 'select' | 'fog-reveal' | 'fog-erase';
+  activeTool: 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate';
   fogBrushSize: number;
   onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
   onRevealFog: (stroke: VTTFogStroke) => void;
@@ -15,6 +15,9 @@ interface VTTCanvasProps {
   onSelectToken: (id: string | null) => void;
   onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
   onMapDimensions?: (w: number, h: number) => void;
+  onDropToken?: (tokenId: string, worldPos: { x: number; y: number }) => void;
+  calibrationPoints?: { x: number; y: number }[];
+  onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
 }
 
 export function VTTCanvas({
@@ -31,6 +34,9 @@ export function VTTCanvas({
   onSelectToken,
   onRightClickToken,
   onMapDimensions,
+  onDropToken,
+  calibrationPoints,
+  onCalibrationPoint,
 }: VTTCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,6 +52,9 @@ export function VTTCanvas({
   const isPaintingFogRef = useRef(false);
   const lastPanRef = useRef<{ x: number; y: number } | null>(null);
   const isPanningRef = useRef(false);
+
+  const [mapLoading, setMapLoading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Sync all props to refs so native event handlers always read current values
   const tokensRef = useRef(tokens);
@@ -74,6 +83,12 @@ export function VTTCanvas({
   onRightClickTokenRef.current = onRightClickToken;
   const onMapDimensionsRef = useRef(onMapDimensions);
   onMapDimensionsRef.current = onMapDimensions;
+  const onDropTokenRef = useRef(onDropToken);
+  onDropTokenRef.current = onDropToken;
+  const onCalibrationPointRef = useRef(onCalibrationPoint);
+  onCalibrationPointRef.current = onCalibrationPoint;
+  const calibrationPointsRef = useRef(calibrationPoints);
+  calibrationPointsRef.current = calibrationPoints;
 
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
@@ -112,7 +127,12 @@ export function VTTCanvas({
     const cfg = configRef.current;
     if (!cfg.snapToGrid) return { x: wx, y: wy };
     const c = cfg.gridSize || 50;
-    return { x: Math.round(wx / c) * c, y: Math.round(wy / c) * c };
+    const ox = ((cfg.gridOffsetX || 0) % c + c) % c;
+    const oy = ((cfg.gridOffsetY || 0) % c + c) % c;
+    return {
+      x: Math.round((wx - ox) / c) * c + ox,
+      y: Math.round((wy - oy) / c) * c + oy,
+    };
   };
 
   const paintFogAt = (wx: number, wy: number) => {
@@ -205,12 +225,15 @@ export function VTTCanvas({
     }
 
     if (CELL > 0) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      const gridColor = cfg.gridColor || 'rgba(255,255,255,0.15)';
+      const ox = ((cfg.gridOffsetX || 0) % CELL + CELL) % CELL;
+      const oy = ((cfg.gridOffsetY || 0) % CELL + CELL) % CELL;
+      ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1 / vp.scale;
-      for (let gx = 0; gx <= mapW; gx += CELL) {
+      for (let gx = ox; gx <= mapW; gx += CELL) {
         ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, mapH); ctx.stroke();
       }
-      for (let gy = 0; gy <= mapH; gy += CELL) {
+      for (let gy = oy; gy <= mapH; gy += CELL) {
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(mapW, gy); ctx.stroke();
       }
     }
@@ -327,23 +350,62 @@ export function VTTCanvas({
       }
     }
 
+    const calPts = calibrationPointsRef.current;
+    if (calPts && calPts.length > 0) {
+      calPts.forEach((pt, i) => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 8 / vp.scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${12 / vp.scale}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), pt.x, pt.y);
+      });
+
+      if (calPts.length >= 2) {
+        const p1 = calPts[0], p2 = calPts[1];
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = 'rgba(245,158,11,0.6)';
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.setLineDash([6 / vp.scale, 4 / vp.scale]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
     ctx.restore();
   }, []);
 
   drawRef.current = draw;
 
-  // Load map image
+  // Load map image — clear old image immediately to prevent stale map showing
   useEffect(() => {
     if (!config.mapImageUrl) {
+      setMapLoading(false);
       mapLoadedRef.current = false;
       mapImgRef.current = null;
       draw();
       return;
     }
+    // Immediately clear previous image so canvas shows dark bg while loading
+    mapImgRef.current = null;
+    mapLoadedRef.current = false;
+    setMapLoading(true);
+    draw();
+
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
       mapImgRef.current = img;
       mapLoadedRef.current = true;
+      setMapLoading(false);
       if (onMapDimensionsRef.current && img.naturalWidth > 0) {
         onMapDimensionsRef.current(img.naturalWidth, img.naturalHeight);
       }
@@ -352,6 +414,7 @@ export function VTTCanvas({
     img.onerror = () => {
       mapImgRef.current = null;
       mapLoadedRef.current = false;
+      setMapLoading(false);
       draw();
     };
     img.src = config.mapImageUrl;
@@ -367,7 +430,7 @@ export function VTTCanvas({
   }, [fogState.strokes, config.mapWidth, config.mapHeight]);
 
   // Redraw when visual state changes
-  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, config]);
+  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, config, calibrationPoints]);
 
   // Resize observer
   useEffect(() => {
@@ -420,6 +483,8 @@ export function VTTCanvas({
       } else if ((tool === 'fog-reveal' || tool === 'fog-erase') && roleRef.current === 'gm') {
         isPaintingFogRef.current = true;
         paintFogAt(wp.x, wp.y);
+      } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
+        onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
       }
     };
 
@@ -550,13 +615,75 @@ export function VTTCanvas({
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('application/vtt-token-id')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    setIsDragOver(false);
+    const tokenId = e.dataTransfer.getData('application/vtt-token-id');
+    if (!tokenId || !onDropTokenRef.current) return;
+    e.preventDefault();
+    const sp = getCanvasXY(e.clientX, e.clientY);
+    const wp = screenToWorld(sp.x, sp.y);
+    const cfg = configRef.current;
+    const CELL = cfg.gridSize || 50;
+    const ox = ((cfg.gridOffsetX || 0) % CELL + CELL) % CELL;
+    const oy = ((cfg.gridOffsetY || 0) % CELL + CELL) % CELL;
+    const snapped = cfg.snapToGrid
+      ? {
+          x: Math.round((wp.x - ox) / CELL) * CELL + ox,
+          y: Math.round((wp.y - oy) / CELL) * CELL + oy,
+        }
+      : wp;
+    onDropTokenRef.current(tokenId, snapped);
+  };
+
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-gray-950">
+    <div
+      ref={containerRef}
+      className="w-full h-full relative overflow-hidden bg-gray-950"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
         style={{ cursor: isFogTool ? 'none' : 'default' }}
       />
+
+      {isDragOver && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-amber-400/60 bg-amber-400/5 z-10 flex items-center justify-center">
+          <div className="bg-gray-900/80 border border-amber-500/60 rounded-xl px-4 py-2 text-amber-300 text-sm font-medium shadow-xl">
+            Déposer le token ici
+          </div>
+        </div>
+      )}
+
+      {mapLoading && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20 bg-gray-950/60">
+          <div className="flex flex-col items-center gap-3">
+            <img
+              src="/icons/wmremove-transformed.png"
+              alt="Chargement..."
+              className="w-16 h-16 object-contain animate-pulse opacity-80"
+            />
+            <span className="text-gray-400 text-sm">Chargement de la carte...</span>
+          </div>
+        </div>
+      )}
+
       <div
         ref={brushOverlayRef}
         className="pointer-events-none fixed rounded-full border-2 -translate-x-1/2 -translate-y-1/2"

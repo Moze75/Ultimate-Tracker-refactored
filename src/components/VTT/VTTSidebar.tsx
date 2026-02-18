@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, RefreshCw, LogOut, Package } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 
@@ -134,7 +134,12 @@ export function VTTSidebar({
                 <div
                   key={token.id}
                   data-token-id={token.id}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer group transition-colors ${
+                  draggable
+                  onDragStart={e => {
+                    e.dataTransfer.setData('application/vtt-token-id', token.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
                     isSelected
                       ? 'bg-amber-500/15 border border-amber-500/40'
                       : 'hover:bg-gray-800 border border-transparent'
@@ -280,29 +285,8 @@ export function VTTSidebar({
         {activeTab === 'settings' && (
           <div className="p-3 space-y-4">
             <div>
-              <p className="text-xs font-semibold text-gray-300 mb-2">Brouillard de guerre</p>
-              <div className="space-y-2">
-                <Toggle
-                  label="Activer"
-                  value={config.fogEnabled}
-                  onChange={v => onUpdateMap({ fogEnabled: v })}
-                />
-              </div>
-              {role === 'gm' && (
-                <button
-                  onClick={onResetFog}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-gray-300 rounded text-xs transition-colors"
-                >
-                  <RefreshCw size={12} />
-                  Réinitialiser le brouillard
-                </button>
-              )}
-            </div>
-
-            <div className="pt-2 border-t border-gray-700/60">
-              <p className="text-xs text-gray-500 mb-3">
-                ID Room : <span className="font-mono text-gray-400 break-all">{roomId}</span>
-              </p>
+              <p className="text-xs text-gray-500 mb-1 font-medium">ID Room</p>
+              <p className="font-mono text-gray-400 text-xs break-all bg-gray-800/60 rounded px-2 py-1.5 border border-gray-700/50">{roomId}</p>
             </div>
           </div>
         )}
