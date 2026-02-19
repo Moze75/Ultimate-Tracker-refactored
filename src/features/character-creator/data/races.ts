@@ -174,7 +174,6 @@ export const races: DndRace[] = [
     languages: ['Commun', 'Au choix'],
     proficiencies: [],
     traits: [
-      'Vision dans le noir (18 m)',
       'Ascendance gigantesque (choix parmi 6 pouvoirs de géants, utilisations = bonus de maîtrise)',
       'Forme de géant (niv 5, taille G, 10 min, avantage Force, +3 m vitesse, repos long)',
       'Forte carrure (avantage vs Agrippé, capacité de charge accrue)'
