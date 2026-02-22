@@ -1039,13 +1039,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               </div>
             </div>
           )}
-              <button
-                onClick={handleRollMonsterInitiativeActive}
-                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
-                title="Initiative monstres"
-              >
-                <Dices size={12} className="shrink-0" /> Init
-              </button>
+
           {isActive && (
 <div className="sm:hidden px-4 py-2 border-b border-gray-800 flex gap-1.5">
               <button
