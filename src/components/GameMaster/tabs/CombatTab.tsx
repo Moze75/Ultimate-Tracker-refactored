@@ -356,6 +356,31 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     })));
   };
 
+  const handleRollMonsterInitiativeActive = async () => {
+    if (!encounter) return;
+    const updates = participants
+      .filter((p) => p.participant_type === 'monster' && p.initiative_roll === 0)
+      .map((p) => ({ id: p.id, initiative_roll: Math.floor(Math.random() * 20) + 1 }));
+    if (updates.length === 0) {
+      toast('Tous les monstres ont déjà une initiative');
+      return;
+    }
+    for (const u of updates) {
+      try {
+        await monsterService.updateParticipant(u.id, { initiative_roll: u.initiative_roll });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setParticipants((prev) =>
+      prev.map((p) => {
+        const upd = updates.find((u) => u.id === p.id);
+        return upd ? { ...p, initiative_roll: upd.initiative_roll } : p;
+      })
+    );
+    toast.success(`Initiative lancée pour ${updates.length} monstre${updates.length > 1 ? 's' : ''}`);
+  };
+  
   const handleLaunchCombat = async () => {
     if (prepEntries.length === 0) {
       toast.error('Ajoutez des participants avant de lancer le combat');
