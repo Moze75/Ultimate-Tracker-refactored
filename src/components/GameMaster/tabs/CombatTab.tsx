@@ -270,23 +270,29 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     const newEntries: CombatPreparationEntry[] = [];
     for (const entry of entries) {
       try {
-        const detail = await monsterService.fetchMonsterDetail(entry.monster.slug);
+        // Pour les monstres custom/sauvegardés, utiliser directement les données en base
         let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
-        if (!existing) {
-          existing = await monsterService.saveToCampaign(campaignId, detail);
-          setSavedMonsters((prev) => [...prev, existing!]);
+        let monsterData: Monster;
+        if (existing && existing.source === 'custom') {
+          monsterData = existing;
+        } else {
+          monsterData = await monsterService.fetchMonsterDetail(entry.monster.slug);
+          if (!existing) {
+            existing = await monsterService.saveToCampaign(campaignId, monsterData);
+            setSavedMonsters((prev) => [...prev, existing!]);
+          }
         }
         for (let i = 0; i < entry.quantity; i++) {
           prepIdCounter++;
           newEntries.push({
             id: `prep-monster-${prepIdCounter}`,
             type: 'monster',
-            name: entry.quantity > 1 ? `${detail.name} ${i + 1}` : detail.name,
-            monsterSlug: detail.slug,
-            monsterId: existing.id,
-            hp: detail.hit_points,
-            maxHp: detail.hit_points,
-            ac: detail.armor_class,
+            name: entry.quantity > 1 ? `${monsterData.name} ${i + 1}` : monsterData.name,
+            monsterSlug: monsterData.slug,
+            monsterId: existing!.id,
+            hp: monsterData.hit_points,
+            maxHp: monsterData.hit_points,
+            ac: monsterData.armor_class,
             initiative: 0,
           });
         }
