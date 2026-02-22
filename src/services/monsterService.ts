@@ -343,11 +343,19 @@ export const monsterService = {
       return '';
     };
 
-    const numHitDie = Number(stats.numHitDie) || 1;
+      const numHitDie = Number(stats.numHitDie) || 1;
     const hitDieSize = Number(stats.hitDieSize) || 8;
     const conMod = abilityScores ? Math.floor((Number(abilityScores.constitution || 10) - 10) / 2) : 0;
     const extraHp = numHitDie * conMod;
     const hitPointsFormula = `${numHitDie}d${hitDieSize}${extraHp >= 0 ? ` + ${extraHp}` : ` - ${Math.abs(extraHp)}`}`;
+
+    // Calcul robuste des HP : hitPoints direct, sinon parse depuis hitPointsStr, sinon calcul depuis les dés
+    const parsedHitPoints = Number(stats.hitPoints);
+    const hitPointsFromStr = typeof stats.hitPointsStr === 'string' ? parseInt(stats.hitPointsStr, 10) : NaN;
+    const calculatedHp = Math.floor(numHitDie * ((hitDieSize + 1) / 2)) + extraHp;
+    const finalHitPoints = (parsedHitPoints > 0 ? parsedHitPoints : NaN)
+      || (hitPointsFromStr > 0 ? hitPointsFromStr : NaN)
+      || (calculatedHp > 0 ? calculatedHp : 10);
 
     return {
       source: 'custom',
@@ -358,7 +366,7 @@ export const monsterService = {
       alignment: String(stats.alignment || 'Unaligned'),
       armor_class: Number(stats.armorClass) || 10,
       armor_desc: String(stats.armorType || stats.armorTypeStr || ''),
-      hit_points: Number(stats.hitPoints) || (typeof stats.hitPointsStr === 'string' ? parseInt(stats.hitPointsStr, 10) || 10 : 10),
+      hit_points: finalHitPoints,
       hit_points_formula: hitPointsFormula,
       speed,
       abilities: {
