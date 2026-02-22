@@ -812,7 +812,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
         )}
 
         {panelView === 'detail' && (
-          <div className="space-y-3">
+          <div className="frame-card--light frame-card--no-frame rounded-xl overflow-hidden">
             {loadingDetail ? (
               <div className="flex items-center justify-center py-12 text-gray-400">
                 <Loader2 size={20} className="animate-spin mr-2" />
