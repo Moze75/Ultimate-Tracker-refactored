@@ -358,7 +358,7 @@ export const monsterService = {
       alignment: String(stats.alignment || 'Unaligned'),
       armor_class: Number(stats.armorClass) || 10,
       armor_desc: String(stats.armorType || stats.armorTypeStr || ''),
-      hit_points: Number(stats.hitPoints) || 10,
+      hit_points: Number(stats.hitPoints) || (typeof stats.hitPointsStr === 'string' ? parseInt(stats.hitPointsStr, 10) || 10 : 10),
       hit_points_formula: hitPointsFormula,
       speed,
       abilities: {
