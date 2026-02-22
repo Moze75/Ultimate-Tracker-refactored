@@ -93,7 +93,25 @@ export const monsterService = {
       .order('name', { ascending: true });
 
     if (error) throw error;
-    return (data || []) as Monster[];
+
+    // Fix: recalculer les HP depuis la formule si hit_points semble incorrect (1 ou 0)
+    return (data || []).map((m: any) => {
+      if (m.hit_points && m.hit_points > 1) return m as Monster;
+      // Tenter de parser depuis hit_points_formula (ex: "6d6 + 24")
+      if (m.hit_points_formula) {
+        const match = m.hit_points_formula.match(/^(\d+)d(\d+)\s*([+-]\s*\d+)?$/);
+        if (match) {
+          const numDice = parseInt(match[1], 10);
+          const dieSize = parseInt(match[2], 10);
+          const bonus = match[3] ? parseInt(match[3].replace(/\s/g, ''), 10) : 0;
+          const avgHp = Math.floor(numDice * ((dieSize + 1) / 2)) + bonus;
+          if (avgHp > 1) {
+            return { ...m, hit_points: avgHp } as Monster;
+          }
+        }
+      }
+      return m as Monster;
+    });
   },
 
   async updateCampaignMonster(
