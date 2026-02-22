@@ -359,7 +359,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const handleRollMonsterInitiativeActive = async () => {
     if (!encounter) return;
     const updates = participants
-      .filter((p) => p.participant_type === 'monster' && p.initiative_roll === 0)
+      .filter((p) => p.participant_type === 'monster')
       .map((p) => ({ id: p.id, initiative_roll: Math.floor(Math.random() * 20) + 1 }));
     if (updates.length === 0) {
       toast('Tous les monstres ont déjà une initiative');
