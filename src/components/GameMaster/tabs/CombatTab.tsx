@@ -306,8 +306,13 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
     if (!encounter) return;
     for (const entry of entries) {
       try {
-        const detail = await monsterService.fetchMonsterDetail(entry.monster.slug);
+        // Pour les monstres custom/sauvegardés, utiliser directement les données en base
         let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
+        if (existing && existing.source === 'custom') {
+          await handleAddMonsterToEncounter(existing, entry.quantity);
+          continue;
+        }
+        const detail = await monsterService.fetchMonsterDetail(entry.monster.slug);
         if (!existing) {
           existing = await monsterService.saveToCampaign(campaignId, detail);
           setSavedMonsters((prev) => [...prev, existing!]);
