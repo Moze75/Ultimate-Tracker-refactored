@@ -971,16 +971,15 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               {isActive ? (
            
       
-      <div className="hidden sm:flex gap-2">
-      
-                          <button
+<div className="hidden sm:flex gap-1.5">
+                  <button
                     onClick={handleRollMonsterInitiativeActive}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
-                    title="Lancer l'initiative des monstres"
+                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                    title="Relancer l'initiative des monstres"
                   >
-                    <Dices size={12} className="shrink-0" />
+                    <Dices size={12} />
                   </button>
-        <button
+                  <button
                     onClick={handleNextTurn}
                     className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
