@@ -350,7 +350,10 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   };
 
   const handleRollAllInitiative = () => {
-    setPrepEntries((prev) => prev.map((e) => ({ ...e, initiative: Math.floor(Math.random() * 20) + 1 })));
+    setPrepEntries((prev) => prev.map((e) => ({
+      ...e,
+      initiative: e.type === 'monster' ? Math.floor(Math.random() * 20) + 1 : e.initiative,
+    })));
   };
 
   const handleLaunchCombat = async () => {
