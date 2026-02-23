@@ -774,7 +774,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               panelView === 'search'
                 ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
-                : 'text-black hover:text-black'
+                : 'text-gray-400 hover:text-gray-200'
             }`}
           >
             <Search size={12} className="inline mr-1" /> Rechercher monstres
@@ -812,7 +812,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
         )}
 
         {panelView === 'detail' && (
-          <div className="frame-card--light frame-card--no-frame rounded-xl overflow-hidden">
+          <div className="space-y-3"> 
             {loadingDetail ? (
               <div className="flex items-center justify-center py-12 text-gray-400">
                 <Loader2 size={20} className="animate-spin mr-2" />
@@ -824,7 +824,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                   {!selectedMonster.id && (
                     <button
                       onClick={() => handleSaveMonster(selectedMonster)}
-                      className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-black text-sm font-medium rounded-lg transition-colors"
                     >
                       <Save size={14} /> Sauvegarder
                     </button>
