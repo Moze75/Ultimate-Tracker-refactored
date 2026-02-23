@@ -764,7 +764,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           {panelView === 'detail' && (
             <button
               onClick={() => setPanelView('search')}
-              className="px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+              className="px-3 py-1.5 text-xs text-black hover:text-amber-300 transition-colors"
             >
               <ArrowLeft size={12} className="inline mr-1" /> Retour
             </button>
@@ -985,7 +985,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 <div className="hidden sm:flex gap-1.5">
                   <button
                     onClick={handleRollMonsterInitiativeActive}
-                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-black text-xs rounded-lg border border-gray-700 transition-colors"
+                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
                     title="Relancer l'initiative des monstres"
                   >
                     <Dices size={12} />
