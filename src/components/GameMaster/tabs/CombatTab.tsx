@@ -1635,7 +1635,7 @@ function ActiveParticipantsList({
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
 ) : selectedMonster ? (
-  <div style={{ colorScheme: 'light' }} className="bg-[#f5e8d0] rounded-md overflow-hidden">
+  <div className="familiar-statblock-reset">
     <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
   </div>
 ) : null}
