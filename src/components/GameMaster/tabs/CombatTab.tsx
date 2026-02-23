@@ -860,7 +860,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             {panelView === 'detail' && mobileSearchOpen && (
               <button
                 onClick={() => setPanelView('search')}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black hover:text-amber-300 transition-colors"
               >
                 <ArrowLeft size={12} /> Retour
               </button>
