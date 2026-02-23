@@ -935,7 +935,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                         ) : (
                           <button
                             onClick={() => { handleAddSavedMonsterToPrep(selectedMonster, 1); setPanelView('search'); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-black text-sm font-medium rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
                           >
                             <Swords size={14} /> Ajouter au combat
                           </button>
@@ -962,7 +962,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <Swords size={16} className="text-red-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                <h3 className="text-black font-semibold text-sm flex items-center gap-2">
                   <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
                     <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
