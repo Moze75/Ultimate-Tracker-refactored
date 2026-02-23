@@ -774,7 +774,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               panelView === 'search'
                 ? 'bg-amber-900/40 text-amber-300 border border-amber-700'
-                : 'text-gray-400 hover:text-black'
+                : 'text-gray-400 hover:text-gray-200' 
             }`}
           >
             <Search size={12} className="inline mr-1" /> Rechercher monstres
