@@ -920,13 +920,13 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                         {!selectedMonster.id && (
                           <button
                             onClick={() => handleSaveMonster(selectedMonster)}
-                            className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-black text-sm font-medium rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
                           >
                             <Save size={14} /> Sauvegarder
                           </button>
                         )}
                         {isActive ? (
-                          <button
+                          <button 
                             onClick={() => handleAddMonsterToEncounter(selectedMonster, addCount)}
                             className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
                           >
