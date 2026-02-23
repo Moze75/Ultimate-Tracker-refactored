@@ -895,6 +895,10 @@ select {
 .familiar-statblock-reset [class*="border-gray-700"] {
   border-color: revert !important;
 }
+
+.monster-statblock-wrapper {
+  color: #58180d !important;
+}
 .monster-statblock-wrapper h2,
 .monster-statblock-wrapper h3,
 .monster-statblock-wrapper h4 {
@@ -903,5 +907,10 @@ select {
 }
 .monster-statblock-wrapper span.font-semibold {
   font-family: inherit !important;
-  color: inherit !important;
+  color: #58180d !important;
+}
+.monster-statblock-wrapper p,
+.monster-statblock-wrapper li,
+.monster-statblock-wrapper span:not(.font-semibold) {
+  color: #1a1a1a !important;
 }
