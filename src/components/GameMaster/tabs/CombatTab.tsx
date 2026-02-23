@@ -962,10 +962,10 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <Swords size={16} className="text-red-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-black font-semibold text-sm flex items-center gap-2">
+                <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                   <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
-                    <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
+                    <span className="text-xs bg-black text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                       Round {encounter.round_number}
                     </span>
                   )}
