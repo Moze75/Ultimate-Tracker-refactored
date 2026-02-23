@@ -928,14 +928,14 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                         {isActive ? (
                           <button
                             onClick={() => handleAddMonsterToEncounter(selectedMonster, addCount)}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-black text-sm font-medium rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
                           >
                             <Swords size={14} /> Ajouter au combat ({addCount})
                           </button>
                         ) : (
                           <button
                             onClick={() => { handleAddSavedMonsterToPrep(selectedMonster, 1); setPanelView('search'); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-black text-sm font-medium rounded-lg transition-colors"
                           >
                             <Swords size={14} /> Ajouter au combat
                           </button>
