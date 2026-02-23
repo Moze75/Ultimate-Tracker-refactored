@@ -1635,9 +1635,9 @@ function ActiveParticipantsList({
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
           ) : selectedMonster ? (
-  <div className="[&_*]:!text-gray-900 [&_*]:!border-gray-300">
-    <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
-  </div>
+<div className="[&_.text-white]:!text-gray-900 [&_.text-gray-100]:!text-gray-800 [&_.text-gray-200]:!text-gray-700">
+  <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+</div>
 ) : null}
               </div>  
             )} 
