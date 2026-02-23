@@ -1634,9 +1634,11 @@ function ActiveParticipantsList({
                   <div className="flex items-center justify-center py-6 text-gray-400">
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
-                ) : selectedMonster ? (
-                  <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
-                ) : null}
+          ) : selectedMonster ? (
+  <div className="[&_*]:!text-gray-900 [&_*]:!border-gray-300">
+    <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+  </div>
+) : null}
               </div>  
             )} 
           </div>
