@@ -913,7 +913,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                     <div className="flex items-center justify-center py-8 text-gray-400">
                       <Loader2 size={20} className="animate-spin mr-2" /> 
                     </div>
-                  ) : selectedMonster ? (
+                  ) : selectedMonster ? ( 
                     <div className="space-y-3">
                       <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
                       <div className="flex gap-2">
