@@ -1634,10 +1634,10 @@ function ActiveParticipantsList({
                   <div className="flex items-center justify-center py-6 text-gray-400">
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
-          ) : selectedMonster ? (
-<div className="[&_.text-white]:!text-gray-900 [&_.text-gray-100]:!text-gray-800 [&_.text-gray-200]:!text-gray-700">
-  <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
-</div>
+) : selectedMonster ? (
+  <div style={{ colorScheme: 'light' }} className="bg-[#f5e8d0] rounded-md overflow-hidden">
+    <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+  </div>
 ) : null}
               </div>  
             )} 
