@@ -1631,7 +1631,7 @@ function ActiveParticipantsList({
             {isExpanded && (
               <div className="mt-2 ml-0 sm:ml-10">
                 {loadingDetail ? (
-                  <div className="flex items-center justify-center py-6 text-gray-400">
+                  <div className="flex items-center justify-center py-6 text-black">
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
                 ) : selectedMonster ? (
