@@ -1628,17 +1628,19 @@ function ActiveParticipantsList({
               </div>
             )}
 
-            {isExpanded && (
-              <div className="mt-2 ml-0 sm:ml-10">
-                {loadingDetail ? (
-                  <div className="flex items-center justify-center py-6 text-gray-400">
-                    <Loader2 size={18} className="animate-spin mr-2" />
-                  </div>
-                ) : selectedMonster ? (
-                  <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
-                ) : null}
-              </div> 
-            )} 
+{isExpanded && (
+  <div className="mt-2 ml-0 sm:ml-10">
+    {loadingDetail ? (
+      <div className="flex items-center justify-center py-6 text-gray-400">
+        <Loader2 size={18} className="animate-spin mr-2" />
+      </div>
+    ) : selectedMonster ? (
+      <div className="text-gray-900 [&_*]:text-inherit">
+        <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+      </div>
+    ) : null}
+  </div>
+)}
           </div>
         );
       })}
