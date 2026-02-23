@@ -823,8 +823,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <div className="flex gap-2">
                   {!selectedMonster.id && (
                     <button
-                      onClick={() => handleSaveMonster(selectedMonster)}
-                      className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+                      onClick={() => handleSaveMonster(selectedMonster)} 
+                      className="flex items-center gap-2 px-4 py-2 bg-amber-600/80 hover:bg-amber-500 text-black text-sm font-medium rounded-lg transition-colors"
                     >
                       <Save size={14} /> Sauvegarder
                     </button>
