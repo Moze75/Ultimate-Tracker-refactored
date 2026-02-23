@@ -895,3 +895,13 @@ select {
 .familiar-statblock-reset [class*="border-gray-700"] {
   border-color: revert !important;
 }
+.monster-statblock-wrapper h2,
+.monster-statblock-wrapper h3,
+.monster-statblock-wrapper h4 {
+  font-family: inherit !important;
+  color: #922610 !important;
+}
+.monster-statblock-wrapper span.font-semibold {
+  font-family: inherit !important;
+  color: inherit !important;
+}
