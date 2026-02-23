@@ -965,7 +965,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                   <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
-                    <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
+                    <span className="text-xs bg-gray-800 text-black px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                       Round {encounter.round_number}
                     </span>
                   )}
