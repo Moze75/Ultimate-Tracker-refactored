@@ -814,8 +814,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
         {panelView === 'detail' && (
           <div className="space-y-3"> 
             {loadingDetail ? (
-              <div className="flex items-center justify-center py-12 text-black">
-                <Loader2 size={20} className="animate-spin mr-2" />
+              <div className="flex items-center justify-center py-12 text-gray-400">
+                <Loader2 size={20} className="animate-spin mr-2" /> 
               </div>
             ) : selectedMonster ? (
               <div className="space-y-3">
