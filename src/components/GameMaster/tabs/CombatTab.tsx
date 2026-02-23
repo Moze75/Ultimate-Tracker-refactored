@@ -965,7 +965,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                   <span className="truncate">{isActive ? encounter.name : 'Preparation du combat'}</span>
                   {isActive && (
-                    <span className="text-xs bg-black text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
+                    <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                       Round {encounter.round_number}
                     </span>
                   )}
@@ -985,7 +985,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 <div className="hidden sm:flex gap-1.5">
                   <button
                     onClick={handleRollMonsterInitiativeActive}
-                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-black text-xs rounded-lg border border-gray-700 transition-colors"
                     title="Relancer l'initiative des monstres"
                   >
                     <Dices size={12} />
