@@ -1454,7 +1454,50 @@ export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps
 
   // ✨ Utiliser le même contexte que StatsTab pour lancer les dés
   const { rollDice } = React.useContext(DiceRollContext);
+  // ✅ Affinité élémentaire — state pour la popup de confirmation
+  const [affinityModalData, setAffinityModalData] = useState<{
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+    elementType: string;
+  } | null>(null);
 
+  const charismaModifier = useMemo(() => {
+    // Réutiliser la même logique que AbilitiesTab pour extraire le mod CHA
+    const abilities: any = (player as any)?.abilities;
+    if (!abilities) return 0;
+
+    const findCha = (obj: any): any => {
+      if (!obj || typeof obj !== 'object') return null;
+      if (Array.isArray(obj)) {
+        return obj.find((a: any) => {
+          const n = (a?.name || a?.abbr || a?.key || '').toString().toLowerCase();
+          return n === 'charisme' || n === 'charisma' || n === 'cha' || n === 'car';
+        });
+      }
+      const keys = Object.keys(obj);
+      const k = keys.find(k => {
+        const kk = k.toLowerCase();
+        return kk === 'charisme' || kk === 'charisma' || kk === 'cha' || kk === 'car';
+      });
+      return k ? obj[k] : null;
+    };
+
+    const cha = findCha(abilities);
+    if (!cha) return 0;
+
+    const toNum = (v: any) => {
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+      if (typeof v === 'string') { const n = Number(v.replace(/[^\d+-]/g, '')); return Number.isFinite(n) ? n : null; }
+      return null;
+    };
+
+    const mod = toNum(cha.modifier) ?? toNum(cha.mod) ?? toNum(cha.modValue);
+    if (mod != null) return mod;
+    const score = toNum(cha.score) ?? toNum(cha.total) ?? toNum(cha.base);
+    if (score != null) return Math.floor((score - 10) / 2);
+    return 0;
+  }, [player]);
   const [searchTerm, setSearchTerm] = useState('');
 
 const [filterPrepared, setFilterPrepared] = useState<'all' | 'prepared' | 'unprepared'>('all');
