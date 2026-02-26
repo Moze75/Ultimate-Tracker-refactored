@@ -285,6 +285,7 @@ const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): numb
     return 5;
   }
   return 0;
+};
 const getCharacterLevel = (player: Player): number => Number((player as any).level ?? 1) || 1;
 
 // ✅ Affinité élémentaire — mapping des types de dégâts vers les éléments draconiques
