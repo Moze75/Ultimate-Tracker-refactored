@@ -288,8 +288,47 @@ const getHighestAllowedSlotLevel = (casterType: CasterType, level: number): numb
 };
 
 const getCharacterLevel = (player: Player): number => Number((player as any).level ?? 1) || 1;
- 
-   
+
+// ✅ Affinité élémentaire — mapping des types de dégâts vers les éléments draconiques
+const ELEMENTAL_DAMAGE_TYPES: Record<string, string> = {
+  'feu': 'feu', 'fire': 'feu',
+  'froid': 'froid', 'cold': 'froid',
+  'foudre': 'foudre', 'lightning': 'foudre',
+  'acide': 'acide', 'acid': 'acide',
+  'poison': 'poison',
+};
+
+const spellMatchesDraconicElement = (
+  spellDescription: string,
+  spellName: string,
+  draconicElement: string
+): boolean => {
+  const text = `${spellName} ${spellDescription}`.toLowerCase();
+  for (const [keyword, element] of Object.entries(ELEMENTAL_DAMAGE_TYPES)) {
+    if (element === draconicElement && text.includes(keyword)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const isElementalAffinityEligible = (player: Player): boolean => {
+  if (player.class !== 'Ensorceleur') return false;
+  if ((player.level || 1) < 6) return false;
+  const sub = (
+    (player as any).subclass ||
+    (player as any).sub_class ||
+    (player as any).sousClasse ||
+    ''
+  ).toLowerCase();
+  return (
+    sub.includes('draconique') ||
+    sub.includes('draconic') ||
+    sub.includes('draconian')
+  );
+};
+
+/* ====== Composants ====== */
 
 // ✅ Affinité élémentaire — mapping des types de dégâts vers les éléments draconiques
 const ELEMENTAL_DAMAGE_TYPES: Record<string, string> = {
