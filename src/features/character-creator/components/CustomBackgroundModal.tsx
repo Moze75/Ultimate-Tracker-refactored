@@ -135,6 +135,11 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       alert('Le don d\'origine est requis');
       return;
     }
+        const featData = FEAT_SKILL_BONUSES[normalizeFeatName(feat)];
+    if (featData && featSkillPicks.length !== featData.totalPicks) {
+      alert(`Le don "${feat}" nécessite de choisir ${featData.totalPicks} maîtrises`);
+      return;
+    }
     if (skillProficiencies.length !== 2) {
       alert('Vous devez sélectionner exactement 2 compétences');
       return;
@@ -276,7 +281,57 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
               <p className="text-xs text-gray-500 mt-2">Sélectionné: {abilityScores.length}/3</p>
             </CardContent>
           </Card>
- 
+
+          {/* Compétences du don "Doué" (3 au choix parmi compétences/outils) */}
+          {(() => {
+            const featData = FEAT_SKILL_BONUSES[normalizeFeatName(feat)];
+            if (!featData) return null;
+            const allOptions = [...featData.skillChoices, ...featData.toolChoices];
+            return (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-green-400" />
+                    <h4 className="text-white font-semibold">
+                      Don «{feat}» — Maîtrises supplémentaires * ({featData.totalPicks} au choix)
+                    </h4>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Choisissez {featData.totalPicks} compétences ou outils supplémentaires octroyés par le don.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {allOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          if (featSkillPicks.includes(option)) {
+                            setFeatSkillPicks(featSkillPicks.filter(s => s !== option));
+                          } else if (featSkillPicks.length < featData.totalPicks) {
+                            setFeatSkillPicks([...featSkillPicks, option]);
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                          featSkillPicks.includes(option)
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        } ${featSkillPicks.length >= featData.totalPicks && !featSkillPicks.includes(option) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={featSkillPicks.length >= featData.totalPicks && !featSkillPicks.includes(option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Sélectionné: {featSkillPicks.length}/{featData.totalPicks}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })()}
+          
           {/* Don d'origine */}
           <Card>
             <CardHeader>
