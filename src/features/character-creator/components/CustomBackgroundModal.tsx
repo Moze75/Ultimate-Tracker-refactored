@@ -74,6 +74,11 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       setSkillProficiencies(initialData.skillProficiencies || []);
       setToolProficiency(initialData.toolProficiencies?.[0] || '');
             setFeatSkillPicks(initialData.featSkillPicks || []);
+
+  // Réinitialiser les choix de compétences du don quand le don change
+  useEffect(() => {
+    setFeatSkillPicks([]);
+  }, [feat]);
       
       // Parser l'équipement existant
       const optA = initialData.equipmentOptions?.optionA || [];
