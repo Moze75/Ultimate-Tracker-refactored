@@ -294,13 +294,28 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
   const [abilities, setAbilities] = useState<Ability[]>(() => {
     if (Array.isArray(player.abilities) && player.abilities.length > 0) {
-      return player.abilities.map(ability => ({
-        ...ability,
-        skills: ability.skills.map(skill => ({
-          ...skill,
-          hasExpertise: skill.hasExpertise || false
-        }))
-      }));
+      return player.abilities.map(ability => {
+        const patched = {
+          ...ability,
+          skills: ability.skills.map(skill => ({
+            ...skill,
+            hasExpertise: skill.hasExpertise || false
+          }))
+        };
+        // 🔧 Patch: réinjecter 'Survie' si elle manque dans Sagesse
+        if (
+          patched.name === 'Sagesse' &&
+          !patched.skills.some(s => s.name === 'Survie')
+        ) {
+          patched.skills.push({
+            name: 'Survie',
+            bonus: 0,
+            isProficient: false,
+            hasExpertise: false
+          });
+        }
+        return patched;
+      });
     }
     return DEFAULT_ABILITIES;
   });
