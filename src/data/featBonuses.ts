@@ -52,6 +52,33 @@ export const FEAT_BONUSES: Record<string, FeatBonus> = {
   'tueur de mages': { choices: ['Force', 'Dextérité'], amount: 1 },
 };
 
+// Mapping des dons d'origine vers les maîtrises de compétences qu'ils offrent
+// "Doué" : 3 compétences ou outils au choix (toutes compétences disponibles)
+export interface FeatSkillBonus {
+  skillChoices: string[];  // Compétences éligibles
+  toolChoices: string[];   // Outils éligibles
+  totalPicks: number;      // Nombre total à choisir (compétences + outils combinés)
+}
+
+export const FEAT_SKILL_BONUSES: Record<string, FeatSkillBonus> = {
+  'doué': {
+    skillChoices: [
+      'Acrobaties', 'Arcanes', 'Athlétisme', 'Discrétion', 'Dressage',
+      'Escamotage', 'Histoire', 'Intimidation', 'Investigation', 'Intuition',
+      'Médecine', 'Nature', 'Perception', 'Persuasion', 'Religion',
+      'Représentation', 'Survie', 'Tromperie',
+    ],
+    toolChoices: [
+      'Matériel de calligraphie', 'Outils d\'artisan (au choix)',
+      'Instrument de musique (au choix)', 'Matériel de contrefaçon',
+      'Outils de voleur', 'Matériel d\'herboriste', 'Outils de charpentier',
+      'Boîte de jeux (au choix)', 'Outils de cartographe',
+      'Instruments de navigateur',
+    ],
+    totalPicks: 3, // 3 compétences ou outils au choix, mélangés
+  },
+};
+
 // Normalisation du nom du don pour la recherche
 export function normalizeFeatName(name: string): string {
   return name
