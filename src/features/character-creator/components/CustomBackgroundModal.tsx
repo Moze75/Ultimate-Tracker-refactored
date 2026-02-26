@@ -56,6 +56,7 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
   const [feat, setFeat] = useState('');
   const [skillProficiencies, setSkillProficiencies] = useState<string[]>([]);
   const [toolProficiency, setToolProficiency] = useState('');
+    const [featSkillPicks, setFeatSkillPicks] = useState<string[]>([]);
   const [equipmentA, setEquipmentA] = useState<string[]>([]);
   const [goldA, setGoldA] = useState<number>(0);
   const [goldB, setGoldB] = useState<number>(50);
