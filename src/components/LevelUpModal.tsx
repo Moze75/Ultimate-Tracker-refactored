@@ -463,8 +463,7 @@ export function LevelUpModal({ isOpen, onClose, player, onUpdate, classType = 'p
             resources.used_channel_divinity = 0;
             break;
           case 'Druide':
-            resources.wild_shape = 2;
-            resources.used_wild_shape = 0;
+                       resources.wild_shape = level >= 17 ? 4 : level >= 6 ? 3 : 2;
             break;
           case 'Ensorceleur':
             resources.sorcery_points = level;
