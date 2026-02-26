@@ -126,11 +126,15 @@ function parseClassFeatures(md: string, level: number): string[] {
 function parseRaceTraits(md: string, raceName: string): string[] {
   if (!raceName) return [];
   const traits: string[] = [];
-  const normalized = raceName.toUpperCase().split(' ')[0]; 
+  const normalized = raceName.toUpperCase().trim();
   const lines = md.split('\n');
   let inSection = false;
   for (const line of lines) {
-    if (line.startsWith('###')) { inSection = line.toUpperCase().includes(normalized); continue; }
+    if (line.startsWith('###')) {
+      const sectionName = line.replace(/^###\s*/, '').trim().toUpperCase();
+      inSection = sectionName === normalized;
+      continue;
+    }
     if (inSection) {
       const match = line.match(/^\*\*(.+?)\.?\*\*/);
       if (match && !['Type de créature', 'Catégorie de taille', 'Vitesse'].includes(match[1].trim())) traits.push(match[1].trim());
