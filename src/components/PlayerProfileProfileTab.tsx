@@ -335,6 +335,11 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
     return (player.stats as any)?.feat_ability_choices || {};
   });
 
+    // État pour les choix de compétences/outils des dons (ex: "Doué")
+  const [featSkillChoices, setFeatSkillChoices] = useState<Record<string, string[]>>(() => {
+    return (player.stats as any)?.feat_skill_choices || {};
+  });
+
   // Synchroniser avec les props du joueur
   useEffect(() => {
     setFeatAbilityChoices((player.stats as any)?.feat_ability_choices || {});
