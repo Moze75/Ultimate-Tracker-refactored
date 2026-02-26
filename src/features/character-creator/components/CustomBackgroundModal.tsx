@@ -135,6 +135,11 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       alert('Le don d\'origine est requis');
       return;
     }
+        const featData = FEAT_SKILL_BONUSES[normalizeFeatName(feat)];
+    if (featData && featSkillPicks.length !== featData.totalPicks) {
+      alert(`Le don "${feat}" nécessite de choisir ${featData.totalPicks} maîtrises`);
+      return;
+    }
     if (skillProficiencies.length !== 2) {
       alert('Vous devez sélectionner exactement 2 compétences');
       return;
