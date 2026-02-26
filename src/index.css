@@ -85,6 +85,53 @@ body {
   overflow-x: hidden !important;
 }
 
+/* ========================================
+   Safe Area — PWA standalone sur iOS (Dynamic Island / Notch)
+   
+   En mode standalone avec black-translucent, le contenu passe
+   sous la status bar. Les éléments en position:fixed ignorent
+   le padding du <body>, il faut donc leur appliquer directement
+   le safe-area-inset-top.
+   
+   On utilise @media (display-mode: standalone) pour cibler
+   UNIQUEMENT la PWA installée, pas Safari classique.
+   
+   max() garantit un padding minimal de 20px même si
+   env() n'est pas supporté ou retourne 0.
+   ======================================== */
+
+@media (display-mode: standalone) {
+  /* Header fixe : repousser sous la Dynamic Island / notch */
+  .fixed.top-0,
+  [style*="position: fixed"][style*="top: 0"],
+  [style*="position:fixed"][style*="top:0"],
+  header.fixed,
+  nav.fixed {
+    padding-top: max(env(safe-area-inset-top, 20px), 20px) !important;
+  }
+
+  /* Le body garde son padding pour le contenu en flux normal */
+  body {
+    padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Fallback iOS : Safari sur iOS supporte aussi -webkit-  */
+  @supports (-webkit-touch-callout: none) {
+    .fixed.top-0,
+    header.fixed,
+    nav.fixed {
+      padding-top: max(
+        env(safe-area-inset-top, 20px),
+        constant(safe-area-inset-top, 20px),
+        20px
+      ) !important;
+    }
+  }
+}
+
 /* Background spécifique pour la page de login */
 .login-page {
   min-height: 100vh;
