@@ -1819,20 +1819,48 @@ const spellAttackBonus = useMemo(
   [spellcastingAbilityName, proficiencyBonus, abilityMod]
 );
 
-// ✅ Helper : déclencher un lancer de dés via le contexte global (comme StatsTab)
+// ✅ Helper : déclencher un lancer de dés via le contexte global
+// Intercepte les jets de dégâts pour proposer l'Affinité Élémentaire si éligible
 const triggerDiceRoll = useCallback((
   type: 'attack' | 'damage',
   attackName: string,
   diceFormula: string,
   modifier: number
 ) => {
-  rollDice({
-    type,
-    attackName,
-    diceFormula,
-    modifier,
-  });
-}, [rollDice]);
+  // Vérifier l'éligibilité à l'Affinité Élémentaire
+  if (
+    type === 'damage' &&
+    isElementalAffinityEligible(player) &&
+    player.draconic_element
+  ) {
+    // Chercher le sort correspondant dans les sorts connus pour vérifier le type de dégâts
+    const spellName = attackName.replace(/\s*\(.*\)\s*$/, ''); // Retirer "(Niv. X)" etc.
+    const matchingSpell = knownSpells.find(
+      (s) => s.spell_name.toLowerCase() === spellName.toLowerCase()
+    );
+
+    if (
+      matchingSpell &&
+      spellMatchesDraconicElement(
+        matchingSpell.spell_description || '',
+        matchingSpell.spell_name,
+        player.draconic_element
+      )
+    ) {
+      // Afficher la popup de confirmation
+      setAffinityModalData({
+        attackName,
+        diceFormula,
+        modifier,
+        elementType: player.draconic_element,
+      });
+      return; // On attend la réponse de l'utilisateur
+    }
+  }
+
+  // Pas d'affinité → lancer directement
+  rollDice({ type, attackName, diceFormula, modifier });
+}, [rollDice, player, knownSpells]);
 
   // ✅ MODIFIÉ : Vérifier AUSSI la classe secondaire pour le casterType
    const casterType = useMemo(() => {
