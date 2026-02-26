@@ -766,6 +766,60 @@ useEffect(() => {
             />
           );
         }
+
+        {/* ✅ Sélecteur Affinité Élémentaire (Sorcellerie Draconique niv.6+) */}
+        if ((player.level || 1) >= 6 && subclass) {
+          const sub = subclass.toLowerCase();
+          const isDraconic = sub.includes('draconique') || sub.includes('draconic') || sub.includes('draconian');
+          
+          if (isDraconic) {
+            const DRACONIC_ELEMENTS = [
+              { value: 'feu', label: '🔥 Feu', color: 'text-red-400' },
+              { value: 'froid', label: '❄️ Froid', color: 'text-blue-400' },
+              { value: 'foudre', label: '⚡ Foudre', color: 'text-yellow-400' },
+              { value: 'acide', label: '🧪 Acide', color: 'text-green-400' },
+              { value: 'poison', label: '☠️ Poison', color: 'text-purple-400' },
+            ];
+
+            items.push(
+              <div key="draconic_element" className="resource-block bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-gray-700/30 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Flame size={20} className="text-orange-500" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-300">Affinité élémentaire</span>
+                      <span className="text-xs text-gray-500">Sorcellerie draconique</span>
+                    </div>
+                  </div>
+                  <select
+                    value={player.draconic_element || ''}
+                    onChange={async (e) => {
+                      const newElement = e.target.value || null;
+                      try {
+                        const { error } = await supabase
+                          .from('players')
+                          .update({ draconic_element: newElement })
+                          .eq('id', player.id);
+                        if (error) throw error;
+                        onUpdate({ ...player, draconic_element: newElement as any });
+                        toast.success(newElement ? `Affinité : ${newElement}` : 'Affinité retirée');
+                      } catch (err) {
+                        console.error('Erreur mise à jour affinité:', err);
+                        toast.error('Erreur lors de la mise à jour');
+                      }
+                    }}
+                    className="input-dark px-3 py-1.5 rounded-lg text-sm"
+                  >
+                    <option value="">— Choisir —</option>
+                    {DRACONIC_ELEMENTS.map(el => (
+                      <option key={el.value} value={el.value}>{el.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          }
+        }
         break;
 
       case 'Guerrier':
