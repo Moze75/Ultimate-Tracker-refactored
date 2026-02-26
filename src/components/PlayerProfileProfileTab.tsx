@@ -369,6 +369,47 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
 
       if (error) throw error;
 
+  // Sauvegarder les choix de compétences pour un don (ex: "Doué")
+  const saveFeatSkillChoice = async (featName: string, skill: string) => {
+    const normalizedName = normalizeFeatName(featName);
+    const featData = FEAT_SKILL_BONUSES[normalizedName];
+    if (!featData) return;
+
+    const current = featSkillChoices[normalizedName] || [];
+    let updated: string[];
+
+    if (current.includes(skill)) {
+      updated = current.filter(s => s !== skill);
+    } else if (current.length < featData.totalPicks) {
+      updated = [...current, skill];
+    } else {
+      return; // Limite atteinte
+    }
+
+    const newChoices = { ...featSkillChoices, [normalizedName]: updated };
+    setFeatSkillChoices(newChoices);
+
+    try {
+      const newStats = {
+        ...(player.stats || {}),
+        feat_skill_choices: newChoices
+      };
+
+      const { error } = await supabase
+        .from('players')
+        .update({ stats: newStats })
+        .eq('id', player.id);
+
+      if (error) throw error;
+
+      if (onUpdate) {
+        onUpdate({ ...player, stats: newStats });
+      }
+    } catch (e: any) {
+      console.error('[ProfileTab] Erreur sauvegarde choix compétences don:', e);
+    }
+  };
+      
       // Notifier le parent pour mettre à jour le joueur
       if (onUpdate) {
         onUpdate({
