@@ -356,8 +356,7 @@ export function CampaignPlayerModal({
   const [claiming, setClaiming] = useState(false);
   const [selectedGiftIds, setSelectedGiftIds] = useState<string[]>([]);
   // Notes (onglet) — délégué au composant NotesTab
-  // Cache in-memory des notes pour affichage instantané
-const notesCacheRef = React.useRef<{ journal: string; npcs: string; quests: string } | null>(null);
+
 
 // Pré-hydrate depuis localStorage dès que le player change (sync, pas d'attente)
 useEffect(() => {
