@@ -358,23 +358,6 @@ export function CampaignPlayerModal({
   // Notes (onglet) — délégué au composant NotesTab
 
 
-// Pré-hydrate depuis localStorage dès que le player change (sync, pas d'attente)
-useEffect(() => {
-  try {
-    const raw = localStorage.getItem(LS_NOTES_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const journal = parsed.journal || '';
-      const npcs = parsed.npcs || '';
-      const quests = parsed.quests || '';
-      setNotesJournal(journal);
-      setNotesNPCs(npcs);
-      setNotesQuests(quests);
-      notesCacheRef.current = { journal, npcs, quests };
-    }
-  } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [player.id]);
 
 // Prefetch silencieux dès l'ouverture du modal (même si onglet non "notes")
 useEffect(() => {
