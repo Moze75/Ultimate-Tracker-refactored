@@ -355,11 +355,7 @@ export function CampaignPlayerModal({
   // État pour empêcher les double-clics lors du claim
   const [claiming, setClaiming] = useState(false);
   const [selectedGiftIds, setSelectedGiftIds] = useState<string[]>([]);
-  // Notes (onglet)
-const [notesJournal, setNotesJournal] = useState('');
-const [notesNPCs, setNotesNPCs] = useState('');
-const [notesQuests, setNotesQuests] = useState('');
-const [savingNotes, setSavingNotes] = useState(false);
+  // Notes (onglet) — délégué au composant NotesTab
   // Cache in-memory des notes pour affichage instantané
 const notesCacheRef = React.useRef<{ journal: string; npcs: string; quests: string } | null>(null);
 
