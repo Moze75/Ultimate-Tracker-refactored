@@ -846,7 +846,46 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
                       )}
                     </div>
                   )}
-                  
+                                    {/* Sélecteur de compétences/outils (ex: don "Doué") */}
+                  {(() => {
+                    const featSkillData = FEAT_SKILL_BONUSES[normalizedFeatName];
+                    if (!featSkillData) return null;
+                    const currentPicks = featSkillChoices[normalizedFeatName] || [];
+                    const allOptions = [...featSkillData.skillChoices, ...featSkillData.toolChoices];
+                    return (
+                      <div className="mb-3 p-3 bg-purple-900/20 border border-purple-700/30 rounded-lg">
+                        <div className="text-sm text-purple-300 font-medium mb-2">
+                          Maîtrises ({currentPicks.length}/{featSkillData.totalPicks}) :
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {allOptions.map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => saveFeatSkillChoice(item.name, option)}
+                              className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                                currentPicks.includes(option)
+                                  ? 'bg-purple-500 border-purple-400 text-white font-medium'
+                                  : currentPicks.length >= featSkillData.totalPicks
+                                    ? 'bg-gray-700/30 border-gray-700 text-gray-500 cursor-not-allowed'
+                                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-300'
+                              }`}
+                              disabled={!currentPicks.includes(option) && currentPicks.length >= featSkillData.totalPicks}
+                            >
+                              {option}
+                              {currentPicks.includes(option) && (
+                                <Check size={14} className="inline ml-1" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        {currentPicks.length < featSkillData.totalPicks && (
+                          <div className="text-xs text-amber-400 mt-2">
+                            ⚠️ Choisissez {featSkillData.totalPicks - currentPicks.length} maîtrise{featSkillData.totalPicks - currentPicks.length > 1 ? 's' : ''} supplémentaire{featSkillData.totalPicks - currentPicks.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {item.hit ? (
                     <MarkdownLite content={item.hit.content} />
                   ) : (
