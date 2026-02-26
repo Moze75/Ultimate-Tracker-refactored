@@ -359,14 +359,6 @@ export function CampaignPlayerModal({
 
 
 
-// Prefetch silencieux dès l'ouverture du modal (même si onglet non "notes")
-useEffect(() => {
-  if (open) {
-    // ne bloque pas l'UI; si déjà hydraté, ça ne flashera pas
-    loadNotes();
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [open]);
  const [currentUserId, setCurrentUserId] = useState('');
 
   const getVisibleDescription = (description: string | null | undefined): string => {
