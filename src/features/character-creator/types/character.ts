@@ -126,6 +126,7 @@ export interface CustomBackgroundData {
     optionB: string[];
   };
   isCustom?: boolean;
+    featSkillPicks?: string[];  // Compétences/outils choisis via le don (ex: "Doué")
 }
 
 export interface CustomClassData {
