@@ -603,7 +603,7 @@ if (
                        `${selectedLevels.size} niveaux sélectionnés`
                     }
                   </div>
-                  <div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+<div id="level-dropdown" className="hidden absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-600 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
                     {SPELL_LEVELS.map(level => (
                       <label key={level} className="flex items-center px-3 py-2 hover:bg-gray-700 cursor-pointer">
                         <input
