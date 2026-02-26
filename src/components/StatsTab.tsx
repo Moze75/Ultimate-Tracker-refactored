@@ -320,6 +320,27 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     return DEFAULT_ABILITIES;
   });
 
+  // 🔧 Patch auto-save: si 'Survie' manquait, on sauvegarde les abilities patchées en base
+  useEffect(() => {
+    if (!Array.isArray(player.abilities) || player.abilities.length === 0) return;
+    const sagesse = player.abilities.find(a => a.name === 'Sagesse');
+    if (sagesse && !sagesse.skills.some(s => s.name === 'Survie')) {
+      console.log('[StatsTab] 🔧 Patch: Survie manquante détectée, sauvegarde en base...');
+      supabase
+        .from('players')
+        .update({ abilities })
+        .eq('id', player.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[StatsTab] ❌ Erreur patch Survie:', error);
+          } else {
+            console.log('[StatsTab] ✅ Survie ajoutée et sauvegardée en base');
+          }
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id]);
+  
   const expertiseLimit = getExpertiseLimit(player.class, player.level);
   const currentExpertiseCount = abilities.reduce((count, ability) => 
     count + ability.skills.filter(skill => skill.hasExpertise).length, 0
