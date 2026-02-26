@@ -109,8 +109,7 @@ const getDefaultClassResources = (player: Player): ClassResources => {
       break;
 
     case 'Druide':
-      resources.wild_shape = 2;
-      resources.used_wild_shape = 0;
+         resources.wild_shape = level >= 17 ? 4 : level >= 6 ? 3 : 2;
       break;
 
     case 'Ensorceleur':
