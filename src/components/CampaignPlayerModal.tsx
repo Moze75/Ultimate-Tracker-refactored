@@ -11,6 +11,7 @@ import {
   Campaign
 } from '../types/campaign';
 import toast from 'react-hot-toast';
+import { NotesTab } from './NotesTab';
 
 // Cache claims simple (TTL 30s) — au niveau module
 const CLAIMS_TTL = 30_000;
