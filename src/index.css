@@ -566,6 +566,119 @@ select {
   @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white transition-all duration-200 shadow-lg shadow-red-900/20 hover:shadow-red-900/40;
 }
 
+
+/* ========================================
+   Combat Panel — fond semi-transparent sans texture
+   Évite la superposition de deux fonds identiques
+   quand le panneau est dans un frame-card parent.
+   ======================================== */
+
+.combat-panel {
+  position: relative;
+  background-color: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 170, 96, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 180, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  color: #E8DFD2;
+}
+
+/* Pas de pseudo-élément texture → pas de double fond */
+.combat-panel::before,
+.combat-panel::after {
+  display: none !important;
+}
+
+/* Hériter du style typographique frame-card */
+.combat-panel h2,
+.combat-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+  letter-spacing: 0.02em;
+}
+
+.combat-panel h4 {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  color: #D4C4A8;
+}
+
+.combat-panel span.font-semibold {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+}
+
+.combat-panel p,
+.combat-panel li,
+.combat-panel span:not(.font-semibold) {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #E8DFD2;
+}
+
+.combat-panel .text-white {
+  color: #EFE6D8 !important;
+}
+
+.combat-panel .text-gray-100 {
+  color: #EFE6D8 !important;
+}
+
+.combat-panel .text-gray-200 {
+  color: #E8DFD2 !important;
+}
+
+.combat-panel .text-gray-300 {
+  color: #D4C4A8 !important;
+}
+
+.combat-panel .text-gray-400 {
+  color: #B8A88A !important;
+}
+
+.combat-panel .text-gray-500 {
+  color: #9A8B6E !important;
+}
+
+/* Sous-conteneurs transparents comme dans frame-card */
+.combat-panel [class*="bg-gray-800"] {
+  background-color: transparent !important;
+}
+
+.combat-panel [class*="border-gray-700"] {
+  border-color: rgba(212, 170, 96, 0.12) !important;
+}
+
+.combat-panel .bg-gray-800\/50,
+.combat-panel .bg-gray-800\/30,
+.combat-panel .bg-gray-800\/40 {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(212, 170, 96, 0.10) !important;
+}
+
+/* Bordure interne séparant les sections */
+.combat-panel [class*="border-gray-800"] {
+  border-color: rgba(212, 170, 96, 0.10) !important;
+}
+
+/* Inputs restent lisibles */
+.combat-panel input,
+.combat-panel select {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Boutons vitreux cohérents */
+.combat-panel button {
+  --btn-glass-bg: rgba(255, 255, 255, 0.06);
+  --btn-glass-border: rgba(255, 255, 255, 0.10);
+  --btn-glass-hover-bg: rgba(255, 255, 255, 0.12);
+  --btn-glass-hover-border: rgba(255, 255, 255, 0.18);
+}
+
 /* ========================================
    Boutons vitreux dans les frame-card
    Transparents, désaturés, cohérents avec le thème
