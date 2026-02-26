@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Shield, ScrollText, Sparkles, Loader2, ChevronDown, Check, Sword, Wrench, UserCircle, User, Calendar, Globe, Compass } from 'lucide-react';
-import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
+import { FEAT_BONUSES, FEAT_SKILL_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
 import type { Player } from '../types/dnd';
 import { supabase } from '../lib/supabase';
 import MarkdownLite from './MarkdownLite';
