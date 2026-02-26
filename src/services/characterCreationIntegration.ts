@@ -12,7 +12,7 @@ const SKILL_GROUPS: Record<'Force' | 'Dextérité' | 'Constitution' | 'Intellige
   Dextérité: ['Acrobaties', 'Discrétion', 'Escamotage'],
   Constitution: [],
   Intelligence: ['Arcanes', 'Histoire', 'Investigation', 'Nature', 'Religion'],
-  Sagesse: ['Dressage', 'Médecine', 'Perception', 'Perspicacité'],
+  Sagesse: ['Dressage', 'Médecine', 'Perception', 'Perspicacité', 'Survie'],
   Charisme: ['Intimidation', 'Persuasion', 'Représentation', 'Tromperie'],
 };
 
