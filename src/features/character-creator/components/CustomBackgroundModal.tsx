@@ -171,6 +171,7 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
         optionB: [`${goldB} po`],
       },
       isCustom: true,
+            featSkillPicks: featSkillPicks.length > 0 ? featSkillPicks : undefined,
     };
 
     console.log('[CustomBackgroundModal] Historique créé:', customBackground);
