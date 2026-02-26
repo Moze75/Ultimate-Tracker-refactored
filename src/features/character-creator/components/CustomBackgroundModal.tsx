@@ -6,7 +6,7 @@ import Card, { CardContent, CardHeader } from './ui/Card';
 import { X, Plus, Trash2, BookOpen, Star, Wrench, Zap, Scroll, Package } from 'lucide-react';
 import { CustomBackgroundData } from '../types/character';
 import EquipmentCatalogPicker from './EquipmentCatalogPicker';
-import { FEAT_SKILL_BONUSES, normalizeFeatName } from '../../../../data/featBonuses';
+import { FEAT_SKILL_BONUSES, normalizeFeatName } from "../../../data/featBonuses";
 
 interface CustomBackgroundModalProps {
   open: boolean;
