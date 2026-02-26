@@ -221,7 +221,8 @@ export interface Player {
   avatar_url?: string | null;
 
   race?: string | null;
-  subclass?: string | null;
+   subclass?: string | null;
+  draconic_element?: 'feu' | 'froid' | 'foudre' | 'acide' | 'poison' | null;
   background?: PlayerBackground | null;
   alignment?: string | null;
   languages?: string[];
