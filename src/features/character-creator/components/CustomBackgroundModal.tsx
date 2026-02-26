@@ -176,6 +176,7 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
     setFeat('');
     setSkillProficiencies([]);
     setToolProficiency('');
+        setFeatSkillPicks([]);
     setEquipmentA([]);
     setGoldA(0);
     setGoldB(50);
