@@ -199,10 +199,10 @@ export interface Attack {
 
   // Caractéristique utilisée (Force/Dextérité, null = automatique)
   override_ability?: 'Force' | 'Dextérité' | 'Constitution' | 'Intelligence' | 'Sagesse' | 'Charisme' | null;
-}
 
-  // ✅ NOUVEAU : Bonus de l'arme (s'ajoute aux calculs d'attaque et de dégâts)
+  // ✅ Bonus de l'arme (s'ajoute aux calculs d'attaque et de dégâts)
   weapon_bonus?: number | null;
+}
 
 export interface Player {
   id: string;
