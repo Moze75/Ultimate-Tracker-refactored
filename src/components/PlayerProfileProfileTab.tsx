@@ -369,6 +369,18 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
 
       if (error) throw error;
 
+      // Notifier le parent pour mettre à jour le joueur
+      if (onUpdate) {
+        onUpdate({
+          ...player,
+          stats: newStats
+        });
+      }
+    } catch (e: any) {
+      console.error('[ProfileTab] Erreur sauvegarde choix don:', e);
+    }
+  };
+
   // Sauvegarder les choix de compétences pour un don (ex: "Doué")
   const saveFeatSkillChoice = async (featName: string, skill: string) => {
     const normalizedName = normalizeFeatName(featName);
