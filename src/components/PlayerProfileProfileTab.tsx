@@ -345,6 +345,10 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
     setFeatAbilityChoices((player.stats as any)?.feat_ability_choices || {});
   }, [player.id, player.stats]);
 
+    useEffect(() => {
+    setFeatSkillChoices((player.stats as any)?.feat_skill_choices || {});
+  }, [player.id, player.stats]);
+
   // Sauvegarder le choix de caractéristique pour un don
   const saveFeatAbilityChoice = async (featName: string, ability: AbilityName) => {
     const normalizedName = normalizeFeatName(featName);
