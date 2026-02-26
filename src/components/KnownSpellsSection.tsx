@@ -2299,7 +2299,36 @@ return (
           onConfirm={handleSpellsSelected}
         />
       )}
-       
+
+      {/* ✅ Modale Affinité Élémentaire (Sorcellerie Draconique niv.6+) */}
+      <ElementalAffinityModal
+        isOpen={!!affinityModalData}
+        onConfirm={() => {
+          if (affinityModalData) {
+            rollDice({
+              type: 'damage',
+              attackName: `${affinityModalData.attackName} ✨`,
+              diceFormula: affinityModalData.diceFormula,
+              modifier: affinityModalData.modifier + charismaModifier,
+            });
+            setAffinityModalData(null);
+          }
+        }}
+        onSkip={() => {
+          if (affinityModalData) {
+            rollDice({
+              type: 'damage',
+              attackName: affinityModalData.attackName,
+              diceFormula: affinityModalData.diceFormula,
+              modifier: affinityModalData.modifier,
+            });
+            setAffinityModalData(null);
+          }
+        }}
+        charismaModifier={charismaModifier}
+        elementType={affinityModalData?.elementType || 'feu'}
+        spellName={affinityModalData?.attackName || ''}
+      />
     </div>
   );
-} 
+}
