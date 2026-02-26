@@ -874,8 +874,8 @@ export function buildDefaultsForClass(cls: string, level: number, player?: Playe
       return { used_bardic_inspiration: 0 };
     case 'Clerc':
       return { channel_divinity: level >= 6 ? 2 : 1, used_channel_divinity: 0 };
-    case 'Druide':
-      return { wild_shape: 2, used_wild_shape: 0 };
+     case 'Druide':
+      return { wild_shape: level >= 17 ? 4 : level >= 6 ? 3 : 2, used_wild_shape: 0 };
     case 'Ensorceleur': {
       return {
         sorcery_points: level,
