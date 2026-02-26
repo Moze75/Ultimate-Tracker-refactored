@@ -108,7 +108,7 @@ export function GamePage({
 
   // 🆕 État pour gérer le fond d'écran (partagé desktop/mobile/tablet)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-    return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
+  return localStorage.getItem('desktop-background') || 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table.png';
   });
 
   // 🆕 Compteur de version pour forcer le reload du DiceBox
