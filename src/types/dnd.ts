@@ -279,6 +279,9 @@ export interface Player {
 
   active_conditions?: string[];
 
+  // Affinité élémentaire (Ensorceleur — Sorcellerie draconique niv.6+)
+  draconic_element?: 'feu' | 'froid' | 'foudre' | 'acide' | 'poison' | null;
+
   custom_class_data?: CustomClassData | null;
 }
 
