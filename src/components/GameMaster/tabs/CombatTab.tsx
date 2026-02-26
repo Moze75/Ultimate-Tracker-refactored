@@ -777,7 +777,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 : 'text-gray-400 hover:text-gray-200' 
             }`}
           >
-            <Search size={12} className="inline mr-1" /> Rechercher monstres
+            <Search size={12} className="inline mr-1" /> Ajouter monstres
           </button>
           <button
             onClick={() => { setEditingMonster(null); setShowCustomModal(true); }}
