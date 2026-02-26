@@ -388,11 +388,14 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
 
     const current = featSkillChoices[normalizedName] || [];
     let updated: string[];
+    let adding: boolean;
 
     if (current.includes(skill)) {
       updated = current.filter(s => s !== skill);
+      adding = false;
     } else if (current.length < featData.totalPicks) {
       updated = [...current, skill];
+      adding = true;
     } else {
       return;
     }
@@ -401,20 +404,53 @@ export default function PlayerProfileProfileTab({ player, onUpdate }: PlayerProf
     setFeatSkillChoices(newChoices);
 
     try {
+      // 1) Mettre à jour feat_skill_choices dans stats
       const newStats = {
         ...(player.stats || {}),
         feat_skill_choices: newChoices
       };
 
+      // 2) Mettre à jour isProficient dans le tableau abilities
+      let newAbilities = Array.isArray(player.abilities) ? player.abilities.map((ab: any) => ({
+        ...ab,
+        skills: Array.isArray(ab.skills) ? ab.skills.map((sk: any) => ({ ...sk })) : []
+      })) : null;
+
+      if (newAbilities) {
+        for (const ability of newAbilities) {
+          for (const sk of ability.skills) {
+            if (sk.name === skill) {
+              sk.isProficient = adding;
+              // Recalculer le bonus
+              const profBonus = Math.min(6, Math.floor((player.level + 7) / 4));
+              const modifier = ability.modifier || Math.floor(((ability.score || 10) - 10) / 2);
+              sk.bonus = modifier + (sk.isProficient
+                ? (sk.hasExpertise ? profBonus * 2 : profBonus)
+                : 0);
+            }
+          }
+        }
+      }
+
+      // 3) Sauvegarder les deux en une seule requête
+      const updatePayload: any = { stats: newStats };
+      if (newAbilities) {
+        updatePayload.abilities = newAbilities;
+      }
+
       const { error } = await supabase
         .from('players')
-        .update({ stats: newStats })
+        .update(updatePayload)
         .eq('id', player.id);
 
       if (error) throw error;
 
       if (onUpdate) {
-        onUpdate({ ...player, stats: newStats });
+        const updatedPlayer = { ...player, stats: newStats };
+        if (newAbilities) {
+          (updatedPlayer as any).abilities = newAbilities;
+        }
+        onUpdate(updatedPlayer);
       }
     } catch (e: any) {
       console.error('[ProfileTab] Erreur sauvegarde choix compétences don:', e);
