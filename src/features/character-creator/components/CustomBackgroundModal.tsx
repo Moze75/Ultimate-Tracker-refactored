@@ -73,6 +73,7 @@ export default function CustomBackgroundModal({ open, onClose, onSave, initialDa
       setFeat(initialData.feat || '');
       setSkillProficiencies(initialData.skillProficiencies || []);
       setToolProficiency(initialData.toolProficiencies?.[0] || '');
+            setFeatSkillPicks(initialData.featSkillPicks || []);
       
       // Parser l'équipement existant
       const optA = initialData.equipmentOptions?.optionA || [];
