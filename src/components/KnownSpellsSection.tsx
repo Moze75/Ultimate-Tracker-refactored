@@ -26,6 +26,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { SpellbookModal } from './SpellbookModal';
 import { DiceRollContext } from './ResponsiveGameLayout'; // ✨ comme dans StatsTab
+import { ElementalAffinityModal } from './ElementalAffinityModal';
 import { getSpellSlotsByLevel } from '../utils/spellSlots2024';
 import {
   getArcaneRecoveryInfo,
