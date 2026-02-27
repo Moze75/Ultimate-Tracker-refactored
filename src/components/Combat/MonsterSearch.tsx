@@ -305,7 +305,7 @@ export function MonsterSearch({
           <button
             onClick={() => setSelected(new Map())}
             className="text-xs text-gray-400 hover:text-white transition-colors"
-          >
+          > 
             Tout deselectionner
           </button>
           <button
@@ -326,7 +326,7 @@ export function MonsterSearch({
         <div
           ref={listContainerRef}
           onScroll={handleScroll}
-                 className="bestiary-panel max-h-[500px] overflow-y-auto rounded-lg"
+          className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900"
         >
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-gray-500 text-sm">
