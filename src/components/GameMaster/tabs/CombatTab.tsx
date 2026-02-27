@@ -102,6 +102,18 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const isDesktop = useIsDesktop();
   const isActive = !!encounter;
 
+  // Bloquer le scroll body quand l'overlay mobile bestiaire est ouvert
+  useEffect(() => {
+    if (mobileSearchOpen && !isDesktop) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      return () => {
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+      };
+    }
+  }, [mobileSearchOpen, isDesktop]);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
