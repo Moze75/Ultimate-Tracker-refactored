@@ -894,8 +894,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               <BookOpen size={12} /> Charger combat
             </button>
           </div>
-          {mobileSearchOpen && (
-            <div className="max-h-[50vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl p-3">
+           {mobileSearchOpen && (
+            <div className="absolute top-12 left-0 right-0 z-30 max-h-[70vh] overflow-y-auto bg-[rgba(20,16,12,0.95)] border border-[rgba(212,170,96,0.45)] rounded-xl p-3 shadow-2xl backdrop-blur-sm">
               {panelView === 'search' && (
                 <MonsterSearch
                   selectionMode
