@@ -604,8 +604,8 @@ select {
   position: absolute;
   top: -20px;
   bottom: -24px;
-  left: -10px;
-  right: -18px;
+  left: -25px;
+  right: -25px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png');
   border-image-slice: 45%;
   border-image-width: 100px;
