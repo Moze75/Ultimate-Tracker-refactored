@@ -11,12 +11,12 @@ interface ElementalAffinityModalProps {
   spellName: string;
 }
 
-const ELEMENT_COLORS: Record<string, { bg: string; border: string; text: string; icon: string }> = {
-  feu:    { bg: 'from-red-900/80 to-orange-900/60', border: 'border-red-500/50', text: 'text-red-300', icon: '🔥' },
-  froid:  { bg: 'from-blue-900/80 to-cyan-900/60', border: 'border-blue-500/50', text: 'text-blue-300', icon: '❄️' },
-  foudre: { bg: 'from-yellow-900/80 to-amber-900/60', border: 'border-yellow-500/50', text: 'text-yellow-300', icon: '⚡' },
-  acide:  { bg: 'from-green-900/80 to-lime-900/60', border: 'border-green-500/50', text: 'text-green-300', icon: '🧪' },
-  poison: { bg: 'from-purple-900/80 to-green-900/60', border: 'border-purple-500/50', text: 'text-purple-300', icon: '☠️' },
+const ELEMENT_COLORS: Record<string, { text: string; accent: string; icon: string }> = {
+  feu:    { text: 'text-red-300',    accent: 'rgba(239, 68, 68, 0.25)', icon: '🔥' },
+  froid:  { text: 'text-blue-300',   accent: 'rgba(59, 130, 246, 0.25)', icon: '❄️' },
+  foudre: { text: 'text-yellow-300', accent: 'rgba(234, 179, 8, 0.25)',  icon: '⚡' },
+  acide:  { text: 'text-green-300',  accent: 'rgba(34, 197, 94, 0.25)',  icon: '🧪' },
+  poison: { text: 'text-purple-300', accent: 'rgba(168, 85, 247, 0.25)', icon: '☠️' },
 };
 
 export function ElementalAffinityModal({
