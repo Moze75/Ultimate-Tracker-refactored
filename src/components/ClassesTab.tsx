@@ -524,6 +524,16 @@ function ClassesTab({
       return;
     }
 
+    // ✅ Intercepter la mise à jour de l'affinité draconique (pas une class_resource)
+    if ((resource as string) === '_refresh_draconic' && typeof value === 'object' && value !== null) {
+      const newElement = (value as any).__draconic_element ?? null;
+      if (onUpdate && player) {
+        onUpdate({ ...(player as any), draconic_element: newElement } as Player);
+      }
+      return;
+    }
+
+    
     if (resource === 'bardic_inspiration') {
       toast.error("Le total d'Inspiration bardique est calculé automatiquement (modificateur de Charisme).");
       return;
