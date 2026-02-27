@@ -432,6 +432,7 @@ export function PlayerProfileSettingsModal({
   const [weaponProficiencies, setWeaponProficiencies] = useState<string[]>([]);
   const [armorProficiencies, setArmorProficiencies] = useState<string[]>([]);
   const [acBonus, setAcBonus] = useState<number>(0);
+  const [draconicElement, setDraconicElement] = useState<string>(player.draconic_element || '');
 
   const ALLOWED_RACES = useMemo(() => new Set(DND_RACES.filter(Boolean)), []);
   const ALLOWED_BACKGROUNDS = useMemo(() => new Set(DND_BACKGROUNDS.filter(Boolean)), []);
