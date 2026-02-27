@@ -770,7 +770,7 @@ useEffect(() => {
         {/* ✅ Sélecteur Affinité Élémentaire (Sorcellerie Draconique niv.6+) */}
         if ((player.level || 1) >= 6 && subclass) {
           const sub = subclass.toLowerCase();
-          const isDraconic = sub.includes('draconique') || sub.includes('draconic') || sub.includes('draconian');
+                  const isDraconic = sub.includes('dracon');
           
           if (isDraconic) {
             const DRACONIC_ELEMENTS = [
