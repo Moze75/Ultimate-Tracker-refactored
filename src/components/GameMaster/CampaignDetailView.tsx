@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Users, Package, Send, Image, FileText, Swords } from 'lucide-react';
+import { ArrowLeft, LogOut, Users, Package, Send, Image, FileText, Swords } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Campaign, CampaignMember, CampaignInventoryItem, CampaignInvitation, CampaignGift, CampaignGiftClaim } from '../../types/campaign';
 import { campaignService } from '../../services/campaignService';
