@@ -1063,8 +1063,8 @@ case 'Magicien':
         </div>
       </div>
 
-      {/* Section "Ressources de classe" masquée */}
-      {/* {renderClassResources()} */}
+      {/* Section "Ressources de classe" */}
+      {renderClassResources()}
 
       {showSpellbook && (
         <SpellbookModal
