@@ -908,7 +908,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           </div>
           {mobileSearchOpen && (
             <div
-              className="frame-card--light frame-card--no-frame flex flex-col p-4 pt-2"
+                       className="frame-card--light frame-card--no-frame bestiary-overlay-mobile flex flex-col p-4"
               style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, overflow: 'hidden', touchAction: 'none', border: 'none', borderRadius: 0, boxShadow: 'none', paddingTop: 0 }}
               onTouchMove={(e) => e.stopPropagation()}
             >
