@@ -813,6 +813,9 @@ useEffect(() => {
         updateData.secondary_subclass = selectedSecondarySubclass || null;
       }
 
+      // Sauvegarder l'élément draconique si Ensorceleur draconique
+      updateData.draconic_element = draconicElement || null;
+      
       const { error } = await supabase.from('players').update(updateData).eq('id', player.id);
       if (error) throw error;
 
