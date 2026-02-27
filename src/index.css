@@ -602,16 +602,16 @@ select {
 .combat-panel::after {
   content: '';
   position: absolute;
-  top: -20px;
-  bottom: -24px;
+  top: -30px;
+  bottom: -34px;
   left: -30px;
   right: -30px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png');
-  border-image-slice: 45%;
-  border-image-width: 100px;
+  border-image-slice: 30%;
+  border-image-width: 80px;
   border-image-repeat: stretch;
   border-style: solid;
-  border-width: 30px;
+  border-width: 12px;
   pointer-events: none;
   z-index: 10;
 }
