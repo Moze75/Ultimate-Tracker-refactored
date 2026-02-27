@@ -326,7 +326,7 @@ export function MonsterSearch({
         <div
           ref={listContainerRef}
           onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-700/30 bg-gray-900/30 lg:max-h-[35vh]"
+                className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-700/30 bg-gray-900/30 lg:max-h-[45vh]"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehavior: 'contain' }}
           onTouchMove={(e) => e.stopPropagation()}
         >
