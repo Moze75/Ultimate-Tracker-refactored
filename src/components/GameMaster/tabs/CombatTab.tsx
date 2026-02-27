@@ -852,8 +852,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 
       </div>
 
-      {/* RIGHT: Unified combat panel */}
-      <div className="space-y-4">
+       {/* RIGHT: Unified combat panel */}
+      <div className="space-y-4 relative">
         {/* Mobile-only: search toolbar + panel ABOVE combat box */}
         <div className="lg:hidden space-y-3">
           <div className="flex flex-wrap gap-1.5">
