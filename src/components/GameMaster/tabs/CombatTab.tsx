@@ -1007,7 +1007,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               {isActive ? (
            
       
-<div className="hidden sm:flex gap-1.5">
+<div className="hidden sm:flex gap-1.5 flex-wrap">
                   <button
                     onClick={handleRollMonsterInitiativeActive}
                     className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
