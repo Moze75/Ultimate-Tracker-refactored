@@ -182,6 +182,16 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
           <CombatTab campaignId={campaign.id} members={members} onReload={loadMembers} onRollDice={handleRollDice} />
         )}
         </div>
+
+        <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
+          <button
+            onClick={onBack}
+            className="w-full btn-transparent-cinzel rounded-lg flex items-center justify-center gap-2 px-4 py-2"
+          >
+            <LogOut size={20} />
+            Retour aux campagnes
+          </button>
+        </div>
       </div>
 
       <DraggableVisualWindows windows={draggableWindows} onClose={closeVisualWindow} onUpdatePosition={updateWindowPosition} />
