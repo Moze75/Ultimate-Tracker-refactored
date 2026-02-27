@@ -34,8 +34,9 @@ export function ElementalAffinityModal({
   const modalContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[10001] p-4">
       <div
-        className={`bg-gradient-to-br ${colors.bg} rounded-xl shadow-2xl max-w-sm w-full border ${colors.border} overflow-hidden animate-fade-in`}
-      > 
+        className="frame-card--light frame-card--no-frame max-w-sm w-full rounded-xl animate-fade-in"
+        style={{ boxShadow: `0 0 30px ${colors.accent}, 0 6px 18px rgba(0, 0, 0, 0.45)` }}
+      >
         {/* Header */}
         <div className="p-4 border-b border-gray-700/30">
           <div className="flex items-center gap-3">
