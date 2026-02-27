@@ -5,7 +5,7 @@ import { campaignService } from '../services/campaignService';
 import { CampaignDetailView, CreateCampaignModal, EditCampaignModal } from '../components/GameMaster';
 import toast from 'react-hot-toast';
 
-const BG_URL = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp';
+const BG_URL = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/fond_ecran_ambre.png'; 
 
 interface GameMasterCampaignPageProps {
   session: any;
