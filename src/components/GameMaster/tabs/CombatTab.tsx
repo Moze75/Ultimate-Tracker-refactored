@@ -898,14 +898,14 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             <div className="fixed inset-0 z-50 flex flex-col frame-card--light frame-card--no-frame p-4 pt-2" style={{ overflow: 'hidden' }}>
               <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <h3 className="text-sm font-semibold text-[#EFE6D8]" style={{ fontFamily: 'Cinzel, serif' }}>Bestiaire</h3>
-                       <button
+                <button
                   onClick={() => setMobileSearchOpen(false)}
                   className="p-2 text-gray-400 hover:text-white transition-colors"
                 >
                   <X size={20} />
                 </button>
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              </div> 
+              
               {panelView === 'search' && (
                 <MonsterSearch
                   selectionMode
