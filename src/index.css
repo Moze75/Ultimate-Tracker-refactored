@@ -712,6 +712,93 @@ select {
   z-index: 1;
 }
 
+/* ========================================
+   Bestiaire Panel — même style que combat-panel
+   ======================================== */
+
+.bestiary-panel {
+  position: relative;
+  background-color: rgba(20, 16, 12, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 170, 96, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 180, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow: visible;
+  color: #E8DFD2;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.bestiary-panel::before {
+  display: none !important;
+}
+
+/* Cadre décoratif AmbreFrame2 — mobile first */
+.bestiary-panel::after {
+  content: '';
+  position: absolute;
+  top: -14px;
+  bottom: -16px;
+  left: -10px;
+  right: -10px;
+  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png');
+  border-image-slice: 30%;
+  border-image-width: 40px;
+  border-image-repeat: stretch;
+  border-style: solid;
+  border-width: 12px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (min-width: 1024px) {
+  .bestiary-panel::after {
+    top: -30px;
+    bottom: -34px;
+    left: -30px;
+    right: -30px;
+    border-image-width: 80px;
+  }
+}
+
+/* Contenu au-dessus du cadre */
+.bestiary-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Typographie cohérente */
+.bestiary-panel h2,
+.bestiary-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  color: #EFE6D8;
+}
+
+.bestiary-panel .text-gray-200 { color: #E8DFD2 !important; }
+.bestiary-panel .text-gray-300 { color: #D4C4A8 !important; }
+.bestiary-panel .text-gray-400 { color: #B8A88A !important; }
+.bestiary-panel .text-gray-500 { color: #9A8B6E !important; }
+
+/* Sous-conteneurs transparents */
+.bestiary-panel [class*="bg-gray-800"] {
+  background-color: transparent !important;
+}
+
+.bestiary-panel [class*="bg-gray-900"] {
+  background-color: transparent !important;
+}
+
+.bestiary-panel [class*="border-gray-700"] {
+  border-color: rgba(212, 170, 96, 0.12) !important;
+}
+
+.bestiary-panel [class*="border-gray-800"] {
+  border-color: rgba(212, 170, 96, 0.10) !important;
+}
+
 
 /* Boutons vitreux cohérents */
 .combat-panel button {
