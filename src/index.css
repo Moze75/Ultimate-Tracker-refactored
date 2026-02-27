@@ -774,6 +774,12 @@ select {
   display: none !important;
 }
 
+/* Variante sans bordure */
+.bestiary-panel--no-border {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* Typographie cohérente */
 .bestiary-panel h2,
 .bestiary-panel h3 {
