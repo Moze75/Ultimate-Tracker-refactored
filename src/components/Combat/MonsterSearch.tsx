@@ -326,7 +326,9 @@ export function MonsterSearch({
         <div
           ref={listContainerRef}
           onScroll={handleScroll}
-                            className="max-h-[500px] lg:max-h-[500px] max-h-[none] flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-700/30 bg-gray-900/30"
+          className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-700/30 bg-gray-900/30 lg:max-h-[500px]"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-gray-500 text-sm">
