@@ -501,7 +501,68 @@ export function ClassResourcesCard({
             />
           );
         }
-      
+
+        // ✅ Sélecteur Affinité Élémentaire (Sorcellerie Draconique niv.6+)
+        if (player && (level || 1) >= 6) {
+          const sub = (
+            (player as any).subclass ||
+            (player as any).sub_class ||
+            (player as any).sousClasse ||
+            ''
+          ).toString().toLowerCase();
+
+          if (sub.includes('dracon')) {
+            const DRACONIC_ELEMENTS = [
+              { value: 'feu', label: '🔥 Feu' },
+              { value: 'froid', label: '❄️ Froid' },
+              { value: 'foudre', label: '⚡ Foudre' },
+              { value: 'acide', label: '🧪 Acide' },
+              { value: 'poison', label: '☠️ Poison' },
+            ];
+
+            items.push(
+              <div
+                key="draconic_element"
+                className="resource-block bg-gradient-to-br from-orange-900/20 to-red-900/10 border border-orange-500/30 rounded-lg p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Flame size={20} className="text-orange-500" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-orange-300">Affinité élémentaire</span>
+                      <span className="text-xs text-gray-400">Sorcellerie draconique</span>
+                    </div>
+                  </div>
+                  <select
+                    value={(player as any).draconic_element || ''}
+                    onChange={async (e) => {
+                      const newElement = e.target.value || null;
+                      try {
+                        const { default: supabase } = await import('../../../lib/supabase').then(m => ({ default: m.supabase }));
+                        const { error } = await supabase
+                          .from('players')
+                          .update({ draconic_element: newElement })
+                          .eq('id', player.id);
+                        if (error) throw error;
+                        // Notifier le parent via onUpdateResource avec une clé spéciale
+                        onUpdateResource('draconic_element' as any, newElement);
+                      } catch (err) {
+                        console.error('Erreur mise à jour affinité:', err);
+                      }
+                    }}
+                    className="input-dark px-3 py-1.5 rounded-lg text-sm"
+                  >
+                    <option value="">— Choisir —</option>
+                    {DRACONIC_ELEMENTS.map(el => (
+                      <option key={el.value} value={el.value}>{el.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          }
+        }
+
         break;
 
     case 'Guerrier':
