@@ -44,10 +44,10 @@ export function AttackSection({
 
   // --- LOGIQUE ATTAQUE SANS ARME ---
   const getMartialArtsDie = (level: number) => {
-    if (level >= 17) return '1d10';
-    if (level >= 11) return '1d8';
-    if (level >= 5) return '1d6';
-    return '1d4';
+    if (level >= 17) return '1d12';
+    if (level >= 11) return '1d10';
+    if (level >= 5) return '1d8';
+    return '1d6';
   };
 
   const getUnarmedStrike = (): Attack => {
