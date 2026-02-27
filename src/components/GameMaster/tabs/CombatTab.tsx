@@ -757,7 +757,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-6">
       {/* LEFT: Search / Bestiary - Desktop only */}
       <div className="hidden lg:block space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
