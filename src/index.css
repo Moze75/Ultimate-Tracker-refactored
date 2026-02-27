@@ -593,18 +593,9 @@ select {
   padding-bottom: 6px;
 }
 
-/* Fond opaque entre le cadre décoratif et le conteneur */
+/* Pas de pseudo-élément texture → pas de double fond */
 .combat-panel::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  bottom: -34px;
-  left: -30px;
-  right: -30px;
-  background-color: rgba(12, 10, 9, 0.85);
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 0;
+  display: none !important;
 }
 
 /* Cadre décoratif AmbreFrame2 — ajusté au combat-panel compact */
