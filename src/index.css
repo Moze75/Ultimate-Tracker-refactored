@@ -862,9 +862,14 @@ select {
 /* Inputs/selects dans le bestiaire overlay : garder fond sombre + texte clair */
 .bestiary-overlay-mobile input,
 .bestiary-overlay-mobile select {
-  background-color: rgba(31, 41, 55, 0.8) !important;
+  background-color: rgb(31, 41, 55) !important;
   color: #E8DFD2 !important;
   border-color: rgba(212, 170, 96, 0.25) !important;
+}
+
+.bestiary-overlay-mobile select option {
+  background-color: rgb(31, 41, 55) !important;
+  color: #E8DFD2 !important;
 }
 
 .bestiary-overlay-mobile input::placeholder {
