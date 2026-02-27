@@ -769,6 +769,11 @@ select {
   z-index: 1;
 }
 
+/* Variante sans cadre décoratif */
+.bestiary-panel--no-frame::after {
+  display: none !important;
+}
+
 /* Typographie cohérente */
 .bestiary-panel h2,
 .bestiary-panel h3 {
