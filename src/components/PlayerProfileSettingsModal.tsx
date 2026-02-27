@@ -512,6 +512,7 @@ setAcField(acInitial > 0 ? String(acInitial) : String(autoAC));
     setSpeedField(speedInitial > 0 ? String(speedInitial).replace('.', ',') : String(9));
     setProfField(profInitial > 0 ? String(profInitial) : String(profAuto));
     setAcBonus((player.stats as any)?.ac_bonus ?? 0);
+        setDraconicElement(player.draconic_element || '');
 
     const feats: any = (player.stats as any)?.feats || {};
 
