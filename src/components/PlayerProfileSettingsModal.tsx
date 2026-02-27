@@ -1453,37 +1453,7 @@ useEffect(() => {
               )}
             </div>
             
-            {/* Élément draconique — visible uniquement pour Ensorceleur Draconique niv.6+ */}
-            {selectedClass === 'Ensorceleur' && level >= 6 && selectedSubclass &&
-              (selectedSubclass.toLowerCase().includes('dracon')) && (
-              <div className="mt-6 p-4 bg-gradient-to-br from-orange-900/20 to-red-900/10 border border-orange-500/30 rounded-lg">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">🐉</span>
-                  <div>
-                    <h4 className="text-sm font-semibold text-orange-300">Affinité élémentaire</h4>
-                    <p className="text-xs text-gray-400">Sorcellerie draconique — Niveau 6+</p>
-                  </div>
-                </div>
-                <select
-                  value={draconicElement}
-                  onChange={(e) => {
-                    setDraconicElement(e.target.value);
-                    setDirty(true);
-                  }}
-                  className="input-dark w-full px-3 py-2 rounded-md"
-                >
-                  <option value="">— Choisir un élément —</option>
-                  <option value="feu">🔥 Feu</option>
-                  <option value="froid">❄️ Froid</option>
-                  <option value="foudre">⚡ Foudre</option>
-                  <option value="acide">🧪 Acide</option>
-                  <option value="poison">☠️ Poison</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-2">
-                  Ajoute votre modificateur de Charisme aux dégâts des sorts de ce type.
-                </p>
-              </div>
-            )}
+
           </CollapsibleCard>
 
           {/* Dons */}
