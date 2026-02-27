@@ -757,7 +757,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* LEFT: Search / Bestiary - Desktop only */}
       <div className="hidden lg:block space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
@@ -949,10 +949,10 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
         </div>
 
-        <div className="hidden lg:flex gap-2 border-b border-gray-700 pb-2">
+        <div className="hidden lg:flex gap-2 border-b border-gray-700 pb-2"> 
           <span className="px-3 py-1.5 text-xs invisible">Alignement</span>
         </div>
-<div className="combat-panel rounded-xl mx-[12px] my-[16px] lg:mx-[30px] lg:my-[34px]">
+<div className="combat-panel rounded-xl mx-[20px] my-[24px]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-3">
