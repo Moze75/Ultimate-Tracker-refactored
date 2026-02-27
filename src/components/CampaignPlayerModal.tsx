@@ -355,8 +355,12 @@ export function CampaignPlayerModal({
   // État pour empêcher les double-clics lors du claim
   const [claiming, setClaiming] = useState(false);
   const [selectedGiftIds, setSelectedGiftIds] = useState<string[]>([]);
-  // Notes (onglet) — délégué au composant NotesTab
-
+  // Notes (onglet)
+  const [notesJournal, setNotesJournal] = useState('');
+  const [notesNPCs, setNotesNPCs] = useState('');
+  const [notesQuests, setNotesQuests] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const notesCacheRef = React.useRef<{ journal: string; npcs: string; quests: string } | null>(null);
 
 
  const [currentUserId, setCurrentUserId] = useState('');
@@ -416,6 +420,99 @@ const handleClaimMultiple = async () => {
   }
 };
   
+  const loadNotes = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Tente d'abord le localStorage (instantané)
+      const cacheKey = `campaign_notes_${user.id}_${player.id}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setNotesJournal(parsed.journal || '');
+          setNotesNPCs(parsed.npcs || '');
+          setNotesQuests(parsed.quests || '');
+          notesCacheRef.current = {
+            journal: parsed.journal || '',
+            npcs: parsed.npcs || '',
+            quests: parsed.quests || '',
+          };
+        } catch {}
+      }
+
+      // Puis charge depuis Supabase
+      const { data, error } = await supabase
+        .from('campaign_notes')
+        .select('journal, npcs, quests')
+        .eq('user_id', user.id)
+        .eq('player_id', player.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erreur chargement notes:', error);
+        return;
+      }
+
+      if (data) {
+        setNotesJournal(data.journal || '');
+        setNotesNPCs(data.npcs || '');
+        setNotesQuests(data.quests || '');
+        notesCacheRef.current = {
+          journal: data.journal || '',
+          npcs: data.npcs || '',
+          quests: data.quests || '',
+        };
+        localStorage.setItem(cacheKey, JSON.stringify({
+          journal: data.journal || '',
+          npcs: data.npcs || '',
+          quests: data.quests || '',
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur loadNotes:', error);
+    }
+  };
+
+  const saveNotes = async () => {
+    try {
+      setSavingNotes(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const payload = {
+        user_id: user.id,
+        player_id: player.id,
+        journal: notesJournal,
+        npcs: notesNPCs,
+        quests: notesQuests,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('campaign_notes')
+        .upsert(payload, { onConflict: 'user_id,player_id' });
+
+      if (error) throw error;
+
+      // Met à jour le cache
+      notesCacheRef.current = {
+        journal: notesJournal,
+        npcs: notesNPCs,
+        quests: notesQuests,
+      };
+      const cacheKey = `campaign_notes_${user.id}_${player.id}`;
+      localStorage.setItem(cacheKey, JSON.stringify(notesCacheRef.current));
+
+      toast.success('Notes sauvegardées !');
+    } catch (error) {
+      console.error('Erreur saveNotes:', error);
+      toast.error('Erreur lors de la sauvegarde des notes');
+    } finally {
+      setSavingNotes(false);
+    }
+  };
 
 
   const loadCampaignMembers = async (campaignId: string) => {
