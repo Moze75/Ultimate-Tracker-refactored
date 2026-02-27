@@ -266,7 +266,7 @@ export function MonsterSearch({
           <div className="flex-1 min-w-[100px]">
             <label className="block text-xs text-gray-500 mb-1">FP</label>
             <select
-              className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none"
+              className="w-full px-2 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:border-amber-600 focus:outline-none [&>option]:bg-gray-800 [&>option]:text-gray-200"
               value={crFilter}
               onChange={(e) => setCrFilter(e.target.value)}
             >
