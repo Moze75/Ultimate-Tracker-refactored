@@ -1455,9 +1455,7 @@ useEffect(() => {
             
             {/* Élément draconique — visible uniquement pour Ensorceleur Draconique niv.6+ */}
             {selectedClass === 'Ensorceleur' && level >= 6 && selectedSubclass &&
-              (selectedSubclass.toLowerCase().includes('draconique') ||
-               selectedSubclass.toLowerCase().includes('draconic') ||
-               selectedSubclass.toLowerCase().includes('draconian')) && (
+              (selectedSubclass.toLowerCase().includes('dracon')) && (
               <div className="mt-6 p-4 bg-gradient-to-br from-orange-900/20 to-red-900/10 border border-orange-500/30 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">🐉</span>
