@@ -979,7 +979,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             <div className="hidden lg:block" style={{ height: '81px' }}></div>
 <div className="combat-panel rounded-xl lg:mx-[30px] lg:mb-[34px]">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="px-4 py-3 border-b border-gray-800 space-y-2">
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 isActive ? 'bg-red-600/40' : 'bg-red-900/30'
@@ -1003,11 +1003,9 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                 </p>
               </div>
             </div>
-            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
+            <div className="flex gap-1.5 w-full">
               {isActive ? (
-           
-      
-<div className="hidden sm:flex gap-1.5 flex-wrap">
+                <div className="hidden sm:flex gap-1.5 w-full">
                   <button
                     onClick={handleRollMonsterInitiativeActive}
                     className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
@@ -1017,19 +1015,19 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                   </button>
                   <button
                     onClick={handleNextTurn}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
                     <SkipForward size={12} className="shrink-0" /> Tour suivant
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
                     <Save size={12} className="shrink-0" /> Sauvegarder
                   </button>
                   <button
                     onClick={handleEndCombat}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
                   >
                     <Square size={12} className="shrink-0" /> Fin
                   </button>
