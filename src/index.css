@@ -580,7 +580,7 @@ select {
 
 .combat-panel {
   position: relative;
-  background-color: rgba(17, 24, 39, 0.65);
+  background-color: rgba(12, 10, 9, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
    border: 1px solid rgba(212, 170, 96, 0.20);
