@@ -1816,6 +1816,15 @@ const triggerDiceRoll = useCallback((
   modifier: number
 ) => {
   // Vérifier l'éligibilité à l'Affinité Élémentaire
+    console.log('[triggerDiceRoll] ⚡ Vérification Affinité Élémentaire:', {
+    type,
+    attackName,
+    isEligible: isElementalAffinityEligible(player),
+    draconicElement: player.draconic_element,
+    playerClass: player.class,
+    playerLevel: player.level,
+    playerSubclass: (player as any).subclass,
+  });
   if (
     type === 'damage' &&
     isElementalAffinityEligible(player) &&
