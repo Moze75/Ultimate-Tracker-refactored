@@ -587,8 +587,10 @@ select {
   box-shadow:
     inset 0 1px 0 rgba(255, 235, 180, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
+  overflow: visible;
   color: #E8DFD2;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 /* Pas de pseudo-élément texture → pas de double fond */
