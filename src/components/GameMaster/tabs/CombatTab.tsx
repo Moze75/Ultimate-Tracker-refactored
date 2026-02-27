@@ -770,8 +770,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* LEFT: Search / Bestiary - Desktop only */}
-      <div className="hidden lg:block space-y-4">
+      {/* LEFT: Search / Bestiary - Desktop only */     
+        <div className="hidden lg:block space-y-4 bestiary-panel rounded-xl lg:mx-[30px] lg:mt-[30px] p-4">     <div className="hidden lg:block space-y-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
           {panelView === 'detail' && (
             <button
