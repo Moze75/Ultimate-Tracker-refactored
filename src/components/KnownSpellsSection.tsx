@@ -321,11 +321,7 @@ const isElementalAffinityEligible = (player: Player): boolean => {
     (player as any).sousClasse ||
     ''
   ).toLowerCase();
-  return (
-    sub.includes('draconique') ||
-    sub.includes('draconic') ||
-    sub.includes('draconian')
-  );
+  return sub.includes('dracon');
 };
 
 
