@@ -895,7 +895,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
             </button>
           </div>
           {mobileSearchOpen && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-[rgba(12,10,8,0.97)] backdrop-blur-md p-4 pt-2">
+                  <div className="fixed inset-0 z-50 flex flex-col bg-[rgba(12,10,8,0.80)] backdrop-blur-sm p-4 pt-2">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-[#EFE6D8]" style={{ fontFamily: 'Cinzel, serif' }}>Bestiaire</h3>
                 <button
