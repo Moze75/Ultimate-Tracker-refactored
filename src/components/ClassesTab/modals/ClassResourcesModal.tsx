@@ -538,14 +538,18 @@ export function ClassResourcesCard({
                     onChange={async (e) => {
                       const newElement = e.target.value || null;
                       try {
-                        const { default: supabase } = await import('../../../lib/supabase').then(m => ({ default: m.supabase }));
+                        const { supabase } = await import('../../../lib/supabase');
                         const { error } = await supabase
                           .from('players')
                           .update({ draconic_element: newElement })
                           .eq('id', player.id);
                         if (error) throw error;
-                        // Notifier le parent via onUpdateResource avec une clé spéciale
-                        onUpdateResource('draconic_element' as any, newElement);
+                        // NE PAS passer par onUpdateResource (qui gère class_resources)
+                        // On force le rechargement via un faux update sur class_resources
+                        // pour que ClassesTab.tsx re-rende avec le player à jour
+                        onUpdateResource('_refresh_draconic' as any, { 
+                          __draconic_element: newElement 
+                        });
                       } catch (err) {
                         console.error('Erreur mise à jour affinité:', err);
                       }
