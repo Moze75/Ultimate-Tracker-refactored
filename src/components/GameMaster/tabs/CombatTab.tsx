@@ -894,8 +894,17 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
               <BookOpen size={12} /> Charger combat
             </button>
           </div>
-           {mobileSearchOpen && (
-            <div className="absolute top-12 left-0 right-0 z-30 max-h-[70vh] overflow-y-auto bg-[rgba(20,16,12,0.95)] border border-[rgba(212,170,96,0.45)] rounded-xl p-3 shadow-2xl backdrop-blur-sm">
+          {mobileSearchOpen && (
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-[rgba(12,10,8,0.97)] backdrop-blur-md p-4 pt-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-[#EFE6D8]" style={{ fontFamily: 'Cinzel, serif' }}>Bestiaire</h3>
+                <button
+                  onClick={() => setMobileSearchOpen(false)}
+                  className="p-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
               {panelView === 'search' && (
                 <MonsterSearch
                   selectionMode
@@ -945,6 +954,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
                   ) : null}
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>
