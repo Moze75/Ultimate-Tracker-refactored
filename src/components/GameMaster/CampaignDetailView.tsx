@@ -138,10 +138,6 @@ export function CampaignDetailView({ campaign, session, onBack }: CampaignDetail
       <div className="relative z-10">
         <div className="max-w-6xl mx-auto px-4">
           <div className="mb-6">
-            <button onClick={onBack} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6">
-              <ArrowLeft size={20} /> Retour aux campagnes
-            </button>
-
             <div>
               <h1 className="text-3xl font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>{campaign.name}</h1>
               {campaign.description && <p className="text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{campaign.description}</p>}
