@@ -799,6 +799,66 @@ select {
   border-color: rgba(212, 170, 96, 0.10) !important;
 }
 
+/* ========================================
+   Overlay Bestiaire Mobile
+   ======================================== */
+
+/* Pas de safe-area padding sur l'overlay bestiaire */
+.bestiary-overlay-mobile {
+  padding-top: 12px !important;
+}
+
+/* Les MonsterStatBlock (fond parchemin #fdf1dc, bordure #922610)
+   gardent leurs couleurs sombres d'origine dans l'overlay */
+.bestiary-overlay-mobile .border-\[\#922610\] {
+  color: #1a1a1a;
+}
+
+.bestiary-overlay-mobile .border-\[\#922610\] * {
+  color: inherit !important;
+}
+
+.bestiary-overlay-mobile .border-\[\#922610\] .text-\[\#922610\] {
+  color: #922610 !important;
+}
+
+.bestiary-overlay-mobile .border-\[\#922610\] .text-\[\#58180d\] {
+  color: #58180d !important;
+}
+
+.bestiary-overlay-mobile .border-\[\#922610\] .text-\[\#1a1a1a\] {
+  color: #1a1a1a !important;
+}
+
+.bestiary-overlay-mobile .border-\[\#922610\] .font-bold {
+  color: inherit !important;
+}
+
+/* Idem pour le desktop : les stat blocks dans le panneau gauche */
+.frame-card--light .border-\[\#922610\] {
+  color: #1a1a1a;
+}
+
+.frame-card--light .border-\[\#922610\] * {
+  color: inherit !important;
+}
+
+.frame-card--light .border-\[\#922610\] .text-\[\#922610\] {
+  color: #922610 !important;
+}
+
+.frame-card--light .border-\[\#922610\] .text-\[\#58180d\] {
+  color: #58180d !important;
+}
+
+.frame-card--light .border-\[\#922610\] .text-\[\#1a1a1a\] {
+  color: #1a1a1a !important;
+}
+
+.frame-card--light .border-\[\#922610\] .font-bold {
+  color: inherit !important;
+}
+
 
 /* Boutons vitreux cohérents */
 .combat-panel button {
