@@ -704,6 +704,13 @@ select {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* Contenu au-dessus des pseudo-éléments */
+.combat-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+
 /* Boutons vitreux cohérents */
 .combat-panel button {
   --btn-glass-bg: rgba(255, 255, 255, 0.06);
