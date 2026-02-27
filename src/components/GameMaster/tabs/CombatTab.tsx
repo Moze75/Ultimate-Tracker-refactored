@@ -949,7 +949,7 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           )}
         </div>
 
-            <div className="hidden lg:block" style={{ height: '85px' }}></div>
+            <div className="hidden lg:block" style={{ height: '81px' }}></div>
 <div className="combat-panel rounded-xl lg:mx-[30px] lg:mb-[34px]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
