@@ -908,8 +908,8 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
           </div>
           {mobileSearchOpen && (
             <div
-              className="frame-card--light frame-card--no-frame flex flex-col p-4 pt-2"
-              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, overflow: 'hidden', touchAction: 'none' }}
+              className="flex flex-col p-4 pt-2"
+              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, overflow: 'hidden', touchAction: 'none', backgroundColor: 'rgb(17, 14, 12)' }}
               onTouchMove={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3 flex-shrink-0">
