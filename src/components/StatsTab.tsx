@@ -472,11 +472,14 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
 const handleSave = async () => {
   try {
-    const dexScore = abilities. find(a => a.name === 'Dextérité')?.score ??  10;
-    const equipmentBonuses = calculateEquipmentBonuses();
-    const featBonuses = calculateFeatBonuses();
-    const totalDexBonus = (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0);
-    const dexMod = getModifier(dexScore + totalDexBonus);
+          const equipmentBonuses = calculateEquipmentBonuses();
+          const featBonuses = calculateFeatBonuses();
+          const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
+          const featBonus = featBonuses[ability.name as keyof typeof featBonuses] || 0;
+          const totalBonus = equipmentBonus + featBonus;
+          const baseModifier = getModifier(ability.score);
+          const effectiveScore = ability.score + totalBonus;
+          const displayModifier = getModifier(effectiveScore);
 
     const updatedStatsLocal = {
       ... stats,
