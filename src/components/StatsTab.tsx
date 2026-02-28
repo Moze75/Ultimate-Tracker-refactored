@@ -496,8 +496,8 @@ const handleSave = async () => {
     // Recalcul CA auto (référence) si pas d'armure
     let autoAC = player.stats?.auto_armor_class ?? (10 + dexMod);
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      autoAC = calculateUnarmoredACFromAbilities(player.class, abilities, equipmentBonuses);
-      console.log(`[StatsTab] ✅ Recalcul CA auto ${player.class}: ${autoAC} (avec bonus équipement)`);
+      autoAC = calculateUnarmoredACFromAbilities(player.class, abilities, combinedBonuses);
+      console.log(`[StatsTab] ✅ Recalcul CA auto ${player.class}: ${autoAC} (avec bonus combinés)`);
     } else if (!hasArmorEquipped) {
       autoAC = 10 + dexMod;
     }
