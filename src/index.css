@@ -331,6 +331,38 @@ body::before {
    Wizard Cards — cartes de sélection dans le Character Creator
    ======================================== */
 
+/* ========================================
+   Wizard Steps — typographie Cinzel
+   ======================================== */
+
+.wizard-step h2,
+.wizard-step h3,
+.wizard-step h4 {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.02em;
+  color: #EFE6D8;
+}
+
+.wizard-step h2 {
+  font-weight: 700;
+}
+
+.wizard-step h3 {
+  font-weight: 600;
+}
+
+.wizard-step h4 {
+  font-weight: 400;
+  color: #D4C4A8;
+}
+
+/* Labels et textes semi-gras dans les steps */
+.wizard-step .font-semibold,
+.wizard-step .font-bold {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.01em;
+}
+
 .wizard-card {
   border-color: rgba(212, 170, 96, 0.25) !important;
   background-color: rgba(20, 16, 12, 0.45) !important;
