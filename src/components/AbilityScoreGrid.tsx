@@ -101,7 +101,11 @@ export function AbilityScoreGrid({
                     />
                   ) : (
                     <div className="w-10 h-10 flex items-center justify-center text-base font-normal text-gray-100">
-                      {ability.score}
+                      {totalBonus !== 0 ? (
+                        <span className="text-green-400">{ability.score + totalBonus}</span>
+                      ) : (
+                        ability.score
+                      )}
                     </div>
                   )}
                 </div>
