@@ -328,6 +328,27 @@ body::before {
 }
 
 /* ========================================
+   Wizard Cards — cartes de sélection dans le Character Creator
+   ======================================== */
+
+.wizard-card {
+  border-color: rgba(212, 170, 96, 0.25) !important;
+  background-color: rgba(20, 16, 12, 0.45) !important;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.wizard-card:hover {
+  border-color: rgba(212, 170, 96, 0.45) !important;
+  background-color: rgba(20, 16, 12, 0.60) !important;
+}
+
+.wizard-card--selected {
+  border-color: rgba(239, 68, 68, 0.9) !important;
+  background-color: rgba(20, 16, 12, 0.75) !important;
+}
+
+
+/* ========================================
    Desktop: conteneurs intérieurs transparents
    pour laisser voir la texture du frame-card parent
    ======================================== */
