@@ -312,12 +312,12 @@ return (
                 </div>
 
                 {totalBonus !== 0 && (
-                  <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 pointer-events-none">
-                    <div className="text-[9px] text-green-400 leading-none whitespace-nowrap bg-gray-900/80 px-1.5 py-0.5 rounded">
-                                        (score {ability.score}→{effectiveScore})
-                    </div>
-                  </div>
-                )}
+                   <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 pointer-events-none">
+                     <div className="text-[9px] text-green-400 leading-none whitespace-nowrap bg-gray-900/80 px-1.5 py-0.5 rounded">
+                       ({ability.score}→{ability.score + totalBonus})
+                     </div>
+                   </div>
+                 )}
 
                 <div className="absolute top-[46%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                   <div className="text-2xl font-normal text-gray-100">
