@@ -136,7 +136,7 @@ export default function CardDetailModal({
           onTouchEnd={onTouchEnd}
           style={{ touchAction: 'pan-y' }}
         >
-  <div className="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-sm border-b border-amber-700/30 px-6 py-4 flex items-center justify-between">
+<div className="sticky top-0 z-10 border-b border-amber-700/30 px-6 py-4 flex items-center justify-between" style={{ background: 'rgba(20, 16, 12, 0.75)', backdropFilter: 'blur(12px)' }}>
             <h2 className="text-xl font-bold text-white">
               {titleExtractor ? titleExtractor(currentCard) : ''}
             </h2>
