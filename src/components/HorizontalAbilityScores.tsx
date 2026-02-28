@@ -338,7 +338,11 @@ return (
                     />
                   ) : (
                     <div className="w-8 h-8 flex items-center justify-center text-sm font-normal text-gray-100 pointer-events-none">
-                      {ability.score}
+                      {totalBonus !== 0 ? (
+                        <span className="text-green-400">{ability.score + totalBonus}</span>
+                      ) : (
+                        ability.score
+                      )}
                     </div>
                   )}
                 </div>
