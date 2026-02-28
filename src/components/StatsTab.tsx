@@ -366,9 +366,9 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
     };
 
     return newAbilities.map(ability => {
-      const baseModifier = getModifier(ability.score);
       const combinedBonus = combinedBonuses[ability.name as keyof typeof combinedBonuses] || 0;
-      const modifier = baseModifier + (typeof combinedBonus === 'number' ? combinedBonus : 0);
+      const effectiveScore = ability.score + (typeof combinedBonus === 'number' ? combinedBonus : 0);
+      const modifier = getModifier(effectiveScore);
       
       const jackOfAllTradesBonus = currentStats.jack_of_all_trades ? getJackOfAllTradesBonus(proficiencyBonus) : 0;
 
