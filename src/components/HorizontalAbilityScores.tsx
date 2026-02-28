@@ -314,7 +314,7 @@ return (
                 {totalBonus !== 0 && (
                   <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 pointer-events-none">
                     <div className="text-[9px] text-green-400 leading-none whitespace-nowrap bg-gray-900/80 px-1.5 py-0.5 rounded">
-                      ({baseModifier >= 0 ? '+' : ''}{baseModifier} {totalBonus > 0 ? '+' : ''}{totalBonus})
+                                        (score {ability.score}→{effectiveScore})
                     </div>
                   </div>
                 )}
