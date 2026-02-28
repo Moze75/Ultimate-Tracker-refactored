@@ -127,8 +127,7 @@ export default function CardDetailModal({
           </button>
         )}
 
-        <div
-      <div
+<div
   className="flex-1 frame-card--light frame-card--no-frame rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in"
           onClick={(e) => e.stopPropagation()}
           onTouchStart={onTouchStart}
