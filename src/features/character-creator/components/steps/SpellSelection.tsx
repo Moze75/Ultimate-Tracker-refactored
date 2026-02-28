@@ -489,10 +489,10 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
                   return (
                     <div
                       key={spell.id}
-className={`border rounded-lg overflow-hidden transition-all ${
+className={`frame-card--light frame-card--no-frame rounded-lg transition-all ${
   isSelected
-    ? 'border-blue-500/60 bg-blue-900/20'
-    : 'border-amber-700/25 bg-gray-900/40 hover:border-amber-600/40 hover:bg-gray-900/60'
+    ? '!border-purple-500/60'
+    : 'hover:!border-amber-600/50'
 }`}
                     >
                       <button
