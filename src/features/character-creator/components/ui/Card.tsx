@@ -70,10 +70,10 @@ export default function Card({
       )}
 
 <div
-  className={`relative z-10 h-full rounded-xl border-2 transition-all duration-200 flex flex-col ${
+  className={`relative z-10 h-full rounded-xl border-2 transition-all duration-200 flex flex-col frame-card--light frame-card--no-frame ${
     selected
-      ? 'border-transparent bg-gray-900/90'
-      : 'border-amber-700/30 bg-gray-900/50 hover:border-amber-600/50 hover:bg-gray-900/70'
+      ? 'border-transparent'
+      : 'hover:border-amber-600/50'
   }`}
 >
         {children}
