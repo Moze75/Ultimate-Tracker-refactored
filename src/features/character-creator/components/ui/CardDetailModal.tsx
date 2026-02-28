@@ -128,7 +128,8 @@ export default function CardDetailModal({
         )}
 
         <div
-          className="flex-1 bg-gray-900/95 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in border border-gray-700/50"
+      <div
+  className="flex-1 frame-card--light frame-card--no-frame rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in"
           onClick={(e) => e.stopPropagation()}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
