@@ -23,10 +23,10 @@ export default function Card({
   }, [selected]);
 
   return (
-    <div
-      className={`relative rounded-xl cursor-pointer transition-all duration-200 ${
-        isHovered && !selected ? 'transform scale-[1.02]' : ''
-      } ${className}`}
+<div
+  className={`relative rounded-xl cursor-pointer transition-all duration-200 ${
+    isHovered && !selected ? 'transform scale-[1.02]' : ''
+  } ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
