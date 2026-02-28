@@ -198,9 +198,9 @@ const handleSave = async () => {
   }
 
   try {
-    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?. score ?? 10;
-    const equipmentBonuses = calculateEquipmentBonuses(); // ✅ Récupérer les bonus
-    const dexMod = getModifier(dexScore) + (equipmentBonuses.Dextérité || 0); // ✅ Inclure le bonus
+    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
+    const equipmentBonuses = calculateEquipmentBonuses();
+    const dexMod = getModifier(dexScore + (equipmentBonuses.Dextérité || 0));
 
     // Vérifier si une armure est équipée
     const hasArmorEquipped = ! !(player.equipment?. armor?.armor_formula);
