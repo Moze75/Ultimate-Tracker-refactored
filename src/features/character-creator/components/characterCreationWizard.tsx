@@ -747,7 +747,7 @@ const renderStep = () => {
             steps={steps}
           /> 
 
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6 md:p-8">
+        <div className="p-6 md:p-8">
             {renderStep()}
           </div>
         </div>
