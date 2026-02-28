@@ -69,13 +69,13 @@ export default function Card({
         </>
       )}
 
-      <div
-        className={`relative z-10 h-full rounded-xl border-2 transition-all duration-200 flex flex-col ${
-          selected
-            ? 'border-transparent bg-gray-900/95'
-            : 'border-gray-700/60 bg-gray-900/60 hover:border-gray-500/70 hover:bg-gray-900/80'
-        }`}
-      >
+<div
+  className={`relative z-10 h-full rounded-xl border-2 transition-all duration-200 flex flex-col ${
+    selected
+      ? 'border-transparent bg-gray-900/90'
+      : 'border-amber-700/30 bg-gray-900/50 hover:border-amber-600/50 hover:bg-gray-900/70'
+  }`}
+>
         {children}
       </div>
 
