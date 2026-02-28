@@ -200,7 +200,17 @@ const handleSave = async () => {
   try {
     const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
     const equipmentBonuses = calculateEquipmentBonuses();
-    const dexMod = getModifier(dexScore + (equipmentBonuses.Dextérité || 0));
+    const featBonuses = calculateFeatBonuses();
+    const combinedBonuses = {
+      ...equipmentBonuses,
+      Force: (equipmentBonuses.Force || 0) + (featBonuses.Force || 0),
+      Dextérité: (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0),
+      Constitution: (equipmentBonuses.Constitution || 0) + (featBonuses.Constitution || 0),
+      Intelligence: (equipmentBonuses.Intelligence || 0) + (featBonuses.Intelligence || 0),
+      Sagesse: (equipmentBonuses.Sagesse || 0) + (featBonuses.Sagesse || 0),
+      Charisme: (equipmentBonuses.Charisme || 0) + (featBonuses.Charisme || 0),
+    };
+    const dexMod = getModifier(dexScore + combinedBonuses.Dextérité);
 
     // Vérifier si une armure est équipée
     const hasArmorEquipped = ! !(player.equipment?. armor?.armor_formula);
