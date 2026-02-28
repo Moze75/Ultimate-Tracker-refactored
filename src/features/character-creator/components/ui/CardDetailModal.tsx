@@ -152,7 +152,7 @@ export default function CardDetailModal({
           <div className="p-6">{renderCardContent(currentCard, currentIndex)}</div>
 
           {onConfirm && (
-     <div className="sticky bottom-0 z-10 bg-gray-900/80 backdrop-blur-sm border-t border-amber-700/30 px-6 py-4">
+<div className="sticky bottom-0 z-10 border-t border-amber-700/30 px-6 py-4" style={{ background: 'rgba(20, 16, 12, 0.75)', backdropFilter: 'blur(12px)' }}>
               <button
                 onClick={handleConfirm}
                 disabled={confirmDisabled}
