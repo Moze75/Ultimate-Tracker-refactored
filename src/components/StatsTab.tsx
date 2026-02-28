@@ -473,8 +473,10 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 const handleSave = async () => {
   try {
     const dexScore = abilities. find(a => a.name === 'Dextérité')?.score ??  10;
-    const equipmentBonuses = calculateEquipmentBonuses(); // ✅ Récupérer les bonus d'équipement
-    const dexMod = getModifier(dexScore) + (equipmentBonuses.Dextérité || 0); // ✅ Inclure le bonus d'équipement
+    const equipmentBonuses = calculateEquipmentBonuses();
+    const featBonuses = calculateFeatBonuses();
+    const totalDexBonus = (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0);
+    const dexMod = getModifier(dexScore + totalDexBonus);
 
     const updatedStatsLocal = {
       ... stats,
