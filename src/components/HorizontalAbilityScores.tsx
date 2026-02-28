@@ -219,9 +219,8 @@ const handleSave = async () => {
     let newArmorClass = player.stats?.armor_class ?? (10 + dexMod);
     
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      // ✅ Passer les bonus d'équipement au calcul
-      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities, equipmentBonuses);
-      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus équipement)`);
+      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities, combinedBonuses);
+      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus combinés)`);
     } else if (! hasArmorEquipped) {
       newArmorClass = 10 + dexMod;
     }
