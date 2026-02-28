@@ -385,12 +385,12 @@ export default function RaceSelection({
   const isCustomRace = race.isCustom === true; // ✅ Race personnalisée sauvegardée
 
   return (
-    <Card
-      key={`${race.name}-${index}`}
-      selected={isSelected && !isCustomCard}
-      onClick={() => handleCardClick(index)}
-      className={`h-full min-h-[200px] ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''} ${isCustomRace ? 'border-purple-500/30' : ''}`}
-    >
+<Card
+  key={`${race.name}-${index}`}
+  selected={isSelected && !isCustomCard}
+  onClick={() => handleCardClick(index)}
+  className={`h-full min-h-[200px] wizard-card ${isSelected && !isCustomCard ? 'wizard-card--selected' : ''} ${isCustomCard ? 'border-2 border-dashed border-purple-500/50 hover:border-purple-400/70' : ''} ${isCustomRace ? 'border-purple-500/30' : ''}`}
+>
       <CardHeader>
         <div className="flex items-center justify-between">
           <h3 className={`text-lg font-semibold ${isCustomCard ? 'text-purple-300' : isCustomRace ? 'text-purple-200' : 'text-white'}`}>
