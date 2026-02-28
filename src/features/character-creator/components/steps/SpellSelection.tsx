@@ -432,7 +432,7 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
         </div>
       ) : (
         <>
-       <div className="frame-card--light frame-card--no-frame rounded-lg p-4">
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50"> 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
