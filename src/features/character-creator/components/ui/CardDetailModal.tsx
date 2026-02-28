@@ -129,13 +129,12 @@ export default function CardDetailModal({
 
 <div
   className="flex-1 frame-card--light frame-card--no-frame rounded-lg shadow-2xl max-h-[90vh] animate-scale-in"
-  style={{ overflow: 'hidden auto' }}
-          onClick={(e) => e.stopPropagation()}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          style={{ touchAction: 'pan-y' }}
-        >
+  style={{ overflow: 'hidden auto', touchAction: 'pan-y' }}
+  onClick={(e) => e.stopPropagation()}
+  onTouchStart={onTouchStart}
+  onTouchMove={onTouchMove}
+  onTouchEnd={onTouchEnd}
+>
 <div className="sticky top-0 z-10 border-b border-amber-700/30 px-6 py-4 flex items-center justify-between" style={{ background: 'rgba(20, 16, 12, 0.75)', backdropFilter: 'blur(12px)' }}>
             <h2 className="text-xl font-bold text-white">
               {titleExtractor ? titleExtractor(currentCard) : ''}
