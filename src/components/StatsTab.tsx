@@ -48,20 +48,20 @@ const calculateUnarmoredACFromAbilities = (
   equipmentBonuses: { Force: number; Dextérité: number; Constitution: number; Intelligence: number; Sagesse: number; Charisme: number; armor_class: number }
 ): number => {
   const dexAbility = abilities.find(a => a.name === 'Dextérité');
-  const baseDexMod = dexAbility ?  getModifier(dexAbility.score) : 0;
-  const dexMod = baseDexMod + (equipmentBonuses.Dextérité || 0);
+  const effectiveDexScore = (dexAbility?.score ?? 10) + (equipmentBonuses.Dextérité || 0);
+  const dexMod = getModifier(effectiveDexScore);
 
   if (playerClass === 'Moine') {
-    const wisAbility = abilities.find(a => a. name === 'Sagesse');
-    const baseWisMod = wisAbility ? getModifier(wisAbility. score) : 0;
-    const wisMod = baseWisMod + (equipmentBonuses.Sagesse || 0);
+    const wisAbility = abilities.find(a => a.name === 'Sagesse');
+    const effectiveWisScore = (wisAbility?.score ?? 10) + (equipmentBonuses.Sagesse || 0);
+    const wisMod = getModifier(effectiveWisScore);
     return 10 + dexMod + wisMod;
   }
 
   if (playerClass === 'Barbare') {
-    const conAbility = abilities. find(a => a.name === 'Constitution');
-    const baseConMod = conAbility ? getModifier(conAbility.score) : 0;
-    const conMod = baseConMod + (equipmentBonuses.Constitution || 0);
+    const conAbility = abilities.find(a => a.name === 'Constitution');
+    const effectiveConScore = (conAbility?.score ?? 10) + (equipmentBonuses.Constitution || 0);
+    const conMod = getModifier(effectiveConScore);
     return 10 + dexMod + conMod;
   }
 
