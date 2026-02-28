@@ -286,7 +286,8 @@ const handleSave = async () => {
           const featBonus = featBonuses[ability.name as keyof typeof featBonuses] || 0;
           const totalBonus = equipmentBonus + featBonus;
           const baseModifier = getModifier(ability.score);
-          const displayModifier = baseModifier + totalBonus;
+          const effectiveScore = ability.score + totalBonus;
+          const displayModifier = getModifier(effectiveScore);
 
 return (
   <div key={ability.name} className="flex flex-col items-center">
