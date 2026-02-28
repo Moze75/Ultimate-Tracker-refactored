@@ -489,11 +489,11 @@ const SpellSelection: React.FC<SpellSelectionProps> = ({
                   return (
                     <div
                       key={spell.id}
-                      className={`border rounded-lg overflow-hidden transition-all ${
-                        isSelected
-                          ? 'border-blue-500/60 bg-blue-900/20'
-                          : 'border-gray-700/50 bg-gray-800/50 hover:bg-gray-700/50'
-                      }`}
+className={`border rounded-lg overflow-hidden transition-all ${
+  isSelected
+    ? 'border-blue-500/60 bg-blue-900/20'
+    : 'border-amber-700/25 bg-gray-900/40 hover:border-amber-600/40 hover:bg-gray-900/60'
+}`}
                     >
                       <button
                         onClick={() => setExpandedSpell(isExpanded ? null : spell.id)}
