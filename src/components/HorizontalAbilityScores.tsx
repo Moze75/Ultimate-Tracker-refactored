@@ -192,50 +192,61 @@ export function HorizontalAbilityScores({
   };
 
 const handleSave = async () => {
-  if (! player || !onUpdate) {
-    toast.error('Impossible de sauvegarder');
-    return;
-  }
-
   try {
-    const dexScore = localAbilities.find(a => a.name === 'Dextérité')?.score ?? 10;
+    const dexScore = abilities.find(a => a.name === 'Dextérité')?.score ?? 10;
     const equipmentBonuses = calculateEquipmentBonuses();
     const featBonuses = calculateFeatBonuses();
+
+    // Combiner équipement + dons pour le calcul de la CA
     const combinedBonuses = {
-      ...equipmentBonuses,
       Force: (equipmentBonuses.Force || 0) + (featBonuses.Force || 0),
       Dextérité: (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0),
       Constitution: (equipmentBonuses.Constitution || 0) + (featBonuses.Constitution || 0),
       Intelligence: (equipmentBonuses.Intelligence || 0) + (featBonuses.Intelligence || 0),
       Sagesse: (equipmentBonuses.Sagesse || 0) + (featBonuses.Sagesse || 0),
       Charisme: (equipmentBonuses.Charisme || 0) + (featBonuses.Charisme || 0),
+      armor_class: equipmentBonuses.armor_class || 0,
     };
     const dexMod = getModifier(dexScore + combinedBonuses.Dextérité);
 
-    // Vérifier si une armure est équipée
-    const hasArmorEquipped = ! !(player.equipment?. armor?.armor_formula);
+    const updatedStatsLocal = {
+      ...stats,
+      jack_of_all_trades: hasJackOfAllTrades(player.class, player.level)
+        ? (stats.jack_of_all_trades ?? false)
+        : false
+    };
 
-    // Recalculer la CA si Moine/Barbare sans armure
-    let newArmorClass = player.stats?.armor_class ?? (10 + dexMod);
-    
+    // Vérifier si une armure est équipée
+    const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
+
+    const isManualAC = (player.stats as any)?.is_ac_manual === true;
+
+    // Recalcul CA auto (référence) si pas d'armure
+    let autoAC = player.stats?.auto_armor_class ?? (10 + dexMod);
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      newArmorClass = calculateUnarmoredACFromAbilities(player.class, localAbilities, combinedBonuses);
-      console.log(`[HorizontalAbilityScores] ✅ Recalcul CA ${player.class}: ${newArmorClass} (avec bonus combinés)`);
-    } else if (! hasArmorEquipped) {
-      newArmorClass = 10 + dexMod;
+      autoAC = calculateUnarmoredACFromAbilities(player.class, abilities, combinedBonuses);
+      console.log(`[StatsTab] ✅ Recalcul CA auto ${player.class}: ${autoAC} (avec bonus combinés)`);
+    } else if (!hasArmorEquipped) {
+      autoAC = 10 + dexMod;
     }
+
+    const currentAC = player.stats?.armor_class ?? autoAC;
+    const newArmorClass = isManualAC ? currentAC : autoAC;
 
     const mergedStats = {
       ...player.stats,
-      proficiency_bonus: getProficiencyBonus(player.level),
+      ...updatedStatsLocal,
+      proficiency_bonus: effectiveProficiency,
       initiative: dexMod,
       armor_class: newArmorClass,
+      auto_armor_class: autoAC,
+      is_ac_manual: isManualAC,
     };
 
     const { error } = await supabase
       .from('players')
-      .update({ 
-        abilities: localAbilities,
+      .update({
+        abilities,
         stats: mergedStats
       })
       .eq('id', player.id);
@@ -244,14 +255,14 @@ const handleSave = async () => {
 
     onUpdate({
       ...player,
-      abilities: localAbilities,
+      abilities,
       stats: mergedStats
     });
 
     setEditing(false);
     toast.success('Caractéristiques mises à jour');
   } catch (error) {
-    console.error('Erreur lors de la mise à jour:', error);
+    console.error('Erreur lors de la mise à jour des caractéristiques:', error);
     toast.error('Erreur lors de la mise à jour');
   }
 };
