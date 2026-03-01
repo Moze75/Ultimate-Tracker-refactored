@@ -658,15 +658,15 @@ export default function BackgroundSelection({
         })}
       </div>
 
-      <div className="flex justify-between pt-6">
-        <Button onClick={onPrevious} variant="secondary" size="lg">
-          Precedent
+      <div className="grid grid-cols-2 gap-3 pt-8">
+        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full">
+          Précédent
         </Button>
         <Button
           onClick={onNext}
           disabled={!selectedBackground || !selectedEquipmentOption}
           size="lg"
-          className="min-w-[200px]"
+          className="w-full"
         >
           Continuer
         </Button>
