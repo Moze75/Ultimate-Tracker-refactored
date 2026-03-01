@@ -771,7 +771,7 @@ select {
 }
 
 /* Sous-conteneurs transparents comme dans frame-card */
-.combat-panel [class*="bg-gray-800"] {
+.combat-panel [class*="bg-gray-800"]:not(.btn-texture-gray):not(.btn-texture-orange):not(.btn-texture-gray-glow) {
   background-color: transparent !important;
 }
 
