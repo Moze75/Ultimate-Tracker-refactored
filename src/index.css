@@ -517,8 +517,8 @@ body::before {
 }
 
 /* Sous-conteneurs avec fond gris inline (Tailwind) */
-.frame-card [class*="bg-gray-800"],
-.frame-card--light [class*="bg-gray-800"] {
+.frame-card [class*="bg-gray-800"]:not(.btn-texture-gray):not(.btn-texture-orange):not(.btn-texture-gray-glow),
+.frame-card--light [class*="bg-gray-800"]:not(.btn-texture-gray):not(.btn-texture-orange):not(.btn-texture-gray-glow) {
   background-color: transparent !important;
 }
 
