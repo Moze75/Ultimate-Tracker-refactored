@@ -61,33 +61,50 @@ export function HPManager({
       <div className="p-4">
         <div className="space-y-4">
 <div className="relative py-5" ref={hpBarRef}>
+  {/* Texte HP centré */}
   <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none select-none">
-    <span className="text-white font-bold text-sm drop-shadow-lg">
+    <span className="text-white font-bold text-sm drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
       {totalHP} / {player.max_hp}
     </span>
   </div>
 
-            <div className="w-full bg-gray-700 rounded-full h-5 overflow-hidden relative">
-              <div
-                className={`hp-bar hp-bar-main h-full transition-all duration-500 bg-gradient-to-r ${getHPBarColor()} ${
-                  isCriticalHealth ? 'heartbeat-animation' : ''
-                }`}
-                style={{ width: `${Math.min(100, (player.current_hp / player.max_hp) * 100)}%` }}
-              />
-              {player.temporary_hp > 0 && (
-                <div
-                  className="hp-bar-temp absolute top-0 h-full bg-gradient-to-r from-blue-500 to-blue-400"
-                  style={{
-                    left: `${Math.min(100, (player.current_hp / player.max_hp) * 100)}%`,
-                    width: `${Math.min(
-                      100 - (player.current_hp / player.max_hp) * 100,
-                      (player.temporary_hp / player.max_hp) * 100
-                    )}%`
-                  }}
-                />
-              )}
-            </div>
-          </div>
+  <div className={`w-full rounded-full h-6 overflow-hidden relative border border-amber-700/40 ${
+    isCriticalHealth ? 'heartbeat-animation' : ''
+  }`}>
+    {/* Couche 1 : Texture rouge statique (toujours 100%) */}
+    <div
+      className="absolute inset-0 hp-bar"
+      style={{
+        backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20rouge(2).png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+
+    {/* Couche 2 : PV temporaires (bleu, après les HP actuels) */}
+    {player.temporary_hp > 0 && (
+      <div
+        className="absolute top-0 h-full bg-gradient-to-r from-blue-500/80 to-blue-400/80 z-[1]"
+        style={{
+          left: `${Math.min(100, (player.current_hp / player.max_hp) * 100)}%`,
+          width: `${Math.min(
+            100 - (player.current_hp / player.max_hp) * 100,
+            (player.temporary_hp / player.max_hp) * 100
+          )}%`,
+        }}
+      />
+    )}
+
+    {/* Couche 3 : Masque gris qui couvre les PV perdus (vient de la droite) */}
+    <div
+      className="absolute top-0 right-0 h-full bg-gray-700/90 transition-all duration-500 z-[2]"
+      style={{
+        width: `${Math.max(0, 100 - ((player.current_hp + player.temporary_hp) / player.max_hp) * 100)}%`,
+      }}
+    />
+  </div>
+</div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col items-center space-y-2"> 
