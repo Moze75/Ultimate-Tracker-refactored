@@ -1639,7 +1639,7 @@ button.btn-texture-gray-glow::before,
   position: absolute;
   inset: 0;
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
-  background-size: 150px 40px;
+  background-size: 150px 140px;
   background-position: center;
  
   opacity: 0.45;
