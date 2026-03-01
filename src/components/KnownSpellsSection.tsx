@@ -1386,7 +1386,7 @@ function SpellLevelSection({
   );
 }
 
-export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps) {
+export function KnownSpellsSection({ player, onUpdate, inventory = [] }: KnownSpellsSectionProps) {
   const [knownSpells, setKnownSpells] = useState<KnownSpell[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSpellbook, setShowSpellbook] = useState(false);
