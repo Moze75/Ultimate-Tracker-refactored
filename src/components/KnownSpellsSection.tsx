@@ -1386,65 +1386,13 @@ function SpellLevelSection({
   );
 }
 
-export function KnownSpellsSection({ player, onUpdate, inventory = [] }: KnownSpellsSectionProps) {
+export function KnownSpellsSection({ player, onUpdate }: KnownSpellsSectionProps) {
   const [knownSpells, setKnownSpells] = useState<KnownSpell[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSpellbook, setShowSpellbook] = useState(false);
   const [selectedSpells, setSelectedSpells] = useState<Spell[]>([]);
   const [expandedSpell, setExpandedSpell] = useState<string | null>(null);
 
-  // ✅ Calcul des bonus d'équipement (même logique que StatsTab/HorizontalAbilityScores)
-  const equipmentBonuses = useMemo(() => {
-    const bonuses = { Force: 0, Dextérité: 0, Constitution: 0, Intelligence: 0, Sagesse: 0, Charisme: 0 };
-    if (!inventory || !Array.isArray(inventory)) return bonuses;
-
-    for (const item of inventory) {
-      try {
-        const description = item.description || '';
-        const metaLine = description
-          .split('\n')
-          .reverse()
-          .find((l: string) => l.trim().startsWith('#meta:'));
-        if (!metaLine) continue;
-        const meta = JSON.parse(metaLine.trim().slice(6));
-        if (meta.equipped && meta.bonuses) {
-          if (meta.bonuses.strength) bonuses.Force += meta.bonuses.strength;
-          if (meta.bonuses.dexterity) bonuses.Dextérité += meta.bonuses.dexterity;
-          if (meta.bonuses.constitution) bonuses.Constitution += meta.bonuses.constitution;
-          if (meta.bonuses.intelligence) bonuses.Intelligence += meta.bonuses.intelligence;
-          if (meta.bonuses.wisdom) bonuses.Sagesse += meta.bonuses.wisdom;
-          if (meta.bonuses.charisma) bonuses.Charisme += meta.bonuses.charisma;
-        }
-      } catch { continue; }
-    }
-    return bonuses;
-  }, [inventory]);
-
-  // ✅ Calcul des bonus de dons
-  const featBonuses = useMemo(() => {
-    const bonuses: Record<AbilityName, number> = { Force: 0, Dextérité: 0, Constitution: 0, Intelligence: 0, Sagesse: 0, Charisme: 0 };
-    if (!player.stats) return bonuses;
-    const feats = (player.stats as any)?.feats || {};
-    const featAbilityChoices: Record<string, AbilityName> = (player.stats as any)?.feat_ability_choices || {};
-    const allFeats: string[] = [
-      ...(Array.isArray(feats.generals) ? feats.generals : []),
-      ...(Array.isArray(feats.origins) ? feats.origins : []),
-      ...(Array.isArray(feats.styles) ? feats.styles : []),
-    ];
-    for (const featName of allFeats) {
-      const normalizedName = normalizeFeatName(featName);
-      const featBonus = FEAT_BONUSES[normalizedName];
-      if (featBonus) {
-        const chosenAbility = featAbilityChoices[normalizedName];
-        if (chosenAbility && featBonus.choices.includes(chosenAbility)) {
-          bonuses[chosenAbility] += featBonus.amount;
-        }
-      }
-    }
-    return bonuses;
-  }, [player.stats]);
-
-  
   // État pour les bonus personnalisés des sorts
   // Structure: { [spell_id]: { attackBonus: number, damageBonus: number } }
   const [spellBonuses, setSpellBonuses] = useState<Record<string, { attackBonus: number; damageBonus: number }>>(() => {
@@ -1834,43 +1782,10 @@ const spellcastingAbilityName = useMemo(() => {
   return primaryAbility || secondaryAbility;
 }, [player.class, player.secondary_class]);
 
-const abilityMod = useMemo(() => {
-  if (!spellcastingAbilityName) return 0;
-
-  // 1) Récupérer le score de BASE depuis abilities
-  const abilities: any = (player as any).abilities;
-  let baseScore: number | null = null;
-
-  if (Array.isArray(abilities)) {
-    const found = abilities.find((a: any) => a?.name === spellcastingAbilityName);
-    if (found && typeof found.score === 'number') baseScore = found.score;
-  } else if (abilities && typeof abilities === 'object') {
-    const direct = abilities[spellcastingAbilityName] ?? abilities[spellcastingAbilityName.toLowerCase()];
-    if (typeof direct === 'number') baseScore = direct;
-    else if (direct && typeof direct.score === 'number') baseScore = direct.score;
-  }
-
-  if (baseScore === null) return 0;
-
-  // 2) Ajouter les bonus d'équipement + dons
-  const eqBonus = equipmentBonuses[spellcastingAbilityName as keyof typeof equipmentBonuses] || 0;
-  const ftBonus = featBonuses[spellcastingAbilityName as keyof typeof featBonuses] || 0;
-  const effectiveScore = baseScore + eqBonus + ftBonus;
-
-  const mod = getModifier(effectiveScore);
-
-  console.log('[KnownSpellsSection] 🧙 Calcul DD/Attaque:', {
-    classe: player.class,
-    abilityName: spellcastingAbilityName,
-    baseScore,
-    eqBonus,
-    ftBonus,
-    effectiveScore,
-    mod,
-  });
-
-  return mod;
-}, [player, spellcastingAbilityName, equipmentBonuses, featBonuses]);
+const abilityMod = useMemo(
+  () => (spellcastingAbilityName ? getAbilityModFromPlayer(player, spellcastingAbilityName) : 0),
+  [player, spellcastingAbilityName]
+);
 
 const proficiencyBonus = useMemo(
   () =>
