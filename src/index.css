@@ -1642,7 +1642,7 @@ button.btn-texture-gray-glow::before,
   background-size: 80px 40px;
   background-position: center;
   background-repeat: repeat;
-  opacity: 0.45;
+  opacity: 0.8;
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
