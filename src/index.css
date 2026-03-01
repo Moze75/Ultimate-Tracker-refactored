@@ -1626,7 +1626,7 @@ button.btn-texture-gray-glow,
   border: 2px solid rgba(212, 170, 96, 0.6) !important;
   box-shadow:
     0 0 30px rgba(212, 170, 96, 0.4),
-    0 0 60px rgba(212, 170, 96, 0.2),
+    0 0 60px rgba(212, 170, 96, 0.2), 
     inset 0 1px 2px rgba(255, 235, 180, 0.15);
   transition: all 0.2s ease;
   overflow: hidden;
@@ -1639,9 +1639,9 @@ button.btn-texture-gray-glow::before,
   position: absolute;
   inset: 0;
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
-  background-size: 150px 140px;
+  background-size: 80px 40px;
   background-position: center;
- 
+  background-repeat: repeat;
   opacity: 0.45;
   z-index: -1;
   pointer-events: none;
