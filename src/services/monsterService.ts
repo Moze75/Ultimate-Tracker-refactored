@@ -27,29 +27,24 @@ export const monsterService = {
     return cachedList;
   },
 
-  async fetchMonsterDetail(slug: string): Promise<Monster> {
-    const res = await fetch(
-      `${EDGE_FN_BASE}?action=detail&slug=${encodeURIComponent(slug)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!res.ok) throw new Error(`Monstre non trouvé: ${res.status}`);
     const data = await res.json();
-    console.log('🐉 [monsterService] Raw API response:', JSON.stringify({
-      skills: data.skills,
-      senses: data.senses,
-      languages: data.languages, 
-      saving_throws: data.saving_throws,
-      vulnerabilities: data.vulnerabilities,
-      resistances: data.resistances,
-    }, null, 2));
+
+    // ===== FIX côté client : l'edge function parse mal les champs avec accents =====
+    // Le bug : "Compétences" dans le HTML contient &eacute; que la regex ne matche pas,
+    // donc le fallback capture "étences" comme skills, et les champs suivants sont perdus.
+    // On nettoie ici en attendant le redéploiement de l'edge function.
+
+    // 1. Skills corrompus : "étences ..." → supprimer le préfixe
+    if (data.skills && typeof data.skills === 'string') {
+      data.skills = data.skills.replace(/^[éèe]tences\s*/i, '');
+    }
+
+    // 2. saving_throws corrompus : contient du texte de trait au lieu des vrais JdS
+    if (data.saving_throws && /^contre\s/i.test(data.saving_throws)) {
+      data.saving_throws = '';
+    }
+
     return { ...data, source: 'aidedd' } as Monster;
-  },
 
   async saveToCampaign(campaignId: string, monster: Monster): Promise<Monster> {
     const { data, error } = await supabase
