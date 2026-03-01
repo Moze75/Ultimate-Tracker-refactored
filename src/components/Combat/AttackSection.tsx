@@ -184,7 +184,7 @@ export function AttackSection({
                   console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
                   onRollDamage(attack);
                 }}
-                className="bg-orange-600/60 hover:bg-orange-500/60 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
+                              className="btn-texture-orange text-white px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
               >
                 Dégâts : {dmgLabel}
               </button>
