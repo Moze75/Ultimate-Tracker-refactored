@@ -1054,7 +1054,7 @@ case 'Magicien':
   return (
     <div className="space-y-8">
 
-      <KnownSpellsSection player={player} onUpdate={onUpdate} /> 
+       <KnownSpellsSection player={player} onUpdate={onUpdate} inventory={inventory} /> 
 
       {/* Section "Emplacements de sorts" masquée */}
       {/* {renderSpellSlots()} */}
