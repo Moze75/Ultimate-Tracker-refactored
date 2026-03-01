@@ -1460,12 +1460,13 @@ select {
   content: '';
   position: absolute;
   inset: 0;
-.btn-texture-gray {
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') !important;
-  background-color: transparent !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(156, 163, 175, 0.3) !important;
-}
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+  mix-blend-mode: overlay;
+} 
