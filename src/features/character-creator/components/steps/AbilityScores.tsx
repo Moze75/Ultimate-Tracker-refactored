@@ -639,12 +639,12 @@ export default function AbilityScores({
           Précédent
         </Button>
         <Button
-          onClick={onNext}
-          disabled={!canProceed}
+          onClick={handleFinish}
           size="lg"
           className="w-full"
+          disabled={isCreating}
         >
-          Continuer
+          {isCreating ? 'Création en cours...' : 'Créer le personnage'}
         </Button>
       </div>
     </div>
