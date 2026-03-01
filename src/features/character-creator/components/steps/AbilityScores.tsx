@@ -634,19 +634,19 @@ export default function AbilityScores({
         </Card>
       )}
 
-      <div className="flex flex-col gap-3 pt-8">
+      <div className="grid grid-cols-2 gap-3 pt-8">
+        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full">
+          Précédent
+        </Button>
         <Button
-          onClick={handleFinish}
+          onClick={handleFinish} 
           size="lg"
           className="w-full"
           disabled={isCreating}
         >
           {isCreating ? 'Création en cours...' : 'Créer le personnage'}
         </Button>
-        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full">
-          Précédent
-        </Button>
-      </div>
+      </div> 
     </div>
   );
 }
