@@ -749,6 +749,12 @@ const handleSignOut = async () => {
                       fontSize: '1.125rem',
                       letterSpacing: '0.05em',
                       color: '#FFE8B8',
+                      boxShadow: `
+                        0 0 30px rgba(212, 170, 96, 0.6),
+                        0 0 60px rgba(212, 170, 96, 0.4),
+                        0 0 100px rgba(212, 170, 96, 0.2),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.15)
+                      `,
                       textShadow: '0 2px 4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 232, 184, 0.5)',
                     }}
                   >
