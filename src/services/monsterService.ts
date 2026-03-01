@@ -40,15 +40,116 @@ export const monsterService = {
 
     if (!res.ok) throw new Error(`Monstre non trouvé: ${res.status}`);
     const data = await res.json();
-    console.log('🐉 [monsterService] Raw API response:', JSON.stringify({
-      skills: data.skills,
-      senses: data.senses,
-      languages: data.languages,
-      saving_throws: data.saving_throws,
-      vulnerabilities: data.vulnerabilities,
-      resistances: data.resistances,
-    }, null, 2));
+
+    // === FIX: Re-parser les champs depuis le HTML brut car l'edge function parse mal les accents ===
+    // L'edge function retourne des données corrompues (ex: skills="étences" au lieu de "Perception +5, Discrétion +4")
+    // On re-fetch le HTML et on re-parse côté client si les données semblent corrompues
+    const needsReparse =
+      (data.skills && /^[éèe]tences/i.test(data.skills)) ||
+      (data.saving_throws && /^contre\s/i.test(data.saving_throws)) ||
+      (!data.senses && !data.languages);
+
+    if (needsReparse) {
+      try {
+        const fixedFields = await this.reparseMonsterFields(data.slug || slug);
+        if (fixedFields) {
+          data.skills = fixedFields.skills || data.skills;
+          data.senses = fixedFields.senses || data.senses;
+          data.languages = fixedFields.languages || data.languages;
+          data.saving_throws = fixedFields.saving_throws || '';
+          data.vulnerabilities = fixedFields.vulnerabilities || data.vulnerabilities;
+          data.resistances = fixedFields.resistances || data.resistances;
+          data.damage_immunities = fixedFields.damage_immunities || data.damage_immunities;
+          data.condition_immunities = fixedFields.condition_immunities || data.condition_immunities;
+        }
+      } catch (e) {
+        console.warn('⚠️ Reparse failed, using raw data:', e);
+      }
+    }
+
+    // Nettoyage final : supprimer les artefacts de parsing
+    if (data.skills && /^[éèe]tences\b/i.test(data.skills)) {
+      data.skills = data.skills.replace(/^[éèe]tences\s*/i, '');
+    }
+    if (data.saving_throws && /^contre\s/i.test(data.saving_throws)) {
+      data.saving_throws = '';
+    }
+
     return { ...data, source: 'aidedd' } as Monster;
+  },
+
+  async reparseMonsterFields(slug: string): Promise<Record<string, string> | null> {
+    // Fetch la page HTML directement via un proxy CORS ou via l'edge function en mode debug
+    // On utilise l'edge function avec un paramètre spécial pour obtenir le HTML brut
+    // Mais comme on ne peut pas modifier l'edge function, on parse le HTML côté client
+    // via une approche alternative : on fetch la page aidedd via un proxy
+    try {
+      const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-monster?action=raw-html&slug=${encodeURIComponent(slug)}`;
+      const res = await fetch(proxyUrl, {
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+      });
+      // Si l'edge function ne supporte pas "raw-html", on ne peut rien faire
+      if (!res.ok) return null;
+
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('text/html')) {
+        const html = await res.text();
+        return this.parseFieldsFromHtml(html);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  parseFieldsFromHtml(html: string): Record<string, string> {
+    const stripHtml = (s: string): string =>
+      s.replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&eacute;/g, 'é')
+        .replace(/&egrave;/g, 'è')
+        .replace(/&agrave;/g, 'à')
+        .replace(/&ocirc;/g, 'ô')
+        .replace(/&icirc;/g, 'î')
+        .replace(/&ucirc;/g, 'û')
+        .replace(/&ccedil;/g, 'ç')
+        .replace(/&ecirc;/g, 'ê')
+        .replace(/&acirc;/g, 'â')
+        .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(parseInt(code, 10)))
+        .trim();
+
+    const fields: Record<string, string> = {};
+    const strongRegex = /<strong>(.*?)<\/strong>\s*(.*?)(?=<br|<strong|<div|<\/div|$)/gis;
+    let m;
+
+    while ((m = strongRegex.exec(html)) !== null) {
+      const label = stripHtml(m[1]).trim().toLowerCase();
+      const value = stripHtml(m[2]).trim();
+
+      if (label.includes('compétences') || label.includes('competences') || label === 'comp.') {
+        fields.skills = value;
+      } else if (label.includes('sens')) {
+        fields.senses = value;
+      } else if (label.includes('langues')) {
+        fields.languages = value;
+      } else if (label.includes('vulnérabilité') || label.includes('vulnerabilite')) {
+        fields.vulnerabilities = value;
+      } else if (label.includes('résistance') || label.includes('resistance')) {
+        fields.resistances = value;
+      } else if (label.includes('immunité') && label.includes('dégât')) {
+        fields.damage_immunities = value;
+      } else if (label.includes('immunité') && label.includes('condition')) {
+        fields.condition_immunities = value;
+      } else if (label.includes('sauvegarde') || label === 'jds') {
+        fields.saving_throws = value;
+      }
+    }
+
+    return fields;
   },
 
   async saveToCampaign(campaignId: string, monster: Monster): Promise<Monster> {
