@@ -1472,67 +1472,160 @@ select {
 }
 
 /* ========================================
-   Boutons texturés (images de fond)
-   Spécificité élevée pour résister aux règles
-   combat-panel, frame-card, stat-card
+   Boutons texturés — Gris, Orange, Gris-Glow
+   Même pattern que .btn-primary (bouton rouge)
    ======================================== */
 
+/* --- Bouton Gris --- */
 button.btn-texture-gray,
 div.btn-texture-gray,
 .combat-panel button.btn-texture-gray,
 .frame-card button.btn-texture-gray,
 .frame-card--light button.btn-texture-gray,
 .stat-card button.btn-texture-gray {
-  background: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') center / cover no-repeat !important;
+  position: relative;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
   background-color: transparent !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(156, 163, 175, 0.3) !important;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(156, 163, 175, 0.5) !important;
+  box-shadow:
+    0 0 8px rgba(156, 163, 175, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 button.btn-texture-gray:hover,
+div.btn-texture-gray:hover,
 .combat-panel button.btn-texture-gray:hover,
 .frame-card button.btn-texture-gray:hover,
 .frame-card--light button.btn-texture-gray:hover {
-  filter: brightness(1.25);
-  transform: scale(1.02);
+  border-color: rgba(156, 163, 175, 0.8) !important;
+  box-shadow:
+    0 0 14px rgba(156, 163, 175, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  filter: brightness(1.15);
 }
 
+button.btn-texture-gray:active,
+.combat-panel button.btn-texture-gray:active {
+  filter: brightness(0.9);
+  box-shadow:
+    0 0 6px rgba(156, 163, 175, 0.15),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+button.btn-texture-gray:disabled,
+div.btn-texture-gray:disabled {
+  filter: grayscale(0.6) brightness(0.7);
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(156, 163, 175, 0.2) !important;
+  box-shadow: none;
+}
+
+/* --- Bouton Orange --- */
 button.btn-texture-orange,
 div.btn-texture-orange,
 .combat-panel button.btn-texture-orange,
 .frame-card button.btn-texture-orange,
 .frame-card--light button.btn-texture-orange,
 .stat-card button.btn-texture-orange {
-  background: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20orange(1).png') center / cover no-repeat !important;
+  position: relative;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20orange(1).png') !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
   background-color: transparent !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(234, 88, 12, 0.3) !important;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(212, 140, 50, 0.5) !important;
+  box-shadow:
+    0 0 8px rgba(212, 140, 50, 0.2),
+    inset 0 1px 0 rgba(255, 235, 180, 0.12);
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 button.btn-texture-orange:hover,
+div.btn-texture-orange:hover,
 .combat-panel button.btn-texture-orange:hover,
 .frame-card button.btn-texture-orange:hover,
 .frame-card--light button.btn-texture-orange:hover {
-  filter: brightness(1.25);
-  transform: scale(1.02);
+  border-color: rgba(212, 140, 50, 0.8) !important;
+  box-shadow:
+    0 0 14px rgba(212, 140, 50, 0.35),
+    inset 0 1px 0 rgba(255, 235, 180, 0.2);
+  filter: brightness(1.15);
 }
 
+button.btn-texture-orange:active,
+.combat-panel button.btn-texture-orange:active {
+  filter: brightness(0.9);
+  box-shadow:
+    0 0 6px rgba(212, 140, 50, 0.15),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+button.btn-texture-orange:disabled,
+div.btn-texture-orange:disabled {
+  filter: grayscale(0.6) brightness(0.7);
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(212, 140, 50, 0.2) !important;
+  box-shadow: none;
+}
+
+/* --- Bouton Gris Prestige (glow ambre) --- */
 button.btn-texture-gray-glow,
 .combat-panel button.btn-texture-gray-glow,
 .frame-card button.btn-texture-gray-glow,
 .frame-card--light button.btn-texture-gray-glow {
-  background: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') center / cover no-repeat !important;
+  position: relative;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
   background-color: transparent !important;
+  color: #FFE8B8;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 232, 184, 0.5);
   border: 2px solid rgba(212, 170, 96, 0.6) !important;
   box-shadow:
     0 0 30px rgba(212, 170, 96, 0.4),
     0 0 60px rgba(212, 170, 96, 0.2),
-    inset 0 1px 2px rgba(255, 255, 255, 0.15);
+    inset 0 1px 2px rgba(255, 235, 180, 0.15);
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 button.btn-texture-gray-glow:hover,
-.combat-panel button.btn-texture-gray-glow:hover {
+.combat-panel button.btn-texture-gray-glow:hover,
+.frame-card button.btn-texture-gray-glow:hover {
+  border-color: rgba(212, 170, 96, 0.85) !important;
+  box-shadow:
+    0 0 40px rgba(212, 170, 96, 0.5),
+    0 0 80px rgba(212, 170, 96, 0.3),
+    inset 0 1px 0 rgba(255, 235, 180, 0.25);
   filter: brightness(1.1);
-  transform: scale(1.05);
+}
+
+button.btn-texture-gray-glow:active,
+.combat-panel button.btn-texture-gray-glow:active {
+  filter: brightness(0.9);
+  box-shadow:
+    0 0 20px rgba(212, 170, 96, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
