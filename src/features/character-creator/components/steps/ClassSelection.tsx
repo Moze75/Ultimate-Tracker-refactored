@@ -623,11 +623,12 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         })}
       </div>
 
-      <div className="flex justify-between pt-6">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-8">
         <Button
           onClick={onPrevious}
           variant="secondary"
           size="lg"
+          className="w-full sm:w-auto sm:min-w-[200px]"
         >
           Précédent
         </Button>
@@ -635,8 +636,8 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           onClick={onNext}
           disabled={!selectedClass}
           size="lg"
-          className="min-w-[200px]"
-        > 
+          className="w-full sm:w-auto sm:min-w-[200px]"
+        >
           Continuer
         </Button>
       </div>
