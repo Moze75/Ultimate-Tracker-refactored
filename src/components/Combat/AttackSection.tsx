@@ -154,7 +154,7 @@ export function AttackSection({
                 console.log('🎯 [AttackSection] Clic Attaque:', attack.name);
                 onRollAttack(attack);
               }}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors flex items-center justify-center"
+                      className="btn-texture-gray text-white px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
             >
               Attaque : 1d20+{getAttackBonus(attack)}
             </button>
