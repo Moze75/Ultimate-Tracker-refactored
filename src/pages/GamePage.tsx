@@ -778,7 +778,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
         ); 
       }
       case 'class': return <ClassesTabWrapper player={currentPlayer} onUpdate={applyPlayerUpdate} />;
-      case 'abilities': return <AbilitiesTab player={currentPlayer} onUpdate={applyPlayerUpdate} />;
+            case 'abilities': return <AbilitiesTab player={currentPlayer} onUpdate={applyPlayerUpdate} inventory={inventory} />;
       case 'stats': return <StatsTab player={currentPlayer} inventory={inventory} onUpdate={applyPlayerUpdate} />;
       case 'equipment':
         return (
