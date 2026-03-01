@@ -996,51 +996,8 @@ style={{
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4" />
                 <p className="text-gray-400">Chargement...</p>
               </div>
-           ): activeTab === 'notes' ? (
-  <div className="space-y-4">
-    <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-4">
-      <label className="block text-sm font-medium text-gray-300 mb-2">Journal de campagne</label>
-      <textarea
-        value={notesJournal}
-        onChange={(e) => setNotesJournal(e.target.value)}
-        className="input-dark w-full px-3 py-2 rounded-md"
-        rows={6}
-        placeholder="Écrivez ici le résumé des sessions, éléments marquants, récaps..."
-      />
-    </div>
-
-    <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-4">
-      <label className="block text-sm font-medium text-gray-300 mb-2">PNJ rencontrés</label>
-      <textarea
-        value={notesNPCs}
-        onChange={(e) => setNotesNPCs(e.target.value)}
-        className="input-dark w-full px-3 py-2 rounded-md"
-        rows={5}
-        placeholder="Listez les PNJ, rôles, lieux, liens, indices..."
-      />
-    </div>
-
-    <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-4">
-      <label className="block text-sm font-medium text-gray-300 mb-2">Quêtes et objectifs</label>
-      <textarea
-        value={notesQuests}
-        onChange={(e) => setNotesQuests(e.target.value)}
-        className="input-dark w-full px-3 py-2 rounded-md"
-        rows={5}
-        placeholder="Quêtes en cours, objectifs du groupe, pistes à suivre..."
-      />
-    </div>
-
-    <div className="flex justify-end">
-      <button
-        onClick={saveNotes}
-        disabled={savingNotes}
-        className="btn-primary px-5 py-2 rounded-lg disabled:opacity-50"
-      >
-        {savingNotes ? 'Sauvegarde...' : 'Sauvegarder les notes'}
-      </button>
-    </div>
-  </div>
+) : activeTab === 'notes' ? (
+  <NotesTab player={player} onUpdate={onUpdate} />
 ) : activeTab === 'invitations' ? (
               <div className="space-y-4">
                 {invitations.length > 0 ? (
