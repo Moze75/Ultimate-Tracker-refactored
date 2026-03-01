@@ -742,22 +742,14 @@ const handleSignOut = async () => {
                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                   <button
                     onClick={() => setShowCampaigns(true)}
-                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl overflow-hidden transition-all hover:scale-105 animate-glow"
+                    className="btn-primary group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl overflow-hidden transition-all hover:scale-105 animate-glow"
                     style={{
                       fontFamily: 'Cinzel, serif',
                       fontWeight: 700,
                       fontSize: '1.125rem',
                       letterSpacing: '0.05em',
                       color: '#FFE8B8',
-                      background: 'linear-gradient(135deg, rgba(212, 170, 96, 0.25) 0%, rgba(184, 115, 51, 0.35) 100%)',
-                      border: '2px solid rgba(212, 170, 96, 0.6)',
-                      boxShadow: `
-                        0 0 30px rgba(212, 170, 96, 0.6),
-                        0 0 60px rgba(212, 170, 96, 0.4),
-                        0 0 100px rgba(212, 170, 96, 0.2),
-                        inset 0 1px 2px rgba(255, 255, 255, 0.15)
-                      `,
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 232, 184, 0.5)'
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 232, 184, 0.5)',
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
