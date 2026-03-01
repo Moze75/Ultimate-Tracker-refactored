@@ -47,6 +47,33 @@ export function HPManager({
 }: HPManagerProps) {
   const isCriticalHealth = totalHP <= Math.floor(player.max_hp * 0.20);
 
+  // Couleur texturée : vert forêt → orange → rouge sang selon les PV
+  const getHPBarCSSColor = (): string => {
+    const pct = player.max_hp > 0 ? player.current_hp / player.max_hp : 0;
+
+    // Couleurs clés (vert forêt sombre → rouge sang profond)
+    // 100% → rgb(34, 120, 50)   vert forêt
+    //  50% → rgb(180, 100, 20)  orange brûlé
+    //   0% → rgb(120, 15, 10)   rouge sang foncé
+    let r: number, g: number, b: number;
+
+    if (pct > 0.5) {
+      // vert forêt → orange brûlé (100% → 50%)
+      const t = (pct - 0.5) / 0.5; // 1 à 0
+      r = Math.round(180 + (34 - 180) * t);
+      g = Math.round(100 + (120 - 100) * t);
+      b = Math.round(20 + (50 - 20) * t);
+    } else {
+      // orange brûlé → rouge sang (50% → 0%)
+      const t = pct / 0.5; // 1 à 0
+      r = Math.round(120 + (180 - 120) * t);
+      g = Math.round(15 + (100 - 15) * t);
+      b = Math.round(10 + (20 - 10) * t);
+    }
+
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+  
  return (
 <div className="stat-card bg-gray-800/80 lg:bg-gray-800/30 border-gray-700">
       <div className="stat-header from-gray-800/70 to-gray-900/70 flex items-center justify-between">
