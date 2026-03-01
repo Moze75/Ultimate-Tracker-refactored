@@ -94,8 +94,12 @@ export const monsterService = {
 
     if (error) throw error;
 
-    // Fix: recalculer les HP depuis la formule si hit_points semble incorrect (1 ou 0)
     return (data || []).map((m: any) => {
+      // Nettoyer skills corrompus par l'ancien parsing
+      if (m.skills && typeof m.skills === 'string' && /^[eéè]tences\b/i.test(m.skills)) {
+        m.skills = m.skills.replace(/^[eéè]tences\s*/i, '');
+      }
+      // Fix: recalculer les HP depuis la formule si hit_points semble incorrect (1 ou 0)
       if (m.hit_points && m.hit_points > 1) return m as Monster;
       // Tenter de parser depuis hit_points_formula (ex: "6d6 + 24")
       if (m.hit_points_formula) {
