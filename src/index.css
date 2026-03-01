@@ -1473,7 +1473,7 @@ select {
 
 /* ========================================
    Boutons texturés — Gris, Orange, Gris-Glow
-   Image centrée non déformée + overlay sombre
+   Image réduite + répétée pour effet texture
    ======================================== */
 
 /* --- Bouton Gris --- */
@@ -1485,7 +1485,7 @@ div.btn-texture-gray,
 .stat-card button.btn-texture-gray {
   position: relative;
   background: none !important;
-  background-color: rgb(40, 40, 45) !important;
+  background-color: rgb(35, 35, 40) !important;
   color: #fff;
   font-family: 'Cinzel', serif;
   font-weight: 600;
@@ -1508,10 +1508,10 @@ div.btn-texture-gray::before,
   position: absolute;
   inset: 0;
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
-  background-size: cover;
+  background-size: 80px 40px;
   background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.5;
+  background-repeat: repeat;
+  opacity: 0.45;
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
@@ -1552,7 +1552,7 @@ div.btn-texture-orange,
 .stat-card button.btn-texture-orange {
   position: relative;
   background: none !important;
-  background-color: rgb(60, 30, 10) !important;
+  background-color: rgb(55, 25, 8) !important;
   color: #fff;
   font-family: 'Cinzel', serif;
   font-weight: 600;
@@ -1575,10 +1575,10 @@ div.btn-texture-orange::before,
   position: absolute;
   inset: 0;
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20orange(1).png');
-  background-size: cover;
+  background-size: 80px 40px;
   background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.5;
+  background-repeat: repeat;
+  opacity: 0.45;
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
@@ -1617,7 +1617,7 @@ button.btn-texture-gray-glow,
 .frame-card--light button.btn-texture-gray-glow {
   position: relative;
   background: none !important;
-  background-color: rgb(40, 40, 45) !important;
+  background-color: rgb(35, 35, 40) !important;
   color: #FFE8B8;
   font-family: 'Cinzel', serif;
   font-weight: 700;
@@ -1639,10 +1639,10 @@ button.btn-texture-gray-glow::before,
   position: absolute;
   inset: 0;
   background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
-  background-size: cover;
+  background-size: 80px 40px;
   background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.5;
+  background-repeat: repeat;
+  opacity: 0.45;
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
