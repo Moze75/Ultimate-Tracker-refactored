@@ -192,12 +192,13 @@ export function HorizontalAbilityScores({
   };
 
 const handleSave = async () => {
+  if (!player || !onUpdate) return;
+
   try {
-    const dexScore = abilities.find(a => a.name === 'Dextérité')?.score ?? 10;
     const equipmentBonuses = calculateEquipmentBonuses();
     const featBonuses = calculateFeatBonuses();
 
-    // Combiner équipement + dons pour le calcul de la CA
+    // Combiner équipement + dons
     const combinedBonuses = {
       Force: (equipmentBonuses.Force || 0) + (featBonuses.Force || 0),
       Dextérité: (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0),
@@ -207,25 +208,41 @@ const handleSave = async () => {
       Charisme: (equipmentBonuses.Charisme || 0) + (featBonuses.Charisme || 0),
       armor_class: equipmentBonuses.armor_class || 0,
     };
-    const dexMod = getModifier(dexScore + combinedBonuses.Dextérité);
 
-    const updatedStatsLocal = {
-      ...stats,
-      jack_of_all_trades: hasJackOfAllTrades(player.class, player.level)
-        ? (stats.jack_of_all_trades ?? false)
-        : false
-    };
+    // Recalculer les modificateurs des abilities locales avant sauvegarde
+    const profBonus = getProficiencyBonus(player.level);
+    const savedAbilities = localAbilities.map(ability => {
+      const totalBonus = (combinedBonuses[ability.name as keyof typeof combinedBonuses] || 0);
+      const effectiveScore = ability.score + (typeof totalBonus === 'number' ? totalBonus : 0);
+      const modifier = getModifier(effectiveScore);
+
+      const isSavingThrowProficient = ability.savingThrow !== ability.modifier;
+
+      return {
+        ...ability,
+        modifier,
+        savingThrow: modifier + (isSavingThrowProficient ? profBonus : 0),
+        skills: ability.skills.map(skill => ({
+          ...skill,
+          bonus: modifier + (skill.isProficient
+            ? (skill.hasExpertise ? profBonus * 2 : profBonus)
+            : 0)
+        }))
+      };
+    });
+
+    // Calculer le mod de Dextérité effectif
+    const dexAbility = savedAbilities.find(a => a.name === 'Dextérité');
+    const dexMod = dexAbility?.modifier ?? 0;
 
     // Vérifier si une armure est équipée
     const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
-
     const isManualAC = (player.stats as any)?.is_ac_manual === true;
 
-    // Recalcul CA auto (référence) si pas d'armure
+    // Recalcul CA auto si pas d'armure
     let autoAC = player.stats?.auto_armor_class ?? (10 + dexMod);
     if (!hasArmorEquipped && (player.class === 'Moine' || player.class === 'Barbare')) {
-      autoAC = calculateUnarmoredACFromAbilities(player.class, abilities, combinedBonuses);
-      console.log(`[StatsTab] ✅ Recalcul CA auto ${player.class}: ${autoAC} (avec bonus combinés)`);
+      autoAC = calculateUnarmoredACFromAbilities(player.class, savedAbilities, combinedBonuses);
     } else if (!hasArmorEquipped) {
       autoAC = 10 + dexMod;
     }
@@ -233,20 +250,23 @@ const handleSave = async () => {
     const currentAC = player.stats?.armor_class ?? autoAC;
     const newArmorClass = isManualAC ? currentAC : autoAC;
 
+    // Conserver jack_of_all_trades si déjà défini dans les stats existantes
+    const existingJoat = player.stats?.jack_of_all_trades ?? false;
+
     const mergedStats = {
       ...player.stats,
-      ...updatedStatsLocal,
-      proficiency_bonus: effectiveProficiency,
+      proficiency_bonus: profBonus,
       initiative: dexMod,
       armor_class: newArmorClass,
       auto_armor_class: autoAC,
       is_ac_manual: isManualAC,
+      jack_of_all_trades: existingJoat,
     };
 
     const { error } = await supabase
       .from('players')
       .update({
-        abilities,
+        abilities: savedAbilities,
         stats: mergedStats
       })
       .eq('id', player.id);
@@ -255,7 +275,7 @@ const handleSave = async () => {
 
     onUpdate({
       ...player,
-      abilities,
+      abilities: savedAbilities,
       stats: mergedStats
     });
 
