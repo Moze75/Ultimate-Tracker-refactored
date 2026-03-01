@@ -472,23 +472,32 @@ export function StatsTab({ player, inventory, onUpdate }: StatsTabProps) {
 
 const handleSave = async () => {
   try {
-          const equipmentBonuses = calculateEquipmentBonuses();
-          const featBonuses = calculateFeatBonuses();
-          const equipmentBonus = equipmentBonuses[ability.name as keyof typeof equipmentBonuses] || 0;
-          const featBonus = featBonuses[ability.name as keyof typeof featBonuses] || 0;
-          const totalBonus = equipmentBonus + featBonus;
-          const baseModifier = getModifier(ability.score);
-          const effectiveScore = ability.score + totalBonus;
-          const displayModifier = getModifier(effectiveScore);
+    const equipmentBonuses = calculateEquipmentBonuses();
+    const featBonuses = calculateFeatBonuses();
+
+    // Combiner les bonus équipement + dons pour le calcul de la CA
+    const combinedBonuses = {
+      Force: (equipmentBonuses.Force || 0) + (featBonuses.Force || 0),
+      Dextérité: (equipmentBonuses.Dextérité || 0) + (featBonuses.Dextérité || 0),
+      Constitution: (equipmentBonuses.Constitution || 0) + (featBonuses.Constitution || 0),
+      Intelligence: (equipmentBonuses.Intelligence || 0) + (featBonuses.Intelligence || 0),
+      Sagesse: (equipmentBonuses.Sagesse || 0) + (featBonuses.Sagesse || 0),
+      Charisme: (equipmentBonuses.Charisme || 0) + (featBonuses.Charisme || 0),
+      armor_class: equipmentBonuses.armor_class || 0,
+    };
+
+    // Calculer le mod de Dextérité effectif (score de base + bonus combinés)
+    const dexAbility = abilities.find(a => a.name === 'Dextérité');
+    const dexMod = getModifier((dexAbility?.score ?? 10) + combinedBonuses.Dextérité);
 
     const updatedStatsLocal = {
-      ... stats,
+      ...stats,
       jack_of_all_trades: hasJackOfAllTrades(player.class, player.level)
-        ? (stats.jack_of_all_trades ??  false)
+        ? (stats.jack_of_all_trades ?? false)
         : false
     };
 
-     // Vérifier si une armure est équipée
+    // Vérifier si une armure est équipée
     const hasArmorEquipped = !!(player.equipment?.armor?.armor_formula);
 
     const isManualAC = (player.stats as any)?.is_ac_manual === true;
@@ -506,18 +515,18 @@ const handleSave = async () => {
     const newArmorClass = isManualAC ? currentAC : autoAC;
 
     const mergedStats = {
-      ... player.stats,
-      ... updatedStatsLocal,
+      ...player.stats,
+      ...updatedStatsLocal,
       proficiency_bonus: effectiveProficiency,
       initiative: dexMod,
-          armor_class: newArmorClass,
+      armor_class: newArmorClass,
       auto_armor_class: autoAC,
       is_ac_manual: isManualAC,
     };
 
     const { error } = await supabase
-      . from('players')
-      .update({ 
+      .from('players')
+      .update({
         abilities,
         stats: mergedStats
       })
@@ -534,7 +543,7 @@ const handleSave = async () => {
     setEditing(false);
     toast.success('Caractéristiques mises à jour');
   } catch (error) {
-    console. error('Erreur lors de la mise à jour des caractéristiques:', error);
+    console.error('Erreur lors de la mise à jour des caractéristiques:', error);
     toast.error('Erreur lors de la mise à jour');
   }
 };
