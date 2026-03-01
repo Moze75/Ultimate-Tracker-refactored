@@ -470,7 +470,7 @@ export default function RaceSelection({
         })}
       </div>
 
-      <div className="flex justify-center pt-6">
+      <div className="flex justify-end pt-8 mt-2">
         <Button
           onClick={onNext}
           disabled={!selectedRace}
