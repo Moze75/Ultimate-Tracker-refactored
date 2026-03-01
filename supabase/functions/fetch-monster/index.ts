@@ -349,47 +349,67 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     }
   }
 
-  const extractField = (label: string): string => {
-    // Stratégie : chercher toutes les lignes <strong>XXX</strong> valeur
-    // et comparer le label en texte pur (après décodage des entités HTML)
-    const fieldRegex = /<strong>(.*?)<\/strong>\s*(.*?)(?=<br|<\/|<strong|<div)/gi;
+   // Convertir le block HTML en lignes de texte pour extraction robuste
+  // Chaque ligne <strong>Label</strong> Valeur est extraite comme une paire
+  const extractAllFields = (htmlBlock: string): Record<string, string> => {
+    const fields: Record<string, string> = {};
+    
+    // Normaliser : remplacer <br> par des séparateurs
+    const normalized = htmlBlock
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<\/p>/gi, "\n");
+    
+    // Matcher tous les <strong>XXX</strong> suivis de contenu
+    const strongRegex = /<strong>(.*?)<\/strong>\s*(.*?)(?=\n|<strong|$)/gi;
     let fieldMatch;
-
-    // Normaliser le label recherché (minuscule, sans accents pour comparaison souple)
-    const normalizeForCompare = (s: string): string => {
-      return extractTextContent(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    };
-    const normalizedLabel = normalizeForCompare(label);
-
-    while ((fieldMatch = fieldRegex.exec(block)) !== null) {
-      const foundLabel = normalizeForCompare(fieldMatch[1]);
-      if (foundLabel === normalizedLabel) {
-        return extractTextContent(fieldMatch[2]);
+    
+    while ((fieldMatch = strongRegex.exec(normalized)) !== null) {
+      const rawLabel = extractTextContent(fieldMatch[1]).trim();
+      const rawValue = extractTextContent(fieldMatch[2]).trim();
+      if (rawLabel && rawValue) {
+        fields[rawLabel.toLowerCase()] = rawValue;
       }
     }
+    
+    return fields;
+  };
 
-    // Fallback : match partiel (le label commence par le texte cherché)
-    fieldRegex.lastIndex = 0;
-    while ((fieldMatch = fieldRegex.exec(block)) !== null) {
-      const foundLabel = normalizeForCompare(fieldMatch[1]);
-      if (foundLabel.startsWith(normalizedLabel) || normalizedLabel.startsWith(foundLabel)) {
-        return extractTextContent(fieldMatch[2]);
+  const allFields = extractAllFields(block);
+
+  // Fonction de recherche souple : normalise les accents pour la comparaison
+  const findField = (...labels: string[]): string => {
+    const normalize = (s: string): string =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    for (const label of labels) {
+      const normalizedLabel = normalize(label);
+      for (const [key, value] of Object.entries(allFields)) {
+        if (normalize(key) === normalizedLabel) {
+          return value;
+        }
       }
     }
-
+    // Fallback: match partiel (le début du label)
+    for (const label of labels) {
+      const normalizedLabel = normalize(label);
+      for (const [key, value] of Object.entries(allFields)) {
+        if (normalize(key).startsWith(normalizedLabel) || normalizedLabel.startsWith(normalize(key))) {
+          return value;
+        }
+      }
+    }
     return "";
   };
 
-  const savingThrows =
-    extractField("Jets de sauvegarde") || extractField("JdS");
-  const skillsText = extractField("Compétences");
-  const vulnerabilities = extractField("Vulnérabilités");
-  const resistances =
-    extractField("Résistances aux dégâts") || extractField("Résistances");
-  const damageImmunities = extractField("Immunités aux dégâts");
-  const conditionImmunities = extractField("Immunités aux conditions");
-  const senses = extractField("Sens");
-  const languages = extractField("Langues");
+  const savingThrows = findField("Jets de sauvegarde", "JdS");
+  const skillsText = findField("Compétences");
+  const vulnerabilities = findField("Vulnérabilités", "Vulnérabilités aux dégâts");
+  const resistances = findField("Résistances aux dégâts", "Résistances");
+  const damageImmunities = findField("Immunités aux dégâts");
+  const conditionImmunities = findField("Immunités aux conditions");
+  const senses = findField("Sens");
+  const languages = findField("Langues");
 
   const crMatch1 = block.match(
     /<strong>FP<\/strong>\s*([\d\/]+)\s*(?:\(([^)]*)\))?/i
