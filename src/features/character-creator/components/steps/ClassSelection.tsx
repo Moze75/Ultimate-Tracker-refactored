@@ -638,7 +638,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           size="lg"
           className="w-full sm:w-auto sm:min-w-[200px]"
         >
-          Continuer 
+          Continuer
         </Button>
       </div>
 
