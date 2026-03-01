@@ -1442,17 +1442,10 @@ select {
    Couleur dynamique + texture image superposée
    ======================================== */
 
-.hp-bar-textured .hp-bar-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.5;
-  pointer-events: none;
+.hp-bar-textured .hp-bar-fill {
+  position: relative;
+  height: 100%;
+  transition: width 500ms ease, background-color 500ms ease;
+  overflow: hidden;
   border-radius: inherit;
-  z-index: 1;
-  mix-blend-mode: soft-light;
 }
