@@ -1834,10 +1834,43 @@ const spellcastingAbilityName = useMemo(() => {
   return primaryAbility || secondaryAbility;
 }, [player.class, player.secondary_class]);
 
-const abilityMod = useMemo(
-  () => (spellcastingAbilityName ? getAbilityModFromPlayer(player, spellcastingAbilityName) : 0),
-  [player, spellcastingAbilityName]
-);
+const abilityMod = useMemo(() => {
+  if (!spellcastingAbilityName) return 0;
+
+  // 1) Récupérer le score de BASE depuis abilities
+  const abilities: any = (player as any).abilities;
+  let baseScore: number | null = null;
+
+  if (Array.isArray(abilities)) {
+    const found = abilities.find((a: any) => a?.name === spellcastingAbilityName);
+    if (found && typeof found.score === 'number') baseScore = found.score;
+  } else if (abilities && typeof abilities === 'object') {
+    const direct = abilities[spellcastingAbilityName] ?? abilities[spellcastingAbilityName.toLowerCase()];
+    if (typeof direct === 'number') baseScore = direct;
+    else if (direct && typeof direct.score === 'number') baseScore = direct.score;
+  }
+
+  if (baseScore === null) return 0;
+
+  // 2) Ajouter les bonus d'équipement + dons
+  const eqBonus = equipmentBonuses[spellcastingAbilityName as keyof typeof equipmentBonuses] || 0;
+  const ftBonus = featBonuses[spellcastingAbilityName as keyof typeof featBonuses] || 0;
+  const effectiveScore = baseScore + eqBonus + ftBonus;
+
+  const mod = getModifier(effectiveScore);
+
+  console.log('[KnownSpellsSection] 🧙 Calcul DD/Attaque:', {
+    classe: player.class,
+    abilityName: spellcastingAbilityName,
+    baseScore,
+    eqBonus,
+    ftBonus,
+    effectiveScore,
+    mod,
+  });
+
+  return mod;
+}, [player, spellcastingAbilityName, equipmentBonuses, featBonuses]);
 
 const proficiencyBonus = useMemo(
   () =>
