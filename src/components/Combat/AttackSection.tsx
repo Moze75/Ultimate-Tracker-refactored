@@ -147,7 +147,7 @@ export function AttackSection({
           </div>
         </div>
 
-        <div className="flex gap-2 text-sm items-stretch"> 
+             <div className={`flex text-sm items-stretch ${isDesktop ? 'gap-6' : 'gap-2'}`}>
           <div className="flex-1 flex flex-col">
             <button
               onClick={() => {
