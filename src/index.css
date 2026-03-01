@@ -1442,20 +1442,6 @@ select {
    Couleur dynamique + texture image superposée
    ======================================== */
 
-.hp-bar-textured {
-  position: relative;
-  overflow: hidden;
-  border: 2px solid rgba(180, 140, 60, 0.5);
-  border-radius: 9999px;
-}
-
-.hp-bar-textured .hp-bar-fill {
-  position: relative;
-  height: 100%;
-  transition: width 500ms ease, background-color 500ms ease;
-}
-
-/* Texture image grise semi-transparente par-dessus la couleur */
 .hp-bar-textured .hp-bar-fill::after {
   content: '';
   position: absolute;
@@ -1464,9 +1450,9 @@ select {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 1;
+  opacity: 0.5;
   pointer-events: none;
   border-radius: inherit;
   z-index: 1;
-  mix-blend-mode: overlay;
+  mix-blend-mode: soft-light;
 }
