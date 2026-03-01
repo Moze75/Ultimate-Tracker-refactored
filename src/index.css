@@ -1491,7 +1491,7 @@ div.btn-texture-gray,
   font-weight: 600;
   letter-spacing: 0.03em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-  border: 2px solid rgba(156, 163, 175, 0.5) !important;
+  border: 2px solid rgba(156, 163, 175, 0.85) !important;
   box-shadow:
     0 0 8px rgba(156, 163, 175, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
