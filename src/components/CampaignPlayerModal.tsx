@@ -418,45 +418,6 @@ const handleClaimMultiple = async () => {
   
 
 
-  const saveNotes = async () => {
-    try {
-      setSavingNotes(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const payload = {
-        user_id: user.id,
-        player_id: player.id,
-        journal: notesJournal,
-        npcs: notesNPCs,
-        quests: notesQuests,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from('campaign_notes')
-        .upsert(payload, { onConflict: 'user_id,player_id' });
-
-      if (error) throw error;
-
-      // Met à jour le cache
-      notesCacheRef.current = {
-        journal: notesJournal,
-        npcs: notesNPCs,
-        quests: notesQuests,
-      };
-      const cacheKey = `campaign_notes_${user.id}_${player.id}`;
-      localStorage.setItem(cacheKey, JSON.stringify(notesCacheRef.current));
-
-      toast.success('Notes sauvegardées !');
-    } catch (error) {
-      console.error('Erreur saveNotes:', error);
-      toast.error('Erreur lors de la sauvegarde des notes');
-    } finally {
-      setSavingNotes(false);
-    }
-  };
-
 
   const loadCampaignMembers = async (campaignId: string) => {
     try {
