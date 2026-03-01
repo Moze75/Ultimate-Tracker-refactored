@@ -107,7 +107,7 @@ export function TabbedPanel({
           </div>
         )}
         {activeTab === 'spells' && (
-          <AbilitiesTab player={player} onUpdate={onPlayerUpdate} />
+          <AbilitiesTab player={player} onUpdate={onPlayerUpdate} inventory={inventory} />
         )}
 
         {activeTab === 'gold' && (
