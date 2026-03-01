@@ -238,6 +238,14 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   );
   const block = jauneMatch ? jauneMatch[1] : html;
 
+  // DEBUG: log un extrait du block autour de "omp" (pour Compétences/Comp)
+  const debugIdx = block.toLowerCase().indexOf("omp");
+  if (debugIdx > -1) {
+    console.log("=== DEBUG BLOCK AROUND SKILLS ===");
+    console.log(block.substring(Math.max(0, debugIdx - 50), debugIdx + 200));
+    console.log("=== END DEBUG ===");
+  }
+
   const nameMatch = block.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const name = nameMatch ? extractTextContent(nameMatch[1]) : slug;
 
