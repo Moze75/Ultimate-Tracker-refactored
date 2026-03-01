@@ -377,8 +377,7 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
 
   const savingThrows =
     extractField("Jets de sauvegarde") || extractField("JdS");
-  const skillsText =
-    extractField("Compétences") || extractField("Comp\\.?");
+  const skillsText = extractField("Compétences");
   const vulnerabilities = extractField("Vulnérabilités");
   const resistances =
     extractField("Résistances aux dégâts") || extractField("Résistances");
