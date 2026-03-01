@@ -119,6 +119,7 @@ interface Spell {
 interface KnownSpellsSectionProps {
   player: Player;
   onUpdate: (player: Player) => void;
+  inventory?: any[];
 }
 
 // Utilitaire pour formater les composantes de sort
