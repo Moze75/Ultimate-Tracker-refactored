@@ -621,7 +621,45 @@ select {
 }
 
 .btn-primary {
-  @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white transition-all duration-200 shadow-lg shadow-red-900/20 hover:shadow-red-900/40;
+  position: relative;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20rouge(2).png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(212, 170, 96, 0.6);
+  box-shadow:
+    0 0 8px rgba(212, 170, 96, 0.25),
+    inset 0 1px 0 rgba(255, 235, 180, 0.15);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  border-color: rgba(212, 170, 96, 0.85);
+  box-shadow:
+    0 0 14px rgba(212, 170, 96, 0.4),
+    inset 0 1px 0 rgba(255, 235, 180, 0.25);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  filter: brightness(0.9);
+  box-shadow:
+    0 0 6px rgba(212, 170, 96, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:disabled {
+  filter: grayscale(0.6) brightness(0.7);
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(212, 170, 96, 0.2);
+  box-shadow: none;
 }
 
 
