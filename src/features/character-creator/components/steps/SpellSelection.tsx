@@ -687,15 +687,15 @@ className={`frame-card--light frame-card--no-frame rounded-lg transition-all ${
         </>
       )}
 
-      <div className="flex justify-between pt-6">
-        <Button onClick={onPrevious} variant="secondary" size="lg">
+      <div className="grid grid-cols-2 gap-3 pt-8">
+        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full">
           Précédent
         </Button>
         <Button
           onClick={onNext}
           disabled={!canProceed || loading}
           size="lg"
-          className="min-w-[200px]"
+          className="w-full"
         >
           Continuer
         </Button>
