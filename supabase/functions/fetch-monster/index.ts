@@ -342,37 +342,34 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   }
 
   const extractField = (label: string): string => {
-    // Générer des variantes du label pour gérer les entités HTML
-    const labelVariants = [label];
-    const entityMap: Record<string, string> = {
-      'é': '(?:é|&eacute;)',
-      'è': '(?:è|&egrave;)',
-      'à': '(?:à|&agrave;)',
-      'ô': '(?:ô|&ocirc;)',
-      'î': '(?:î|&icirc;)',
-      'û': '(?:û|&ucirc;)',
-      'ç': '(?:ç|&ccedil;)',
-      'ê': '(?:ê|&ecirc;)',
-      'â': '(?:â|&acirc;)',
+    // Stratégie : chercher toutes les lignes <strong>XXX</strong> valeur
+    // et comparer le label en texte pur (après décodage des entités HTML)
+    const fieldRegex = /<strong>(.*?)<\/strong>\s*(.*?)(?=<br|<\/|<strong|<div)/gi;
+    let fieldMatch;
+
+    // Normaliser le label recherché (minuscule, sans accents pour comparaison souple)
+    const normalizeForCompare = (s: string): string => {
+      return extractTextContent(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     };
-    let flexLabel = label;
-    for (const [char, pattern] of Object.entries(entityMap)) {
-      flexLabel = flexLabel.replaceAll(char, pattern);
+    const normalizedLabel = normalizeForCompare(label);
+
+    while ((fieldMatch = fieldRegex.exec(block)) !== null) {
+      const foundLabel = normalizeForCompare(fieldMatch[1]);
+      if (foundLabel === normalizedLabel) {
+        return extractTextContent(fieldMatch[2]);
+      }
     }
 
-    const regex1 = new RegExp(
-      `<strong>${flexLabel}<\\/strong>\\s*(.*?)(?:<br|<\\/|<strong|<div)`,
-      "i"
-    );
-    const m1 = block.match(regex1);
-    if (m1) return extractTextContent(m1[1]);
+    // Fallback : match partiel (le label commence par le texte cherché)
+    fieldRegex.lastIndex = 0;
+    while ((fieldMatch = fieldRegex.exec(block)) !== null) {
+      const foundLabel = normalizeForCompare(fieldMatch[1]);
+      if (foundLabel.startsWith(normalizedLabel) || normalizedLabel.startsWith(foundLabel)) {
+        return extractTextContent(fieldMatch[2]);
+      }
+    }
 
-    const regex2 = new RegExp(
-      `(?:<strong>)?${flexLabel}(?:<\\/strong>)?\\s*[:\\s]*(.*?)(?:<br|<\\/|<strong)`,
-      "i"
-    );
-    const m2 = block.match(regex2);
-    return m2 ? extractTextContent(m2[1]) : "";
+    return "";
   };
 
   const savingThrows =
