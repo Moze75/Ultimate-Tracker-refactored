@@ -623,12 +623,11 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         })}
       </div>
 
-      <div className="flex justify-between pt-8 mt-2">
+      <div className="flex justify-between pt-6">
         <Button
           onClick={onPrevious}
           variant="secondary"
           size="lg"
-          className="min-w-[200px]"
         >
           Précédent
         </Button>
@@ -637,7 +636,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
           disabled={!selectedClass}
           size="lg"
           className="min-w-[200px]"
-        >
+        > 
           Continuer
         </Button>
       </div>
