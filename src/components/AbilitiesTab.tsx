@@ -187,9 +187,10 @@ const RESOURCE_LABELS: Record<string, string> = {
 type AbilitiesTabProps = {
   player: Player;
   onUpdate: (player: Player) => void;
+  inventory?: any[];
 };
 
-export function AbilitiesTab({ player, onUpdate }: AbilitiesTabProps) {
+export function AbilitiesTab({ player, onUpdate, inventory = [] }: AbilitiesTabProps) {
   const [editing, setEditing] = useState(false);
   const [previousClass, setPreviousClass] = useState(player.class);
   const [previousLevel, setPreviousLevel] = useState(player.level);
