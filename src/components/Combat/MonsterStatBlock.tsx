@@ -403,7 +403,7 @@ export function MonsterStatBlock({ monster, compact, onRollDice }: MonsterStatBl
               <div><span className="font-bold">JdS</span> {monster.saving_throws}</div>
             )}
             {monster.skills && (
-              <div><span className="font-bold">Comp.</span> {monster.skills}</div>
+                        <div><span className="font-bold">Compétences</span> {monster.skills}</div>
             )}
             {monster.vulnerabilities && (
               <div><span className="font-bold">Vuln.</span> {monster.vulnerabilities}</div>
