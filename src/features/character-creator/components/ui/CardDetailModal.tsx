@@ -158,7 +158,7 @@ export default function CardDetailModal({
                 className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
                   confirmDisabled
                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-600 hover:bg-red-500 text-white shadow-lg hover:shadow-red-500/25'
+                    : 'btn-primary'
                 }`}
               >
                 <Check className="w-5 h-5" />
