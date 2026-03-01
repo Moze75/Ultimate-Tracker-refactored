@@ -34,6 +34,7 @@ import {
   updateArcaneRecoveryUsage,
 } from '../utils/arcaneRecovery';
 import { combineSpellSlots } from '../utils/multiclassUtils';
+import { FEAT_BONUSES, normalizeFeatName, AbilityName } from '../data/featBonuses';
 import { useDiceSettings } from '../hooks/useDiceSettings';
 
 
