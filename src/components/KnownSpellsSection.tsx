@@ -1488,6 +1488,68 @@ export function KnownSpellsSection({ player, onUpdate, inventory = [] }: KnownSp
 
 const [filterPrepared, setFilterPrepared] = useState<'all' | 'prepared' | 'unprepared'>('all');
 
+    // ✅ Calcul des bonus d'équipement sur les caractéristiques
+  const equipmentAbilityBonuses = useMemo(() => {
+    const bonuses: Record<string, number> = {
+      Force: 0, Dextérité: 0, Constitution: 0,
+      Intelligence: 0, Sagesse: 0, Charisme: 0,
+    };
+    if (!inventory || !Array.isArray(inventory)) return bonuses;
+
+    for (const item of inventory) {
+      try {
+        const description = item.description || '';
+        const metaLine = description
+          .split('\n')
+          .reverse()
+          .find((l: string) => l.trim().startsWith('#meta:'));
+        if (!metaLine) continue;
+        const meta = JSON.parse(metaLine.trim().slice(6));
+        if (meta.equipped && meta.bonuses) {
+          if (meta.bonuses.strength) bonuses.Force += meta.bonuses.strength;
+          if (meta.bonuses.dexterity) bonuses.Dextérité += meta.bonuses.dexterity;
+          if (meta.bonuses.constitution) bonuses.Constitution += meta.bonuses.constitution;
+          if (meta.bonuses.intelligence) bonuses.Intelligence += meta.bonuses.intelligence;
+          if (meta.bonuses.wisdom) bonuses.Sagesse += meta.bonuses.wisdom;
+          if (meta.bonuses.charisma) bonuses.Charisme += meta.bonuses.charisma;
+        }
+      } catch { continue; }
+    }
+    return bonuses;
+  }, [inventory]);
+
+  // ✅ Calcul des bonus de dons (feats) sur les caractéristiques
+  const featAbilityBonuses = useMemo(() => {
+    const bonuses: Record<string, number> = {
+      Force: 0, Dextérité: 0, Constitution: 0,
+      Intelligence: 0, Sagesse: 0, Charisme: 0,
+    };
+    const feats = (player.stats as any)?.feats || {};
+    const featAbilityChoices: Record<string, string> = (player.stats as any)?.feat_ability_choices || {};
+    const allFeats: string[] = [
+      ...(Array.isArray(feats.generals) ? feats.generals : []),
+      ...(Array.isArray(feats.origins) ? feats.origins : []),
+      ...(Array.isArray(feats.styles) ? feats.styles : []),
+    ];
+    // Import dynamique non nécessaire : on fait un calcul simple
+    // Si FEAT_BONUSES est importé, utiliser la même logique que StatsTab
+    // Sinon, fallback vide (les bonus de dons sont déjà dans ability.modifier si sauvegardé)
+    try {
+      const { FEAT_BONUSES, normalizeFeatName } = require('../data/featBonuses');
+      for (const featName of allFeats) {
+        const normalizedName = normalizeFeatName(featName);
+        const featBonus = FEAT_BONUSES[normalizedName];
+        if (featBonus) {
+          const chosenAbility = featAbilityChoices[normalizedName];
+          if (chosenAbility && featBonus.choices.includes(chosenAbility)) {
+            bonuses[chosenAbility] += featBonus.amount;
+          }
+        }
+      }
+    } catch { /* FEAT_BONUSES non disponible, on ignore */ }
+    return bonuses;
+  }, [player.stats]);
+
 
   // ✅ Correctif : Force la lecture des slots pour les Tiers-Lanceurs si combineSpellSlots les ignore
   const combinedSpellSlots = useMemo(() => {
