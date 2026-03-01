@@ -1473,7 +1473,7 @@ select {
 
 /* ========================================
    Boutons texturés — Gris, Orange, Gris-Glow
-   Même pattern que .btn-primary (bouton rouge)
+   Image centrée non déformée + overlay sombre
    ======================================== */
 
 /* --- Bouton Gris --- */
@@ -1484,11 +1484,8 @@ div.btn-texture-gray,
 .frame-card--light button.btn-texture-gray,
 .stat-card button.btn-texture-gray {
   position: relative;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') !important;
-  background-size: 100% 100% !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-color: transparent !important;
+  background: none !important;
+  background-color: rgb(40, 40, 45) !important;
   color: #fff;
   font-family: 'Cinzel', serif;
   font-weight: 600;
@@ -1500,13 +1497,28 @@ div.btn-texture-gray,
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transition: all 0.2s ease;
   overflow: hidden;
+  z-index: 0;
+}
+
+button.btn-texture-gray::before,
+div.btn-texture-gray::before,
+.combat-panel button.btn-texture-gray::before,
+.stat-card button.btn-texture-gray::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 button.btn-texture-gray:hover,
-div.btn-texture-gray:hover,
-.combat-panel button.btn-texture-gray:hover,
-.frame-card button.btn-texture-gray:hover,
-.frame-card--light button.btn-texture-gray:hover {
+.combat-panel button.btn-texture-gray:hover {
   border-color: rgba(156, 163, 175, 0.8) !important;
   box-shadow:
     0 0 14px rgba(156, 163, 175, 0.35),
@@ -1539,11 +1551,8 @@ div.btn-texture-orange,
 .frame-card--light button.btn-texture-orange,
 .stat-card button.btn-texture-orange {
   position: relative;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20orange(1).png') !important;
-  background-size: 100% 100% !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-color: transparent !important;
+  background: none !important;
+  background-color: rgb(60, 30, 10) !important;
   color: #fff;
   font-family: 'Cinzel', serif;
   font-weight: 600;
@@ -1555,13 +1564,28 @@ div.btn-texture-orange,
     inset 0 1px 0 rgba(255, 235, 180, 0.12);
   transition: all 0.2s ease;
   overflow: hidden;
+  z-index: 0;
+}
+
+button.btn-texture-orange::before,
+div.btn-texture-orange::before,
+.combat-panel button.btn-texture-orange::before,
+.stat-card button.btn-texture-orange::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/bouton%20orange(1).png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 button.btn-texture-orange:hover,
-div.btn-texture-orange:hover,
-.combat-panel button.btn-texture-orange:hover,
-.frame-card button.btn-texture-orange:hover,
-.frame-card--light button.btn-texture-orange:hover {
+.combat-panel button.btn-texture-orange:hover {
   border-color: rgba(212, 140, 50, 0.8) !important;
   box-shadow:
     0 0 14px rgba(212, 140, 50, 0.35),
@@ -1592,11 +1616,8 @@ button.btn-texture-gray-glow,
 .frame-card button.btn-texture-gray-glow,
 .frame-card--light button.btn-texture-gray-glow {
   position: relative;
-  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png') !important;
-  background-size: 100% 100% !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-color: transparent !important;
+  background: none !important;
+  background-color: rgb(40, 40, 45) !important;
   color: #FFE8B8;
   font-family: 'Cinzel', serif;
   font-weight: 700;
@@ -1609,11 +1630,26 @@ button.btn-texture-gray-glow,
     inset 0 1px 2px rgba(255, 235, 180, 0.15);
   transition: all 0.2s ease;
   overflow: hidden;
+  z-index: 0;
+}
+
+button.btn-texture-gray-glow::before,
+.combat-panel button.btn-texture-gray-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Boutons/Bouton%20gris(1).png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 button.btn-texture-gray-glow:hover,
-.combat-panel button.btn-texture-gray-glow:hover,
-.frame-card button.btn-texture-gray-glow:hover {
+.combat-panel button.btn-texture-gray-glow:hover {
   border-color: rgba(212, 170, 96, 0.85) !important;
   box-shadow:
     0 0 40px rgba(212, 170, 96, 0.5),
