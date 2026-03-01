@@ -375,7 +375,10 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     return fields;
   };
 
-  const allFields = extractAllFields(block);
+  // Ne chercher les champs que dans la zone d'en-tête (avant la première section "rub")
+  const headerEnd = block.search(/<div\s+class=['"]rub['"][^>]*>/i);
+  const headerBlock = headerEnd > -1 ? block.substring(0, headerEnd) : block;
+  const allFields = extractAllFields(headerBlock);
 
   // Fonction de recherche souple : normalise les accents pour la comparaison
   const findField = (...labels: string[]): string => {
