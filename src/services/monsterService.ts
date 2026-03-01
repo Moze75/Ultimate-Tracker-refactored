@@ -40,6 +40,14 @@ export const monsterService = {
 
     if (!res.ok) throw new Error(`Monstre non trouvé: ${res.status}`);
     const data = await res.json();
+    console.log('🐉 [monsterService] Raw API response:', JSON.stringify({
+      skills: data.skills,
+      senses: data.senses,
+      languages: data.languages,
+      saving_throws: data.saving_throws,
+      vulnerabilities: data.vulnerabilities,
+      resistances: data.resistances,
+    }, null, 2));
     return { ...data, source: 'aidedd' } as Monster;
   },
 
