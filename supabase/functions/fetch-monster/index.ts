@@ -342,15 +342,33 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   }
 
   const extractField = (label: string): string => {
+    // Générer des variantes du label pour gérer les entités HTML
+    const labelVariants = [label];
+    const entityMap: Record<string, string> = {
+      'é': '(?:é|&eacute;)',
+      'è': '(?:è|&egrave;)',
+      'à': '(?:à|&agrave;)',
+      'ô': '(?:ô|&ocirc;)',
+      'î': '(?:î|&icirc;)',
+      'û': '(?:û|&ucirc;)',
+      'ç': '(?:ç|&ccedil;)',
+      'ê': '(?:ê|&ecirc;)',
+      'â': '(?:â|&acirc;)',
+    };
+    let flexLabel = label;
+    for (const [char, pattern] of Object.entries(entityMap)) {
+      flexLabel = flexLabel.replaceAll(char, pattern);
+    }
+
     const regex1 = new RegExp(
-      `<strong>${label}<\\/strong>\\s*(.*?)(?:<br|<\\/|<strong|<div)`,
+      `<strong>${flexLabel}<\\/strong>\\s*(.*?)(?:<br|<\\/|<strong|<div)`,
       "i"
     );
     const m1 = block.match(regex1);
     if (m1) return extractTextContent(m1[1]);
 
     const regex2 = new RegExp(
-      `(?:<strong>)?${label}(?:<\\/strong>)?\\s*[:\\s]*(.*?)(?:<br|<\\/|<strong)`,
+      `(?:<strong>)?${flexLabel}(?:<\\/strong>)?\\s*[:\\s]*(.*?)(?:<br|<\\/|<strong)`,
       "i"
     );
     const m2 = block.match(regex2);
