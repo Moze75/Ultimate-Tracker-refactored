@@ -48,27 +48,24 @@ export function HPManager({
   const isCriticalHealth = totalHP <= Math.floor(player.max_hp * 0.20);
 
   // Couleur texturée : vert forêt → orange → rouge sang selon les PV
+  // Couleur : vert forêt sombre → rouge sang profond selon les PV
   const getHPBarCSSColor = (): string => {
     const pct = player.max_hp > 0 ? player.current_hp / player.max_hp : 0;
 
-    // Couleurs clés (vert forêt sombre → rouge sang profond)
-    // 100% → rgb(34, 120, 50)   vert forêt
-    //  50% → rgb(180, 100, 20)  orange brûlé
-    //   0% → rgb(120, 15, 10)   rouge sang foncé
     let r: number, g: number, b: number;
 
     if (pct > 0.5) {
-      // vert forêt → orange brûlé (100% → 50%)
-      const t = (pct - 0.5) / 0.5; // 1 à 0
-      r = Math.round(180 + (34 - 180) * t);
-      g = Math.round(100 + (120 - 100) * t);
-      b = Math.round(20 + (50 - 20) * t);
+      // 100% → 50% : vert forêt rgb(30, 100, 40) → rouge sombre rgb(140, 20, 15)
+      const t = (pct - 0.5) / 0.5; // 1 (100%) → 0 (50%)
+      r = Math.round(140 + (30 - 140) * t);
+      g = Math.round(20 + (100 - 20) * t);
+      b = Math.round(15 + (40 - 15) * t);
     } else {
-      // orange brûlé → rouge sang (50% → 0%)
-      const t = pct / 0.5; // 1 à 0
-      r = Math.round(120 + (180 - 120) * t);
-      g = Math.round(15 + (100 - 15) * t);
-      b = Math.round(10 + (20 - 10) * t);
+      // 50% → 0% : rouge sombre rgb(140, 20, 15) → rouge sang noir rgb(80, 5, 5)
+      const t = pct / 0.5; // 1 (50%) → 0 (0%)
+      r = Math.round(80 + (140 - 80) * t);
+      g = Math.round(5 + (20 - 5) * t);
+      b = Math.round(5 + (15 - 5) * t);
     }
 
     return `rgb(${r}, ${g}, ${b})`;
