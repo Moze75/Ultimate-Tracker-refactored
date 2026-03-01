@@ -629,7 +629,7 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         </Button>
         <Button
           onClick={onNext}
-          disabled={!selectedBackground || !selectedEquipmentOption}
+          disabled={!selectedClass}
           size="lg"
           className="w-full"
         >
