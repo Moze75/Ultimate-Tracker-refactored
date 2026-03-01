@@ -623,15 +623,15 @@ const ClassSelection: React.FC<ClassSelectionProps> = ({
         })}
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-8">
-        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full sm:w-auto sm:min-w-[200px]">
+      <div className="grid grid-cols-2 gap-3 pt-8">
+        <Button onClick={onPrevious} variant="secondary" size="lg" className="w-full">
           Précédent
         </Button>
         <Button
           onClick={onNext}
           disabled={!selectedBackground || !selectedEquipmentOption}
           size="lg"
-          className="w-full sm:w-auto sm:min-w-[200px]"
+          className="w-full"
         >
           Continuer
         </Button>
