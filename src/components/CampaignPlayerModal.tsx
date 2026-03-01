@@ -976,27 +976,7 @@ style={{
     </span>
   </button>
 
-<button
-  onClick={() => {
-    setActiveTab('notes');
-    // Hydrate instantanément depuis le cache mémoire (aucun flash)
-    if (notesCacheRef.current) {
-      const { journal, npcs, quests } = notesCacheRef.current;
-      setNotesJournal(journal);
-      setNotesNPCs(npcs);
-      setNotesQuests(quests);
-    }
-    // Puis rafraîchis en arrière-plan (localStorage/BDD)
-    loadNotes();
-  }}
-  className={`pb-2 px-1 border-b-2 transition-colors ${
-    activeTab === 'notes'
-      ? 'border-purple-500 text-purple-400'
-      : 'border-transparent text-gray-400 hover:text-gray-300'
-  }`}
->
-  Prise de notes
-</button>
+
 </div>
           </div>
 
