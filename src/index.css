@@ -1604,7 +1604,7 @@ button.btn-texture-orange:active,
 button.btn-texture-orange:disabled,
 div.btn-texture-orange:disabled {
   filter: grayscale(0.6) brightness(0.7);
-  opacity: 0.6;
+  opacity: 0.8;
   cursor: not-allowed;
   border-color: rgba(212, 140, 50, 0.2) !important;
   box-shadow: none;
