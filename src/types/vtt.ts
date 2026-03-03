@@ -25,10 +25,13 @@ export interface VTTRoomConfig {
   fogPersistent: boolean;
   mapWidth: number;
   mapHeight: number;
+  gridColor?: string;
+  gridOffsetX?: number;
+  gridOffsetY?: number;
+  gridLineWidth?: number;
 }
 
 export interface VTTFogStroke {
-  gridLineWidth?: number;
   x: number;
   y: number;
   r: number;
@@ -74,6 +77,7 @@ export interface VTTRoom {
   config: VTTRoomConfig;
   tokens: VTTToken[];
   fogState: VTTFogState;
+  walls: VTTWall[];
   connectedUsers: string[];
   lastSnapshot: number;
 }
@@ -82,6 +86,12 @@ export interface VTTServerState {
   room: VTTRoom;
   yourRole: VTTRole;
   yourUserId: string;
+}
+
+export interface VTTConnectedUser {
+  userId: string;
+  name: string;
+  role: VTTRole;
 }
 
 export type VTTClientEvent =
@@ -94,7 +104,9 @@ export type VTTClientEvent =
   | { type: 'UPDATE_TOKEN'; tokenId: string; changes: Partial<VTTToken> }
   | { type: 'ADD_PROP'; prop: Omit<VTTProp, 'id'> }
   | { type: 'REMOVE_PROP'; propId: string }
-  | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> };
+  | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> }
+  | { type: 'SWITCH_SCENE'; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[] }
+  | { type: 'UPDATE_WALLS'; walls: VTTWall[] };
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }
@@ -104,6 +116,8 @@ export type VTTServerEvent =
   | { type: 'TOKEN_UPDATED'; tokenId: string; changes: Partial<VTTToken> }
   | { type: 'FOG_UPDATED'; fogState: VTTFogState }
   | { type: 'MAP_UPDATED'; config: Partial<VTTRoomConfig> }
-  | { type: 'USER_JOINED'; userId: string }
+  | { type: 'SCENE_SWITCHED'; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[] }
+  | { type: 'WALLS_UPDATED'; walls: VTTWall[] }
+  | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
   | { type: 'ERROR'; message: string };

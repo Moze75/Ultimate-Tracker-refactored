@@ -1,9 +1,10 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTConnectedUser } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
+type PresenceHandler = (users: VTTConnectedUser[]) => void;
 
 const DEFAULT_CONFIG: VTTRoomConfig = {
   mapImageUrl: '',
@@ -32,22 +33,26 @@ interface LocalState {
   config: VTTRoomConfig;
   tokens: VTTToken[];
   fogState: VTTFogState;
+  walls: VTTWall[];
 }
 
 class VTTService {
   private channel: RealtimeChannel | null = null;
   private roomId: string | null = null;
   private userId: string | null = null;
+  private userName: string | null = null;
   private isGM = false;
   private messageHandlers: MessageHandler[] = [];
   private connectionHandlers: ConnectionHandler[] = [];
-  private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] } };
+  private presenceHandlers: PresenceHandler[] = [];
+  private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
 
-  connect(roomId: string, userId: string, _authToken: string) {
+  connect(roomId: string, userId: string, _authToken: string, userName?: string) {
     this.roomId = roomId;
     this.userId = userId;
+    this.userName = userName || null;
     this._connectAsync().catch(e => console.error('[VTT] connect error:', e));
   }
 
@@ -73,6 +78,7 @@ class VTTService {
       config: { ...DEFAULT_CONFIG, ...(stateJson.config || {}) },
       tokens: stateJson.tokens || [],
       fogState: stateJson.fogState || { revealedCells: [] },
+      walls: stateJson.walls || [],
     };
 
     const initialEvent: VTTServerEvent = {
@@ -85,6 +91,7 @@ class VTTService {
           config: this.localState.config,
           tokens: this.localState.tokens,
           fogState: this.localState.fogState,
+          walls: this.localState.walls,
           connectedUsers: [userId],
           lastSnapshot: Date.now(),
         },
@@ -102,7 +109,10 @@ class VTTService {
       .on('broadcast', { event: 'vtt' }, ({ payload }) => {
         const serverEvent = payload as VTTServerEvent;
         if (serverEvent.type === 'TOKEN_ADDED') {
-          this.localState.tokens = [...this.localState.tokens, serverEvent.token];
+          const exists = this.localState.tokens.some(t => t.id === serverEvent.token.id);
+          if (!exists) {
+            this.localState.tokens = [...this.localState.tokens, serverEvent.token];
+          }
         } else if (serverEvent.type === 'TOKEN_MOVED') {
           this.localState.tokens = this.localState.tokens.map(t =>
             t.id === serverEvent.tokenId ? { ...t, position: serverEvent.position } : t
@@ -117,30 +127,69 @@ class VTTService {
           this.localState.fogState = serverEvent.fogState;
         } else if (serverEvent.type === 'MAP_UPDATED') {
           this.localState.config = { ...this.localState.config, ...serverEvent.config };
+        } else if (serverEvent.type === 'SCENE_SWITCHED') {
+          this.localState.config = serverEvent.config;
+          this.localState.tokens = serverEvent.tokens;
+          this.localState.fogState = serverEvent.fogState;
+          this.localState.walls = serverEvent.walls;
+        } else if (serverEvent.type === 'WALLS_UPDATED') {
+          this.localState.walls = serverEvent.walls;
         }
         this.messageHandlers.forEach(h => h(serverEvent));
       })
+      .on('presence', { event: 'sync' }, () => {
+        this._emitPresence();
+      })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
-        newPresences.forEach((p: { user_id?: string }) => {
+        newPresences.forEach((p: Record<string, unknown>) => {
           if (p.user_id && p.user_id !== userId) {
-            this.messageHandlers.forEach(h => h({ type: 'USER_JOINED', userId: p.user_id! }));
+            this.messageHandlers.forEach(h => h({
+              type: 'USER_JOINED',
+              userId: p.user_id as string,
+              name: (p.name as string) || undefined,
+            }));
           }
         });
+        this._emitPresence();
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        leftPresences.forEach((p: { user_id?: string }) => {
+        leftPresences.forEach((p: Record<string, unknown>) => {
           if (p.user_id) {
-            this.messageHandlers.forEach(h => h({ type: 'USER_LEFT', userId: p.user_id! }));
+            this.messageHandlers.forEach(h => h({ type: 'USER_LEFT', userId: p.user_id as string }));
           }
         });
+        this._emitPresence();
       })
       .subscribe(async (status) => {
         const ok = status === 'SUBSCRIBED';
         this.connectionHandlers.forEach(h => h(ok));
         if (ok) {
-          await this.channel?.track({ user_id: userId, online_at: new Date().toISOString() });
+          await this.channel?.track({
+            user_id: userId,
+            name: this.userName || 'Inconnu',
+            role: this.isGM ? 'gm' : 'player',
+            online_at: new Date().toISOString(),
+          });
         }
       });
+  }
+
+  private _emitPresence() {
+    if (!this.channel) return;
+    const state = this.channel.presenceState();
+    const users: VTTConnectedUser[] = [];
+    for (const key of Object.keys(state)) {
+      const presences = state[key] as Array<Record<string, unknown>>;
+      if (presences.length > 0) {
+        const p = presences[0];
+        users.push({
+          userId: (p.user_id as string) || key,
+          name: (p.name as string) || 'Inconnu',
+          role: (p.role as 'gm' | 'player') || 'player',
+        });
+      }
+    }
+    this.presenceHandlers.forEach(h => h(users));
   }
 
   send(event: VTTClientEvent) {
@@ -203,6 +252,27 @@ class VTTService {
         serverEvent = { type: 'MAP_UPDATED', config: event.config };
         this._persistNow();
         break;
+
+      case 'SWITCH_SCENE':
+        this.localState.config = event.config;
+        this.localState.tokens = event.tokens;
+        this.localState.fogState = event.fogState;
+        this.localState.walls = event.walls;
+        serverEvent = {
+          type: 'SCENE_SWITCHED',
+          config: event.config,
+          tokens: event.tokens,
+          fogState: event.fogState,
+          walls: event.walls,
+        };
+        this._persistNow();
+        break;
+
+      case 'UPDATE_WALLS':
+        this.localState.walls = event.walls;
+        serverEvent = { type: 'WALLS_UPDATED', walls: event.walls };
+        this._persistNow();
+        break;
     }
 
     if (serverEvent) {
@@ -252,6 +322,13 @@ class VTTService {
     };
   }
 
+  onPresenceChange(handler: PresenceHandler) {
+    this.presenceHandlers.push(handler);
+    return () => {
+      this.presenceHandlers = this.presenceHandlers.filter(h => h !== handler);
+    };
+  }
+
   disconnect() {
     if (this.persistDebounce) {
       clearTimeout(this.persistDebounce);
@@ -263,9 +340,11 @@ class VTTService {
     }
     this.roomId = null;
     this.userId = null;
+    this.userName = null;
     this.messageHandlers = [];
     this.connectionHandlers = [];
-    this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] } };
+    this.presenceHandlers = [];
+    this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
   }
 
   isConnected() {
@@ -280,7 +359,7 @@ export async function createVTTRoom(name: string, userId: string, _authToken: st
   const { error } = await supabase
     .from('vtt_rooms')
     .insert({ id: roomId, name, gm_user_id: userId, state_json: {} });
-  if (error) throw new Error('Erreur création room VTT: ' + error.message);
+  if (error) throw new Error('Erreur creation room VTT: ' + error.message);
   return { roomId };
 }
 

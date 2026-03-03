@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { VTTCanvas } from '../components/VTT/VTTCanvas';
 import type { VTTCanvasHandle } from '../components/VTT/VTTCanvas';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
+import type { VTTActiveTool } from '../components/VTT/VTTLeftToolbar';
 import { VTTSidebar } from '../components/VTT/VTTSidebar';
 import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
 import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
@@ -11,6 +12,7 @@ import { AddTokenModal } from '../components/VTT/AddTokenModal';
 import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
 import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
+import { VTTPlayerList } from '../components/VTT/VTTPlayerList';
 import { vttService } from '../services/vttService';
 import type {
   VTTRole,
@@ -22,6 +24,7 @@ import type {
   VTTServerEvent,
   VTTProp,
   VTTWall,
+  VTTConnectedUser,
 } from '../types/vtt';
 
 interface VTTPageProps {
@@ -62,10 +65,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
-  const [connectedCount, setConnectedCount] = useState(1);
+  const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
-  const [activeTool, setActiveTool] = useState<'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw'>('select');
+  const [activeTool, setActiveTool] = useState<VTTActiveTool>('select');
   const [calibrationPoints, setCalibrationPoints] = useState<{ x: number; y: number }[]>([]);
   const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
@@ -74,12 +77,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
+  const [showWalls, setShowWalls] = useState(true);
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const switchingSceneRef = useRef(false);
 
-  // Always-current refs for scene save (avoid stale closure)
   const configRef = useRef(config);
   configRef.current = config;
   const fogStateRef = useRef(fogState);
@@ -97,6 +100,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const userId = session.user.id;
   const authToken = session.access_token;
+  const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
   const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
@@ -109,8 +113,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         setConfig(event.state.room.config);
         setTokens(event.state.room.tokens);
         setFogState(event.state.room.fogState);
+        setWalls(event.state.room.walls || []);
         setRole(event.state.yourRole);
-        setConnectedCount(event.state.room.connectedUsers.length);
         break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
@@ -118,7 +122,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         ));
         break;
       case 'TOKEN_ADDED':
-        setTokens(prev => [...prev, event.token]);
+        setTokens(prev => {
+          if (prev.some(t => t.id === event.token.id)) return prev;
+          return [...prev, event.token];
+        });
         break;
       case 'TOKEN_REMOVED':
         setTokens(prev => prev.filter(t => t.id !== event.tokenId));
@@ -135,11 +142,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
         break;
-      case 'USER_JOINED':
-        setConnectedCount(c => c + 1);
+      case 'SCENE_SWITCHED':
+        setConfig(event.config);
+        setTokens(event.tokens);
+        setFogState(event.fogState);
+        setWalls(event.walls);
         break;
+      case 'WALLS_UPDATED':
+        setWalls(event.walls);
+        break;
+      case 'USER_JOINED':
       case 'USER_LEFT':
-        setConnectedCount(c => Math.max(1, c - 1));
         break;
     }
   }, []);
@@ -148,9 +161,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (phase !== 'room' || !roomId) return;
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
-    vttService.connect(roomId, userId, authToken);
-    return () => { unsub(); unsubConn(); vttService.disconnect(); };
-  }, [phase, roomId, userId, authToken, handleServerEvent]);
+    const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
+    vttService.connect(roomId, userId, authToken, userName);
+    return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
+  }, [phase, roomId, userId, authToken, userName, handleServerEvent]);
 
   useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
@@ -170,7 +184,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         } else {
           supabase
             .from('vtt_scenes')
-            .insert({ room_id: roomId, name: 'Scène 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
+            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
             .select()
             .maybeSingle()
             .then(({ data: s }) => {
@@ -212,27 +226,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       if (!data) return;
       const scene = dbSceneToVTTScene(data);
 
-      // Broadcast scene change to other clients (suppress local echo to avoid conflicts)
-      vttService.suppressLocalNotifications(true);
-      const currentTokenIds = tokensRef.current.map(t => t.id);
-      currentTokenIds.forEach(id => vttService.send({ type: 'REMOVE_TOKEN', tokenId: id }));
-      vttService.send({ type: 'UPDATE_MAP', config: scene.config });
-      vttService.send({ type: 'RESET_FOG' });
-      if (scene.fogState.strokes && scene.fogState.strokes.length > 0) {
-        for (const stroke of scene.fogState.strokes) {
-          vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
-        }
-      }
-      scene.tokens.forEach(token => {
-        const { id: _id, ...rest } = token;
-        void _id;
-        vttService.send({ type: 'ADD_TOKEN', token: rest });
+      vttService.send({
+        type: 'SWITCH_SCENE',
+        config: scene.config,
+        tokens: scene.tokens,
+        fogState: scene.fogState,
+        walls: scene.walls || [],
       });
-      vttService.suppressLocalNotifications(false);
 
-      // Update local React state directly (don't wait for broadcast echo)
       setConfig(scene.config);
-      setFogState({ revealedCells: [], strokes: scene.fogState.strokes || [] });
+      setFogState(scene.fogState);
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
       setActiveSceneId(sceneId);
@@ -378,7 +381,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
-    if (!window.confirm('Réinitialiser tout le brouillard de guerre ?')) return;
+    if (!window.confirm('Reinitialiser tout le brouillard de guerre ?')) return;
     vttService.send({ type: 'RESET_FOG' });
     setFogState({ revealedCells: [], strokes: [] });
   }, [role]);
@@ -438,18 +441,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleApplyCalibration = useCallback(() => {
     if (calibrationPoints.length < 2) return;
     const [p1, p2] = calibrationPoints;
-
-    // Use the larger axis component to determine cell size
-    // This handles purely horizontal, purely vertical, or slightly diagonal clicks
     const dx = Math.abs(p2.x - p1.x);
     const dy = Math.abs(p2.y - p1.y);
     const cellSize = Math.round(Math.max(dx, dy));
     if (cellSize < 10) return;
-
-    // Compute offset from the first point (which lies on a grid intersection)
     const ox = Math.round(((p1.x % cellSize) + cellSize) % cellSize);
     const oy = Math.round(((p1.y % cellSize) + cellSize) % cellSize);
-
     handleUpdateMap({ gridSize: cellSize, gridOffsetX: ox, gridOffsetY: oy });
     setCalibrationPoints([]);
     setActiveTool('select');
@@ -470,14 +467,22 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, []);
 
   const handleWallAdded = useCallback((wall: VTTWall) => {
-    setWalls(prev => [...prev, wall]);
+    setWalls(prev => {
+      const next = [...prev, wall];
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
   }, []);
 
   const handleClearWalls = useCallback(() => {
     setWalls([]);
+    vttService.send({ type: 'UPDATE_WALLS', walls: [] });
   }, []);
 
-  const leaveRoom = () => {
+  const leaveRoom = useCallback(async () => {
+    if (activeSceneIdRef.current && role === 'gm') {
+      await saveCurrentSceneState(activeSceneIdRef.current);
+    }
     setPhase('lobby');
     setRoomId(null);
     setTokens([]);
@@ -488,7 +493,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setProps([]);
     setSelectedPropId(null);
     setWalls([]);
-  };
+    setConnectedUsers([]);
+  }, [role, saveCurrentSceneState]);
 
   if (phase === 'lobby') {
     return (
@@ -518,11 +524,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onUpdateMap={handleUpdateMap}
           onBack={leaveRoom}
           calibrationPoints={calibrationPoints}
-          onCalibrationPoint={handleCalibrationPoint}
           onClearCalibration={handleClearCalibration}
           onApplyCalibration={handleApplyCalibration}
           wallCount={walls.length}
           onClearWalls={handleClearWalls}
+          showWalls={showWalls}
+          onToggleShowWalls={() => setShowWalls(v => !v)}
         />
 
         <div
@@ -585,6 +592,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onCalibrationPoint={handleCalibrationPoint}
             walls={walls}
             onWallAdded={handleWallAdded}
+            showWalls={showWalls}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
@@ -626,8 +634,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             </div>
           ))}
 
+          <VTTPlayerList users={connectedUsers} />
+
           {activeSceneId && scenes.length > 0 && (
-            <div className="absolute bottom-4 left-4 pointer-events-none z-10">
+            <div className="absolute bottom-4 right-60 pointer-events-none z-10">
               <div className="px-3 py-1 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-xs text-gray-400 shadow-lg">
                 {scenes.find(s => s.id === activeSceneId)?.name ?? ''}
               </div>
@@ -643,7 +653,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           userId={userId}
           roomId={roomId!}
           connected={connected}
-          connectedCount={connectedCount}
+          connectedCount={connectedUsers.length || 1}
           onSelectToken={setSelectedTokenId}
           onEditToken={setEditingToken}
           onRemoveToken={handleRemoveToken}
