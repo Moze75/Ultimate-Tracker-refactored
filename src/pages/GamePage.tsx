@@ -941,13 +941,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
               />
 
               <div className="w-full max-w-md mx-auto mt-6 px-4 pb-6">
-                <button
-                  onClick={handleBackToSelection}
-                  className="w-full btn-secondary px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-                >
-                  <LogOut size={20} />
-                  Retour aux personnages
-                </button>
+
               </div>
             </>
           );
