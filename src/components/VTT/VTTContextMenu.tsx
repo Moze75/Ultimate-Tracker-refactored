@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, Shield, Users, Globe } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -11,7 +11,7 @@ interface VTTContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
-  onResize?: (size: number) => void;
+  onSetControlledBy?: (controlledBy: 'gm' | 'player' | 'all') => void;
   onClose: () => void;
 }
 
@@ -24,10 +24,12 @@ export function VTTContextMenu({
   onEdit,
   onDelete,
   onToggleVisibility,
+  onSetControlledBy,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const canEdit = role === 'gm' || token.ownerUserId === userId;
+  const ctrl = token.controlledBy || 'all';
+  const canEdit = role === 'gm' || (ctrl === 'all') || (ctrl === 'player' && token.ownerUserId === userId);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -74,6 +76,33 @@ export function VTTContextMenu({
           label={token.visible ? 'Masquer' : 'Rendre visible'}
           onClick={() => { onToggleVisibility(); onClose(); }}
         />
+      )}
+
+      {role === 'gm' && onSetControlledBy && (
+        <div className="border-t border-gray-700/60 mt-1 pt-1">
+          <p className="px-3 py-1 text-[10px] text-gray-500 font-medium uppercase tracking-wide">Controle</p>
+          <div className="flex gap-0.5 px-2 pb-1">
+            {([
+              { value: 'all' as const, icon: <Globe size={11} />, tip: 'Tous' },
+              { value: 'player' as const, icon: <Users size={11} />, tip: 'Joueur' },
+              { value: 'gm' as const, icon: <Shield size={11} />, tip: 'MJ' },
+            ]).map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { onSetControlledBy(opt.value); onClose(); }}
+                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] transition-colors ${
+                  (token.controlledBy || 'all') === opt.value
+                    ? 'bg-amber-600/30 text-amber-300 border border-amber-500/50'
+                    : 'bg-gray-800 text-gray-500 border border-gray-700 hover:text-gray-300'
+                }`}
+                title={opt.tip}
+              >
+                {opt.icon}
+                {opt.tip}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {role === 'gm' && (

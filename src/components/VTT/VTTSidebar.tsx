@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 
@@ -21,6 +21,7 @@ interface VTTSidebarProps {
   onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
   onResetFog: () => void;
   onBack: () => void;
+  onHome: () => void;
   props: VTTProp[];
   selectedPropId: string | null;
   onSelectProp: (id: string | null) => void;
@@ -74,6 +75,7 @@ export function VTTSidebar({
   onAddProp,
   onRemoveProp,
   onUpdateProp,
+  onHome,
 }: VTTSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
@@ -146,7 +148,8 @@ export function VTTSidebar({
                 <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
               )}
               {tokens.map(token => {
-                const canEdit = role === 'gm' || token.ownerUserId === userId;
+                const ctrl = token.controlledBy || 'all';
+                const canEdit = role === 'gm' || (ctrl === 'all') || (ctrl === 'player' && token.ownerUserId === userId);
                 const isSelected = token.id === selectedTokenId;
                 return (
                   <div
@@ -321,18 +324,28 @@ export function VTTSidebar({
       </div>
 
       <div className="border-t border-gray-700/60 shrink-0">
-        {activeTab === 'settings' && (
-          <button
-            onClick={onBack}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-xs font-medium border-b border-gray-700/60"
-          >
-            <LogOut size={13} />
-            Retour à l'accueil
-          </button>
-        )}
         <div className={`px-3 py-2 flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-          {connected ? `${connectedCount} connecté${connectedCount > 1 ? 's' : ''}` : 'Déconnecté'}
+          {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
+        </div>
+        <div className="flex border-t border-gray-700/60">
+          <button
+            onClick={onHome}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-[11px]"
+            title="Retour a l'accueil"
+          >
+            <LogOut size={12} />
+            Accueil
+          </button>
+          <div className="w-px bg-gray-700/60" />
+          <button
+            onClick={onBack}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-500 hover:text-red-400 hover:bg-red-950/30 transition-colors text-[11px]"
+            title="Quitter la salle"
+          >
+            <DoorOpen size={12} />
+            Quitter
+          </button>
         </div>
       </div>
     </div>

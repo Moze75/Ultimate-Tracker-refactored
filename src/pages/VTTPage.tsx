@@ -311,23 +311,30 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.send({ type: 'ADD_TOKEN', token: { ...token, position: center } });
   }, []);
 
+  const canControlToken = useCallback((token: VTTToken): boolean => {
+    if (role === 'gm') return true;
+    const ctrl = token.controlledBy || 'all';
+    if (ctrl === 'gm') return false;
+    if (ctrl === 'player') return token.ownerUserId === userId;
+    return true;
+  }, [role, userId]);
+
   const handleDropToken = useCallback((tokenId: string, worldPos: { x: number; y: number }) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
-    const canMove = role === 'gm' || token.ownerUserId === userId;
-    if (!canMove) return;
+    if (!canControlToken(token)) return;
     handleMoveToken(tokenId, worldPos);
-  }, [role, userId, handleMoveToken]);
+  }, [canControlToken, handleMoveToken]);
 
   const handleRemoveToken = useCallback((tokenId: string) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
-    if (role !== 'gm' && token.ownerUserId !== userId) return;
+    if (!canControlToken(token)) return;
     vttService.send({ type: 'REMOVE_TOKEN', tokenId });
     setTokens(prev => prev.filter(t => t.id !== tokenId));
     setSelectedTokenId(id => id === tokenId ? null : id);
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
-  }, [role, userId]);
+  }, [canControlToken]);
 
   useEffect(() => {
     if (phase !== 'room') return;
@@ -358,18 +365,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleEditTokenSave = useCallback((changes: Partial<VTTToken>) => {
     if (!editingToken) return;
-    const canEdit = role === 'gm' || editingToken.ownerUserId === userId;
-    if (!canEdit) return;
+    if (!canControlToken(editingToken)) return;
     vttService.send({ type: 'UPDATE_TOKEN', tokenId: editingToken.id, changes });
-  }, [editingToken, role, userId]);
+  }, [editingToken, canControlToken]);
 
   const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
-    const canEdit = role === 'gm' || token.ownerUserId === userId;
-    if (!canEdit) return;
+    if (!canControlToken(token)) return;
     vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
-  }, [role, userId]);
+  }, [canControlToken]);
 
   const handleResizeToken = useCallback((tokenId: string, size: number) => {
     handleUpdateToken(tokenId, { size });
@@ -408,6 +413,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
     setConfig(prev => ({ ...prev, ...changes }));
     vttService.send({ type: 'UPDATE_MAP', config: changes });
+    if (activeSceneIdRef.current) {
+      setScenes(prev => prev.map(s => {
+        if (s.id !== activeSceneIdRef.current) return s;
+        return { ...s, config: { ...s.config, ...changes } };
+      }));
+      supabase
+        .from('vtt_scenes')
+        .update({ config: { ...configRef.current, ...changes } })
+        .eq('id', activeSceneIdRef.current)
+        .then(() => {});
+    }
   }, []);
 
   const handleSceneRightClick = useCallback((sceneId: string) => {
@@ -661,6 +677,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onUpdateMap={handleUpdateMap}
           onResetFog={handleResetFog}
           onBack={leaveRoom}
+          onHome={onBack}
           props={props}
           selectedPropId={selectedPropId}
           onSelectProp={setSelectedPropId}
@@ -699,6 +716,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onSetControlledBy={(controlledBy) => {
+            handleUpdateToken(contextMenu.token.id, { controlledBy });
+            setContextMenu(null);
+          }}
           onClose={() => setContextMenu(null)}
         />
       )}
