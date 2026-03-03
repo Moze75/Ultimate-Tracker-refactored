@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'measure';
