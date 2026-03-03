@@ -166,6 +166,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, handleServerEvent]);
 
+  const applySceneToLive = useCallback((scene: VTTScene) => {
+    setConfig(scene.config);
+    setTokens(scene.tokens);
+    setFogState(scene.fogState);
+    setWalls(scene.walls || []);
+    vttService.send({
+      type: 'SWITCH_SCENE',
+      config: scene.config,
+      tokens: scene.tokens,
+      fogState: scene.fogState,
+      walls: scene.walls || [],
+    });
+  }, []);
+
   useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
     supabase
@@ -178,8 +192,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
           if (!activeSceneId) {
-            setActiveSceneId(parsed[0].id);
-            setWalls(parsed[0].walls || []);
+            const first = parsed[0];
+            setActiveSceneId(first.id);
+            applySceneToLive(first);
           }
         } else {
           supabase
@@ -192,11 +207,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 const scene = dbSceneToVTTScene(s);
                 setScenes([scene]);
                 setActiveSceneId(scene.id);
+                applySceneToLive(scene);
               }
             });
         }
       });
-  }, [phase, roomId, role]);
+  }, [phase, roomId, role, applySceneToLive]);
 
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
@@ -433,15 +449,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [scenes]);
 
   const handleSaveSceneConfig = useCallback(async (sceneId: string, changes: Partial<VTTRoomConfig>) => {
-    const scene = scenes.find(s => s.id === sceneId);
-    if (!scene) return;
-    const newConfig = { ...scene.config, ...changes };
-    await supabase.from('vtt_scenes').update({ config: newConfig }).eq('id', sceneId);
-    setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, config: newConfig } : s));
-    if (sceneId === activeSceneId) {
-      handleUpdateMap(changes);
+    setScenes(prev => {
+      const scene = prev.find(s => s.id === sceneId);
+      if (!scene) return prev;
+      const newConfig = { ...scene.config, ...changes };
+      supabase.from('vtt_scenes').update({ config: newConfig }).eq('id', sceneId).then(() => {});
+      return prev.map(s => s.id === sceneId ? { ...s, config: newConfig } : s);
+    });
+    if (sceneId === activeSceneIdRef.current) {
+      setConfig(prev => ({ ...prev, ...changes }));
+      vttService.send({ type: 'UPDATE_MAP', config: changes });
     }
-  }, [scenes, activeSceneId, handleUpdateMap]);
+  }, []);
 
   const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
     setCalibrationPoints(prev => {
