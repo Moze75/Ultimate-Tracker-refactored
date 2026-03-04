@@ -582,13 +582,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
-    // --- VISION DE NUIT (drawNightVisionOverlay avec raycasting murs) ---
-    // Doit être dessiné APRÈS le fog et AVANT le filtre heure pour ne pas être écrasé
+    // --- VISION DE NUIT (drawNightVisionOverlay avec raycasting murs + mémoire pérenne) ---
     if (isNight && curRole === 'player') {
       const playerTokens = tokensRef.current.filter(
         t => t.visible && t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)
       );
       if (playerTokens.length > 0) {
+        // Canvas de vision actuelle
         let nvc = visionCanvasRef.current;
         if (!nvc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
           nvc = document.createElement('canvas');
@@ -600,9 +600,65 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         const nCtx = nvc.getContext('2d')!;
         const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
         drawNightVisionOverlay(nCtx, mapW, mapH, playerTokens, currentWalls, CELL, tod.opacity, tod.color);
+
+        // Canvas de mémoire : accumule les zones déjà explorées
+        let evc = exploredCanvasRef.current;
+        if (!evc || exploredCanvasSizeRef.current.w !== mapW || exploredCanvasSizeRef.current.h !== mapH) {
+          evc = document.createElement('canvas');
+          evc.width = mapW;
+          evc.height = mapH;
+          // Initialiser en noir total (jamais exploré)
+          const eCtx = evc.getContext('2d')!;
+          eCtx.fillStyle = 'rgba(0,0,0,1)';
+          eCtx.fillRect(0, 0, mapW, mapH);
+          exploredCanvasRef.current = evc;
+          exploredCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const eCtx = evc.getContext('2d')!;
+
+        // Pour chaque token, marquer la zone visible actuelle comme explorée
+        // On "perce" le canvas de mémoire aux endroits visibles
+        // Les zones explorées passent de noir 100% à noir 30% (zones vues mais hors vision)
+        eCtx.globalCompositeOperation = 'destination-out';
+        for (const token of playerTokens) {
+          if (!token.visible) continue;
+          const size = (token.size || 1) * CELL;
+          const tcx = token.position.x + size / 2;
+          const tcy = token.position.y + size / 2;
+          const visionMode = token.visionMode || 'none';
+          const visionRange = token.visionRange ?? 18;
+          const lightSource = token.lightSource || 'none';
+          const lightRange = token.lightRange ?? 6;
+
+          let maxR = 0;
+          if (visionMode === 'normal') maxR = Math.max(maxR, metersToPixels(3, CELL));
+          else if (visionMode === 'darkvision') maxR = Math.max(maxR, metersToPixels(visionRange, CELL));
+
+          if (lightSource !== 'none') {
+            let dimM = lightRange * 2;
+            if (lightSource === 'torch') dimM = 12;
+            else if (lightSource === 'lantern') dimM = 18;
+            maxR = Math.max(maxR, metersToPixels(dimM, CELL));
+          }
+
+          if (maxR > 0) {
+            // Effacer la zone visible du canvas de mémoire (la rendre transparente)
+            eCtx.fillStyle = 'rgba(0,0,0,1)';
+            eCtx.beginPath();
+            eCtx.arc(tcx, tcy, maxR, 0, Math.PI * 2);
+            eCtx.fill();
+          }
+        }
+        eCtx.globalCompositeOperation = 'source-over';
+
+        // Dessiner d'abord la mémoire des zones explorées (noir à 30% = visible mais assombri)
+        ctx.globalAlpha = 0.30;
+        ctx.drawImage(evc, 0, 0, mapW, mapH);
+        ctx.globalAlpha = 1;
+
+        // Par-dessus, dessiner la vision actuelle (le drawNightVisionOverlay)
         ctx.drawImage(nvc, 0, 0, mapW, mapH);
       } else {
-        // Aucun token joueur : brouillard total
         ctx.fillStyle = 'rgba(0,0,0,1)';
         ctx.fillRect(0, 0, mapW, mapH);
       }
