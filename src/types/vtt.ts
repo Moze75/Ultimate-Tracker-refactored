@@ -30,6 +30,7 @@ export interface VTTRoomConfig {
   gridOffsetX?: number;
   gridOffsetY?: number;
   gridLineWidth?: number;
+  timeOfDay?: number;
 }
 
 export interface VTTFogStroke {

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
+import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
@@ -486,6 +487,16 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
           ctx.globalAlpha = 1;
         }
+      }
+    }
+
+    const timeOfDay = cfg.timeOfDay;
+    if (timeOfDay != null) {
+      const tod = getTimeOfDayOverlay(timeOfDay);
+      if (tod.opacity > 0) {
+        const fillColor = tod.color.replace('ALPHA', String(tod.opacity));
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(0, 0, mapW, mapH);
       }
     }
 

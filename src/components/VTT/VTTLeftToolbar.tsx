@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'measure';
@@ -70,6 +70,7 @@ export function VTTLeftToolbar({
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
   const [wallPopupOpen, setWallPopupOpen] = useState(false);
   const [broadcastPopupOpen, setBroadcastPopupOpen] = useState(false);
+  const [timePopupOpen, setTimePopupOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const fogPopupRef = useRef<HTMLDivElement>(null);
   const fogBtnRef = useRef<HTMLDivElement>(null);
@@ -79,11 +80,13 @@ export function VTTLeftToolbar({
   const wallBtnRef = useRef<HTMLDivElement>(null);
   const broadcastPopupRef = useRef<HTMLDivElement>(null);
   const broadcastBtnRef = useRef<HTMLDivElement>(null);
+  const timePopupRef = useRef<HTMLDivElement>(null);
+  const timeBtnRef = useRef<HTMLDivElement>(null);
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
   useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen) return;
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
@@ -107,10 +110,15 @@ export function VTTLeftToolbar({
         broadcastBtnRef.current && !broadcastBtnRef.current.contains(target)) {
         setBroadcastPopupOpen(false);
       }
+      if (timePopupOpen &&
+        timePopupRef.current && !timePopupRef.current.contains(target) &&
+        timeBtnRef.current && !timeBtnRef.current.contains(target)) {
+        setTimePopupOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen]);
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen]);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
@@ -189,6 +197,23 @@ export function VTTLeftToolbar({
             />
           </div>
         </>
+      )}
+
+      {role === 'gm' && (
+        <div ref={timeBtnRef} className="w-full flex flex-col items-center">
+          <ToolBtn
+            icon={<Clock size={17} />}
+            label="Heure du jour"
+            active={timePopupOpen}
+            onClick={() => {
+              setTimePopupOpen(v => !v);
+              setFogPopupOpen(false);
+              setGridPopupOpen(false);
+              setWallPopupOpen(false);
+              setBroadcastPopupOpen(false);
+            }}
+          />
+        </div>
       )}
 
       {role === 'gm' && (
@@ -517,6 +542,15 @@ export function VTTLeftToolbar({
         </div>
       )}
 
+      {timePopupOpen && role === 'gm' && (
+        <TimeOfDayPopup
+          ref={timePopupRef}
+          hour={config.timeOfDay ?? 12}
+          onChange={(h) => onUpdateMap({ timeOfDay: h })}
+          onClose={() => setTimePopupOpen(false)}
+        />
+      )}
+
       {broadcastPopupOpen && role === 'gm' && (
         <div
           ref={broadcastPopupRef}
@@ -681,6 +715,148 @@ function hexToRgba(hex: string, alpha: number): string {
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
 }
+
+export function getTimeOfDayOverlay(hour: number): { color: string; opacity: number; label: string } {
+  if (hour >= 7 && hour < 8) return { color: 'rgba(255,160,50,ALPHA)', opacity: 0.15, label: 'Aube' };
+  if (hour >= 8 && hour < 10) return { color: 'rgba(255,200,100,ALPHA)', opacity: 0.06, label: 'Matin' };
+  if (hour >= 10 && hour < 16) return { color: 'rgba(255,255,200,ALPHA)', opacity: 0, label: 'Journee' };
+  if (hour >= 16 && hour < 18) return { color: 'rgba(255,180,80,ALPHA)', opacity: 0.08, label: 'Apres-midi' };
+  if (hour >= 18 && hour < 19) return { color: 'rgba(255,120,40,ALPHA)', opacity: 0.18, label: 'Crepuscule' };
+  if (hour >= 19 && hour < 20) return { color: 'rgba(200,80,30,ALPHA)', opacity: 0.3, label: 'Soir' };
+  if (hour >= 20 && hour < 21) return { color: 'rgba(40,40,100,ALPHA)', opacity: 0.4, label: 'Tombee de la nuit' };
+  if (hour >= 21 && hour < 23) return { color: 'rgba(15,15,60,ALPHA)', opacity: 0.55, label: 'Nuit' };
+  if (hour >= 23 || hour < 4) return { color: 'rgba(5,5,30,ALPHA)', opacity: 0.65, label: 'Nuit profonde' };
+  if (hour >= 4 && hour < 5) return { color: 'rgba(15,15,60,ALPHA)', opacity: 0.5, label: 'Fin de nuit' };
+  if (hour >= 5 && hour < 6) return { color: 'rgba(80,50,100,ALPHA)', opacity: 0.3, label: 'Aurore' };
+  if (hour >= 6 && hour < 7) return { color: 'rgba(200,120,60,ALPHA)', opacity: 0.18, label: 'Lever du soleil' };
+  return { color: 'rgba(0,0,0,ALPHA)', opacity: 0, label: 'Journee' };
+}
+
+function getTimeIcon(hour: number) {
+  if (hour >= 19 || hour < 5) return <Moon size={14} className="text-blue-300" />;
+  if (hour >= 5 && hour < 8) return <Sunrise size={14} className="text-amber-400" />;
+  if (hour >= 16 && hour < 19) return <Sunset size={14} className="text-orange-400" />;
+  return <Sun size={14} className="text-yellow-400" />;
+}
+
+function formatHour(h: number): string {
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+}
+
+const HOUR_PRESETS = [
+  { hour: 6, label: 'Aube', icon: Sunrise },
+  { hour: 12, label: 'Midi', icon: Sun },
+  { hour: 18, label: 'Crepuscule', icon: Sunset },
+  { hour: 22, label: 'Nuit', icon: Moon },
+];
+
+const TimeOfDayPopup = React.forwardRef<HTMLDivElement, {
+  hour: number;
+  onChange: (h: number) => void;
+  onClose: () => void;
+}>(function TimeOfDayPopup({ hour, onChange, onClose }, ref) {
+  const overlay = getTimeOfDayOverlay(hour);
+  const isNight = hour >= 19 || hour < 5;
+  const bgPreview = overlay.opacity > 0
+    ? overlay.color.replace('ALPHA', String(Math.min(overlay.opacity + 0.1, 1)))
+    : 'rgba(135,206,235,0.2)';
+
+  return (
+    <div
+      ref={ref}
+      className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64"
+      style={{ top: '230px' }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <Clock size={13} className="text-amber-400" />
+          <span className="text-xs font-semibold text-gray-200">Heure du jour</span>
+        </div>
+        <button onClick={onClose} className="p-0.5 text-gray-500 hover:text-gray-300 rounded">
+          <X size={13} />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <div
+          className="rounded-lg p-3 border border-gray-700/60 flex items-center gap-3 transition-colors"
+          style={{ backgroundColor: bgPreview }}
+        >
+          {getTimeIcon(hour)}
+          <div>
+            <span className="text-lg font-bold text-white font-mono">{formatHour(hour)}</span>
+            <p className="text-[10px] text-gray-300/80">{overlay.label}</p>
+          </div>
+          {isNight && (
+            <div className="ml-auto px-1.5 py-0.5 bg-blue-900/60 border border-blue-700/50 rounded text-[9px] text-blue-300 font-medium">
+              NUIT
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-gray-400">Heure</span>
+            <span className="text-xs font-mono text-amber-400 font-bold">{formatHour(hour)}</span>
+          </div>
+          <div className="relative">
+            <input
+              type="range"
+              min={0}
+              max={23.5}
+              step={0.5}
+              value={hour}
+              onChange={e => onChange(parseFloat(e.target.value))}
+              className="w-full accent-amber-500"
+            />
+            <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+              <span>00:00</span>
+              <span>06:00</span>
+              <span>12:00</span>
+              <span>18:00</span>
+              <span>23:30</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative h-4 rounded-full overflow-hidden border border-gray-700/60">
+          <div className="absolute inset-0 flex">
+            <div className="flex-1" style={{ background: 'linear-gradient(to right, #0a0a2e, #0a0a2e 16%, #c87832 21%, #ffc864 29%, #ffffc8 42%, #ffffc8 58%, #ffb450 67%, #c85028 79%, #28286e 83%, #0a0a2e)' }} />
+          </div>
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-white shadow-sm shadow-black"
+            style={{ left: `${(hour / 24) * 100}%` }}
+          />
+        </div>
+
+        <div className="grid grid-cols-4 gap-1">
+          {HOUR_PRESETS.map(preset => (
+            <button
+              key={preset.hour}
+              onClick={() => onChange(preset.hour)}
+              className={`flex flex-col items-center gap-0.5 py-1.5 rounded text-[10px] transition-colors border ${
+                Math.abs(hour - preset.hour) < 1
+                  ? 'bg-amber-600/20 border-amber-500/60 text-amber-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+              }`}
+            >
+              <preset.icon size={12} />
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="pt-1 border-t border-gray-700/60">
+          <p className="text-[10px] text-gray-500 leading-relaxed">
+            Filtre d'ambiance visible par tous les joueurs. La nuit commence a <strong className="text-gray-400">19h</strong>. Les tokens avec vision nocturne ignoreront l'assombrissement.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 function ToolBtn({
   icon, label, active, onClick,
