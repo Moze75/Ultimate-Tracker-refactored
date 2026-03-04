@@ -637,8 +637,22 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           const tSize = (token.size || 1) * CELL;
           const tcx = token.position.x + tSize / 2;
           const tcy = token.position.y + tSize / 2;
-          const radii = getVisionRadii(token, CELL);
-          const maxR = Math.max(radii.brightR, radii.dimR);
+
+          // Calculer maxR directement pour cohérence avec drawNightVisionOverlay
+          const vm = token.visionMode || 'none';
+          const vr = token.visionRange ?? 18;
+          const ls = token.lightSource || 'none';
+          const lr = token.lightRange ?? 6;
+
+          let maxR = 0;
+          if (vm === 'normal') maxR = metersToPixels(3, CELL);
+          else if (vm === 'darkvision') maxR = metersToPixels(vr, CELL);
+          if (ls !== 'none') {
+            let dimM = lr * 2;
+            if (ls === 'torch') dimM = 12;
+            else if (ls === 'lantern') dimM = 18;
+            maxR = Math.max(maxR, metersToPixels(dimM, CELL));
+          }
           if (maxR <= 0) continue;
 
           if (wallSegs.length > 0) {
