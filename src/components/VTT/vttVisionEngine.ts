@@ -53,7 +53,7 @@ export function getVisionRadii(token: VTTToken, gridSize: number): VisionRadius 
   return { cx, cy, brightR, dimR };
 }
 
-function getWallSegments(walls: VTTWall[]): { x1: number; y1: number; x2: number; y2: number }[] {
+export function getWallSegments(walls: VTTWall[]): { x1: number; y1: number; x2: number; y2: number }[] {
   const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
   for (const wall of walls) {
     for (let i = 0; i < wall.points.length - 1; i++) {
