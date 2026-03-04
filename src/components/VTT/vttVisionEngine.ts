@@ -223,7 +223,7 @@ export function drawNightVisionOverlay(
 
       const flicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
       const lBrightReveal = token.lightBrightAlpha ?? 1.0;
-      const lDimReveal = token.lightDimAlpha ?? 0.70;
+      const lDimReveal = token.lightDimAlpha ?? 0.85;
 
       zones.push({
         cx, cy,
