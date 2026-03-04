@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperat
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
-import { drawVisionOverlay } from './vttVisionEngine';
+import { drawNightVisionOverlay, drawDayVisionOverlay } from './vttVisionEngine';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
@@ -184,6 +184,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
   const visionCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dayVisionCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const torchAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
 
@@ -494,10 +497,34 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     }
 
     const timeOfDay = cfg.timeOfDay;
+    const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
+    const isDay = !isNight;
+    const currentWalls = wallsRef.current || [];
+
+    if (isDay && curRole === 'player' && currentWalls.length > 0) {
+      const playerTokens = tokensRef.current.filter(
+        t => t.visible && t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)
+      );
+      if (playerTokens.length > 0) {
+        let dvc = dayVisionCanvasRef.current;
+        if (!dvc || dayVisionCanvasSizeRef.current.w !== mapW || dayVisionCanvasSizeRef.current.h !== mapH) {
+          dvc = document.createElement('canvas');
+          dvc.width = mapW;
+          dvc.height = mapH;
+          dayVisionCanvasRef.current = dvc;
+          dayVisionCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const dvCtx = dvc.getContext('2d')!;
+        drawDayVisionOverlay(dvCtx, mapW, mapH, playerTokens, currentWalls, CELL);
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(dvc, 0, 0, mapW, mapH);
+        ctx.globalAlpha = 1;
+      }
+    }
+
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        const isNight = timeOfDay >= 19 || timeOfDay < 5;
         const hasVisionTokens = isNight && tokensRef.current.some(
           t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
         );
@@ -512,14 +539,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
             visionCanvasSizeRef.current = { w: mapW, h: mapH };
           }
           const vCtx = vc.getContext('2d')!;
-          drawVisionOverlay(
+          drawNightVisionOverlay(
             vCtx, mapW, mapH,
             tokensRef.current,
-            wallsRef.current || [],
+            currentWalls,
             CELL,
             tod.opacity,
-            tod.color,
-            false
+            tod.color
           );
           ctx.drawImage(vc, 0, 0, mapW, mapH);
         } else {
@@ -735,6 +761,29 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // Redraw when visual state changes
   useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls]);
+
+  useEffect(() => {
+    const hasTorch = tokens.some(t => t.visible && t.lightSource === 'torch');
+    const isNight = config.timeOfDay != null && (config.timeOfDay >= 19 || config.timeOfDay < 5);
+    if (hasTorch && isNight) {
+      let running = true;
+      const animate = () => {
+        if (!running) return;
+        drawRef.current();
+        torchAnimRef.current = requestAnimationFrame(animate);
+      };
+      torchAnimRef.current = requestAnimationFrame(animate);
+      return () => {
+        running = false;
+        if (torchAnimRef.current) cancelAnimationFrame(torchAnimRef.current);
+      };
+    } else {
+      if (torchAnimRef.current) {
+        cancelAnimationFrame(torchAnimRef.current);
+        torchAnimRef.current = null;
+      }
+    }
+  }, [tokens, config.timeOfDay]);
 
   // Resize observer
   useEffect(() => {

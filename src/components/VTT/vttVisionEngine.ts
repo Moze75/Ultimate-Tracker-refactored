@@ -1,94 +1,180 @@
 import type { VTTToken, VTTWall } from '../../types/vtt';
 
-interface VisionSource {
+interface VisionZone {
   cx: number;
   cy: number;
-  brightRadiusPx: number;
-  dimRadiusPx: number;
-  brightAlpha: number;
-  dimAlpha: number;
-  isProximity: boolean;
+  innerRadiusPx: number;
+  outerRadiusPx: number;
+  innerEraseAlpha: number;
+  outerEraseAlpha: number;
+  respectWalls: boolean;
 }
 
 function metersToPixels(meters: number, gridSizePx: number): number {
   return (meters / 1.5) * gridSizePx;
 }
 
-function rayIntersectsWall(
-  ox: number, oy: number,
-  dx: number, dy: number,
-  walls: VTTWall[]
-): number {
-  let minT = 1;
+function getWallSegments(walls: VTTWall[]): { x1: number; y1: number; x2: number; y2: number }[] {
+  const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
   for (const wall of walls) {
     for (let i = 0; i < wall.points.length - 1; i++) {
-      const p1 = wall.points[i], p2 = wall.points[i + 1];
-      const wx = p2.x - p1.x, wy = p2.y - p1.y;
-      const denom = dx * wy - dy * wx;
-      if (Math.abs(denom) < 1e-10) continue;
-      const t = ((p1.x - ox) * wy - (p1.y - oy) * wx) / denom;
-      const u = ((p1.x - ox) * dy - (p1.y - oy) * dx) / denom;
-      if (t >= 0 && t < minT && u >= 0 && u <= 1) {
-        minT = t;
-      }
+      segs.push({
+        x1: wall.points[i].x, y1: wall.points[i].y,
+        x2: wall.points[i + 1].x, y2: wall.points[i + 1].y,
+      });
     }
   }
-  return minT;
+  return segs;
+}
+
+function castRay(
+  ox: number, oy: number,
+  angle: number,
+  maxDist: number,
+  segments: { x1: number; y1: number; x2: number; y2: number }[]
+): number {
+  const rdx = Math.cos(angle);
+  const rdy = Math.sin(angle);
+  let closest = maxDist;
+
+  for (const seg of segments) {
+    const sx = seg.x2 - seg.x1;
+    const sy = seg.y2 - seg.y1;
+    const denom = rdx * sy - rdy * sx;
+    if (Math.abs(denom) < 1e-10) continue;
+    const t = ((seg.x1 - ox) * sy - (seg.y1 - oy) * sx) / denom;
+    const u = ((seg.x1 - ox) * rdy - (seg.y1 - oy) * rdx) / denom;
+    if (t > 0.001 && t < closest && u >= 0 && u <= 1) {
+      closest = t;
+    }
+  }
+  return closest;
 }
 
 function buildVisibilityPolygon(
   cx: number, cy: number,
   maxRadius: number,
-  walls: VTTWall[],
+  segments: { x1: number; y1: number; x2: number; y2: number }[],
   mapW: number, mapH: number
-): { x: number; y: number }[] {
-  const endpoints: { angle: number; x: number; y: number }[] = [];
-
-  const corners = [
-    { x: 0, y: 0 },
-    { x: mapW, y: 0 },
-    { x: mapW, y: mapH },
-    { x: 0, y: mapH },
-  ];
-  for (const c of corners) {
-    endpoints.push({ angle: Math.atan2(c.y - cy, c.x - cx), x: c.x, y: c.y });
+): Float64Array {
+  const relevant: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  const pad = maxRadius + 20;
+  for (const s of segments) {
+    const minX = Math.min(s.x1, s.x2);
+    const maxX = Math.max(s.x1, s.x2);
+    const minY = Math.min(s.y1, s.y2);
+    const maxY = Math.max(s.y1, s.y2);
+    if (maxX < cx - pad || minX > cx + pad || maxY < cy - pad || minY > cy + pad) continue;
+    relevant.push(s);
   }
 
-  for (const wall of walls) {
-    for (const pt of wall.points) {
-      const dx = pt.x - cx, dy = pt.y - cy;
-      if (dx * dx + dy * dy > (maxRadius + 50) * (maxRadius + 50)) continue;
-      endpoints.push({ angle: Math.atan2(dy, dx), x: pt.x, y: pt.y });
+  const mapSegs: { x1: number; y1: number; x2: number; y2: number }[] = [
+    { x1: 0, y1: 0, x2: mapW, y2: 0 },
+    { x1: mapW, y1: 0, x2: mapW, y2: mapH },
+    { x1: mapW, y1: mapH, x2: 0, y2: mapH },
+    { x1: 0, y1: mapH, x2: 0, y2: 0 },
+  ];
+  const allSegs = [...relevant, ...mapSegs];
+
+  const angles: number[] = [];
+  const TINY = 0.00005;
+
+  for (const s of relevant) {
+    for (const pt of [{ x: s.x1, y: s.y1 }, { x: s.x2, y: s.y2 }]) {
+      const a = Math.atan2(pt.y - cy, pt.x - cx);
+      angles.push(a - TINY, a, a + TINY);
     }
   }
 
-  const angles: number[] = [];
-  const TINY = 0.0001;
-  for (const ep of endpoints) {
-    angles.push(ep.angle - TINY, ep.angle, ep.angle + TINY);
+  const corners = [
+    { x: 0, y: 0 }, { x: mapW, y: 0 },
+    { x: mapW, y: mapH }, { x: 0, y: mapH },
+  ];
+  for (const c of corners) {
+    const a = Math.atan2(c.y - cy, c.x - cx);
+    angles.push(a - TINY, a, a + TINY);
   }
-  const step = Math.PI / 36;
-  for (let a = -Math.PI; a < Math.PI; a += step) {
+
+  const RAY_STEP = Math.PI / 60;
+  for (let a = -Math.PI; a < Math.PI; a += RAY_STEP) {
     angles.push(a);
   }
 
   angles.sort((a, b) => a - b);
 
-  const polygon: { x: number; y: number }[] = [];
-  for (const angle of angles) {
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    const t = rayIntersectsWall(cx, cy, dx * maxRadius, dy * maxRadius, walls);
-    polygon.push({
-      x: cx + dx * maxRadius * t,
-      y: cy + dy * maxRadius * t,
-    });
+  const result = new Float64Array(angles.length * 2);
+  for (let i = 0; i < angles.length; i++) {
+    const dist = castRay(cx, cy, angles[i], maxRadius, allSegs);
+    result[i * 2] = cx + Math.cos(angles[i]) * dist;
+    result[i * 2 + 1] = cy + Math.sin(angles[i]) * dist;
   }
-
-  return polygon;
+  return result;
 }
 
-export function drawVisionOverlay(
+function drawClippedVisionZone(
+  ctx: CanvasRenderingContext2D,
+  zone: VisionZone,
+  polygon: Float64Array | null
+) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+
+  if (polygon && polygon.length >= 6) {
+    ctx.beginPath();
+    ctx.moveTo(polygon[0], polygon[1]);
+    for (let i = 2; i < polygon.length; i += 2) {
+      ctx.lineTo(polygon[i], polygon[i + 1]);
+    }
+    ctx.closePath();
+    ctx.clip();
+  }
+
+  const outerR = Math.max(zone.outerRadiusPx, zone.innerRadiusPx);
+
+  if (zone.innerRadiusPx < outerR && zone.innerRadiusPx > 0) {
+    const grad = ctx.createRadialGradient(
+      zone.cx, zone.cy, 0,
+      zone.cx, zone.cy, outerR
+    );
+    const ratio = zone.innerRadiusPx / outerR;
+    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(Math.max(0, ratio - 0.01), `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(ratio, `rgba(0,0,0,${zone.outerEraseAlpha})`);
+    grad.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.fillStyle = grad;
+  } else if (zone.innerRadiusPx >= outerR) {
+    const grad = ctx.createRadialGradient(
+      zone.cx, zone.cy, 0,
+      zone.cx, zone.cy, outerR
+    );
+    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(0.85, `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.fillStyle = grad;
+  } else {
+    const grad = ctx.createRadialGradient(
+      zone.cx, zone.cy, 0,
+      zone.cx, zone.cy, outerR
+    );
+    grad.addColorStop(0, `rgba(0,0,0,${zone.outerEraseAlpha})`);
+    grad.addColorStop(0.85, `rgba(0,0,0,${zone.outerEraseAlpha})`);
+    grad.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.fillStyle = grad;
+  }
+
+  ctx.beginPath();
+  ctx.arc(zone.cx, zone.cy, outerR + 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+let _flickerPhase = 0;
+function getTorchFlicker(): number {
+  _flickerPhase += 0.07 + Math.random() * 0.04;
+  return 0.92 + 0.08 * Math.sin(_flickerPhase * 2.3) * Math.sin(_flickerPhase * 1.1);
+}
+
+export function drawNightVisionOverlay(
   overlayCtx: CanvasRenderingContext2D,
   mapW: number,
   mapH: number,
@@ -96,8 +182,7 @@ export function drawVisionOverlay(
   walls: VTTWall[],
   gridSize: number,
   nightOpacity: number,
-  nightColor: string,
-  isGM: boolean
+  nightColor: string
 ) {
   overlayCtx.clearRect(0, 0, mapW, mapH);
 
@@ -105,10 +190,9 @@ export function drawVisionOverlay(
   overlayCtx.fillStyle = fillColor;
   overlayCtx.fillRect(0, 0, mapW, mapH);
 
-  if (isGM) return;
-
   const CELL = gridSize || 50;
-  const sources: VisionSource[] = [];
+  const wallSegs = getWallSegments(walls);
+  const zones: VisionZone[] = [];
 
   for (const token of tokens) {
     if (!token.visible) continue;
@@ -121,22 +205,22 @@ export function drawVisionOverlay(
     const lightRange = token.lightRange ?? 6;
 
     if (visionMode === 'normal') {
-      sources.push({
+      zones.push({
         cx, cy,
-        brightRadiusPx: metersToPixels(3, CELL),
-        dimRadiusPx: metersToPixels(3, CELL),
-        brightAlpha: 0.3,
-        dimAlpha: 0.3,
-        isProximity: true,
+        innerRadiusPx: 0,
+        outerRadiusPx: metersToPixels(3, CELL),
+        innerEraseAlpha: 0.30,
+        outerEraseAlpha: 0.30,
+        respectWalls: false,
       });
     } else if (visionMode === 'darkvision') {
-      sources.push({
+      zones.push({
         cx, cy,
-        brightRadiusPx: metersToPixels(3, CELL),
-        dimRadiusPx: metersToPixels(visionRange, CELL),
-        brightAlpha: 1.0,
-        dimAlpha: 0.65,
-        isProximity: false,
+        innerRadiusPx: metersToPixels(3, CELL),
+        outerRadiusPx: metersToPixels(visionRange, CELL),
+        innerEraseAlpha: 1.0,
+        outerEraseAlpha: 0.65,
+        respectWalls: true,
       });
     }
 
@@ -145,74 +229,82 @@ export function drawVisionOverlay(
       let dimM = lightRange * 2;
       if (lightSource === 'torch') { brightM = 6; dimM = 12; }
       else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
-      sources.push({
+
+      const flicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
+
+      zones.push({
         cx, cy,
-        brightRadiusPx: metersToPixels(brightM, CELL),
-        dimRadiusPx: metersToPixels(dimM, CELL),
-        brightAlpha: 1.0,
-        dimAlpha: 0.65,
-        isProximity: false,
+        innerRadiusPx: metersToPixels(brightM, CELL) * flicker,
+        outerRadiusPx: metersToPixels(dimM, CELL) * flicker,
+        innerEraseAlpha: 1.0,
+        outerEraseAlpha: 0.65,
+        respectWalls: true,
       });
     }
   }
 
-  if (sources.length === 0) return;
+  if (zones.length === 0) return;
 
-  const hasWalls = walls.length > 0;
+  const polyCache = new Map<string, Float64Array>();
 
-  overlayCtx.save();
-  overlayCtx.globalCompositeOperation = 'destination-out';
-
-  for (const src of sources) {
-    const maxR = Math.max(src.brightRadiusPx, src.dimRadiusPx);
-
-    if (hasWalls && !src.isProximity) {
-      const poly = buildVisibilityPolygon(src.cx, src.cy, maxR, walls, mapW, mapH);
-      if (poly.length < 3) continue;
-
-      overlayCtx.save();
-      overlayCtx.beginPath();
-      overlayCtx.moveTo(poly[0].x, poly[0].y);
-      for (let i = 1; i < poly.length; i++) {
-        overlayCtx.lineTo(poly[i].x, poly[i].y);
-      }
-      overlayCtx.closePath();
-      overlayCtx.clip();
-
-      if (src.brightRadiusPx < src.dimRadiusPx) {
-        const grad = overlayCtx.createRadialGradient(
-          src.cx, src.cy, 0,
-          src.cx, src.cy, src.dimRadiusPx
-        );
-        grad.addColorStop(0, `rgba(0,0,0,${src.brightAlpha})`);
-        grad.addColorStop(src.brightRadiusPx / src.dimRadiusPx, `rgba(0,0,0,${src.brightAlpha})`);
-        grad.addColorStop(1, `rgba(0,0,0,${src.dimAlpha})`);
-        overlayCtx.fillStyle = grad;
+  for (const zone of zones) {
+    let poly: Float64Array | null = null;
+    if (zone.respectWalls && wallSegs.length > 0) {
+      const maxR = Math.max(zone.innerRadiusPx, zone.outerRadiusPx);
+      const key = `${zone.cx},${zone.cy},${Math.round(maxR)}`;
+      if (polyCache.has(key)) {
+        poly = polyCache.get(key)!;
       } else {
-        overlayCtx.fillStyle = `rgba(0,0,0,${src.brightAlpha})`;
+        poly = buildVisibilityPolygon(zone.cx, zone.cy, maxR, wallSegs, mapW, mapH);
+        polyCache.set(key, poly);
       }
-      overlayCtx.beginPath();
-      overlayCtx.arc(src.cx, src.cy, src.dimRadiusPx, 0, Math.PI * 2);
-      overlayCtx.fill();
-      overlayCtx.restore();
-    } else {
-      if (src.brightRadiusPx < src.dimRadiusPx) {
-        const grad = overlayCtx.createRadialGradient(
-          src.cx, src.cy, 0,
-          src.cx, src.cy, src.dimRadiusPx
-        );
-        grad.addColorStop(0, `rgba(0,0,0,${src.brightAlpha})`);
-        grad.addColorStop(src.brightRadiusPx / src.dimRadiusPx, `rgba(0,0,0,${src.brightAlpha})`);
-        grad.addColorStop(1, `rgba(0,0,0,${src.dimAlpha})`);
-        overlayCtx.fillStyle = grad;
-      } else {
-        overlayCtx.fillStyle = `rgba(0,0,0,${src.brightAlpha})`;
-      }
-      overlayCtx.beginPath();
-      overlayCtx.arc(src.cx, src.cy, maxR, 0, Math.PI * 2);
-      overlayCtx.fill();
     }
+    drawClippedVisionZone(overlayCtx, zone, poly);
   }
+}
 
-  overlayCtx.restore();
+export function drawDayVisionOverlay(
+  ctx: CanvasRenderingContext2D,
+  mapW: number,
+  mapH: number,
+  tokens: VTTToken[],
+  walls: VTTWall[],
+  gridSize: number
+) {
+  if (walls.length === 0) return;
+
+  const wallSegs = getWallSegments(walls);
+  const CELL = gridSize || 50;
+
+  const visionTokens = tokens.filter(
+    t => t.visible && t.controlledByUserIds && t.controlledByUserIds.length > 0
+  );
+  if (visionTokens.length === 0) return;
+
+  ctx.clearRect(0, 0, mapW, mapH);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(0, 0, mapW, mapH);
+
+  ctx.globalCompositeOperation = 'destination-out';
+  for (const token of visionTokens) {
+    const size = (token.size || 1) * CELL;
+    const cx = token.position.x + size / 2;
+    const cy = token.position.y + size / 2;
+    const maxR = Math.max(mapW, mapH) * 1.5;
+
+    const poly = buildVisibilityPolygon(cx, cy, maxR, wallSegs, mapW, mapH);
+    if (poly.length < 6) continue;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.beginPath();
+    ctx.moveTo(poly[0], poly[1]);
+    for (let i = 2; i < poly.length; i += 2) {
+      ctx.lineTo(poly[i], poly[i + 1]);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.globalCompositeOperation = 'source-over';
 }
