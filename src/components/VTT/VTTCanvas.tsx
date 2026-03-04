@@ -545,13 +545,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         vCtx.clearRect(0, 0, mapW, mapH);
         vCtx.drawImage(fogCanvasRef.current, 0, 0);
 
-        // Seuls les tokens avec LUMIERE percent le fog pour tous les joueurs
-        // La vision seule (normal/darkvision) ne lève PAS le fog manuel
-        const lightTokens = tokensRef.current.filter(
-          t => t.visible && t.lightSource && t.lightSource !== 'none'
-        );
-        if (lightTokens.length > 0) {
-          punchVisionHoles(vCtx, lightTokens, CELL, currentWalls, mapW, mapH);
+        // De jour : la vision (normal/darkvision) + lumière percent le fog
+        // De nuit : seule la lumière (torche/lanterne/custom) perce le fog
+        const fogPunchTokens = isDay
+          ? tokensRef.current.filter(
+              t => t.visible && (
+                (t.visionMode && t.visionMode !== 'none') ||
+                (t.lightSource && t.lightSource !== 'none')
+              )
+            )
+          : tokensRef.current.filter(
+              t => t.visible && t.lightSource && t.lightSource !== 'none'
+            );
+        if (fogPunchTokens.length > 0) {
+          punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH);
         }
 
         ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
