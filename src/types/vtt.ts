@@ -21,8 +21,12 @@ export interface VTTToken {
   imageOffsetY?: number;
   visionMode?: VTTVisionMode;
   visionRange?: number;
+  visionBrightAlpha?: number;
+  visionDimAlpha?: number;
   lightSource?: VTTLightSource;
   lightRange?: number;
+  lightBrightAlpha?: number;
+  lightDimAlpha?: number;
 }
 
 export interface VTTRoomConfig {

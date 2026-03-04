@@ -44,7 +44,7 @@ function castRay(
     if (Math.abs(denom) < 1e-10) continue;
     const t = ((seg.x1 - ox) * sy - (seg.y1 - oy) * sx) / denom;
     const u = ((seg.x1 - ox) * rdy - (seg.y1 - oy) * rdx) / denom;
-    if (t > 0.001 && t < closest && u >= 0 && u <= 1) {
+    if (t > 0.5 && t < closest && u >= 0 && u <= 1) {
       closest = t;
     }
   }
@@ -58,7 +58,7 @@ function buildVisibilityPolygon(
   mapW: number, mapH: number
 ): Float64Array {
   const relevant: { x1: number; y1: number; x2: number; y2: number }[] = [];
-  const pad = maxRadius + 20;
+  const pad = maxRadius + 40;
   for (const s of segments) {
     const minX = Math.min(s.x1, s.x2);
     const maxX = Math.max(s.x1, s.x2);
@@ -111,7 +111,7 @@ function buildVisibilityPolygon(
   return result;
 }
 
-function drawClippedVisionZone(
+function clipAndDrawZone(
   ctx: CanvasRenderingContext2D,
   zone: VisionZone,
   polygon: Float64Array | null
@@ -131,24 +131,16 @@ function drawClippedVisionZone(
 
   const outerR = Math.max(zone.outerRadiusPx, zone.innerRadiusPx);
 
-  if (zone.innerRadiusPx < outerR && zone.innerRadiusPx > 0) {
+  if (zone.innerRadiusPx > 0 && zone.innerRadiusPx < outerR) {
     const grad = ctx.createRadialGradient(
       zone.cx, zone.cy, 0,
       zone.cx, zone.cy, outerR
     );
     const ratio = zone.innerRadiusPx / outerR;
     grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(Math.max(0, ratio - 0.01), `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(Math.max(0, ratio - 0.02), `rgba(0,0,0,${zone.innerEraseAlpha})`);
     grad.addColorStop(ratio, `rgba(0,0,0,${zone.outerEraseAlpha})`);
-    grad.addColorStop(1, `rgba(0,0,0,0)`);
-    ctx.fillStyle = grad;
-  } else if (zone.innerRadiusPx >= outerR) {
-    const grad = ctx.createRadialGradient(
-      zone.cx, zone.cy, 0,
-      zone.cx, zone.cy, outerR
-    );
-    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(0.85, `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(Math.min(1, 0.95), `rgba(0,0,0,${zone.outerEraseAlpha})`);
     grad.addColorStop(1, `rgba(0,0,0,0)`);
     ctx.fillStyle = grad;
   } else {
@@ -156,8 +148,8 @@ function drawClippedVisionZone(
       zone.cx, zone.cy, 0,
       zone.cx, zone.cy, outerR
     );
-    grad.addColorStop(0, `rgba(0,0,0,${zone.outerEraseAlpha})`);
-    grad.addColorStop(0.85, `rgba(0,0,0,${zone.outerEraseAlpha})`);
+    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
+    grad.addColorStop(0.80, `rgba(0,0,0,${zone.innerEraseAlpha})`);
     grad.addColorStop(1, `rgba(0,0,0,0)`);
     ctx.fillStyle = grad;
   }
@@ -181,13 +173,16 @@ export function drawNightVisionOverlay(
   tokens: VTTToken[],
   walls: VTTWall[],
   gridSize: number,
-  nightOpacity: number,
+  _nightOpacity: number,
   nightColor: string
 ) {
   overlayCtx.clearRect(0, 0, mapW, mapH);
 
-  const fillColor = nightColor.replace('ALPHA', String(nightOpacity));
-  overlayCtx.fillStyle = fillColor;
+  const baseRgb = nightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  const r = baseRgb ? baseRgb[1] : '0';
+  const g = baseRgb ? baseRgb[2] : '0';
+  const b = baseRgb ? baseRgb[3] : '0';
+  overlayCtx.fillStyle = `rgba(${r},${g},${b},1)`;
   overlayCtx.fillRect(0, 0, mapW, mapH);
 
   const CELL = gridSize || 50;
@@ -205,21 +200,24 @@ export function drawNightVisionOverlay(
     const lightRange = token.lightRange ?? 6;
 
     if (visionMode === 'normal') {
+      const brightAlpha = token.visionBrightAlpha ?? 0.30;
       zones.push({
         cx, cy,
         innerRadiusPx: 0,
         outerRadiusPx: metersToPixels(3, CELL),
-        innerEraseAlpha: 0.30,
-        outerEraseAlpha: 0.30,
+        innerEraseAlpha: brightAlpha,
+        outerEraseAlpha: brightAlpha,
         respectWalls: false,
       });
     } else if (visionMode === 'darkvision') {
+      const brightAlpha = token.visionBrightAlpha ?? 1.0;
+      const dimAlpha = token.visionDimAlpha ?? 0.65;
       zones.push({
         cx, cy,
         innerRadiusPx: metersToPixels(3, CELL),
         outerRadiusPx: metersToPixels(visionRange, CELL),
-        innerEraseAlpha: 1.0,
-        outerEraseAlpha: 0.65,
+        innerEraseAlpha: brightAlpha,
+        outerEraseAlpha: dimAlpha,
         respectWalls: true,
       });
     }
@@ -231,13 +229,15 @@ export function drawNightVisionOverlay(
       else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
 
       const flicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
+      const lBrightAlpha = token.lightBrightAlpha ?? 1.0;
+      const lDimAlpha = token.lightDimAlpha ?? 0.65;
 
       zones.push({
         cx, cy,
         innerRadiusPx: metersToPixels(brightM, CELL) * flicker,
         outerRadiusPx: metersToPixels(dimM, CELL) * flicker,
-        innerEraseAlpha: 1.0,
-        outerEraseAlpha: 0.65,
+        innerEraseAlpha: lBrightAlpha,
+        outerEraseAlpha: lDimAlpha,
         respectWalls: true,
       });
     }
@@ -259,7 +259,7 @@ export function drawNightVisionOverlay(
         polyCache.set(key, poly);
       }
     }
-    drawClippedVisionZone(overlayCtx, zone, poly);
+    clipAndDrawZone(overlayCtx, zone, poly);
   }
 }
 

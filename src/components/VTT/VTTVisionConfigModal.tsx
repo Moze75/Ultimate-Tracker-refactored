@@ -11,7 +11,7 @@ interface VTTVisionConfigModalProps {
 const VISION_MODES: { value: VTTVisionMode; label: string; desc: string; icon: React.ReactNode }[] = [
   { value: 'none', label: 'Aucune', desc: 'Pas de vision propre', icon: <Ban size={14} /> },
   { value: 'normal', label: 'Normale', desc: 'Vision de proximite (3 m) la nuit', icon: <Eye size={14} /> },
-  { value: 'darkvision', label: 'Nyctalopie', desc: 'Vision dans le noir (18 m par defaut)', icon: <Moon size={14} /> },
+  { value: 'darkvision', label: 'Nyctalopie', desc: 'Vision dans le noir (configurable)', icon: <Moon size={14} /> },
 ];
 
 const LIGHT_SOURCES: { value: VTTLightSource; label: string; desc: string; icon: React.ReactNode; brightM: number; dimM: number }[] = [
@@ -21,23 +21,56 @@ const LIGHT_SOURCES: { value: VTTLightSource; label: string; desc: string; icon:
   { value: 'custom', label: 'Personnalise', desc: 'Definir manuellement', icon: <Lightbulb size={14} />, brightM: 6, dimM: 12 },
 ];
 
+function AlphaSlider({ label, value, onChange, color }: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  color: string;
+}) {
+  const pct = Math.round(value * 100);
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-0.5">
+        <label className="text-[10px] text-gray-400">{label}</label>
+        <span className={`text-[10px] font-mono font-bold ${color}`}>{pct}%</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={pct}
+        onChange={e => onChange(parseInt(e.target.value) / 100)}
+        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer ${
+          color.includes('amber') ? 'accent-amber-500' : 'accent-orange-500'
+        }`}
+      />
+    </div>
+  );
+}
+
 export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfigModalProps) {
   const [visionMode, setVisionMode] = useState<VTTVisionMode>(token.visionMode || 'none');
   const [visionRange, setVisionRange] = useState(token.visionRange ?? 18);
+  const [visionBrightAlpha, setVisionBrightAlpha] = useState(token.visionBrightAlpha ?? (token.visionMode === 'normal' ? 0.30 : 1.0));
+  const [visionDimAlpha, setVisionDimAlpha] = useState(token.visionDimAlpha ?? 0.65);
   const [lightSource, setLightSource] = useState<VTTLightSource>(token.lightSource || 'none');
   const [lightRange, setLightRange] = useState(token.lightRange ?? 6);
+  const [lightBrightAlpha, setLightBrightAlpha] = useState(token.lightBrightAlpha ?? 1.0);
+  const [lightDimAlpha, setLightDimAlpha] = useState(token.lightDimAlpha ?? 0.65);
 
   const handleSave = () => {
-    onSave({ visionMode, visionRange, lightSource, lightRange });
+    onSave({
+      visionMode, visionRange, visionBrightAlpha, visionDimAlpha,
+      lightSource, lightRange, lightBrightAlpha, lightDimAlpha,
+    });
     onClose();
   };
-
-  const isNight = true;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md"
+        className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
@@ -57,7 +90,11 @@ export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfig
               {VISION_MODES.map(mode => (
                 <button
                   key={mode.value}
-                  onClick={() => setVisionMode(mode.value)}
+                  onClick={() => {
+                    setVisionMode(mode.value);
+                    if (mode.value === 'normal') setVisionBrightAlpha(0.30);
+                    if (mode.value === 'darkvision') setVisionBrightAlpha(1.0);
+                  }}
                   className={`flex flex-col items-center gap-1 p-2.5 rounded-lg text-[10px] transition-colors border ${
                     visionMode === mode.value
                       ? 'bg-amber-600/20 border-amber-500/60 text-amber-300'
@@ -74,25 +111,56 @@ export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfig
             </p>
           </div>
 
-          {visionMode === 'darkvision' && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs text-gray-400">Portee de la nyctalopie</label>
-                <span className="text-xs font-mono text-amber-400 font-bold">{visionRange} m</span>
-              </div>
-              <input
-                type="range"
-                min={3}
-                max={36}
-                step={1.5}
-                value={visionRange}
-                onChange={e => setVisionRange(parseFloat(e.target.value))}
-                className="w-full accent-amber-500"
+          {visionMode === 'normal' && (
+            <div className="p-3 rounded-lg bg-gray-800/60 border border-gray-700/50 space-y-2.5">
+              <p className="text-[10px] text-gray-400 font-medium">Reglages vision de proximite (3 m)</p>
+              <AlphaSlider
+                label="Puissance du devoilement"
+                value={visionBrightAlpha}
+                onChange={setVisionBrightAlpha}
+                color="text-amber-400"
               />
-              <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
-                <span>3 m</span>
-                <span>18 m</span>
-                <span>36 m</span>
+              <p className="text-[9px] text-gray-600">100% = totalement visible, 30% = legere attenuation du noir</p>
+            </div>
+          )}
+
+          {visionMode === 'darkvision' && (
+            <div className="p-3 rounded-lg bg-gray-800/60 border border-gray-700/50 space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-gray-400">Portee de la nyctalopie</label>
+                  <span className="text-xs font-mono text-amber-400 font-bold">{visionRange} m</span>
+                </div>
+                <input
+                  type="range"
+                  min={3}
+                  max={36}
+                  step={1.5}
+                  value={visionRange}
+                  onChange={e => setVisionRange(parseFloat(e.target.value))}
+                  className="w-full accent-amber-500"
+                />
+                <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                  <span>3 m</span>
+                  <span>18 m</span>
+                  <span>36 m</span>
+                </div>
+              </div>
+              <div className="border-t border-gray-700/50 pt-2.5 space-y-2.5">
+                <p className="text-[10px] text-gray-400 font-medium">Puissance du devoilement</p>
+                <AlphaSlider
+                  label="Zone proche (3 m)"
+                  value={visionBrightAlpha}
+                  onChange={setVisionBrightAlpha}
+                  color="text-amber-400"
+                />
+                <AlphaSlider
+                  label={`Zone etendue (${visionRange} m)`}
+                  value={visionDimAlpha}
+                  onChange={setVisionDimAlpha}
+                  color="text-amber-400"
+                />
+                <p className="text-[9px] text-gray-600">100% = totalement visible, 65% = brouillard attenue</p>
               </div>
             </div>
           )}
@@ -148,13 +216,30 @@ export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfig
             </div>
           )}
 
-          {isNight && (
-            <div className="p-2.5 rounded-lg bg-blue-950/40 border border-blue-900/40">
-              <p className="text-[10px] text-blue-300/80 leading-relaxed">
-                <strong className="text-blue-300">Effet de nuit :</strong> La vision est limitee. Les tokens avec <strong>Nyctalopie</strong> voient dans le noir. Les <strong>torches</strong> eclairent la zone autour du token.
-              </p>
+          {lightSource !== 'none' && (
+            <div className="p-3 rounded-lg bg-gray-800/60 border border-gray-700/50 space-y-2.5">
+              <p className="text-[10px] text-gray-400 font-medium">Puissance du devoilement de la lumiere</p>
+              <AlphaSlider
+                label="Zone lumineuse (rayon vif)"
+                value={lightBrightAlpha}
+                onChange={setLightBrightAlpha}
+                color="text-orange-400"
+              />
+              <AlphaSlider
+                label="Zone attenuee (rayon etendu)"
+                value={lightDimAlpha}
+                onChange={setLightDimAlpha}
+                color="text-orange-400"
+              />
+              <p className="text-[9px] text-gray-600">100% = totalement visible, 65% = brouillard attenue</p>
             </div>
           )}
+
+          <div className="p-2.5 rounded-lg bg-blue-950/40 border border-blue-900/40">
+            <p className="text-[10px] text-blue-300/80 leading-relaxed">
+              <strong className="text-blue-300">Effet de nuit :</strong> Le brouillard de guerre est totalement noir (100%). Les reglages ci-dessus controlent combien de ce noir est retire autour du token. 100% = vision totale, 65% = brouillard attenue.
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-2 px-4 pb-4">
