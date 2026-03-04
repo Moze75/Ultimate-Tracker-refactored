@@ -191,14 +191,18 @@ export function VTTLeftToolbar({
         </>
       )}
 
-      <div className="w-6 h-px bg-gray-700/70 my-0.5" />
+      {role === 'gm' && (
+        <>
+          <div className="w-6 h-px bg-gray-700/70 my-0.5" />
 
-      <ToolBtn
-        icon={<UserPlus size={17} />}
-        label="Ajouter un token"
-        active={false}
-        onClick={onAddToken}
-      />
+          <ToolBtn
+            icon={<UserPlus size={17} />}
+            label="Ajouter un token"
+            active={false}
+            onClick={onAddToken}
+          />
+        </>
+      )}
 
       {role === 'gm' && (
         <>
