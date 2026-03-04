@@ -579,7 +579,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         }
         const dvCtx = dvc.getContext('2d')!;
         drawDayVisionOverlay(dvCtx, mapW, mapH, playerTokens, currentWalls, CELL);
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = 0.65;
         ctx.drawImage(dvc, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
       }
