@@ -205,9 +205,10 @@ export function drawNightVisionOverlay(
     } else if (visionMode === 'darkvision') {
       const brightReveal = token.visionBrightAlpha ?? 1.0;
       const dimReveal = token.visionDimAlpha ?? 0.70;
+      const visionFlicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
       zones.push({
         cx, cy,
-        brightRadiusPx: metersToPixels(3, CELL),
+        brightRadiusPx: metersToPixels(3, CELL) * visionFlicker,
         dimRadiusPx: metersToPixels(visionRange, CELL),
         brightReveal,
         dimReveal,
