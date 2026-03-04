@@ -161,8 +161,8 @@ function drawPolyPath(ctx: CanvasRenderingContext2D, polygon: Float64Array) {
 
 let _flickerPhase = 0;
 function getTorchFlicker(): number {
-  _flickerPhase += 0.07 + Math.random() * 0.04;
-  return 0.92 + 0.08 * Math.sin(_flickerPhase * 2.3) * Math.sin(_flickerPhase * 1.1);
+  _flickerPhase += 0.012 + Math.random() * 0.006;
+  return 0.96 + 0.04 * Math.sin(_flickerPhase * 1.7) * Math.sin(_flickerPhase * 0.7);
 }
 
 export function drawNightVisionOverlay(
