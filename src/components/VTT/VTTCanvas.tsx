@@ -478,28 +478,29 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       ctx.restore();
     });
 
-    if (cfg.fogEnabled) {
-      const strokes = fog.strokes || [];
-      if (fogCanvasRef.current &&
-          fogCanvasSizeRef.current.w === mapW &&
-          fogCanvasSizeRef.current.h === mapH) {
-        ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
-        ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
-        ctx.globalAlpha = 1;
-      } else {
-        buildFogCanvas(strokes, mapW, mapH);
-        if (fogCanvasRef.current) {
-          ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
-          ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
-          ctx.globalAlpha = 1;
-        }
-      }
-    }
-
     const timeOfDay = cfg.timeOfDay;
     const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
     const isDay = !isNight;
     const currentWalls = wallsRef.current || [];
+
+    const nightHasVisionTokens = isNight && tokensRef.current.some(
+      t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
+    );
+    const nightVisionReplaceFog = nightHasVisionTokens && curRole === 'player';
+
+    if (cfg.fogEnabled) {
+      const strokes = fog.strokes || [];
+      if (!fogCanvasRef.current ||
+          fogCanvasSizeRef.current.w !== mapW ||
+          fogCanvasSizeRef.current.h !== mapH) {
+        buildFogCanvas(strokes, mapW, mapH);
+      }
+      if (!nightVisionReplaceFog && fogCanvasRef.current) {
+        ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
+        ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
+        ctx.globalAlpha = 1;
+      }
+    }
 
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
       const playerTokens = tokensRef.current.filter(
@@ -525,11 +526,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        const hasVisionTokens = isNight && tokensRef.current.some(
-          t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
-        );
-
-        if (hasVisionTokens && curRole === 'player') {
+        if (nightVisionReplaceFog) {
           let vc = visionCanvasRef.current;
           if (!vc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
             vc = document.createElement('canvas');

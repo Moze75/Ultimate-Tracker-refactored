@@ -52,12 +52,12 @@ function AlphaSlider({ label, value, onChange, color }: {
 export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfigModalProps) {
   const [visionMode, setVisionMode] = useState<VTTVisionMode>(token.visionMode || 'none');
   const [visionRange, setVisionRange] = useState(token.visionRange ?? 18);
-  const [visionBrightAlpha, setVisionBrightAlpha] = useState(token.visionBrightAlpha ?? (token.visionMode === 'normal' ? 0.30 : 1.0));
-  const [visionDimAlpha, setVisionDimAlpha] = useState(token.visionDimAlpha ?? 0.65);
+  const [visionBrightAlpha, setVisionBrightAlpha] = useState(token.visionBrightAlpha ?? 1.0);
+  const [visionDimAlpha, setVisionDimAlpha] = useState(token.visionDimAlpha ?? 0.70);
   const [lightSource, setLightSource] = useState<VTTLightSource>(token.lightSource || 'none');
   const [lightRange, setLightRange] = useState(token.lightRange ?? 6);
   const [lightBrightAlpha, setLightBrightAlpha] = useState(token.lightBrightAlpha ?? 1.0);
-  const [lightDimAlpha, setLightDimAlpha] = useState(token.lightDimAlpha ?? 0.65);
+  const [lightDimAlpha, setLightDimAlpha] = useState(token.lightDimAlpha ?? 0.70);
 
   const handleSave = () => {
     onSave({
@@ -92,7 +92,7 @@ export function VTTVisionConfigModal({ token, onSave, onClose }: VTTVisionConfig
                   key={mode.value}
                   onClick={() => {
                     setVisionMode(mode.value);
-                    if (mode.value === 'normal') setVisionBrightAlpha(0.30);
+                    if (mode.value === 'normal') setVisionBrightAlpha(1.0);
                     if (mode.value === 'darkvision') setVisionBrightAlpha(1.0);
                   }}
                   className={`flex flex-col items-center gap-1 p-2.5 rounded-lg text-[10px] transition-colors border ${

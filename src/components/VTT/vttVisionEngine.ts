@@ -200,7 +200,7 @@ export function drawNightVisionOverlay(
     const lightRange = token.lightRange ?? 6;
 
     if (visionMode === 'normal') {
-      const brightAlpha = token.visionBrightAlpha ?? 0.30;
+      const brightAlpha = token.visionBrightAlpha ?? 1.0;
       zones.push({
         cx, cy,
         innerRadiusPx: 0,
@@ -211,7 +211,7 @@ export function drawNightVisionOverlay(
       });
     } else if (visionMode === 'darkvision') {
       const brightAlpha = token.visionBrightAlpha ?? 1.0;
-      const dimAlpha = token.visionDimAlpha ?? 0.65;
+      const dimAlpha = token.visionDimAlpha ?? 0.70;
       zones.push({
         cx, cy,
         innerRadiusPx: metersToPixels(3, CELL),
@@ -230,7 +230,7 @@ export function drawNightVisionOverlay(
 
       const flicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
       const lBrightAlpha = token.lightBrightAlpha ?? 1.0;
-      const lDimAlpha = token.lightDimAlpha ?? 0.65;
+      const lDimAlpha = token.lightDimAlpha ?? 0.70;
 
       zones.push({
         cx, cy,
