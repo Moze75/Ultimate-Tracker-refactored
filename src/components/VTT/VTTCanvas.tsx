@@ -607,19 +607,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     }
 
     // --- FILTRE HEURE DU JOUR ---
-    // Pour la nuit côté joueur, le filtre est déjà intégré dans drawNightVisionOverlay
-    // On applique ici uniquement pour : jour, crépuscule, aube, OU vue GM de nuit
-    if (timeOfDay != null) {
+    // La nuit, drawNightVisionOverlay gère l'obscurité + la teinte via nightColor.
+    // Ce filtre ne s'applique que de jour / crépuscule / aube (heures non-nuit).
+    // Pour le GM la nuit, on applique un léger voile pour l'ambiance mais très atténué.
+    if (timeOfDay != null && !isNight) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        const skipForPlayer = isNight && curRole === 'player';
-        if (!skipForPlayer) {
-          const alphaVal = isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity;
-          const fillColor = tod.color.replace('ALPHA', String(alphaVal));
-          ctx.fillStyle = fillColor;
-          ctx.fillRect(0, 0, mapW, mapH);
-        }
+        const fillColor = tod.color.replace('ALPHA', String(tod.opacity));
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(0, 0, mapW, mapH);
       }
+    } else if (timeOfDay != null && isNight && curRole === 'gm') {
+      // GM voit la carte normalement mais avec un léger voile bleuté d'ambiance
+      ctx.fillStyle = 'rgba(10,10,40,0.08)';
+      ctx.fillRect(0, 0, mapW, mapH);
     }
 
     const calPts = calibrationPointsRef.current;
