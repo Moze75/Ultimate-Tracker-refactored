@@ -583,7 +583,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
               )
             )
           : tokensRef.current.filter(
-              t => t.visible && t.lightSource && t.lightSource !== 'none'
+              t => t.visible && (
+                (t.lightSource && t.lightSource !== 'none') ||
+                (t.visionMode === 'darkvision')
+              )
             );
         if (fogPunchTokens.length > 0) {
           punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH);
