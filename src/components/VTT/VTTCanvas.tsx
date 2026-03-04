@@ -428,10 +428,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         ctx.stroke();
       }
 
-      const owned = token.ownerUserId === curUserId;
+      const controlled = token.controlledByUserIds && token.controlledByUserIds.includes(curUserId);
       ctx.beginPath();
       ctx.arc(0, 0, r + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = owned ? '#22c55e' : '#94a3b8';
+      ctx.strokeStyle = controlled ? '#22c55e' : '#94a3b8';
       ctx.lineWidth = 2 / vp.scale;
       ctx.stroke();
 
@@ -756,7 +756,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
         const token = getTokenAt(wp.x, wp.y);
         if (token) {
-          const canMove = roleRef.current === 'gm' || token.ownerUserId === userIdRef.current;
+          const canMove = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
           if (canMove) {
             const multiSel = selectedTokenIdsRef.current;
             if (multiSel.length > 1 && multiSel.includes(token.id)) {
@@ -821,7 +821,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       const wp = screenToWorld(sp.x, sp.y);
       const token = getTokenAt(wp.x, wp.y);
       if (token) {
-        const canEdit = roleRef.current === 'gm' || token.ownerUserId === userIdRef.current;
+        const canEdit = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
         if (canEdit) cb(token, e.clientX, e.clientY);
       }
     };
@@ -903,6 +903,18 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           const primaryInit = drag.multiInitial.get(drag.id)!;
           const dx = snapped.x - primaryInit.x;
           const dy = snapped.y - primaryInit.y;
+          const currentWalls = wallsRef.current || [];
+          if (currentWalls.length > 0) {
+            let blocked = false;
+            drag.multiInitial.forEach((initPos, tid) => {
+              if (blocked) return;
+              const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
+              const mt = tokensRef.current.find(t => t.id === tid);
+              const mSize = (mt?.size || 1) * (configRef.current.gridSize || 50);
+              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls)) blocked = true;
+            });
+            if (blocked) return;
+          }
           drag.multiInitial.forEach((initPos, tid) => {
             const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
             onMoveTokenRef.current(tid, newPos);
@@ -1028,7 +1040,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       if (!selId) return;
       const token = tokensRef.current.find(t => t.id === selId);
       if (!token) return;
-      const canMove = roleRef.current === 'gm' || token.ownerUserId === userIdRef.current;
+      const canMove = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
       if (!canMove) return;
       const c = configRef.current.gridSize || 50;
       let dx = 0, dy = 0;
@@ -1038,7 +1050,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       else if (e.key === 'ArrowDown') dy = c;
       else return;
       e.preventDefault();
-      onMoveTokenRef.current(selId, { x: token.position.x + dx, y: token.position.y + dy });
+      const newX = token.position.x + dx;
+      const newY = token.position.y + dy;
+      const tokenSizePx = (token.size || 1) * c;
+      const currentWalls = wallsRef.current || [];
+      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls)) return;
+      onMoveTokenRef.current(selId, { x: newX, y: newY });
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);

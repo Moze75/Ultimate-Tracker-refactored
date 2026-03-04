@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, UserCheck } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -11,6 +11,7 @@ interface VTTContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
+  onManageBinding?: () => void;
   onClose: () => void;
 }
 
@@ -23,10 +24,11 @@ export function VTTContextMenu({
   onEdit,
   onDelete,
   onToggleVisibility,
+  onManageBinding,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const canEdit = role === 'gm' || token.ownerUserId === userId;
+  const canEdit = role === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userId));
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -51,6 +53,8 @@ export function VTTContextMenu({
 
   if (!canEdit) return null;
 
+  const boundCount = token.controlledByUserIds?.length || 0;
+
   return (
     <div
       ref={menuRef}
@@ -63,7 +67,7 @@ export function VTTContextMenu({
 
       <MenuItem
         icon={<Pencil size={13} />}
-        label="Éditer"
+        label="Editer"
         onClick={() => { onEdit(); onClose(); }}
       />
 
@@ -72,6 +76,14 @@ export function VTTContextMenu({
           icon={token.visible ? <EyeOff size={13} /> : <Eye size={13} />}
           label={token.visible ? 'Masquer' : 'Rendre visible'}
           onClick={() => { onToggleVisibility(); onClose(); }}
+        />
+      )}
+
+      {role === 'gm' && onManageBinding && (
+        <MenuItem
+          icon={<UserCheck size={13} />}
+          label={`Assigner joueur${boundCount > 0 ? ` (${boundCount})` : ''}`}
+          onClick={() => { onManageBinding(); onClose(); }}
         />
       )}
 

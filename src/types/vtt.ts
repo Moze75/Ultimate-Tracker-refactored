@@ -4,6 +4,7 @@ export interface VTTToken {
   id: string;
   characterId: string | null;
   ownerUserId: string;
+  controlledByUserIds?: string[];
   label: string;
   imageUrl: string | null;
   position: { x: number; y: number };

@@ -14,6 +14,7 @@ import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
 import { VTTPlayerList } from '../components/VTT/VTTPlayerList';
 import { VTTBroadcastFrame } from '../components/VTT/VTTBroadcastFrame';
+import { VTTTokenBindingModal } from '../components/VTT/VTTTokenBindingModal';
 import { vttService } from '../services/vttService';
 import type {
   VTTRole,
@@ -62,6 +63,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [phase, setPhase] = useState<'lobby' | 'room'>('lobby');
   const [roomId, setRoomId] = useState<string | null>(null);
   const [requestedRole, setRequestedRole] = useState<'gm' | 'player'>('player');
+  const [playerBoundTokenIds, setPlayerBoundTokenIds] = useState<string[]>([]);
 
   const [role, setRole] = useState<VTTRole>('player');
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
@@ -78,6 +80,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [showAddToken, setShowAddToken] = useState(false);
   const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
+  const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
   const [showWalls, setShowWalls] = useState(true);
 
@@ -344,7 +347,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const canControlToken = useCallback((token: VTTToken): boolean => {
     if (role === 'gm') return true;
-    return token.ownerUserId === userId;
+    if (token.controlledByUserIds && token.controlledByUserIds.includes(userId)) return true;
+    return false;
   }, [role, userId]);
 
   const handleDropToken = useCallback((tokenId: string, worldPos: { x: number; y: number }) => {
@@ -590,12 +594,45 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setConnectedUsers([]);
   }, [role, saveCurrentSceneState]);
 
+  const handleJoinFromLobby = useCallback((id: string, chosenRole: 'gm' | 'player', selectedTokenIds?: string[]) => {
+    setRoomId(id);
+    setRequestedRole(chosenRole);
+    setPlayerBoundTokenIds(selectedTokenIds || []);
+    setPhase('room');
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'room' || !roomId || role !== 'player' || playerBoundTokenIds.length === 0) return;
+    if (tokens.length === 0) return;
+
+    const needsUpdate = playerBoundTokenIds.some(tid => {
+      const token = tokens.find(t => t.id === tid);
+      return token && (!token.controlledByUserIds || !token.controlledByUserIds.includes(userId));
+    });
+
+    if (needsUpdate) {
+      playerBoundTokenIds.forEach(tid => {
+        const token = tokens.find(t => t.id === tid);
+        if (!token) return;
+        const current = token.controlledByUserIds || [];
+        if (!current.includes(userId)) {
+          vttService.send({
+            type: 'UPDATE_TOKEN',
+            tokenId: tid,
+            changes: { controlledByUserIds: [...current, userId] },
+          });
+        }
+      });
+      setPlayerBoundTokenIds([]);
+    }
+  }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
+
   if (phase === 'lobby') {
     return (
       <VTTRoomLobby
         userId={userId}
         authToken={authToken}
-        onJoinRoom={(id, chosenRole) => { setRoomId(id); setRequestedRole(chosenRole); setPhase('room'); }}
+        onJoinRoom={handleJoinFromLobby}
         onBack={onBack}
       />
     );
@@ -816,7 +853,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onManageBinding={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            setBindingToken(freshToken || contextMenu.token);
+            setContextMenu(null);
+          }}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {bindingToken && (
+        <VTTTokenBindingModal
+          token={bindingToken}
+          connectedUsers={connectedUsers}
+          onSave={(controlledByUserIds) => {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: bindingToken.id,
+              changes: { controlledByUserIds },
+            });
+          }}
+          onClose={() => setBindingToken(null)}
         />
       )}
 
