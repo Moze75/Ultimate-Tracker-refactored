@@ -200,7 +200,7 @@ export function drawNightVisionOverlay(
         brightReveal: reveal,
         dimReveal: 0,
         respectWalls: true,
-      });
+      }); 
     } else if (visionMode === 'darkvision') {
       const brightReveal = token.visionBrightAlpha ?? 1.0;
       const dimReveal = token.visionDimAlpha ?? 0.70;
