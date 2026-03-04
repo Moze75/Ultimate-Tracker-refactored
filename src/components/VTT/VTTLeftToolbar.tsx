@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'measure';
@@ -24,6 +24,16 @@ interface VTTLeftToolbarProps {
   onClearWalls?: () => void;
   showWalls: boolean;
   onToggleShowWalls: () => void;
+  roomId?: string;
+  broadcastFrameEnabled: boolean;
+  onToggleBroadcastFrame: () => void;
+  broadcastAspectRatio: string;
+  onBroadcastAspectRatioChange: (ratio: string) => void;
+  broadcastLockRatio: boolean;
+  onToggleBroadcastLockRatio: () => void;
+  onOpenBroadcastWindow: () => void;
+  broadcastMode: 'frame' | 'follow';
+  onBroadcastModeChange: (mode: 'frame' | 'follow') => void;
 }
 
 export function VTTLeftToolbar({
@@ -45,21 +55,35 @@ export function VTTLeftToolbar({
   onClearWalls,
   showWalls,
   onToggleShowWalls,
+  roomId,
+  broadcastFrameEnabled,
+  onToggleBroadcastFrame,
+  broadcastAspectRatio,
+  onBroadcastAspectRatioChange,
+  broadcastLockRatio,
+  onToggleBroadcastLockRatio,
+  onOpenBroadcastWindow,
+  broadcastMode,
+  onBroadcastModeChange,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
   const [wallPopupOpen, setWallPopupOpen] = useState(false);
+  const [broadcastPopupOpen, setBroadcastPopupOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fogPopupRef = useRef<HTMLDivElement>(null);
   const fogBtnRef = useRef<HTMLDivElement>(null);
   const gridPopupRef = useRef<HTMLDivElement>(null);
   const gridBtnRef = useRef<HTMLDivElement>(null);
   const wallPopupRef = useRef<HTMLDivElement>(null);
   const wallBtnRef = useRef<HTMLDivElement>(null);
+  const broadcastPopupRef = useRef<HTMLDivElement>(null);
+  const broadcastBtnRef = useRef<HTMLDivElement>(null);
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
   useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen) return;
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
@@ -78,10 +102,15 @@ export function VTTLeftToolbar({
         wallBtnRef.current && !wallBtnRef.current.contains(target)) {
         setWallPopupOpen(false);
       }
+      if (broadcastPopupOpen &&
+        broadcastPopupRef.current && !broadcastPopupRef.current.contains(target) &&
+        broadcastBtnRef.current && !broadcastBtnRef.current.contains(target)) {
+        setBroadcastPopupOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen]);
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen]);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
@@ -170,6 +199,25 @@ export function VTTLeftToolbar({
         active={false}
         onClick={onAddToken}
       />
+
+      {role === 'gm' && (
+        <>
+          <div className="w-6 h-px bg-gray-700/70 my-0.5" />
+          <div ref={broadcastBtnRef} className="w-full flex flex-col items-center">
+            <ToolBtn
+              icon={<MonitorPlay size={17} />}
+              label="Diffusion"
+              active={broadcastPopupOpen}
+              onClick={() => {
+                setBroadcastPopupOpen(v => !v);
+                setFogPopupOpen(false);
+                setGridPopupOpen(false);
+                setWallPopupOpen(false);
+              }}
+            />
+          </div>
+        </>
+      )}
 
       {fogPopupOpen && role === 'gm' && (
         <div
@@ -461,6 +509,145 @@ export function VTTLeftToolbar({
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {broadcastPopupOpen && role === 'gm' && (
+        <div
+          ref={broadcastPopupRef}
+          className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64"
+          style={{ bottom: '8px' }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-gray-200">Diffusion</span>
+            <button onClick={() => setBroadcastPopupOpen(false)} className="p-0.5 text-gray-500 hover:text-gray-300 rounded">
+              <X size={13} />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">
+                Projetez la vue joueur sur un ecran ou TV.
+              </p>
+              <button
+                onClick={onOpenBroadcastWindow}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                <ExternalLink size={13} />
+                Ouvrir la vue
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-gray-700/60">
+              <button
+                onClick={() => {
+                  if (!roomId) return;
+                  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                  copied
+                    ? 'bg-emerald-700/30 border-emerald-600/50 text-emerald-300'
+                    : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
+                }`}
+              >
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? 'Copie !' : 'Copier le lien'}
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-gray-700/60">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Mode de diffusion</p>
+              <div className="flex gap-1 mb-2">
+                <button
+                  onClick={() => onBroadcastModeChange('follow')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors border ${
+                    broadcastMode === 'follow'
+                      ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                      : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <Eye size={11} />
+                  Suivre le MJ
+                </button>
+                <button
+                  onClick={() => onBroadcastModeChange('frame')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors border ${
+                    broadcastMode === 'frame'
+                      ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                      : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <RectangleHorizontal size={11} />
+                  Cadre
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                {broadcastMode === 'follow'
+                  ? 'Les joueurs voient exactement ce que le MJ voit.'
+                  : 'Delimitez la zone visible avec un cadre sur la carte.'}
+              </p>
+            </div>
+
+            {broadcastMode === 'frame' && (
+              <>
+                <div className="pt-2 border-t border-gray-700/60">
+                  <button
+                    onClick={onToggleBroadcastFrame}
+                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                      broadcastFrameEnabled
+                        ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                        : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
+                    }`}
+                  >
+                    <RectangleHorizontal size={13} />
+                    {broadcastFrameEnabled ? 'Cadre actif' : 'Activer le cadre'}
+                  </button>
+                </div>
+
+                {broadcastFrameEnabled && (
+                  <div className="pt-2 border-t border-gray-700/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Ratio d'ecran</p>
+                      <button
+                        onClick={onToggleBroadcastLockRatio}
+                        className={`p-1 rounded transition-colors ${broadcastLockRatio ? 'text-amber-400 hover:text-amber-300' : 'text-gray-500 hover:text-gray-300'}`}
+                        title={broadcastLockRatio ? 'Ratio verrouille' : 'Ratio libre'}
+                      >
+                        {broadcastLockRatio ? <Lock size={11} /> : <Unlock size={11} />}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { value: '16:9', label: '16:9' },
+                        { value: '16:10', label: '16:10' },
+                        { value: '4:3', label: '4:3' },
+                        { value: '21:9', label: '21:9' },
+                        { value: '3:2', label: '3:2' },
+                        { value: 'free', label: 'Libre' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => onBroadcastAspectRatioChange(opt.value)}
+                          className={`py-1.5 rounded text-[10px] font-medium transition-colors border ${
+                            broadcastAspectRatio === opt.value
+                              ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                              : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

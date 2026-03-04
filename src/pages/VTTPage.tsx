@@ -61,6 +61,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
 export function VTTPage({ session, onBack }: VTTPageProps) {
   const [phase, setPhase] = useState<'lobby' | 'room'>('lobby');
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [requestedRole, setRequestedRole] = useState<'gm' | 'player'>('player');
 
   const [role, setRole] = useState<VTTRole>('player');
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
@@ -99,9 +100,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [broadcastFrame, setBroadcastFrame] = useState({ x: 200, y: 100, width: 1600, height: 900 });
   const [broadcastAspectRatio, setBroadcastAspectRatio] = useState('16:9');
   const [broadcastLockRatio, setBroadcastLockRatio] = useState(true);
+  const [broadcastMode, setBroadcastMode] = useState<'frame' | 'follow'>('follow');
   const broadcastFrameRef = useRef(broadcastFrame);
   broadcastFrameRef.current = broadcastFrame;
+  const broadcastModeRef = useRef(broadcastMode);
+  broadcastModeRef.current = broadcastMode;
   const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
   const [walls, setWalls] = useState<VTTWall[]>([]);
@@ -172,9 +177,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
     const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
-    vttService.connect(roomId, userId, authToken, userName);
+    vttService.connect(roomId, userId, authToken, userName, requestedRole);
     return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
-  }, [phase, roomId, userId, authToken, userName, handleServerEvent]);
+  }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
   const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
@@ -529,14 +534,44 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     }, 50);
   }, []);
 
+  const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
+    setCanvasViewport(vp);
+    if (broadcastModeRef.current !== 'follow') return;
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const worldX = -vp.x / vp.scale;
+    const worldY = -vp.y / vp.scale;
+    const worldW = rect.width / vp.scale;
+    const worldH = rect.height / vp.scale;
+    if (followTimerRef.current) clearTimeout(followTimerRef.current);
+    followTimerRef.current = setTimeout(() => {
+      vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
+    }, 50);
+  }, []);
+
   const handleOpenBroadcastWindow = useCallback(() => {
     if (!roomId) return;
     const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
     window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
-    if (broadcastFrameEnabled) {
-      setTimeout(() => vttService.sendBroadcastViewport(broadcastFrameRef.current), 500);
-    }
-  }, [roomId, broadcastFrameEnabled]);
+    setTimeout(() => {
+      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
+        vttService.sendBroadcastViewport(broadcastFrameRef.current);
+      } else if (broadcastModeRef.current === 'follow') {
+        const container = canvasContainerRef.current;
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          const vp = canvasViewport;
+          vttService.sendBroadcastViewport({
+            x: -vp.x / vp.scale,
+            y: -vp.y / vp.scale,
+            width: rect.width / vp.scale,
+            height: rect.height / vp.scale,
+          });
+        }
+      }
+    }, 500);
+  }, [roomId, broadcastFrameEnabled, canvasViewport]);
 
   const leaveRoom = useCallback(async () => {
     if (activeSceneIdRef.current && role === 'gm') {
@@ -560,7 +595,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       <VTTRoomLobby
         userId={userId}
         authToken={authToken}
-        onJoinRoom={(id) => { setRoomId(id); setPhase('room'); }}
+        onJoinRoom={(id, chosenRole) => { setRoomId(id); setRequestedRole(chosenRole); setPhase('room'); }}
         onBack={onBack}
       />
     );
@@ -589,9 +624,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onClearWalls={handleClearWalls}
           showWalls={showWalls}
           onToggleShowWalls={() => setShowWalls(v => !v)}
+          roomId={roomId!}
+          broadcastFrameEnabled={broadcastFrameEnabled}
+          onToggleBroadcastFrame={() => setBroadcastFrameEnabled(v => !v)}
+          broadcastAspectRatio={broadcastAspectRatio}
+          onBroadcastAspectRatioChange={setBroadcastAspectRatio}
+          broadcastLockRatio={broadcastLockRatio}
+          onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
+          onOpenBroadcastWindow={handleOpenBroadcastWindow}
+          broadcastMode={broadcastMode}
+          onBroadcastModeChange={setBroadcastMode}
         />
 
         <div
+          ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
@@ -657,7 +703,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
-            onViewportChange={setCanvasViewport}
+            onViewportChange={handleCanvasViewportChange}
           />
 
           {props.map(prop => (
@@ -696,7 +742,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
           <VTTPlayerList users={connectedUsers} />
 
-          {broadcastFrameEnabled && role === 'gm' && (
+          {broadcastFrameEnabled && broadcastMode === 'frame' && role === 'gm' && (
             <VTTBroadcastFrame
               frame={broadcastFrame}
               onChange={handleBroadcastFrameChange}
@@ -738,13 +784,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onAddProp={handleAddProp}
           onRemoveProp={handleRemoveProp}
           onUpdateProp={handleUpdateProp}
-          broadcastFrameEnabled={broadcastFrameEnabled}
-          onToggleBroadcastFrame={() => setBroadcastFrameEnabled(v => !v)}
-          broadcastAspectRatio={broadcastAspectRatio}
-          onBroadcastAspectRatioChange={setBroadcastAspectRatio}
-          broadcastLockRatio={broadcastLockRatio}
-          onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
-          onOpenBroadcastWindow={handleOpenBroadcastWindow}
         />
       </div>
 

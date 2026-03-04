@@ -59,10 +59,13 @@ class VTTService {
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
 
-  connect(roomId: string, userId: string, _authToken: string, userName?: string) {
+  private requestedRole: 'gm' | 'player' | null = null;
+
+  connect(roomId: string, userId: string, _authToken: string, userName?: string, requestedRole?: 'gm' | 'player') {
     this.roomId = roomId;
     this.userId = userId;
     this.userName = userName || null;
+    this.requestedRole = requestedRole || null;
     this._connectAsync().catch(e => console.error('[VTT] connect error:', e));
   }
 
@@ -82,7 +85,11 @@ class VTTService {
       return;
     }
 
-    this.isGM = data.gm_user_id === userId;
+    if (this.requestedRole) {
+      this.isGM = this.requestedRole === 'gm' && data.gm_user_id === userId;
+    } else {
+      this.isGM = data.gm_user_id === userId;
+    }
     const stateJson = data.state_json as Partial<LocalState> || {};
     this.localState = {
       config: { ...DEFAULT_CONFIG, ...(stateJson.config || {}) },

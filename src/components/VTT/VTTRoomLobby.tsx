@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, LogIn, Map, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, LogIn, Map, RefreshCw, Shield, User } from 'lucide-react';
 import { createVTTRoom, listVTTRooms, deleteVTTRoom } from '../../services/vttService';
 
 interface Room {
@@ -12,7 +12,7 @@ interface Room {
 interface VTTRoomLobbyProps {
   userId: string;
   authToken: string;
-  onJoinRoom: (roomId: string) => void;
+  onJoinRoom: (roomId: string, role: 'gm' | 'player') => void;
   onBack: () => void;
 }
 
@@ -23,6 +23,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   const [newRoomName, setNewRoomName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [joinRoomId, setJoinRoomId] = useState('');
+  const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -49,7 +50,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       const { roomId } = await createVTTRoom(newRoomName.trim(), userId, authToken);
       setNewRoomName('');
       await fetchRooms();
-      onJoinRoom(roomId);
+      onJoinRoom(roomId, 'gm');
     } catch {
       setError('Erreur lors de la création de la room.');
     } finally {
@@ -123,7 +124,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
             />
             <button
-              onClick={() => joinRoomId.trim() && onJoinRoom(joinRoomId.trim())}
+              onClick={() => joinRoomId.trim() && setPendingJoinRoomId(joinRoomId.trim())}
               disabled={!joinRoomId.trim()}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
@@ -172,7 +173,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                       </button>
                     )}
                     <button
-                      onClick={() => onJoinRoom(room.id)}
+                      onClick={() => setPendingJoinRoomId(room.id)}
                       className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
                     >
                       <LogIn size={12} />
@@ -192,6 +193,43 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </p>
         </div>
       </div>
+
+      {pendingJoinRoomId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-base font-semibold text-white mb-1">Rejoindre la table</h3>
+            <p className="text-xs text-gray-400 mb-5">Choisissez votre role pour cette session.</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                onClick={() => { onJoinRoom(pendingJoinRoomId, 'gm'); setPendingJoinRoomId(null); }}
+                className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-amber-900/30 border border-gray-700 hover:border-amber-600/50 rounded-xl transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-600/20 border border-amber-600/40 flex items-center justify-center group-hover:bg-amber-600/30 transition-colors">
+                  <Shield size={20} className="text-amber-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-200 group-hover:text-amber-300 transition-colors">Maitre du Jeu</span>
+                <span className="text-[10px] text-gray-500 text-center leading-tight">Controle total de la table</span>
+              </button>
+              <button
+                onClick={() => { onJoinRoom(pendingJoinRoomId, 'player'); setPendingJoinRoomId(null); }}
+                className="flex flex-col items-center gap-2 p-4 bg-gray-800 hover:bg-blue-900/30 border border-gray-700 hover:border-blue-600/50 rounded-xl transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center group-hover:bg-blue-600/30 transition-colors">
+                  <User size={20} className="text-blue-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-200 group-hover:text-blue-300 transition-colors">Joueur</span>
+                <span className="text-[10px] text-gray-500 text-center leading-tight">Vision limitee par le MJ</span>
+              </button>
+            </div>
+            <button
+              onClick={() => setPendingJoinRoomId(null)}
+              className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
