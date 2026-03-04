@@ -749,14 +749,80 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         nCtx.globalCompositeOperation = 'source-over';
 
         // --- Composer sur le canvas principal ---
-        // 1) Mémoire des zones explorées (noir restant = jamais vu, transparent = déjà vu)
-        //    On dessine ce noir à 30% d'opacité → les zones déjà vues mais hors vision = très légère ombre
-        ctx.globalAlpha = 0.30;
-        ctx.drawImage(evc, 0, 0, mapW, mapH);
-        ctx.globalAlpha = 1;
+        // On veut :
+        //   - Zone jamais vue → noir 100%
+        //   - Zone explorée hors vision actuelle → voile noir 30%
+        //   - Zone en vision directe → carte visible (transparent)
+        //
+        // nvc = noir partout SAUF les trous de vision actuelle
+        // evc = noir partout SAUF les zones déjà explorées
+        //
+        // Stratégie : on utilise nvc comme base, puis on réduit l'opacité
+        // des pixels noirs qui sont dans une zone déjà explorée.
 
-        // 2) Vision actuelle par-dessus (noir = pas visible maintenant, transparent = visible)
+        // D'abord, on fait un canvas composite
+        const cvc = document.createElement('canvas');
+        cvc.width = mapW;
+        cvc.height = mapH;
+        const cCtx = cvc.getContext('2d')!;
+
+        // Commencer par la mémoire (noir = jamais vu, transparent = déjà vu)
+        cCtx.drawImage(evc, 0, 0);
+
+        // Effacer les zones en vision directe de la mémoire aussi (déjà fait mais bon)
+        // Maintenant cvc = noir uniquement sur les zones jamais vues
+
+        // Dessiner la vision live par-dessus avec multiply :
+        // - Là où la mémoire est noire (jamais vu) ET la vision est noire → reste noir
+        // - Là où la mémoire est transparente (déjà vu) ET la vision est noire → on veut 30% de noir
+        // - Là où la vision est transparente (visible) → on veut 0% de noir
+
+        // Approche simple : 2 passes
+        // Passe 1 : vision actuelle (trous = carte visible)
         ctx.drawImage(nvc, 0, 0, mapW, mapH);
+
+        // Passe 2 : pour les zones explorées hors vision, réduire le noir
+        // On utilise destination-out sur nvc avec les zones explorées inversées
+        // Plus simple : dessiner le voile mémoire à faible opacité, puis la vision live
+
+        // En fait, approche la plus simple et fiable :
+        // - La vision live (nvc) a des trous clairs (vision directe) et du noir (pas de vision)
+        // - La mémoire (evc) a des trous clairs (déjà vu) et du noir (jamais vu)
+        // - On veut : min(nvc, evc) = noir si l'un des deux est noir (jamais vu OU pas de vision)
+        //   mais avec le twist que "déjà vu + pas de vision actuelle" = 30% noir au lieu de 100%
+
+        // Reset le composite canvas
+        cCtx.clearRect(0, 0, mapW, mapH);
+
+        // Étape 1 : peindre tout en noir
+        cCtx.fillStyle = 'rgba(0,0,0,1)';
+        cCtx.fillRect(0, 0, mapW, mapH);
+
+        // Étape 2 : effacer les zones déjà explorées à 70% (laisser 30% de noir)
+        // evc est noir où jamais vu, transparent où déjà vu
+        // On veut effacer 70% là où evc est transparent
+        // → inverser : on copie evc sur un temp, puis on fait destination-out sur cvc
+        cCtx.globalCompositeOperation = 'destination-out';
+        // Dessiner un rect blanc complet à 70% partout
+        cCtx.fillStyle = 'rgba(0,0,0,0.70)';
+        cCtx.fillRect(0, 0, mapW, mapH);
+        cCtx.globalCompositeOperation = 'source-over';
+        // Maintenant cvc = 30% noir partout. Remettre le noir complet sur les zones jamais vues
+        // En dessinant evc (noir = jamais vu) par-dessus
+        cCtx.drawImage(evc, 0, 0);
+        // Maintenant cvc = 100% noir sur jamais vu, 30% noir sur déjà vu
+
+        // Étape 3 : effacer les zones en vision directe (trous de nvc)
+        // nvc = noir partout sauf les trous. On veut effacer cvc là où nvc est transparent.
+        // → on utilise destination-in avec nvc : garder cvc seulement là où nvc a des pixels
+        // Non : destination-in garde les pixels de cvc seulement là où nvc est opaque (noir)
+        // C'est exactement ce qu'on veut : garder le voile/noir sauf dans les trous
+        cCtx.globalCompositeOperation = 'destination-in';
+        cCtx.drawImage(nvc, 0, 0);
+        cCtx.globalCompositeOperation = 'source-over';
+
+        // Dessiner le résultat final sur le canvas principal
+        ctx.drawImage(cvc, 0, 0, mapW, mapH);
       } else {
         // Aucun token joueur : brouillard total
         ctx.fillStyle = 'rgba(0,0,0,1)';
