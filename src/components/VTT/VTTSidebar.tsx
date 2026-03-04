@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 
-type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
+type SidebarTab = 'tokens' | 'map' | 'props' | 'settings' | 'broadcast';
 
 interface VTTSidebarProps {
   role: 'gm' | 'player';
@@ -28,6 +28,13 @@ interface VTTSidebarProps {
   onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
+  broadcastFrameEnabled: boolean;
+  onToggleBroadcastFrame: () => void;
+  broadcastAspectRatio: string;
+  onBroadcastAspectRatioChange: (ratio: string) => void;
+  broadcastLockRatio: boolean;
+  onToggleBroadcastLockRatio: () => void;
+  onOpenBroadcastWindow: () => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -76,10 +83,18 @@ export function VTTSidebar({
   onRemoveProp,
   onUpdateProp,
   onHome,
+  broadcastFrameEnabled,
+  onToggleBroadcastFrame,
+  broadcastAspectRatio,
+  onBroadcastAspectRatioChange,
+  broadcastLockRatio,
+  onToggleBroadcastLockRatio,
+  onOpenBroadcastWindow,
 }: VTTSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
 
@@ -138,6 +153,7 @@ export function VTTSidebar({
         <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
         <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
         <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        {role === 'gm' && <TabBtn icon={<MonitorPlay size={14} />} title="Broadcast" active={activeTab === 'broadcast'} onClick={() => setActiveTab('broadcast')} />}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -148,8 +164,7 @@ export function VTTSidebar({
                 <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
               )}
               {tokens.map(token => {
-                const ctrl = token.controlledBy || 'all';
-                const canEdit = role === 'gm' || (ctrl === 'all') || (ctrl === 'player' && token.ownerUserId === userId);
+                const canEdit = role === 'gm' || token.ownerUserId === userId;
                 const isSelected = token.id === selectedTokenId;
                 return (
                   <div
@@ -319,6 +334,105 @@ export function VTTSidebar({
               <p className="text-xs text-gray-500 mb-1 font-medium">ID Room</p>
               <p className="font-mono text-gray-400 text-xs break-all bg-gray-800/60 rounded px-2 py-1.5 border border-gray-700/50">{roomId}</p>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'broadcast' && role === 'gm' && (
+          <div className="p-3 space-y-4">
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Vue joueur</p>
+              <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
+                Ouvrez une fenetre secondaire pour projeter la vue joueur sur un ecran ou TV.
+              </p>
+              <button
+                onClick={onOpenBroadcastWindow}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                <ExternalLink size={13} />
+                Ouvrir la vue
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-gray-700/60">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Lien de diffusion</p>
+              <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">
+                Copiez le lien pour l'ouvrir sur un autre appareil du reseau.
+              </p>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                  copied
+                    ? 'bg-emerald-700/30 border-emerald-600/50 text-emerald-300'
+                    : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
+                }`}
+              >
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? 'Copie !' : 'Copier le lien'}
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-gray-700/60">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Cadre de diffusion</p>
+              <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">
+                Activez un cadre pour delimiter la zone visible sur l'ecran secondaire.
+              </p>
+              <button
+                onClick={onToggleBroadcastFrame}
+                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                  broadcastFrameEnabled
+                    ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                    : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
+                }`}
+              >
+                <RectangleHorizontal size={13} />
+                {broadcastFrameEnabled ? 'Cadre actif' : 'Activer le cadre'}
+              </button>
+            </div>
+
+            {broadcastFrameEnabled && (
+              <div className="pt-2 border-t border-gray-700/60 space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Ratio d'ecran</p>
+                    <button
+                      onClick={onToggleBroadcastLockRatio}
+                      className={`p-1 rounded transition-colors ${broadcastLockRatio ? 'text-amber-400 hover:text-amber-300' : 'text-gray-500 hover:text-gray-300'}`}
+                      title={broadcastLockRatio ? 'Ratio verrouille' : 'Ratio libre'}
+                    >
+                      {broadcastLockRatio ? <Lock size={11} /> : <Unlock size={11} />}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    {[
+                      { value: '16:9', label: '16:9' },
+                      { value: '16:10', label: '16:10' },
+                      { value: '4:3', label: '4:3' },
+                      { value: '21:9', label: '21:9' },
+                      { value: '3:2', label: '3:2' },
+                      { value: 'free', label: 'Libre' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => onBroadcastAspectRatioChange(opt.value)}
+                        className={`py-1.5 rounded text-[10px] font-medium transition-colors border ${
+                          broadcastAspectRatio === opt.value
+                            ? 'bg-teal-700/30 border-teal-600/50 text-teal-300'
+                            : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

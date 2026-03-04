@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Eye, EyeOff, Shield, Users, Globe } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 
 interface VTTTokenEditModalProps {
@@ -46,7 +46,6 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
   const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
   const [imageOffsetY, setImageOffsetY] = useState(token.imageOffsetY ?? 0);
-  const [controlledBy, setControlledBy] = useState<'gm' | 'player' | 'all'>(token.controlledBy || 'all');
   const isDraggingPreview = useRef(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +82,6 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
       maxHp: maxHp !== '' ? parseInt(maxHp) : undefined,
       imageOffsetX,
       imageOffsetY,
-      controlledBy,
     });
     onClose();
   };
@@ -246,32 +244,6 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
             </div>
           )}
 
-          {role === 'gm' && (
-            <div className="pt-1 border-t border-gray-700/60">
-              <label className="block text-xs text-gray-400 mb-2">Controle par</label>
-              <div className="flex gap-1.5">
-                {([
-                  { value: 'all', label: 'Tous', icon: <Globe size={12} />, desc: 'Tout le monde' },
-                  { value: 'player', label: 'Joueur', icon: <Users size={12} />, desc: 'Proprietaire uniquement' },
-                  { value: 'gm', label: 'MJ', icon: <Shield size={12} />, desc: 'Maitre du jeu uniquement' },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setControlledBy(opt.value)}
-                    className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-lg text-[11px] transition-colors border ${
-                      controlledBy === opt.value
-                        ? 'bg-amber-600/20 border-amber-500/60 text-amber-300'
-                        : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
-                    }`}
-                    title={opt.desc}
-                  >
-                    {opt.icon}
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex gap-2 px-4 pb-4">

@@ -30,6 +30,8 @@ interface VTTCanvasProps {
   walls?: VTTWall[];
   onWallAdded?: (wall: VTTWall) => void;
   showWalls?: boolean;
+  forceViewport?: { x: number; y: number; width: number; height: number } | null;
+  onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
 }
 
 function segmentsIntersect(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
@@ -85,6 +87,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   walls,
   onWallAdded,
   showWalls = false,
+  forceViewport: forceViewportProp = null,
+  onViewportChange,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -166,6 +170,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onWallAddedRef.current = onWallAdded;
   const showWallsRef = useRef(showWalls);
   showWallsRef.current = showWalls;
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
   const measureStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -174,6 +180,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const forceViewportRef = useRef(forceViewportProp);
+  forceViewportRef.current = forceViewportProp;
 
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
@@ -283,6 +291,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (!ctx) return;
     const W = canvas.width;
     const H = canvas.height;
+
+    if (forceViewportRef.current && W > 0 && H > 0) {
+      const fv = forceViewportRef.current;
+      const scale = Math.min(W / fv.width, H / fv.height);
+      const offsetX = (W - fv.width * scale) / 2;
+      const offsetY = (H - fv.height * scale) / 2;
+      viewportRef.current = { x: -fv.x * scale + offsetX, y: -fv.y * scale + offsetY, scale };
+    }
+
     const vp = viewportRef.current;
     const cfg = configRef.current;
     const CELL = cfg.gridSize || 50;
@@ -694,6 +711,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     return () => ro.disconnect();
   }, [draw]);
 
+  useEffect(() => {
+    if (forceViewportProp) draw();
+  }, [forceViewportProp, draw]);
+
   // Native event listeners — single registration, reads from refs
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -849,6 +870,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         const dy = e.clientY - lastPanRef.current.y;
         lastPanRef.current = { x: e.clientX, y: e.clientY };
         viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
         return;
       }
@@ -948,6 +970,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       const wx = (sp.x - vp.x) / vp.scale;
       const wy = (sp.y - vp.y) / vp.scale;
       viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+      onViewportChangeRef.current?.(viewportRef.current);
       drawRef.current();
     };
 

@@ -15,7 +15,6 @@ export interface VTTToken {
   maxHp?: number;
   imageOffsetX?: number;
   imageOffsetY?: number;
-  controlledBy?: 'gm' | 'player' | 'all';
 }
 
 export interface VTTRoomConfig {

@@ -63,9 +63,11 @@ function App() {
   const [CharacterSelectionPage, setCharacterSelectionPage] = useState<React.ComponentType<any> | null>(null);
   const [GamePage, setGamePage] = useState<React.ComponentType<any> | null>(null);
   const [VTTPage, setVTTPage] = useState<React.ComponentType<any> | null>(null);
+  const [VTTBroadcastPage, setVTTBroadcastPage] = useState<React.ComponentType<any> | null>(null);
   const [hardLoggedOut, setHardLoggedOut] = useState(false);
   const [showHomePage, setShowHomePage] = useState(true);
   const [showVTT, setShowVTT] = useState(false);
+  const [broadcastRoomId, setBroadcastRoomId] = useState<string | null>(null);
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
@@ -86,6 +88,21 @@ function App() {
     return () => window.removeEventListener('open-vtt', handler);
   }, []);
 
+  useEffect(() => {
+    const checkBroadcastHash = () => {
+      const hash = window.location.hash;
+      const match = hash.match(/^#\/vtt-broadcast\/(.+)$/);
+      if (match) {
+        setBroadcastRoomId(match[1]);
+      } else {
+        setBroadcastRoomId(null);
+      }
+    };
+    checkBroadcastHash();
+    window.addEventListener('hashchange', checkBroadcastHash);
+    return () => window.removeEventListener('hashchange', checkBroadcastHash);
+  }, []);
+
 
 // ✅ MODIFIÉ : Charger dynamiquement les pages avec retry limité
 useEffect(() => {
@@ -98,11 +115,12 @@ useEffect(() => {
     try {
       console.log(`[App] 🔄 Tentative de chargement des composants (${currentRetry + 1}/${MAX_RETRIES})...`);
       
-      const [loginModule, characterSelectionModule, gamePageModule, vttPageModule] = await Promise.all([
+      const [loginModule, characterSelectionModule, gamePageModule, vttPageModule, vttBroadcastModule] = await Promise.all([
         import('./pages/LoginPage'),
         import('./pages/CharacterSelectionPage'),
         import('./pages/GamePage'),
         import('./pages/VTTPage'),
+        import('./pages/VTTBroadcastPage'),
       ]);
 
       if (isCancelled) return;
@@ -113,6 +131,7 @@ useEffect(() => {
       );
       setGamePage(() => (gamePageModule as any).GamePage ?? (gamePageModule as any).default);
       setVTTPage(() => (vttPageModule as any).VTTPage ?? (vttPageModule as any).default);
+      setVTTBroadcastPage(() => (vttBroadcastModule as any).VTTBroadcastPage ?? (vttBroadcastModule as any).default);
       
       console.log('[App] ✅ Composants chargés avec succès');
       setComponentLoadError(false);
@@ -637,6 +656,16 @@ useEffect(() => {
 
             if (!session) {
               return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            }
+
+            if (broadcastRoomId && VTTBroadcastPage && session) {
+              return (
+                <VTTBroadcastPage
+                  session={session}
+                  roomId={broadcastRoomId}
+                  onBack={() => { window.location.hash = ''; setBroadcastRoomId(null); }}
+                />
+              );
             }
 
             if (showVTT && VTTPage) {

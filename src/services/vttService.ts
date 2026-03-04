@@ -6,6 +6,15 @@ type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
 type PresenceHandler = (users: VTTConnectedUser[]) => void;
 
+export interface BroadcastViewport {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+type BroadcastViewportHandler = (viewport: BroadcastViewport) => void;
+
 const DEFAULT_CONFIG: VTTRoomConfig = {
   mapImageUrl: '',
   gridSize: 60,
@@ -45,6 +54,7 @@ class VTTService {
   private messageHandlers: MessageHandler[] = [];
   private connectionHandlers: ConnectionHandler[] = [];
   private presenceHandlers: PresenceHandler[] = [];
+  private broadcastViewportHandlers: BroadcastViewportHandler[] = [];
   private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
@@ -136,6 +146,10 @@ class VTTService {
           this.localState.walls = serverEvent.walls;
         }
         this.messageHandlers.forEach(h => h(serverEvent));
+      })
+      .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
+        const vp = payload as BroadcastViewport;
+        this.broadcastViewportHandlers.forEach(h => h(vp));
       })
       .on('presence', { event: 'sync' }, () => {
         this._emitPresence();
@@ -329,6 +343,18 @@ class VTTService {
     };
   }
 
+  sendBroadcastViewport(viewport: BroadcastViewport) {
+    if (!this.channel) return;
+    this.channel.send({ type: 'broadcast', event: 'vtt-viewport', payload: viewport }).catch(console.error);
+  }
+
+  onBroadcastViewport(handler: BroadcastViewportHandler) {
+    this.broadcastViewportHandlers.push(handler);
+    return () => {
+      this.broadcastViewportHandlers = this.broadcastViewportHandlers.filter(h => h !== handler);
+    };
+  }
+
   disconnect() {
     if (this.persistDebounce) {
       clearTimeout(this.persistDebounce);
@@ -344,6 +370,7 @@ class VTTService {
     this.messageHandlers = [];
     this.connectionHandlers = [];
     this.presenceHandlers = [];
+    this.broadcastViewportHandlers = [];
     this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
   }
 
