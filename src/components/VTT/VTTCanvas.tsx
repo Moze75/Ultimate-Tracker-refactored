@@ -659,57 +659,67 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           }
         }
         eCtx.globalCompositeOperation = 'source-over';
-        // evc: noir = jamais vu, transparent = d��jà vu
+        // evc: noir = jamais vu, transparent = déjà vu
+        // nvc: noir opaque = hors vision, transparent = en vision directe, semi-transparent = dim
 
         // --- Composer le résultat final ---
-        // Couche 1 : mémoire explored à 30% opacité
-        //   - zones jamais vues : noir 30% (sera complété par la vision live)
-        //   - zones déjà vues : transparent (on voit la carte)
-        ctx.globalAlpha = 0.30;
-        ctx.drawImage(evc, 0, 0, mapW, mapH);
-        ctx.globalAlpha = 1;
+        // On construit un canvas composite unique qui contient :
+        //   - Zones en vision directe : transparent (carte visible) — géré par nvc
+        //   - Zones déjà explorées hors vision : noir à 30% (voile léger)
+        //   - Zones jamais vues : noir 100% (totalement masqué)
 
-        // Couche 2 : vision live par-dessus
-        //   - zones visibles maintenant : transparent (on voit la carte)
-        //   - zones déjà vues hors vision : noir opaque se superpose au 30% de la mémoire
-        //     → mais la mémoire est déjà transparente là → seul le noir de nvc reste
-        //     → on veut un voile de 30% pas du noir 100%
-        //
-        // Pour ça, on doit masquer la vision live : ne garder le noir de nvc
-        // QUE sur les zones jamais vues (où evc est noir).
-        // Sur les zones déjà vues (evc transparent), on met un voile léger au lieu du noir de nvc.
-        //
-        // Approche : créer un canvas composite
+        // Étape 1 : Créer le canvas "explored fog" = noir à 30% partout SAUF zones déjà vues
+        // On inverse evc : zones déjà vues deviennent noires, zones jamais vues transparentes
+        // Puis on dessine un voile de 30% clipé sur les zones déjà vues
+
+        // Approche directe : on part de nvc (vision live complète) et on réduit
+        // l'opacité du noir sur les zones déjà explorées
+
         const cvc = document.createElement('canvas');
         cvc.width = mapW;
         cvc.height = mapH;
         const cCtx = cvc.getContext('2d')!;
 
-        // Copier la vision live
+        // Commencer avec nvc = noir complet sur les zones hors vision
         cCtx.drawImage(nvc, 0, 0);
-        // cvc = noir (pas visible) + transparent (visible)
 
-        // Sur les zones déjà explorées (evc transparent) mais hors vision live (cvc noir),
-        // on veut réduire le noir à 30%.
-        // On utilise un canvas temp pour obtenir le masque "déjà vu ET hors vision"
-        // Plus simple : on réduit l'alpha de cvc là où evc est transparent.
-        //
-        // evc inversé : transparent → opaque, noir → transparent
-        // On peut faire : destination-in avec evc = garder cvc seulement où evc est opaque (jamais vu)
-        // Le reste (déjà vu) de cvc est effacé
-        cCtx.globalCompositeOperation = 'destination-in';
-        cCtx.drawImage(evc, 0, 0);
+        // Maintenant, sur les zones "déjà explorées" (evc transparent) ET "hors vision" (cvc noir),
+        // on veut réduire le noir de 100% à 30%.
+        // On va d'abord isoler le noir qui tombe sur des zones déjà explorées, puis le réduire.
+
+        // Étape 2 : Créer un masque "déjà exploré ET hors vision"
+        // = les pixels de cvc qui sont noirs (opaques) ET où evc est transparent
+        // On crée un canvas inversé de evc : noir là où evc est transparent, transparent là où evc est noir
+        const invCanvas = document.createElement('canvas');
+        invCanvas.width = mapW;
+        invCanvas.height = mapH;
+        const invCtx = invCanvas.getContext('2d')!;
+        // Remplir tout en noir
+        invCtx.fillStyle = 'rgba(0,0,0,1)';
+        invCtx.fillRect(0, 0, mapW, mapH);
+        // Effacer les zones jamais vues (où evc est opaque/noir)
+        invCtx.globalCompositeOperation = 'destination-out';
+        invCtx.drawImage(evc, 0, 0);
+        invCtx.globalCompositeOperation = 'source-over';
+        // invCanvas = noir là où déjà vu, transparent là où jamais vu
+
+        // Étape 3 : Sur cvc, retirer 70% du noir sur les zones déjà explorées
+        // On utilise destination-out avec invCanvas à 70% d'alpha
+        // Cela retire 70% de l'opacité de cvc là où invCanvas est opaque (= déjà exploré)
+        // Résultat : les zones déjà explorées hors vision passent de noir 100% à noir 30%
+        cCtx.globalCompositeOperation = 'destination-out';
+        cCtx.globalAlpha = 0.70;
+        cCtx.drawImage(invCanvas, 0, 0);
+        cCtx.globalAlpha = 1;
         cCtx.globalCompositeOperation = 'source-over';
-        // cvc = noir UNIQUEMENT sur "jamais vu ET hors vision" + transparent partout ailleurs
 
-        // Dessiner ce noir (zones jamais vues) sur le canvas principal
+        // cvc contient maintenant :
+        //   - Zones en vision directe : transparent (inchangé depuis nvc) ✓
+        //   - Zones déjà explorées hors vision : noir à ~30% ✓
+        //   - Zones jamais vues hors vision : noir 100% (inchangé depuis nvc) ✓
+
+        // Étape 4 : Dessiner sur le canvas principal
         ctx.drawImage(cvc, 0, 0, mapW, mapH);
-
-        // Et les zones en vision directe ? drawNightVisionOverlay a déjà percé nvc.
-        // Ces zones sont transparentes dans cvc → rien dessiné → la carte est visible ✓
-        // Les zones déjà vues hors vision → evc transparent → effacé de cvc → seul le 30% de la couche 1 reste ✓
-        // Les zones jamais vues → evc noir → gardé dans cvc → noir 100% + 30% en dessous ✓
-        // Les zones en vision → nvc transparent → cvc transparent après destination-in → rien ✓
 
       } else {
         ctx.fillStyle = 'rgba(0,0,0,1)';
