@@ -90,7 +90,7 @@ function castRay(
   return closest;
 }
 
-function buildVisibilityPolygon(
+export function buildVisibilityPolygon(
   cx: number, cy: number,
   maxRadius: number,
   segments: { x1: number; y1: number; x2: number; y2: number }[],
