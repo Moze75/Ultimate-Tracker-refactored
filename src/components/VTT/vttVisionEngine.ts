@@ -3,10 +3,10 @@ import type { VTTToken, VTTWall } from '../../types/vtt';
 interface VisionZone {
   cx: number;
   cy: number;
-  innerRadiusPx: number;
-  outerRadiusPx: number;
-  innerEraseAlpha: number;
-  outerEraseAlpha: number;
+  brightRadiusPx: number;
+  dimRadiusPx: number;
+  brightReveal: number;
+  dimReveal: number;
   respectWalls: boolean;
 }
 
@@ -111,53 +111,13 @@ function buildVisibilityPolygon(
   return result;
 }
 
-function clipAndDrawZone(
-  ctx: CanvasRenderingContext2D,
-  zone: VisionZone,
-  polygon: Float64Array | null
-) {
-  ctx.save();
-  ctx.globalCompositeOperation = 'destination-out';
-
-  if (polygon && polygon.length >= 6) {
-    ctx.beginPath();
-    ctx.moveTo(polygon[0], polygon[1]);
-    for (let i = 2; i < polygon.length; i += 2) {
-      ctx.lineTo(polygon[i], polygon[i + 1]);
-    }
-    ctx.closePath();
-    ctx.clip();
-  }
-
-  const outerR = Math.max(zone.outerRadiusPx, zone.innerRadiusPx);
-
-  if (zone.innerRadiusPx > 0 && zone.innerRadiusPx < outerR) {
-    const grad = ctx.createRadialGradient(
-      zone.cx, zone.cy, 0,
-      zone.cx, zone.cy, outerR
-    );
-    const ratio = zone.innerRadiusPx / outerR;
-    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(Math.max(0, ratio - 0.02), `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(ratio, `rgba(0,0,0,${zone.outerEraseAlpha})`);
-    grad.addColorStop(Math.min(1, 0.95), `rgba(0,0,0,${zone.outerEraseAlpha})`);
-    grad.addColorStop(1, `rgba(0,0,0,0)`);
-    ctx.fillStyle = grad;
-  } else {
-    const grad = ctx.createRadialGradient(
-      zone.cx, zone.cy, 0,
-      zone.cx, zone.cy, outerR
-    );
-    grad.addColorStop(0, `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(0.80, `rgba(0,0,0,${zone.innerEraseAlpha})`);
-    grad.addColorStop(1, `rgba(0,0,0,0)`);
-    ctx.fillStyle = grad;
-  }
-
+function drawPolyPath(ctx: CanvasRenderingContext2D, polygon: Float64Array) {
   ctx.beginPath();
-  ctx.arc(zone.cx, zone.cy, outerR + 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  ctx.moveTo(polygon[0], polygon[1]);
+  for (let i = 2; i < polygon.length; i += 2) {
+    ctx.lineTo(polygon[i], polygon[i + 1]);
+  }
+  ctx.closePath();
 }
 
 let _flickerPhase = 0;
@@ -167,7 +127,7 @@ function getTorchFlicker(): number {
 }
 
 export function drawNightVisionOverlay(
-  overlayCtx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D,
   mapW: number,
   mapH: number,
   tokens: VTTToken[],
@@ -176,14 +136,7 @@ export function drawNightVisionOverlay(
   _nightOpacity: number,
   nightColor: string
 ) {
-  overlayCtx.clearRect(0, 0, mapW, mapH);
-
-  const baseRgb = nightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  const r = baseRgb ? baseRgb[1] : '0';
-  const g = baseRgb ? baseRgb[2] : '0';
-  const b = baseRgb ? baseRgb[3] : '0';
-  overlayCtx.fillStyle = `rgba(${r},${g},${b},1)`;
-  overlayCtx.fillRect(0, 0, mapW, mapH);
+  ctx.clearRect(0, 0, mapW, mapH);
 
   const CELL = gridSize || 50;
   const wallSegs = getWallSegments(walls);
@@ -200,24 +153,24 @@ export function drawNightVisionOverlay(
     const lightRange = token.lightRange ?? 6;
 
     if (visionMode === 'normal') {
-      const brightAlpha = token.visionBrightAlpha ?? 1.0;
+      const reveal = token.visionBrightAlpha ?? 1.0;
       zones.push({
         cx, cy,
-        innerRadiusPx: 0,
-        outerRadiusPx: metersToPixels(3, CELL),
-        innerEraseAlpha: brightAlpha,
-        outerEraseAlpha: brightAlpha,
+        brightRadiusPx: metersToPixels(3, CELL),
+        dimRadiusPx: 0,
+        brightReveal: reveal,
+        dimReveal: 0,
         respectWalls: false,
       });
     } else if (visionMode === 'darkvision') {
-      const brightAlpha = token.visionBrightAlpha ?? 1.0;
-      const dimAlpha = token.visionDimAlpha ?? 0.70;
+      const brightReveal = token.visionBrightAlpha ?? 1.0;
+      const dimReveal = token.visionDimAlpha ?? 0.70;
       zones.push({
         cx, cy,
-        innerRadiusPx: metersToPixels(3, CELL),
-        outerRadiusPx: metersToPixels(visionRange, CELL),
-        innerEraseAlpha: brightAlpha,
-        outerEraseAlpha: dimAlpha,
+        brightRadiusPx: metersToPixels(3, CELL),
+        dimRadiusPx: metersToPixels(visionRange, CELL),
+        brightReveal,
+        dimReveal,
         respectWalls: true,
       });
     }
@@ -229,37 +182,132 @@ export function drawNightVisionOverlay(
       else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
 
       const flicker = lightSource === 'torch' ? getTorchFlicker() : 1.0;
-      const lBrightAlpha = token.lightBrightAlpha ?? 1.0;
-      const lDimAlpha = token.lightDimAlpha ?? 0.70;
+      const lBrightReveal = token.lightBrightAlpha ?? 1.0;
+      const lDimReveal = token.lightDimAlpha ?? 0.70;
 
       zones.push({
         cx, cy,
-        innerRadiusPx: metersToPixels(brightM, CELL) * flicker,
-        outerRadiusPx: metersToPixels(dimM, CELL) * flicker,
-        innerEraseAlpha: lBrightAlpha,
-        outerEraseAlpha: lDimAlpha,
+        brightRadiusPx: metersToPixels(brightM, CELL) * flicker,
+        dimRadiusPx: metersToPixels(dimM, CELL) * flicker,
+        brightReveal: lBrightReveal,
+        dimReveal: lDimReveal,
         respectWalls: true,
       });
     }
   }
 
-  if (zones.length === 0) return;
+  if (zones.length === 0) {
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fillRect(0, 0, mapW, mapH);
+    return;
+  }
 
   const polyCache = new Map<string, Float64Array>();
 
+  function getPolygon(zone: VisionZone): Float64Array | null {
+    if (!zone.respectWalls || wallSegs.length === 0) return null;
+    const maxR = Math.max(zone.brightRadiusPx, zone.dimRadiusPx);
+    const key = `${zone.cx},${zone.cy},${Math.round(maxR)}`;
+    if (polyCache.has(key)) return polyCache.get(key)!;
+    const poly = buildVisibilityPolygon(zone.cx, zone.cy, maxR, wallSegs, mapW, mapH);
+    polyCache.set(key, poly);
+    return poly;
+  }
+
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(0, 0, mapW, mapH);
+
+  ctx.globalCompositeOperation = 'destination-out';
+
   for (const zone of zones) {
-    let poly: Float64Array | null = null;
-    if (zone.respectWalls && wallSegs.length > 0) {
-      const maxR = Math.max(zone.innerRadiusPx, zone.outerRadiusPx);
-      const key = `${zone.cx},${zone.cy},${Math.round(maxR)}`;
-      if (polyCache.has(key)) {
-        poly = polyCache.get(key)!;
-      } else {
-        poly = buildVisibilityPolygon(zone.cx, zone.cy, maxR, wallSegs, mapW, mapH);
-        polyCache.set(key, poly);
-      }
+    const poly = getPolygon(zone);
+    const maxR = Math.max(zone.brightRadiusPx, zone.dimRadiusPx || zone.brightRadiusPx);
+
+    ctx.save();
+
+    if (poly && poly.length >= 6) {
+      drawPolyPath(ctx, poly);
+      ctx.clip();
     }
-    clipAndDrawZone(overlayCtx, zone, poly);
+
+    if (zone.dimRadiusPx > 0 && zone.dimRadiusPx > zone.brightRadiusPx) {
+      ctx.fillStyle = `rgba(255,255,255,${zone.dimReveal})`;
+      ctx.beginPath();
+      ctx.arc(zone.cx, zone.cy, zone.dimRadiusPx, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (zone.brightRadiusPx > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${zone.brightReveal})`;
+      ctx.beginPath();
+      ctx.arc(zone.cx, zone.cy, zone.brightRadiusPx, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+
+  for (const zone of zones) {
+    if (zone.dimRadiusPx <= 0 || zone.dimRadiusPx <= zone.brightRadiusPx) continue;
+    const poly = getPolygon(zone);
+
+    ctx.save();
+    if (poly && poly.length >= 6) {
+      drawPolyPath(ctx, poly);
+      ctx.clip();
+    }
+
+    const edgeFade = Math.max(zone.dimRadiusPx * 0.05, 4);
+    const grad = ctx.createRadialGradient(
+      zone.cx, zone.cy, zone.dimRadiusPx - edgeFade,
+      zone.cx, zone.cy, zone.dimRadiusPx + edgeFade
+    );
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(zone.cx, zone.cy, zone.dimRadiusPx + edgeFade + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  for (const zone of zones) {
+    if (zone.brightRadiusPx <= 0 || zone.dimRadiusPx <= zone.brightRadiusPx) continue;
+
+    ctx.save();
+    const poly = getPolygon(zone);
+    if (poly && poly.length >= 6) {
+      drawPolyPath(ctx, poly);
+      ctx.clip();
+    }
+
+    const edgeFade = Math.max(zone.brightRadiusPx * 0.08, 3);
+    const grad = ctx.createRadialGradient(
+      zone.cx, zone.cy, zone.brightRadiusPx - edgeFade,
+      zone.cx, zone.cy, zone.brightRadiusPx + edgeFade
+    );
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, `rgba(0,0,0,${1 - zone.dimReveal})`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(zone.cx, zone.cy, zone.brightRadiusPx + edgeFade + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  const baseRgb = nightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (baseRgb) {
+    const r = parseInt(baseRgb[1]);
+    const g = parseInt(baseRgb[2]);
+    const b = parseInt(baseRgb[3]);
+    if (r > 0 || g > 0 || b > 0) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(0, 0, mapW, mapH);
+      ctx.globalCompositeOperation = 'source-over';
+    }
   }
 }
 

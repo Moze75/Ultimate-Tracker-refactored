@@ -486,7 +486,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const nightHasVisionTokens = isNight && tokensRef.current.some(
       t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
     );
-    const nightVisionReplaceFog = nightHasVisionTokens && curRole === 'player';
 
     if (cfg.fogEnabled) {
       const strokes = fog.strokes || [];
@@ -495,7 +494,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           fogCanvasSizeRef.current.h !== mapH) {
         buildFogCanvas(strokes, mapW, mapH);
       }
-      if (!nightVisionReplaceFog && fogCanvasRef.current) {
+      if (!nightHasVisionTokens && fogCanvasRef.current) {
         ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
         ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
@@ -526,7 +525,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        if (nightVisionReplaceFog) {
+        if (nightHasVisionTokens) {
           let vc = visionCanvasRef.current;
           if (!vc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
             vc = document.createElement('canvas');
@@ -544,7 +543,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
             tod.opacity,
             tod.color
           );
+          ctx.globalAlpha = curRole === 'gm' ? 0.5 : 1;
           ctx.drawImage(vc, 0, 0, mapW, mapH);
+          ctx.globalAlpha = 1;
         } else {
           const fillColor = tod.color.replace('ALPHA', String(isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity));
           ctx.fillStyle = fillColor;
