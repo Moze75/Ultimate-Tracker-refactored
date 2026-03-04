@@ -582,7 +582,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
-    // --- VISION DE NUIT (approche fog-like : canvas noir percé proprement) ---
+    // --- VISION DE NUIT (approche directe fog-like + mémoire pérenne) ---
     if (isNight && curRole === 'player') {
       const playerTokens = tokensRef.current.filter(
         t => t.visible && t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)
@@ -598,58 +598,54 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
             })
           : [];
 
-        // --- Canvas de mémoire (explored) : accumule les zones déjà vues ---
+        // --- 1) Canvas de mémoire pérenne (explored) ---
         let evc = exploredCanvasRef.current;
         if (!evc || exploredCanvasSizeRef.current.w !== mapW || exploredCanvasSizeRef.current.h !== mapH) {
           evc = document.createElement('canvas');
           evc.width = mapW;
           evc.height = mapH;
-          const eCtx = evc.getContext('2d')!;
-          eCtx.fillStyle = 'rgba(0,0,0,1)';
-          eCtx.fillRect(0, 0, mapW, mapH);
+          const eCtx2 = evc.getContext('2d')!;
+          eCtx2.fillStyle = 'rgba(0,0,0,1)';
+          eCtx2.fillRect(0, 0, mapW, mapH);
           exploredCanvasRef.current = evc;
           exploredCanvasSizeRef.current = { w: mapW, h: mapH };
         }
         const eCtx = evc.getContext('2d')!;
 
-        // Percer la mémoire avec la forme visible actuelle (respecte les murs)
+        // Percer la mémoire avec les polygones de visibilité (respecte les murs)
         eCtx.globalCompositeOperation = 'destination-out';
         for (const token of playerTokens) {
           if (!token.visible) continue;
-          const size = (token.size || 1) * CELL;
-          const tcx = token.position.x + size / 2;
-          const tcy = token.position.y + size / 2;
-          const visionMode = token.visionMode || 'none';
-          const visionRange = token.visionRange ?? 18;
-          const lightSource = token.lightSource || 'none';
-          const lightRange = token.lightRange ?? 6;
+          const tSize = (token.size || 1) * CELL;
+          const tcx = token.position.x + tSize / 2;
+          const tcy = token.position.y + tSize / 2;
+          const vm = token.visionMode || 'none';
+          const vr = token.visionRange ?? 18;
+          const ls = token.lightSource || 'none';
+          const lr = token.lightRange ?? 6;
 
           let maxR = 0;
-          if (visionMode === 'normal') maxR = Math.max(maxR, metersToPixels(3, CELL));
-          else if (visionMode === 'darkvision') maxR = Math.max(maxR, metersToPixels(visionRange, CELL));
-          if (lightSource !== 'none') {
-            let dimM = lightRange * 2;
-            if (lightSource === 'torch') dimM = 12;
-            else if (lightSource === 'lantern') dimM = 18;
+          if (vm === 'normal') maxR = metersToPixels(3, CELL);
+          else if (vm === 'darkvision') maxR = metersToPixels(vr, CELL);
+          if (ls !== 'none') {
+            let dimM = lr * 2;
+            if (ls === 'torch') dimM = 12;
+            else if (ls === 'lantern') dimM = 18;
             maxR = Math.max(maxR, metersToPixels(dimM, CELL));
           }
           if (maxR <= 0) continue;
 
           if (wallSegs.length > 0) {
-            // Construire le polygone de visibilité (respecte les murs)
             const poly = buildVisibilityPolygon(tcx, tcy, maxR, wallSegs, mapW, mapH);
             if (poly.length >= 6) {
               eCtx.fillStyle = 'rgba(0,0,0,1)';
               eCtx.beginPath();
               eCtx.moveTo(poly[0], poly[1]);
-              for (let i = 2; i < poly.length; i += 2) {
-                eCtx.lineTo(poly[i], poly[i + 1]);
-              }
+              for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
               eCtx.closePath();
               eCtx.fill();
             }
           } else {
-            // Pas de murs : cercle simple
             eCtx.fillStyle = 'rgba(0,0,0,1)';
             eCtx.beginPath();
             eCtx.arc(tcx, tcy, maxR, 0, Math.PI * 2);
@@ -658,7 +654,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         }
         eCtx.globalCompositeOperation = 'source-over';
 
-        // --- Canvas de vision en direct (ce que le joueur voit maintenant) ---
+        // --- 2) Canvas composite de nuit ---
         let nvc = visionCanvasRef.current;
         if (!nvc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
           nvc = document.createElement('canvas');
@@ -668,46 +664,49 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           visionCanvasSizeRef.current = { w: mapW, h: mapH };
         }
         const nCtx = nvc.getContext('2d')!;
-        // Fond noir total
         nCtx.clearRect(0, 0, mapW, mapH);
-        nCtx.fillStyle = 'rgba(0,0,0,1)';
+
+        // Fond : noir à 30% (voile des zones explorées)
+        nCtx.fillStyle = 'rgba(0,0,0,0.30)';
         nCtx.fillRect(0, 0, mapW, mapH);
 
-        // Percer les trous de vision actuelle (comme le pinceau fog)
+        // Remettre le noir 100% sur les zones jamais vues (ce qui est noir dans evc)
+        // evc = noir sur jamais vu, transparent sur déjà vu
+        // On ajoute 70% de noir supplémentaire sur le noir de evc pour atteindre 100%
+        nCtx.globalAlpha = 0.70;
+        nCtx.drawImage(evc, 0, 0);
+        nCtx.globalAlpha = 1;
+        // Maintenant nvc = 100% noir (jamais vu) ou 30% noir (déjà vu)
+
+        // --- 3) Effacer les zones en vision directe (comme le pinceau fog) ---
         nCtx.globalCompositeOperation = 'destination-out';
         for (const token of playerTokens) {
           if (!token.visible) continue;
-          const size = (token.size || 1) * CELL;
-          const tcx = token.position.x + size / 2;
-          const tcy = token.position.y + size / 2;
-          const visionMode = token.visionMode || 'none';
-          const visionRange = token.visionRange ?? 18;
-          const lightSource = token.lightSource || 'none';
-          const lightRange = token.lightRange ?? 6;
+          const tSize = (token.size || 1) * CELL;
+          const tcx = token.position.x + tSize / 2;
+          const tcy = token.position.y + tSize / 2;
+          const vm = token.visionMode || 'none';
+          const vr = token.visionRange ?? 18;
+          const ls = token.lightSource || 'none';
+          const lr = token.lightRange ?? 6;
 
-          // Calculer les rayons bright/dim
           let brightR = 0;
           let dimR = 0;
-          if (visionMode === 'normal') {
-            brightR = metersToPixels(3, CELL);
-          } else if (visionMode === 'darkvision') {
-            brightR = metersToPixels(3, CELL);
-            dimR = metersToPixels(visionRange, CELL);
-          }
-          if (lightSource !== 'none') {
-            let brightM = lightRange;
-            let dimM = lightRange * 2;
-            if (lightSource === 'torch') { brightM = 6; dimM = 12; }
-            else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
-            const flicker = lightSource === 'torch' ? (0.96 + 0.04 * Math.sin(Date.now() * 0.0012) * Math.sin(Date.now() * 0.0007)) : 1.0;
-            brightR = Math.max(brightR, metersToPixels(brightM, CELL) * flicker);
-            dimR = Math.max(dimR, metersToPixels(dimM, CELL) * flicker);
+          if (vm === 'normal') brightR = metersToPixels(3, CELL);
+          else if (vm === 'darkvision') { brightR = metersToPixels(3, CELL); dimR = metersToPixels(vr, CELL); }
+          if (ls !== 'none') {
+            let bm = lr, dm = lr * 2;
+            if (ls === 'torch') { bm = 6; dm = 12; }
+            else if (ls === 'lantern') { bm = 9; dm = 18; }
+            const fl = ls === 'torch' ? (0.96 + 0.04 * Math.sin(Date.now() * 0.0012) * Math.sin(Date.now() * 0.0007)) : 1.0;
+            brightR = Math.max(brightR, metersToPixels(bm, CELL) * fl);
+            dimR = Math.max(dimR, metersToPixels(dm, CELL) * fl);
           }
 
           const maxR = Math.max(brightR, dimR);
           if (maxR <= 0) continue;
 
-          // Obtenir le polygone de visibilité (murs)
+          // Clip par le polygone de visibilité (murs)
           let poly: Float64Array | null = null;
           if (wallSegs.length > 0) {
             poly = buildVisibilityPolygon(tcx, tcy, maxR, wallSegs, mapW, mapH);
@@ -717,18 +716,16 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           if (poly && poly.length >= 6) {
             nCtx.beginPath();
             nCtx.moveTo(poly[0], poly[1]);
-            for (let pi = 2; pi < poly.length; pi += 2) {
-              nCtx.lineTo(poly[pi], poly[pi + 1]);
-            }
+            for (let pi = 2; pi < poly.length; pi += 2) nCtx.lineTo(poly[pi], poly[pi + 1]);
             nCtx.closePath();
             nCtx.clip();
           }
 
-          // Zone dim (si plus grande que bright) : effacement total aussi
+          // Zone dim : dégradé doux au bord
           if (dimR > brightR) {
-            // Gradient de dim → bord : effacement avec transition douce au bord
-            const grad = nCtx.createRadialGradient(tcx, tcy, dimR * 0.85, tcx, tcy, dimR);
+            const grad = nCtx.createRadialGradient(tcx, tcy, brightR, tcx, tcy, dimR);
             grad.addColorStop(0, 'rgba(0,0,0,1)');
+            grad.addColorStop(0.85, 'rgba(0,0,0,0.6)');
             grad.addColorStop(1, 'rgba(0,0,0,0)');
             nCtx.fillStyle = grad;
             nCtx.beginPath();
@@ -748,83 +745,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         }
         nCtx.globalCompositeOperation = 'source-over';
 
-        // --- Composer sur le canvas principal ---
-        // On veut :
-        //   - Zone jamais vue → noir 100%
-        //   - Zone explorée hors vision actuelle → voile noir 30%
-        //   - Zone en vision directe → carte visible (transparent)
-        //
-        // nvc = noir partout SAUF les trous de vision actuelle
-        // evc = noir partout SAUF les zones déjà explorées
-        //
-        // Stratégie : on utilise nvc comme base, puis on réduit l'opacité
-        // des pixels noirs qui sont dans une zone déjà explorée.
-
-        // D'abord, on fait un canvas composite
-        const cvc = document.createElement('canvas');
-        cvc.width = mapW;
-        cvc.height = mapH;
-        const cCtx = cvc.getContext('2d')!;
-
-        // Commencer par la mémoire (noir = jamais vu, transparent = déjà vu)
-        cCtx.drawImage(evc, 0, 0);
-
-        // Effacer les zones en vision directe de la mémoire aussi (déjà fait mais bon)
-        // Maintenant cvc = noir uniquement sur les zones jamais vues
-
-        // Dessiner la vision live par-dessus avec multiply :
-        // - Là où la mémoire est noire (jamais vu) ET la vision est noire → reste noir
-        // - Là où la mémoire est transparente (déjà vu) ET la vision est noire → on veut 30% de noir
-        // - Là où la vision est transparente (visible) → on veut 0% de noir
-
-        // Approche simple : 2 passes
-        // Passe 1 : vision actuelle (trous = carte visible)
+        // --- 4) Dessiner le résultat sur le canvas principal ---
         ctx.drawImage(nvc, 0, 0, mapW, mapH);
-
-        // Passe 2 : pour les zones explorées hors vision, réduire le noir
-        // On utilise destination-out sur nvc avec les zones explorées inversées
-        // Plus simple : dessiner le voile mémoire à faible opacité, puis la vision live
-
-        // En fait, approche la plus simple et fiable :
-        // - La vision live (nvc) a des trous clairs (vision directe) et du noir (pas de vision)
-        // - La mémoire (evc) a des trous clairs (déjà vu) et du noir (jamais vu)
-        // - On veut : min(nvc, evc) = noir si l'un des deux est noir (jamais vu OU pas de vision)
-        //   mais avec le twist que "déjà vu + pas de vision actuelle" = 30% noir au lieu de 100%
-
-        // Reset le composite canvas
-        cCtx.clearRect(0, 0, mapW, mapH);
-
-        // Étape 1 : peindre tout en noir
-        cCtx.fillStyle = 'rgba(0,0,0,1)';
-        cCtx.fillRect(0, 0, mapW, mapH);
-
-        // Étape 2 : effacer les zones déjà explorées à 70% (laisser 30% de noir)
-        // evc est noir où jamais vu, transparent où déjà vu
-        // On veut effacer 70% là où evc est transparent
-        // → inverser : on copie evc sur un temp, puis on fait destination-out sur cvc
-        cCtx.globalCompositeOperation = 'destination-out';
-        // Dessiner un rect blanc complet à 70% partout
-        cCtx.fillStyle = 'rgba(0,0,0,0.70)';
-        cCtx.fillRect(0, 0, mapW, mapH);
-        cCtx.globalCompositeOperation = 'source-over';
-        // Maintenant cvc = 30% noir partout. Remettre le noir complet sur les zones jamais vues
-        // En dessinant evc (noir = jamais vu) par-dessus
-        cCtx.drawImage(evc, 0, 0);
-        // Maintenant cvc = 100% noir sur jamais vu, 30% noir sur déjà vu
-
-        // Étape 3 : effacer les zones en vision directe (trous de nvc)
-        // nvc = noir partout sauf les trous. On veut effacer cvc là où nvc est transparent.
-        // → on utilise destination-in avec nvc : garder cvc seulement là où nvc a des pixels
-        // Non : destination-in garde les pixels de cvc seulement là où nvc est opaque (noir)
-        // C'est exactement ce qu'on veut : garder le voile/noir sauf dans les trous
-        cCtx.globalCompositeOperation = 'destination-in';
-        cCtx.drawImage(nvc, 0, 0);
-        cCtx.globalCompositeOperation = 'source-over';
-
-        // Dessiner le résultat final sur le canvas principal
-        ctx.drawImage(cvc, 0, 0, mapW, mapH);
       } else {
-        // Aucun token joueur : brouillard total
         ctx.fillStyle = 'rgba(0,0,0,1)';
         ctx.fillRect(0, 0, mapW, mapH);
       }
