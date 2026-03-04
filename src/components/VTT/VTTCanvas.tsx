@@ -589,7 +589,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH);
         }
 
-        ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
+        // De nuit la vision gère déjà l'obscurité, le fog n'est qu'un masque GM complémentaire
+        // On réduit son opacité pour ne pas doubler l'effet avec drawNightVisionOverlay
+        const fogAlpha = curRole === 'gm' ? 0.5 : (isNight ? 0.6 : 0.95);
+        ctx.globalAlpha = fogAlpha;
         ctx.drawImage(vc, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
       }
