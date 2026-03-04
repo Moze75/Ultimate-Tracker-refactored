@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperat
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
-import { drawDayVisionOverlay } from './vttVisionEngine';
-import { getVisionRadii } from './vttVisionEngine';
+import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
+import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
