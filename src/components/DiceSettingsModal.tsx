@@ -86,7 +86,7 @@ const modalContent = (
                <div className="flex items-center justify-between p-4 border-b border-gray-700/30">
           <div>
             <h2 className="text-xl font-bold text-white">Paramètres de l'app</h2>
-            <p className="text-xs text-gray-500 mt-1">Version 2.2.1</p>
+            <p className="text-xs text-gray-500 mt-1">Version 2.2.2</p>
           </div>
           <button
             onClick={onClose}
