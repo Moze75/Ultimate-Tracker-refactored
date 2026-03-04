@@ -10,8 +10,47 @@ interface VisionZone {
   respectWalls: boolean;
 }
 
-function metersToPixels(meters: number, gridSizePx: number): number {
+export function metersToPixels(meters: number, gridSizePx: number): number {
   return (meters / 1.5) * gridSizePx;
+}
+
+export interface VisionRadius {
+  cx: number;
+  cy: number;
+  brightR: number;
+  dimR: number;
+}
+
+export function getVisionRadii(token: VTTToken, gridSize: number): VisionRadius {
+  const CELL = gridSize || 50;
+  const size = (token.size || 1) * CELL;
+  const cx = token.position.x + size / 2;
+  const cy = token.position.y + size / 2;
+  const visionMode = token.visionMode || 'none';
+  const lightSource = token.lightSource || 'none';
+  const visionRange = token.visionRange ?? 18;
+  const lightRange = token.lightRange ?? 6;
+
+  let brightR = 0;
+  let dimR = 0;
+
+  if (visionMode === 'normal') {
+    brightR = Math.max(brightR, metersToPixels(3, CELL));
+  } else if (visionMode === 'darkvision') {
+    brightR = Math.max(brightR, metersToPixels(3, CELL));
+    dimR = Math.max(dimR, metersToPixels(visionRange, CELL));
+  }
+
+  if (lightSource !== 'none') {
+    let brightM = lightRange;
+    let dimM = lightRange * 2;
+    if (lightSource === 'torch') { brightM = 6; dimM = 12; }
+    else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
+    brightR = Math.max(brightR, metersToPixels(brightM, CELL));
+    dimR = Math.max(dimR, metersToPixels(dimM, CELL));
+  }
+
+  return { cx, cy, brightR, dimR };
 }
 
 function getWallSegments(walls: VTTWall[]): { x1: number; y1: number; x2: number; y2: number }[] {

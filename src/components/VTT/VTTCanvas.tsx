@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperat
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
-import { drawNightVisionOverlay, drawDayVisionOverlay } from './vttVisionEngine';
+import { drawDayVisionOverlay } from './vttVisionEngine';
+import { getVisionRadii } from './vttVisionEngine';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
@@ -44,6 +45,44 @@ function segmentsIntersect(ax: number, ay: number, bx: number, by: number, cx: n
   const t = ((cx - ax) * d2y - (cy - ay) * d2x) / cross;
   const u = ((cx - ax) * d1y - (cy - ay) * d1x) / cross;
   return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+function punchVisionHoles(
+  fctx: CanvasRenderingContext2D,
+  visionTokens: VTTToken[],
+  gridSize: number,
+  _walls: VTTWall[],
+  _mapW: number,
+  _mapH: number
+) {
+  fctx.globalCompositeOperation = 'destination-out';
+  for (const token of visionTokens) {
+    const radii = getVisionRadii(token, gridSize);
+    const maxR = Math.max(radii.brightR, radii.dimR);
+    if (maxR <= 0) continue;
+
+    if (radii.dimR > radii.brightR) {
+      const grad = fctx.createRadialGradient(
+        radii.cx, radii.cy, radii.brightR,
+        radii.cx, radii.cy, radii.dimR
+      );
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(0.85, 'rgba(0,0,0,0.5)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      fctx.fillStyle = grad;
+      fctx.beginPath();
+      fctx.arc(radii.cx, radii.cy, radii.dimR, 0, Math.PI * 2);
+      fctx.fill();
+    }
+
+    if (radii.brightR > 0) {
+      fctx.fillStyle = 'rgba(0,0,0,1)';
+      fctx.beginPath();
+      fctx.arc(radii.cx, radii.cy, radii.brightR, 0, Math.PI * 2);
+      fctx.fill();
+    }
+  }
+  fctx.globalCompositeOperation = 'source-over';
 }
 
 function wallBlocksToken(newX: number, newY: number, sizeInPx: number, walls: VTTWall[]): boolean {
@@ -483,10 +522,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const isDay = !isNight;
     const currentWalls = wallsRef.current || [];
 
-    const nightHasVisionTokens = isNight && tokensRef.current.some(
-      t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
-    );
-
     if (cfg.fogEnabled) {
       const strokes = fog.strokes || [];
       if (!fogCanvasRef.current ||
@@ -494,9 +529,28 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           fogCanvasSizeRef.current.h !== mapH) {
         buildFogCanvas(strokes, mapW, mapH);
       }
-      if (!nightHasVisionTokens && fogCanvasRef.current) {
+      if (fogCanvasRef.current) {
+        let vc = visionCanvasRef.current;
+        if (!vc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
+          vc = document.createElement('canvas');
+          vc.width = mapW;
+          vc.height = mapH;
+          visionCanvasRef.current = vc;
+          visionCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const vCtx = vc.getContext('2d')!;
+        vCtx.clearRect(0, 0, mapW, mapH);
+        vCtx.drawImage(fogCanvasRef.current, 0, 0);
+
+        const visionTokens = tokensRef.current.filter(
+          t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
+        );
+        if (visionTokens.length > 0) {
+          punchVisionHoles(vCtx, visionTokens, CELL, currentWalls, mapW, mapH);
+        }
+
         ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
-        ctx.drawImage(fogCanvasRef.current, 0, 0, mapW, mapH);
+        ctx.drawImage(vc, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
       }
     }
@@ -525,32 +579,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        if (nightHasVisionTokens) {
-          let vc = visionCanvasRef.current;
-          if (!vc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
-            vc = document.createElement('canvas');
-            vc.width = mapW;
-            vc.height = mapH;
-            visionCanvasRef.current = vc;
-            visionCanvasSizeRef.current = { w: mapW, h: mapH };
-          }
-          const vCtx = vc.getContext('2d')!;
-          drawNightVisionOverlay(
-            vCtx, mapW, mapH,
-            tokensRef.current,
-            currentWalls,
-            CELL,
-            tod.opacity,
-            tod.color
-          );
-          ctx.globalAlpha = curRole === 'gm' ? 0.5 : 1;
-          ctx.drawImage(vc, 0, 0, mapW, mapH);
-          ctx.globalAlpha = 1;
-        } else {
-          const fillColor = tod.color.replace('ALPHA', String(isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity));
-          ctx.fillStyle = fillColor;
-          ctx.fillRect(0, 0, mapW, mapH);
-        }
+        const alphaVal = isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity;
+        const fillColor = tod.color.replace('ALPHA', String(alphaVal));
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(0, 0, mapW, mapH);
       }
     }
 
