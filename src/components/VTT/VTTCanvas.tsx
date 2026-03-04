@@ -517,11 +517,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       ctx.restore();
     });
 
-    const timeOfDay = cfg.timeOfDay;
+     const timeOfDay = cfg.timeOfDay;
     const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
     const isDay = !isNight;
     const currentWalls = wallsRef.current || [];
 
+    // --- FOG DE GUERRE (manuel, GM only) ---
     if (cfg.fogEnabled) {
       const strokes = fog.strokes || [];
       if (!fogCanvasRef.current ||
@@ -542,11 +543,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         vCtx.clearRect(0, 0, mapW, mapH);
         vCtx.drawImage(fogCanvasRef.current, 0, 0);
 
-        const visionTokens = tokensRef.current.filter(
-          t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
+        // Seuls les tokens avec LUMIERE percent le fog pour tous les joueurs
+        // La vision seule (normal/darkvision) ne lève PAS le fog manuel
+        const lightTokens = tokensRef.current.filter(
+          t => t.visible && t.lightSource && t.lightSource !== 'none'
         );
-        if (visionTokens.length > 0) {
-          punchVisionHoles(vCtx, visionTokens, CELL, currentWalls, mapW, mapH);
+        if (lightTokens.length > 0) {
+          punchVisionHoles(vCtx, lightTokens, CELL, currentWalls, mapW, mapH);
         }
 
         ctx.globalAlpha = curRole === 'gm' ? 0.5 : 0.95;
@@ -555,6 +558,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
+    // --- VISION DE JOUR (murs bloquent la vue) ---
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
       const playerTokens = tokensRef.current.filter(
         t => t.visible && t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)
@@ -576,13 +580,45 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
+    // --- VISION DE NUIT (drawNightVisionOverlay avec raycasting murs) ---
+    // Doit être dessiné APRÈS le fog et AVANT le filtre heure pour ne pas être écrasé
+    if (isNight && curRole === 'player') {
+      const playerTokens = tokensRef.current.filter(
+        t => t.visible && t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)
+      );
+      if (playerTokens.length > 0) {
+        let nvc = visionCanvasRef.current;
+        if (!nvc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
+          nvc = document.createElement('canvas');
+          nvc.width = mapW;
+          nvc.height = mapH;
+          visionCanvasRef.current = nvc;
+          visionCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const nCtx = nvc.getContext('2d')!;
+        const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
+        drawNightVisionOverlay(nCtx, mapW, mapH, playerTokens, currentWalls, CELL, tod.opacity, tod.color);
+        ctx.drawImage(nvc, 0, 0, mapW, mapH);
+      } else {
+        // Aucun token joueur : brouillard total
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        ctx.fillRect(0, 0, mapW, mapH);
+      }
+    }
+
+    // --- FILTRE HEURE DU JOUR ---
+    // Pour la nuit côté joueur, le filtre est déjà intégré dans drawNightVisionOverlay
+    // On applique ici uniquement pour : jour, crépuscule, aube, OU vue GM de nuit
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        const alphaVal = isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity;
-        const fillColor = tod.color.replace('ALPHA', String(alphaVal));
-        ctx.fillStyle = fillColor;
-        ctx.fillRect(0, 0, mapW, mapH);
+        const skipForPlayer = isNight && curRole === 'player';
+        if (!skipForPlayer) {
+          const alphaVal = isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity;
+          const fillColor = tod.color.replace('ALPHA', String(alphaVal));
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(0, 0, mapW, mapH);
+        }
       }
     }
 
