@@ -324,16 +324,18 @@ export function drawNightVisionOverlay(
       ctx.clip();
     }
 
-    const edgeFade = Math.max(zone.brightRadiusPx * 0.08, 3);
+    // Transition douce de bright vers dim sans gap noir
+    // On ajoute du noir proportionnel à (1-dimReveal) entre bright et bright+fade
+    const fadeWidth = Math.max((zone.dimRadiusPx - zone.brightRadiusPx) * 0.15, 4);
     const grad = ctx.createRadialGradient(
-      zone.cx, zone.cy, zone.brightRadiusPx - edgeFade,
-      zone.cx, zone.cy, zone.brightRadiusPx + edgeFade
+      zone.cx, zone.cy, zone.brightRadiusPx,
+      zone.cx, zone.cy, zone.brightRadiusPx + fadeWidth
     );
     grad.addColorStop(0, 'rgba(0,0,0,0)');
     grad.addColorStop(1, `rgba(0,0,0,${1 - zone.dimReveal})`);
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(zone.cx, zone.cy, zone.brightRadiusPx + edgeFade + 2, 0, Math.PI * 2);
+    ctx.arc(zone.cx, zone.cy, zone.brightRadiusPx + fadeWidth + 1, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
