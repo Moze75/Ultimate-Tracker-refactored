@@ -717,18 +717,18 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 export function getTimeOfDayOverlay(hour: number): { color: string; opacity: number; label: string } {
-  if (hour >= 7 && hour < 8) return { color: 'rgba(255,160,50,ALPHA)', opacity: 0.15, label: 'Aube' };
-  if (hour >= 8 && hour < 10) return { color: 'rgba(255,200,100,ALPHA)', opacity: 0.06, label: 'Matin' };
+  if (hour >= 7 && hour < 8) return { color: 'rgba(255,160,50,ALPHA)', opacity: 0.06, label: 'Aube' };
+  if (hour >= 8 && hour < 10) return { color: 'rgba(255,200,100,ALPHA)', opacity: 0.03, label: 'Matin' };
   if (hour >= 10 && hour < 16) return { color: 'rgba(255,255,200,ALPHA)', opacity: 0, label: 'Journee' };
-  if (hour >= 16 && hour < 18) return { color: 'rgba(255,180,80,ALPHA)', opacity: 0.08, label: 'Apres-midi' };
-  if (hour >= 18 && hour < 19) return { color: 'rgba(255,120,40,ALPHA)', opacity: 0.18, label: 'Crepuscule' };
-  if (hour >= 19 && hour < 20) return { color: 'rgba(200,80,30,ALPHA)', opacity: 0.3, label: 'Soir' };
-  if (hour >= 20 && hour < 21) return { color: 'rgba(40,40,100,ALPHA)', opacity: 0.4, label: 'Tombee de la nuit' };
-  if (hour >= 21 && hour < 23) return { color: 'rgba(15,15,60,ALPHA)', opacity: 0.55, label: 'Nuit' };
-  if (hour >= 23 || hour < 4) return { color: 'rgba(5,5,30,ALPHA)', opacity: 0.65, label: 'Nuit profonde' };
-  if (hour >= 4 && hour < 5) return { color: 'rgba(15,15,60,ALPHA)', opacity: 0.5, label: 'Fin de nuit' };
-  if (hour >= 5 && hour < 6) return { color: 'rgba(80,50,100,ALPHA)', opacity: 0.3, label: 'Aurore' };
-  if (hour >= 6 && hour < 7) return { color: 'rgba(200,120,60,ALPHA)', opacity: 0.18, label: 'Lever du soleil' };
+  if (hour >= 16 && hour < 18) return { color: 'rgba(255,180,80,ALPHA)', opacity: 0.04, label: 'Apres-midi' };
+  if (hour >= 18 && hour < 19) return { color: 'rgba(255,120,40,ALPHA)', opacity: 0.08, label: 'Crepuscule' };
+  if (hour >= 19 && hour < 20) return { color: 'rgba(200,80,30,ALPHA)', opacity: 0.12, label: 'Soir' };
+  if (hour >= 20 && hour < 21) return { color: 'rgba(20,20,60,ALPHA)', opacity: 0.18, label: 'Tombee de la nuit' };
+  if (hour >= 21 && hour < 23) return { color: 'rgba(10,10,40,ALPHA)', opacity: 0.25, label: 'Nuit' };
+  if (hour >= 23 || hour < 4) return { color: 'rgba(5,5,20,ALPHA)', opacity: 0.30, label: 'Nuit profonde' };
+  if (hour >= 4 && hour < 5) return { color: 'rgba(10,10,40,ALPHA)', opacity: 0.22, label: 'Fin de nuit' };
+  if (hour >= 5 && hour < 6) return { color: 'rgba(80,50,100,ALPHA)', opacity: 0.10, label: 'Aurore' };
+  if (hour >= 6 && hour < 7) return { color: 'rgba(200,120,60,ALPHA)', opacity: 0.06, label: 'Lever du soleil' };
   return { color: 'rgba(0,0,0,ALPHA)', opacity: 0, label: 'Journee' };
 }
 
