@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, ScanEye } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 
 interface VTTTokenEditModalProps {
@@ -241,6 +241,19 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                 {visible ? <Eye size={13} /> : <EyeOff size={13} />}
                 {visible ? 'Visible' : 'Cache'}
               </button>
+            </div>
+          )}
+
+          {role === 'gm' && (
+            <div className="flex items-center justify-between pt-1 border-t border-gray-700/60">
+              <span className="text-xs text-gray-400">Vision</span>
+              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <ScanEye size={13} />
+                {token.visionMode === 'darkvision' ? 'Nyctalopie' : token.visionMode === 'normal' ? 'Normale' : 'Aucune'}
+                {token.lightSource && token.lightSource !== 'none' && (
+                  <span className="text-orange-400 ml-1">+ {token.lightSource === 'torch' ? 'Torche' : token.lightSource === 'lantern' ? 'Lanterne' : 'Lumiere'}</span>
+                )}
+              </div>
             </div>
           )}
 

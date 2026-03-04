@@ -1,5 +1,8 @@
 export type VTTRole = 'gm' | 'player';
 
+export type VTTVisionMode = 'none' | 'normal' | 'darkvision';
+export type VTTLightSource = 'none' | 'torch' | 'lantern' | 'custom';
+
 export interface VTTToken {
   id: string;
   characterId: string | null;
@@ -16,6 +19,10 @@ export interface VTTToken {
   maxHp?: number;
   imageOffsetX?: number;
   imageOffsetY?: number;
+  visionMode?: VTTVisionMode;
+  visionRange?: number;
+  lightSource?: VTTLightSource;
+  lightRange?: number;
 }
 
 export interface VTTRoomConfig {

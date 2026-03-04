@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff, UserCheck } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -12,6 +12,7 @@ interface VTTContextMenuProps {
   onDelete: () => void;
   onToggleVisibility: () => void;
   onManageBinding?: () => void;
+  onConfigureVision?: () => void;
   onClose: () => void;
 }
 
@@ -25,6 +26,7 @@ export function VTTContextMenu({
   onDelete,
   onToggleVisibility,
   onManageBinding,
+  onConfigureVision,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -84,6 +86,14 @@ export function VTTContextMenu({
           icon={<UserCheck size={13} />}
           label={`Assigner joueur${boundCount > 0 ? ` (${boundCount})` : ''}`}
           onClick={() => { onManageBinding(); onClose(); }}
+        />
+      )}
+
+      {role === 'gm' && onConfigureVision && (
+        <MenuItem
+          icon={<ScanEye size={13} />}
+          label={`Vision${token.visionMode && token.visionMode !== 'none' ? ` (${token.visionMode === 'darkvision' ? 'Nyctalopie' : 'Normale'})` : ''}`}
+          onClick={() => { onConfigureVision(); onClose(); }}
         />
       )}
 

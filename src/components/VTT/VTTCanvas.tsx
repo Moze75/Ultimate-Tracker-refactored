@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperat
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
+import { drawVisionOverlay } from './vttVisionEngine';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
@@ -181,6 +182,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const visionCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
 
@@ -494,9 +497,36 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (timeOfDay != null) {
       const tod = getTimeOfDayOverlay(timeOfDay);
       if (tod.opacity > 0) {
-        const fillColor = tod.color.replace('ALPHA', String(tod.opacity));
-        ctx.fillStyle = fillColor;
-        ctx.fillRect(0, 0, mapW, mapH);
+        const isNight = timeOfDay >= 19 || timeOfDay < 5;
+        const hasVisionTokens = isNight && tokensRef.current.some(
+          t => t.visible && ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none'))
+        );
+
+        if (hasVisionTokens && curRole === 'player') {
+          let vc = visionCanvasRef.current;
+          if (!vc || visionCanvasSizeRef.current.w !== mapW || visionCanvasSizeRef.current.h !== mapH) {
+            vc = document.createElement('canvas');
+            vc.width = mapW;
+            vc.height = mapH;
+            visionCanvasRef.current = vc;
+            visionCanvasSizeRef.current = { w: mapW, h: mapH };
+          }
+          const vCtx = vc.getContext('2d')!;
+          drawVisionOverlay(
+            vCtx, mapW, mapH,
+            tokensRef.current,
+            wallsRef.current || [],
+            CELL,
+            tod.opacity,
+            tod.color,
+            false
+          );
+          ctx.drawImage(vc, 0, 0, mapW, mapH);
+        } else {
+          const fillColor = tod.color.replace('ALPHA', String(isNight && curRole === 'gm' ? tod.opacity * 0.4 : tod.opacity));
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(0, 0, mapW, mapH);
+        }
       }
     }
 

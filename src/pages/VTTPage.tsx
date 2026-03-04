@@ -10,6 +10,7 @@ import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
 import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
 import { AddTokenModal } from '../components/VTT/AddTokenModal';
 import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
+import { VTTVisionConfigModal } from '../components/VTT/VTTVisionConfigModal';
 import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
 import { VTTPlayerList } from '../components/VTT/VTTPlayerList';
@@ -81,6 +82,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
+  const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
   const [showWalls, setShowWalls] = useState(true);
 
@@ -858,6 +860,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             setBindingToken(freshToken || contextMenu.token);
             setContextMenu(null);
           }}
+          onConfigureVision={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            setVisionToken(freshToken || contextMenu.token);
+            setContextMenu(null);
+          }}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -874,6 +881,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             });
           }}
           onClose={() => setBindingToken(null)}
+        />
+      )}
+
+      {visionToken && (
+        <VTTVisionConfigModal
+          token={visionToken}
+          onSave={(changes) => {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: visionToken.id,
+              changes,
+            });
+          }}
+          onClose={() => setVisionToken(null)}
         />
       )}
 
