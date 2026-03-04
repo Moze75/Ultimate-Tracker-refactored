@@ -338,18 +338,8 @@ export function drawNightVisionOverlay(
     ctx.restore();
   }
 
-  const baseRgb = nightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (baseRgb) {
-    const r = parseInt(baseRgb[1]);
-    const g = parseInt(baseRgb[2]);
-    const b = parseInt(baseRgb[3]);
-    if (r > 0 || g > 0 || b > 0) {
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillRect(0, 0, mapW, mapH);
-      ctx.globalCompositeOperation = 'source-over';
-    }
-  }
+  // Teinte de nuit supprimée ici : elle colorait le brouillard opaque en orange/bleu.
+  // La teinte d'ambiance est gérée par le filtre heure dans VTTCanvas.
 }
 
 export function drawDayVisionOverlay(
