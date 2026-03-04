@@ -603,7 +603,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           t.ownerUserId === curUserId
         )
       );
-      if (playerTokens.length > 0) {
+      if (playerTokens.length > 0) { 
         let dvc = dayVisionCanvasRef.current;
         if (!dvc || dayVisionCanvasSizeRef.current.w !== mapW || dayVisionCanvasSizeRef.current.h !== mapH) {
           dvc = document.createElement('canvas');
