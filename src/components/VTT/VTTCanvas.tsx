@@ -51,15 +51,41 @@ function punchVisionHoles(
   fctx: CanvasRenderingContext2D,
   visionTokens: VTTToken[],
   gridSize: number,
-  _walls: VTTWall[],
-  _mapW: number,
-  _mapH: number
+  walls: VTTWall[],
+  mapW: number,
+  mapH: number
 ) {
+  const wallSegs = walls.length > 0
+    ? walls.flatMap(w => {
+        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+        for (let i = 0; i < w.points.length - 1; i++) {
+          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+        }
+        return segs;
+      })
+    : [];
+
   fctx.globalCompositeOperation = 'destination-out';
   for (const token of visionTokens) {
     const radii = getVisionRadii(token, gridSize);
     const maxR = Math.max(radii.brightR, radii.dimR);
     if (maxR <= 0) continue;
+
+    // Clip par le polygone de visibilité si des murs existent
+    const hasPoly = wallSegs.length > 0;
+    let poly: Float64Array | null = null;
+    if (hasPoly) {
+      poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegs, mapW, mapH);
+    }
+
+    fctx.save();
+    if (poly && poly.length >= 6) {
+      fctx.beginPath();
+      fctx.moveTo(poly[0], poly[1]);
+      for (let pi = 2; pi < poly.length; pi += 2) fctx.lineTo(poly[pi], poly[pi + 1]);
+      fctx.closePath();
+      fctx.clip();
+    }
 
     if (radii.dimR > radii.brightR) {
       const grad = fctx.createRadialGradient(
@@ -81,6 +107,8 @@ function punchVisionHoles(
       fctx.arc(radii.cx, radii.cy, radii.brightR, 0, Math.PI * 2);
       fctx.fill();
     }
+
+    fctx.restore();
   }
   fctx.globalCompositeOperation = 'source-over';
 }
