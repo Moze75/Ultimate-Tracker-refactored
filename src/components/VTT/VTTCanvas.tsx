@@ -954,8 +954,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   useEffect(() => {
     const hasTorch = tokens.some(t => t.visible && t.lightSource === 'torch');
+    const hasNightVision = tokens.some(t => t.visible && (t.visionMode === 'darkvision' || t.visionMode === 'normal' || (t.lightSource && t.lightSource !== 'none')));
     const isNight = config.timeOfDay != null && (config.timeOfDay >= 19 || config.timeOfDay < 5);
-    if (hasTorch && isNight) {
+    if ((hasTorch || hasNightVision) && isNight) {
       let running = true;
       const animate = () => {
         if (!running) return;
