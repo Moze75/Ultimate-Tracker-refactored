@@ -847,11 +847,11 @@ const fogPunchTokens =
     }
 
 
-        // --- VISION DE JOUR (murs bloquent la vue + mémoire pérenne) ---
+    // --- VISION DE JOUR (murs bloquent la vue + mémoire pérenne) ---
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
       const playerTokens = myVisionTokens;
       if (playerTokens.length > 0) {
-        // Canvas de vision live (noir = hors vision, transparent = en vision)
+        // 1) Canvas de vision live (drawDayVisionOverlay : noir = hors vision, transparent = en vision)
         let dvc = dayVisionCanvasRef.current;
         if (!dvc || dayVisionCanvasSizeRef.current.w !== mapW || dayVisionCanvasSizeRef.current.h !== mapH) {
           dvc = document.createElement('canvas');
@@ -863,7 +863,9 @@ const fogPunchTokens =
         const dvCtx = dvc.getContext('2d')!;
         drawDayVisionOverlay(dvCtx, mapW, mapH, playerTokens, currentWalls, CELL);
 
-        // Canvas de mémoire pérenne (explored) — même logique que la nuit
+        // 2) Canvas de mémoire pérenne (explored) — même principe que la nuit
+        //    Ce canvas est noir au départ et on y perce les zones vues (destination-out)
+        //    Il persiste entre les frames => mémoire cumulative
         let evc = exploredCanvasRef.current;
         if (!evc || exploredCanvasSizeRef.current.w !== mapW || exploredCanvasSizeRef.current.h !== mapH) {
           evc = document.createElement('canvas');
@@ -913,16 +915,17 @@ const fogPunchTokens =
         }
         eCtx.globalCompositeOperation = 'source-over';
 
-        // Composer le résultat : dvc (vision live) + evc (mémoire)
-        const cvc = document.createElement('canvas');
-        cvc.width = mapW;
-        cvc.height = mapH;
-        const cCtx = cvc.getContext('2d')!;
+        // 3) Composer : vision live (dvc) = noir hors LOS directe
+        //    + mémoire (evc inversé) => zones déjà vues passent de noir 100% à noir ~30%
+        const compositeCanvas = document.createElement('canvas');
+        compositeCanvas.width = mapW;
+        compositeCanvas.height = mapH;
+        const cCtx = compositeCanvas.getContext('2d')!;
 
-        // Commencer avec dvc (noir complet hors vision directe)
+        // Copier l'overlay live (noir complet hors LOS)
         cCtx.drawImage(dvc, 0, 0);
 
-        // Inverser evc : noir là où déjà vu, transparent là où jamais vu
+        // Inverser evc : là où c'est transparent (déjà vu) => noir, là où c'est noir (jamais vu) => transparent
         const invCanvas = document.createElement('canvas');
         invCanvas.width = mapW;
         invCanvas.height = mapH;
@@ -933,15 +936,17 @@ const fogPunchTokens =
         invCtx.drawImage(evc, 0, 0);
         invCtx.globalCompositeOperation = 'source-over';
 
-        // Réduire le noir de 70% sur les zones déjà explorées (passe de 100% à ~30%)
+        // Retirer 70% de l'opacité noire sur les zones déjà explorées
+        // => passe de noir 100% à noir ~30% (voile léger)
         cCtx.globalCompositeOperation = 'destination-out';
         cCtx.globalAlpha = 0.70;
         cCtx.drawImage(invCanvas, 0, 0);
         cCtx.globalAlpha = 1;
         cCtx.globalCompositeOperation = 'source-over';
 
-        ctx.drawImage(cvc, 0, 0, mapW, mapH);
+        ctx.drawImage(compositeCanvas, 0, 0, mapW, mapH);
       } else {
+        // Aucun token voyant contrôlé par le joueur => noir total
         ctx.fillStyle = 'rgba(0,0,0,1)';
         ctx.fillRect(0, 0, mapW, mapH);
       }
