@@ -383,6 +383,22 @@ class VTTService {
     }
   }
 
+  private _saveFogNow(fogState: VTTFogState) {
+    if (!this.activeSceneId) return;
+    const sceneId = this.activeSceneId;
+    console.log('[VTT] _saveFogNow strokes:', (fogState.strokes || []).length);
+    supabase
+      .rpc('update_scene_fog_state', {
+        p_scene_id: sceneId,
+        p_fog_state: fogState,
+      })
+      .then(({ error }) => {
+        if (error) console.error('[VTT] _saveFogNow error:', error);
+        else console.log('[VTT] _saveFogNow OK strokes:', (fogState.strokes || []).length);
+      });
+  }
+
+  
   onMessage(handler: MessageHandler) {
     this.messageHandlers.push(handler);
     return () => {
