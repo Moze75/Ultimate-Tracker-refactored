@@ -282,6 +282,8 @@ class VTTService {
 
       case 'REVEAL_FOG': {
         const stroke = event.stroke;
+        console.log('[VTT] REVEAL_FOG event:', JSON.stringify(event));
+        console.log('[VTT] stroke value:', stroke);
         const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || [])];
         if (stroke) strokes.push(stroke);
         const newFog: VTTFogState = { revealedCells: this.localState.fogState.revealedCells, strokes };
