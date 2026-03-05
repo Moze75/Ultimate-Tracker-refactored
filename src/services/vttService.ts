@@ -376,8 +376,10 @@ class VTTService {
     };
   }
 
-  sendBroadcastViewport(viewport: BroadcastViewport) {
-    if (!this.channel) return;
+  setActiveSceneId(sceneId: string | null) {
+    this.activeSceneId = sceneId;
+  }
+
     this.channel.send({ type: 'broadcast', event: 'vtt-viewport', payload: viewport }).catch(console.error);
   }
 
