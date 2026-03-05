@@ -443,56 +443,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     tokensRef.current.forEach(token => {
       if (!token.visible && curRole === 'player') return;
-      if (curRole === 'player') {
-  const isMine = myVisibleTokens.some(mt => mt.id === token.id);
-  if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
-}
-      const px = token.position.x;
-      const py = token.position.y;
-      const size = (token.size || 1) * CELL;
-      const cx = px + size / 2;
-      const cy = py + size / 2;
-      const r = size / 2 - 4;
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate((token.rotation || 0) * Math.PI / 180);
-
-      if (token.imageUrl) {
-        let img = tokenImageCache.current.get(token.imageUrl);
-        if (!img) {
-          img = new Image();
-          img.onload = () => drawRef.current();
-          img.src = token.imageUrl;
-          tokenImageCache.current.set(token.imageUrl, img);
-        }
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.clip();
-        if (img.complete && img.naturalWidth > 0) {
-          const ZOOM = 1.8;
-          const side = r * 2 * ZOOM;
-          const excess = side - r * 2;
-          const ox = -(token.imageOffsetX || 0) * (excess / 2);
-          const oy = -(token.imageOffsetY || 0) * (excess / 2);
-          const aspect = img.naturalWidth / img.naturalHeight;
-          let dw: number, dh: number;
-          if (aspect >= 1) { dw = side; dh = side / aspect; } else { dw = side * aspect; dh = side; }
-          const dx = -r - excess / 2 + ox + (side - dw) / 2;
-          const dy = -r - excess / 2 + oy + (side - dh) / 2;
-          ctx.drawImage(img, dx, dy, dw, dh);
-        } else {
-          ctx.fillStyle = token.color || '#3b82f6';
-          ctx.fill();
-        }
-        ctx.restore();
-      } else {
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.fillStyle = token.color || '#3b82f6';
-        ctx.fill();
-        ctx.restore();
-      }
+   
 
       ctx.save();
       ctx.translate(cx, cy);
