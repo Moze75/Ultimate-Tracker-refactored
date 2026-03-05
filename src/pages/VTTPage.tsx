@@ -625,13 +625,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (phase !== 'room' || !roomId || role !== 'player' || playerBoundTokenIds.length === 0) return;
     if (tokens.length === 0) return;
 
-    const needsUpdate = playerBoundTokenIds.some(tid => {
-      const token = tokens.find(t => t.id === tid);
-      return token && (!token.controlledByUserIds || !token.controlledByUserIds.includes(userId));
-    });
-
-    if (needsUpdate) {
-      playerBoundTokenIds.forEach(tid => {
+    playerBoundTokenIds.forEach(tid => {
         const token = tokens.find(t => t.id === tid);
         if (!token) return;
         vttService.send({
