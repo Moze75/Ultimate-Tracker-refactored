@@ -126,6 +126,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+    const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
