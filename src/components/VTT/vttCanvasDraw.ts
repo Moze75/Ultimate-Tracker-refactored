@@ -354,9 +354,11 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       const cCtx = cvc.getContext('2d')!;
       cCtx.drawImage(dvc, 0, 0); // copie de dvc : noir avec trous là où on voit
 
+      // De jour : on efface seulement 35% du noir sur les zones explorées
+      // → reste 65% de noir = voile bien visible (zones inexplorées = 100% noir)
       cCtx.globalCompositeOperation = 'destination-out';
-      cCtx.globalAlpha = 0.70;
-      cCtx.drawImage(invCanvas, 0, 0); // efface 70% du noir sur les zones explorées
+      cCtx.globalAlpha = 0.35;
+      cCtx.drawImage(invCanvas, 0, 0);
       cCtx.globalAlpha = 1;
       cCtx.globalCompositeOperation = 'source-over';
 
