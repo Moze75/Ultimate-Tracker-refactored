@@ -63,10 +63,21 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const cfg = ctx2d.configRef.current;
   const CELL = cfg.gridSize || 50;
   const fog = ctx2d.fogStateRef.current;
-  const curRole = ctx2d.roleRef.current;
-  const curUserId = ctx2d.userIdRef.current;
-  const currentSelectedId = ctx2d.selectedTokenIdRef.current;
-  const multiIds = ctx2d.selectedTokenIdsRef.current;
+const controlledTokenIdsKey = ctx2d.tokensRef.current
+  .filter(t => t.visible && (
+    (t.controlledByUserIds?.includes(curUserId) ?? false) || t.ownerUserId === curUserId
+  ))
+  .map(t => t.id)
+  .sort()
+  .join('|');
+
+const visionOwnerKey = curRole === 'player' ? `player:${curUserId}:${controlledTokenIdsKey}` : 'gm:global';
+
+if (ctx2d.exploredCanvasOwnerKeyRef.current !== visionOwnerKey) {
+  ctx2d.exploredCanvasOwnerKeyRef.current = visionOwnerKey;
+  ctx2d.exploredCanvasRef.current = null;
+  ctx2d.exploredCanvasSizeRef.current = { w: 0, h: 0 };
+}
 
   ctx.clearRect(0, 0, W, H);
   ctx.save();
