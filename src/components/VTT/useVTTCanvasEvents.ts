@@ -505,6 +505,60 @@ export function useVTTCanvasEvents({
         wallPointsRef.current = [];
         wallPreviewPosRef.current = null;
         drawRef.current();
+        return;
+      }
+
+      if (activeToolRef.current === 'wall-select' && roleRef.current === 'gm') {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const vp = viewportRef.current;
+        const HIT_PX = 10;
+        const currentWalls = wallsRef.current || [];
+
+        let bestWall: any = null;
+        let bestSegIndex = -1;
+        let bestDist = Infinity;
+        let bestProj = { x: 0, y: 0 };
+
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i];
+            const p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0, Math.min(1, t));
+            const projX = p1.x + t * dx;
+            const projY = p1.y + t * dy;
+            const distPx = Math.sqrt(
+              Math.pow((wp.x - projX) * vp.scale, 2) +
+              Math.pow((wp.y - projY) * vp.scale, 2)
+            );
+            if (distPx < HIT_PX && distPx < bestDist) {
+              bestDist = distPx;
+              bestWall = wall;
+              bestSegIndex = i;
+              bestProj = { x: projX, y: projY };
+            }
+          }
+        }
+
+        if (bestWall && bestSegIndex >= 0) {
+          // Insérer le nouveau point après l'index du segment
+          const newPoints = [
+            ...bestWall.points.slice(0, bestSegIndex + 1),
+            bestProj,
+            ...bestWall.points.slice(bestSegIndex + 1),
+          ];
+          const updatedWall = { ...bestWall, points: newPoints };
+          wallsRef.current = currentWalls.map(w => w.id === bestWall.id ? updatedWall : w);
+          onWallUpdatedRef.current?.(updatedWall);
+          // Sélectionner immédiatement le nouveau point pour le déplacer
+          const newPointIndex = bestSegIndex + 1;
+          selectedWallPointRef.current = { wallId: bestWall.id, pointIndex: newPointIndex };
+          drawRef.current();
+        }
       }
     };
 
