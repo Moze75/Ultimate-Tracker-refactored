@@ -98,6 +98,10 @@ export function useVTTCanvasEvents({
   activeTool,
 }: VTTCanvasRefs) {
 
+
+  // Refs internes pour l'édition de points de mur (wall-select)
+  const draggingWallPointRef = React.useRef<{ wallId: string; pointIndex: number; offsetX: number; offsetY: number } | null>(null);
+  
   // Reset wall/measure state when tool changes
   useEffect(() => {
     if (activeTool !== 'wall-draw') {
