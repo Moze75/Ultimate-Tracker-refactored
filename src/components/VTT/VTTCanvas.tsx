@@ -495,35 +495,12 @@ if (curRole === 'player') {
       poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegs, mapW, mapH);
       if (poly.length < 6) poly = null;
     }
-
-    for (const t of tokensRef.current) {
-      if (!t.visible) continue;
-      const ts = (t.size || 1) * CELL;
-      const tcx = t.position.x + ts / 2;
-      const tcy = t.position.y + ts / 2;
-
-      const dx = tcx - radii.cx;
-      const dy = tcy - radii.cy;
-      if (dx * dx + dy * dy > maxR * maxR) continue;
-
-      if (poly) {
-        if (pointInPolygon(tcx, tcy, poly)) directlyVisibleTokenIds.add(t.id);
-      } else {
-        directlyVisibleTokenIds.add(t.id);
-      }
-    }
-  }
-}
-
+    
 tokensRef.current.forEach(token => {
-  if (!token.visible && curRole === 'player') return;
+if (!token.visible && curRole === 'player') return;
 
-  // Player: ne dessiner un token que s'il est directement visible,
-  // sauf ses propres tokens (toujours visibles pour le contrôle)
-  if (curRole === 'player') {
-    const isMine = myVisibleTokens.some(mt => mt.id === token.id);
-    if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
-  }
+// Player: ne dessiner un token que s'il est directement visible,
+// sauf ses propres tokens (toujours visibles pour le contrôle)
 
 
   const px = token.position.x;
@@ -544,7 +521,7 @@ tokensRef.current.forEach(token => {
       img = new Image();
       img.onload = () => drawRef.current();
       img.src = token.imageUrl;
-      tokenImageCache.current.set(token.imageUrl, img);
+      tokenImageCache.current.set(token.imageUrl, img); 
     }
 
     ctx.beginPath();
@@ -579,7 +556,7 @@ tokensRef.current.forEach(token => {
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = token.color || '#3b82f6';
-    ctx.fill(); 
+    ctx.fill();
   }
   ctx.restore();
 
