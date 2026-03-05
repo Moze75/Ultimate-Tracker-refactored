@@ -69,17 +69,17 @@ function punchVisionHoles(
   fctx.globalCompositeOperation = 'destination-out';
   for (const token of visionTokens) {
 const baseRadii = getVisionRadii(token, gridSize);
+const visionMode = token.visionMode || 'none';
 
-// De jour : toute vision (normal ou darkvision) doit être infinie (bornée à la carte)
-const hasDayVision = token.visionMode === 'normal' || token.visionMode === 'darkvision';
+// De jour : seule une vraie vision (normal/darkvision) perce à l'infini
+// Si vision = none => aucune ouverture (même si lumière)
+const hasDayVision = visionMode === 'normal' || visionMode === 'darkvision';
 const infiniteR = Math.max(mapW, mapH) * 1.5;
 
 const radii = isDay
-  ? {
-      ...baseRadii,
-      brightR: hasDayVision ? infiniteR : baseRadii.brightR,
-      dimR: hasDayVision ? 0 : baseRadii.dimR,
-    }
+  ? (hasDayVision
+      ? { ...baseRadii, brightR: infiniteR, dimR: 0 }
+      : { ...baseRadii, brightR: 0, dimR: 0 })
   : baseRadii;
 
 const maxR = Math.max(radii.brightR, radii.dimR);
