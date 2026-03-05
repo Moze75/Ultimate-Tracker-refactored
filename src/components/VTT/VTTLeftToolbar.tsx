@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset } from 'lucide-react';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'measure';
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-edit' | 'measure';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
