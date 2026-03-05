@@ -496,6 +496,140 @@ if (curRole === 'player') {
       if (poly.length < 6) poly = null;
     }
     
+tokensRef.current.forEach(token => {
+if (!token.visible && curRole === 'player') return;
+
+// Player: ne dessiner un token que s'il est directement visible, 
+// sauf ses propres tokens (toujours visibles pour le contrôle)
+
+
+  const px = token.position.x;
+  const py = token.position.y;
+  const size = (token.size || 1) * CELL;
+  const cx = px + size / 2;
+  const cy = py + size / 2;
+  const r = size / 2 - 4;
+
+  // Dessiner le token (image/couleur)
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((token.rotation || 0) * Math.PI / 180);
+
+  if (token.imageUrl) {
+    let img = tokenImageCache.current.get(token.imageUrl);
+    if (!img) {
+      img = new Image();
+      img.onload = () => drawRef.current();
+      img.src = token.imageUrl;
+      tokenImageCache.current.set(token.imageUrl, img); 
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (img.complete && img.naturalWidth > 0) {
+      const ZOOM = 1.8;
+      const side = r * 2 * ZOOM;
+      const excess = side - r * 2;
+      const ox = -(token.imageOffsetX || 0) * (excess / 2);
+      const oy = -(token.imageOffsetY || 0) * (excess / 2);
+      const aspect = img.naturalWidth / img.naturalHeight;
+
+      let dw: number, dh: number;
+      if (aspect >= 1) {
+        dw = side;
+        dh = side / aspect;
+      } else {
+        dw = side * aspect;
+        dh = side;
+      }
+
+      const dx = -r - excess / 2 + ox + (side - dw) / 2;
+      const dy = -r - excess / 2 + oy + (side - dh) / 2;
+      ctx.drawImage(img, dx, dy, dw, dh);
+    } else {
+      ctx.fillStyle = token.color || '#3b82f6';
+      ctx.fill();
+    }
+  } else {
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = token.color || '#3b82f6';
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Surcouches (sélection, bordure, hp)
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
+    const pad = 4 / vp.scale;
+    ctx.strokeStyle = 'rgba(99,179,237,0.9)';
+    ctx.lineWidth = 2 / vp.scale;
+    ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+    ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+    ctx.setLineDash([]);
+  }
+
+  if (token.id === currentSelectedId) {
+    const pad = 5 / vp.scale;
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2.5 / vp.scale;
+    ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
+    ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+    ctx.setLineDash([]);
+
+    const hx = size / 2 + pad;
+    const hy = size / 2 + pad;
+    const hr = 7 / vp.scale;
+    ctx.beginPath();
+    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+    ctx.fillStyle = '#facc15';
+    ctx.fill();
+    ctx.strokeStyle = '#92400e';
+    ctx.lineWidth = 1.5 / vp.scale;
+    ctx.stroke();
+  }
+
+  const controlled = token.controlledByUserIds?.includes(curUserId);
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 2, 0, Math.PI * 2);
+  ctx.strokeStyle = controlled ? '#22c55e' : '#94a3b8';
+  ctx.lineWidth = 2 / vp.scale;
+  ctx.stroke();
+
+  if (!token.imageUrl) {
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.max(10, size * 0.25) / vp.scale}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
+  }
+
+  if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
+    const barW = r * 1.6;
+    const barH = Math.max(4, size * 0.07) / vp.scale;
+    const barY = r + 6 / vp.scale;
+    const pct = Math.max(0, Math.min(1, token.hp / token.maxHp));
+    const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(-barW / 2, barY, barW, barH, barH / 2);
+    ctx.fill();
+    if (pct > 0) {
+      ctx.fillStyle = hpColor;
+      ctx.beginPath();
+      ctx.roundRect(-barW / 2, barY, barW * pct, barH, barH / 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+});
+ 
+
 
     for (const t of tokensRef.current) {
       if (!t.visible) continue;
@@ -503,9 +637,9 @@ if (curRole === 'player') {
       const tcx = t.position.x + ts / 2;
       const tcy = t.position.y + ts / 2;
 
-      const dx2 = tcx - radii.cx;
-      const dy2 = tcy - radii.cy;
-      if (dx2 * dx2 + dy2 * dy2 > maxR * maxR) continue;
+      const dx = tcx - radii.cx;
+      const dy = tcy - radii.cy;
+      if (dx * dx + dy * dy > maxR * maxR) continue;
 
       if (poly) {
         if (pointInPolygon(tcx, tcy, poly)) directlyVisibleTokenIds.add(t.id);
@@ -516,7 +650,7 @@ if (curRole === 'player') {
   }
 }
 
-tokensRef.current.forEach(token => {
+    tokensRef.current.forEach(token => {
   if (!token.visible && curRole === 'player') return;
 
   // Player : ne dessiner que ses propres tokens + ceux en vision directe
@@ -648,9 +782,6 @@ tokensRef.current.forEach(token => {
 
   ctx.restore();
 });
-
-
-
     
 // Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
 if (curRole === 'player' && myVisionTokens.length === 0) {
