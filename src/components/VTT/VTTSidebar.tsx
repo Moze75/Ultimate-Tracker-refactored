@@ -77,7 +77,7 @@ export function VTTSidebar({
   onUpdateProp,
   onHome,
 }: VTTSidebarProps) {
-  const [activeTab, setActiveTab] = useState<SidebarTab>(role === 'player' ? 'settings' : 'tokens');
+const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
