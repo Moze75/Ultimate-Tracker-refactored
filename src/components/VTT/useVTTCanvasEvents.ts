@@ -100,7 +100,7 @@ export function useVTTCanvasEvents({
 
 
   // Refs internes pour l'édition de points de mur (wall-select)
-  const draggingWallPointRef = React.useRef<{ wallId: string; pointIndex: number; offsetX: number; offsetY: number } | null>(null);
+  const draggingWallPointRef = useRef<{ wallId: string; pointIndex: number; offsetX: number; offsetY: number } | null>(null);
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
