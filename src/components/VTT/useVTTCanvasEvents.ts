@@ -204,6 +204,30 @@ export function useVTTCanvasEvents({
         wallPointsRef.current = [...wallPointsRef.current, { x: wp.x, y: wp.y }];
         wallPreviewPosRef.current = null;
         drawRef.current();
+      } else if (tool === 'wall-select' && roleRef.current === 'gm') {
+        // Trouver un point de mur à moins de 10px (en coordonnées écran)
+        const vp = viewportRef.current;
+        const HIT_RADIUS_PX = 10;
+        let found = false;
+        const currentWalls = wallsRef.current || [];
+        for (const wall of currentWalls) {
+          for (let pi = 0; pi < wall.points.length; pi++) {
+            const pt = wall.points[pi];
+            const dx = (pt.x - wp.x) * vp.scale;
+            const dy = (pt.y - wp.y) * vp.scale;
+            if (Math.sqrt(dx * dx + dy * dy) < HIT_RADIUS_PX) {
+              draggingWallPointRef.current = {
+                wallId: wall.id,
+                pointIndex: pi,
+                offsetX: wp.x - pt.x,
+                offsetY: wp.y - pt.y,
+              };
+              found = true;
+              break;
+            }
+          }
+          if (found) break;
+        }
       } else if (tool === 'measure') {
         if (measureLockedRef.current) {
           measureStartRef.current = null;
