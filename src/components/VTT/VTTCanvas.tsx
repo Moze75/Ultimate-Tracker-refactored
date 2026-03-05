@@ -30,6 +30,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onCalibrationPoint,
   walls,
   onWallAdded,
+  onWallUpdated,
+  onWallRemoved,
   showWalls = false,
   forceViewport: forceViewportProp = null,
   onViewportChange,
