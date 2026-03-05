@@ -531,6 +531,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   if (shouldDrawWalls) {
     const committedWalls = ctx2d.wallsRef.current || [];
     const isWallMode = ctx2d.activeToolRef.current === 'wall-draw';
+    const isWallSelectMode = ctx2d.activeToolRef.current === 'wall-select';
     const wallAlpha = isWallMode ? 0.9 : 0.35;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
