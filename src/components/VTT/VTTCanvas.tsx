@@ -146,6 +146,19 @@ function wallBlocksToken(newX: number, newY: number, sizeInPx: number, walls: VT
   return false;
 }
 
+function pointInPolygon(x: number, y: number, poly: Float64Array): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 2; i < poly.length; i += 2) {
+    const xi = poly[i], yi = poly[i + 1];
+    const xj = poly[j], yj = poly[j + 1];
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-9) + xi);
+    if (intersect) inside = !inside;
+    j = i;
+  }
+  return inside;
+}
+
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
   config,
   tokens,
