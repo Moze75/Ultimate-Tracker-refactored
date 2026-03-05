@@ -367,21 +367,7 @@ class VTTService {
       .then(({ error }) => {
         if (error) console.error('[VTT] Persist error:', error);
       });
-    // Persist fog_state dans vtt_scenes via RPC (accessible joueurs et GM)
-    if (this.activeSceneId) {
-      const sceneIdToSave = this.activeSceneId;
-      const fogToSave = this.localState.fogState;
-      console.log('[VTT] Saving fog to scene', sceneIdToSave, 'strokes:', (fogToSave as {strokes?: unknown[]}).strokes?.length ?? 0);
-      supabase
-        .rpc('update_scene_fog_state', {
-          p_scene_id: sceneIdToSave,
-          p_fog_state: fogToSave,
-        })
-        .then(({ error }) => {
-          if (error) console.error('[VTT] Persist fog scene error:', error);
-          else console.log('[VTT] Fog saved OK to scene', sceneIdToSave);
-        });
-    }
+    // Le fog est sauvegardé exclusivement via _saveFogToScene() dans le case REVEAL_FOG
   }
 
   private _saveFogNow(fogState: VTTFogState) {
