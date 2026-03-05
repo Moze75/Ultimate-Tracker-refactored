@@ -599,6 +599,55 @@ const myVisionTokens = myVisibleTokens.filter(
   t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
 );
 
+const directlyVisibleTokenIds = new Set<string>();
+
+if (curRole === 'player') {
+  const wallSegs = currentWalls.length > 0
+    ? currentWalls.flatMap(w => {
+        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+        for (let i = 0; i < w.points.length - 1; i++) {
+          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+        }
+        return segs;
+      })
+    : [];
+
+  const viewers = isNight
+    ? myVisibleTokens.filter(t =>
+        (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
+      )
+    : myVisionTokens;
+
+  for (const viewer of viewers) {
+    const radii = getVisionRadii(viewer, CELL);
+    const maxR = Math.max(radii.brightR, radii.dimR);
+    if (maxR <= 0) continue;
+
+    let poly: Float64Array | null = null;
+    if (wallSegs.length > 0) {
+      poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegs, mapW, mapH);
+      if (poly.length < 6) poly = null;
+    }
+
+    for (const t of tokensRef.current) {
+      if (!t.visible) continue;
+      const ts = (t.size || 1) * CELL;
+      const tcx = t.position.x + ts / 2;
+      const tcy = t.position.y + ts / 2;
+
+      const dx = tcx - radii.cx;
+      const dy = tcy - radii.cy;
+      if (dx * dx + dy * dy > maxR * maxR) continue;
+
+      if (poly) {
+        if (pointInPolygon(tcx, tcy, poly)) directlyVisibleTokenIds.add(t.id);
+      } else {
+        directlyVisibleTokenIds.add(t.id);
+      }
+    }
+  }
+}
+    
 // Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
 if (curRole === 'player' && myVisionTokens.length === 0) {
   ctx.fillStyle = 'rgba(0,0,0,1)';
