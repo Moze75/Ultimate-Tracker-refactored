@@ -195,6 +195,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
+      sceneId: scene.id,
       config: scene.config,
       tokens: scene.tokens,
       fogState: scene.fogState,
