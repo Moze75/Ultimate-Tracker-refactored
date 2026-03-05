@@ -114,7 +114,7 @@ class VTTService {
           this.localState.walls = scenes[0].walls;
         }
         // Priorité au fog de la scène s'il existe (plus récent que vtt_rooms)
-        if (scenes[0].fog_state?.strokes?.length > 0) {
+        if (scenes[0].fog_state && typeof scenes[0].fog_state === 'object') {
           this.localState.fogState = scenes[0].fog_state;
         }
         // Mémorise le sceneId actif pour les sauvegardes fog ultérieures
