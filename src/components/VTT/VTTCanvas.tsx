@@ -568,15 +568,18 @@ const currentWalls = wallsRef.current || [];
 
 // Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
 if (curRole === 'player') {
-  const hasActiveVisionToken = tokensRef.current.some(
-    t =>
-      t.visible &&
-      (t.visionMode === 'normal' || t.visionMode === 'darkvision') &&
-      (
-        (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-        t.ownerUserId === curUserId
-      )
-  );
+const playerOwnedOrControlledTokens = tokensRef.current.filter(
+  t =>
+    t.visible &&
+    (
+      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+      t.ownerUserId === curUserId
+    )
+);
+
+const hasActiveVisionToken = playerOwnedOrControlledTokens.some(
+  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+);
 
   if (!hasActiveVisionToken) {
     ctx.fillStyle = 'rgba(0,0,0,1)';
