@@ -214,11 +214,12 @@ const torchAnimRef = useRef<number | null>(null);
       fogCanvasSizeRef,
       visionCanvasRef,
       visionCanvasSizeRef,
-      dayVisionCanvasRef,
-      dayVisionCanvasSizeRef,
-      exploredCanvasRef,
-      exploredCanvasSizeRef,
-      drawRef,
+dayVisionCanvasRef,
+dayVisionCanvasSizeRef,
+exploredCanvasRef,
+exploredCanvasSizeRef,
+exploredCanvasOwnerKeyRef,
+drawRef,
     });
   }, []);
 
