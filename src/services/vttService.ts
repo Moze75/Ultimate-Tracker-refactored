@@ -117,6 +117,10 @@ class VTTService {
         if (scenes[0].fog_state?.strokes?.length > 0) {
           this.localState.fogState = scenes[0].fog_state;
         }
+        // Mémorise le sceneId actif pour les sauvegardes fog ultérieures
+        if (scenes[0].id) {
+          this.activeSceneId = scenes[0].id;
+        }
       }
     } catch {
       // Silencieux : on garde les valeurs déjà chargées
