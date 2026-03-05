@@ -1153,35 +1153,42 @@ if (isNight && curRole === 'player') {
           }
         }
 
-        const token = getTokenAt(wp.x, wp.y);
-        if (token) {
-          const canMove = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
-          if (canMove) {
-            const multiSel = selectedTokenIdsRef.current;
-            if (multiSel.length > 1 && multiSel.includes(token.id)) {
-              const initialPositions = new Map<string, { x: number; y: number }>();
-              tokensRef.current.forEach(t => {
-                if (multiSel.includes(t.id)) initialPositions.set(t.id, { ...t.position });
-              });
-              draggingTokenRef.current = {
-                id: token.id,
-                offsetX: wp.x - token.position.x,
-                offsetY: wp.y - token.position.y,
-                multiInitial: initialPositions,
-              };
-            } else {
-              draggingTokenRef.current = {
-                id: token.id,
-                offsetX: wp.x - token.position.x,
-                offsetY: wp.y - token.position.y,
-              };
-            }
-          }
-          onSelectTokenRef.current(token.id);
-          if (selectedTokenIdsRef.current.length <= 1 || !selectedTokenIdsRef.current.includes(token.id)) {
-            onSelectTokensRef.current?.([token.id]);
-          }
-        } else {
+const token = getTokenAt(wp.x, wp.y);
+if (token) {
+  const canControl = roleRef.current === 'gm' || (token.controlledByUserIds?.includes(userIdRef.current) ?? false);
+
+  // Joueur: interdit de sélectionner un token qu'il ne contrôle pas
+  if (roleRef.current === 'player' && !canControl) {
+    return;
+  }
+
+  if (canControl) {
+    const multiSel = selectedTokenIdsRef.current;
+    if (multiSel.length > 1 && multiSel.includes(token.id)) {
+      const initialPositions = new Map<string, { x: number; y: number }>();
+      tokensRef.current.forEach(t => {
+        if (multiSel.includes(t.id)) initialPositions.set(t.id, { ...t.position });
+      });
+      draggingTokenRef.current = {
+        id: token.id,
+        offsetX: wp.x - token.position.x,
+        offsetY: wp.y - token.position.y,
+        multiInitial: initialPositions,
+      };
+    } else {
+      draggingTokenRef.current = {
+        id: token.id,
+        offsetX: wp.x - token.position.x,
+        offsetY: wp.y - token.position.y,
+      };
+    }
+  }
+
+  onSelectTokenRef.current(token.id);
+  if (selectedTokenIdsRef.current.length <= 1 || !selectedTokenIdsRef.current.includes(token.id)) {
+    onSelectTokensRef.current?.([token.id]);
+  }
+} else {
           isDragSelectingRef.current = true;
           selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
           onSelectTokenRef.current(null);
