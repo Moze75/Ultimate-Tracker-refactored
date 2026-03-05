@@ -175,7 +175,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
 
   const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
     // Token du joueur lui-même : toujours visible
-    if (myVisibleTokens.some(mt => mt.id === token.id)) return true;
+    if (myControlledTokens.some(mt => mt.id === token.id)) return true;
     // Sans vision active : rien n'est visible (le blackout s'en chargera)
     if (!hasVision) return false;
     // Sans murs : tout token visible est vu (pas d'occlusion)
