@@ -651,14 +651,7 @@ const fogPunchTokens =
 
     // --- VISION DE JOUR (murs bloquent la vue) ---
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
-const playerTokens = tokensRef.current.filter(
-  t => t.visible &&
-    (t.visionMode === 'normal' || t.visionMode === 'darkvision') &&
-    (
-      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-      t.ownerUserId === curUserId
-    )
-);
+const playerTokens = myVisionTokens;
       if (playerTokens.length > 0) { 
         let dvc = dayVisionCanvasRef.current;
         if (!dvc || dayVisionCanvasSizeRef.current.w !== mapW || dayVisionCanvasSizeRef.current.h !== mapH) {
