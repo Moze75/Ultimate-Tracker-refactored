@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { VTTToken } from '../../types/vtt';
 import { wallBlocksToken } from './vttCanvasUtils';
 import { pointInPolygon } from './vttCanvasUtils';
