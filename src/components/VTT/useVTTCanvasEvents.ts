@@ -246,10 +246,37 @@ export function useVTTCanvasEvents({
 
     const onContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      const cb = onRightClickTokenRef.current;
-      if (!cb) return;
+      const tool = activeToolRef.current;
       const sp = getCanvasXY(e.clientX, e.clientY);
       const wp = screenToWorld(sp.x, sp.y);
+
+      // En mode wall-select : clic droit sur un segment = suppression du mur entier
+      if (tool === 'wall-select' && roleRef.current === 'gm') {
+        const vp = viewportRef.current;
+        const HIT_PX = 8;
+        const currentWalls = wallsRef.current || [];
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i];
+            const p2 = wall.points[i + 1];
+            // Distance point-segment en pixels écran
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0, Math.min(1, t));
+            const projX = p1.x + t * dx, projY = p1.y + t * dy;
+            const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
+            if (distPx < HIT_PX) {
+              onWallRemovedRef.current?.(wall.id);
+              return;
+            }
+          }
+        }
+        return; // En mode wall-select, ne pas ouvrir le menu token
+      }
+
+      const cb = onRightClickTokenRef.current;
+      if (!cb) return;
       const token = getTokenAt(wp.x, wp.y);
       if (token) {
         const canEdit = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
