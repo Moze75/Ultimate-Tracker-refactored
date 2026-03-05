@@ -37,6 +37,8 @@ export interface VTTCanvasRefs {
   onRightClickTokenRef: React.MutableRefObject<((token: VTTToken, x: number, y: number) => void) | undefined>;
   onCalibrationPointRef: React.MutableRefObject<((pos: { x: number; y: number }) => void) | undefined>;
   onWallAddedRef: React.MutableRefObject<((wall: any) => void) | undefined>;
+  onWallUpdatedRef: React.MutableRefObject<((wall: any) => void) | undefined>;
+  onWallRemovedRef: React.MutableRefObject<((wallId: string) => void) | undefined>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
   fogCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   fogBrushRef?: React.MutableRefObject<number>;
