@@ -527,7 +527,11 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   }
 
   // --- MURS ---
-  const shouldDrawWalls = curRole === 'gm' && (ctx2d.activeToolRef.current === 'wall-draw' || ctx2d.showWallsRef.current);
+  const shouldDrawWalls = curRole === 'gm' && (
+    ctx2d.activeToolRef.current === 'wall-draw' ||
+    ctx2d.activeToolRef.current === 'wall-select' ||
+    ctx2d.showWallsRef.current
+  );
   if (shouldDrawWalls) {
     const committedWalls = ctx2d.wallsRef.current || [];
     const isWallMode = ctx2d.activeToolRef.current === 'wall-draw';
