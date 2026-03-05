@@ -98,6 +98,28 @@ class VTTService {
       walls: stateJson.walls || [],
     };
 
+    // Les murs sont stockés par scène (vtt_scenes), pas dans vtt_rooms.
+    // On charge la scène active pour récupérer les murs courants.
+    try {
+      const { data: scenes } = await supabase
+        .from('vtt_scenes')
+        .select('walls, fog_state')
+        .eq('room_id', roomId)
+        .order('order_index', { ascending: true })
+        .limit(1);
+      if (scenes && scenes.length > 0) {
+        if (scenes[0].walls) {
+          this.localState.walls = scenes[0].walls;
+        }
+        // Priorité au fog de la scène s'il existe (plus récent que vtt_rooms)
+        if (scenes[0].fog_state?.strokes?.length > 0) {
+          this.localState.fogState = scenes[0].fog_state;
+        }
+      }
+    } catch {
+      // Silencieux : on garde les valeurs déjà chargées
+    }
+
     const initialEvent: VTTServerEvent = {
       type: 'STATE_SYNC',
       state: {
