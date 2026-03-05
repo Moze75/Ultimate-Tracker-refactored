@@ -133,12 +133,16 @@ const alreadyBound = tokenInfos
     }
   };
 
-  const handlePlayerConfirm = () => {
-    if (!playerSelectStep) return;
-    onJoinRoom(playerSelectStep.roomId, 'player', selectedPlayerTokenIds);
-    setPlayerSelectStep(null);
-    setSelectedPlayerTokenIds([]);
-  };
+const handlePlayerConfirm = () => {
+  if (!playerSelectStep) return;
+
+  const playerSessionId = crypto.randomUUID();
+  sessionStorage.setItem(`vtt:playerSessionId:${playerSelectStep.roomId}`, playerSessionId);
+
+  onJoinRoom(playerSelectStep.roomId, 'player', selectedPlayerTokenIds);
+  setPlayerSelectStep(null);
+  setSelectedPlayerTokenIds([]);
+};
 
   const toggleTokenSelection = (tokenId: string) => {
     setSelectedPlayerTokenIds(prev =>
