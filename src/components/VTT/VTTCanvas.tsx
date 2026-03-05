@@ -675,14 +675,7 @@ const playerTokens = myVisionTokens;
 
     // --- MASQUE NOIR si le joueur n'a aucun token avec vision (jour) ---
     if (isDay && curRole === 'player') {
-const hasAnyVision = tokensRef.current.some(
-  t => t.visible &&
-    (t.visionMode === 'normal' || t.visionMode === 'darkvision') &&
-    (
-      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-      t.ownerUserId === curUserId
-    )
-);
+const hasAnyVision = myVisionTokens.length > 0;
       if (!hasAnyVision) {
         ctx.fillStyle = 'rgba(0,0,0,1)';
         ctx.fillRect(0, 0, mapW, mapH);
