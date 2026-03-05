@@ -108,6 +108,9 @@ export function useVTTCanvasEvents({
       wallPointsRef.current = [];
       wallPreviewPosRef.current = null;
     }
+    if (activeTool !== 'wall-select') {
+      draggingWallPointRef.current = null;
+    }
     if (activeTool !== 'measure') {
       measureStartRef.current = null;
       measureEndRef.current = null;
