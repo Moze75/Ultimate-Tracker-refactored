@@ -58,6 +58,7 @@ class VTTService {
   private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
+  private activeSceneId: string | null = null;
 
   private requestedRole: 'gm' | 'player' | null = null;
 
