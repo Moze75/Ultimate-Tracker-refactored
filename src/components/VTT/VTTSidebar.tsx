@@ -178,7 +178,7 @@ const visibleTokens = isGM
         {activeTab === 'tokens' && (
           <div className="flex flex-col">
             <div ref={tokenListRef} className="p-2 space-y-1">
-              {tokens.length === 0 && (
+             {visibleTokens.length === 0 && (
                 <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
               )}
               {tokens.map(token => {
