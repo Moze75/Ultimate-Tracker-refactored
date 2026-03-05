@@ -64,6 +64,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const lastPanRef = useRef<{ x: number; y: number } | null>(null);
   const isPanningRef = useRef(false);
   const selectionRectRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+    // Ref partagé pour le point de mur sélectionné en mode wall-select (highlight)
+  const selectedWallPointRef = useRef<{ wallId: string; pointIndex: number } | null>(null);
   const isDragSelectingRef = useRef(false);
   const selectedTokenIdsRef = useRef(selectedTokenIds);
   selectedTokenIdsRef.current = selectedTokenIds;
