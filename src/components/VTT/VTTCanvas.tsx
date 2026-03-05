@@ -693,7 +693,11 @@ const hasAnyVision = tokensRef.current.some(
     
     // --- VISION DE NUIT (drawNightVisionOverlay + mémoire pérenne) ---
     if (isNight && curRole === 'player') {
-      const playerTokens = tokensRef.current.filter(
+const playerTokens = myVisibleTokens.filter(
+  t =>
+    (t.visionMode && t.visionMode !== 'none') ||
+    (t.lightSource && t.lightSource !== 'none')
+);
         t => t.visible &&
           ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')) &&
           (
