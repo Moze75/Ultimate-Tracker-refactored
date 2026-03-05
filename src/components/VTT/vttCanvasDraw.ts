@@ -542,12 +542,17 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       ctx.moveTo(wall.points[0].x, wall.points[0].y);
       for (let i = 1; i < wall.points.length; i++) ctx.lineTo(wall.points[i].x, wall.points[i].y);
       ctx.stroke();
-      if (isWallMode) {
-        ctx.fillStyle = 'rgba(239,68,68,0.85)';
+      if (isWallMode || isWallSelectMode) {
+        ctx.fillStyle = isWallSelectMode ? 'rgba(251,146,60,0.9)' : 'rgba(239,68,68,0.85)';
         for (const pt of wall.points) {
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 4 / vp.scale, 0, Math.PI * 2);
+          ctx.arc(pt.x, pt.y, (isWallSelectMode ? 6 : 4) / vp.scale, 0, Math.PI * 2);
           ctx.fill();
+          if (isWallSelectMode) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 1.5 / vp.scale;
+            ctx.stroke();
+          }
         }
       }
     }
