@@ -810,13 +810,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         // Étape 4 : Dessiner sur le canvas principal
         ctx.drawImage(cvc, 0, 0, mapW, mapH);
 
-      } else {
-        // Joueur sans token : voile de nuit sombre mais pas 100% noir
-        const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
-        const nightAlpha = Math.min(0.85, 0.5 + tod.opacity);
-        ctx.fillStyle = `rgba(0,0,0,${nightAlpha})`;
-        ctx.fillRect(0, 0, mapW, mapH);
-      }
+// Joueur sans token : voile de nuit sombre mais pas 100% noir
     }
     // --- FILTRE HEURE DU JOUR ---
     // La nuit, drawNightVisionOverlay gère l'obscurité + la teinte via nightColor.
