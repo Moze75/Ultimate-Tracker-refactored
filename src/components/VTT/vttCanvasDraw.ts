@@ -352,7 +352,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
 
   // --- VISION DE NUIT ---
   if (isNight && curRole === 'player') {
-    const playerTokens = myVisibleTokens.filter(t =>
+    const playerTokens = myControlledTokens.filter(t =>
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );
     if (playerTokens.length > 0) {
