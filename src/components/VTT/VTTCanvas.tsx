@@ -628,6 +628,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         ctx.globalAlpha = 0.65;
         ctx.drawImage(dvc, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
+      } else {
+        // Joueur avec murs mais aucun token voyant → noir total derrière les murs
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(0, 0, mapW, mapH);
       }
     }
 
