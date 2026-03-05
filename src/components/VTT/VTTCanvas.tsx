@@ -1,14 +1,10 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type { VTTToken, VTTFogStroke, VTTWall } from '../../types/vtt';
-import { getTimeOfDayOverlay } from './VTTLeftToolbar';
-import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
-import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
 import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
-import { segmentsIntersect, wallBlocksToken, pointInPolygon } from './vttCanvasUtils';
-import { punchVisionHoles } from './vttCanvasPunch';
-import { buildFogCanvas, applyStrokeToFogCanvas } from './vttCanvasFog';
-import { drawToken } from './vttCanvasTokenRenderer';
+import { wallBlocksToken } from './vttCanvasUtils';
+import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
 import { useVTTCanvasEvents } from './useVTTCanvasEvents';
+import { drawVTTCanvas } from './vttCanvasDraw';
 
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
