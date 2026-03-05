@@ -522,6 +522,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleWallAdded = useCallback((wall: VTTWall) => {
     setWalls(prev => {
       const next = [...prev, wall];
+      // Sauvegarder immédiatement dans la scène active
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Save walls error:', error); });
+      }
       vttService.send({ type: 'UPDATE_WALLS', walls: next });
       return next;
     });
