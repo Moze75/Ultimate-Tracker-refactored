@@ -28,6 +28,8 @@ export interface VTTCanvasProps {
   onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
   walls?: VTTWall[];
   onWallAdded?: (wall: VTTWall) => void;
+  onWallUpdated?: (wall: VTTWall) => void;
+  onWallRemoved?: (wallId: string) => void;
   showWalls?: boolean;
   forceViewport?: { x: number; y: number; width: number; height: number } | null;
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
