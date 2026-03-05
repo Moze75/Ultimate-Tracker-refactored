@@ -1,9 +1,12 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
-import type { VTTActiveTool } from './VTTLeftToolbar';
+import type { VTTToken, VTTFogStroke, VTTWall } from '../../types/vtt';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
 import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
+import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
+import { segmentsIntersect, wallBlocksToken, pointInPolygon } from './vttCanvasUtils';
+import { punchVisionHoles } from './vttCanvasPunch';
+import { buildFogCanvas, applyStrokeToFogCanvas } from './vttCanvasFog';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
