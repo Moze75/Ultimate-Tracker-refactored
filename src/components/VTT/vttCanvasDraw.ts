@@ -331,11 +331,10 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       dvCtx.globalCompositeOperation = 'source-over';
 
       // --- Composition finale identique à la nuit ---
-      // dvc = noir opaque sauf dans les polygones de vision courante (transparent = vu)
-      // evc = noir=jamais vu, transparent=exploré
-      // invCanvas = inverse de evc : opaque=jamais vu, transparent=exploré
-      // On efface dvc à 70% via invCanvas → zones explorées hors vision deviennent semi-transparentes
+      // On NE MODIFIE PAS dvc directement (c'est un ref persistant).
+      // On crée un canvas temporaire cvc pour la composition.
 
+      // invCanvas : opaque là où jamais vu, transparent là où exploré
       const invCanvas = document.createElement('canvas');
       invCanvas.width = mapW;
       invCanvas.height = mapH;
@@ -346,14 +345,20 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       invCtx.drawImage(evc, 0, 0);
       invCtx.globalCompositeOperation = 'source-over';
 
-      const cCtx = dvc.getContext('2d')!;
+      // cvc : copie de dvc sur laquelle on applique la transparence des zones explorées
+      const cvc = document.createElement('canvas');
+      cvc.width = mapW;
+      cvc.height = mapH;
+      const cCtx = cvc.getContext('2d')!;
+      cCtx.drawImage(dvc, 0, 0); // copie de dvc : noir avec trous là où on voit
+
       cCtx.globalCompositeOperation = 'destination-out';
       cCtx.globalAlpha = 0.70;
-      cCtx.drawImage(invCanvas, 0, 0);
+      cCtx.drawImage(invCanvas, 0, 0); // efface 70% du noir sur les zones explorées
       cCtx.globalAlpha = 1;
       cCtx.globalCompositeOperation = 'source-over';
 
-      ctx.drawImage(dvc, 0, 0, mapW, mapH);
+      ctx.drawImage(cvc, 0, 0, mapW, mapH);
     } else {
       ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.fillRect(0, 0, mapW, mapH);
