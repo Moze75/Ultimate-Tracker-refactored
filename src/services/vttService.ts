@@ -298,6 +298,7 @@ class VTTService {
         const newFog: VTTFogState = { revealedCells: [], strokes: [] };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
+        this._saveFogToScene(newFog);
         this._persistNow();
         break;
       }
