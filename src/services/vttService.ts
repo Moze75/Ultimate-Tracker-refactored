@@ -319,10 +319,12 @@ class VTTService {
 
   private _persistNow() {
     if (!this.roomId) return;
-    const state = { ...this.localState };
+    // Les murs sont par scène → on ne les persiste PAS dans la room globale
+    // pour éviter la contamination inter-scènes
+    const { walls: _walls, ...stateWithoutWalls } = this.localState;
     supabase
       .from('vtt_rooms')
-      .update({ state_json: state, updated_at: new Date().toISOString() })
+      .update({ state_json: stateWithoutWalls, updated_at: new Date().toISOString() })
       .eq('id', this.roomId)
       .then(({ error }) => {
         if (error) console.error('[VTT] Persist error:', error);
