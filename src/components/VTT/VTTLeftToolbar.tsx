@@ -123,6 +123,8 @@ export function VTTLeftToolbar({
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
   const isWallTool = activeTool === 'wall-draw';
+  const isWallSelectTool = activeTool === 'wall-select';
+  const isAnyWallTool = isWallTool || isWallSelectTool;
   const isMeasureTool = activeTool === 'measure';
 
   return (
