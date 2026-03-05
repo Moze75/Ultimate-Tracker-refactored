@@ -381,14 +381,10 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );
     if (playerTokens.length > 0) {
-      let nvc = ctx2d.visionCanvasRef.current;
-      if (!nvc || ctx2d.visionCanvasSizeRef.current.w !== mapW || ctx2d.visionCanvasSizeRef.current.h !== mapH) {
-        nvc = document.createElement('canvas');
-        nvc.width = mapW;
-        nvc.height = mapH;
-        ctx2d.visionCanvasRef.current = nvc;
-        ctx2d.visionCanvasSizeRef.current = { w: mapW, h: mapH };
-      }
+      // Canvas temporaire local (ne pas réutiliser visionCanvasRef déjà occupé par le fog)
+      const nvc = document.createElement('canvas');
+      nvc.width = mapW;
+      nvc.height = mapH;
       const nCtx = nvc.getContext('2d')!;
       const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
       drawNightVisionOverlay(nCtx, mapW, mapH, playerTokens, currentWalls, CELL, tod.opacity, tod.color);
