@@ -257,17 +257,16 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   if (isDay && curRole === 'player' && currentWalls.length > 0) {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
-      let dvc = ctx2d.dayVisionCanvasRef.current;
-      if (!dvc || ctx2d.dayVisionCanvasSizeRef.current.w !== mapW || ctx2d.dayVisionCanvasSizeRef.current.h !== mapH) {
-        dvc = document.createElement('canvas');
-        dvc.width = mapW;
-        dvc.height = mapH;
-        ctx2d.dayVisionCanvasRef.current = dvc;
-        ctx2d.dayVisionCanvasSizeRef.current = { w: mapW, h: mapH };
-      }
-      const dvCtx = dvc.getContext('2d')!;
-      drawDayVisionOverlay(dvCtx, mapW, mapH, playerTokens, currentWalls, CELL);
+      const dayWallSegs = currentWalls.flatMap(w => {
+        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+        for (let i = 0; i < w.points.length - 1; i++) {
+          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+        }
+        return segs;
+      });
+      const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
 
+      // --- exploredCanvas : mémoire permanente des zones déjà vues (noir = jamais vu, transparent = déjà exploré)
       let evc = ctx2d.exploredCanvasRef.current;
       if (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH) {
         evc = document.createElement('canvas');
@@ -281,63 +280,124 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       }
       const eCtx = evc.getContext('2d')!;
 
-      const dayWallSegs = currentWalls.flatMap(w => {
-        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-        for (let i = 0; i < w.points.length - 1; i++) {
-          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-        }
-        return segs;
-      });
-      const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
-
+      // Graver dans exploredCanvas les zones visibles actuellement (destination-out = effacer le noir)
       eCtx.globalCompositeOperation = 'destination-out';
       for (const token of playerTokens) {
         if (!token.visible) continue;
         const tSize = (token.size || 1) * CELL;
         const tcx = token.position.x + tSize / 2;
         const tcy = token.position.y + tSize / 2;
-        if (dayWallSegs.length > 0) {
-          const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
-          if (poly.length >= 6) {
-            eCtx.fillStyle = 'rgba(0,0,0,1)';
-            eCtx.beginPath();
-            eCtx.moveTo(poly[0], poly[1]);
-            for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
-            eCtx.closePath();
-            eCtx.fill();
-          }
-        } else {
+        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+        if (poly.length >= 6) {
           eCtx.fillStyle = 'rgba(0,0,0,1)';
           eCtx.beginPath();
-          eCtx.arc(tcx, tcy, dayInfiniteR, 0, Math.PI * 2);
+          eCtx.moveTo(poly[0], poly[1]);
+          for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
+          eCtx.closePath();
           eCtx.fill();
         }
       }
       eCtx.globalCompositeOperation = 'source-over';
 
-      const compositeCanvas = document.createElement('canvas');
-      compositeCanvas.width = mapW;
-      compositeCanvas.height = mapH;
-      const cCtx = compositeCanvas.getContext('2d')!;
-      cCtx.drawImage(dvc, 0, 0);
+      // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
+      let dvc = ctx2d.dayVisionCanvasRef.current;
+      if (!dvc || ctx2d.dayVisionCanvasSizeRef.current.w !== mapW || ctx2d.dayVisionCanvasSizeRef.current.h !== mapH) {
+        dvc = document.createElement('canvas');
+        dvc.width = mapW;
+        dvc.height = mapH;
+        ctx2d.dayVisionCanvasRef.current = dvc;
+        ctx2d.dayVisionCanvasSizeRef.current = { w: mapW, h: mapH };
+      }
+      const dvCtx = dvc.getContext('2d')!;
+      dvCtx.clearRect(0, 0, mapW, mapH);
+      dvCtx.fillStyle = 'rgba(0,0,0,1)';
+      dvCtx.fillRect(0, 0, mapW, mapH);
+      dvCtx.globalCompositeOperation = 'destination-out';
+      for (const token of playerTokens) {
+        if (!token.visible) continue;
+        const tSize = (token.size || 1) * CELL;
+        const tcx = token.position.x + tSize / 2;
+        const tcy = token.position.y + tSize / 2;
+        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+        if (poly.length >= 6) {
+          dvCtx.fillStyle = 'rgba(0,0,0,1)';
+          dvCtx.beginPath();
+          dvCtx.moveTo(poly[0], poly[1]);
+          for (let pi = 2; pi < poly.length; pi += 2) dvCtx.lineTo(poly[pi], poly[pi + 1]);
+          dvCtx.closePath();
+          dvCtx.fill();
+        }
+      }
+      dvCtx.globalCompositeOperation = 'source-over';
 
-      const invCanvas = document.createElement('canvas');
-      invCanvas.width = mapW;
-      invCanvas.height = mapH;
-      const invCtx = invCanvas.getContext('2d')!;
-      invCtx.fillStyle = 'rgba(0,0,0,1)';
-      invCtx.fillRect(0, 0, mapW, mapH);
-      invCtx.globalCompositeOperation = 'destination-out';
-      invCtx.drawImage(evc, 0, 0);
-      invCtx.globalCompositeOperation = 'source-over';
+      // --- Composition finale sur le canvas principal :
+      // 1. Zones jamais vues            → noir opaque (evc encore noir)
+      // 2. Zones déjà vues hors vision  → voile semi-transparent (EXPLORED_VEIL)
+      // 3. Zones dans la vision courante → visibles à 100%
 
-      cCtx.globalCompositeOperation = 'destination-out';
-      cCtx.globalAlpha = 0.70;
-      cCtx.drawImage(invCanvas, 0, 0);
-      cCtx.globalAlpha = 1;
-      cCtx.globalCompositeOperation = 'source-over';
+      const EXPLORED_VEIL = 0.55; // opacité du voile sur les zones déjà explorées
 
-      ctx.drawImage(compositeCanvas, 0, 0, mapW, mapH);
+      // Étape A : dessiner le voile exploré (zones où evc est transparent = déjà vu → voile gris)
+      // On crée un canvas "voile" = gris semi-transparent masqué par l'inverse de evc
+      const veilCanvas = document.createElement('canvas');
+      veilCanvas.width = mapW;
+      veilCanvas.height = mapH;
+      const veilCtx = veilCanvas.getContext('2d')!;
+      // Remplir en gris semi-transparent uniquement sur les zones explorées
+      // exploredCanvas : noir = jamais vu, transparent = déjà vu
+      // On veut voile là où evc est transparent → utiliser evc comme masque
+      veilCtx.fillStyle = `rgba(0,0,0,${EXPLORED_VEIL})`;
+      veilCtx.fillRect(0, 0, mapW, mapH);
+      // Effacer le voile là où ce n'est PAS encore exploré (re-mettre noir total là)
+      // → on applique evc en destination-in pour ne garder le voile que sur les zones explorées
+      veilCtx.globalCompositeOperation = 'destination-out';
+      veilCtx.drawImage(evc, 0, 0); // evc : noir=jamais vu, transparent=exploré
+      // Là où evc est noir (jamais vu), destination-out efface le voile → transparent
+      // Là où evc est transparent (exploré), destination-out ne fait rien → voile conservé
+      // MAIS c'est l'inverse : destination-out efface où la SOURCE est opaque.
+      // evc noir = source opaque → efface le voile. evc transparent = source transparente → garde le voile.
+      // C'est exactement ce qu'on veut ! ✓
+      veilCtx.globalCompositeOperation = 'source-over';
+
+      // Étape B : appliquer le masque de vision courante sur le voile (enlever le voile là où on voit)
+      veilCtx.globalCompositeOperation = 'destination-out';
+      veilCtx.drawImage(dvc, 0, 0); // dvc : noir=hors vision, transparent=dans vision
+      // dvc transparent (dans vision) → destination-out efface le voile → zone pleinement visible ✓
+      // dvc noir (hors vision) → ne fait rien sur le voile ✓
+      // MAIS dvc a la logique inversée : il est noir là où on NE voit PAS.
+      // On veut effacer le voile là où ON voit = là où dvc est TRANSPARENT.
+      // destination-out efface où SOURCE est opaque. Donc on a besoin de l'inverse de dvc.
+      veilCtx.globalCompositeOperation = 'source-over';
+
+      // En fait, corrigeons : utilisons directement les polygones courants pour effacer le voile
+      veilCtx.globalCompositeOperation = 'destination-out';
+      for (const token of playerTokens) {
+        if (!token.visible) continue;
+        const tSize = (token.size || 1) * CELL;
+        const tcx = token.position.x + tSize / 2;
+        const tcy = token.position.y + tSize / 2;
+        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+        if (poly.length >= 6) {
+          veilCtx.fillStyle = 'rgba(0,0,0,1)';
+          veilCtx.beginPath();
+          veilCtx.moveTo(poly[0], poly[1]);
+          for (let pi = 2; pi < poly.length; pi += 2) veilCtx.lineTo(poly[pi], poly[pi + 1]);
+          veilCtx.closePath();
+          veilCtx.fill();
+        }
+      }
+      veilCtx.globalCompositeOperation = 'source-over';
+
+      // Étape C : noir total sur les zones jamais vues (evc encore noir)
+      const neverSeenCanvas = document.createElement('canvas');
+      neverSeenCanvas.width = mapW;
+      neverSeenCanvas.height = mapH;
+      const nsCtx = neverSeenCanvas.getContext('2d')!;
+      nsCtx.drawImage(evc, 0, 0); // copie evc : noir=jamais vu, transparent=exploré
+
+      // Dessin final :
+      ctx.drawImage(veilCanvas, 0, 0, mapW, mapH);    // voile semi-transparent sur zones explorées
+      ctx.drawImage(neverSeenCanvas, 0, 0, mapW, mapH); // noir total sur zones jamais vues
     } else {
       ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.fillRect(0, 0, mapW, mapH);
