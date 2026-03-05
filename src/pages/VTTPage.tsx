@@ -636,8 +636,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           changes: { controlledByUserIds: [userId] },
         });
       });
-      setPlayerBoundTokenIds([]);
-    }
+    setPlayerBoundTokenIds([]);
   }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
 
   if (phase === 'lobby') {
