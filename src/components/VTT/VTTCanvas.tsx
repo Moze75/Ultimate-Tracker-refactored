@@ -68,7 +68,9 @@ function punchVisionHoles(
 
   fctx.globalCompositeOperation = 'destination-out';
   for (const token of visionTokens) {
-    const radii = getVisionRadii(token, gridSize);
+    const radii = isDay
+      ? getVisionRadiiForDay(token, gridSize, mapW, mapH)
+      : getVisionRadii(token, gridSize);
     const maxR = Math.max(radii.brightR, radii.dimR);
     if (maxR <= 0) continue;
 
