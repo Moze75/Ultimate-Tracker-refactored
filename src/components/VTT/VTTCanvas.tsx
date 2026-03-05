@@ -800,7 +800,7 @@ if (cfg.fogEnabled) {
       if (!fogCanvasRef.current ||
           fogCanvasSizeRef.current.w !== mapW ||
           fogCanvasSizeRef.current.h !== mapH) {
-        buildFogCanvas(strokes, mapW, mapH);
+    buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
       }
       if (fogCanvasRef.current) {
         let vc = visionCanvasRef.current;
