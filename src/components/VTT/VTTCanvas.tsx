@@ -441,6 +441,61 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
+const timeOfDay = cfg.timeOfDay;
+const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
+const isDay = !isNight;
+const currentWalls = wallsRef.current || [];
+
+    // Tokens strictement appartenant/contrôlés par le joueur courant
+const selectedIdsSet = new Set(selectedTokenIdsRef.current || []);
+
+const hasSelectedIds = selectedIdsSet.size > 0;
+
+const myVisibleTokens = tokensRef.current.filter(t => {
+  if (!t.visible) return false;
+  if (curRole !== 'player') return true;
+
+  // Priorité absolue aux tokens choisis au login
+  if (hasSelectedIds) return selectedIdsSet.has(t.id);
+
+  // Fallback si selectedTokenIds n'est pas encore hydraté
+  return (t.controlledByUserIds?.includes(curUserId) ?? false);
+});
+
+const myVisionTokens = myVisibleTokens.filter(
+  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+);
+
+const directlyVisibleTokenIds = new Set<string>();
+
+if (curRole === 'player') {
+  const wallSegs = currentWalls.length > 0
+    ? currentWalls.flatMap(w => {
+        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+        for (let i = 0; i < w.points.length - 1; i++) {
+          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+        }
+        return segs;
+      })
+    : [];
+
+  const viewers = isNight
+    ? myVisibleTokens.filter(t =>
+        (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
+      )
+    : myVisionTokens;
+
+  for (const viewer of viewers) {
+    const radii = getVisionRadii(viewer, CELL);
+    const maxR = Math.max(radii.brightR, radii.dimR);
+    if (maxR <= 0) continue;
+
+    let poly: Float64Array | null = null;
+    if (wallSegs.length > 0) {
+      poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegs, mapW, mapH);
+      if (poly.length < 6) poly = null;
+    }
+    
 tokensRef.current.forEach(token => {
 if (!token.visible && curRole === 'player') return;
 
@@ -584,60 +639,7 @@ if (curRole === 'player') {
   ctx.restore();
 });
 
-const timeOfDay = cfg.timeOfDay;
-const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
-const isDay = !isNight;
-const currentWalls = wallsRef.current || [];
 
-    // Tokens strictement appartenant/contrôlés par le joueur courant
-const selectedIdsSet = new Set(selectedTokenIdsRef.current || []);
-
-const hasSelectedIds = selectedIdsSet.size > 0;
-
-const myVisibleTokens = tokensRef.current.filter(t => {
-  if (!t.visible) return false;
-  if (curRole !== 'player') return true;
-
-  // Priorité absolue aux tokens choisis au login
-  if (hasSelectedIds) return selectedIdsSet.has(t.id);
-
-  // Fallback si selectedTokenIds n'est pas encore hydraté
-  return (t.controlledByUserIds?.includes(curUserId) ?? false);
-});
-
-const myVisionTokens = myVisibleTokens.filter(
-  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
-);
-
-const directlyVisibleTokenIds = new Set<string>();
-
-if (curRole === 'player') {
-  const wallSegs = currentWalls.length > 0
-    ? currentWalls.flatMap(w => {
-        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-        for (let i = 0; i < w.points.length - 1; i++) {
-          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-        }
-        return segs;
-      })
-    : [];
-
-  const viewers = isNight
-    ? myVisibleTokens.filter(t =>
-        (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
-      )
-    : myVisionTokens;
-
-  for (const viewer of viewers) {
-    const radii = getVisionRadii(viewer, CELL);
-    const maxR = Math.max(radii.brightR, radii.dimR);
-    if (maxR <= 0) continue;
-
-    let poly: Float64Array | null = null;
-    if (wallSegs.length > 0) {
-      poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegs, mapW, mapH);
-      if (poly.length < 6) poly = null;
-    }
 
     for (const t of tokensRef.current) {
       if (!t.visible) continue;
