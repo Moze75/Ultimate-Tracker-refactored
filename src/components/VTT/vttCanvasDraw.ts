@@ -381,7 +381,8 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );
     if (playerTokens.length > 0) {
-      // Canvas temporaire local (ne pas réutiliser visionCanvasRef déjà occupé par le fog)
+      // Canvas temporaire local pour la vision de nuit
+      // On ne réutilise PAS visionCanvasRef (déjà utilisé par le fog)
       const nvc = document.createElement('canvas');
       nvc.width = mapW;
       nvc.height = mapH;
