@@ -578,19 +578,17 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
         // De jour : la vision (normal/darkvision) + lumière percent le fog
         // De nuit : seule la lumière (torche/lanterne/custom) perce le fog
-        const fogPunchTokens = isDay
-          ? tokensRef.current.filter(
-              t => t.visible && (
-                (t.visionMode && t.visionMode !== 'none') ||
-                (t.lightSource && t.lightSource !== 'none')
-              )
-            )
-          : tokensRef.current.filter(
-              t => t.visible && (
-                (t.lightSource && t.lightSource !== 'none') ||
-                (t.visionMode === 'darkvision')
-              )
-            );
+const fogPunchTokens = isDay
+  ? tokensRef.current.filter(
+      // De jour : seule une vraie vision (normal/darkvision) doit percer le fog à l'infini
+      t => t.visible && (t.visionMode === 'normal' || t.visionMode === 'darkvision')
+    )
+  : tokensRef.current.filter(
+      t => t.visible && (
+        (t.lightSource && t.lightSource !== 'none') ||
+        (t.visionMode === 'darkvision')
+      )
+    );
         if (fogPunchTokens.length > 0) {
           punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay);
         }
