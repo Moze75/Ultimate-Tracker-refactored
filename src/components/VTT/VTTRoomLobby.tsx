@@ -117,9 +117,12 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         controlledByUserIds: t.controlledByUserIds,
       }));
 
-      const alreadyBound = tokenInfos
-        .filter(t => t.controlledByUserIds?.includes(userId))
-        .map(t => t.id);
+const alreadyBound = tokenInfos
+  .filter(t => {
+    const owners = t.controlledByUserIds || [];
+    return owners.length === 0 || owners.includes(userId);
+  })
+  .map(t => t.id);
 
       setSelectedPlayerTokenIds(alreadyBound);
       setPlayerSelectStep({ roomId, tokens: tokenInfos });
