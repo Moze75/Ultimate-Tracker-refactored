@@ -213,6 +213,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       showWallsRef,
       wallPointsRef,
       wallPreviewPosRef,
+      selectedWallPointRef,
       measureStartRef,
       measureEndRef,
       selectionRectRef,
