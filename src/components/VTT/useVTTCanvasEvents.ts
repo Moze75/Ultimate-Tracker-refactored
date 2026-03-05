@@ -229,6 +229,7 @@ export function useVTTCanvasEvents({
             wallsRef.current = currentWalls.map(w => w.id === current.wallId ? updatedWall : w);
             onWallUpdatedRef.current?.(updatedWall);
           }
+                    selectedWallPointRef.current = null;
           draggingWallPointRef.current = null;
           drawRef.current();
           return;
