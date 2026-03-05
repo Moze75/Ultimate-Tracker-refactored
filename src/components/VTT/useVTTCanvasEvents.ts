@@ -259,8 +259,10 @@ export function useVTTCanvasEvents({
         // Clic dans le vide = désélectionner
         if (!found) {
           draggingWallPointRef.current = null;
+          selectedWallPointRef.current = null;
         }
         drawRef.current();
+      // FIN du bloc wall-select
       } else if (tool === 'measure') {
         if (measureLockedRef.current) {
           measureStartRef.current = null;
