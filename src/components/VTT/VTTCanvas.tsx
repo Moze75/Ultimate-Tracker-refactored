@@ -68,11 +68,22 @@ function punchVisionHoles(
 
   fctx.globalCompositeOperation = 'destination-out';
   for (const token of visionTokens) {
-    const radii = isDay
-      ? getVisionRadiiForDay(token, gridSize, mapW, mapH)
-      : getVisionRadii(token, gridSize);
-    const maxR = Math.max(radii.brightR, radii.dimR);
-    if (maxR <= 0) continue;
+const baseRadii = getVisionRadii(token, gridSize);
+
+// De jour : toute vision (normal ou darkvision) doit être infinie (bornée à la carte)
+const hasDayVision = token.visionMode === 'normal' || token.visionMode === 'darkvision';
+const infiniteR = Math.max(mapW, mapH) * 1.5;
+
+const radii = isDay
+  ? {
+      ...baseRadii,
+      brightR: hasDayVision ? infiniteR : baseRadii.brightR,
+      dimR: hasDayVision ? 0 : baseRadii.dimR,
+    }
+  : baseRadii;
+
+const maxR = Math.max(radii.brightR, radii.dimR);
+if (maxR <= 0) continue;
 
     // Clip par le polygone de visibilité si des murs existent
     const hasPoly = wallSegs.length > 0;
