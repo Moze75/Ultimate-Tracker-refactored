@@ -569,15 +569,18 @@ const currentWalls = wallsRef.current || [];
     // Tokens strictement appartenant/contrôlés par le joueur courant
 const selectedIdsSet = new Set(selectedTokenIdsRef.current || []);
 
-const myVisibleTokens = tokensRef.current.filter(
-  t =>
-    t.visible &&
-    (
-      curRole === 'player'
-        ? selectedIdsSet.has(t.id)
-        : true
-    )
-);
+const hasSelectedIds = selectedIdsSet.size > 0;
+
+const myVisibleTokens = tokensRef.current.filter(t => {
+  if (!t.visible) return false;
+  if (curRole !== 'player') return true;
+
+  // Priorité absolue aux tokens choisis au login
+  if (hasSelectedIds) return selectedIdsSet.has(t.id);
+
+  // Fallback si selectedTokenIds n'est pas encore hydraté
+  return (t.controlledByUserIds?.includes(curUserId) ?? false);
+});
 
 const myVisionTokens = myVisibleTokens.filter(
   t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
