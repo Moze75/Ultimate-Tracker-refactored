@@ -353,7 +353,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         saveCurrentSceneState(activeSceneIdRef.current!);
       }, 2000);
     }
-  }, [saveCurrentSceneState]);
+  }, [saveCurrentSceneState, role]);
 
   const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
