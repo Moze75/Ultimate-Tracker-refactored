@@ -177,6 +177,9 @@ class VTTService {
           this.localState.tokens = serverEvent.tokens;
           this.localState.fogState = serverEvent.fogState;
           this.localState.walls = serverEvent.walls;
+          if (serverEvent.sceneId) {
+            this.activeSceneId = serverEvent.sceneId;
+          }
         } else if (serverEvent.type === 'WALLS_UPDATED') {
           this.localState.walls = serverEvent.walls;
         }
