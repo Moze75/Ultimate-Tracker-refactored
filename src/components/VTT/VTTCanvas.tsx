@@ -501,9 +501,7 @@ if (!token.visible && curRole === 'player') return;
 
 // Player: ne dessiner un token que s'il est directement visible,
 // sauf ses propres tokens (toujours visibles pour le contrôle)
-if (curRole === 'player') {
-  const selectedIdsSetLocal = new Set(selectedTokenIdsRef.current || []);
-  const hasSelectedLocal = selectedIdsSetLocal.size > 0;
+
 
   const isMine = hasSelectedLocal
     ? selectedIdsSetLocal.has(token.id)
