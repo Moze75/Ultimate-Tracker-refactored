@@ -567,12 +567,18 @@ const isDay = !isNight;
 const currentWalls = wallsRef.current || [];
 
     // Tokens strictement appartenant/contrôlés par le joueur courant
+const selectedIdsSet = new Set(selectedTokenIdsRef.current || []);
+
 const myVisibleTokens = tokensRef.current.filter(
   t =>
     t.visible &&
     (
-      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-      t.ownerUserId === curUserId
+      selectedIdsSet.size > 0
+        ? selectedIdsSet.has(t.id)
+        : (
+            (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+            t.ownerUserId === curUserId
+          )
     )
 );
 
