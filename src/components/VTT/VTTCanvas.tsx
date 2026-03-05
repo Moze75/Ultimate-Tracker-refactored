@@ -3,7 +3,7 @@ import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWa
 import type { VTTActiveTool } from './VTTLeftToolbar';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
-import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
+import { getVisionRadii, getVisionRadiiForDay, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
