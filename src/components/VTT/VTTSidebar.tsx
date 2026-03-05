@@ -151,14 +151,14 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   return (
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
       <div className="flex border-b border-gray-700/60 shrink-0">
-        {isGM && (
-          <>
-            <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
-            <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
-            <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
-          </>
-        )}
-        <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+   <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
+{isGM && (
+  <>
+    <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
+    <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
+  </>
+)}
+<TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
         <button
           onClick={() => setCollapsed(true)}
           className="px-1.5 flex items-center justify-center text-gray-500 hover:text-amber-400 hover:bg-gray-800/50 transition-colors border-b-2 border-transparent"
