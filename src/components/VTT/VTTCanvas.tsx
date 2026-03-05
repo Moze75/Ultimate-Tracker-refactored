@@ -433,7 +433,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
-        style={{ cursor: isFogTool ? 'none' : (isWallTool || isWallSelectTool || isMeasureTool) ? 'crosshair' : 'default' }}
+        style={{ cursor: isFogTool ? 'none' : (isWallTool || isMeasureTool) ? 'crosshair' : 'default' }}
       />
 
       {isDragOver && (
