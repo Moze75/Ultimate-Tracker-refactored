@@ -1352,12 +1352,13 @@ if (token) {
         if (x2 - x1 > minSize || y2 - y1 > minSize) {
           const cfg = configRef.current;
           const CELL2 = cfg.gridSize || 50;
-           const found = tokensRef.current.filter(t => {
-            if (roleRef.current === 'player' && !t.visible) return false;
-            const ts = (t.size || 1) * CELL2;
-            return t.position.x < x2 && t.position.x + ts > x1 &&
-                   t.position.y < y2 && t.position.y + ts > y1;
-          });
+const found = tokensRef.current.filter(t => {
+  if (roleRef.current === 'player' && !t.visible) return false;
+  if (roleRef.current === 'player' && !(t.controlledByUserIds?.includes(userIdRef.current) ?? false)) return false;
+  const ts = (t.size || 1) * CELL2;
+  return t.position.x < x2 && t.position.x + ts > x1 &&
+         t.position.y < y2 && t.position.y + ts > y1;
+});
           if (found.length > 0) {
             onSelectTokensRef.current?.(found.map(t => t.id));
             onSelectTokenRef.current(found[0].id);
