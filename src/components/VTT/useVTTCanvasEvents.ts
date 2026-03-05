@@ -282,10 +282,23 @@ export function useVTTCanvasEvents({
         }
       }
 
-      if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
+      if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
-        wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
-        drawRef.current();
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const drag = draggingWallPointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === drag.wallId);
+        if (wall) {
+          const newPoints = wall.points.map((pt, i) =>
+            i === drag.pointIndex
+              ? { x: wp2.x - drag.offsetX, y: wp2.y - drag.offsetY }
+              : pt
+          );
+          const updatedWall = { ...wall, points: newPoints };
+          // Mise à jour locale immédiate pour le rendu fluide
+          wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+          drawRef.current();
+        }
       }
 
       if (activeToolRef.current === 'measure' && measureStartRef.current && !measureLockedRef.current) {
