@@ -420,6 +420,7 @@ class VTTService {
     this.presenceHandlers = [];
     this.broadcastViewportHandlers = [];
     this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
+    this.activeSceneId = null;
   }
 
   isConnected() {
