@@ -360,6 +360,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isWallTool = activeTool === 'wall-draw';
+  const isWallSelectTool = activeTool === 'wall-select';
+  const isAnyWallTool = isWallTool || isWallSelectTool;
   const isMeasureTool = activeTool === 'measure';
 
   const handleDragOver = (e: React.DragEvent) => {
