@@ -105,7 +105,7 @@ class VTTService {
     try {
       const { data: scenes } = await supabase
         .from('vtt_scenes')
-        .select('walls, fog_state')
+         .select('id, walls, fog_state')
         .eq('room_id', roomId)
         .order('order_index', { ascending: true })
         .limit(1);
