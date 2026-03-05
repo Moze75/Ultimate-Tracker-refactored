@@ -53,7 +53,8 @@ function punchVisionHoles(
   gridSize: number,
   walls: VTTWall[],
   mapW: number,
-  mapH: number
+  mapH: number,
+  isDay: boolean = false
 ) {
   const wallSegs = walls.length > 0
     ? walls.flatMap(w => {
