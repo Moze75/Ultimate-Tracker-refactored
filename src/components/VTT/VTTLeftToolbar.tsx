@@ -482,7 +482,7 @@ export function VTTLeftToolbar({
         </div>
       )}
 
-      {wallPopupOpen && role === 'gm' && (
+       {wallPopupOpen && role === 'gm' && (
         <div
           ref={wallPopupRef}
           className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-56"
@@ -496,15 +496,51 @@ export function VTTLeftToolbar({
           </div>
 
           <div className="space-y-3">
-            <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-900/40">
-              <p className="text-[11px] text-red-300/80 leading-relaxed">
-                <strong className="text-red-300">Cliquer</strong> sur la carte pour poser des points.<br />
-                <strong className="text-red-300">Echap</strong> pour terminer le mur en cours.
-              </p>
+
+            {/* Sous-outils : Tracer / Éditer */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => onToolChange('wall-draw')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-medium transition-colors border ${
+                  isWallTool
+                    ? 'bg-red-700/30 border-red-600/60 text-red-300'
+                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-red-300 hover:border-red-700/40'
+                }`}
+              >
+                <Fence size={12} /> {isWallTool ? 'Tracage actif' : 'Tracer'}
+              </button>
+              <button
+                onClick={() => onToolChange('wall-select')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-medium transition-colors border ${
+                  isWallSelectTool
+                    ? 'bg-orange-700/30 border-orange-600/60 text-orange-300'
+                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-orange-300 hover:border-orange-700/40'
+                }`}
+              >
+                <MousePointer2 size={12} /> {isWallSelectTool ? 'Édition active' : 'Éditer'}
+              </button>
             </div>
 
+            {/* Instructions contextualles selon le sous-outil actif */}
+            {isWallTool && (
+              <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-900/40">
+                <p className="text-[11px] text-red-300/80 leading-relaxed">
+                  <strong className="text-red-300">Cliquer</strong> sur la carte pour poser des points.<br />
+                  <strong className="text-red-300">Echap</strong> pour terminer le mur en cours.
+                </p>
+              </div>
+            )}
+            {isWallSelectTool && (
+              <div className="p-2.5 rounded-lg bg-orange-950/40 border border-orange-900/40">
+                <p className="text-[11px] text-orange-300/80 leading-relaxed">
+                  <strong className="text-orange-300">Glisser</strong> un point pour le déplacer.<br />
+                  <strong className="text-orange-300">Clic droit</strong> sur un segment pour supprimer le mur.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Murs traces</span>
+              <span className="text-xs text-gray-400">Murs tracés</span>
               <span className="text-xs font-mono text-red-400 font-bold">{wallCount}</span>
             </div>
 
@@ -518,28 +554,17 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
-            <div className="flex items-center gap-2 pt-1 border-t border-gray-700/60">
-              <button
-                onClick={() => { onToolChange(isWallTool ? 'select' : 'wall-draw'); }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs transition-colors border ${
-                  isWallTool
-                    ? 'bg-red-700/30 border-red-600/60 text-red-300'
-                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-red-300 hover:border-red-700/40'
-                }`}
-              >
-                <Fence size={12} />
-                {isWallTool ? 'Tracage actif' : 'Tracer'}
-              </button>
-              {wallCount > 0 && (
+            {wallCount > 0 && (
+              <div className="pt-1 border-t border-gray-700/60">
                 <button
                   onClick={() => { onClearWalls?.(); }}
-                  className="p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-red-400 transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-red-400 transition-colors"
                   title="Effacer tous les murs"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={12} /> Effacer tous les murs
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
