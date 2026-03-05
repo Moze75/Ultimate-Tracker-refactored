@@ -210,11 +210,30 @@ export function useVTTCanvasEvents({
         wallPreviewPosRef.current = null;
         drawRef.current();
       } else if (tool === 'wall-select' && roleRef.current === 'gm') {
-        // Trouver un point de mur à moins de 10px (en coordonnées écran)
         const vp = viewportRef.current;
-        const HIT_RADIUS_PX = 10;
-        let found = false;
+        const HIT_RADIUS_PX = 12;
         const currentWalls = wallsRef.current || [];
+        const current = draggingWallPointRef.current;
+
+        // Si un point est déjà en phase 'selected' ou 'moving' :
+        // un clic n'importe où repose le point à la position cliquée
+        if (current) {
+          const wall = currentWalls.find(w => w.id === current.wallId);
+          if (wall) {
+            const newPoints = wall.points.map((pt, i) =>
+              i === current.pointIndex ? { x: wp.x, y: wp.y } : pt
+            );
+            const updatedWall = { ...wall, points: newPoints };
+            wallsRef.current = currentWalls.map(w => w.id === current.wallId ? updatedWall : w);
+            onWallUpdatedRef.current?.(updatedWall);
+          }
+          draggingWallPointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // Sinon : chercher un point à cliquer → le passer en 'selected'
+        let found = false;
         for (const wall of currentWalls) {
           for (let pi = 0; pi < wall.points.length; pi++) {
             const pt = wall.points[pi];
@@ -224,8 +243,7 @@ export function useVTTCanvasEvents({
               draggingWallPointRef.current = {
                 wallId: wall.id,
                 pointIndex: pi,
-                offsetX: wp.x - pt.x,
-                offsetY: wp.y - pt.y,
+                phase: 'selected',
               };
               found = true;
               break;
@@ -233,6 +251,11 @@ export function useVTTCanvasEvents({
           }
           if (found) break;
         }
+        // Clic dans le vide = désélectionner
+        if (!found) {
+          draggingWallPointRef.current = null;
+        }
+        drawRef.current();
       } else if (tool === 'measure') {
         if (measureLockedRef.current) {
           measureStartRef.current = null;
