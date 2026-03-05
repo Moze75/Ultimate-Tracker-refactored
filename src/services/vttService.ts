@@ -67,6 +67,7 @@ class VTTService {
     this.userId = userId;
     this.userName = userName || null;
     this.requestedRole = requestedRole || null;
+    this.activeSceneId = null;
     this._connectAsync().catch(e => console.error('[VTT] connect error:', e));
   }
 
