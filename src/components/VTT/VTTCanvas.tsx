@@ -653,6 +653,7 @@ if (!token.visible && curRole === 'player') return;
     tokensRef.current.forEach(token => {
   if (!token.visible && curRole === 'player') return;
 
+  // Player : ne dessiner que ses propres tokens + ceux en vision directe
   if (curRole === 'player') {
     const isMine = myVisibleTokens.some(mt => mt.id === token.id);
     if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
@@ -733,6 +734,17 @@ if (!token.visible && curRole === 'player') return;
     ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
     ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
     ctx.setLineDash([]);
+
+    const hx = size / 2 + pad;
+    const hy = size / 2 + pad;
+    const hr = 7 / vp.scale;
+    ctx.beginPath();
+    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+    ctx.fillStyle = '#facc15';
+    ctx.fill();
+    ctx.strokeStyle = '#92400e';
+    ctx.lineWidth = 1.5 / vp.scale;
+    ctx.stroke();
   }
 
   const controlled = token.controlledByUserIds?.includes(curUserId);
@@ -748,6 +760,24 @@ if (!token.visible && curRole === 'player') return;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
+  }
+
+  if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
+    const barW = r * 1.6;
+    const barH = Math.max(4, size * 0.07) / vp.scale;
+    const barY = r + 6 / vp.scale;
+    const pct = Math.max(0, Math.min(1, token.hp / token.maxHp));
+    const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(-barW / 2, barY, barW, barH, barH / 2);
+    ctx.fill();
+    if (pct > 0) {
+      ctx.fillStyle = hpColor;
+      ctx.beginPath();
+      ctx.roundRect(-barW / 2, barY, barW * pct, barH, barH / 2);
+      ctx.fill();
+    }
   }
 
   ctx.restore();
