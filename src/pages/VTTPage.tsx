@@ -276,6 +276,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
       setActiveSceneId(sceneId);
+      vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
     } finally {
       switchingSceneRef.current = false;
