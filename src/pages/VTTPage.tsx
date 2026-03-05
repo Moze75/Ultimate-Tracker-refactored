@@ -791,6 +791,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onCalibrationPoint={handleCalibrationPoint}
             walls={walls}
             onWallAdded={handleWallAdded}
+            onWallUpdated={handleWallUpdated}
+            onWallRemoved={handleWallRemoved}
             showWalls={showWalls}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
