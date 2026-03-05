@@ -126,11 +126,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
   const visionCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
-  const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const dayVisionCanvasSizeRef = useRef({ w: 0, h: 0 });
-    const exploredCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const exploredCanvasSizeRef = useRef({ w: 0, h: 0 });
-  const torchAnimRef = useRef<number | null>(null);
+const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
+const dayVisionCanvasSizeRef = useRef({ w: 0, h: 0 });
+const exploredCanvasRef = useRef<HTMLCanvasElement | null>(null);
+const exploredCanvasSizeRef = useRef({ w: 0, h: 0 });
+const exploredCanvasOwnerKeyRef = useRef<string | null>(null);
+const torchAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
 
