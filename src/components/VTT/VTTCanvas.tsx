@@ -660,11 +660,11 @@ const playerTokens = tokensRef.current.filter(
         ctx.globalAlpha = 0.65;
         ctx.drawImage(dvc, 0, 0, mapW, mapH);
         ctx.globalAlpha = 1;
-      } else {
-        // Joueur avec murs mais aucun token voyant → noir total derrière les murs
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.fillRect(0, 0, mapW, mapH);
-      }
+} else {
+  // Aucun token voyant contrôlé par le joueur => noir total
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(0, 0, mapW, mapH);
+}
     }
 
     // --- MASQUE NOIR si le joueur n'a aucun token avec vision (jour) ---
