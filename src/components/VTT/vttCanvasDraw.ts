@@ -549,17 +549,21 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       for (let i = 1; i < wall.points.length; i++) ctx.lineTo(wall.points[i].x, wall.points[i].y);
       ctx.stroke();
       if (isWallMode || isWallSelectMode) {
-        ctx.fillStyle = isWallSelectMode ? 'rgba(251,146,60,0.9)' : 'rgba(239,68,68,0.85)';
-        for (const pt of wall.points) {
+        const selPt = ctx2d.selectedWallPointRef?.current;
+        wall.points.forEach((pt, pi) => {
+          const isHighlighted = isWallSelectMode && selPt?.wallId === wall.id && selPt?.pointIndex === pi;
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, (isWallSelectMode ? 6 : 4) / vp.scale, 0, Math.PI * 2);
+          ctx.arc(pt.x, pt.y, (isHighlighted ? 9 : isWallSelectMode ? 6 : 4) / vp.scale, 0, Math.PI * 2);
+          ctx.fillStyle = isHighlighted
+            ? 'rgba(255,200,0,1)'
+            : isWallSelectMode ? 'rgba(251,146,60,0.9)' : 'rgba(239,68,68,0.85)';
           ctx.fill();
           if (isWallSelectMode) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-            ctx.lineWidth = 1.5 / vp.scale;
+            ctx.strokeStyle = isHighlighted ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.6)';
+            ctx.lineWidth = (isHighlighted ? 2.5 : 1.5) / vp.scale;
             ctx.stroke();
           }
-        }
+        });
       }
     }
     if (isWallMode) {
