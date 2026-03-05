@@ -287,7 +287,9 @@ class VTTService {
         const newFog: VTTFogState = { revealedCells: this.localState.fogState.revealedCells, strokes };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
-        this._schedulePersist();
+        // Sauvegarde fog directement dans vtt_scenes via RPC (sans debounce,
+        // pour éviter qu'un _persistNow ultérieur sauve un fog vide)
+        this._saveFogNow(newFog);
         break;
       }
 
