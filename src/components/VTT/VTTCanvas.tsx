@@ -8,6 +8,7 @@ import { segmentsIntersect, wallBlocksToken, pointInPolygon } from './vttCanvasU
 import { punchVisionHoles } from './vttCanvasPunch';
 import { buildFogCanvas, applyStrokeToFogCanvas } from './vttCanvasFog';
 import { drawToken } from './vttCanvasTokenRenderer';
+import { useVTTCanvasEvents } from './useVTTCanvasEvents';
 
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
