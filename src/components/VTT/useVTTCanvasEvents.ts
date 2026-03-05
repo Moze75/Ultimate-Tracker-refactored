@@ -51,6 +51,9 @@ export interface VTTCanvasRefs {
   activeTool: VTTActiveTool;
 }
 
+// État interne partagé pour l'édition de murs (wall-select)
+// wallEditStateRef : { wallId, pointIndex } du point en cours de drag
+
 export function useVTTCanvasEvents({
   canvasRef,
   brushOverlayRef,
