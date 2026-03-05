@@ -447,7 +447,14 @@ if (!token.visible && curRole === 'player') return;
 // Player: ne dessiner un token que s'il est directement visible,
 // sauf ses propres tokens (toujours visibles pour le contrôle)
 if (curRole === 'player') {
-  const isMine = myVisibleTokens.some(mt => mt.id === token.id);
+  const selectedIdsSetLocal = new Set(selectedTokenIdsRef.current || []);
+  const hasSelectedLocal = selectedIdsSetLocal.size > 0;
+
+  const isMine = hasSelectedLocal
+    ? selectedIdsSetLocal.has(token.id)
+    : (token.controlledByUserIds?.includes(curUserId) ?? false);
+
+  // Ses tokens à lui restent visibles, les autres uniquement si LOS direct
   if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
 }
 
