@@ -37,16 +37,15 @@ export interface VTTDrawContext {
   visionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   dayVisionCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   dayVisionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
-exploredCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
-exploredCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
-exploredCanvasOwnerKeyRef: React.MutableRefObject<string | null>;
-drawRef: React.MutableRefObject<() => void>;
+  exploredCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  exploredCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
+  drawRef: React.MutableRefObject<() => void>;
 }
 
 export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const canvas = ctx2d.canvasRef.current;
   if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d'); 
   if (!ctx) return;
   const W = canvas.width;
   const H = canvas.height;
@@ -63,21 +62,10 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const cfg = ctx2d.configRef.current;
   const CELL = cfg.gridSize || 50;
   const fog = ctx2d.fogStateRef.current;
-const controlledTokenIdsKey = ctx2d.tokensRef.current
-  .filter(t => t.visible && (
-    (t.controlledByUserIds?.includes(curUserId) ?? false) || t.ownerUserId === curUserId
-  ))
-  .map(t => t.id)
-  .sort()
-  .join('|');
-
-const visionOwnerKey = curRole === 'player' ? `player:${curUserId}:${controlledTokenIdsKey}` : 'gm:global';
-
-if (ctx2d.exploredCanvasOwnerKeyRef.current !== visionOwnerKey) {
-  ctx2d.exploredCanvasOwnerKeyRef.current = visionOwnerKey;
-  ctx2d.exploredCanvasRef.current = null;
-  ctx2d.exploredCanvasSizeRef.current = { w: 0, h: 0 };
-}
+  const curRole = ctx2d.roleRef.current;
+  const curUserId = ctx2d.userIdRef.current;
+  const currentSelectedId = ctx2d.selectedTokenIdRef.current;
+  const multiIds = ctx2d.selectedTokenIdsRef.current;
 
   ctx.clearRect(0, 0, W, H);
   ctx.save();
