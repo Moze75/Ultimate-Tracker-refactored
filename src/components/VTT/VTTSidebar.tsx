@@ -181,7 +181,7 @@ const visibleTokens = isGM
              {visibleTokens.length === 0 && (
                 <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
               )}
-              {tokens.map(token => {
+          {visibleTokens.map(token => {
                 const canEdit = role === 'gm' || token.ownerUserId === userId;
                 const isSelected = token.id === selectedTokenId;
                 return (
