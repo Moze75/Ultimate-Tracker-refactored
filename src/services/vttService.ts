@@ -375,6 +375,11 @@ class VTTService {
       this.presenceHandlers = this.presenceHandlers.filter(h => h !== handler);
     };
   }
+
+  setActiveSceneId(sceneId: string | null) {
+    this.activeSceneId = sceneId;
+  }
+
   
   sendBroadcastViewport(viewport: BroadcastViewport) {
     if (!this.channel) return;
