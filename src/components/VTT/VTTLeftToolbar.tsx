@@ -187,14 +187,14 @@ export function VTTLeftToolbar({
           <div ref={wallBtnRef} className="w-full flex flex-col items-center">
             <ToolBtn
               icon={<Fence size={17} />}
-              label="Tracer des murs"
-              active={isWallTool || wallPopupOpen}
+              label="Murs"
+              active={isAnyWallTool || wallPopupOpen}
               onClick={() => {
                 const opening = !wallPopupOpen;
                 setWallPopupOpen(opening);
                 setFogPopupOpen(false);
                 setGridPopupOpen(false);
-                if (opening && !isWallTool) onToolChange('wall-draw');
+                if (opening && !isAnyWallTool) onToolChange('wall-draw');
               }}
             />
           </div>
