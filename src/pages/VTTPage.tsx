@@ -634,14 +634,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       playerBoundTokenIds.forEach(tid => {
         const token = tokens.find(t => t.id === tid);
         if (!token) return;
-        const current = token.controlledByUserIds || [];
-        if (!current.includes(userId)) {
-          vttService.send({
-            type: 'UPDATE_TOKEN',
-            tokenId: tid,
-            changes: { controlledByUserIds: [...current, userId] },
-          });
-        }
+        vttService.send({
+          type: 'UPDATE_TOKEN',
+          tokenId: tid,
+          // On remplace entièrement : ce token appartient à CE joueur uniquement.
+          // Ne pas accumuler les userId qui laisserait la vision se partager.
+          changes: { controlledByUserIds: [userId] },
+        });
       });
       setPlayerBoundTokenIds([]);
     }
