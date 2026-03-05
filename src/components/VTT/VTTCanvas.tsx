@@ -305,24 +305,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     fctx.globalCompositeOperation = 'source-over';
   };
 
-  const applyStrokeToFogCanvas = (stroke: VTTFogStroke) => {
-    const fc = fogCanvasRef.current;
-    if (!fc) return;
-    const fctx = fc.getContext('2d')!;
-    if (!stroke.erase) {
-      fctx.globalCompositeOperation = 'destination-out';
-      fctx.beginPath();
-      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-      fctx.fill();
-    } else {
-      fctx.globalCompositeOperation = 'source-over';
-      fctx.fillStyle = '#000';
-      fctx.beginPath();
-      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-      fctx.fill();
-    }
-    fctx.globalCompositeOperation = 'source-over';
-  };
+
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
