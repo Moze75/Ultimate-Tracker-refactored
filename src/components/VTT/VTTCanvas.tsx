@@ -846,10 +846,12 @@ const fogPunchTokens =
       }
     }
 
-    // --- VISION DE JOUR (murs bloquent la vue) ---
+
+        // --- VISION DE JOUR (murs bloquent la vue + mémoire pérenne) ---
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
-const playerTokens = myVisionTokens;
-      if (playerTokens.length > 0) { 
+      const playerTokens = myVisionTokens;
+      if (playerTokens.length > 0) {
+        // Canvas de vision live (noir = hors vision, transparent = en vision)
         let dvc = dayVisionCanvasRef.current;
         if (!dvc || dayVisionCanvasSizeRef.current.w !== mapW || dayVisionCanvasSizeRef.current.h !== mapH) {
           dvc = document.createElement('canvas');
@@ -860,19 +862,94 @@ const playerTokens = myVisionTokens;
         }
         const dvCtx = dvc.getContext('2d')!;
         drawDayVisionOverlay(dvCtx, mapW, mapH, playerTokens, currentWalls, CELL);
-        ctx.globalAlpha = 0.65;
-        ctx.drawImage(dvc, 0, 0, mapW, mapH);
-        ctx.globalAlpha = 1;
-} else {
-  // Aucun token voyant contrôlé par le joueur => noir total
-  ctx.fillStyle = 'rgba(0,0,0,1)';
-  ctx.fillRect(0, 0, mapW, mapH);
-}
+
+        // Canvas de mémoire pérenne (explored) — même logique que la nuit
+        let evc = exploredCanvasRef.current;
+        if (!evc || exploredCanvasSizeRef.current.w !== mapW || exploredCanvasSizeRef.current.h !== mapH) {
+          evc = document.createElement('canvas');
+          evc.width = mapW;
+          evc.height = mapH;
+          const eCtx2 = evc.getContext('2d')!;
+          eCtx2.fillStyle = 'rgba(0,0,0,1)';
+          eCtx2.fillRect(0, 0, mapW, mapH);
+          exploredCanvasRef.current = evc;
+          exploredCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const eCtx = evc.getContext('2d')!;
+
+        // Percer la mémoire avec les polygones de visibilité actuels
+        const dayWallSegs = currentWalls.flatMap(w => {
+          const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+          for (let i = 0; i < w.points.length - 1; i++) {
+            segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+          }
+          return segs;
+        });
+        const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
+
+        eCtx.globalCompositeOperation = 'destination-out';
+        for (const token of playerTokens) {
+          if (!token.visible) continue;
+          const tSize = (token.size || 1) * CELL;
+          const tcx = token.position.x + tSize / 2;
+          const tcy = token.position.y + tSize / 2;
+
+          if (dayWallSegs.length > 0) {
+            const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+            if (poly.length >= 6) {
+              eCtx.fillStyle = 'rgba(0,0,0,1)';
+              eCtx.beginPath();
+              eCtx.moveTo(poly[0], poly[1]);
+              for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
+              eCtx.closePath();
+              eCtx.fill();
+            }
+          } else {
+            eCtx.fillStyle = 'rgba(0,0,0,1)';
+            eCtx.beginPath();
+            eCtx.arc(tcx, tcy, dayInfiniteR, 0, Math.PI * 2);
+            eCtx.fill();
+          }
+        }
+        eCtx.globalCompositeOperation = 'source-over';
+
+        // Composer le résultat : dvc (vision live) + evc (mémoire)
+        const cvc = document.createElement('canvas');
+        cvc.width = mapW;
+        cvc.height = mapH;
+        const cCtx = cvc.getContext('2d')!;
+
+        // Commencer avec dvc (noir complet hors vision directe)
+        cCtx.drawImage(dvc, 0, 0);
+
+        // Inverser evc : noir là où déjà vu, transparent là où jamais vu
+        const invCanvas = document.createElement('canvas');
+        invCanvas.width = mapW;
+        invCanvas.height = mapH;
+        const invCtx = invCanvas.getContext('2d')!;
+        invCtx.fillStyle = 'rgba(0,0,0,1)';
+        invCtx.fillRect(0, 0, mapW, mapH);
+        invCtx.globalCompositeOperation = 'destination-out';
+        invCtx.drawImage(evc, 0, 0);
+        invCtx.globalCompositeOperation = 'source-over';
+
+        // Réduire le noir de 70% sur les zones déjà explorées (passe de 100% à ~30%)
+        cCtx.globalCompositeOperation = 'destination-out';
+        cCtx.globalAlpha = 0.70;
+        cCtx.drawImage(invCanvas, 0, 0);
+        cCtx.globalAlpha = 1;
+        cCtx.globalCompositeOperation = 'source-over';
+
+        ctx.drawImage(cvc, 0, 0, mapW, mapH);
+      } else {
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        ctx.fillRect(0, 0, mapW, mapH);
+      }
     }
 
     // --- MASQUE NOIR si le joueur n'a aucun token avec vision (jour) ---
     if (isDay && curRole === 'player') {
-const hasAnyVision = myVisionTokens.length > 0;
+      const hasAnyVision = myVisionTokens.length > 0;
       if (!hasAnyVision) {
         ctx.fillStyle = 'rgba(0,0,0,1)';
         ctx.fillRect(0, 0, mapW, mapH);
