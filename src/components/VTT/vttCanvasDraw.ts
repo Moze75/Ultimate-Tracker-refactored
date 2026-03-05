@@ -162,15 +162,24 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
     }
   }
 
-  // Sans murs ET avec vision : tous les tokens visibles sont visibles (pas d'occlusion)
-  const noWallVision = currentWalls.length === 0 && myVisionTokens.length > 0;
+  // Détermine si un token est visible pour le joueur courant
+  const hasWalls = currentWalls.length > 0;
+  const hasVision = myVisionTokens.length > 0;
+
+  const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
+    // Token du joueur lui-même : toujours visible
+    if (myVisibleTokens.some(mt => mt.id === token.id)) return true;
+    // Sans vision active : rien n'est visible (le blackout s'en chargera)
+    if (!hasVision) return false;
+    // Sans murs : tout token visible est vu (pas d'occlusion)
+    if (!hasWalls) return true;
+    // Avec murs : seulement les tokens dans le polygone de vision
+    return directlyVisibleTokenIds.has(token.id);
+  };
 
   ctx2d.tokensRef.current.forEach(token => {
     if (!token.visible && curRole === 'player') return;
-    if (curRole === 'player') {
-      const isMine = myVisibleTokens.some(mt => mt.id === token.id);
-      if (!isMine && !noWallVision && !directlyVisibleTokenIds.has(token.id)) return;
-    }
+    if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
     drawToken({
       ctx,
       token,
@@ -183,6 +192,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       onImageLoad: () => ctx2d.drawRef.current(),
     });
   });
+
   // Hard blackout joueur : aucun token avec vision active => tout noir
   if (curRole === 'player' && myVisionTokens.length === 0) {
     ctx.fillStyle = 'rgba(0,0,0,1)';
