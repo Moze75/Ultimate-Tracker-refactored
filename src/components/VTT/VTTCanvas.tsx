@@ -1063,22 +1063,36 @@ if (isNight && curRole === 'player') {
       ctx.fillText(label, midX, midY);
     }
 
-    const selRect = selectionRectRef.current;
-    if (selRect) {
-      const sx = Math.min(selRect.x1, selRect.x2);
-      const sy = Math.min(selRect.y1, selRect.y2);
-      const sw = Math.abs(selRect.x2 - selRect.x1);
-      const sh = Math.abs(selRect.y2 - selRect.y1);
-      ctx.fillStyle = 'rgba(59,130,246,0.12)';
-      ctx.fillRect(sx, sy, sw, sh);
-      ctx.strokeStyle = 'rgba(96,165,250,0.85)';
-      ctx.lineWidth = 1.5 / vp.scale;
-      ctx.setLineDash([5 / vp.scale, 3 / vp.scale]);
-      ctx.strokeRect(sx, sy, sw, sh);
-      ctx.setLineDash([]);
-    }
+const selRect = selectionRectRef.current;
+if (selRect) {
+  const sx = Math.min(selRect.x1, selRect.x2);
+  const sy = Math.min(selRect.y1, selRect.y2);
+  const sw = Math.abs(selRect.x2 - selRect.x1);
+  const sh = Math.abs(selRect.y2 - selRect.y1);
+  ctx.fillStyle = 'rgba(59,130,246,0.12)';
+  ctx.fillRect(sx, sy, sw, sh);
+  ctx.strokeStyle = 'rgba(96,165,250,0.85)';
+  ctx.lineWidth = 1.5 / vp.scale;
+  ctx.setLineDash([5 / vp.scale, 3 / vp.scale]);
+  ctx.strokeRect(sx, sy, sw, sh);
+  ctx.setLineDash([]);
+}
 
-    ctx.restore();
+// Masquer les tokens non en vision directe du joueur
+if (curRole === 'player') {
+  for (const t of tokensRef.current) {
+    if (!t.visible) continue;
+    if (myVisibleTokens.some(mt => mt.id === t.id)) continue; // ses propres tokens restent visibles
+
+    if (!directlyVisibleTokenIds.has(t.id)) {
+      const ts = (t.size || 1) * CELL;
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.fillRect(t.position.x, t.position.y, ts, ts);
+    }
+  }
+}
+
+ctx.restore();
   }, []);
 
   drawRef.current = draw;
