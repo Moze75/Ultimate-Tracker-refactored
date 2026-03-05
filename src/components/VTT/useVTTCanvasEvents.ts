@@ -247,6 +247,7 @@ export function useVTTCanvasEvents({
                 pointIndex: pi,
                 phase: 'selected',
               };
+                            selectedWallPointRef.current = { wallId: wall.id, pointIndex: pi };
               found = true;
               break;
             }
