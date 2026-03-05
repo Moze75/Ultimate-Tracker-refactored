@@ -101,20 +101,20 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const isDay = !isNight;
   const currentWalls = ctx2d.wallsRef.current || [];
 
-  const selectedIdsSet = new Set(ctx2d.selectedTokenIdsRef.current || []);
-  const hasSelectedIds = selectedIdsSet.size > 0;
-
-  const myVisibleTokens = ctx2d.tokensRef.current.filter(t => {
+  // myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
+  const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
     if (!t.visible) return false;
     if (curRole !== 'player') return true;
-    if (hasSelectedIds) return selectedIdsSet.has(t.id);
-    return (t.controlledByUserIds?.includes(curUserId) ?? false);
+    return (t.controlledByUserIds?.includes(curUserId) ?? false)
+        || t.ownerUserId === curUserId;
   });
 
-  const myVisionTokens = myVisibleTokens.filter(
+  // myVisionTokens = mes tokens qui ont une vision active
+  const myVisionTokens = myControlledTokens.filter(
     t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
   );
 
+  // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
 
   if (curRole === 'player') {
@@ -129,7 +129,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       : [];
 
     const viewers = isNight
-      ? myVisibleTokens.filter(t =>
+      ? myControlledTokens.filter(t =>
           (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
         )
       : myVisionTokens;
@@ -159,6 +159,13 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
           directlyVisibleTokenIds.add(t.id);
         }
       }
+    }
+
+    // Sans murs : si j'ai une vision, je vois tous les tokens visibles
+    if (currentWalls.length === 0 && viewers.length > 0) {
+      ctx2d.tokensRef.current.forEach(t => {
+        if (t.visible) directlyVisibleTokenIds.add(t.id);
+      });
     }
   }
 
