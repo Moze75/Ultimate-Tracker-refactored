@@ -952,9 +952,47 @@ ctx.restore();
     if (forceViewportProp) draw();
   }, [forceViewportProp, draw]);
 
-  // Native event listeners — single registration, reads from refs
-  useEffect(() => { 
-    const canvas = canvasRef.current;
+  useVTTCanvasEvents({
+    canvasRef,
+    brushOverlayRef,
+    viewportRef,
+    tokensRef,
+    configRef,
+    roleRef,
+    userIdRef,
+    activeToolRef,
+    fogBrushSizeRef,
+    wallsRef,
+    wallPointsRef,
+    wallPreviewPosRef,
+    measureStartRef,
+    measureEndRef,
+    measureLockedRef,
+    selectedTokenIdRef,
+    selectedTokenIdsRef,
+    draggingTokenRef,
+    resizingTokenRef,
+    isPaintingFogRef,
+    lastPanRef,
+    isPanningRef,
+    selectionRectRef,
+    isDragSelectingRef,
+    onSelectTokenRef,
+    onSelectTokensRef,
+    onMoveTokenRef,
+    onResizeTokenRef,
+    onRightClickTokenRef,
+    onCalibrationPointRef,
+    onWallAddedRef,
+    onViewportChangeRef,
+    drawRef,
+    paintFogAt,
+    getCanvasXY,
+    screenToWorld,
+    getTokenAt,
+    snapToGrid,
+    activeTool,
+  });
     if (!canvas) return;
 
     const onMouseDown = (e: MouseEvent) => {
