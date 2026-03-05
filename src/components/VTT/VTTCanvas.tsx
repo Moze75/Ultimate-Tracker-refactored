@@ -1039,19 +1039,7 @@ if (selRect) {
   ctx.setLineDash([]);
 }
 
-// Masquer les tokens non en vision directe du joueur
-if (curRole === 'player') {
-  for (const t of tokensRef.current) {
-    if (!t.visible) continue;
-    if (myVisibleTokens.some(mt => mt.id === t.id)) continue; // ses propres tokens restent visibles
 
-    if (!directlyVisibleTokenIds.has(t.id)) {
-      const ts = (t.size || 1) * CELL;
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-      ctx.fillRect(t.position.x, t.position.y, ts, ts);
-    }
-  }
-}
 
 ctx.restore();
   }, []);
