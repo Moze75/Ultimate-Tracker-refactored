@@ -89,6 +89,7 @@ export function useVTTCanvasEvents({
     onWallAddedRef,
     onWallUpdatedRef,
     onWallRemovedRef,
+    selectedWallPointRef,
     onViewportChangeRef,
   drawRef,
   paintFogAt,
