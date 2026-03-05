@@ -490,6 +490,11 @@ export function useVTTCanvasEvents({
         drawRef.current();
         return;
       }
+            if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
+        draggingWallPointRef.current = null;
+        drawRef.current();
+        return;
+      }
       if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
         const pts = wallPointsRef.current;
         if (pts.length >= 2) {
