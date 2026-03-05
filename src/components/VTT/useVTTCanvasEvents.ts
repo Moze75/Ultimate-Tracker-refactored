@@ -398,6 +398,16 @@ export function useVTTCanvasEvents({
           }
         }
       }
+      // Valider le déplacement d'un point de mur
+      if (draggingWallPointRef.current) {
+        const drag = draggingWallPointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const updatedWall = currentWalls.find(w => w.id === drag.wallId);
+        if (updatedWall) {
+          onWallUpdatedRef.current?.(updatedWall);
+        }
+        draggingWallPointRef.current = null;
+      }
       isDragSelectingRef.current = false;
       selectionRectRef.current = null;
       draggingTokenRef.current = null;
