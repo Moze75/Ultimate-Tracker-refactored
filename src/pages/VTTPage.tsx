@@ -549,6 +549,38 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     });
   }, []);
 
+  const handleWallUpdated = useCallback((wall: VTTWall) => {
+    setWalls(prev => {
+      const next = prev.map(w => w.id === wall.id ? wall : w);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Update wall error:', error); });
+      }
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
+  }, []);
+
+  const handleWallRemoved = useCallback((wallId: string) => {
+    setWalls(prev => {
+      const next = prev.filter(w => w.id !== wallId);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Remove wall error:', error); });
+      }
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
+  }, []);
+  
   const handleClearWalls = useCallback(() => {
     setWalls([]);
     vttService.send({ type: 'UPDATE_WALLS', walls: [] });
