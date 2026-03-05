@@ -345,9 +345,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       strokes: [...(prev.strokes || []), stroke],
     }));
     vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
-    // Sauvegarde différée du fog dans vtt_scenes (toutes les 2 secondes max)
-    // pour qu'un refresh recharge les zones révélées
-    if (activeSceneIdRef.current) {
+    // Pour le GM uniquement : sauvegarde complète de la scène (config + tokens + fog + walls)
+    // Pour les joueurs, c'est vttService._persistNow() via RPC qui gère le fog
+    if (activeSceneIdRef.current && role === 'gm') {
       if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
       fogSaveTimerRef.current = setTimeout(() => {
         saveCurrentSceneState(activeSceneIdRef.current!);
