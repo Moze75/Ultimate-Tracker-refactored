@@ -503,14 +503,6 @@ if (!token.visible && curRole === 'player') return;
 // sauf ses propres tokens (toujours visibles pour le contrôle)
 
 
-  const isMine = hasSelectedLocal
-    ? selectedIdsSetLocal.has(token.id)
-    : (token.controlledByUserIds?.includes(curUserId) ?? false);
-
-  // Ses tokens à lui restent visibles, les autres uniquement si LOS direct
-  if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
-}
-
   const px = token.position.x;
   const py = token.position.y;
   const size = (token.size || 1) * CELL;
