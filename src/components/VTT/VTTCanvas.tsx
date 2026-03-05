@@ -1248,63 +1248,7 @@ const found = tokensRef.current.filter(t => {
     };
   }, []);
 
-  // Arrow key token movement
-  useEffect(() => {
-    if (activeTool !== 'wall-draw') {
-      wallPointsRef.current = [];
-      wallPreviewPosRef.current = null;
-    }
-    if (activeTool !== 'measure') {
-      measureStartRef.current = null;
-      measureEndRef.current = null;
-      measureLockedRef.current = false;
-    }
-    drawRef.current();
-  }, [activeTool]);
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeToolRef.current === 'measure') {
-        measureStartRef.current = null;
-        measureEndRef.current = null;
-        measureLockedRef.current = false;
-        drawRef.current();
-        return;
-      }
-      if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
-        const pts = wallPointsRef.current;
-        if (pts.length >= 2) {
-          onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
-        }
-        wallPointsRef.current = [];
-        wallPreviewPosRef.current = null;
-        drawRef.current();
-        return;
-      }
-      const selId = selectedTokenIdRef.current;
-      if (!selId) return;
-      const token = tokensRef.current.find(t => t.id === selId);
-      if (!token) return;
-      const canMove = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
-      if (!canMove) return;
-      const c = configRef.current.gridSize || 50;
-      let dx = 0, dy = 0;
-      if (e.key === 'ArrowLeft') dx = -c;
-      else if (e.key === 'ArrowRight') dx = c;
-      else if (e.key === 'ArrowUp') dy = -c;
-      else if (e.key === 'ArrowDown') dy = c;
-      else return;
-      e.preventDefault();
-      const newX = token.position.x + dx;
-      const newY = token.position.y + dy;
-      const tokenSizePx = (token.size || 1) * c;
-      const currentWalls = wallsRef.current || [];
-      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls)) return;
-      onMoveTokenRef.current(selId, { x: newX, y: newY });
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isWallTool = activeTool === 'wall-draw';
