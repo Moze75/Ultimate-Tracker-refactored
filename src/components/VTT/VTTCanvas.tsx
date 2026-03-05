@@ -573,12 +573,9 @@ const myVisibleTokens = tokensRef.current.filter(
   t =>
     t.visible &&
     (
-      selectedIdsSet.size > 0
+      curRole === 'player'
         ? selectedIdsSet.has(t.id)
-        : (
-            (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-            t.ownerUserId === curUserId
-          )
+        : true
     )
 );
 
