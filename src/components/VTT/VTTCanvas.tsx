@@ -334,7 +334,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const paintFogAt = (wx: number, wy: number) => {
     const erase = activeToolRef.current === 'fog-erase';
     const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
-    applyStrokeToFogCanvas(stroke);
+    applyStrokeToFogCanvas(stroke, fogCanvasRef);
     onRevealFogRef.current(stroke);
   };
 
