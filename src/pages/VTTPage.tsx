@@ -539,6 +539,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const handleClearWalls = useCallback(() => {
     setWalls([]);
     vttService.send({ type: 'UPDATE_WALLS', walls: [] });
+    // Sauvegarder dans la scène active
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ walls: [], updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] Clear walls error:', error); });
+    }
   }, []);
 
   const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
