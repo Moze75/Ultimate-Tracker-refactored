@@ -310,8 +310,12 @@ class VTTService {
         this.localState.tokens = event.tokens;
         this.localState.fogState = event.fogState;
         this.localState.walls = event.walls;
+        if (event.sceneId) {
+          this.activeSceneId = event.sceneId;
+        }
         serverEvent = {
           type: 'SCENE_SWITCHED',
+          sceneId: event.sceneId,
           config: event.config,
           tokens: event.tokens,
           fogState: event.fogState,
