@@ -483,7 +483,20 @@ export function useVTTCanvasEvents({
       drawRef.current();
     };
 
+    const onDblClick = (e: MouseEvent) => {
+      if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
+        const pts = wallPointsRef.current;
+        if (pts.length >= 2) {
+          onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+        }
+        wallPointsRef.current = [];
+        wallPreviewPosRef.current = null;
+        drawRef.current();
+      }
+    };
+
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('dblclick', onDblClick);
     canvas.addEventListener('contextmenu', onContextMenu);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseup', onMouseUp);
