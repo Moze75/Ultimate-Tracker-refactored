@@ -607,10 +607,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // --- VISION DE JOUR (murs bloquent la vue) ---
     if (isDay && curRole === 'player' && currentWalls.length > 0) {
       const playerTokens = tokensRef.current.filter(
-        t => t.visible && (
-          (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-          t.ownerUserId === curUserId
-        )
+        t => t.visible &&
+          (t.visionMode && t.visionMode !== 'none') &&
+          (
+            (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+            t.ownerUserId === curUserId
+          )
       );
       if (playerTokens.length > 0) { 
         let dvc = dayVisionCanvasRef.current;
