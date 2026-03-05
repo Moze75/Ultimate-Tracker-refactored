@@ -150,11 +150,7 @@ const isGM = role === 'gm';
 
 const visibleTokens = isGM
   ? tokens
-  : tokens.filter(
-      token =>
-        token.ownerUserId === userId ||
-        (token.controlledByUserIds?.includes(userId) ?? false)
-    );
+  : tokens.filter(token => token.controlledByUserIds?.includes(userId) ?? false);
 
   return (
     <div className="flex flex-col w-56 bg-gray-900/95 border-l border-gray-700/60 shrink-0 overflow-hidden">
