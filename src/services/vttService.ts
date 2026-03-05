@@ -353,6 +353,16 @@ class VTTService {
       .then(({ error }) => {
         if (error) console.error('[VTT] Persist error:', error);
       });
+    // Persist fog_state dans vtt_scenes pour que les rechargements récupèrent le bon état
+    if (this.activeSceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ fog_state: this.localState.fogState, updated_at: new Date().toISOString() })
+        .eq('id', this.activeSceneId)
+        .then(({ error }) => {
+          if (error) console.error('[VTT] Persist fog scene error:', error);
+        });
+    }
   }
 
   onMessage(handler: MessageHandler) {
