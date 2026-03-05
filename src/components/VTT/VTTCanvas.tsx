@@ -633,11 +633,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     // --- VISION DE NUIT (drawNightVisionOverlay + mémoire pérenne) ---
     if (isNight && curRole === 'player') {
-          const playerTokens = tokensRef.current.filter(
-        t => t.visible && (
-          (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-          t.ownerUserId === curUserId
-        )
+      const playerTokens = tokensRef.current.filter(
+        t => t.visible &&
+          ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')) &&
+          (
+            (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+            t.ownerUserId === curUserId
+          )
       );
       if (playerTokens.length > 0) {
         // --- Canvas de vision live via drawNightVisionOverlay (gère torche/flicker/murs/zones) ---
