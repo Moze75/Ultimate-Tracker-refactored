@@ -524,9 +524,32 @@ export function useVTTCanvasEvents({
         drawRef.current();
         return;
       }
-            if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
+      if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
+        // Annuler : remettre le point à sa position d'origine n'est pas stocké,
+        // donc on re-fetch depuis wallsRef (déjà à jour car mise à jour locale)
         draggingWallPointRef.current = null;
         drawRef.current();
+        return;
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && activeToolRef.current === 'wall-select') {
+        const sel = draggingWallPointRef.current;
+        if (sel && roleRef.current === 'gm') {
+          const currentWalls = wallsRef.current || [];
+          const wall = currentWalls.find(w => w.id === sel.wallId);
+          if (wall) {
+            const newPoints = wall.points.filter((_, i) => i !== sel.pointIndex);
+            if (newPoints.length < 2) {
+              // Moins de 2 points : supprimer le mur entier
+              onWallRemovedRef.current?.(wall.id);
+            } else {
+              const updatedWall = { ...wall, points: newPoints };
+              wallsRef.current = currentWalls.map(w => w.id === sel.wallId ? updatedWall : w);
+              onWallUpdatedRef.current?.(updatedWall);
+            }
+          }
+          draggingWallPointRef.current = null;
+          drawRef.current();
+        }
         return;
       }
       if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
