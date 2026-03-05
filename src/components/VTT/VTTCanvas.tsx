@@ -561,13 +561,33 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       ctx.restore();
     });
 
-     const timeOfDay = cfg.timeOfDay;
-    const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
-    const isDay = !isNight;
-    const currentWalls = wallsRef.current || [];
+const timeOfDay = cfg.timeOfDay;
+const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
+const isDay = !isNight;
+const currentWalls = wallsRef.current || [];
 
-    // --- FOG DE GUERRE (manuel, GM only) ---
-    if (cfg.fogEnabled) {
+// Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
+if (curRole === 'player') {
+  const hasActiveVisionToken = tokensRef.current.some(
+    t =>
+      t.visible &&
+      (t.visionMode === 'normal' || t.visionMode === 'darkvision') &&
+      (
+        (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+        t.ownerUserId === curUserId
+      )
+  );
+
+  if (!hasActiveVisionToken) {
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fillRect(0, 0, mapW, mapH);
+    ctx.restore();
+    return;
+  }
+}
+
+// --- FOG DE GUERRE (manuel, GM only) ---
+if (cfg.fogEnabled) {
       const strokes = fog.strokes || [];
       if (!fogCanvasRef.current ||
           fogCanvasSizeRef.current.w !== mapW ||
