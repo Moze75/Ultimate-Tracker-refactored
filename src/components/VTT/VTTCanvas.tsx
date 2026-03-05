@@ -441,12 +441,18 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
-    tokensRef.current.forEach(token => {
-      if (!token.visible && curRole === 'player') return;
-   
+tokensRef.current.forEach(token => {
+  if (!token.visible && curRole === 'player') return;
 
-      ctx.save();
-      ctx.translate(cx, cy);
+  const px = token.position.x;
+  const py = token.position.y;
+  const size = (token.size || 1) * CELL;
+  const cx = px + size / 2;
+  const cy = py + size / 2;
+  const r = size / 2 - 4;
+
+  ctx.save();
+  ctx.translate(cx, cy);
 
       if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
         const pad = 4 / vp.scale;
