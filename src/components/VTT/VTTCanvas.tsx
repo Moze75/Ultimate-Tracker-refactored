@@ -1344,7 +1344,7 @@ ctx.restore();
     const strokes = fogState.strokes || [];
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
-    buildFogCanvas(strokes, mapW, mapH);
+    buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
     // Reset explored memory on scene change
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
