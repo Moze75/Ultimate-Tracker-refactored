@@ -230,6 +230,7 @@ export function useVTTCanvasEvents({
             onWallUpdatedRef.current?.(updatedWall);
           }
                     selectedWallPointRef.current = null;
+         
           draggingWallPointRef.current = null;
           drawRef.current();
           return;
@@ -531,6 +532,7 @@ export function useVTTCanvasEvents({
       if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
         // Annuler : remettre le point à sa position d'origine n'est pas stocké,
         // donc on re-fetch depuis wallsRef (déjà à jour car mise à jour locale)
+                selectedWallPointRef.current = null;
         draggingWallPointRef.current = null;
         drawRef.current();
         return;
