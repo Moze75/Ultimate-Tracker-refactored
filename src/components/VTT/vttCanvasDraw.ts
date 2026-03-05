@@ -233,7 +233,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
         curRole === 'player'
           ? (isDay
               ? myVisionTokens
-              : myVisibleTokens.filter(t =>
+              : myControlledTokens.filter(t =>
                   (t.visionMode === 'darkvision') || (t.lightSource && t.lightSource !== 'none')
                 ))
           : (isDay
