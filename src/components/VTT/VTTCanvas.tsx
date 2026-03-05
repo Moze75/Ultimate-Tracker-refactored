@@ -592,7 +592,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
               )
             );
         if (fogPunchTokens.length > 0) {
-          punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH);
+          punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay);
         }
 
         // De nuit la vision gère déjà l'obscurité, le fog n'est qu'un masque GM complémentaire
