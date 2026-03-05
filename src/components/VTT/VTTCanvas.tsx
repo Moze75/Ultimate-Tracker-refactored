@@ -566,6 +566,20 @@ const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
 const isDay = !isNight;
 const currentWalls = wallsRef.current || [];
 
+    // Tokens strictement appartenant/contrôlés par le joueur courant
+const myVisibleTokens = tokensRef.current.filter(
+  t =>
+    t.visible &&
+    (
+      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
+      t.ownerUserId === curUserId
+    )
+);
+
+const myVisionTokens = myVisibleTokens.filter(
+  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+);
+
 // Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
 if (curRole === 'player') {
 const playerOwnedOrControlledTokens = tokensRef.current.filter(
