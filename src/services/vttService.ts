@@ -281,15 +281,14 @@ class VTTService {
         break;
 
       case 'REVEAL_FOG': {
-        const stroke = (event as VTTClientEvent & { stroke?: VTTFogStroke }).stroke;
+        const stroke = event.stroke;
         const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || [])];
         if (stroke) strokes.push(stroke);
         const newFog: VTTFogState = { revealedCells: this.localState.fogState.revealedCells, strokes };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
-        // Sauvegarde fog directement dans vtt_scenes via RPC (sans debounce,
-        // pour éviter qu'un _persistNow ultérieur sauve un fog vide)
-        this._saveFogNow(newFog);
+        // Sauvegarde immédiate dans vtt_scenes (sans debounce pour ne pas perdre les strokes)
+        this._saveFogToScene(newFog);
         break;
       }
 
