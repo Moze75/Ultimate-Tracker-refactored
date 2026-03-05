@@ -8,37 +8,7 @@ import { segmentsIntersect, wallBlocksToken, pointInPolygon } from './vttCanvasU
 import { punchVisionHoles } from './vttCanvasPunch';
 import { buildFogCanvas, applyStrokeToFogCanvas } from './vttCanvasFog';
 
-export interface VTTCanvasHandle {
-  getViewportCenter: () => { x: number; y: number };
-}
 
-interface VTTCanvasProps {
-  config: VTTRoomConfig;
-  tokens: VTTToken[];
-  fogState: VTTFogState;
-  role: VTTRole;
-  userId: string;
-  activeTool: VTTActiveTool;
-  fogBrushSize: number;
-  onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
-  onRevealFog: (stroke: VTTFogStroke) => void;
-  selectedTokenId: string | null;
-  onSelectToken: (id: string | null) => void;
-  selectedTokenIds?: string[];
-  onSelectTokens?: (ids: string[]) => void;
-  onRightClickToken?: (token: VTTToken, screenX: number, screenY: number) => void;
-  onMapDimensions?: (w: number, h: number) => void;
-  onDropToken?: (tokenId: string, worldPos: { x: number; y: number }) => void;
-  onAddTokenAtPos?: (token: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => void;
-  onResizeToken?: (tokenId: string, size: number) => void;
-  calibrationPoints?: { x: number; y: number }[];
-  onCalibrationPoint?: (worldPos: { x: number; y: number }) => void;
-  walls?: VTTWall[];
-  onWallAdded?: (wall: VTTWall) => void;
-  showWalls?: boolean;
-  forceViewport?: { x: number; y: number; width: number; height: number } | null;
-  onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
-}
 
 function segmentsIntersect(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
   const d1x = bx - ax, d1y = by - ay;
