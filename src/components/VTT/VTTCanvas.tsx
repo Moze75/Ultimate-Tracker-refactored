@@ -189,40 +189,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onRevealFogRef.current(stroke);
   };
 
-  const buildFogCanvas = (strokes: VTTFogStroke[], mapW: number, mapH: number) => {
-    let fc = fogCanvasRef.current;
-    if (!fc || fogCanvasSizeRef.current.w !== mapW || fogCanvasSizeRef.current.h !== mapH) {
-      fc = document.createElement('canvas');
-      fc.width = mapW;
-      fc.height = mapH;
-      fogCanvasRef.current = fc;
-      fogCanvasSizeRef.current = { w: mapW, h: mapH };
-    }
-    const fctx = fc.getContext('2d')!;
-    fctx.clearRect(0, 0, mapW, mapH);
-    fctx.fillStyle = '#000';
-    fctx.fillRect(0, 0, mapW, mapH);
-    fctx.globalCompositeOperation = 'destination-out';
-    for (const s of strokes) {
-      if (!s.erase) {
-        fctx.beginPath();
-        fctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        fctx.fill();
-      }
-    }
-    fctx.globalCompositeOperation = 'source-over';
-    for (const s of strokes) {
-      if (s.erase) {
-        fctx.beginPath();
-        fctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        fctx.fillStyle = '#000';
-        fctx.fill();
-      }
-    }
-    fctx.globalCompositeOperation = 'source-over';
-  };
-
-
+ 
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
