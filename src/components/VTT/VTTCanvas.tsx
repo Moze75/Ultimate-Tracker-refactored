@@ -581,26 +581,11 @@ const myVisionTokens = myVisibleTokens.filter(
 );
 
 // Hard blackout joueur : aucun token avec vision active => tout noir (ignore mémoire explorée)
-if (curRole === 'player') {
-const playerOwnedOrControlledTokens = tokensRef.current.filter(
-  t =>
-    t.visible &&
-    (
-      (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-      t.ownerUserId === curUserId
-    )
-);
-
-const hasActiveVisionToken = playerOwnedOrControlledTokens.some(
-  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
-);
-
-  if (!hasActiveVisionToken) {
-    ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.fillRect(0, 0, mapW, mapH);
-    ctx.restore();
-    return;
-  }
+if (curRole === 'player' && myVisionTokens.length === 0) {
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(0, 0, mapW, mapH);
+  ctx.restore();
+  return;
 }
 
 // --- FOG DE GUERRE (manuel, GM only) ---
