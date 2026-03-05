@@ -496,12 +496,34 @@ if (curRole === 'player') {
       if (poly.length < 6) poly = null;
     }
     
+
+    for (const t of tokensRef.current) {
+      if (!t.visible) continue;
+      const ts = (t.size || 1) * CELL;
+      const tcx = t.position.x + ts / 2;
+      const tcy = t.position.y + ts / 2;
+
+      const dx2 = tcx - radii.cx;
+      const dy2 = tcy - radii.cy;
+      if (dx2 * dx2 + dy2 * dy2 > maxR * maxR) continue;
+
+      if (poly) {
+        if (pointInPolygon(tcx, tcy, poly)) directlyVisibleTokenIds.add(t.id);
+      } else {
+        directlyVisibleTokenIds.add(t.id);
+      }
+    }
+  }
+}
+
 tokensRef.current.forEach(token => {
-if (!token.visible && curRole === 'player') return;
+  if (!token.visible && curRole === 'player') return;
 
-// Player: ne dessiner un token que s'il est directement visible, 
-// sauf ses propres tokens (toujours visibles pour le contrôle)
-
+  // Player : ne dessiner que ses propres tokens + ceux en vision directe
+  if (curRole === 'player') {
+    const isMine = myVisibleTokens.some(mt => mt.id === token.id);
+    if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
+  }
 
   const px = token.position.x;
   const py = token.position.y;
@@ -510,7 +532,6 @@ if (!token.visible && curRole === 'player') return;
   const cy = py + size / 2;
   const r = size / 2 - 4;
 
-  // Dessiner le token (image/couleur)
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((token.rotation || 0) * Math.PI / 180);
@@ -521,7 +542,7 @@ if (!token.visible && curRole === 'player') return;
       img = new Image();
       img.onload = () => drawRef.current();
       img.src = token.imageUrl;
-      tokenImageCache.current.set(token.imageUrl, img); 
+      tokenImageCache.current.set(token.imageUrl, img);
     }
 
     ctx.beginPath();
@@ -560,7 +581,6 @@ if (!token.visible && curRole === 'player') return;
   }
   ctx.restore();
 
-  // Surcouches (sélection, bordure, hp)
   ctx.save();
   ctx.translate(cx, cy);
 
@@ -628,7 +648,6 @@ if (!token.visible && curRole === 'player') return;
 
   ctx.restore();
 });
-
 
 
     for (const t of tokensRef.current) {
