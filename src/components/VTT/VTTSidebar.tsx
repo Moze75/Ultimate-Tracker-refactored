@@ -146,6 +146,8 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
     );
   }
 
+const isGM = role === 'gm';
+
 const visibleTokens = isGM
   ? tokens
   : tokens.filter(
