@@ -37,9 +37,10 @@ export interface VTTDrawContext {
   visionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   dayVisionCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   dayVisionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
-  exploredCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
-  exploredCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
-  drawRef: React.MutableRefObject<() => void>;
+exploredCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+exploredCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
+exploredCanvasOwnerKeyRef: React.MutableRefObject<string | null>;
+drawRef: React.MutableRefObject<() => void>;
 }
 
 export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
