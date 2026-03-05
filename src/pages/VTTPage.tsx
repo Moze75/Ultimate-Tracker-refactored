@@ -341,13 +341,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       strokes: [...(prev.strokes || []), stroke],
     }));
     vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
-    // Sauvegarder le fog dans la scène active (debounce via setTimeout)
-    // pour qu'un refresh recharge le bon état
+    // Sauvegarde différée du fog dans vtt_scenes (toutes les 2 secondes max)
+    // pour qu'un refresh recharge les zones révélées
     if (activeSceneIdRef.current) {
-      if ((handleRevealFog as unknown as { _fogSaveTimer?: ReturnType<typeof setTimeout> })._fogSaveTimer) {
-        clearTimeout((handleRevealFog as unknown as { _fogSaveTimer?: ReturnType<typeof setTimeout> })._fogSaveTimer);
-      }
-      (handleRevealFog as unknown as { _fogSaveTimer?: ReturnType<typeof setTimeout> })._fogSaveTimer = setTimeout(() => {
+      if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
+      fogSaveTimerRef.current = setTimeout(() => {
         saveCurrentSceneState(activeSceneIdRef.current!);
       }, 2000);
     }
