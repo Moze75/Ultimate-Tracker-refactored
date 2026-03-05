@@ -335,7 +335,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       // 2. Zones déjà vues hors vision  → voile semi-transparent (EXPLORED_VEIL)
       // 3. Zones dans la vision courante → visibles à 100%
 
-      const EXPLORED_VEIL = 0.30; // opacité du voile sur les zones déjà explorées (même valeur que la nuit : 1 - 0.70)
+         const EXPLORED_VEIL = 0.30; // opacité du voile sur les zones déjà explorées (même valeur que la nuit : 1 - 0.70)
 
       // Étape A : dessiner le voile exploré (zones où evc est transparent = déjà vu → voile gris)
       // On crée un canvas "voile" = gris semi-transparent masqué par l'inverse de evc
