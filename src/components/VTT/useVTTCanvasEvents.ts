@@ -341,16 +341,16 @@ export function useVTTCanvasEvents({
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         const wp2 = screenToWorld(sp2.x, sp2.y);
         const drag = draggingWallPointRef.current;
+        // Passer en phase 'moving' dès qu'on bouge avec un point sélectionné
+        drag.phase = 'moving';
         const currentWalls = wallsRef.current || [];
         const wall = currentWalls.find(w => w.id === drag.wallId);
         if (wall) {
           const newPoints = wall.points.map((pt, i) =>
-            i === drag.pointIndex
-              ? { x: wp2.x - drag.offsetX, y: wp2.y - drag.offsetY }
-              : pt
+            i === drag.pointIndex ? { x: wp2.x, y: wp2.y } : pt
           );
           const updatedWall = { ...wall, points: newPoints };
-          // Mise à jour locale immédiate pour le rendu fluide
+          // Mise à jour locale immédiate pour le rendu fluide (sans sauvegarder)
           wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
           drawRef.current();
         }
