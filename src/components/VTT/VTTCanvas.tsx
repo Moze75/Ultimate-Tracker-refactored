@@ -692,16 +692,12 @@ const hasAnyVision = tokensRef.current.some(
 
     
     // --- VISION DE NUIT (drawNightVisionOverlay + mémoire pérenne) ---
-    if (isNight && curRole === 'player') {
-
-);
-        t => t.visible && 
-          ((t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')) &&
-          (
-            (t.controlledByUserIds && t.controlledByUserIds.includes(curUserId)) ||
-            t.ownerUserId === curUserId
-          )
-      );
+if (isNight && curRole === 'player') {
+  const playerTokens = myVisibleTokens.filter(
+    t =>
+      (t.visionMode && t.visionMode !== 'none') ||
+      (t.lightSource && t.lightSource !== 'none')
+  );
       if (playerTokens.length > 0) {
         // --- Canvas de vision live via drawNightVisionOverlay (gère torche/flicker/murs/zones) ---
         let nvc = visionCanvasRef.current;
