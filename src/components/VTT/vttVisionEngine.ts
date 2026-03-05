@@ -53,7 +53,38 @@ export function getVisionRadii(token: VTTToken, gridSize: number): VisionRadius 
   return { cx, cy, brightR, dimR };
 }
 
+export function getVisionRadiiForDay(token: VTTToken, gridSize: number, mapW: number, mapH: number): VisionRadius {
+  const CELL = gridSize || 50;
+  const size = (token.size || 1) * CELL;
+  const cx = token.position.x + size / 2;
+  const cy = token.position.y + size / 2;
+  const visionMode = token.visionMode || 'none';
+  const lightSource = token.lightSource || 'none';
 
+  // Pas de vision = pas de radii
+  if (visionMode === 'none' && lightSource === 'none') {
+    return { cx, cy, brightR: 0, dimR: 0 };
+  }
+
+  // De jour, vision normale ou darkvision = vision infinie (bloquée par les murs)
+  const infiniteR = Math.max(mapW, mapH) * 1.5;
+
+  if (visionMode === 'normal' || visionMode === 'darkvision') {
+    return { cx, cy, brightR: infiniteR, dimR: 0 };
+  }
+
+  // Vision 'none' mais avec lumière → seule la lumière éclaire
+  if (lightSource !== 'none') {
+    const lightRange = token.lightRange ?? 6;
+    let brightM = lightRange;
+    let dimM = lightRange * 2;
+    if (lightSource === 'torch') { brightM = 6; dimM = 12; }
+    else if (lightSource === 'lantern') { brightM = 9; dimM = 18; }
+    return { cx, cy, brightR: metersToPixels(brightM, CELL), dimR: metersToPixels(dimM, CELL) };
+  }
+
+  return { cx, cy, brightR: 0, dimR: 0 };
+}
 
 
 export function getWallSegments(walls: VTTWall[]): { x1: number; y1: number; x2: number; y2: number }[] {
