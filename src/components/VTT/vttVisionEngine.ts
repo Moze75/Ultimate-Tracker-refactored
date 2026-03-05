@@ -54,6 +54,22 @@ export function getVisionRadii(token: VTTToken, gridSize: number): VisionRadius 
 }
 
 
+export function getVisionRadiiForDay(token: VTTToken, gridSize: number, mapW: number, mapH: number): VisionRadius {
+  const CELL = gridSize || 50;
+  const size = (token.size || 1) * CELL;
+  const cx = token.position.x + size / 2;
+  const cy = token.position.y + size / 2;
+  const visionMode = token.visionMode || 'none';
+
+  // Aucune vision = ne voit rien
+  if (visionMode === 'none') {
+    return { cx, cy, brightR: 0, dimR: 0 };
+  }
+
+  // De jour, normal et darkvision = vision infinie (bloquée par murs uniquement)
+  const infiniteR = Math.max(mapW, mapH) * 1.5;
+  return { cx, cy, brightR: infiniteR, dimR: 0 };
+}
  
 export function getVisionRadiiForDay(token: VTTToken, gridSize: number, mapW: number, mapH: number): VisionRadius {
   const CELL = gridSize || 50;
