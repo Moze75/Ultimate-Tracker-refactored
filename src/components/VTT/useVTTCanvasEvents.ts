@@ -100,7 +100,12 @@ export function useVTTCanvasEvents({
 
 
   // Refs internes pour l'édition de points de mur (wall-select)
-  const draggingWallPointRef = useRef<{ wallId: string; pointIndex: number; offsetX: number; offsetY: number } | null>(null);
+  // null = rien, phase 'selected' = point highlighté, phase 'moving' = point suit la souris
+  const draggingWallPointRef = useRef<{
+    wallId: string;
+    pointIndex: number;
+    phase: 'selected' | 'moving';
+  } | null>(null);
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
