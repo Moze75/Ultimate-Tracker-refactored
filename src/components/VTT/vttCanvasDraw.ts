@@ -105,8 +105,12 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
     if (!t.visible) return false;
     if (curRole !== 'player') return true;
-    return (t.controlledByUserIds?.includes(curUserId) ?? false)
-        || t.ownerUserId === curUserId;
+    // Un joueur ne "contrôle" un token que s'il figure explicitement dans controlledByUserIds
+    // OU s'il en est le ownerUserId. On évite ainsi qu'un token partagé entre plusieurs joueurs
+    // donne sa vision à tous.
+    const isOwner = t.ownerUserId === curUserId;
+    const isController = t.controlledByUserIds?.includes(curUserId) ?? false;
+    return isOwner || isController;
   });
 
   // myVisionTokens = mes tokens qui ont une vision active
