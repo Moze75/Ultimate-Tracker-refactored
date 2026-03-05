@@ -366,13 +366,17 @@ class VTTService {
       });
     // Persist fog_state dans vtt_scenes via RPC (accessible joueurs et GM)
     if (this.activeSceneId) {
+      const sceneIdToSave = this.activeSceneId;
+      const fogToSave = this.localState.fogState;
+      console.log('[VTT] Saving fog to scene', sceneIdToSave, 'strokes:', (fogToSave as {strokes?: unknown[]}).strokes?.length ?? 0);
       supabase
         .rpc('update_scene_fog_state', {
-          p_scene_id: this.activeSceneId,
-          p_fog_state: this.localState.fogState,
+          p_scene_id: sceneIdToSave,
+          p_fog_state: fogToSave,
         })
         .then(({ error }) => {
           if (error) console.error('[VTT] Persist fog scene error:', error);
+          else console.log('[VTT] Fog saved OK to scene', sceneIdToSave);
         });
     }
   }
