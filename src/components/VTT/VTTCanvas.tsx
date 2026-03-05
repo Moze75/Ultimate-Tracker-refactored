@@ -442,7 +442,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     }
 
 tokensRef.current.forEach(token => {
-  if (!token.visible && curRole === 'player') return;
+if (!token.visible && curRole === 'player') return;
+
+// Player: ne dessiner un token que s'il est directement visible,
+// sauf ses propres tokens (toujours visibles pour le contrôle)
+if (curRole === 'player') {
+  const isMine = myVisibleTokens.some(mt => mt.id === token.id);
+  if (!isMine && !directlyVisibleTokenIds.has(token.id)) return;
+}
 
   const px = token.position.x;
   const py = token.position.y;
