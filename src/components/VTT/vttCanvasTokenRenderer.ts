@@ -47,7 +47,7 @@ export function drawToken({
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.clip();
     if (img.complete && img.naturalWidth > 0) {
-      const ZOOM = 1.8;
+      const ZOOM = token.imageZoom ?? 1.8;
       const side = r * 2 * ZOOM;
       const excess = side - r * 2;
       const ox = -(token.imageOffsetX || 0) * (excess / 2);
