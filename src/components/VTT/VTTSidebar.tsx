@@ -288,7 +288,7 @@ const visibleTokens = isGM
           <div className="flex flex-col h-full">
             {/* Carte active */}
             {config.mapImageUrl && (
-              <div className="relative rounded-lg overflow-hidden border border-gray-700/60 bg-gray-800 mx-3 mt-3 shrink-0">
+              <div className="relative overflow-hidden border-b border-gray-700/60 bg-gray-800 shrink-0">
                 <img
                   src={config.mapImageUrl}
                   alt="Carte actuelle"
