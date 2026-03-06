@@ -6,6 +6,7 @@ import { VTTPropsPanel } from './VTTPropsPanel';
 type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
 
 interface VTTSidebarProps {
+    authToken?: string;
   role: 'gm' | 'player';
   tokens: VTTToken[];
   config: VTTRoomConfig;
