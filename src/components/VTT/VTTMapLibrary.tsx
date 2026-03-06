@@ -137,7 +137,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     setOpenFolders(prev => new Set([...prev, folder.id]));
     setNewFolderMode(false);
     setNewFolderName('');
-    refresh();
+    persist();
   };
 
   const handleRenameStart = (id: string, currentName: string) => {
