@@ -653,6 +653,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     await saveCurrentSceneState(activeSceneIdRef.current);
   }, [role, saveCurrentSceneState]);
 
+    const handleUpdateWeather = useCallback((effects: VTTWeatherEffect[]) => {
+    if (role !== 'gm') return;
+    setWeatherEffects(effects);
+    weatherEffectsRef.current = effects;
+    // Propager aux joueurs via UPDATE_MAP (réutilise la config)
+    vttService.send({ type: 'UPDATE_MAP', config: { weatherEffects: effects } });
+    // Persister dans la scène
+    if (activeSceneIdRef.current) {
+      setConfig(prev => ({ ...prev, weatherEffects: effects }));
+    }
+  }, [role]);
+
   
   const leaveRoom = useCallback(async () => {
     if (activeSceneIdRef.current && role === 'gm') {
