@@ -46,8 +46,15 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
   const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
   const [imageOffsetY, setImageOffsetY] = useState(token.imageOffsetY ?? 0);
+  const [imageZoom, setImageZoom] = useState(token.imageZoom ?? 1.8);
   const isDraggingPreview = useRef(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const handlePreviewWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setImageZoom(prev => Math.max(1.0, Math.min(4.0, parseFloat((prev + delta).toFixed(2)))));
+  }, []);
 
   const handlePreviewMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
