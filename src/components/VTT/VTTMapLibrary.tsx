@@ -170,7 +170,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     setAddUrlValue('');
     setAddUrlName('');
     setAddUrlMode(null);
-    refresh();
+    persist();
   };
 
   const handleFileUpload = async (file: File, folderId: string | null) => {
