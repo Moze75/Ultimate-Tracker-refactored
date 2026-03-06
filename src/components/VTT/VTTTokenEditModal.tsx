@@ -10,9 +10,9 @@ interface VTTTokenEditModalProps {
   onClose: () => void;
 }
 
-function PreviewImage({ src, offsetX, offsetY, containerSize }: { src: string; offsetX: number; offsetY: number; containerSize: number }) {
+function PreviewImage({ src, offsetX, offsetY, zoom, containerSize }: { src: string; offsetX: number; offsetY: number; zoom: number; containerSize: number }) {
   const [aspect, setAspect] = React.useState(1);
-  const ZOOM = 1.8;
+  const ZOOM = zoom;
   const side = containerSize * ZOOM;
   const excess = side - containerSize;
   const dw = aspect >= 1 ? side : side * aspect;
