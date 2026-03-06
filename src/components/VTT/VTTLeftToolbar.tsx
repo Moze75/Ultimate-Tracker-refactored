@@ -93,8 +93,8 @@ export function VTTLeftToolbar({
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
-  useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen) return;
+   useEffect(() => {
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
@@ -123,10 +123,15 @@ export function VTTLeftToolbar({
         timeBtnRef.current && !timeBtnRef.current.contains(target)) {
         setTimePopupOpen(false);
       }
+      if (weatherPopupOpen &&
+        weatherPopupRef.current && !weatherPopupRef.current.contains(target) &&
+        weatherBtnRef.current && !weatherBtnRef.current.contains(target)) {
+        setWeatherPopupOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen]);
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen]);
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
