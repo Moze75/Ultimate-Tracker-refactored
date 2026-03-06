@@ -31,6 +31,20 @@ export interface VTTToken {
   lightDimAlpha?: number;
 }
 
+// Inspiré de FXMaster (gambit07/fxmaster) — https://github.com/gambit07/fxmaster
+export type VTTWeatherType =
+  | 'rain' | 'acid-rain' | 'snow' | 'blizzard'
+  | 'fog' | 'embers' | 'leaves' | 'sandstorm'
+  | 'sunshower' | 'bubbles' | 'spiderwebs'
+  | 'magiccrystals' | 'magicstars';
+
+export interface VTTWeatherEffect {
+  type: VTTWeatherType;
+  density: number;   // 0.1 → 3.0
+  speed: number;     // 0.2 → 3.0
+  alpha: number;     // 0.1 → 1.0
+}
+
 export interface VTTRoomConfig {
   mapImageUrl: string;
   gridSize: number;
@@ -44,6 +58,7 @@ export interface VTTRoomConfig {
   gridOffsetY?: number;
   gridLineWidth?: number;
   timeOfDay?: number;
+  weatherEffects?: VTTWeatherEffect[];  // effets actifs (cumulables)
 }
 
 export interface VTTFogStroke {
