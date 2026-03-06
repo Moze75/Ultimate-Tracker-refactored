@@ -162,7 +162,8 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   };
 
   const handleDragOver = (e: React.DragEvent, folderId: string | null) => {
-    if (!draggingMapId) return;
+    // On vérifie le dataTransfer directement plutôt que le state (plus fiable)
+    if (!e.dataTransfer.types.includes('vtt-library-map-id')) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverFolderId(folderId ?? 'root');
