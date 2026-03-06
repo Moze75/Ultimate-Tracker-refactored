@@ -886,6 +886,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onAddProp={handleAddProp}
           onRemoveProp={handleRemoveProp}
           onUpdateProp={handleUpdateProp}
+          onSaveScene={role === 'gm' ? handleSaveScene : undefined}
         />
       </div>
 
