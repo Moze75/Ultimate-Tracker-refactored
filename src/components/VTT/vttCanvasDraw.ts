@@ -28,6 +28,7 @@ export interface VTTDrawContext {
   wallPointsRef: React.MutableRefObject<{ x: number; y: number }[]>;
   wallPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
+  selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   measureStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
   measureEndRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectionRectRef: React.MutableRefObject<{ x1: number; y1: number; x2: number; y2: number } | null>;
