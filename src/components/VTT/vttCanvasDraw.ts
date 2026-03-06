@@ -662,54 +662,5 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
     ctx.setLineDash([]);
   }
 
-  ctx.restore(); // fin du transform monde
-
-  // --- HP bars + labels : dessin en pixels écran PURS (hors transform) ---
-  // À ce stade ctx est revenu à la matrice identité (canvas CSS)
-  const BAR_W   = 40;
-  const BAR_H   = 5;
-  const FONT_PX = 11;
-  const PAD     = 3;
-  const GAP     = 5;
-  const INTER   = 3;
-
-  for (const { cx, cy, r, token } of tokenOverlays) {
-    const screenCX = cx * vp.scale + vp.x;
-    const screenCY = cy * vp.scale + vp.y;
-    const screenR  = r  * vp.scale;
-    const baseY    = screenCY + screenR + GAP;
-
-    const hasHp    = token.maxHp != null && token.maxHp > 0 && token.hp != null;
-    const hasLabel = !!token.showLabel;
-
-    if (hasHp) {
-      const pct = Math.max(0, Math.min(1, token.hp! / token.maxHp!));
-      const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
-      ctx.fillStyle = 'rgba(0,0,0,0.60)';
-      ctx.beginPath();
-      ctx.roundRect(screenCX - BAR_W / 2, baseY, BAR_W, BAR_H, BAR_H / 2);
-      ctx.fill();
-      if (pct > 0) {
-        ctx.fillStyle = hpColor;
-        ctx.beginPath();
-        ctx.roundRect(screenCX - BAR_W / 2, baseY, BAR_W * pct, BAR_H, BAR_H / 2);
-        ctx.fill();
-      }
-    }
-
-    if (hasLabel) {
-      const labelY = hasHp ? baseY + BAR_H + INTER : baseY;
-      ctx.font = `bold ${FONT_PX}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      const tw = ctx.measureText(token.label).width + PAD * 2;
-      const th = FONT_PX + PAD * 2;
-      ctx.fillStyle = 'rgba(0,0,0,0.65)';
-      ctx.beginPath();
-      ctx.roundRect(screenCX - tw / 2, labelY, tw, th, 3);
-      ctx.fill();
-      ctx.fillStyle = 'white'; 
-      ctx.fillText(token.label, screenCX, labelY + PAD);
-    }
-  }
+  ctx.restore();
 }
