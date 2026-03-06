@@ -80,7 +80,10 @@ export function VTTSidebar({
   onUpdateProp,
   onHome,
   authToken,
+  onSaveScene,
 }: VTTSidebarProps) {
+  const [saving, setSaving] = React.useState(false);
+  const [saveOk, setSaveOk] = React.useState(false);
 const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
