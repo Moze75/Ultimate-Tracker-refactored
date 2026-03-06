@@ -5,6 +5,8 @@ export interface DrawTokenOptions {
   token: VTTToken;
   CELL: number;
   scale: number;
+  vpX: number;   // viewport offset X (vp.x)
+  vpY: number;   // viewport offset Y (vp.y)
   currentSelectedId: string | null;
   multiIds: string[];
   curUserId: string;
