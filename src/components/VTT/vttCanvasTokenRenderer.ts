@@ -19,6 +19,8 @@ export function drawToken({
   token,
   CELL,
   scale,
+  vpX,
+  vpY,
   currentSelectedId,
   multiIds,
   curUserId,
