@@ -170,6 +170,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         setTokens(event.tokens);
         setFogState(event.fogState);
         setWalls(event.walls);
+        setWeatherEffects(event.config.weatherEffects || []);
         break;
       case 'WALLS_UPDATED':
         setWalls(event.walls);
