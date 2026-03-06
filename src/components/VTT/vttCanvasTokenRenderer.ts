@@ -122,58 +122,61 @@ export function drawToken({
     ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
   }
 
-   ctx.restore(); // fin du bloc surcouches monde
+    ctx.restore(); // fin du bloc surcouches monde
 
-  // --- Barre HP + Nom : dessin en coordonnées ÉCRAN (hors transform monde) ---
-  // On calcule la position écran du centre du token
+  // --- Barre HP + Nom : dessin en coordonnées ÉCRAN proportionnel au token ---
   const screenCX = cx * scale + vpX;
   const screenCY = cy * scale + vpY;
-  const screenR  = r * scale;          // rayon en pixels écran
+  const screenR  = r * scale;  // rayon du token en px écran
 
-  const hasHp = token.maxHp != null && token.maxHp > 0 && token.hp != null;
+  const hasHp    = token.maxHp != null && token.maxHp > 0 && token.hp != null;
   const hasLabel = !!token.showLabel;
 
   if (hasHp || hasLabel) {
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset total → coordonnées écran pures
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset → coordonnées écran pures
+
+    // Dimensions proportionnelles au token (screenR), avec plancher/plafond
+    const BAR_W  = Math.max(16, Math.min(screenR * 1.4, 80));  // 70% du diamètre, entre 16 et 80px
+    const BAR_H  = Math.max(3,  Math.min(screenR * 0.10, 8));  // 10% du rayon, entre 3 et 8px
+    const GAP    = Math.max(3,  screenR * 0.08);               // espace token → barre
 
     // ── Barre HP ──────────────────────────────────────────────────────────────
     if (hasHp) {
-      const BAR_W = 40;   // px écran
-      const BAR_H = 5;    // px écran
-      const BAR_R = BAR_H / 2;
-      const barScreenY = screenCY + screenR + 6;
+      const barScreenY = screenCY + screenR + GAP;
       const pct = Math.max(0, Math.min(1, token.hp! / token.maxHp!));
       const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
       // fond
       ctx.fillStyle = 'rgba(0,0,0,0.60)';
       ctx.beginPath();
-      ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W, BAR_H, BAR_R);
+      ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W, BAR_H, BAR_H / 2);
       ctx.fill();
       // remplissage
       if (pct > 0) {
         ctx.fillStyle = hpColor;
         ctx.beginPath();
-        ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W * pct, BAR_H, BAR_R);
+        ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W * pct, BAR_H, BAR_H / 2);
         ctx.fill();
       }
     }
 
     // ── Nom du token ──────────────────────────────────────────────────────────
     if (hasLabel) {
-      const FONT_PX = 11;  // px écran
-      const offsetY = hasHp ? screenR + 16 : screenR + 6;
-      const labelScreenY = screenCY + offsetY;
+      const FONT_PX  = Math.max(9, Math.min(screenR * 0.22, 14)); // entre 9 et 14px
+      const PAD      = Math.max(2, screenR * 0.07);
+      const labelOffY = hasHp
+        ? screenR + GAP + BAR_H + Math.max(2, GAP * 0.5)
+        : screenR + GAP;
+      const labelScreenY = screenCY + labelOffY;
       ctx.font = `bold ${FONT_PX}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      const PAD = 3;
       const tw = ctx.measureText(token.label).width + PAD * 2;
       const th = FONT_PX + PAD * 2;
       // fond arrondi
       ctx.fillStyle = 'rgba(0,0,0,0.65)';
       ctx.beginPath();
-      ctx.roundRect(screenCX - tw / 2, labelScreenY, tw, th, 3);
+      ctx.roundRect(screenCX - tw / 2, labelScreenY, tw, th, th / 3);
       ctx.fill();
       // texte
       ctx.fillStyle = 'white';
