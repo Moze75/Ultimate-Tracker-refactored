@@ -35,6 +35,8 @@ interface VTTLeftToolbarProps {
   onOpenBroadcastWindow: () => void;
   broadcastMode: 'frame' | 'follow';
   onBroadcastModeChange: (mode: 'frame' | 'follow') => void;
+  weatherEffects: VTTWeatherEffect[];
+  onUpdateWeather: (effects: VTTWeatherEffect[]) => void;
 }
 
 export function VTTLeftToolbar({
