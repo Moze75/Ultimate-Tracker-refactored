@@ -467,7 +467,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
 
               {/* Contenu du dossier */}
               {isOpen && (
-                <div className="pl-4 border-l border-gray-700/40 ml-3 mb-1">
+                <div className="mb-1">
                   {folderMaps.length === 0 && (
                     <p className="text-[10px] text-gray-600 px-2 py-1 italic">Dossier vide</p>
                   )}
