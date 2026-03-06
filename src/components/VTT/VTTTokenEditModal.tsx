@@ -241,20 +241,20 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Couleur</label>
-            <div className="flex gap-1.5 flex-wrap">
-              {TOKEN_COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`w-7 h-7 rounded-full border-2 transition-all ${color === c ? 'border-white scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
+          {role === 'gm' && (
+            <div className="flex items-center justify-between pt-1 border-t border-gray-700/60">
+              <span className="text-xs text-gray-400">Afficher le nom</span>
+              <button
+                onClick={() => setShowLabel(v => !v)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                  showLabel ? 'bg-emerald-700/40 text-emerald-400 border border-emerald-600/40' : 'bg-gray-700 text-gray-400 border border-gray-600'
+                }`}
+              >
+                {showLabel ? <Eye size={13} /> : <EyeOff size={13} />}
+                {showLabel ? 'Visible' : 'Caché'}
+              </button>
             </div>
-          </div>
+          )}
 
           {role === 'gm' && (
             <div className="flex items-center justify-between pt-1 border-t border-gray-700/60">
