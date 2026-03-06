@@ -20,6 +20,7 @@ export interface VTTToken {
   imageOffsetX?: number;
   imageOffsetY?: number;
  imageZoom?: number;
+    showLabel?: boolean;  // true = nom affiché sur le canvas (visible joueurs)
   visionMode?: VTTVisionMode;
   visionRange?: number;
   visionBrightAlpha?: number;
