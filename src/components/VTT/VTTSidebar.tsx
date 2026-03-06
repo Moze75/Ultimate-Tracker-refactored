@@ -285,13 +285,14 @@ const visibleTokens = isGM
         )}
 
         {activeTab === 'map' && (
-          <div className="p-3 space-y-3">
+          <div className="flex flex-col h-full">
+            {/* Carte active */}
             {config.mapImageUrl && (
-              <div className="relative rounded-lg overflow-hidden border border-gray-700/60 bg-gray-800">
+              <div className="relative rounded-lg overflow-hidden border border-gray-700/60 bg-gray-800 mx-3 mt-3 shrink-0">
                 <img
                   src={config.mapImageUrl}
                   alt="Carte actuelle"
-                  className="w-full h-28 object-cover"
+                  className="w-full h-20 object-cover"
                   onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
                 <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent">
@@ -309,47 +310,45 @@ const visibleTokens = isGM
               </div>
             )}
 
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">
-                {hasExistingMap ? (
-                  <span className="flex items-center gap-1"><RefreshCw size={10} /> Remplacer par URL</span>
-                ) : 'URL de la carte'}
-              </label>
-              <div className="flex gap-1">
-                <input
-                  type="text"
-                  value={mapUrl}
-                  onChange={e => setMapUrl(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleApplyUrl(); }}
-                  placeholder="https://..."
-                  className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-                />
-                <button
-                  onClick={handleApplyUrl}
-                  className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs transition-colors"
-                >
-                  OK
-                </button>
-              </div>
-            </div> 
+            {/* Bibliothèque de cartes */}
+            <div className="flex-1 overflow-hidden border-b border-gray-700/60">
+              <VTTMapLibrary
+                roomId={roomId}
+                currentMapUrl={config.mapImageUrl}
+                onLoadMap={(url, width, height) => {
+                  onUpdateMap({
+                    mapImageUrl: url,
+                    ...(width ? { mapWidth: width } : {}),
+                    ...(height ? { mapHeight: height } : {}),
+                  });
+                  setMapUrl(url);
+                }}
+              />
+            </div>
 
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">
-                {hasExistingMap ? (
-                  <span className="flex items-center gap-1"><RefreshCw size={10} /> Remplacer par fichier</span>
-                ) : <span>Fichier local <span className="text-gray-600">(compressé)</span></span>}
-              </label>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={compressing}
-                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 text-gray-300 rounded text-xs transition-colors"
-              >
-                <Upload size={12} />
-                               {compressing
-                  ? (import.meta.env.VITE_CF_UPLOAD_WORKER_URL ? 'Upload R2...' : 'Compression...')
-                  : 'Choisir une image...'}
-              </button>
+            {/* URL manuelle (repli) */}
+            <div className="p-3 space-y-2 shrink-0">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  <span className="flex items-center gap-1"><RefreshCw size={10} /> URL directe</span>
+                </label>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={mapUrl}
+                    onChange={e => setMapUrl(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleApplyUrl(); }}
+                    placeholder="https://..."
+                    className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                  <button
+                    onClick={handleApplyUrl}
+                    className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs transition-colors"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
