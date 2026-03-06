@@ -150,7 +150,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     if (type === 'folder') mapLibrary.renameFolder(renamingId, renameValue);
     else mapLibrary.renameMap(renamingId, renameValue);
     setRenamingId(null);
-    refresh();
+    persist();
   };
 
   const handleDeleteFolder = (folderId: string) => {
