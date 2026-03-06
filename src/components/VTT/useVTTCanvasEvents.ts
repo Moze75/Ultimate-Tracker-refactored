@@ -483,8 +483,29 @@ export function useVTTCanvasEvents({
           }
         }
       }
-      // En wall-select : ne pas annuler la sélection au mouseUp (le clic suivant repose)
-      // On ne fait rien ici pour draggingWallPointRef
+      // En wall-select : sélection multiple de points par rectangle
+      if (activeToolRef.current === 'wall-select' && isDragSelectingRef.current && selectionRectRef.current) {
+        const rect = selectionRectRef.current;
+        const rx1 = Math.min(rect.x1, rect.x2);
+        const ry1 = Math.min(rect.y1, rect.y2);
+        const rx2 = Math.max(rect.x1, rect.x2);
+        const ry2 = Math.max(rect.y1, rect.y2);
+        const minSize = 5 / viewportRef.current.scale;
+        if (rx2 - rx1 > minSize || ry2 - ry1 > minSize) {
+          const currentWalls = wallsRef.current || [];
+          const found: { wallId: string; pointIndex: number }[] = [];
+          for (const wall of currentWalls) {
+            wall.points.forEach((pt, pi) => {
+              if (pt.x >= rx1 && pt.x <= rx2 && pt.y >= ry1 && pt.y <= ry2) {
+                found.push({ wallId: wall.id, pointIndex: pi });
+              }
+            });
+          }
+          selectedWallPointsRef.current = found;
+          selectedWallPointRef.current = null;
+          draggingWallPointRef.current = null;
+        }
+      }
       isDragSelectingRef.current = false;
       selectionRectRef.current = null;
       draggingTokenRef.current = null;
