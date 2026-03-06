@@ -51,6 +51,13 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   
   const refresh = useCallback(() => setLib(mapLibrary.get()), []);
 
+  // Persiste le cache local vers Supabase après chaque mutation
+  const persist = useCallback(() => {
+    const current = mapLibrary.get();
+    setLib(current);
+    saveMapLibrary(roomId, current);
+  }, [roomId]);
+
   useEffect(() => {
     if (renamingId && renameInputRef.current) {
       renameInputRef.current.focus();
