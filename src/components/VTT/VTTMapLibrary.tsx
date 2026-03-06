@@ -352,7 +352,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
           {dragGhost.imgUrl && !dragGhost.imgUrl.startsWith('data:') ? (
             <img src={dragGhost.imgUrl} alt="" className="w-full h-16 object-cover block" draggable={false} />
           ) : (
-            <div className="w-full h-16 bg-gray-700 flex items-center justify-center"><Map size={20} className="text-gray-400" /></div>
+                  <div className="w-full h-16 bg-gray-700 flex items-center justify-center"><MapIcon size={20} className="text-gray-400" /></div>
           )}
           <div className="bg-black/80 px-1.5 py-0.5 text-[10px] text-amber-300 truncate">{dragGhost.label}</div>
         </div>
