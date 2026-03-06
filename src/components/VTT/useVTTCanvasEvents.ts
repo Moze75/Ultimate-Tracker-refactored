@@ -381,6 +381,17 @@ export function useVTTCanvasEvents({
         drawRef.current();
       }
 
+      // Rectangle de sélection de points de mur (wall-select, glissé dans le vide)
+      if (activeToolRef.current === 'wall-select' && isDragSelectingRef.current && selectionRectRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        selectionRectRef.current.x2 = wp2.x;
+        selectionRectRef.current.y2 = wp2.y;
+        drawRef.current();
+        return;
+      }
+
+      
       if (isPanningRef.current && lastPanRef.current) {
         const dx = e.clientX - lastPanRef.current.x;
         const dy = e.clientY - lastPanRef.current.y;
