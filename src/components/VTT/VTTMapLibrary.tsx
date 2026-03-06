@@ -257,7 +257,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
             />
           ) : (
             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <Map size={24} className="text-gray-600" />
+                           <MapIcon size={24} className="text-gray-600" />
             </div>
           )}
         </div>
