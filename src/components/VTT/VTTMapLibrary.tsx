@@ -157,8 +157,10 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
 
   // ── Drag & Drop (classement dans la bibliothèque) ─────────────────────────
   const handleDragStart = (e: React.DragEvent, mapId: string) => {
+    draggingMapIdRef.current = mapId;
     setDraggingMapId(mapId);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', mapId); // 'text/plain' est fiable sur tous les navigateurs
     e.dataTransfer.setData('vtt-library-map-id', mapId);
   };
 
