@@ -3,7 +3,7 @@ import {
   FolderPlus, Folder, FolderOpen, Map as MapIcon, Trash2,
   Upload, ChevronRight, ChevronDown, Edit2, Check, X, Link
 } from 'lucide-react';
-import { mapLibrary, type MapEntry, type MapLibrary } from '../../services/mapLibraryService';
+import { mapLibrary, fetchMapLibrary, saveMapLibrary, type MapEntry, type MapLibrary } from '../../services/mapLibraryService';
 
 interface VTTMapLibraryProps {
   roomId: string;
