@@ -174,16 +174,20 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
 
   const handleDrop = (e: React.DragEvent, folderId: string | null) => {
     e.preventDefault();
-    const mapId = e.dataTransfer.getData('vtt-library-map-id');
-    if (mapId) {
+    e.stopPropagation();
+    // On essaie d'abord la clé custom, fallback sur text/plain
+    const mapId = e.dataTransfer.getData('vtt-library-map-id') || e.dataTransfer.getData('text/plain');
+    if (mapId && draggingMapIdRef.current) {
       mapLibrary.moveMap(mapId, folderId);
       refresh();
     }
-    setDraggingMapId(null); 
+    draggingMapIdRef.current = null;
+    setDraggingMapId(null);
     setDragOverFolderId(null);
   };
 
   const handleDragEnd = () => {
+    draggingMapIdRef.current = null;
     setDraggingMapId(null);
     setDragOverFolderId(null);
   };
