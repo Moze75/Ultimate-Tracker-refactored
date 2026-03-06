@@ -40,6 +40,15 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   const dragMapIdRef = useRef<string | null>(null);
   const dragOverTargetRef = useRef<string | null>(null);
 
+  // ── Chargement depuis Supabase au montage ─────────────────────────────────
+  useEffect(() => {
+    fetchMapLibrary(roomId).then(lib => {
+      mapLibrary.setCache(lib);
+      setLib(lib);
+    });
+  }, [roomId]);
+
+  
   const refresh = useCallback(() => setLib(mapLibrary.get()), []);
 
   useEffect(() => {
