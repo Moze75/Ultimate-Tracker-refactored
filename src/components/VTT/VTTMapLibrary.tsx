@@ -150,7 +150,30 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     }
   };
 
-  const handleDeleteMap = (mapId: string) => {
+  const handleDeleteMap = async (mapId: string) => {
+    const map = lib.maps.find(m => m.id === mapId);
+    if (!map) return;
+
+    // Supprimer du bucket R2 si c'est une URL R2
+    const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
+    const uploadSecret = import.meta.env.VITE_CF_UPLOAD_SECRET;
+    if (workerUrl && uploadSecret && map.url.includes('.r2.dev/vtt/')) {
+      try {
+        // Extraire la clé R2 depuis l'URL : tout ce qui suit le domaine
+        const key = map.url.split('.r2.dev/')[1]; // ex: vtt/maps/roomId_123.jpg
+        if (key) {
+          const url = new URL(workerUrl);
+          url.searchParams.set('action', 'delete');
+          url.searchParams.set('key', key);
+          await fetch(url.toString(), {
+            headers: { 'X-Upload-Secret': uploadSecret },
+          });
+        }
+      } catch (err) {
+        console.warn('[MapLib] Suppression R2 échouée (ignorée):', err);
+      }
+    }
+
     mapLibrary.deleteMap(mapId);
     refresh();
   };
