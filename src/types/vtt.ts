@@ -149,6 +149,7 @@ export type VTTServerEvent =
   | { type: 'MAP_UPDATED'; config: Partial<VTTRoomConfig> }
   | { type: 'SCENE_SWITCHED'; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[] }
   | { type: 'WALLS_UPDATED'; walls: VTTWall[] }
+  | { type: 'WEATHER_UPDATED'; effects: VTTWeatherEffect[] }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
   | { type: 'ERROR'; message: string };
