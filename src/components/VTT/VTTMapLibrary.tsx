@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   FolderPlus, Folder, FolderOpen, Map, Trash2,
-  Upload, Plus, ChevronRight, ChevronDown, Edit2, Check, X, Link
+  Upload, ChevronRight, ChevronDown, Edit2, Check, X, Link
 } from 'lucide-react';
-import { mapLibrary, type MapEntry, type MapFolder, type MapLibrary } from '../../services/mapLibraryService';
+import { mapLibrary, type MapEntry, type MapLibrary } from '../../services/mapLibraryService';
 
 interface VTTMapLibraryProps {
   roomId: string;
@@ -11,23 +11,34 @@ interface VTTMapLibraryProps {
   onLoadMap: (url: string, width?: number, height?: number) => void;
 }
 
+// ── Ghost de drag custom ─────────────────────────────────────────────────────
+interface DragGhost {
+  mapId: string;
+  label: string;
+  imgUrl: string;
+  x: number;
+  y: number;
+}
+
 export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibraryProps) {
   const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get());
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
-    const [draggingMapId, setDraggingMapId] = useState<string | null>(null);
-  const draggingMapIdRef = useRef<string | null>(null);
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null);
+  const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
+  const [dragOverTarget, setDragOverTarget] = useState<string | null>(null); // folderId | 'root' | null
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [newFolderMode, setNewFolderMode] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [addUrlMode, setAddUrlMode] = useState<string | null>(null); // folderId | 'root'
+  const [addUrlMode, setAddUrlMode] = useState<string | null>(null);
   const [addUrlValue, setAddUrlValue] = useState('');
   const [addUrlName, setAddUrlName] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileTargetFolderRef = useRef<string | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragMapIdRef = useRef<string | null>(null);
+  const folderRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const refresh = useCallback(() => setLib(mapLibrary.get()), []);
 
@@ -37,6 +48,55 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
       renameInputRef.current.select();
     }
   }, [renamingId]);
+
+  // ── Drag custom (mousemove sur window) ───────────────────────────────────
+  const startDrag = useCallback((e: React.MouseEvent, map: MapEntry) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragMapIdRef.current = map.id;
+
+    setDragGhost({
+      mapId: map.id,
+      label: map.name,
+      imgUrl: map.url,
+      x: e.clientX,
+      y: e.clientY,
+    });
+
+    const onMouseMove = (ev: MouseEvent) => {
+      setDragGhost(prev => prev ? { ...prev, x: ev.clientX, y: ev.clientY } : null);
+
+      // Détecter la cible sous le curseur
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      let target: string | null = null;
+      if (el) {
+        const folderEl = el.closest('[data-folder-drop]') as HTMLElement | null;
+        if (folderEl) {
+          target = folderEl.dataset.folderDrop || 'root';
+        } else if (el.closest('[data-root-drop]')) {
+          target = 'root';
+        }
+      }
+      setDragOverTarget(target);
+    };
+
+    const onMouseUp = () => {
+      const mapId = dragMapIdRef.current;
+      if (mapId && dragOverTarget !== null) {
+        const folderId = dragOverTarget === 'root' ? null : dragOverTarget;
+        mapLibrary.moveMap(mapId, folderId);
+        refresh();
+      }
+      dragMapIdRef.current = null;
+      setDragGhost(null);
+      setDragOverTarget(null);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, [dragOverTarget, refresh]);
 
   // ── Dossiers ──────────────────────────────────────────────────────────────
   const toggleFolder = (id: string) => {
@@ -100,7 +160,6 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
       if (workerUrl) {
         const { uploadVttAsset } = await import('../../services/vttStorageService');
         url = await uploadVttAsset(file, 'maps', roomId);
-        // Récupérer les dimensions
         await new Promise<void>((resolve) => {
           const img = new Image();
           img.onload = () => { width = img.naturalWidth; height = img.naturalHeight; resolve(); };
@@ -108,7 +167,6 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
           img.src = url;
         });
       } else {
-        // Fallback dataURL
         const result = await new Promise<{ dataUrl: string; width: number; height: number }>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -133,13 +191,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
         height = result.height;
       }
 
-      mapLibrary.addMap({
-        name: file.name.replace(/\.[^.]+$/, ''),
-        url,
-        folderId,
-        width,
-        height,
-      });
+      mapLibrary.addMap({ name: file.name.replace(/\.[^.]+$/, ''), url, folderId, width, height });
       refresh();
     } catch (err) {
       console.error('Erreur upload carte:', err);
@@ -154,23 +206,19 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     const map = lib.maps.find(m => m.id === mapId);
     if (!map) return;
 
-    // Supprimer du bucket R2 si c'est une URL R2
     const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
     const uploadSecret = import.meta.env.VITE_CF_UPLOAD_SECRET;
     if (workerUrl && uploadSecret && map.url.includes('.r2.dev/vtt/')) {
       try {
-        // Extraire la clé R2 depuis l'URL : tout ce qui suit le domaine
-        const key = map.url.split('.r2.dev/')[1]; // ex: vtt/maps/roomId_123.jpg
+        const key = map.url.split('.r2.dev/')[1];
         if (key) {
           const url = new URL(workerUrl);
           url.searchParams.set('action', 'delete');
           url.searchParams.set('key', key);
-          await fetch(url.toString(), {
-            headers: { 'X-Upload-Secret': uploadSecret },
-          });
+          await fetch(url.toString(), { headers: { 'X-Upload-Secret': uploadSecret } });
         }
       } catch (err) {
-        console.warn('[MapLib] Suppression R2 échouée (ignorée):', err);
+        console.warn('[MapLib] Suppression R2 ignorée:', err);
       }
     }
 
@@ -178,86 +226,44 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     refresh();
   };
 
-  // ── Drag & Drop (classement dans la bibliothèque) ─────────────────────────
-  const handleDragStart = (e: React.DragEvent, mapId: string) => {
-    draggingMapIdRef.current = mapId;
-    setDraggingMapId(mapId);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', mapId); // 'text/plain' est fiable sur tous les navigateurs
-    e.dataTransfer.setData('vtt-library-map-id', mapId);
-  };
-
-  const handleDragOver = (e: React.DragEvent, folderId: string | null) => {
-    if (!draggingMapIdRef.current) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverFolderId(folderId ?? 'root');
-  };
-
-  const handleDrop = (e: React.DragEvent, folderId: string | null) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // On essaie d'abord la clé custom, fallback sur text/plain
-    const mapId = e.dataTransfer.getData('vtt-library-map-id') || e.dataTransfer.getData('text/plain');
-    if (mapId && draggingMapIdRef.current) {
-      mapLibrary.moveMap(mapId, folderId);
-      refresh();
-    }
-    draggingMapIdRef.current = null;
-    setDraggingMapId(null);
-    setDragOverFolderId(null);
-  };
-
-  const handleDragEnd = () => {
-    draggingMapIdRef.current = null;
-    setDraggingMapId(null);
-    setDragOverFolderId(null);
-  };
-
-  // ── Charger une carte sur le canvas ──────────────────────────────────────
   const handleLoadMap = (map: MapEntry) => {
     onLoadMap(map.url, map.width, map.height);
   };
 
-  // ── Rendu d'une carte (thumbnail pleine largeur) ──────────────────��────────
+  // ── Rendu d'une carte (thumbnail pleine largeur) ──────────────────────────
   const renderMap = (map: MapEntry) => {
     const isActive = map.url === currentMapUrl;
     const isRenaming = renamingId === map.id;
+    const isDragging = dragGhost?.mapId === map.id;
 
     return (
       <div
         key={map.id}
-        draggable
-        onDragStart={e => handleDragStart(e, map.id)}
-        onDragEnd={handleDragEnd}
-        className={`group relative w-full overflow-hidden cursor-grab active:cursor-grabbing transition-all border-b border-gray-700/40 ${
-          isActive
-            ? 'ring-2 ring-inset ring-amber-500'
-            : 'hover:brightness-110'
-        }`}
+        className={`group relative w-full overflow-hidden transition-all select-none ${
+          isDragging ? 'opacity-40' : 'opacity-100'
+        } ${isActive ? 'ring-2 ring-inset ring-amber-500' : ''}`}
       >
-        {/* Thumbnail pleine largeur */}
-        {map.url && !map.url.startsWith('data:') ? (
-          <img
-            src={map.url}
-            alt={map.name}
-            draggable={false}
-            className="w-full h-14 object-cover block"
-            onError={e => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-        ) : null}
-
-        {/* Fallback si pas d'image ou dataURL trop lourd à afficher */}
-        <div className={`w-full h-14 bg-gray-800 flex items-center justify-center ${map.url && !map.url.startsWith('data:') ? 'hidden' : ''}`}>
-          <Map size={20} className="text-gray-600" />
+        {/* Thumbnail — zone de drag */}
+        <div
+          className="w-full h-20 cursor-grab active:cursor-grabbing"
+          onMouseDown={e => startDrag(e, map)}
+        >
+          {map.url && !map.url.startsWith('data:') ? (
+            <img
+              src={map.url}
+              alt={map.name}
+              draggable={false}
+              className="w-full h-full object-cover block pointer-events-none"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+              <Map size={24} className="text-gray-600" />
+            </div>
+          )}
         </div>
 
-        {/* Bandeau bas : nom de la carte */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 py-1 flex items-end justify-between gap-1">
+        {/* Bandeau bas : nom + actions */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-1.5 py-1 flex items-end justify-between gap-1">
           {isRenaming ? (
             <input
               ref={renameInputRef}
@@ -271,50 +277,37 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
               className="flex-1 px-1 py-0 bg-black/60 border border-amber-500 rounded text-white text-[10px] outline-none"
             />
           ) : (
-            <span className={`flex-1 text-[10px] truncate font-medium leading-tight ${isActive ? 'text-amber-300' : 'text-gray-200'}`}>
+            <span
+              className={`flex-1 text-[10px] truncate font-medium leading-tight ${isActive ? 'text-amber-300' : 'text-gray-200'}`}
+              title={map.name}
+            >
               {map.name}
             </span>
           )}
 
-          {/* Boutons actions — visibles au hover */}
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            {/* Charger */}
             <button
-              onClick={e => { e.stopPropagation(); handleLoadMap(map); }}
-              className="p-0.5 rounded bg-amber-600/80 hover:bg-amber-500 text-white transition-colors"
-              title="Charger cette carte"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => handleLoadMap(map)}
+              className="p-0.5 rounded bg-amber-600/90 hover:bg-amber-500 text-white"
+              title="Charger"
             >
               <ChevronRight size={10} />
             </button>
-            {/* Renommer */}
             {isRenaming ? (
               <>
-                <button onClick={e => { e.stopPropagation(); handleRenameConfirm('map'); }} className="p-0.5 rounded bg-green-600/80 hover:bg-green-500 text-white"><Check size={10} /></button>
-                <button onClick={e => { e.stopPropagation(); setRenamingId(null); }} className="p-0.5 rounded bg-gray-600/80 hover:bg-gray-500 text-white"><X size={10} /></button>
+                <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameConfirm('map')} className="p-0.5 rounded bg-green-600/90 hover:bg-green-500 text-white"><Check size={10} /></button>
+                <button onMouseDown={e => e.stopPropagation()} onClick={() => setRenamingId(null)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white"><X size={10} /></button>
               </>
             ) : (
-              <button
-                onClick={e => { e.stopPropagation(); handleRenameStart(map.id, map.name); }}
-                className="p-0.5 rounded bg-gray-600/80 hover:bg-gray-500 text-white transition-colors"
-                title="Renommer"
-              >
-                <Edit2 size={10} />
-              </button>
+              <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameStart(map.id, map.name)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white" title="Renommer"><Edit2 size={10} /></button>
             )}
-            {/* Supprimer */}
-            <button
-              onClick={e => { e.stopPropagation(); handleDeleteMap(map.id); }}
-              className="p-0.5 rounded bg-red-700/80 hover:bg-red-600 text-white transition-colors"
-              title="Supprimer"
-            >
-              <Trash2 size={10} />
-            </button>
+            <button onMouseDown={e => e.stopPropagation()} onClick={() => handleDeleteMap(map.id)} className="p-0.5 rounded bg-red-700/90 hover:bg-red-600 text-white" title="Supprimer"><Trash2 size={10} /></button>
           </div>
         </div>
 
-        {/* Indicateur actif */}
         {isActive && (
-          <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-amber-500 rounded text-[8px] text-white font-bold leading-none">
+          <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-amber-500 rounded text-[8px] text-white font-bold leading-none pointer-events-none">
             EN COURS
           </div>
         )}
@@ -322,67 +315,25 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     );
   };
 
-  // ── Rendu d'un formulaire d'ajout URL ─────────────────────────────────────
+  // ── Rendu boutons d'ajout ─────────────────────────────────────────────────
   const renderAddUrlForm = (folderId: string | null) => (
-    <div className="mx-2 mt-1 space-y-1 p-2 bg-gray-800/60 rounded-lg border border-gray-700">
-      <input
-        type="text"
-        value={addUrlName}
-        onChange={e => setAddUrlName(e.target.value)}
-        placeholder="Nom (optionnel)"
-        className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-      />
-      <input
-        autoFocus
-        type="text"
-        value={addUrlValue}
-        onChange={e => setAddUrlValue(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(folderId); if (e.key === 'Escape') setAddUrlMode(null); }}
-        placeholder="https://..."
-        className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-      />
+    <div className="mx-2 mt-1 mb-1 space-y-1 p-2 bg-gray-800/60 rounded-lg border border-gray-700">
+      <input type="text" value={addUrlName} onChange={e => setAddUrlName(e.target.value)} placeholder="Nom (optionnel)" className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500" />
+      <input autoFocus type="text" value={addUrlValue} onChange={e => setAddUrlValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(folderId); if (e.key === 'Escape') setAddUrlMode(null); }} placeholder="https://..." className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500" />
       <div className="flex gap-1">
-        <button
-          onClick={() => handleAddUrl(folderId)}
-          disabled={!addUrlValue.trim()}
-          className="flex-1 py-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded text-xs transition-colors"
-        >
-          Ajouter
-        </button>
-        <button
-          onClick={() => { setAddUrlMode(null); setAddUrlValue(''); setAddUrlName(''); }}
-          className="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-xs transition-colors"
-        >
-          Annuler
-        </button>
+        <button onClick={() => handleAddUrl(folderId)} disabled={!addUrlValue.trim()} className="flex-1 py-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded text-xs transition-colors">Ajouter</button>
+        <button onClick={() => { setAddUrlMode(null); setAddUrlValue(''); setAddUrlName(''); }} className="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-xs transition-colors">Annuler</button>
       </div>
     </div>
   );
 
-  // ── Rendu boutons d'ajout ─────────────────────────────────────────────────
   const renderAddButtons = (folderId: string | null) => {
     const key = folderId ?? 'root';
     if (addUrlMode === key) return renderAddUrlForm(folderId);
     return (
-      <div className="flex gap-1 px-2 mt-1">
-        <button
-          onClick={() => { setAddUrlMode(key); setAddUrlValue(''); setAddUrlName(''); }}
-          className="flex-1 flex items-center justify-center gap-1 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
-          title="Ajouter par URL"
-        >
-          <Link size={9} /> URL
-        </button>
-        <button
-          onClick={() => {
-            fileTargetFolderRef.current = folderId;
-            fileInputRef.current?.click();
-          }}
-          disabled={uploading}
-          className="flex-1 flex items-center justify-center gap-1 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors disabled:opacity-50"
-          title="Upload fichier"
-        >
-          <Upload size={9} /> {uploading ? '...' : 'Fichier'}
-        </button>
+      <div className="flex gap-1 px-2 mt-1 mb-1">
+        <button onClick={() => { setAddUrlMode(key); setAddUrlValue(''); setAddUrlName(''); }} className="flex-1 flex items-center justify-center gap-1 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"><Link size={9} /> URL</button>
+        <button onClick={() => { fileTargetFolderRef.current = folderId; fileInputRef.current?.click(); }} disabled={uploading} className="flex-1 flex items-center justify-center gap-1 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors disabled:opacity-50"><Upload size={9} /> {uploading ? '...' : 'Fichier'}</button>
       </div>
     );
   };
@@ -390,15 +341,27 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   const rootMaps = lib.maps.filter(m => !m.folderId);
 
   return (
-    <div className="flex flex-col h-full">
+    <div ref={containerRef} className="flex flex-col h-full relative">
+
+      {/* Ghost de drag custom */}
+      {dragGhost && (
+        <div
+          className="fixed z-[9999] pointer-events-none opacity-90 shadow-2xl border-2 border-amber-500"
+          style={{ left: dragGhost.x + 12, top: dragGhost.y - 30, width: 120 }}
+        >
+          {dragGhost.imgUrl && !dragGhost.imgUrl.startsWith('data:') ? (
+            <img src={dragGhost.imgUrl} alt="" className="w-full h-16 object-cover block" draggable={false} />
+          ) : (
+            <div className="w-full h-16 bg-gray-700 flex items-center justify-center"><Map size={20} className="text-gray-400" /></div>
+          )}
+          <div className="bg-black/80 px-1.5 py-0.5 text-[10px] text-amber-300 truncate">{dragGhost.label}</div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-700/60">
         <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Bibliothèque</span>
-        <button
-          onClick={() => { setNewFolderMode(true); setNewFolderName(''); }}
-          className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
-          title="Nouveau dossier"
-        >
+        <button onClick={() => { setNewFolderMode(true); setNewFolderName(''); }} className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors">
           <FolderPlus size={10} /> Dossier
         </button>
       </div>
@@ -406,68 +369,37 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
       {/* Formulaire nouveau dossier */}
       {newFolderMode && (
         <div className="px-2 py-1.5 border-b border-gray-700/60 flex gap-1">
-          <input
-            autoFocus
-            type="text"
-            value={newFolderName}
-            onChange={e => setNewFolderName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setNewFolderMode(false); }}
-            placeholder="Nom du dossier..."
-            className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-          />
-          <button onClick={handleCreateFolder} className="p-1 rounded bg-amber-600 hover:bg-amber-500 text-white">
-            <Check size={12} />
-          </button>
-          <button onClick={() => setNewFolderMode(false)} className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300">
-            <X size={12} />
-          </button>
+          <input autoFocus type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setNewFolderMode(false); }} placeholder="Nom du dossier..." className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500" />
+          <button onClick={handleCreateFolder} className="p-1 rounded bg-amber-600 hover:bg-amber-500 text-white"><Check size={12} /></button>
+          <button onClick={() => setNewFolderMode(false)} className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300"><X size={12} /></button>
         </div>
       )}
 
       {/* Liste scrollable */}
       <div className="flex-1 overflow-y-auto py-1">
 
-        {/* ── Dossiers ─────────────────────────────────────────────────────── */}
+        {/* Dossiers */}
         {lib.folders.map(folder => {
           const isOpen = openFolders.has(folder.id);
           const folderMaps = lib.maps.filter(m => m.folderId === folder.id);
-          const isDragOver = dragOverFolderId === folder.id;
+          const isDragOver = dragOverTarget === folder.id;
           const isRenaming = renamingId === folder.id;
 
           return (
             <div key={folder.id}>
-              {/* En-tête du dossier */}
+              {/* En-tête dossier — zone de drop */}
               <div
-                className={`group flex items-center gap-1 px-2 py-1 cursor-pointer transition-colors ${
-                  isDragOver ? 'bg-amber-500/20' : 'hover:bg-gray-800/60'
+                data-folder-drop={folder.id}
+                className={`group flex items-center gap-1 px-2 py-1.5 cursor-pointer transition-colors ${
+                  isDragOver ? 'bg-amber-500/30 border-y border-amber-500/50' : 'hover:bg-gray-800/60'
                 }`}
                 onClick={() => !isRenaming && toggleFolder(folder.id)}
-                onDragOver={e => handleDragOver(e, folder.id)}
-                onDrop={e => handleDrop(e, folder.id)}
-                onDragLeave={() => setDragOverFolderId(null)}
               >
-                {isOpen
-                  ? <ChevronDown size={10} className="text-gray-500 shrink-0" />
-                  : <ChevronRight size={10} className="text-gray-500 shrink-0" />
-                }
-                {isOpen
-                  ? <FolderOpen size={12} className="text-amber-400 shrink-0" />
-                  : <Folder size={12} className="text-amber-500 shrink-0" />
-                }
+                {isOpen ? <ChevronDown size={10} className="text-gray-500 shrink-0" /> : <ChevronRight size={10} className="text-gray-500 shrink-0" />}
+                {isOpen ? <FolderOpen size={12} className="text-amber-400 shrink-0" /> : <Folder size={12} className="text-amber-500 shrink-0" />}
 
                 {isRenaming ? (
-                  <input
-                    ref={renameInputRef}
-                    value={renameValue}
-                    onChange={e => setRenameValue(e.target.value)}
-                    onClick={e => e.stopPropagation()}
-                    onKeyDown={e => {
-                      e.stopPropagation();
-                      if (e.key === 'Enter') handleRenameConfirm('folder');
-                      if (e.key === 'Escape') setRenamingId(null);
-                    }}
-                    className="flex-1 px-1 py-0 bg-gray-700 border border-amber-500 rounded text-white text-xs outline-none"
-                  />
+                  <input ref={renameInputRef} value={renameValue} onChange={e => setRenameValue(e.target.value)} onClick={e => e.stopPropagation()} onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') handleRenameConfirm('folder'); if (e.key === 'Escape') setRenamingId(null); }} className="flex-1 px-1 py-0 bg-gray-700 border border-amber-500 rounded text-white text-xs outline-none" />
                 ) : (
                   <span className="flex-1 text-xs text-gray-300 truncate font-medium">
                     {folder.name}
@@ -482,17 +414,17 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
                       <button onClick={() => setRenamingId(null)} className="p-0.5 rounded hover:bg-gray-600 text-gray-400"><X size={10} /></button>
                     </>
                   ) : (
-                    <button onClick={() => handleRenameStart(folder.id, folder.name)} className="p-0.5 rounded hover:bg-gray-600 text-gray-500 hover:text-white transition-colors" title="Renommer"><Edit2 size={10} /></button>
+                    <button onClick={() => handleRenameStart(folder.id, folder.name)} className="p-0.5 rounded hover:bg-gray-600 text-gray-500 hover:text-white" title="Renommer"><Edit2 size={10} /></button>
                   )}
-                  <button onClick={() => handleDeleteFolder(folder.id)} className="p-0.5 rounded hover:bg-red-900/40 text-gray-500 hover:text-red-400 transition-colors" title="Supprimer le dossier"><Trash2 size={10} /></button>
+                  <button onClick={() => handleDeleteFolder(folder.id)} className="p-0.5 rounded hover:bg-red-900/40 text-gray-500 hover:text-red-400" title="Supprimer"><Trash2 size={10} /></button>
                 </div>
               </div>
 
-              {/* Contenu du dossier */}
+              {/* Contenu du dossier — SANS border-l */}
               {isOpen && (
                 <div className="mb-1">
                   {folderMaps.length === 0 && (
-                    <p className="text-[10px] text-gray-600 px-2 py-1 italic">Dossier vide</p>
+                    <p className="text-[10px] text-gray-600 px-3 py-1 italic">Dossier vide — glissez une carte ici</p>
                   )}
                   {folderMaps.map(renderMap)}
                   {renderAddButtons(folder.id)}
@@ -502,38 +434,24 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
           );
         })}
 
-        {/* ── Racine (sans dossier) ─────────────────────────────────────────── */}
+        {/* Racine — zone de drop */}
         <div
-          className={`min-h-[24px] transition-colors rounded mx-1 ${
-            dragOverFolderId === 'root' ? 'bg-amber-500/10 border border-dashed border-amber-500/40' : ''
+          data-root-drop="true"
+          className={`min-h-[8px] transition-colors ${
+            dragOverTarget === 'root' ? 'bg-amber-500/10 border-y border-dashed border-amber-500/40' : ''
           }`}
-          onDragOver={e => handleDragOver(e, null)}
-          onDrop={e => handleDrop(e, null)}
-          onDragLeave={() => setDragOverFolderId(null)}
         >
           {rootMaps.length === 0 && lib.folders.length === 0 && (
-            <p className="text-[10px] text-gray-600 text-center py-3 italic">
-              Aucune carte. Ajoutez-en une ci-dessous.
-            </p>
+            <p className="text-[10px] text-gray-600 text-center py-3 italic px-2">Aucune carte. Ajoutez-en une ci-dessous.</p>
           )}
           {rootMaps.map(renderMap)}
         </div>
 
-        {/* Boutons d'ajout à la racine */}
         {renderAddButtons(null)}
       </div>
 
       {/* Input fichier caché */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => {
-          const file = e.target.files?.[0];
-          if (file) handleFileUpload(file, fileTargetFolderRef.current);
-        }}
-      />
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, fileTargetFolderRef.current); }} />
     </div>
   );
 }
