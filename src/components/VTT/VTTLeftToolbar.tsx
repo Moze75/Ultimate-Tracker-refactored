@@ -824,6 +824,173 @@ const HOUR_PRESETS = [
   { hour: 22, label: 'Nuit', icon: Moon },
 ];
 
+// ─── WEATHER PRESETS (inspiré de FXMaster — gambit07/fxmaster) ───────────────
+
+const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] = [
+  { type: 'rain',          label: 'Pluie',           icon: '🌧' },
+  { type: 'acid-rain',     label: 'Pluie acide',     icon: '🧪' },
+  { type: 'sunshower',     label: 'Pluie dorée',     icon: '🌦' },
+  { type: 'snow',          label: 'Neige',           icon: '❄️' },
+  { type: 'blizzard',      label: 'Blizzard',        icon: '🌨' },
+  { type: 'fog',           label: 'Brouillard',      icon: '🌫' },
+  { type: 'embers',        label: 'Braises',         icon: '🔥' },
+  { type: 'leaves',        label: 'Feuilles',        icon: '🍂' },
+  { type: 'sandstorm',     label: 'Sable',           icon: '🏜' },
+  { type: 'bubbles',       label: 'Bulles',          icon: '🫧' },
+  { type: 'spiderwebs',    label: 'Toiles',          icon: '🕸' },
+  { type: 'magiccrystals', label: 'Cristaux',        icon: '💎' },
+  { type: 'magicstars',    label: 'Étoiles',         icon: '✨' },
+];
+
+const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8 };
+
+const WeatherPopup = React.forwardRef<HTMLDivElement, {
+  effects: VTTWeatherEffect[];
+  onChange: (effects: VTTWeatherEffect[]) => void;
+  onClose: () => void;
+}>(function WeatherPopup({ effects, onChange, onClose }, ref) {
+  const [editingType, setEditingType] = React.useState<VTTWeatherType | null>(null);
+
+  const isActive = (type: VTTWeatherType) => effects.some(e => e.type === type);
+  const getEffect = (type: VTTWeatherType) => effects.find(e => e.type === type);
+
+  const toggle = (type: VTTWeatherType) => {
+    if (isActive(type)) {
+      onChange(effects.filter(e => e.type !== type));
+      if (editingType === type) setEditingType(null);
+    } else {
+      onChange([...effects, { type, ...DEFAULT_WEATHER }]);
+      setEditingType(type);
+    }
+  };
+
+  const update = (type: VTTWeatherType, changes: Partial<VTTWeatherEffect>) => {
+    onChange(effects.map(e => e.type === type ? { ...e, ...changes } : e));
+  };
+
+  const editingEffect = editingType ? getEffect(editingType) : null;
+
+  return (
+    <div
+      ref={ref}
+      className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64"
+      style={{ top: '230px' }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <Wind size={13} className="text-sky-400" />
+          <span className="text-xs font-semibold text-gray-200">Effets météo</span>
+          <a
+            href="https://github.com/gambit07/fxmaster"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] text-gray-600 hover:text-gray-400 underline transition-colors"
+            title="Inspiré de FXMaster par gambit07"
+          >
+            FXMaster
+          </a>
+        </div>
+        <div className="flex items-center gap-1">
+          {effects.length > 0 && (
+            <button
+              onClick={() => { onChange([]); setEditingType(null); }}
+              className="text-[9px] text-red-400 hover:text-red-300 px-1 py-0.5 rounded hover:bg-red-950/30 transition-colors"
+            >
+              Tout off
+            </button>
+          )}
+          <button onClick={onClose} className="p-0.5 text-gray-500 hover:text-gray-300 rounded">
+            <X size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Grille des presets */}
+      <div className="grid grid-cols-3 gap-1 mb-3">
+        {WEATHER_PRESETS.map(preset => {
+          const active = isActive(preset.type);
+          return (
+            <button
+              key={preset.type}
+              onClick={() => toggle(preset.type)}
+              onContextMenu={e => { e.preventDefault(); if (active) setEditingType(preset.type); }}
+              title={preset.label + (active ? ' — clic droit : régler' : '')}
+              className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg border text-[10px] transition-all ${
+                active
+                  ? 'border-sky-500/60 bg-sky-900/30 text-sky-200'
+                  : 'border-gray-700/60 bg-gray-800/50 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+              }`}
+            >
+              <span className="text-base leading-none">{preset.icon}</span>
+              <span className="leading-tight text-center">{preset.label}</span>
+              {active && <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Panneau de réglage */}
+      {editingEffect && editingType && (
+        <div className="border-t border-gray-700/60 pt-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-gray-400 font-medium">
+              {WEATHER_PRESETS.find(p => p.type === editingType)?.icon}{' '}
+              {WEATHER_PRESETS.find(p => p.type === editingType)?.label}
+            </span>
+            <button onClick={() => setEditingType(null)} className="text-gray-600 hover:text-gray-400">
+              <X size={10} />
+            </button>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+              <span>Densité</span>
+              <span className="text-gray-400">{editingEffect.density.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0.1" max="3" step="0.1"
+              value={editingEffect.density}
+              onChange={e => update(editingType, { density: parseFloat(e.target.value) })}
+              className="w-full accent-sky-500"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+              <span>Vitesse</span>
+              <span className="text-gray-400">{editingEffect.speed.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0.2" max="3" step="0.1"
+              value={editingEffect.speed}
+              onChange={e => update(editingType, { speed: parseFloat(e.target.value) })}
+              className="w-full accent-sky-500"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+              <span>Opacité</span>
+              <span className="text-gray-400">{editingEffect.alpha.toFixed(2)}</span>
+            </div>
+            <input type="range" min="0.05" max="1" step="0.05"
+              value={editingEffect.alpha}
+              onChange={e => update(editingType, { alpha: parseFloat(e.target.value) })}
+              className="w-full accent-sky-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {effects.length === 0 && (
+        <p className="text-[10px] text-gray-600 text-center pb-1">Cliquez pour activer un effet</p>
+      )}
+      {effects.length > 0 && !editingType && (
+        <p className="text-[10px] text-gray-600 text-center pb-1">Clic droit sur un effet actif pour régler</p>
+      )}
+    </div>
+  );
+});
+
+
 const TimeOfDayPopup = React.forwardRef<HTMLDivElement, {
   hour: number;
   onChange: (h: number) => void;
