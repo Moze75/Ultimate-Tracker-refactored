@@ -119,8 +119,11 @@ export function drawToken({
   }
 
   if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
-    const barW = r * 1.6;
-    const barH = Math.max(4, size * 0.07) / scale;
+    // Taille fixe en pixels écran, indépendante du zoom
+    const BAR_W_PX = 36;   // largeur fixe écran (px)
+    const BAR_H_PX = 5;    // hauteur fixe écran (px)
+    const barW = BAR_W_PX / scale;
+    const barH = BAR_H_PX / scale;
     const barY = r + 6 / scale;
     const pct = Math.max(0, Math.min(1, token.hp / token.maxHp));
     const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
