@@ -197,6 +197,8 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       token,
       CELL,
       scale: vp.scale,
+      vpX: vp.x,
+      vpY: vp.y,
       currentSelectedId,
       multiIds,
       curUserId,
