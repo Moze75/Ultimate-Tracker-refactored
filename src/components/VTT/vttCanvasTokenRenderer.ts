@@ -153,25 +153,7 @@ export function drawToken({
     ctx.shadowBlur = 0;
   }
 
-  // --- Nom du token : taille basée sur CELL ---
-  if (token.showLabel) {
-    const hasHp   = token.maxHp != null && token.maxHp > 0 && token.hp != null;
-    const BAR_H   = CELL * 0.07;
-    const FONT_SZ = CELL * 0.18;        // 18% d'une case (~9px pour CELL=50)
-    const PAD     = CELL * 0.05;
-    const labelY  = r + CELL * 0.06 + (hasHp ? BAR_H + CELL * 0.04 : 0);
-    ctx.font = `bold ${FONT_SZ}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const tw = ctx.measureText(token.label).width + PAD * 2;
-    const th = FONT_SZ + PAD * 2;
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.beginPath();
-    ctx.roundRect(-tw / 2, labelY, tw, th, th / 3);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.fillText(token.label, 0, labelY + PAD);
-  }
+
 
   ctx.restore();
 }
