@@ -258,10 +258,14 @@ export function useVTTCanvasEvents({
           }
           if (found) break;
         }
-        // Clic dans le vide = désélectionner
+        // Clic dans le vide = désélectionner tout (sélection simple ET multi)
         if (!found) {
           draggingWallPointRef.current = null;
           selectedWallPointRef.current = null;
+          selectedWallPointsRef.current = [];
+          // Démarrer un rectangle de sélection de points
+          isDragSelectingRef.current = true;
+          selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
         }
         drawRef.current();
       // FIN du bloc wall-select
