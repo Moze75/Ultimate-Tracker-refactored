@@ -198,6 +198,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setTokens(scene.tokens);
     setFogState(scene.fogState);
     setWalls(scene.walls || []);
+        setWeatherEffects(scene.config.weatherEffects || []);
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
