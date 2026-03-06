@@ -107,7 +107,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
       if (mapId && target !== null) {
         const folderId = target === 'root' ? null : target;
         mapLibrary.moveMap(mapId, folderId);
-        refresh();
+        persist();
       }
 
       dragMapIdRef.current = null;
