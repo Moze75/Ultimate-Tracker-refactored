@@ -189,7 +189,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     onLoadMap(map.url, map.width, map.height);
   };
 
-  // ── Rendu d'une carte ─────────────────────────────────────────────────────
+  // ── Rendu d'une carte (thumbnail pleine largeur) ──────────────────��────────
   const renderMap = (map: MapEntry) => {
     const isActive = map.url === currentMapUrl;
     const isRenaming = renamingId === map.id;
@@ -200,71 +200,93 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
         draggable
         onDragStart={e => handleDragStart(e, map.id)}
         onDragEnd={handleDragEnd}
-        className={`group flex items-center gap-1.5 px-2 py-1 rounded cursor-grab active:cursor-grabbing transition-colors ${
+        className={`group relative w-full overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
           isActive
-            ? 'bg-amber-500/20 border border-amber-500/40'
-            : 'hover:bg-gray-800 border border-transparent'
+            ? 'ring-2 ring-amber-500 ring-offset-1 ring-offset-gray-900'
+            : 'hover:ring-1 hover:ring-gray-600 ring-offset-1 ring-offset-gray-900'
         }`}
       >
-        <Map size={11} className={isActive ? 'text-amber-400 shrink-0' : 'text-gray-500 shrink-0'} />
-
-        {isRenaming ? (
-          <input
-            ref={renameInputRef}
-            value={renameValue}
-            onChange={e => setRenameValue(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') handleRenameConfirm('map');
-              if (e.key === 'Escape') setRenamingId(null);
+        {/* Thumbnail pleine largeur */}
+        {map.url && !map.url.startsWith('data:') ? (
+          <img
+            src={map.url}
+            alt={map.name}
+            draggable={false}
+            className="w-full h-14 object-cover block"
+            onError={e => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
             }}
-            className="flex-1 px-1 py-0 bg-gray-700 border border-amber-500 rounded text-white text-xs outline-none"
           />
-        ) : (
-          <span
-            className={`flex-1 text-xs truncate ${isActive ? 'text-amber-300' : 'text-gray-300'}`}
-            title={map.name}
-          >
-            {map.name}
-          </span>
-        )}
+        ) : null}
 
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {/* Bouton charger */}
-          <button
-            onClick={() => handleLoadMap(map)}
-            className="p-0.5 rounded hover:bg-amber-600/40 text-gray-500 hover:text-amber-300 transition-colors"
-            title="Charger cette carte"
-          >
-            <ChevronRight size={10} />
-          </button>
-          {/* Renommer */}
-          {isRenaming ? (
-            <>
-              <button onClick={() => handleRenameConfirm('map')} className="p-0.5 rounded hover:bg-green-600/40 text-green-400">
-                <Check size={10} />
-              </button>
-              <button onClick={() => setRenamingId(null)} className="p-0.5 rounded hover:bg-gray-600 text-gray-400">
-                <X size={10} />
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => handleRenameStart(map.id, map.name)}
-              className="p-0.5 rounded hover:bg-gray-600 text-gray-500 hover:text-white transition-colors"
-              title="Renommer"
-            >
-              <Edit2 size={10} />
-            </button>
-          )}
-          {/* Supprimer */}
-          <button
-            onClick={() => handleDeleteMap(map.id)}
-            className="p-0.5 rounded hover:bg-red-900/40 text-gray-500 hover:text-red-400 transition-colors"
-            title="Supprimer de la bibliothèque"
-          >
-            <Trash2 size={10} />
-          </button>
+        {/* Fallback si pas d'image ou dataURL trop lourd à afficher */}
+        <div className={`w-full h-14 bg-gray-800 flex items-center justify-center ${map.url && !map.url.startsWith('data:') ? 'hidden' : ''}`}>
+          <Map size={20} className="text-gray-600" />
         </div>
+
+        {/* Bandeau bas : nom de la carte */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 py-1 flex items-end justify-between gap-1">
+          {isRenaming ? (
+            <input
+              ref={renameInputRef}
+              value={renameValue}
+              onChange={e => setRenameValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleRenameConfirm('map');
+                if (e.key === 'Escape') setRenamingId(null);
+              }}
+              onClick={e => e.stopPropagation()}
+              className="flex-1 px-1 py-0 bg-black/60 border border-amber-500 rounded text-white text-[10px] outline-none"
+            />
+          ) : (
+            <span className={`flex-1 text-[10px] truncate font-medium leading-tight ${isActive ? 'text-amber-300' : 'text-gray-200'}`}>
+              {map.name}
+            </span>
+          )}
+
+          {/* Boutons actions — visibles au hover */}
+          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            {/* Charger */}
+            <button
+              onClick={e => { e.stopPropagation(); handleLoadMap(map); }}
+              className="p-0.5 rounded bg-amber-600/80 hover:bg-amber-500 text-white transition-colors"
+              title="Charger cette carte"
+            >
+              <ChevronRight size={10} />
+            </button>
+            {/* Renommer */}
+            {isRenaming ? (
+              <>
+                <button onClick={e => { e.stopPropagation(); handleRenameConfirm('map'); }} className="p-0.5 rounded bg-green-600/80 hover:bg-green-500 text-white"><Check size={10} /></button>
+                <button onClick={e => { e.stopPropagation(); setRenamingId(null); }} className="p-0.5 rounded bg-gray-600/80 hover:bg-gray-500 text-white"><X size={10} /></button>
+              </>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); handleRenameStart(map.id, map.name); }}
+                className="p-0.5 rounded bg-gray-600/80 hover:bg-gray-500 text-white transition-colors"
+                title="Renommer"
+              >
+                <Edit2 size={10} />
+              </button>
+            )}
+            {/* Supprimer */}
+            <button
+              onClick={e => { e.stopPropagation(); handleDeleteMap(map.id); }}
+              className="p-0.5 rounded bg-red-700/80 hover:bg-red-600 text-white transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 size={10} />
+            </button>
+          </div>
+        </div>
+
+        {/* Indicateur actif */}
+        {isActive && (
+          <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-amber-500 rounded text-[8px] text-white font-bold leading-none">
+            EN COURS
+          </div>
+        )}
       </div>
     );
   };
