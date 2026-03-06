@@ -638,14 +638,45 @@ export function useVTTCanvasEvents({
         return;
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && activeToolRef.current === 'wall-select') {
+        if (roleRef.current !== 'gm') return;
+        let currentWalls = wallsRef.current || [];
+
+        // --- Sélection MULTIPLE (rectangle) ---
+        const multiSel = selectedWallPointsRef.current;
+        if (multiSel.length > 0) {
+          // Grouper les points à supprimer par wallId
+          const toDeleteByWall = new Map<string, Set<number>>();
+          for (const sp of multiSel) {
+            if (!toDeleteByWall.has(sp.wallId)) toDeleteByWall.set(sp.wallId, new Set());
+            toDeleteByWall.get(sp.wallId)!.add(sp.pointIndex);
+          }
+          for (const [wallId, indices] of toDeleteByWall) {
+            const wall = currentWalls.find(w => w.id === wallId);
+            if (!wall) continue;
+            const newPoints = wall.points.filter((_, i) => !indices.has(i));
+            if (newPoints.length < 2) {
+              onWallRemovedRef.current?.(wallId);
+              currentWalls = currentWalls.filter(w => w.id !== wallId);
+            } else {
+              const updatedWall = { ...wall, points: newPoints };
+              currentWalls = currentWalls.map(w => w.id === wallId ? updatedWall : w);
+              onWallUpdatedRef.current?.(updatedWall);
+            }
+          }
+          wallsRef.current = currentWalls;
+          selectedWallPointsRef.current = [];
+          draggingWallPointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // --- Sélection SIMPLE (un seul point) ---
         const sel = draggingWallPointRef.current;
-        if (sel && roleRef.current === 'gm') {
-          const currentWalls = wallsRef.current || [];
+        if (sel) {
           const wall = currentWalls.find(w => w.id === sel.wallId);
           if (wall) {
             const newPoints = wall.points.filter((_, i) => i !== sel.pointIndex);
             if (newPoints.length < 2) {
-              // Moins de 2 points : supprimer le mur entier
               onWallRemovedRef.current?.(wall.id);
             } else {
               const updatedWall = { ...wall, points: newPoints };
@@ -654,6 +685,7 @@ export function useVTTCanvasEvents({
             }
           }
           draggingWallPointRef.current = null;
+          selectedWallPointRef.current = null;
           drawRef.current();
         }
         return;
