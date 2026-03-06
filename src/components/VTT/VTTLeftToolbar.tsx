@@ -249,7 +249,7 @@ export function VTTLeftToolbar({
           <div className="w-6 h-px bg-gray-700/70 my-0.5" />
           <div ref={weatherBtnRef} className="w-full flex flex-col items-center">
             <ToolBtn
-              icon={<Cloud size={17} />}
+              icon={<Wind size={17} />}
               label="Effets météo"
               active={weatherPopupOpen || weatherEffects.length > 0}
               onClick={() => {
