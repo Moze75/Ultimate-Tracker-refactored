@@ -345,7 +345,9 @@ const visibleTokens = isGM
                 className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 text-gray-300 rounded text-xs transition-colors"
               >
                 <Upload size={12} />
-                {compressing ? 'Compression...' : 'Choisir une image...'}
+                               {compressing
+                  ? (import.meta.env.VITE_CF_UPLOAD_WORKER_URL ? 'Upload R2...' : 'Compression...')
+                  : 'Choisir une image...'}
               </button>
             </div>
           </div>
