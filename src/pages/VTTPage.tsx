@@ -87,6 +87,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
   const [showWalls, setShowWalls] = useState(true);
+  const [walls, setWalls] = useState<VTTWall[]>([]);
+  const wallsRef = useRef<VTTWall[]>([]);
+  wallsRef.current = walls;
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
