@@ -753,6 +753,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onOpenBroadcastWindow={handleOpenBroadcastWindow}
           broadcastMode={broadcastMode}
           onBroadcastModeChange={setBroadcastMode}
+          weatherEffects={weatherEffects}
+          onUpdateWeather={handleUpdateWeather}
         />
 
         <div
