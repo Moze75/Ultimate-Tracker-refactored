@@ -145,12 +145,14 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                   ref={previewRef}
                   className="w-32 h-32 rounded-full overflow-hidden bg-gray-700 shrink-0 border-2 border-gray-600 relative cursor-grab active:cursor-grabbing select-none"
                   onMouseDown={handlePreviewMouseDown}
-                  title="Glisser pour repositionner"
+                  onWheel={handlePreviewWheel}
+                  title="Glisser pour repositionner · Molette pour zoomer"
                 >
                   <PreviewImage
                     src={imageUrl}
                     offsetX={imageOffsetX}
                     offsetY={imageOffsetY}
+                    zoom={imageZoom}
                     containerSize={128}
                   />
                   <div className="absolute inset-0 rounded-full ring-1 ring-white/10 pointer-events-none" />
@@ -186,11 +188,26 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                       className="w-full accent-amber-500"
                     />
                   </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                      <span>Zoom</span>
+                      <span className="text-gray-400">{imageZoom.toFixed(1)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1.0}
+                      max={4.0}
+                      step={0.1}
+                      value={imageZoom}
+                      onChange={e => setImageZoom(Number(e.target.value))}
+                      className="w-full accent-amber-500"
+                    />
+                  </div>
                   <button
-                    onClick={() => { setImageOffsetX(0); setImageOffsetY(0); }}
+                    onClick={() => { setImageOffsetX(0); setImageOffsetY(0); setImageZoom(1.8); }}
                     className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors underline"
                   >
-                    Centrer
+                    Réinitialiser
                   </button>
                 </div>
               </div>
