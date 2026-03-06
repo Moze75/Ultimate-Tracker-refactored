@@ -136,7 +136,8 @@ export type VTTClientEvent =
   | { type: 'REMOVE_PROP'; propId: string }
   | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> }
   | { type: 'SWITCH_SCENE'; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[] }
-  | { type: 'UPDATE_WALLS'; walls: VTTWall[] };
+  | { type: 'UPDATE_WALLS'; walls: VTTWall[] }
+  | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] };
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }
