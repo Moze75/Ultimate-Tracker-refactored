@@ -642,6 +642,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     }, 500);
   }, [roomId, broadcastFrameEnabled, canvasViewport]);
 
+  const handleSaveScene = useCallback(async () => {
+    if (!activeSceneIdRef.current || role !== 'gm') return;
+    await saveCurrentSceneState(activeSceneIdRef.current);
+  }, [role, saveCurrentSceneState]);
+
+  
   const leaveRoom = useCallback(async () => {
     if (activeSceneIdRef.current && role === 'gm') {
       await saveCurrentSceneState(activeSceneIdRef.current);
