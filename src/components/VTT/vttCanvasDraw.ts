@@ -551,8 +551,11 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       ctx.stroke();
       if (isWallMode || isWallSelectMode) {
         const selPt = ctx2d.selectedWallPointRef?.current;
+        const selPts = ctx2d.selectedWallPointsRef?.current ?? [];
         wall.points.forEach((pt, pi) => {
-          const isHighlighted = isWallSelectMode && selPt?.wallId === wall.id && selPt?.pointIndex === pi;
+          const isSingleHighlighted = isWallSelectMode && selPt?.wallId === wall.id && selPt?.pointIndex === pi;
+          const isMultiHighlighted = isWallSelectMode && selPts.some(sp => sp.wallId === wall.id && sp.pointIndex === pi);
+          const isHighlighted = isSingleHighlighted || isMultiHighlighted;
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, (isHighlighted ? 9 : isWallSelectMode ? 6 : 4) / vp.scale, 0, Math.PI * 2);
           ctx.fillStyle = isHighlighted
