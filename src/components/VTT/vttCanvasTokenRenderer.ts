@@ -138,6 +138,24 @@ export function drawToken({
       ctx.fill();
     }
   }
+  // --- Nom du token (si showLabel activé par le MJ) ---
+  if (token.showLabel) {
+    const LABEL_FONT_PX = 11;   // taille fixe écran
+    const labelY = r + (token.maxHp != null && token.maxHp > 0 && token.hp != null ? 14 : 6) / scale;
+    ctx.font = `bold ${LABEL_FONT_PX / scale}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const padding = 3 / scale;
+    const metrics = ctx.measureText(token.label);
+    const tw = metrics.width + padding * 2;
+    const th = (LABEL_FONT_PX + 2) / scale;
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.beginPath();
+    ctx.roundRect(-tw / 2, labelY, tw, th, 3 / scale);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.fillText(token.label, 0, labelY + padding / 2);
+  }
 
   ctx.restore();
 }
