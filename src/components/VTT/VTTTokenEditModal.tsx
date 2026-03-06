@@ -86,6 +86,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
       imageUrl: imageUrl.trim() || null,
       color,
       visible,
+      showLabel,
       hp: hp !== '' ? parseInt(hp) : undefined,
       maxHp: maxHp !== '' ? parseInt(maxHp) : undefined,
       imageOffsetX,
