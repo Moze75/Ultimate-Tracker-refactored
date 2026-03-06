@@ -156,7 +156,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   const handleDeleteFolder = (folderId: string) => {
     if (!window.confirm('Supprimer ce dossier ? Les cartes seront déplacées à la racine.')) return;
     mapLibrary.deleteFolder(folderId);
-    refresh();
+    persist();
   };
 
   // ── Cartes ────────────────────────────────────────────────────────────────
