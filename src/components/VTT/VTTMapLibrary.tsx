@@ -201,10 +201,10 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
         draggable
         onDragStart={e => handleDragStart(e, map.id)}
         onDragEnd={handleDragEnd}
-        className={`group relative w-full overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
+        className={`group relative w-full overflow-hidden cursor-grab active:cursor-grabbing transition-all border-b border-gray-700/40 ${
           isActive
-            ? 'ring-2 ring-amber-500 ring-offset-1 ring-offset-gray-900'
-            : 'hover:ring-1 hover:ring-gray-600 ring-offset-1 ring-offset-gray-900'
+            ? 'ring-2 ring-inset ring-amber-500'
+            : 'hover:brightness-110'
         }`}
       >
         {/* Thumbnail pleine largeur */}
