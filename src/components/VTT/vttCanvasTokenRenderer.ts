@@ -5,13 +5,17 @@ export interface DrawTokenOptions {
   token: VTTToken;
   CELL: number;
   scale: number;
-  vpX: number;   // viewport offset X (vp.x)
-  vpY: number;   // viewport offset Y (vp.y)
   currentSelectedId: string | null;
   multiIds: string[];
   curUserId: string;
   tokenImageCache: Map<string, HTMLImageElement>;
   onImageLoad: () => void;
+}
+
+export interface DrawTokenResult {
+  cx: number;   // centre X en coords monde
+  cy: number;   // centre Y en coords monde
+  r: number;    // rayon en coords monde
 }
 
 export function drawToken({
