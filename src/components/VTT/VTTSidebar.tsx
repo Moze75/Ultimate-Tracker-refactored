@@ -30,6 +30,7 @@ interface VTTSidebarProps {
   onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
+  onSaveScene?: () => Promise<void>;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
