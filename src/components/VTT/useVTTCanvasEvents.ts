@@ -630,10 +630,11 @@ export function useVTTCanvasEvents({
         return;
       }
       if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
-        // Annuler : remettre le point à sa position d'origine n'est pas stocké,
-        // donc on re-fetch depuis wallsRef (déjà à jour car mise à jour locale)
-                selectedWallPointRef.current = null;
+        selectedWallPointRef.current = null;
+        selectedWallPointsRef.current = [];
         draggingWallPointRef.current = null;
+        isDragSelectingRef.current = false;
+        selectionRectRef.current = null;
         drawRef.current();
         return;
       }
