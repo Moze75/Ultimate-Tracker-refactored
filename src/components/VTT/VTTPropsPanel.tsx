@@ -57,26 +57,56 @@ export function VTTPropsPanel({
     setAddMode(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      onAddProp({
-        label: newLabel || file.name.replace(/\.[^.]+$/, ''),
-        imageUrl: dataUrl,
-        position: { x: 100, y: 100 },
-        width: 150,
-        height: 150,
-        opacity: 1,
-        locked: false,
-      });
-      setNewLabel('');
-      setAddMode(null);
-    };
-    reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+
+    const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
+    if (workerUrl) {
+      // ✅ Upload vers Cloudflare R2
+      setUploading(true);
+      try {
+        const { uploadVttAsset } = await import('../../services/vttStorageService');
+        const cdnUrl = await uploadVttAsset(file, 'props');
+        onAddProp({
+          label: newLabel || file.name.replace(/\.[^.]+$/, ''),
+          imageUrl: cdnUrl,
+          position: { x: 100, y: 100 },
+          width: 150,
+          height: 150,
+          opacity: 1,
+          locked: false,
+        });
+        setNewLabel('');
+        setAddMode(null);
+      } catch (err) {
+        console.error('Erreur upload prop:', err);
+        alert('Erreur lors de l\'upload. Vérifiez votre connexion.');
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      // ⚠️ Fallback dataURL
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        onAddProp({
+          label: newLabel || file.name.replace(/\.[^.]+$/, ''),
+          imageUrl: dataUrl,
+          position: { x: 100, y: 100 },
+          width: 150,
+          height: 150,
+          opacity: 1,
+          locked: false,
+        });
+        setNewLabel('');
+        setAddMode(null);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
