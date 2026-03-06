@@ -28,7 +28,9 @@ import type {
   VTTProp,
   VTTWall,
   VTTConnectedUser,
+  VTTWeatherEffect,
 } from '../types/vtt';
+import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 
 interface VTTPageProps {
   session: Session;
