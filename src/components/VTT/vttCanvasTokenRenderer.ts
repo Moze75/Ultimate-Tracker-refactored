@@ -122,44 +122,64 @@ export function drawToken({
     ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
   }
 
-  if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
-    // Taille fixe en pixels écran, indépendante du zoom
-    const BAR_W_PX = 36;   // largeur fixe écran (px)
-    const BAR_H_PX = 5;    // hauteur fixe écran (px)
-    const barW = BAR_W_PX / scale;
-    const barH = BAR_H_PX / scale;
-    const barY = r + 6 / scale;
-    const pct = Math.max(0, Math.min(1, token.hp / token.maxHp));
-    const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.beginPath();
-    ctx.roundRect(-barW / 2, barY, barW, barH, barH / 2);
-    ctx.fill();
-    if (pct > 0) {
-      ctx.fillStyle = hpColor;
-      ctx.beginPath();
-      ctx.roundRect(-barW / 2, barY, barW * pct, barH, barH / 2);
-      ctx.fill();
-    }
-  }
-  // --- Nom du token (si showLabel activé par le MJ) ---
-  if (token.showLabel) {
-    const LABEL_FONT_PX = 11;   // taille fixe écran
-    const labelY = r + (token.maxHp != null && token.maxHp > 0 && token.hp != null ? 14 : 6) / scale;
-    ctx.font = `bold ${LABEL_FONT_PX / scale}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const padding = 3 / scale;
-    const metrics = ctx.measureText(token.label);
-    const tw = metrics.width + padding * 2;
-    const th = (LABEL_FONT_PX + 2) / scale;
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.beginPath();
-    ctx.roundRect(-tw / 2, labelY, tw, th, 3 / scale);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.fillText(token.label, 0, labelY + padding / 2);
-  }
+   ctx.restore(); // fin du bloc surcouches monde
 
-  ctx.restore();
+  // --- Barre HP + Nom : dessin en coordonnées ÉCRAN (hors transform monde) ---
+  // On calcule la position écran du centre du token
+  const screenCX = cx * scale + vpX;
+  const screenCY = cy * scale + vpY;
+  const screenR  = r * scale;          // rayon en pixels écran
+
+  const hasHp = token.maxHp != null && token.maxHp > 0 && token.hp != null;
+  const hasLabel = !!token.showLabel;
+
+  if (hasHp || hasLabel) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset total → coordonnées écran pures
+
+    // ── Barre HP ──────────────────────────────────────────────────────────────
+    if (hasHp) {
+      const BAR_W = 40;   // px écran
+      const BAR_H = 5;    // px écran
+      const BAR_R = BAR_H / 2;
+      const barScreenY = screenCY + screenR + 6;
+      const pct = Math.max(0, Math.min(1, token.hp! / token.maxHp!));
+      const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+      // fond
+      ctx.fillStyle = 'rgba(0,0,0,0.60)';
+      ctx.beginPath();
+      ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W, BAR_H, BAR_R);
+      ctx.fill();
+      // remplissage
+      if (pct > 0) {
+        ctx.fillStyle = hpColor;
+        ctx.beginPath();
+        ctx.roundRect(screenCX - BAR_W / 2, barScreenY, BAR_W * pct, BAR_H, BAR_R);
+        ctx.fill();
+      }
+    }
+
+    // ── Nom du token ──────────────────────────────────────────────────────────
+    if (hasLabel) {
+      const FONT_PX = 11;  // px écran
+      const offsetY = hasHp ? screenR + 16 : screenR + 6;
+      const labelScreenY = screenCY + offsetY;
+      ctx.font = `bold ${FONT_PX}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const PAD = 3;
+      const tw = ctx.measureText(token.label).width + PAD * 2;
+      const th = FONT_PX + PAD * 2;
+      // fond arrondi
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.beginPath();
+      ctx.roundRect(screenCX - tw / 2, labelScreenY, tw, th, 3);
+      ctx.fill();
+      // texte
+      ctx.fillStyle = 'white';
+      ctx.fillText(token.label, screenCX, labelScreenY + PAD);
+    }
+
+    ctx.restore();
+  }
 }
