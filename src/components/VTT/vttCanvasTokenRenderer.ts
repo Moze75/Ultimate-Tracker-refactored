@@ -118,7 +118,44 @@ export function drawToken({
     ctx.fillText(token.label?.slice(0, 2) || '?', 0, 0);
   }
 
-  ctx.restore(); // fin du bloc surcouches monde
+  // --- Barre HP : taille basée sur CELL (coords monde = stable au zoom) ---
+  if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
+    const BAR_W = CELL * 0.8;           // 80% d'une case
+    const BAR_H = CELL * 0.07;          // 7% d'une case (~3.5px pour CELL=50)
+    const barY  = r + CELL * 0.06;      // 6% d'une case sous le token
+    const pct   = Math.max(0, Math.min(1, token.hp / token.maxHp));
+    const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+    ctx.fillStyle = 'rgba(0,0,0,0.60)';
+    ctx.beginPath();
+    ctx.roundRect(-BAR_W / 2, barY, BAR_W, BAR_H, BAR_H / 2);
+    ctx.fill();
+    if (pct > 0) {
+      ctx.fillStyle = hpColor;
+      ctx.beginPath();
+      ctx.roundRect(-BAR_W / 2, barY, BAR_W * pct, BAR_H, BAR_H / 2);
+      ctx.fill();
+    }
+  }
 
-  return { cx, cy, r };
+  // --- Nom du token : taille basée sur CELL ---
+  if (token.showLabel) {
+    const hasHp   = token.maxHp != null && token.maxHp > 0 && token.hp != null;
+    const BAR_H   = CELL * 0.07;
+    const FONT_SZ = CELL * 0.18;        // 18% d'une case (~9px pour CELL=50)
+    const PAD     = CELL * 0.05;
+    const labelY  = r + CELL * 0.06 + (hasHp ? BAR_H + CELL * 0.04 : 0);
+    ctx.font = `bold ${FONT_SZ}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const tw = ctx.measureText(token.label).width + PAD * 2;
+    const th = FONT_SZ + PAD * 2;
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.beginPath();
+    ctx.roundRect(-tw / 2, labelY, tw, th, th / 3);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.fillText(token.label, 0, labelY + PAD);
+  }
+
+  ctx.restore();
 }
