@@ -32,10 +32,7 @@ function PreviewImage({ src, offsetX, offsetY, zoom, containerSize }: { src: str
   );
 }
 
-const TOKEN_COLORS = [
-  '#3b82f6', '#ef4444', '#22c55e', '#f59e0b',
-  '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
-];
+
 
 export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VTTTokenEditModalProps) {
   const [label, setLabel] = useState(token.label);
