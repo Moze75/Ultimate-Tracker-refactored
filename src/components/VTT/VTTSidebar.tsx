@@ -371,6 +371,34 @@ const visibleTokens = isGM
 
         {activeTab === 'settings' && (
           <div className="p-3 space-y-4">
+            {onSaveScene && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2 font-medium">Scène</p>
+                <button
+                  onClick={async () => {
+                    setSaving(true);
+                    setSaveOk(false);
+                    await onSaveScene();
+                    setSaving(false);
+                    setSaveOk(true);
+                    setTimeout(() => setSaveOk(false), 2500);
+                  }}
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-colors"
+                >
+                  {saving ? (
+                    <RefreshCw size={12} className="animate-spin" />
+                  ) : saveOk ? (
+                    <span className="text-green-300">✓ Sauvegardé !</span>
+                  ) : (
+                    <>
+                      <Upload size={12} />
+                      Enregistrer la scène
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-500 mb-1 font-medium">ID Room</p>
               <p className="font-mono text-gray-400 text-xs break-all bg-gray-800/60 rounded px-2 py-1.5 border border-gray-700/50">{roomId}</p>
