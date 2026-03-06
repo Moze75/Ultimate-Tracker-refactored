@@ -14,7 +14,8 @@ interface VTTMapLibraryProps {
 export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibraryProps) {
   const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get());
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
-  const [draggingMapId, setDraggingMapId] = useState<string | null>(null);
+    const [draggingMapId, setDraggingMapId] = useState<string | null>(null);
+  const draggingMapIdRef = useRef<string | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
