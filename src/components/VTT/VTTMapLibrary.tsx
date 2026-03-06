@@ -38,7 +38,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
   const renameInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragMapIdRef = useRef<string | null>(null);
-  const folderRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const dragOverTargetRef = useRef<string | null>(null);
 
   const refresh = useCallback(() => setLib(mapLibrary.get()), []);
 
