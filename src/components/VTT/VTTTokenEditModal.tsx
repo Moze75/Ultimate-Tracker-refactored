@@ -37,7 +37,7 @@ function PreviewImage({ src, offsetX, offsetY, zoom, containerSize }: { src: str
 export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VTTTokenEditModalProps) {
   const [label, setLabel] = useState(token.label);
   const [imageUrl, setImageUrl] = useState(token.imageUrl || '');
-  const [color, setColor] = useState(token.color);
+
   const [visible, setVisible] = useState(token.visible);
     const [showLabel, setShowLabel] = useState(token.showLabel ?? false);
   const [hp, setHp] = useState(token.hp != null ? String(token.hp) : '');
