@@ -189,13 +189,10 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
     return directlyVisibleTokenIds.has(token.id);
   };
 
-  // Collecter les infos HP/label pour les dessiner APRÈS ctx.restore() (hors transform monde)
-  const tokenOverlays: { cx: number; cy: number; r: number; token: VTTToken }[] = [];
-
   ctx2d.tokensRef.current.forEach(token => {
     if (!token.visible && curRole === 'player') return;
     if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
-    const result = drawToken({
+    drawToken({
       ctx,
       token,
       CELL,
@@ -206,11 +203,6 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
       tokenImageCache: ctx2d.tokenImageCache.current,
       onImageLoad: () => ctx2d.drawRef.current(),
     });
-    const hasHp    = token.maxHp != null && token.maxHp > 0 && token.hp != null;
-    const hasLabel = !!token.showLabel;
-    if (hasHp || hasLabel) {
-      tokenOverlays.push({ cx: result.cx, cy: result.cy, r: result.r, token });
-    }
   });
 
   // Hard blackout joueur : aucun token avec vision active => tout noir
