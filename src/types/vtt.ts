@@ -19,6 +19,7 @@ export interface VTTToken {
   maxHp?: number;
   imageOffsetX?: number;
   imageOffsetY?: number;
+ imageZoom?: number;
   visionMode?: VTTVisionMode;
   visionRange?: number;
   visionBrightAlpha?: number;
