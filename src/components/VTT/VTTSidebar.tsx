@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
+import { VTTMapLibrary } from './VTTMapLibrary';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
 
