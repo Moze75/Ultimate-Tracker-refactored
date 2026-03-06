@@ -216,7 +216,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
       }
 
       mapLibrary.addMap({ name: file.name.replace(/\.[^.]+$/, ''), url, folderId, width, height });
-      refresh();
+      persist();
     } catch (err) {
       console.error('Erreur upload carte:', err);
       alert('Erreur lors de l\'upload.');
