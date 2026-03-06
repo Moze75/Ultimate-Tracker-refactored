@@ -363,6 +363,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onWallUpdatedRef,
     onWallRemovedRef,
     selectedWallPointRef,
+    selectedWallPointsRef,
     onViewportChangeRef,
     drawRef,
     paintFogAt,
