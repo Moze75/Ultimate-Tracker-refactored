@@ -54,6 +54,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     e.preventDefault();
     e.stopPropagation();
     dragMapIdRef.current = map.id;
+    dragOverTargetRef.current = null;
 
     setDragGhost({
       mapId: map.id,
@@ -66,28 +67,35 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     const onMouseMove = (ev: MouseEvent) => {
       setDragGhost(prev => prev ? { ...prev, x: ev.clientX, y: ev.clientY } : null);
 
-      // Détecter la cible sous le curseur
+      // Détecter la cible sous le curseur via le DOM
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
       let target: string | null = null;
       if (el) {
         const folderEl = el.closest('[data-folder-drop]') as HTMLElement | null;
         if (folderEl) {
-          target = folderEl.dataset.folderDrop || 'root';
+          target = folderEl.dataset.folderDrop ?? null;
         } else if (el.closest('[data-root-drop]')) {
           target = 'root';
         }
       }
+      // ✅ On stocke dans la ref ET dans le state (ref = valeur fiable dans onMouseUp)
+      dragOverTargetRef.current = target;
       setDragOverTarget(target);
     };
 
     const onMouseUp = () => {
       const mapId = dragMapIdRef.current;
-      if (mapId && dragOverTarget !== null) {
-        const folderId = dragOverTarget === 'root' ? null : dragOverTarget;
+      // ✅ On lit la ref, pas le state (pas de closure stale)
+      const target = dragOverTargetRef.current;
+
+      if (mapId && target !== null) {
+        const folderId = target === 'root' ? null : target;
         mapLibrary.moveMap(mapId, folderId);
         refresh();
       }
+
       dragMapIdRef.current = null;
+      dragOverTargetRef.current = null;
       setDragGhost(null);
       setDragOverTarget(null);
       window.removeEventListener('mousemove', onMouseMove);
@@ -96,7 +104,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-  }, [dragOverTarget, refresh]);
+  }, [refresh]); // ✅ Plus de dépendance sur dragOverTarget
 
   // ── Dossiers ──────────────────────────────────────────────────────────────
   const toggleFolder = (id: string) => {
