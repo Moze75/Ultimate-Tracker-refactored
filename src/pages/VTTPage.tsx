@@ -795,6 +795,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             </div>
           )}
 
+          {weatherEffects.length > 0 && canvasContainerRef.current && (
+            <VTTWeatherOverlay
+              effects={weatherEffects}
+              width={canvasContainerRef.current.clientWidth || window.innerWidth}
+              height={canvasContainerRef.current.clientHeight || window.innerHeight}
+            />
+          )}
+
+          
           <VTTCanvas
             ref={vttCanvasRef}
             config={config}
