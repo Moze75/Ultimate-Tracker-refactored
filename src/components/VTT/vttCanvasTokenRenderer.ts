@@ -122,7 +122,7 @@ export function drawToken({
   if (token.maxHp != null && token.maxHp > 0 && token.hp != null) {
     const BAR_W = CELL * 0.8;
     const BAR_H = CELL * 0.07;
-    const barY  = -r - BAR_H - CELL * 0.06;   // au-dessus du token
+      const barY  = -r - BAR_H - CELL * 0.12;   // au-dessus du token
     const pct   = Math.max(0, Math.min(1, token.hp / token.maxHp));
     const hpColor = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
     ctx.fillStyle = 'rgba(0,0,0,0.60)';
