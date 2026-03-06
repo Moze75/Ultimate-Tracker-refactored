@@ -12,12 +12,6 @@ export interface DrawTokenOptions {
   onImageLoad: () => void;
 }
 
-export interface DrawTokenResult {
-  cx: number;   // centre X en coords monde
-  cy: number;   // centre Y en coords monde
-  r: number;    // rayon en coords monde
-}
-
 export function drawToken({
   ctx,
   token,
