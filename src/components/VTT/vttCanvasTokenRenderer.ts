@@ -23,14 +23,12 @@ export function drawToken({
   token,
   CELL,
   scale,
-  vpX,
-  vpY,
   currentSelectedId,
   multiIds,
   curUserId,
   tokenImageCache,
   onImageLoad,
-}: DrawTokenOptions): void {
+}: DrawTokenOptions): DrawTokenResult {
   const px = token.position.x;
   const py = token.position.y;
   const size = (token.size || 1) * CELL;
