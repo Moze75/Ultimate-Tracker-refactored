@@ -22,7 +22,7 @@ export function drawToken({
   curUserId,
   tokenImageCache,
   onImageLoad,
-}: DrawTokenOptions): DrawTokenResult {
+}: DrawTokenOptions): void {
   const px = token.position.x;
   const py = token.position.y;
   const size = (token.size || 1) * CELL;
