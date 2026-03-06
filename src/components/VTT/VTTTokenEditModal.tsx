@@ -89,6 +89,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
       maxHp: maxHp !== '' ? parseInt(maxHp) : undefined,
       imageOffsetX,
       imageOffsetY,
+      imageZoom,
     });
     onClose();
   };
