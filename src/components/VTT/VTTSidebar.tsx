@@ -123,28 +123,28 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
     confirmReplace(async () => {
       setCompressing(true);
       try {
-        // Si le Worker R2 est configuré, on upload sur Cloudflare
         const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
-        if (workerUrl && authToken) {
+        if (workerUrl) {
+          // ✅ Upload vers Cloudflare R2
           const { uploadVttAsset } = await import('../../services/vttStorageService');
-          const cdnUrl = await uploadVttAsset(file, 'maps', authToken, roomId);
-          const img = new Image();
-          img.onload = () => {
-            onUpdateMap({ mapImageUrl: cdnUrl, mapWidth: img.naturalWidth, mapHeight: img.naturalHeight });
-            setMapUrl(cdnUrl);
-            setCompressing(false);
-          };
-          img.src = cdnUrl;
+          const cdnUrl = await uploadVttAsset(file, 'maps', roomId);
+          const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+            img.onerror = () => resolve({ w: 3000, h: 2000 });
+            img.src = cdnUrl;
+          });
+          onUpdateMap({ mapImageUrl: cdnUrl, mapWidth: dims.w, mapHeight: dims.h });
+          setMapUrl(cdnUrl);
         } else {
-          // Fallback : dataURL si pas de Worker configuré
+          // ⚠️ Fallback dataURL
           const { dataUrl, width, height } = await compressImageToDataUrl(file);
           onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
           setMapUrl('(fichier local)');
-          setCompressing(false);
         }
-      } catch {
-        alert('Erreur lors du chargement.');
-        setCompressing(false);
+      } catch (err) {
+        console.error('Erreur upload carte:', err);
+        alert('Erreur lors du chargement. Vérifiez votre connexion.');
       } finally {
         setCompressing(false);
       }
