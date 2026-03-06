@@ -77,6 +77,7 @@ export function VTTSidebar({
   onRemoveProp,
   onUpdateProp,
   onHome,
+  authToken,
 }: VTTSidebarProps) {
 const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
