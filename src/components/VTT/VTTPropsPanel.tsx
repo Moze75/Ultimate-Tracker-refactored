@@ -156,10 +156,11 @@ export function VTTPropsPanel({
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-xs transition-colors"
+                  disabled={uploading}
+                  className="flex-1 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-300 rounded text-xs transition-colors"
                 >
-                  Fichier...
-                </button> 
+                  {uploading ? 'Upload...' : 'Fichier...'}
+                </button>
               </div>
               <button
                 onClick={() => setAddMode(null)}
