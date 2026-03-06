@@ -242,6 +242,38 @@ export function VTTLeftToolbar({
       {role === 'gm' && (
         <>
           <div className="w-6 h-px bg-gray-700/70 my-0.5" />
+          <div ref={weatherBtnRef} className="w-full flex flex-col items-center">
+            <ToolBtn
+              icon={<Cloud size={17} />}
+              label="Effets météo"
+              active={weatherPopupOpen || weatherEffects.length > 0}
+              onClick={() => {
+                setWeatherPopupOpen(v => !v);
+                setFogPopupOpen(false);
+                setGridPopupOpen(false);
+                setWallPopupOpen(false);
+              }}
+            />
+            {weatherEffects.length > 0 && (
+              <span className="text-[8px] text-sky-400 font-bold -mt-0.5">{weatherEffects.length}</span>
+            )}
+          </div>
+        </>
+      )}
+
+      {weatherPopupOpen && role === 'gm' && (
+        <WeatherPopup
+          ref={weatherPopupRef}
+          effects={weatherEffects}
+          onChange={onUpdateWeather}
+          onClose={() => setWeatherPopupOpen(false)}
+        />
+      )}
+
+      
+      {role === 'gm' && (
+        <>
+          <div className="w-6 h-px bg-gray-700/70 my-0.5" />
           <div ref={broadcastBtnRef} className="w-full flex flex-col items-center">
             <ToolBtn
               icon={<MonitorPlay size={17} />}
