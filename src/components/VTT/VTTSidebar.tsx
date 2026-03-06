@@ -121,11 +121,28 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
     confirmReplace(async () => {
       setCompressing(true);
       try {
-        const { dataUrl, width, height } = await compressImageToDataUrl(file);
-        onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
-        setMapUrl('(fichier local)');
+        // Si le Worker R2 est configuré, on upload sur Cloudflare
+        const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
+        if (workerUrl && authToken) {
+          const { uploadVttAsset } = await import('../../services/vttStorageService');
+          const cdnUrl = await uploadVttAsset(file, 'maps', authToken, roomId);
+          const img = new Image();
+          img.onload = () => {
+            onUpdateMap({ mapImageUrl: cdnUrl, mapWidth: img.naturalWidth, mapHeight: img.naturalHeight });
+            setMapUrl(cdnUrl);
+            setCompressing(false);
+          };
+          img.src = cdnUrl;
+        } else {
+          // Fallback : dataURL si pas de Worker configuré
+          const { dataUrl, width, height } = await compressImageToDataUrl(file);
+          onUpdateMap({ mapImageUrl: dataUrl, mapWidth: width, mapHeight: height });
+          setMapUrl('(fichier local)');
+          setCompressing(false);
+        }
       } catch {
         alert('Erreur lors du chargement.');
+        setCompressing(false);
       } finally {
         setCompressing(false);
       }
