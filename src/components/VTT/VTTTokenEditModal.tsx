@@ -42,6 +42,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
   const [imageUrl, setImageUrl] = useState(token.imageUrl || '');
   const [color, setColor] = useState(token.color);
   const [visible, setVisible] = useState(token.visible);
+    const [showLabel, setShowLabel] = useState(token.showLabel ?? false);
   const [hp, setHp] = useState(token.hp != null ? String(token.hp) : '');
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
   const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
