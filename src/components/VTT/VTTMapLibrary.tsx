@@ -247,7 +247,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
     }
 
     mapLibrary.deleteMap(mapId);
-    refresh();
+    persist();
   };
 
   const handleLoadMap = (map: MapEntry) => {
