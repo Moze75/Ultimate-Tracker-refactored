@@ -40,6 +40,7 @@ export interface VTTCanvasRefs {
   onWallUpdatedRef: React.MutableRefObject<((wall: any) => void) | undefined>;
   onWallRemovedRef: React.MutableRefObject<((wallId: string) => void) | undefined>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
+  selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
   fogCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   fogBrushRef?: React.MutableRefObject<number>;
