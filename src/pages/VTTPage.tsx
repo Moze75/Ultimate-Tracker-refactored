@@ -174,6 +174,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       case 'WALLS_UPDATED':
         setWalls(event.walls);
         break;
+      case 'WEATHER_UPDATED':
+        setWeatherEffects(event.effects);
+        break;
       case 'USER_JOINED':
       case 'USER_LEFT':
         break;
