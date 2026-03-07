@@ -261,7 +261,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   }
 
   // --- VISION DE JOUR ---
-  if (isDay && curRole === 'player' && currentWalls.length > 0 && curUserId !== '') {
+  if (isDay && curRole === 'player' && currentWalls.length > 0) {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
       const dayWallSegs = currentWalls.flatMap(w => {
