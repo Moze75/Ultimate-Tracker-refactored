@@ -83,6 +83,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [showAddToken, setShowAddToken] = useState(false);
   const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
     const [sceneContextMenu, setSceneContextMenu] = useState<{ sceneId: string; sceneName: string; config: VTTRoomConfig; x: number; y: number } | null>(null);
+  
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
@@ -1018,6 +1019,48 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         />
       )}
 
+        {sceneContextMenu && (
+          <div
+            className="fixed z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[160px]"
+            style={{ top: sceneContextMenu.y, left: sceneContextMenu.x }}
+            onMouseLeave={() => setSceneContextMenu(null)}
+          >
+            <button
+              className="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                // Déclenche le renommage inline via l'état de VTTSceneBar
+                // On simule en passant par un prop dédié ou en passant un ref
+                // Ici on ferme juste le menu — le double-clic gère le renommage
+                setSceneContextMenu(null);
+              }}
+            >
+              ✏️ Renommer (double-clic)
+            </button>
+            {scenes.length > 1 && (
+              <button
+                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700"
+                onClick={() => {
+                  if (window.confirm(`Supprimer "${sceneContextMenu.sceneName}" ?`)) {
+                    handleDeleteScene(sceneContextMenu.sceneId);
+                  }
+                  setSceneContextMenu(null);
+                }}
+              >
+                🗑️ Supprimer
+              </button>
+            )}
+            <button
+              className="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                setSceneConfigEdit({ sceneId: sceneContextMenu.sceneId, config: sceneContextMenu.config });
+                setSceneContextMenu(null);
+              }}
+            >
+              ⚙️ Configurer la scène
+            </button>
+          </div>
+        )}
+      
       {sceneConfigEdit && (
         <VTTSceneConfigModal
           sceneName={scenes.find(s => s.id === sceneConfigEdit.sceneId)?.name ?? ''}
