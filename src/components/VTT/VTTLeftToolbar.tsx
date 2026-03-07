@@ -93,7 +93,7 @@ export function VTTLeftToolbar({
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
-   useEffect(() => {
+  useEffect(() => {
     if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
