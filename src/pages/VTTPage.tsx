@@ -867,7 +867,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
-            initialViewport={config.savedViewport ?? null}
+            initialViewport={savedViewport}
             onViewportChange={handleCanvasViewportChange}
           />
 
