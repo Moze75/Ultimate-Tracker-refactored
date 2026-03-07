@@ -66,6 +66,7 @@ interface CrowParticle {
   size: number;
   lifeNorm: number;
   lifeInc: number;
+  baseLifetimeSec: number;  // durée de vie à speed=1
   alpha: number;
   animTime: number;
   wobblePhase: number;
