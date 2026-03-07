@@ -78,6 +78,9 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         break;
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
+        if (event.config.savedViewport) {
+          setSavedViewport(event.config.savedViewport);
+        }
         break;
       case 'SCENE_SWITCHED':
         setConfig(event.config);
