@@ -13,6 +13,7 @@ const FXMASTER_BASE =
 
 const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
 const CROW_SRCS  = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/crows/crow${n}.webp`);
+const EMBER_SRC  = `${FXMASTER_BASE}/embers/ember.webp`;
 
 const _imgCache = new Map<string, HTMLImageElement>();
 function loadImg(src: string): HTMLImageElement {
