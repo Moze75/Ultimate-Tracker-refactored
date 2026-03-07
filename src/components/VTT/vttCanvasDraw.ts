@@ -378,7 +378,8 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   }
 
   // --- MASQUE NOIR jour sans vision ---
-  if (isDay && curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
+  // Seulement si le joueur n'a aucun token contrôlé (pas juste sans visionMode)
+  if (isDay && curRole === 'player' && myControlledTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)'; 
     ctx.fillRect(0, 0, mapW, mapH);
   }
