@@ -295,6 +295,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setActiveSceneId(sceneId);
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
+            setSavedViewport(scene.config.savedViewport ?? null);
     } finally {
       switchingSceneRef.current = false;
     }
