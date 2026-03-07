@@ -60,16 +60,18 @@ interface CrowParticle {
   type: 'crow';
   x: number; y: number;
   vx: number; vy: number;
+  baseSpeed: number;   // vitesse normalisée à speed=1 (px/s)
+  dirX: number;        // vecteur direction normalisé
+  dirY: number;
   size: number;
   lifeNorm: number;
   lifeInc: number;
   alpha: number;
-  animTime: number;    // temps accumulé pour l'animation (s)
-  // Lateral wobble (FXMaster lateralMovement)
+  animTime: number;
   wobblePhase: number;
   wobbleAmp: number;
   wobblePeriod: number;
-  perpX: number;       // vecteur perpendiculaire normalisé
+  perpX: number;
   perpY: number;
 }
 
