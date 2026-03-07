@@ -37,6 +37,8 @@ interface VTTLeftToolbarProps {
   onBroadcastModeChange: (mode: 'frame' | 'follow') => void;
   weatherEffects: VTTWeatherEffect[];
   onUpdateWeather: (effects: VTTWeatherEffect[]) => void;
+  gmFollowEnabled?: boolean;
+  onToggleGmFollow?: () => void;
 }
 
 export function VTTLeftToolbar({
