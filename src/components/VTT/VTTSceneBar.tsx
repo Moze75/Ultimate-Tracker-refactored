@@ -50,7 +50,7 @@ export function VTTSceneBar({
   };
 
   return (
-    <div className="flex items-center h-10 gap-1.5 overflow-x-auto shrink-0 scrollbar-hide" style={{ paddingLeft: '56px', paddingRight: '8px' }}>
+    <div className="flex items-center h-10 px-3 gap-1.5 overflow-x-auto shrink-0 scrollbar-hide">
       {scenes.map(scene => (
         <div key={scene.id} className="relative group shrink-0">
           {editingId === scene.id ? (
