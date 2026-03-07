@@ -328,6 +328,13 @@ class VTTService {
         this._persistNow();
         break;
 
+      case 'UPDATE_WEATHER':
+        serverEvent = { type: 'WEATHER_UPDATED', effects: event.effects };
+        this.localState.config = { ...this.localState.config, weatherEffects: event.effects };
+        this._persistNow();
+        break;
+
+        
       case 'UPDATE_WALLS':
         this.localState.walls = event.walls;
         serverEvent = { type: 'WALLS_UPDATED', walls: event.walls };
