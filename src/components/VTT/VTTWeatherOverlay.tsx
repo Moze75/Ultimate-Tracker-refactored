@@ -426,15 +426,14 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
-               if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embers') continue;
-        const ctx = effect.type === 'clouds' ? ctxScreen : ctxNormal;
+        if (effect.type !== 'clouds' && effect.type !== 'crows') continue; 
         // clouds → ctxScreen (mixBlendMode: screen)
         // crows  → ctxNormal (mixBlendMode: normal)
           const ctx = effect.type === 'clouds' ? ctxScreen : ctxNormal;
         if (!ctx) continue;
- 
+
         // Spawn
-        layer.spawnAccum += dt;
+        layer.spawnAccum += dt; 
         while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
           layer.spawnAccum -= layer.frequency;
           if (effect.type === 'clouds')       particles.push(makeCloud(width, height, effect.speed, true));
