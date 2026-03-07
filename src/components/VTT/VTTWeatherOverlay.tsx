@@ -388,15 +388,13 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
             ctx.restore();
 
-                  } else {
-            // ── Crow ─────��─────────────────────────────────────
-            // FXMaster _applySpeedToConfig : vitesse × factor, lifetime / factor
+                } else {
+            // ── Crow ───────────────────────────────────────────
+            // FXMaster _applySpeedToConfig : speed × factor, lifetime / factor
             const currentSpeed = p.baseSpeed * effect.speed;
-            p.vx = p.dirX * currentSpeed;
-            p.vy = p.dirY * currentSpeed;
-            // lifeInc recalculé dynamiquement (lifetime de base ÷ speed)
-            // On stocke la baseLifetime dans lifeInc à speed=1, on la récupère
-            p.lifeInc = effect.speed / (1 / p.lifeInc / (1 / effect.speed) * effect.speed);
+            p.vx      = p.dirX * currentSpeed;
+            p.vy      = p.dirY * currentSpeed;
+            p.lifeInc = effect.speed / p.baseLifetimeSec; // lifetime ÷ speedFactor
             p.x += p.vx * dt;
             p.y += p.vy * dt;
             p.animTime += dt;
