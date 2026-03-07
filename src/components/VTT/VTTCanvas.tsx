@@ -329,17 +329,25 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (forceViewportProp) draw();
   }, [forceViewportProp, draw]);
 
-    // Applique la vue initiale sauvegardée (one-shot, n'écrase pas les mouvements ultérieurs)
-  const appliedInitialViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
+  // Applique la vue initiale sauvegardée (one-shot, ne se ré-applique pas si les coordonnées changent après)
+  const initialViewportAppliedRef = useRef(false);
+  const lastAppliedInitialViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
   useEffect(() => {
     if (!initialViewport) return;
-    // On ne ré-applique que si la vue initiale a changé (nouvelle scène chargée)
-    const prev = appliedInitialViewportRef.current;
-    if (prev && prev.x === initialViewport.x && prev.y === initialViewport.y && prev.scale === initialViewport.scale) return;
-    appliedInitialViewportRef.current = initialViewport;
+    const prev = lastAppliedInitialViewportRef.current;
+    // Ne ré-applique QUE si c'est une valeur différente de la dernière appliquée
+    // (protège contre les re-renders React qui recréent l'objet)
+    if (
+      prev &&
+      Math.abs(prev.x - initialViewport.x) < 0.01 &&
+      Math.abs(prev.y - initialViewport.y) < 0.01 &&
+      Math.abs(prev.scale - initialViewport.scale) < 0.0001
+    ) return;
+    lastAppliedInitialViewportRef.current = { ...initialViewport };
     viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
     draw();
-  }, [initialViewport, draw]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
 
   useVTTCanvasEvents({
     canvasRef,
