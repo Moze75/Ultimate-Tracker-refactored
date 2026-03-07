@@ -685,7 +685,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setWeatherEffects(effects);
     weatherEffectsRef.current = effects;
     // Propager aux joueurs via UPDATE_MAP (réutilise la config)
-    vttService.send({ type: 'UPDATE_MAP', config: { weatherEffects: effects } });
+    vttService.send({ type: 'UPDATE_WEATHER', effects });
     // Persister dans la scène
     if (activeSceneIdRef.current) {
       setConfig(prev => ({ ...prev, weatherEffects: effects }));
