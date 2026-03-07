@@ -33,15 +33,16 @@ function extractTextContent(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
-    .replace(/&eacute;/g, "e")
-    .replace(/&egrave;/g, "e")
-    .replace(/&agrave;/g, "a")
-    .replace(/&ocirc;/g, "o")
-    .replace(/&icirc;/g, "i")
-    .replace(/&ucirc;/g, "u")
-    .replace(/&ccedil;/g, "c")
-    .replace(/&ecirc;/g, "e")
-    .replace(/&acirc;/g, "a")
+    .replace(/&eacute;/g, "é")
+    .replace(/&egrave;/g, "è")
+    .replace(/&agrave;/g, "à")
+    .replace(/&ocirc;/g, "ô")
+    .replace(/&icirc;/g, "î")
+    .replace(/&ucirc;/g, "û")
+    .replace(/&ccedil;/g, "ç")
+    .replace(/&ecirc;/g, "ê")
+    .replace(/&acirc;/g, "â")
+    .replace(/&#(\d+);/g, (_m: string, code: string) => String.fromCharCode(parseInt(code, 10)))
     .trim();
 }
 
@@ -139,11 +140,38 @@ async function fetchMonsterList(): Promise<MonsterListItem[]> {
   return monsters;
 }
 
+// ============================================================
+// CORRECTIF PRINCIPAL : parseNameDescPairs supporte maintenant
+// la structure réelle d'AideDD : <div class="titre">Nom.</div>
+// suivi du texte de description (pas de <p><strong><em>)
+// ============================================================
 function parseNameDescPairs(
   sectionHtml: string
 ): Array<{ name: string; description: string }> {
   const items: Array<{ name: string; description: string }> = [];
 
+  // --- STRATÉGIE 1 : <div class="titre">Nom.</div> Description ---
+  // Structure réelle d'AideDD.org
+  const titreRegex = /<div\s+class=['"]titre['"][^>]*>([\s\S]*?)<\/div>/gi;
+  const titreMatches = [...sectionHtml.matchAll(titreRegex)];
+
+  if (titreMatches.length > 0) {
+    for (let i = 0; i < titreMatches.length; i++) {
+      const nameText = extractTextContent(titreMatches[i][1]).replace(/\.\s*$/, "");
+      const startIdx = titreMatches[i].index! + titreMatches[i][0].length;
+      const endIdx =
+        i + 1 < titreMatches.length
+          ? titreMatches[i + 1].index!
+          : sectionHtml.length;
+      const desc = extractTextContent(sectionHtml.substring(startIdx, endIdx)).trim();
+      if (nameText) {
+        items.push({ name: nameText, description: desc });
+      }
+    }
+    if (items.length > 0) return items;
+  }
+
+  // --- STRATÉGIE 2 : <p> contenant <strong><em> ou <em><strong> ---
   const pBlocks = [...sectionHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
 
   if (pBlocks.length > 0) {
@@ -174,20 +202,19 @@ function parseNameDescPairs(
     if (items.length > 0) return items;
   }
 
+  // --- STRATÉGIE 3 : <em><strong> ou <strong><em> hors <p> ---
   const entryRegex =
     /<(?:em|i|strong|b)[^>]*>\s*<(?:em|i|strong|b)[^>]*>([^<]+)<\/(?:em|i|strong|b)>\s*<\/(?:em|i|strong|b)>/gi;
   const allMatches = [...sectionHtml.matchAll(entryRegex)];
 
   if (allMatches.length === 0) {
+    // --- STRATÉGIE 4 : <strong>Nom</strong> seul ---
     const altRegex =
       /<(?:strong|b)[^>]*>([^<]+)<\/(?:strong|b)>\s*[.:]?\s*/gi;
     const altMatches = [...sectionHtml.matchAll(altRegex)];
 
     for (let i = 0; i < altMatches.length; i++) {
-      const nameText = extractTextContent(altMatches[i][1]).replace(
-        /\.\s*$/,
-        ""
-      );
+      const nameText = extractTextContent(altMatches[i][1]).replace(/\.\s*$/, "");
       const startIdx = altMatches[i].index! + altMatches[i][0].length;
       const endIdx =
         i + 1 < altMatches.length
@@ -203,10 +230,7 @@ function parseNameDescPairs(
   }
 
   for (let i = 0; i < allMatches.length; i++) {
-    const nameText = extractTextContent(allMatches[i][1]).replace(
-      /\.\s*$/,
-      ""
-    );
+    const nameText = extractTextContent(allMatches[i][1]).replace(/\.\s*$/, "");
     const startIdx = allMatches[i].index! + allMatches[i][0].length;
     const endIdx =
       i + 1 < allMatches.length
@@ -234,8 +258,8 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   const html = await res.text();
 
   // ============================================================
-  // FIX 1 : Extraction du bloc "jaune" par compteur de profondeur
-  // au lieu d'une regex non-greedy qui tronque aux </div> internes
+  // FIX 1 : Extraction du bloc par compteur de profondeur
+  // pour ne pas tronquer aux </div> internes
   // ============================================================
   function extractDivByClass(source: string, className: string): string | null {
     const openRegex = new RegExp(
@@ -253,46 +277,188 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
       const openDiv = source.indexOf("<div", pos);
       const closeDiv = source.indexOf("</div>", pos);
 
-      if (closeDiv === -1) break; // malformé, on sort
+      if (closeDiv === -1) break;
 
       if (openDiv !== -1 && openDiv < closeDiv) {
         depth++;
-        pos = openDiv + 4; // avancer après "<div"
+        pos = openDiv + 4;
       } else {
         depth--;
         if (depth === 0) {
           return source.substring(contentStart, closeDiv);
         }
-        pos = closeDiv + 6; // avancer après "</div>"
+        pos = closeDiv + 6;
       }
     }
-    return null; // pas trouvé le fermant
+    return null;
   }
 
-  const block = extractDivByClass(html, "jaune") || html;
+  // On prend tout le bloc "blocmonst" ou à défaut "jaune", ou à défaut tout le HTML
+  const block = extractDivByClass(html, "blocmonst")
+    || extractDivByClass(html, "jaune")
+    || html;
 
-  // ============================================================
-  // Le reste du parsing est identique mais fonctionne maintenant
-  // sur le bloc COMPLET (traits, actions, etc. inclus)
-  // ============================================================
-
+  // --- Nom ---
   const nameMatch = block.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const name = nameMatch ? extractTextContent(nameMatch[1]) : slug;
 
+  // --- Type, taille, alignement ---
   const typeDiv = block.match(/<div\s+class=['"]type['"][^>]*>([\s\S]*?)<\/div>/i);
   const typeLine = typeDiv ? extractTextContent(typeDiv[1]) : "";
-  const typeMatch = typeLine.match(
-    /^(.*?)\s+de\s+taille\s+(\w+),?\s*(.*?)$/i
-  );
+  const typeMatch = typeLine.match(/^(.*?)\s+de\s+taille\s+(\w+),?\s*(.*?)$/i);
 
   const monsterType = typeMatch ? typeMatch[1].trim() : "";
   const size = typeMatch ? typeMatch[2].trim() : "";
   const alignment = typeMatch ? typeMatch[3].trim() : "";
 
-  // ... (AC, HP, Speed, Abilities — inchangés) ...
+  // --- Classe d'armure ---
+  const acMatch = block.match(/<strong>CA<\/strong>\s*(\d+)\s*(.*?)(?:<br|$)/i);
+  const acFallback = block.match(/(?:Classe\s+d['']armure|CA)\s*[:\s]*(\d+)\s*(.*?)(?:<br|<\/|$)/i);
+  const armorClass = acMatch
+    ? parseInt(acMatch[1], 10)
+    : acFallback
+    ? parseInt(acFallback[1], 10)
+    : 10;
+  const armorDesc = acMatch
+    ? extractTextContent(acMatch[2])
+    : acFallback
+    ? extractTextContent(acFallback[2])
+    : "";
+
+  // --- Points de vie ---
+  const hpMatch = block.match(/<strong>Pv<\/strong>\s*(\d+)\s*(?:\(([\s\S]*?)\))?/i);
+  const hpFallback = block.match(/(?:Points?\s+de\s+vie|PV)\s*[:\s]*(\d+)\s*(?:\(([\s\S]*?)\))?/i);
+  const hitPoints = hpMatch
+    ? parseInt(hpMatch[1], 10)
+    : hpFallback
+    ? parseInt(hpFallback[1], 10)
+    : 1;
+  const hitPointsFormula = hpMatch
+    ? (hpMatch[2] || "").trim()
+    : hpFallback
+    ? (hpFallback[2] || "").trim()
+    : "";
+
+  // --- Vitesse ---
+  const speedMatch = block.match(/<strong>Vitesse<\/strong>\s*([\s\S]*?)(?:<br|<div|$)/i);
+  const speedFallback = block.match(/(?:Vitesse|VIT)\s*[:\s]*([\s\S]*?)(?:<br|<\/|<strong)/i);
+  const speedText = speedMatch
+    ? extractTextContent(speedMatch[1])
+    : speedFallback
+    ? extractTextContent(speedFallback[1])
+    : "";
+  const speed: Record<string, string> = {};
+
+  if (speedText) {
+    const parts = speedText.split(",").map((s) => s.trim());
+    for (const part of parts) {
+      const namedSpeed = part.match(/^(nage|vol|fouissement|escalade|creusement)\s+(.+)$/i);
+      if (namedSpeed) {
+        speed[namedSpeed[1].toLowerCase()] = namedSpeed[2];
+      } else if (!speed["marche"]) {
+        speed["marche"] = part;
+      }
+    }
+  }
+
+  // --- Caractéristiques ---
+  const abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+
+  const car2Matches = [...block.matchAll(/class=['"]car2['"][^>]*>([\s\S]*?)<\/div>/gi)];
+  const car5Matches = [...block.matchAll(/class=['"]car5['"][^>]*>([\s\S]*?)<\/div>/gi)];
+
+  const abilityKeysRow1: Array<keyof typeof abilities> = ["str", "dex", "con"];
+  const abilityKeysRow2: Array<keyof typeof abilities> = ["int", "wis", "cha"];
+
+  for (let i = 0; i < Math.min(car2Matches.length, 3); i++) {
+    const val = parseAbilityScore(car2Matches[i][1]);
+    if (val > 0) abilities[abilityKeysRow1[i]] = val;
+  }
+  for (let i = 0; i < Math.min(car5Matches.length, 3); i++) {
+    const val = parseAbilityScore(car5Matches[i][1]);
+    if (val > 0) abilities[abilityKeysRow2[i]] = val;
+  }
+
+  const tableAbilityMatch = block.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
+  if (tableAbilityMatch && car2Matches.length === 0) {
+    const abilityKeys: Array<keyof typeof abilities> = ["str", "dex", "con", "int", "wis", "cha"];
+    const rows = [...tableAbilityMatch[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    if (rows.length >= 12) {
+      for (let i = 0; i < 6; i++) {
+        const val = parseAbilityScore(rows[i + 6][1]);
+        if (val > 0) abilities[abilityKeys[i]] = val;
+      }
+    }
+  }
 
   // ============================================================
-  // FIX 2 : Découpage des sections "rub" par positions, pas par regex
+  // FIX 2 : Parsing robuste des champs (Jets de sauvegarde, etc.)
+  // via extraction de toutes les paires <strong>Label</strong> Valeur
+  // ============================================================
+  const headerEnd = block.search(/<div\s+class=['"]rub['"][^>]*>/i);
+  const headerBlock = headerEnd > -1 ? block.substring(0, headerEnd) : block;
+
+  const extractAllFields = (htmlBlock: string): Record<string, string> => {
+    const fields: Record<string, string> = {};
+    const normalized = htmlBlock
+      .replace(/<br\s*\/?>/gi, "|||BREAK|||")
+      .replace(/<\/div>/gi, "|||BREAK|||")
+      .replace(/<\/p>/gi, "|||BREAK|||");
+    const lines = normalized.split("|||BREAK|||");
+    for (const line of lines) {
+      const strongMatch = line.match(/<strong>(.*?)<\/strong>\s*(.*)/i);
+      if (strongMatch) {
+        const rawLabel = extractTextContent(strongMatch[1]).trim();
+        const rawValue = extractTextContent(strongMatch[2]).trim();
+        if (rawLabel) fields[rawLabel] = rawValue;
+      }
+    }
+    return fields;
+  };
+
+  const allFields = extractAllFields(headerBlock);
+
+  const normalize = (s: string): string =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+  const findField = (...labels: string[]): string => {
+    for (const label of labels) {
+      const normalizedLabel = normalize(label);
+      for (const [key, value] of Object.entries(allFields)) {
+        if (normalize(key) === normalizedLabel) return value;
+      }
+    }
+    for (const label of labels) {
+      const normalizedLabel = normalize(label);
+      for (const [key, value] of Object.entries(allFields)) {
+        const normalizedKey = normalize(key);
+        if (normalizedKey.startsWith(normalizedLabel) || normalizedLabel.startsWith(normalizedKey)) {
+          return value;
+        }
+      }
+    }
+    return "";
+  };
+
+  const savingThrows = findField("Jets de sauvegarde", "JdS");
+  const skillsText = findField("Compétences");
+  const vulnerabilities = findField("Vulnérabilités", "Vulnérabilités aux dégâts");
+  const resistances = findField("Résistances aux dégâts", "Résistances");
+  const damageImmunities = findField("Immunités aux dégâts");
+  const conditionImmunities = findField("Immunités aux conditions");
+  const senses = findField("Sens");
+  const languages = findField("Langues");
+
+  // --- Challenge Rating / FP ---
+  const crMatch1 = block.match(/<strong>FP<\/strong>\s*([\d\/]+)\s*(?:\(([^)]*)\))?/i);
+  const crMatch2 = block.match(/(?:Facteur\s+de\s+puissance|FP)\s*[:\s]*([\d\/]+)\s*(?:\(([^)]*)\))?/i);
+  const crMatch = crMatch1 || crMatch2;
+  const challengeRating = crMatch ? crMatch[1].trim() : "0";
+  const xpMatch = crMatch && crMatch[2] ? crMatch[2].match(/[\d\s]+/) : null;
+  const xp = xpMatch ? parseInt(xpMatch[0].replace(/\s/g, ""), 10) : 0;
+
+  // ============================================================
+  // FIX 3 : Découpage des sections "rub" par positions
   // ============================================================
   const rubPositions: Array<{ title: string; startIdx: number }> = [];
   const rubRegex = /<div\s+class=['"]rub['"][^>]*>([\s\S]*?)<\/div>/gi;
@@ -304,8 +470,6 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     });
   }
 
-  // Le contenu de chaque section = de la fin de son <div class="rub">
-  // jusqu'au début de la section suivante (ou fin du bloc)
   const sections: Array<{ title: string; content: string }> = [];
   for (let i = 0; i < rubPositions.length; i++) {
     const endIdx = i + 1 < rubPositions.length
@@ -313,33 +477,39 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
       : block.length;
     sections.push({
       title: rubPositions[i].title,
-      content: block.substring(rubPositions[i].startIdx, endIdx > rubPositions[i].startIdx ? endIdx : block.length),
+      content: block.substring(
+        rubPositions[i].startIdx,
+        endIdx > rubPositions[i].startIdx ? endIdx : block.length
+      ),
     });
   }
 
   // ============================================================
-  // FIX 3 : Extraction des traits — chercher <strong>FP</strong>
-  // au lieu de "FP" en texte brut, et simplifier les fallbacks
+  // FIX 4 : Extraction des traits depuis la zone avant le 1er "rub"
   // ============================================================
   let traits: Array<{ name: string; description: string }> = [];
+  let actions: Array<{ name: string; description: string }> = [];
+  let bonusActions: Array<{ name: string; description: string }> = [];
+  let reactions: Array<{ name: string; description: string }> = [];
+  let legendaryActions: Array<{ name: string; description: string }> = [];
+  let legendaryDescription = "";
 
   const firstRubIdx = rubPositions.length > 0
     ? block.lastIndexOf("<div", rubPositions[0].startIdx)
     : block.length;
   const preSection = block.substring(0, firstRubIdx);
 
-  // Chercher la position de <strong>FP</strong> (pas juste "FP" en texte brut)
+  // Chercher après le FP : les traits sont après la ligne FP
   const fpStrongMatch = preSection.match(/<strong>FP<\/strong>\s*[\d\/]+\s*(?:\([^)]*\))?/i);
   if (fpStrongMatch) {
     const fpEnd = fpStrongMatch.index! + fpStrongMatch[0].length;
     const traitBlock = preSection.substring(fpEnd);
-    // Ne parser que s'il reste du contenu significatif (pas juste des <br>)
-    if (traitBlock.match(/<(?:strong|em|p\b)/i)) {
+    if (traitBlock.match(/<(?:strong|em|p\b|div)/i)) {
       traits = parseNameDescPairs(traitBlock);
     }
   }
 
-  // Fallback: chercher dans les sections "rub" nommées "trait" ou générique
+  // Fallback : chercher dans les sections "rub" dont le titre contient "trait"
   if (traits.length === 0) {
     for (const sec of sections) {
       const title = sec.title;
@@ -360,28 +530,11 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     }
   }
 
-  // Fallback 3: si aucun trait n'a été trouvé, chercher une section "rub" nommée "trait" ou sans titre
-  if (traits.length === 0) {
-    for (const sec of sections) {
-      const title = sec.title;
-      if (
-        title.includes("trait") ||
-        title === "" ||
-        (!title.includes("action") && !title.includes("réaction") && !title.includes("reaction") && !title.includes("légendaire"))
-      ) {
-        const parsed = parseNameDescPairs(sec.content);
-        if (parsed.length > 0 && !title.includes("action")) {
-          traits = parsed;
-          break;
-        }
-      }
-    }
-  }
-
+  // Parsing des sections Actions / Bonus / Réactions / Légendaires
   for (const sec of sections) {
     const title = sec.title;
     if (title.includes("action") && title.includes("légendaire")) {
-      const descMatch = sec.content.match(/^([\s\S]*?)(?=<(?:em|i|strong|b))/i);
+      const descMatch = sec.content.match(/^([\s\S]*?)(?=<(?:em|i|strong|b|div))/i);
       if (descMatch) legendaryDescription = extractTextContent(descMatch[1]);
       legendaryActions = parseNameDescPairs(sec.content);
     } else if (title.includes("action") && title.includes("bonus")) {
@@ -393,15 +546,16 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     }
   }
 
+  // --- Image ---
   let imageUrl: string | undefined;
   const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
   if (imgMatch) {
     const src = imgMatch[1];
-    if (src.startsWith('http')) {
+    if (src.startsWith("http")) {
       imageUrl = src;
-    } else if (src.startsWith('/')) {
+    } else if (src.startsWith("/")) {
       imageUrl = `https://www.aidedd.org${src}`;
-    } else if (src.startsWith('img/')) {
+    } else if (src.startsWith("img/")) {
       imageUrl = `https://www.aidedd.org/monster/${src}`;
     } else {
       imageUrl = `https://www.aidedd.org/monster/fr/${src}`;
