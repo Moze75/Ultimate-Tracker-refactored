@@ -521,8 +521,19 @@ export function useVTTCanvasEvents({
       if (brushOverlayRef.current) brushOverlayRef.current.style.display = 'none';
     };
 
-const onWheel = (e: WheelEvent) => {
-
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const sp = getCanvasXY(e.clientX, e.clientY);
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const vp = viewportRef.current;
+      const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
+      const wx = (sp.x - vp.x) / vp.scale;
+      const wy = (sp.y - vp.y) / vp.scale;
+      viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+      onViewportChangeRef.current?.(viewportRef.current);
+      drawRef.current();
+    };
+ 
     const onDblClick = (e: MouseEvent) => {
       if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
         const pts = wallPointsRef.current;
