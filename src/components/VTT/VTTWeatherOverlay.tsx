@@ -26,7 +26,7 @@ function loadImg(src: string): HTMLImageElement {
   return _imgCache.get(src)!;
 }
 // Préchargement
-[...CLOUD_SRCS, ...CROW_SRCS].forEach(loadImg);
+[...CLOUD_SRCS, ...CROW_SRCS, EMBER_SRC].forEach(loadImg);
 
 // ─── Séquence d'animation corbeaux (FXMaster animatedSingle) ─────────────────
 // [1×20, 2×3, 3×2, 4×2, 3×2, 2×3] frames à 15fps
