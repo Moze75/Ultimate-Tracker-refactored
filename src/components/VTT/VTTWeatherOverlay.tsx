@@ -1,33 +1,52 @@
 /**
  * VTTWeatherOverlay
- * Canvas overlay pour les effets atmosphériques / météo.
+ * Canvas overlay — effet Nuages uniquement.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  * Implémentation Canvas 2D pure, indépendante de PIXI/Foundry.
  */
 import { useEffect, useRef } from 'react';
 import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
 
-interface Particle {
-  x: number;
+// ─── Assets FXMaster (crédits : gambit07/fxmaster) ───────────────────────────
+const FXMASTER_BASE =
+  'https://raw.githubusercontent.com/gambit07/fxmaster/main/assets/particle-effects/effects';
+const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
+
+const _imgCache = new Map<string, HTMLImageElement>();
+function loadImg(src: string): HTMLImageElement {
+  if (!_imgCache.has(src)) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = src;
+    _imgCache.set(src, img);
+  }
+  return _imgCache.get(src)!;
+}
+// Précharger les images au démarrage du module
+CLOUD_SRCS.forEach(loadImg);
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface CloudParticle {
+  x: number;       // position px écran
   y: number;
-  vx: number;
+  vx: number;      // vitesse px/s
   vy: number;
-  size: number;
-  alpha: number;
-  life: number;
-  maxLife: number;
-  rotation: number;
-  rotSpeed: number;
-  color: string;
-  wobble: number;
-  wobbleSpeed: number;
-  wobbleAmp: number;
-  spriteSrc?: string;
+  size: number;    // demi-côté du sprite en px
+  lifeNorm: number; // 0 → 1 (0 = spawn, 1 = mort)
+  lifeInc: number; // incrément par seconde (= 1 / lifetimeSec)
+  alpha: number;   // alpha calculé chaque frame
+  imgSrc: string;
 }
 
 interface WeatherLayer {
   effect: VTTWeatherEffect;
-  particles: Particle[];
+  particles: CloudParticle[];
+  // paramètres calculés depuis les sliders
+  baseSpeedPx: number;   // vitesse px/s à density=1, speed=1
+  maxParticles: number;
+  frequency: number;     // s entre chaque spawn
+  spawnAccum: number;    // accumulateur pour le spawn
 }
 
 interface VTTWeatherOverlayProps {
@@ -36,508 +55,141 @@ interface VTTWeatherOverlayProps {
   height: number;
 }
 
-// ─── Configs par type ───────────────────────────────────────────────────────
+// ─── FXMaster Clouds : valeurs de base (reproduites depuis clouds.js) ────────
+// moveSpeedStatic : min=30, max=100 px/s (à scale=1, grid=100px)
+// scaleStatic     : min=0.08, max=0.8 → taille sprite = scale * 1000px de base
+// rotationStatic  : min=80, max=100° → direction ≈ 90° (gauche→droite)
+// alpha list      : [0@0, 0.5@0.05, 0.5@0.95, 0@1]
 
-function getParticleConfig(type: VTTWeatherType, w: number, h: number, density: number, speed: number, alpha: number) {
-  const count = Math.floor(density * 80);
-  switch (type) {
-    case 'rain':
-      return { count, factory: (i: number): Particle => ({
-        x: Math.random() * (w + 200) - 100,
-        y: Math.random() * h,
-        vx: -1.5 * speed, vy: (8 + Math.random() * 4) * speed,
-        size: 6 + Math.random() * 6,
-        alpha: (0.4 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.atan2(8 * speed, -1.5 * speed),
-        rotSpeed: 0,
-        color: '#a8c8ff',
-        wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
-        spriteSrc: DROP_SRC,
-      })};
-    case 'acid-rain':
-      return { count, factory: (): Particle => ({
-        x: Math.random() * (w + 200) - 100,
-        y: Math.random() * h,
-        vx: -1.5 * speed, vy: (8 + Math.random() * 4) * speed,
-        size: 1 + Math.random() * 1.5,
-        alpha: (0.5 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#39ff14',
-        wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
-      })};
-    case 'sunshower':
-      return { count: Math.floor(count * 0.4), factory: (): Particle => ({
-        x: Math.random() * (w + 200) - 100,
-        y: Math.random() * h,
-        vx: -1 * speed, vy: (5 + Math.random() * 3) * speed,
-        size: 0.8 + Math.random(),
-        alpha: (0.25 + Math.random() * 0.3) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#ffe066',
-        wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
-      })};
-    case 'snow':
-      return { count: Math.floor(count * 0.6), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (-0.5 + Math.random()) * speed,
-        vy: (0.8 + Math.random() * 1.2) * speed,
-        size: 2 + Math.random() * 3,
-        alpha: (0.5 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#ffffff',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.02 + Math.random() * 0.02,
-        wobbleAmp: 0.5 + Math.random() * 1.5,
-      })};
-    case 'blizzard':
-      return { count: Math.floor(count * 1.8), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (-3 - Math.random() * 3) * speed,
-        vy: (1.5 + Math.random() * 2) * speed,
-        size: 1.5 + Math.random() * 2.5,
-        alpha: (0.4 + Math.random() * 0.5) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#ddeeff',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.04 + Math.random() * 0.04,
-        wobbleAmp: 1 + Math.random() * 2,
-      })};
-    case 'fog':
-      return { count: Math.floor(density * 12), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (0.2 + Math.random() * 0.3) * speed,
-        vy: (-0.05 + Math.random() * 0.1) * speed,
-        size: 80 + Math.random() * 120,
-        alpha: (0.04 + Math.random() * 0.06) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.002,
-        color: '#c8d8e8',
-        wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
-        spriteSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
-      })};
-    case 'embers':
-      return { count, factory: (): Particle => ({
-        x: Math.random() * w,
-        y: h + 10,
-        vx: (-1 + Math.random() * 2) * speed,
-        vy: -(1.5 + Math.random() * 3) * speed,
-        size: 6 + Math.random() * 8,
-        alpha: (0.6 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.05,
-        color: Math.random() > 0.5 ? '#ff6600' : '#ffaa00',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.04 + Math.random() * 0.06,
-        wobbleAmp: 1 + Math.random() * 2,
-        spriteSrc: EMBER_SRC,
-      })};
-    case 'crows':
-      return { count: Math.floor(density * 8), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (1.2 + Math.random() * 1.5) * speed,
-        vy: (-0.3 + Math.random() * 0.6) * speed,
-        size: 20 + Math.random() * 25,
-        alpha: 0,
-        life: Math.random(), maxLife: 1,
-        rotation: 0,
-        rotSpeed: 0,
-        color: '#222222',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.5 + Math.random() * 0.5,
-        wobbleAmp: 8 + Math.random() * 12,
-        spriteSrc: CROW_SRCS[Math.floor(Math.random() * CROW_SRCS.length)],
-      })};
-    case 'clouds':
-      return { count: Math.floor(density * 8), factory: (): Particle => ({
-        x: -200 + Math.random() * (w + 400),
-        y: Math.random() * h * 0.6,
-        vx: (30 + Math.random() * 70) * speed / 60,
-        vy: (-0.5 + Math.random()) * speed / 60,
-        size: (80 + Math.random() * 200) * (0.08 + Math.random() * 0.72),
-        alpha: 0,
-        life: 0,
-        maxLife: 1,
-        rotation: 0,
-        rotSpeed: 0,
-        color: '#ffffff',
-        wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
-        spriteSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
-      })};
-    case 'leaves':
-    case 'leaves':
-      return { count: Math.floor(count * 0.4), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: -10,
-        vx: (-1 + Math.random() * 2) * speed,
-        vy: (0.8 + Math.random() * 1.5) * speed,
-        size: 4 + Math.random() * 6,
-        alpha: (0.6 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.05,
-        color: ['#c8520a', '#e87020', '#6aaa20', '#8b5e0a'][Math.floor(Math.random() * 4)],
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.02 + Math.random() * 0.03,
-        wobbleAmp: 1.5 + Math.random() * 2,
-      })};
-    case 'sandstorm':
-      return { count: Math.floor(count * 1.5), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (3 + Math.random() * 4) * speed,
-        vy: (-0.5 + Math.random()) * speed,
-        size: 1 + Math.random() * 2,
-        alpha: (0.3 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#d4a050',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.02 + Math.random() * 0.02,
-        wobbleAmp: 0.5 + Math.random(),
-      })};
-    case 'bubbles':
-      return { count: Math.floor(count * 0.3), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: h + 10,
-        vx: (-0.3 + Math.random() * 0.6) * speed,
-        vy: -(0.5 + Math.random() * 1.5) * speed,
-        size: 3 + Math.random() * 8,
-        alpha: (0.2 + Math.random() * 0.3) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
-        color: '#80c8ff',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.02 + Math.random() * 0.03,
-        wobbleAmp: 1 + Math.random() * 2,
-      })};
-    case 'spiderwebs':
-      return { count: Math.floor(density * 6), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: -20,
-        vx: 0,
-        vy: (0.2 + Math.random() * 0.5) * speed,
-        size: 6 + Math.random() * 10,
-        alpha: (0.3 + Math.random() * 0.4) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.01,
-        color: '#c8c8c8',
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.01,
-        wobbleAmp: 0.5,
-      })};
-    case 'magiccrystals':
-      return { count: Math.floor(count * 0.3), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (-0.3 + Math.random() * 0.6) * speed,
-        vy: (-0.5 - Math.random() * 0.5) * speed,
-        size: 3 + Math.random() * 5,
-        alpha: (0.4 + Math.random() * 0.5) * alpha,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.03,
-        color: ['#a78bfa', '#c084fc', '#818cf8', '#38bdf8'][Math.floor(Math.random() * 4)],
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.02 + Math.random() * 0.02,
-        wobbleAmp: 0.5 + Math.random(),
-      })};
-    case 'magicstars':
-      return { count: Math.floor(count * 0.4), factory: (): Particle => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (-0.2 + Math.random() * 0.4) * speed,
-        vy: (-0.2 + Math.random() * 0.4) * speed,
-        size: 2 + Math.random() * 3,
-        alpha: 0,
-        life: Math.random(), maxLife: 1,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.04,
-        color: ['#fde68a', '#fbcfe8', '#bfdbfe', '#ffffff'][Math.floor(Math.random() * 4)],
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.03 + Math.random() * 0.03,
-        wobbleAmp: 0,
-      })};
-    default:
-      return { count: 0, factory: (): Particle => ({} as Particle) };
-  }
-}
+const CLOUD_SPEED_MIN = 30;   // px/s
+const CLOUD_SPEED_MAX = 100;  // px/s
+const CLOUD_SCALE_MIN = 0.08;
+const CLOUD_SCALE_MAX = 0.80;
+const CLOUD_SPRITE_BASE = 600; // px de base pour scale=1 (ajusté pour Canvas 2D sans PIXI grid)
+const CLOUD_ALPHA_MAX  = 0.5; // valeur max dans la liste alpha FXMaster
 
-// ─── Update particle position ────────────────────────────────────────────────
+function makeCloudParticle(
+  w: number,
+  h: number,
+  speedFactor: number,
+  alphaFactor: number,
+  spawnLeft: boolean,   // true = spawn hors écran à gauche, false = spawn aléatoire (init)
+): CloudParticle {
+  // vitesse individuelle (moveSpeedStatic min-max) × speed slider
+  const rawSpeed = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
 
-function updateParticle(p: Particle, type: VTTWeatherType, w: number, h: number, dt: number, speed: number, alpha: number) {
-  p.wobble += p.wobbleSpeed * dt;
-  const wobbleX = Math.sin(p.wobble) * p.wobbleAmp;
-  p.x += (p.vx + wobbleX) * dt;
-  p.y += p.vy * dt;
-  p.rotation += p.rotSpeed * dt;
-  // Pour clouds : life doit progresser sur ~20s (traversée de scène)
-  if (type === 'clouds') {
-    p.life += dt / 1200;
+  // scale individuel (scaleStatic min-max) × density slider n'affecte pas la taille, juste le nombre
+  const scale = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
+  const size  = scale * CLOUD_SPRITE_BASE;
+
+  // direction ≈ 90° = cos(90°)=0, sin(90°)=1 → mais FXMaster oriente EN PIXELS/S horizontal
+  // rotationStatic 80-100° dans PIXI = angle de déplacement en degrés (0°=droite, 90°=bas)
+  // En pratique les nuages vont de gauche à droite (rotation 90° = est en PIXI coords)
+  // On garde vx = rawSpeed, vy = petit bruit vertical
+  const vx = rawSpeed;
+  const vy = (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05; // léger dérive verticale
+
+  // durée de vie = distance à parcourir / vitesse (FXMaster calcule diagonal / avgSpeed)
+  const travelDist = w + size * 2; // traversée complète
+  const lifetimeSec = travelDist / rawSpeed;
+
+  // position initiale
+  let x: number, y: number;
+  if (spawnLeft) {
+    x = -size - 10;
+    y = Math.random() * h * 0.75; // nuages dans les 3/4 supérieurs
   } else {
-    p.life += dt / 60;
+    // init : dispersion aléatoire sur toute la scène, life aléatoire
+    x = -size + Math.random() * (w + size);
+    y = Math.random() * h * 0.75;
   }
 
-  // fade in/out pour magicstars (FXMaster : 0→0.9→0.9→0)
-  if (type === 'magicstars') {
-    const t = p.life % 1;
-    p.alpha = t < 0.3 ? (t / 0.3) * alpha : t > 0.7 ? ((1 - t) / 0.3) * alpha : alpha;
-  }
-  // FXMaster CLOUDS_CONFIG alpha : times [0, 0.05, 0.95, 1] → values [0, 0.5, 0.5, 0]
-  if (type === 'clouds') {
-    const t = Math.min(1, Math.max(0, p.life));
-    if      (t < 0.05) p.alpha = (t / 0.05) * 0.5 * alpha;
-    else if (t < 0.95) p.alpha = 0.5 * alpha;
-    else               p.alpha = ((1 - t) / 0.05) * 0.5 * alpha;
-  }
-  // Crows : fade in/out rapide (0→1→1→0 sur les bords)
-  if (type === 'crows') {
-    const t = p.life % 1;
-    p.alpha = t < 0.05 ? (t / 0.05) * alpha : t > 0.95 ? ((1 - t) / 0.05) * alpha : alpha;
-  }
-
-  // respawn
-  const margin = p.size + 10;
-  if (p.y > h + margin || p.y < -margin || p.x > w + margin || p.x < -margin || p.life > 1) {
-    respawn(p, type, w, h, speed, alpha);
-  }
+  return {
+    x, y, vx, vy,
+    size,
+    lifeNorm: spawnLeft ? 0 : Math.random(),
+    lifeInc: 1 / lifetimeSec,
+    alpha: 0,
+    imgSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
+  };
 }
 
-function respawn(p: Particle, type: VTTWeatherType, w: number, h: number, speed: number, alpha: number) {
-  p.life = 0;
-  switch (type) {
-    case 'rain': case 'acid-rain': case 'sunshower':
-      p.x = Math.random() * (w + 200) - 100; p.y = -10; break;
-    case 'snow': case 'blizzard':
-      p.x = Math.random() * (w + 100); p.y = -10; break;
-    case 'fog':
-      p.x = -p.size; p.y = Math.random() * h; break;
-    case 'embers': case 'bubbles':
-      p.x = Math.random() * w; p.y = h + 10; break;
-    case 'leaves': case 'spiderwebs':
-      p.x = Math.random() * w; p.y = -20; break;
-    case 'sandstorm':
-      p.x = -10; p.y = Math.random() * h; break;
-    case 'clouds':
-      p.x = -300;
-      p.y = Math.random() * h * 0.6;
-      p.size = (80 + Math.random() * 200) * (0.08 + Math.random() * 0.72);
-      p.spriteSrc = CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)];
-      p.alpha = 0;
-      break;
-    case 'crows':
-      p.x = -p.size - 10;
-      p.y = Math.random() * h;
-      p.spriteSrc = CROW_SRCS[Math.floor(Math.random() * CROW_SRCS.length)];
-      p.alpha = 0;
-      break;
-    case 'magiccrystals': case 'magicstars':
-      p.x = Math.random() * w; p.y = Math.random() * h; break;
-  }
-}
+function buildCloudsLayer(
+  effect: VTTWeatherEffect,
+  w: number,
+  h: number,
+): WeatherLayer {
+  const speedFactor  = effect.speed;   // slider 0.1 → 3
+  const densityFactor = effect.density; // slider 0.1 → 3
+  const alphaFactor  = effect.alpha;   // slider 0 → 1
 
-// ─── Draw particle ───────────────────────────────────────────────────────────
+  // FXMaster: maxParticles ∝ density
+  const maxParticles = Math.max(2, Math.round(densityFactor * 8));
 
-function drawParticle(ctx: CanvasRenderingContext2D, p: Particle, type: VTTWeatherType) {
-  // ── Rendu sprite webp si disponible (Moze75/Ultimate_Tracker assets) ──
-  if (p.spriteSrc) {
-    const img = loadImg(p.spriteSrc);
-    if (img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation);
-      ctx.drawImage(img, -p.size, -p.size, p.size * 2, p.size * 2);
-      ctx.restore();
-      return; // skip rendu procédural
-    }
-    // image pas encore chargée → fallback procédural ci-dessous
-  }
+  // FXMaster: frequency = avgLifetime / maxParticles
+  const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+  const diagonal    = Math.sqrt(w * w + h * h);
+  const avgLifetime = diagonal / avgSpeed;
+  const frequency   = avgLifetime / maxParticles; // secondes entre spawns
 
-  ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-  ctx.translate(p.x, p.y);
-  ctx.rotate(p.rotation);
+  // Créer les particules initiales avec life aléatoire (dispersion)
+  const particles = Array.from({ length: maxParticles }, () =>
+    makeCloudParticle(w, h, speedFactor, alphaFactor, false)
+  );
 
-  switch (type) {
-    case 'rain': case 'acid-rain': case 'sunshower': {
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = p.size;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(p.vx * 0.8, p.vy * 0.8);
-      ctx.stroke();
-      break;
-    }
-    case 'snow': case 'blizzard': {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'fog': {
-      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
-      grad.addColorStop(0, p.color + 'ff');
-      grad.addColorStop(1, p.color + '00');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'embers': {
-      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.3, p.color);
-      grad.addColorStop(1, p.color + '00');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'leaves': {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'sandstorm': {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size * 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'bubbles': {
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-      ctx.stroke();
-      // reflet
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(-p.size * 0.3, -p.size * 0.3, p.size * 0.25, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'spiderwebs': {
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 0.5;
-      const r = p.size;
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.stroke();
-      }
-      for (let ring = 1; ring <= 3; ring++) {
-        const rr = (ring / 3) * r;
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-          const a = (i / 6) * Math.PI * 2;
-          const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-        ctx.stroke();
-      }
-      break;
-    }
-    case 'magiccrystals': {
-      ctx.fillStyle = p.color;
-      ctx.shadowBlur = p.size * 2;
-      ctx.shadowColor = p.color;
-      ctx.beginPath();
-      ctx.moveTo(0, -p.size);
-      ctx.lineTo(p.size * 0.5, 0);
-      ctx.lineTo(0, p.size);
-      ctx.lineTo(-p.size * 0.5, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      break;
-    }
-    case 'magicstars': {
-      ctx.fillStyle = p.color;
-      ctx.shadowBlur = p.size * 3;
-      ctx.shadowColor = p.color;
-      const spikes = 4;
-      const outer = p.size, inner = p.size * 0.4;
-      ctx.beginPath();
-      for (let i = 0; i < spikes * 2; i++) {
-        const a = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
-        const rr = i % 2 === 0 ? outer : inner;
-        i === 0 ? ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr)
-                : ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      break;
-    }
-  }
-  ctx.restore();
+  return {
+    effect,
+    particles,
+    baseSpeedPx: avgSpeed,
+    maxParticles,
+    frequency,
+    spawnAccum: 0,
+  };
 }
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
-// ─── Assets sprites (Moze75/Ultimate_Tracker) ────────────────────────────────
-const FXMASTER_BASE = 'https://raw.githubusercontent.com/gambit07/fxmaster/main/assets/particle-effects/effects';
-const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
-const CROW_SRCS  = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/crows/crow${n}.webp`);
-const EMBER_SRC  = `${FXMASTER_BASE}/embers/ember.webp`;
-const DROP_SRC   = `${FXMASTER_BASE}/rain/drop.webp`;
-
-const _imgCache = new Map<string, HTMLImageElement>();
-function loadImg(src: string): HTMLImageElement {
-  if (!_imgCache.has(src)) {
-    const img = new Image();
-    img.src = src;
-    _imgCache.set(src, img);
-  }
-  return _imgCache.get(src)!;
-}
-
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const layersRef = useRef<WeatherLayer[]>([]);
-  const rafRef = useRef<number>(0);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const layersRef  = useRef<WeatherLayer[]>([]);
+  const rafRef     = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // Sync layers quand effects change
+  // ── Sync layers quand effects change ────────────────────────────────────
   useEffect(() => {
-    layersRef.current = effects.map(effect => {
-      const existing = layersRef.current.find(l => l.effect.type === effect.type);
-      if (existing) {
-        existing.effect = effect;
-        return existing;
+    const cloudsEffect = effects.find(e => e.type === 'clouds');
+
+    if (!cloudsEffect) {
+      layersRef.current = [];
+      return;
+    }
+
+    const existing = layersRef.current.find(l => l.effect.type === 'clouds');
+    if (existing) {
+      // Mettre à jour les paramètres sans recréer les particules
+      // FXMaster recalcule frequency/maxParticles à la volée
+      const speedFactor   = cloudsEffect.speed;
+      const densityFactor = cloudsEffect.density;
+      const avgSpeed      = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+      const diagonal      = Math.sqrt(width * width + height * height);
+      const avgLifetime   = diagonal / avgSpeed;
+      const newMax        = Math.max(2, Math.round(densityFactor * 8));
+      existing.effect     = cloudsEffect;
+      existing.maxParticles = newMax;
+      existing.frequency  = avgLifetime / newMax;
+      // Ajuster le nombre de particules si density a changé
+      while (existing.particles.length < newMax) {
+        existing.particles.push(makeCloudParticle(width, height, speedFactor, cloudsEffect.alpha, false));
       }
-      const cfg = getParticleConfig(effect.type, width, height, effect.density, effect.speed, effect.alpha);
-      return {
-        effect,
-        particles: Array.from({ length: cfg.count }, (_, i) => cfg.factory(i)),
-      };
-    });
+      if (existing.particles.length > newMax) {
+        existing.particles.splice(newMax);
+      }
+    } else {
+      layersRef.current = [buildCloudsLayer(cloudsEffect, width, height)];
+    }
   }, [effects, width, height]);
 
-  // Boucle d'animation
+  // ── Boucle d'animation ───────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -545,16 +197,64 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     if (!ctx) return;
 
     const animate = (time: number) => {
-      const dt = Math.min((time - (lastTimeRef.current || time)) / 16.67, 3);
+      const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
+      const dt = Math.min(dtMs / 1000, 0.1); // dt en secondes, max 100ms
 
       ctx.clearRect(0, 0, width, height);
 
       for (const layer of layersRef.current) {
+        if (layer.effect.type !== 'clouds') continue;
+
         const { effect, particles } = layer;
-        for (const p of particles) {
-          updateParticle(p, effect.type, width, height, dt, effect.speed, effect.alpha);
-          drawParticle(ctx, p, effect.type);
+        const speedFactor = effect.speed;
+        const alphaFactor = effect.alpha;
+
+        // ── Spawn de nouvelles particules (FXMaster: frequency) ──────────
+        layer.spawnAccum += dt;
+        while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
+          layer.spawnAccum -= layer.frequency;
+          particles.push(makeCloudParticle(width, height, speedFactor, alphaFactor, true));
+        }
+        if (layer.spawnAccum > layer.frequency) layer.spawnAccum = 0;
+
+        // ── Update + Draw chaque particule ────────────────────────────────
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+
+          // Avancer la vie (FXMaster: lifeNorm = elapsed / lifetime)
+          p.lifeNorm += p.lifeInc * dt;
+
+          // Si speed a changé via slider, recalculer la vitesse
+          // (on ne recrée pas la particule mais on l'ajuste proportionnellement)
+          // NB : la vitesse de base a été fixée au spawn → on applique juste le ratio
+
+          // Déplacer
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+
+          // Alpha selon la courbe FXMaster : [0@0, 0.5@0.05, 0.5@0.95, 0@1]
+          const t = Math.min(1, Math.max(0, p.lifeNorm));
+          let rawAlpha: number;
+          if      (t < 0.05) rawAlpha = (t / 0.05) * CLOUD_ALPHA_MAX;
+          else if (t < 0.95) rawAlpha = CLOUD_ALPHA_MAX;
+          else               rawAlpha = ((1 - t) / 0.05) * CLOUD_ALPHA_MAX;
+          p.alpha = rawAlpha * alphaFactor;
+
+          // Mort : lifeNorm >= 1
+          if (p.lifeNorm >= 1) {
+            particles.splice(i, 1);
+            continue;
+          }
+
+          // Draw
+          const img = loadImg(p.imgSrc);
+          if (!img.complete || img.naturalWidth === 0) continue; // pas encore chargée
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+          ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+          ctx.restore();
         }
       }
 
