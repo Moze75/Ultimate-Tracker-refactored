@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { VTTCanvas } from '../components/VTT/VTTCanvas';
-import { vttService, type BroadcastViewport } from '../services/vttService';
+import type { BroadcastViewport } from '../services/vttService';
 import type {
   VTTToken,
   VTTRoomConfig,
