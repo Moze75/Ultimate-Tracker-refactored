@@ -125,7 +125,7 @@ const CLOUD_ALPHA_LIST = [
 function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
   const rawSpeed   = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
   const scale      = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
-  const size       = scale * CLOUD_SPRITE_BASE;
+  const size       = scale * CLOUD_SPRITE_BASE * speedFactor; // speedFactor ici = scaleFactor passé
   const travelDist = w + size * 2;
   return {
     type: 'cloud',
