@@ -340,7 +340,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         if (effect.type !== 'clouds' && effect.type !== 'crows') continue;
         // clouds → ctxScreen (mixBlendMode: screen)
         // crows  → ctxNormal (mixBlendMode: normal)
-        const ctx = effect.type === 'clouds' ? ctxScreen : ctxNormal;
+          const ctx = effect.type === 'clouds' ? ctxScreen : ctxNormal;
+        if (!ctx) continue;
 
         // Spawn
         layer.spawnAccum += dt;
