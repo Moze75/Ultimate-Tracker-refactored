@@ -56,6 +56,7 @@ export interface VTTRoomConfig {
   gridLineWidth?: number;
   timeOfDay?: number;
   weatherEffects?: VTTWeatherEffect[];  // effets actifs (cumulables)
+  savedViewport?: { x: number; y: number; scale: number };  // vue enregistrée par le GM
 }
 
 export interface VTTFogStroke {
