@@ -178,6 +178,38 @@ const CROW_SPRITE_BASE  = 180;   // px base (0.12 × 180 = 22px demi-côté au p
 const CROW_SCALE_MID    = 0.12;  // valeur plateau (t 0.1→0.9)
 const CROW_SCALE_EDGE   = 0.03;  // valeur aux bords
 
+function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
+  const baseSpeed = EMBER_SPEED_MIN + Math.random() * (EMBER_SPEED_MAX - EMBER_SPEED_MIN);
+
+  // Direction aléatoire biaisée vers le haut (rotation 200-340° en degrés canvas)
+  // FXMaster rotation 0-365° mais les braises montent → on biaise vy négatif
+  const angle = Math.random() * Math.PI * 2;
+  const dirX  = Math.cos(angle);
+  const dirY  = Math.sin(angle) * 0.4 - 0.6; // biais vers le haut
+  const mag   = Math.sqrt(dirX * dirX + dirY * dirY);
+
+  const baseLifetimeSec = 4 + Math.random() * 2; // lifetime 4-6s
+
+  return {
+    type: 'embers',
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: (dirX / mag) * baseSpeed * speedFactor,
+    vy: (dirY / mag) * baseSpeed * speedFactor,
+    baseSpeed,
+    dirX: dirX / mag,
+    dirY: dirY / mag,
+    size: EMBER_SPRITE_BASE,
+    lifeNorm: Math.random(), // init dispersé
+    baseLifetimeSec,
+    lifeInc: speedFactor / baseLifetimeSec,
+    alpha: 0,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (1.74 + Math.random() * 1.74) * (Math.random() > 0.5 ? 1 : -1), // 100-200°/s en rad
+    color: '#f77300',
+  };
+}
+
 function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
   // baseSpeed = vitesse à speed=1, individuelle par particule (minMult 0.6)
   const baseSpeed = CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN);
