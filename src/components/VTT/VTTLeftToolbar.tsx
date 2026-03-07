@@ -72,6 +72,8 @@ export function VTTLeftToolbar({
   onBroadcastModeChange,
   weatherEffects,
   onUpdateWeather,
+  gmFollowEnabled = false,
+  onToggleGmFollow,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
