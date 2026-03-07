@@ -665,6 +665,25 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(monster);
     }
 
+    // ACTION DEBUG : retourne le HTML brut pour inspecter la structure réelle
+    if (action === "debug") {
+      const slug = url.searchParams.get("slug");
+      if (!slug) return errorResponse("Missing slug parameter", 400);
+      const res = await fetch(`https://www.aidedd.org/monster/fr/${slug}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; DnDTracker/1.0)", Accept: "text/html" },
+      });
+      const html = await res.text();
+      // Extraire juste les 8000 premiers caractères du bloc principal
+      const blockStart = html.indexOf('class="blocmonst"');
+      const blockFallback = html.indexOf('class="jaune"');
+      const startIdx = blockStart > -1 ? blockStart : blockFallback > -1 ? blockFallback : 0;
+      const snippet = html.substring(startIdx, startIdx + 8000);
+      return new Response(JSON.stringify({ html_snippet: snippet }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return errorResponse("Invalid action. Use ?action=list or ?action=detail&slug=xxx", 400);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
