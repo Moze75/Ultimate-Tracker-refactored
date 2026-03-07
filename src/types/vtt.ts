@@ -34,9 +34,7 @@ export interface VTTToken {
 // Inspiré de FXMaster (gambit07/fxmaster) — https://github.com/gambit07/fxmaster
 export type VTTWeatherType =
   | 'rain' | 'acid-rain' | 'snow' | 'blizzard'
-  | 'fog' | 'embers' | 'leaves' | 'sandstorm'
-  | 'sunshower' | 'bubbles' | 'spiderwebs'
-  | 'magiccrystals' | 'magicstars';
+  | 'clouds' | 'crows'
 
 export interface VTTWeatherEffect {
   type: VTTWeatherType;
