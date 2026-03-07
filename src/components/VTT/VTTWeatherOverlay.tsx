@@ -325,7 +325,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     const ctxScreen = canvasScreen.getContext('2d');
     const ctxNormal = canvasNormal.getContext('2d');
     if (!ctxScreen || !ctxNormal) return;
-
+ 
     const animate = (time: number) => {
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
