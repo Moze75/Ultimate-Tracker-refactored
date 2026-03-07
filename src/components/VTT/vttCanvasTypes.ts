@@ -32,5 +32,6 @@ export interface VTTCanvasProps {
   onWallRemoved?: (wallId: string) => void;
   showWalls?: boolean;
   forceViewport?: { x: number; y: number; width: number; height: number } | null;
+  initialViewport?: { x: number; y: number; scale: number } | null;
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
 }
