@@ -332,8 +332,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       lastTimeRef.current = time;
       const dt = Math.min(dtMs / 1000, 0.1); // secondes, max 100ms
 
-      ctxScreen.clearRect(0, 0, width, height);
-      ctxNormal.clearRect(0, 0, width, height);
+      ctxScreen?.clearRect(0, 0, width, height);
+      ctxNormal?.clearRect(0, 0, width, height);
 
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
