@@ -813,9 +813,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-auto">
-          <VTTLeftToolbar
+      <div className="flex flex-1 overflow-hidden">
+        <VTTLeftToolbar 
           role={role}
           activeTool={activeTool}
           fogBrushSize={fogBrushSize}
