@@ -262,11 +262,12 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
 // ─── Composant React ─────────────────────────────────────────────────────────
 
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen 
+  const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
   const layersRef   = useRef<WeatherLayer[]>([]);
   const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
-
+  
   // Sync layers quand effects change
   useEffect(() => {
     const activeTypes = effects.map(e => e.type);
@@ -298,7 +299,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           existing.maxParticles = newMax;
           existing.frequency    = avgLifetime / newMax;
         }
-
+ 
         // Ajuster le nombre de particules si density a changé
         while (existing.particles.length < existing.maxParticles) {
           existing.particles.push(
