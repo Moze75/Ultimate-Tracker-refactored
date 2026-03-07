@@ -927,7 +927,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
-                       initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
+            forceViewport={role === 'player' && playerForcedViewport ? playerForcedViewport : undefined}
+            initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
           />
 
