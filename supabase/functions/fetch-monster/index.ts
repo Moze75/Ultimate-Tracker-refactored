@@ -426,8 +426,8 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   // via extraction de toutes les paires <strong>Label</strong> Valeur
   // ============================================================
   // Chercher la fin du header AVANT la première section titre OU rub
-  const headerEndTitre = block.search(/<div\s+class=['"]titre['"][^>]*>/i);
-  const headerEndRub = block.search(/<div\s+class=['"]rub['"][^>]*>/i);
+  const headerEndTitre = block.search(/<(?:div|h2)\s+class=['"]titre['"][^>]*>/i);
+  const headerEndRub = block.search(/<(?:div|h2)\s+class=['"]rub['"][^>]*>/i);
   const headerEnd = headerEndTitre > -1 && headerEndRub > -1
     ? Math.min(headerEndTitre, headerEndRub)
     : headerEndTitre > -1 ? headerEndTitre
