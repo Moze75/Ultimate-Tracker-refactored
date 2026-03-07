@@ -121,6 +121,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
+    const [savedViewport, setSavedViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [weatherEffects, setWeatherEffects] = useState<VTTWeatherEffect[]>([]);
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
