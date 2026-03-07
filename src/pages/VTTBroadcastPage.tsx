@@ -200,7 +200,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         config={config}
         tokens={tokens}
         fogState={fogState}
-        role="player"
+        role="gm"
         userId=""
         activeTool="select"
         fogBrushSize={0}
