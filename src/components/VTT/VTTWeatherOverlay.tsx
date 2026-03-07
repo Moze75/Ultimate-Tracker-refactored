@@ -422,7 +422,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       {/* Clouds : mode screen (sprites blancs) */}
       {effects.some(e => e.type === 'clouds') && (
         <canvas
-          ref={canvasScreenRef}
+          ref={canvasScreenRef} 
           width={width}
           height={height}
           className="absolute inset-0 pointer-events-none z-10"
