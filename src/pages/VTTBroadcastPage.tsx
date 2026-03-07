@@ -92,14 +92,54 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   }, []);
 
   useEffect(() => {
-    const unsub = vttService.onMessage(handleServerEvent);
-    const unsubConn = vttService.onConnectionChange(setConnected);
-    const unsubViewport = vttService.onBroadcastViewport((vp) => {
-      setBroadcastViewport(vp);
+    // Canal Supabase DÉDIÉ à la fenêtre broadcast — indépendant du vttService singleton
+    const channel = supabase.channel(`vtt-room-${roomId}-broadcast-${userId}`, {
+      config: { broadcast: { self: false } },
     });
-    vttService.connect(roomId, userId, authToken, userName);
-    return () => { unsub(); unsubConn(); unsubViewport(); vttService.disconnect(); };
-  }, [roomId, userId, authToken, userName, handleServerEvent]);
+
+    channel
+      .on('broadcast', { event: 'vtt' }, ({ payload }) => {
+        handleServerEvent(payload as VTTServerEvent);
+      })
+      .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
+        setBroadcastViewport(payload as BroadcastViewport);
+      })
+      .subscribe((status) => {
+        setConnected(status === 'SUBSCRIBED');
+      });
+
+    // Charger l'état initial depuis Supabase DB (la room + la première scène)
+    supabase
+      .from('vtt_rooms')
+      .select('state_json')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.state_json) return;
+        const s = data.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
+        if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
+        if (s.tokens) setTokens(s.tokens);
+        if (s.fogState) setFogState(s.fogState);
+      });
+
+    supabase
+      .from('vtt_scenes')
+      .select('walls, fog_state, config')
+      .eq('room_id', roomId)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          if (data[0].walls) setWalls(data[0].walls);
+          if (data[0].fog_state) setFogState(data[0].fog_state);
+          if (data[0].config) setConfig(prev => ({ ...prev, ...data[0].config }));
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, userId, handleServerEvent]);
 
   useEffect(() => {
     const handleFS = () => setIsFullscreen(!!document.fullscreenElement);
