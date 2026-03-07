@@ -446,7 +446,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             p.rotation += p.rotSpeed * dt;
             p.alpha     = fxAlpha(p.lifeNorm, effect.alpha, EMBER_ALPHA_LIST);
             const scaleFactor = interpList(p.lifeNorm, EMBER_SCALE_LIST);
-            const eSize       = scaleFactor * EMBER_SPRITE_BASE;
+                   const eSize       = scaleFactor * EMBER_SPRITE_BASE * effect.scale;
             // Couleur interpolée orange→rouge (#f77300 → #f72100)
             const tc = Math.min(1, Math.max(0, p.lifeNorm));
             const g  = Math.round(0x73 + (0x21 - 0x73) * tc); // 115→33
