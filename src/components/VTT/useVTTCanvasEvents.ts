@@ -600,6 +600,96 @@ export function useVTTCanvasEvents({
       }
     };
 
+    // ── Touch events (pan 2 doigts + pinch) ─────────────────────────────────
+    let lastTouchDist: number | null = null;   // distance entre 2 doigts (pinch)
+    let lastTouchMid: { x: number; y: number } | null = null; // milieu des 2 doigts
+
+    const getTouchDist = (t1: Touch, t2: Touch) =>
+      Math.sqrt((t2.clientX - t1.clientX) ** 2 + (t2.clientY - t1.clientY) ** 2);
+
+    const getTouchMid = (t1: Touch, t2: Touch) => ({
+      x: (t1.clientX + t2.clientX) / 2,
+      y: (t1.clientY + t2.clientY) / 2,
+    });
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const [t1, t2] = [e.touches[0], e.touches[1]];
+        lastTouchDist = getTouchDist(t1, t2);
+        lastTouchMid  = getTouchMid(t1, t2);
+        // Annuler tout drag en cours
+        isPanningRef.current    = false;
+        lastPanRef.current      = null;
+        draggingTokenRef.current = null;
+      } else if (e.touches.length === 1) {
+        // 1 doigt = simuler mousedown pour le pan (bouton central / alt)
+        // On ne simule que le pan, pas les actions sur tokens
+        lastTouchDist = null;
+        lastTouchMid  = null;
+        isPanningRef.current  = true;
+        lastPanRef.current    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const [t1, t2] = [e.touches[0], e.touches[1]];
+        const newDist = getTouchDist(t1, t2);
+        const newMid  = getTouchMid(t1, t2);
+
+        if (lastTouchDist !== null && lastTouchMid !== null) {
+          const vp = viewportRef.current;
+
+          // ── Pinch → zoom ──────────────────────────────────────
+          const ratio = newDist / lastTouchDist;
+          const newScale = Math.max(0.2, Math.min(4, vp.scale * ratio));
+          const sp = getCanvasXY(newMid.x, newMid.y);
+          const wx = (sp.x - vp.x) / vp.scale;
+          const wy = (sp.y - vp.y) / vp.scale;
+
+          // ── Pan 2 doigts ───────────────────────────────────────
+          const panDx = newMid.x - lastTouchMid.x;
+          const panDy = newMid.y - lastTouchMid.y;
+
+          viewportRef.current = {
+            scale: newScale,
+            x: sp.x - wx * newScale + panDx,
+            y: sp.y - wy * newScale + panDy,
+          };
+          onViewportChangeRef.current?.(viewportRef.current);
+          drawRef.current();
+        }
+
+        lastTouchDist = newDist;
+        lastTouchMid  = newMid;
+      } else if (e.touches.length === 1 && isPanningRef.current && lastPanRef.current) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - lastPanRef.current.x;
+        const dy = e.touches[0].clientY - lastPanRef.current.y;
+        lastPanRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        viewportRef.current = {
+          ...viewportRef.current,
+          x: viewportRef.current.x + dx,
+          y: viewportRef.current.y + dy,
+        };
+        onViewportChangeRef.current?.(viewportRef.current);
+        drawRef.current();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        lastTouchDist = null;
+        lastTouchMid  = null;
+      }
+      if (e.touches.length === 0) {
+        isPanningRef.current = false;
+        lastPanRef.current   = null;
+      }
+    };
+
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('dblclick', onDblClick);
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -607,6 +697,9 @@ export function useVTTCanvasEvents({
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mouseleave', onMouseLeave);
     canvas.addEventListener('wheel', onWheel, { passive: false });
+    canvas.addEventListener('touchstart',  onTouchStart,  { passive: false });
+    canvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
+    canvas.addEventListener('touchend',    onTouchEnd,    { passive: true  });
 
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown);
@@ -616,6 +709,9 @@ export function useVTTCanvasEvents({
       canvas.removeEventListener('mouseup', onMouseUp);
       canvas.removeEventListener('mouseleave', onMouseLeave);
       canvas.removeEventListener('wheel', onWheel);
+      canvas.removeEventListener('touchstart',  onTouchStart);
+      canvas.removeEventListener('touchmove',   onTouchMove);
+      canvas.removeEventListener('touchend',    onTouchEnd);
     };
   }, []);
 
