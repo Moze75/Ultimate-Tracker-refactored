@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Check, X, Bookmark } from 'lucide-react';
 import type { VTTScene } from '../../types/vtt';
 
 interface VTTSceneBarProps {
