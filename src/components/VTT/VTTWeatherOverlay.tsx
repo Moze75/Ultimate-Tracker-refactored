@@ -138,41 +138,46 @@ const CROW_SCALE_MID    = 0.12;  // valeur plateau (t 0.1→0.9)
 const CROW_SCALE_EDGE   = 0.03;  // valeur aux bords
 
 function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
-  const rawSpeed = (CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN)) * speedFactor;
+  // baseSpeed = vitesse à speed=1, individuelle par particule (minMult 0.6)
+  const baseSpeed = CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN);
 
   // Direction aléatoire (rotationStatic 0-359°)
   const angle = Math.random() * Math.PI * 2;
-  const vx    = Math.cos(angle) * rawSpeed;
-  const vy    = Math.sin(angle) * rawSpeed;
+  const dirX  = Math.cos(angle);
+  const dirY  = Math.sin(angle);
+
+  // Vitesse appliquée au spawn avec le facteur courant
+  const rawSpeed = baseSpeed * speedFactor;
+  const vx = dirX * rawSpeed;
+  const vy = dirY * rawSpeed;
 
   // Spawn depuis les bords (DefaultRectangleSpawnMixin)
   let x: number, y: number;
   const border = Math.floor(Math.random() * 4);
-  if      (border === 0) { x = Math.random() * w; y = -50; }           // haut
-  else if (border === 1) { x = Math.random() * w; y = h + 50; }        // bas
-  else if (border === 2) { x = -50;               y = Math.random() * h; } // gauche
-  else                   { x = w + 50;             y = Math.random() * h; } // droite
+  if      (border === 0) { x = Math.random() * w; y = -50; }
+  else if (border === 1) { x = Math.random() * w; y = h + 50; }
+  else if (border === 2) { x = -50;               y = Math.random() * h; }
+  else                   { x = w + 50;             y = Math.random() * h; }
 
-  // Durée de vie (20-40s × speedFactor inverse)
-  const baseLife   = 20 + Math.random() * 20;
-  const lifetimeSec = baseLife / speedFactor;
-  const lifeInc    = 1 / lifetimeSec;
+  // Durée de vie de base (20-40s) — sera recalculée dynamiquement via speedFactor
+  const baseLifetimeSec = 20 + Math.random() * 20;
 
-  // Wobble latéral (FXMaster lateralMovement, période 5-10s)
   const wobblePeriod = 5 + Math.random() * 5;
-  const perpX = -vy / rawSpeed;  // vecteur perpendiculaire
-  const perpY =  vx / rawSpeed;
+  const perpX = -dirY;  // vecteur perpendiculaire
+  const perpY =  dirX;
 
   return {
     type: 'crow',
     x, y, vx, vy,
-    size: CROW_SCALE_MID * CROW_SPRITE_BASE, // taille plateau
+    baseSpeed,
+    dirX, dirY,
+    size: CROW_SCALE_MID * CROW_SPRITE_BASE,
     lifeNorm: 0,
-    lifeInc,
+    lifeInc: 1 / (baseLifetimeSec / speedFactor),
     alpha: 0,
-    animTime: Math.random() * (CROW_ANIM_TOTAL / CROW_FRAMERATE), // phase aléatoire
+    animTime: Math.random() * (CROW_ANIM_TOTAL / CROW_FRAMERATE),
     wobblePhase: Math.random() * Math.PI * 2,
-    wobbleAmp: 0,      // pas de wobble par défaut (optionnel)
+    wobbleAmp: 0,
     wobblePeriod,
     perpX, perpY,
   };
