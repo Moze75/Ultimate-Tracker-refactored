@@ -212,6 +212,14 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         forceViewport={defaultViewport}
       />
 
+      {(config.weatherEffects ?? []).length > 0 && (
+        <VTTWeatherOverlay
+          effects={config.weatherEffects!}
+          width={containerRef.current?.clientWidth ?? window.innerWidth}
+          height={containerRef.current?.clientHeight ?? window.innerHeight}
+        />
+      )}
+
       <div className={`absolute top-0 left-0 right-0 z-30 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-black/80 to-transparent">
           <button
