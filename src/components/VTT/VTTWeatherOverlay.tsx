@@ -321,10 +321,11 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   useEffect(() => {
     const canvasScreen = canvasScreenRef.current;
     const canvasNormal = canvasNormalRef.current;
-    if (!canvasScreen || !canvasNormal) return;
-    const ctxScreen = canvasScreen.getContext('2d');
-    const ctxNormal = canvasNormal.getContext('2d');
-    if (!ctxScreen || !ctxNormal) return;
+    // Au moins un canvas doit être monté
+    if (!canvasScreen && !canvasNormal) return;
+    const ctxScreen = canvasScreen?.getContext('2d') ?? null;
+    const ctxNormal = canvasNormal?.getContext('2d') ?? null;
+    if (!ctxScreen && !ctxNormal) return;
  
     const animate = (time: number) => {
       const dtMs = time - (lastTimeRef.current || time);
