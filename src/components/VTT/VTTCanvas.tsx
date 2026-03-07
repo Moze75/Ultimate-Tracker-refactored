@@ -34,6 +34,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onWallRemoved,
   showWalls = false,
   forceViewport: forceViewportProp = null,
+  initialViewport = null,
   onViewportChange,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
