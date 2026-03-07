@@ -1,6 +1,6 @@
 /**
  * VTTWeatherOverlay
- * Canvas overlay — effets Nuages & Corbeaux.
+ * Canvas overlay — effets Nuages, Corbeaux & Braises.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  * Implémentation Canvas 2D pure, indépendante de PIXI/Foundry.
  */
@@ -25,34 +25,32 @@ function loadImg(src: string): HTMLImageElement {
   }
   return _imgCache.get(src)!;
 }
-// Préchargement
 [...CLOUD_SRCS, ...CROW_SRCS, EMBER_SRC].forEach(loadImg);
 
-// ─── Séquence d'animation corbeaux (FXMaster animatedSingle) ─────────────────
-// [1×20, 2×3, 3×2, 4×2, 3×2, 2×3] frames à 15fps
+// ─── Séquence animation corbeaux [1×20, 2×3, 3×2, 4×2, 3×2, 2×3] à 15fps ───
 const CROW_ANIM_SEQUENCE: number[] = [];
 for (const { tex, count } of [
-  { tex: 0, count: 20 }, // crow1
-  { tex: 1, count: 3  }, // crow2
-  { tex: 2, count: 2  }, // crow3
-  { tex: 3, count: 2  }, // crow4
-  { tex: 2, count: 2  }, // crow3
-  { tex: 1, count: 3  }, // crow2
+  { tex: 0, count: 20 },
+  { tex: 1, count: 3  },
+  { tex: 2, count: 2  },
+  { tex: 3, count: 2  },
+  { tex: 2, count: 2  },
+  { tex: 1, count: 3  },
 ]) {
   for (let i = 0; i < count; i++) CROW_ANIM_SEQUENCE.push(tex);
 }
-const CROW_ANIM_TOTAL  = CROW_ANIM_SEQUENCE.length; // 32 frames
-const CROW_FRAMERATE   = 15; // fps
+const CROW_ANIM_TOTAL = CROW_ANIM_SEQUENCE.length; // 32 frames
+const CROW_FRAMERATE  = 15;
 
-// ─── Types internes ───────────────────────────────────────────────────────────
+// ─── Interfaces particules ────────────────────────────────────────────────────
 
 interface CloudParticle {
   type: 'cloud';
   x: number; y: number;
   vx: number; vy: number;
-  size: number;        // demi-côté sprite px
-  lifeNorm: number;    // 0→1
-  lifeInc: number;     // incrément/s = 1/lifetimeSec
+  size: number;
+  lifeNorm: number;
+  lifeInc: number;
   alpha: number;
   imgSrc: string;
 }
@@ -61,36 +59,34 @@ interface CrowParticle {
   type: 'crow';
   x: number; y: number;
   vx: number; vy: number;
-  baseSpeed: number;   // vitesse normalisée à speed=1 (px/s)
-  dirX: number;        // vecteur direction normalisé
-  dirY: number;
+  baseSpeed: number;
+  dirX: number; dirY: number;
   size: number;
   lifeNorm: number;
   lifeInc: number;
-  baseLifetimeSec: number;  // durée de vie à speed=1
+  baseLifetimeSec: number;
   alpha: number;
   animTime: number;
   wobblePhase: number;
   wobbleAmp: number;
   wobblePeriod: number;
-  perpX: number;
-  perpY: number;
+  perpX: number; perpY: number;
 }
 
 interface EmberParticle {
   type: 'embers';
   x: number; y: number;
   vx: number; vy: number;
-  baseSpeed: number;      // px/s à speed=1
+  baseSpeed: number;
   dirX: number; dirY: number;
-  size: number;           // scale courant (0.15→0.01 × EMBER_SPRITE_BASE)
-  lifeNorm: number;       // 0→1
-  baseLifetimeSec: number;
+  size: number;
+  lifeNorm: number;
   lifeInc: number;
+  baseLifetimeSec: number;
   alpha: number;
-  rotation: number;       // rotation sprite (rad)
-  rotSpeed: number;       // rad/s (100-200°/s en rad)
-  color: string;          // interpolation orange→rouge
+  rotation: number;
+  rotSpeed: number;
+  color: string;
 }
 
 type AnyParticle = CloudParticle | CrowParticle | EmberParticle;
@@ -99,7 +95,7 @@ interface WeatherLayer {
   effect: VTTWeatherEffect;
   particles: AnyParticle[];
   maxParticles: number;
-  frequency: number;   // s entre spawns
+  frequency: number;
   spawnAccum: number;
 }
 
@@ -109,155 +105,138 @@ interface VTTWeatherOverlayProps {
   height: number;
 }
 
-// ─── CLOUDS (FXMaster clouds.js) ─────────────────────────────────────────────
-// moveSpeedStatic : min=30, max=100 px/s
-// scaleStatic     : min=0.08, max=0.8 → size = scale × SPRITE_BASE
-// alpha list      : [0@0, 0.5@0.05, 0.5@0.95, 0@1]
-
+// ─── CLOUDS ──────────────────────────────────────────────────────────────────
 const CLOUD_SPEED_MIN   = 30;
 const CLOUD_SPEED_MAX   = 100;
 const CLOUD_SCALE_MIN   = 0.08;
 const CLOUD_SCALE_MAX   = 0.80;
-const CLOUD_SPRITE_BASE = 600;   // px base (Canvas 2D, pas de grid PIXI)
+const CLOUD_SPRITE_BASE = 600;
 const CLOUD_ALPHA_MAX   = 0.5;
+
+const CLOUD_ALPHA_LIST = [
+  { time: 0,    value: 0              },
+  { time: 0.05, value: CLOUD_ALPHA_MAX },
+  { time: 0.95, value: CLOUD_ALPHA_MAX },
+  { time: 1,    value: 0              },
+];
 
 function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
   const rawSpeed   = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
   const scale      = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
   const size       = scale * CLOUD_SPRITE_BASE;
-  const vx         = rawSpeed;
-  const vy         = (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05;
   const travelDist = w + size * 2;
-  const lifeInc    = rawSpeed / travelDist; // = 1/lifetimeSec
-
   return {
     type: 'cloud',
     x: spawnLeft ? -size - 10 : -size + Math.random() * (w + size),
     y: Math.random() * h * 0.75,
-    vx, vy, size,
+    vx: rawSpeed,
+    vy: (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05,
+    size,
     lifeNorm: spawnLeft ? 0 : Math.random(),
-    lifeInc,
+    lifeInc: rawSpeed / travelDist,
     alpha: 0,
     imgSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
   };
 }
 
-// ─── CROWS (FXMaster crows.js) ───────────────────────────────────────────────
-// moveSpeed : 90-100 px/s (minMult 0.6 → min 54px/s), lifetime 20-40s
-// scale list: [0.03@0, 0.12@0.1, 0.12@0.9, 0.03@1] → size = scale × CROW_SPRITE_BASE
-// alpha list: [0@0, 1@0.02, 1@0.98, 0@1]
-// spawn : depuis les 4 bords (DefaultRectangleSpawnMixin)
-// rotation : 0-359° → direction aléatoire
+// ─── CROWS ───────────────────────────────────────────────────────────────────
+const CROW_SPEED_MIN   = 54;
+const CROW_SPEED_MAX   = 100;
+const CROW_SPRITE_BASE = 180;
+const CROW_SCALE_MID   = 0.12;
+const CROW_SCALE_EDGE  = 0.03;
 
-// ─── EMBERS (FXMaster embers.js) ─────────────────────────────────────────────
-// moveSpeedStatic : min=24, max=40 px/s
-// scale list      : [0.15@0, 0.01@1], minMult=0.85
-// alpha list      : [0@0, 0.9@0.3, 0.9@0.95, 0@1]
-// couleur         : #f77300 → #f72100 (orange→rouge)
-// blendMode       : ADD → canvas 'lighter'
-// spawn           : partout sur la scène
-// direction       : aléatoire (biaisé vers le haut)
-
-const EMBER_SPEED_MIN    = 24;
-const EMBER_SPEED_MAX    = 40;
-const EMBER_SPRITE_BASE  = 120;  // px base (scale 0.15 × 120 = 18px au départ)
-const EMBER_ALPHA_LIST = [
-  { time: 0,    value: 0   },
-  { time: 0.3,  value: 0.9 },
-  { time: 0.95, value: 0.9 },
-  { time: 1,    value: 0   },
-];
-const EMBER_SCALE_LIST = [
-  { time: 0, value: 0.15 },
-  { time: 1, value: 0.01 },
+const CROW_ALPHA_LIST = [
+  { time: 0,    value: 0 },
+  { time: 0.02, value: 1 },
+  { time: 0.98, value: 1 },
+  { time: 1,    value: 0 },
 ];
 
-const CROW_SPEED_MIN    = 54;    // 90 × minMult=0.6
-const CROW_SPEED_MAX    = 100;
-const CROW_SPRITE_BASE  = 180;   // px base (0.12 × 180 = 22px demi-côté au plateau)
-const CROW_SCALE_MID    = 0.12;  // valeur plateau (t 0.1→0.9)
-const CROW_SCALE_EDGE   = 0.03;  // valeur aux bords
-
-function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
-  const baseSpeed = EMBER_SPEED_MIN + Math.random() * (EMBER_SPEED_MAX - EMBER_SPEED_MIN);
-
-  // Direction aléatoire biaisée vers le haut (rotation 200-340° en degrés canvas)
-  // FXMaster rotation 0-365° mais les braises montent → on biaise vy négatif
-  const angle = Math.random() * Math.PI * 2;
-  const dirX  = Math.cos(angle);
-  const dirY  = Math.sin(angle) * 0.4 - 0.6; // biais vers le haut
-  const mag   = Math.sqrt(dirX * dirX + dirY * dirY);
-
-  const baseLifetimeSec = 4 + Math.random() * 2; // lifetime 4-6s
-
-  return {
-    type: 'embers',
-    x: Math.random() * w,
-    y: Math.random() * h,
-    vx: (dirX / mag) * baseSpeed * speedFactor,
-    vy: (dirY / mag) * baseSpeed * speedFactor,
-    baseSpeed,
-    dirX: dirX / mag,
-    dirY: dirY / mag,
-    size: EMBER_SPRITE_BASE,
-    lifeNorm: Math.random(), // init dispersé
-    baseLifetimeSec,
-    lifeInc: speedFactor / baseLifetimeSec,
-    alpha: 0,
-    rotation: Math.random() * Math.PI * 2,
-    rotSpeed: (1.74 + Math.random() * 1.74) * (Math.random() > 0.5 ? 1 : -1), // 100-200°/s en rad
-    color: '#f77300',
-  };
-}
+const CROW_SCALE_LIST = [
+  { time: 0,   value: CROW_SCALE_EDGE },
+  { time: 0.1, value: CROW_SCALE_MID  },
+  { time: 0.9, value: CROW_SCALE_MID  },
+  { time: 1,   value: CROW_SCALE_EDGE },
+];
 
 function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
-  // baseSpeed = vitesse à speed=1, individuelle par particule (minMult 0.6)
-  const baseSpeed = CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN);
-
-  // Direction aléatoire (rotationStatic 0-359°)
-  const angle = Math.random() * Math.PI * 2;
-  const dirX  = Math.cos(angle);
-  const dirY  = Math.sin(angle);
-
-  // Vitesse appliquée au spawn avec le facteur courant
-  const rawSpeed = baseSpeed * speedFactor;
-  const vx = dirX * rawSpeed;
-  const vy = dirY * rawSpeed;
-
-  // Spawn depuis les bords (DefaultRectangleSpawnMixin)
+  const baseSpeed       = CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN);
+  const angle           = Math.random() * Math.PI * 2;
+  const dirX            = Math.cos(angle);
+  const dirY            = Math.sin(angle);
+  const baseLifetimeSec = 20 + Math.random() * 20;
   let x: number, y: number;
   const border = Math.floor(Math.random() * 4);
   if      (border === 0) { x = Math.random() * w; y = -50; }
   else if (border === 1) { x = Math.random() * w; y = h + 50; }
   else if (border === 2) { x = -50;               y = Math.random() * h; }
   else                   { x = w + 50;             y = Math.random() * h; }
-
-  // Durée de vie de base (20-40s) — sera recalculée dynamiquement via speedFactor
-  const baseLifetimeSec = 20 + Math.random() * 20;
-
-  const wobblePeriod = 5 + Math.random() * 5;
-  const perpX = -dirY;  // vecteur perpendiculaire
-  const perpY =  dirX;
-
   return {
     type: 'crow',
-    x, y, vx, vy,
-    baseSpeed,
-    dirX, dirY,
+    x, y,
+    vx: dirX * baseSpeed * speedFactor,
+    vy: dirY * baseSpeed * speedFactor,
+    baseSpeed, dirX, dirY,
     size: CROW_SCALE_MID * CROW_SPRITE_BASE,
     lifeNorm: 0,
-     baseLifetimeSec,
     lifeInc: speedFactor / baseLifetimeSec,
+    baseLifetimeSec,
     alpha: 0,
     animTime: Math.random() * (CROW_ANIM_TOTAL / CROW_FRAMERATE),
     wobblePhase: Math.random() * Math.PI * 2,
     wobbleAmp: 0,
-    wobblePeriod,
-    perpX, perpY,
+    wobblePeriod: 5 + Math.random() * 5,
+    perpX: -dirY,
+    perpY:  dirX,
   };
 }
 
-// ─── Calcul alpha FXMaster par courbe de keyframes ───────────────────────────
+// ─── EMBERS ──────────────────────────────────────────────────────────────────
+const EMBER_SPEED_MIN   = 24;
+const EMBER_SPEED_MAX   = 40;
+const EMBER_SPRITE_BASE = 120;
+
+const EMBER_ALPHA_LIST = [
+  { time: 0,    value: 0   },
+  { time: 0.3,  value: 0.9 },
+  { time: 0.95, value: 0.9 },
+  { time: 1,    value: 0   },
+];
+
+const EMBER_SCALE_LIST = [
+  { time: 0, value: 0.15 },
+  { time: 1, value: 0.01 },
+];
+
+function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
+  const baseSpeed       = EMBER_SPEED_MIN + Math.random() * (EMBER_SPEED_MAX - EMBER_SPEED_MIN);
+  const angle           = Math.random() * Math.PI * 2;
+  const rawDirX         = Math.cos(angle);
+  const rawDirY         = Math.sin(angle) * 0.4 - 0.6; // biais vers le haut
+  const mag             = Math.sqrt(rawDirX * rawDirX + rawDirY * rawDirY);
+  const dirX            = rawDirX / mag;
+  const dirY            = rawDirY / mag;
+  const baseLifetimeSec = 4 + Math.random() * 2;
+  return {
+    type: 'embers',
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: dirX * baseSpeed * speedFactor,
+    vy: dirY * baseSpeed * speedFactor,
+    baseSpeed, dirX, dirY,
+    size: EMBER_SPRITE_BASE,
+    lifeNorm: Math.random(),
+    lifeInc: speedFactor / baseLifetimeSec,
+    baseLifetimeSec,
+    alpha: 0,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (1.74 + Math.random() * 1.74) * (Math.random() > 0.5 ? 1 : -1),
+    color: '#f77300',
+  };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fxAlpha(t: number, alphaFactor: number, list: { time: number; value: number }[]): number {
   const clamped = Math.min(1, Math.max(0, t));
@@ -271,32 +250,7 @@ function fxAlpha(t: number, alphaFactor: number, list: { time: number; value: nu
   return 0;
 }
 
-const CLOUD_ALPHA_LIST = [
-  { time: 0,    value: 0   },
-  { time: 0.05, value: CLOUD_ALPHA_MAX },
-  { time: 0.95, value: CLOUD_ALPHA_MAX },
-  { time: 1,    value: 0   },
-];
-
-const CROW_ALPHA_LIST = [
-  { time: 0,    value: 0 },
-  { time: 0.02, value: 1 },
-  { time: 0.98, value: 1 },
-  { time: 1,    value: 0 },
-];
-
-// ─── Calcul taille corbeau selon courbe de scale FXMaster ────────────────────
-// [0.03@0, 0.12@0.1, 0.12@0.9, 0.03@1]
-
-const CROW_SCALE_LIST = [
-  { time: 0,   value: CROW_SCALE_EDGE },
-  { time: 0.1, value: CROW_SCALE_MID  },
-  { time: 0.9, value: CROW_SCALE_MID  },
-  { time: 1,   value: CROW_SCALE_EDGE },
-];
-
-function interpScale(t: number): number {
-  const list = CROW_SCALE_LIST;
+function interpList(t: number, list: { time: number; value: number }[]): number {
   const clamped = Math.min(1, Math.max(0, t));
   for (let i = 0; i < list.length - 1; i++) {
     const a = list[i], b = list[i + 1];
@@ -305,7 +259,7 @@ function interpScale(t: number): number {
       return a.value + (b.value - a.value) * u;
     }
   }
-  return CROW_SCALE_EDGE;
+  return list[list.length - 1]?.value ?? 0;
 }
 
 // ─── Builder de layer ────────────────────────────────────────────────────────
@@ -313,7 +267,6 @@ function interpScale(t: number): number {
 function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLayer {
   const speedFactor   = effect.speed;
   const densityFactor = effect.density;
-
   let maxParticles: number;
   let frequency: number;
 
@@ -321,17 +274,14 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
     maxParticles = Math.max(2, Math.round(densityFactor * 8));
     const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
     const diagonal    = Math.sqrt(w * w + h * h);
-    const avgLifetime = diagonal / avgSpeed;
-    frequency = avgLifetime / maxParticles;
+    frequency = (diagonal / avgSpeed) / maxParticles;
   } else if (effect.type === 'embers') {
     maxParticles = Math.max(4, Math.round(densityFactor * 40));
-    const avgLifetime = ((4 + 6) / 2) / speedFactor;
-    frequency = avgLifetime / maxParticles;
+    frequency = (5 / speedFactor) / maxParticles; // avgLifetime 5s
   } else {
     // crows
     maxParticles = Math.max(2, Math.round(densityFactor * 6));
-    const avgLifetime = (20 + 40) / 2 / speedFactor;
-    frequency = avgLifetime / maxParticles;
+    frequency = (30 / speedFactor) / maxParticles; // avgLifetime 30s
   }
 
   const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
@@ -346,56 +296,47 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
 // ─── Composant React ─────────────────────────────────────────────────────────
 
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen 
+  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen
   const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
-  const layersRef   = useRef<WeatherLayer[]>([]);
-  const rafRef      = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  
-  // Sync layers quand effects change
+  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen (ADD)
+  const layersRef       = useRef<WeatherLayer[]>([]);
+  const rafRef          = useRef<number>(0);
+  const lastTimeRef     = useRef<number>(0);
+
+  // ── Sync layers ────────────────────────────────────────────────────────────
   useEffect(() => {
     const activeTypes = effects.map(e => e.type);
-
-    // Supprimer les layers devenus inactifs
     layersRef.current = layersRef.current.filter(l => activeTypes.includes(l.effect.type));
 
-    // Ajouter ou mettre à jour
     for (const effect of effects) {
-          if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embers') continue;
+      if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embers') continue;
 
       const existing = layersRef.current.find(l => l.effect.type === effect.type);
       if (existing) {
-        // Recalculer frequency/maxParticles si sliders ont changé
         const speedFactor   = effect.speed;
         const densityFactor = effect.density;
         existing.effect = effect;
 
         if (effect.type === 'clouds') {
-          const newMax      = Math.max(2, Math.round(densityFactor * 8));
-          const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
-          const diagonal    = Math.sqrt(width * width + height * height);
-          const avgLifetime = diagonal / avgSpeed;
+          const newMax   = Math.max(2, Math.round(densityFactor * 8));
+          const avgSpeed = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+          const diagonal = Math.sqrt(width * width + height * height);
           existing.maxParticles = newMax;
-          existing.frequency    = avgLifetime / newMax;
+          existing.frequency    = (diagonal / avgSpeed) / newMax;
         } else if (effect.type === 'embers') {
-          const newMax      = Math.max(4, Math.round(densityFactor * 40));
-          const avgLifetime = ((4 + 6) / 2) / speedFactor;
+          const newMax = Math.max(4, Math.round(densityFactor * 40));
           existing.maxParticles = newMax;
-          existing.frequency    = avgLifetime / newMax;
+          existing.frequency    = (5 / speedFactor) / newMax;
         } else {
-          const newMax      = Math.max(2, Math.round(densityFactor * 6));
-          const avgLifetime = (20 + 40) / 2 / speedFactor;
+          const newMax = Math.max(2, Math.round(densityFactor * 6));
           existing.maxParticles = newMax;
-          existing.frequency    = avgLifetime / newMax;
+          existing.frequency    = (30 / speedFactor) / newMax;
         }
- 
-        // Ajuster le nombre de particules si density a changé
+
         while (existing.particles.length < existing.maxParticles) {
-          existing.particles.push(
-            effect.type === 'clouds'
-              ? makeCloud(width, height, effect.speed, false)
-              : makeCrow(width, height, effect.speed)
-          );
+          if (effect.type === 'clouds')      existing.particles.push(makeCloud(width, height, effect.speed, false));
+          else if (effect.type === 'embers') existing.particles.push(makeEmber(width, height, effect.speed));
+          else                               existing.particles.push(makeCrow(width, height, effect.speed));
         }
         if (existing.particles.length > existing.maxParticles) {
           existing.particles.splice(existing.maxParticles);
@@ -406,39 +347,44 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     }
   }, [effects, width, height]);
 
-  // Boucle d'animation
+  // ── Boucle d'animation ──────────────��──────────────────────────────────────
   useEffect(() => {
     const canvasScreen = canvasScreenRef.current;
     const canvasNormal = canvasNormalRef.current;
-    // Au moins un canvas doit être monté
-    if (!canvasScreen && !canvasNormal) return;
+    const canvasAdd    = canvasAddRef.current;
+    if (!canvasScreen && !canvasNormal && !canvasAdd) return;
+
     const ctxScreen = canvasScreen?.getContext('2d') ?? null;
     const ctxNormal = canvasNormal?.getContext('2d') ?? null;
-    if (!ctxScreen && !ctxNormal) return;
- 
+    const ctxAdd    = canvasAdd?.getContext('2d')    ?? null;
+    if (!ctxScreen && !ctxNormal && !ctxAdd) return;
+
     const animate = (time: number) => {
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
-      const dt = Math.min(dtMs / 1000, 0.1); // secondes, max 100ms
+      const dt = Math.min(dtMs / 1000, 0.1);
 
       ctxScreen?.clearRect(0, 0, width, height);
       ctxNormal?.clearRect(0, 0, width, height);
+      ctxAdd?.clearRect(0, 0, width, height);
 
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
-        if (effect.type !== 'clouds' && effect.type !== 'crows') continue; 
-        // clouds → ctxScreen (mixBlendMode: screen)
-        // crows  → ctxNormal (mixBlendMode: normal)
-          const ctx = effect.type === 'clouds' ? ctxScreen : ctxNormal;
+
+        // Sélection du contexte canvas par effet
+        let ctx: CanvasRenderingContext2D | null;
+        if      (effect.type === 'clouds') ctx = ctxScreen;
+        else if (effect.type === 'embers') ctx = ctxAdd;
+        else                               ctx = ctxNormal;
         if (!ctx) continue;
 
         // Spawn
-        layer.spawnAccum += dt; 
+        layer.spawnAccum += dt;
         while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
           layer.spawnAccum -= layer.frequency;
-          if (effect.type === 'clouds')       particles.push(makeCloud(width, height, effect.speed, true));
-          else if (effect.type === 'embers')  particles.push(makeEmber(width, height, effect.speed));
-          else                                particles.push(makeCrow(width, height, effect.speed));
+          if (effect.type === 'clouds')      particles.push(makeCloud(width, height, effect.speed, true));
+          else if (effect.type === 'embers') particles.push(makeEmber(width, height, effect.speed));
+          else                               particles.push(makeCrow(width, height, effect.speed));
         }
         if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
 
@@ -452,51 +398,66 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             continue;
           }
 
+          // ── Cloud ────────────────────────────────────────────
           if (p.type === 'cloud') {
-            // ── Cloud ──────────────────────────────────────────
             p.x += p.vx * dt;
             p.y += p.vy * dt;
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CLOUD_ALPHA_LIST);
-
             const img = loadImg(p.imgSrc);
             if (!img.complete || img.naturalWidth === 0) continue;
-
             ctx.save();
             ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
             ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
             ctx.restore();
 
-                } else {
-            // ── Crow ───────────────────────────────────────────
+          // ── Crow ─────────────────────────────────────────────
+          } else if (p.type === 'crow') {
             // FXMaster _applySpeedToConfig : speed × factor, lifetime / factor
-            const currentSpeed = p.baseSpeed * effect.speed;
-            p.vx      = p.dirX * currentSpeed;
-            p.vy      = p.dirY * currentSpeed;
-            p.lifeInc = effect.speed / p.baseLifetimeSec; // lifetime ÷ speedFactor
+            p.vx      = p.dirX * p.baseSpeed * effect.speed;
+            p.vy      = p.dirY * p.baseSpeed * effect.speed;
+            p.lifeInc = effect.speed / p.baseLifetimeSec;
             p.x += p.vx * dt;
             p.y += p.vy * dt;
             p.animTime += dt;
-
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CROW_ALPHA_LIST);
-
-            // Taille selon la courbe de scale FXMaster
-            const scaledSize = interpScale(p.lifeNorm) * CROW_SPRITE_BASE;
-
-            // Frame d'animation (flipbook 32 frames à 15fps, en boucle)
-            const frameIdx = Math.floor(p.animTime * CROW_FRAMERATE) % CROW_ANIM_TOTAL;
-            const texIdx   = CROW_ANIM_SEQUENCE[frameIdx];
-            const img      = loadImg(CROW_SRCS[texIdx]);
+            const scaledSize = interpList(p.lifeNorm, CROW_SCALE_LIST) * CROW_SPRITE_BASE;
+            const frameIdx   = Math.floor(p.animTime * CROW_FRAMERATE) % CROW_ANIM_TOTAL;
+            const img        = loadImg(CROW_SRCS[CROW_ANIM_SEQUENCE[frameIdx]]);
             if (!img.complete || img.naturalWidth === 0) continue;
-
-            // Orientation selon la direction de vol
-            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-            const angle = speed > 0 ? Math.atan2(p.vy, p.vx) : 0;
-
+            const flyAngle = Math.atan2(p.vy, p.vx);
             ctx.save();
             ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
             ctx.translate(p.x, p.y);
-            ctx.rotate(angle);
+            ctx.rotate(flyAngle);
             ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
+            ctx.restore();
+
+          // ── Embers ───────────────────────────────────────────
+          } else if (p.type === 'embers') {
+            // FXMaster _applySpeedToConfig
+            p.vx      = p.dirX * p.baseSpeed * effect.speed;
+            p.vy      = p.dirY * p.baseSpeed * effect.speed;
+            p.lifeInc = effect.speed / p.baseLifetimeSec;
+            p.x        += p.vx * dt;
+            p.y        += p.vy * dt;
+            p.rotation += p.rotSpeed * dt;
+            p.alpha     = fxAlpha(p.lifeNorm, effect.alpha, EMBER_ALPHA_LIST);
+            const scaleFactor = interpList(p.lifeNorm, EMBER_SCALE_LIST);
+            const eSize       = scaleFactor * EMBER_SPRITE_BASE;
+            // Couleur interpolée orange→rouge (#f77300 → #f72100)
+            const tc = Math.min(1, Math.max(0, p.lifeNorm));
+            const g  = Math.round(0x73 + (0x21 - 0x73) * tc); // 115→33
+            p.color  = `rgb(247,${g},0)`;
+            const img = loadImg(EMBER_SRC);
+            if (!img.complete || img.naturalWidth === 0) continue;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            // Teinte orange→rouge
+            ctx.filter = `sepia(1) saturate(5) hue-rotate(${Math.round(tc * -20)}deg)`;
+            ctx.drawImage(img, -eSize, -eSize, eSize * 2, eSize * 2);
+            ctx.filter = 'none';
             ctx.restore();
           }
         }
@@ -516,7 +477,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       {/* Clouds : mode screen (sprites blancs) */}
       {effects.some(e => e.type === 'clouds') && (
         <canvas
-          ref={canvasScreenRef} 
+          ref={canvasScreenRef}
           width={width}
           height={height}
           className="absolute inset-0 pointer-events-none z-10"
@@ -533,6 +494,16 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           style={{ mixBlendMode: 'normal' }}
         />
       )}
+      {/* Embers : mode screen (sprites lumineux, ADD en canvas) */}
+      {effects.some(e => e.type === 'embers') && (
+        <canvas
+          ref={canvasAddRef}
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ mixBlendMode: 'screen' }}
+        />
+      )}
     </>
   );
-} 
+}
