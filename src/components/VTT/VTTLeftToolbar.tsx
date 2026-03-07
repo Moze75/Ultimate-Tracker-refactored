@@ -1164,10 +1164,10 @@ function ToolBtn({
         onClick={onClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 shadow-md ${
+          className={`w-9 h-9 flex items-center justify-center rounded-md transition-all duration-150 shadow-md ${
           active
-            ? 'bg-amber-600 text-white shadow-amber-900/50 ring-1 ring-amber-500/60'
-            : 'bg-gray-800/80 text-gray-300 hover:text-white hover:bg-gray-700/90 border border-gray-700/50'
+            ? 'bg-amber-600/85 text-white shadow-amber-900/50 ring-1 ring-amber-500/60'
+            : 'bg-gray-900/50 text-gray-300 hover:text-white hover:bg-gray-700/60 border border-gray-600/40 backdrop-blur-sm'
         }`}
       >
         {icon}
