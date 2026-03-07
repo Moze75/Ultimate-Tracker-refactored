@@ -662,20 +662,22 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleSaveView = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
-    const vp = canvasViewport; // { x, y, scale }
+    const vp = canvasViewport;
+    const savedViewport = { x: vp.x, y: vp.y, scale: vp.scale };
+    // 1. Mettre à jour la config locale + propager aux joueurs connectés via UPDATE_MAP
+    setConfig(prev => ({ ...prev, savedViewport }));
+    vttService.send({ type: 'UPDATE_MAP', config: { savedViewport } });
+    // 2. Persister en base
+    const newConfig = { ...configRef.current, savedViewport };
     await supabase
       .from('vtt_scenes')
-      .update({
-        config: {
-          ...configRef.current,
-          savedViewport: { x: vp.x, y: vp.y, scale: vp.scale },
-        },
-      })
+      .update({ config: newConfig })
       .eq('id', activeSceneIdRef.current);
+    // 3. Mettre à jour le tableau de scènes local
     setScenes(prev =>
       prev.map(s =>
         s.id === activeSceneIdRef.current
-          ? { ...s, config: { ...s.config, savedViewport: { x: vp.x, y: vp.y, scale: vp.scale } } }
+          ? { ...s, config: newConfig }
           : s
       )
     );
