@@ -330,9 +330,18 @@ function respawn(p: Particle, type: VTTWeatherType, w: number, h: number, speed:
     case 'sandstorm':
       p.x = -10; p.y = Math.random() * h; break;
     case 'clouds':
-      p.x = -p.size - 10; p.y = Math.random() * h; break;
+      p.x = -300;
+      p.y = Math.random() * h * 0.6;
+      p.size = (80 + Math.random() * 200) * (0.08 + Math.random() * 0.72);
+      p.spriteSrc = CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)];
+      p.alpha = 0;
+      break;
     case 'crows':
-      p.x = -p.size - 10; p.y = Math.random() * h; break;
+      p.x = -p.size - 10;
+      p.y = Math.random() * h;
+      p.spriteSrc = CROW_SRCS[Math.floor(Math.random() * CROW_SRCS.length)];
+      p.alpha = 0;
+      break;
     case 'magiccrystals': case 'magicstars':
       p.x = Math.random() * w; p.y = Math.random() * h; break;
   }
