@@ -152,8 +152,12 @@ export function VTTLeftToolbar({
   return (
     <div className="relative flex flex-col items-center w-12 bg-transparent shrink-0" style={{ paddingTop: '4px', paddingBottom: '8px', gap: '4px' }}>
 
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center opacity-20 pointer-events-none mb-1">
-        <div className="w-5 h-5 rounded-md bg-gray-500" />
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-1 overflow-hidden">
+        <img
+          src="/icons/wmremove-transformed.png"
+          alt="Logo"
+          className="w-full h-full object-contain"
+        />
       </div>
 
       <div className="w-6 h-px bg-gray-700/70 my-0.5" />
