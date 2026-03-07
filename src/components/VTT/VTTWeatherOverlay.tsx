@@ -418,12 +418,27 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   if (effects.length === 0) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className="absolute inset-0 pointer-events-none z-10"
-      style={{ mixBlendMode: 'screen' }}
-    />
+    <>
+      {/* Clouds : mode screen (sprites blancs) */}
+      {effects.some(e => e.type === 'clouds') && (
+        <canvas
+          ref={canvasScreenRef}
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ mixBlendMode: 'screen' }}
+        />
+      )}
+      {/* Crows : mode normal (sprites sombres) */}
+      {effects.some(e => e.type === 'crows') && (
+        <canvas
+          ref={canvasNormalRef}
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ mixBlendMode: 'normal' }}
+        />
+      )}
+    </>
   );
 }
