@@ -310,6 +310,10 @@ function respawn(p: Particle, type: VTTWeatherType, w: number, h: number, speed:
       p.x = Math.random() * w; p.y = -20; break;
     case 'sandstorm':
       p.x = -10; p.y = Math.random() * h; break;
+    case 'clouds':
+      p.x = -p.size - 10; p.y = Math.random() * h; break;
+    case 'crows':
+      p.x = -p.size - 10; p.y = Math.random() * h; break;
     case 'magiccrystals': case 'magicstars':
       p.x = Math.random() * w; p.y = Math.random() * h; break;
   }
