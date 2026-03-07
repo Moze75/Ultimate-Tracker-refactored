@@ -627,6 +627,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
     setCanvasViewport(vp);
+    // Mode suivi joueurs : envoie viewport à tous les joueurs
+    if (role === 'gm' && gmFollowEnabledRef.current) {
+      const container = canvasContainerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const worldX = -vp.x / vp.scale;
+        const worldY = -vp.y / vp.scale;
+        const worldW = rect.width / vp.scale;
+        const worldH = rect.height / vp.scale;
+        vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
+      }
+    }
     if (broadcastModeRef.current !== 'follow') return;
     const container = canvasContainerRef.current;
     if (!container) return;
