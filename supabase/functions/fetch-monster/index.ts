@@ -443,7 +443,7 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
       .replace(/<\/p>/gi, "|||BREAK|||");
     const lines = normalized.split("|||BREAK|||");
     for (const line of lines) {
-      const strongMatch = line.match(/<strong>(.*?)<\/strong>\s*(.*)/i);
+      const strongMatch = line.match(/<strong[^>]*>(.*?)<\/strong>\s*(.*)/i);
       if (strongMatch) {
         const rawLabel = extractTextContent(strongMatch[1]).trim();
         const rawValue = extractTextContent(strongMatch[2]).trim();
