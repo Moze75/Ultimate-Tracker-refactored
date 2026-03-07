@@ -1,6 +1,6 @@
 /**
  * VTTWeatherOverlay
- * Canvas overlay — effet Nuages uniquement.
+ * Canvas overlay — effets Nuages & Corbeaux.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  * Implémentation Canvas 2D pure, indépendante de PIXI/Foundry.
  */
@@ -10,7 +10,9 @@ import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
 // ─── Assets FXMaster (crédits : gambit07/fxmaster) ───────────────────────────
 const FXMASTER_BASE =
   'https://raw.githubusercontent.com/gambit07/fxmaster/main/assets/particle-effects/effects';
+
 const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
+const CROW_SRCS  = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/crows/crow${n}.webp`);
 
 const _imgCache = new Map<string, HTMLImageElement>();
 function loadImg(src: string): HTMLImageElement {
@@ -22,31 +24,63 @@ function loadImg(src: string): HTMLImageElement {
   }
   return _imgCache.get(src)!;
 }
-// Précharger les images au démarrage du module
-CLOUD_SRCS.forEach(loadImg);
+// Préchargement
+[...CLOUD_SRCS, ...CROW_SRCS].forEach(loadImg);
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Séquence d'animation corbeaux (FXMaster animatedSingle) ─────────────────
+// [1×20, 2×3, 3×2, 4×2, 3×2, 2×3] frames à 15fps
+const CROW_ANIM_SEQUENCE: number[] = [];
+for (const { tex, count } of [
+  { tex: 0, count: 20 }, // crow1
+  { tex: 1, count: 3  }, // crow2
+  { tex: 2, count: 2  }, // crow3
+  { tex: 3, count: 2  }, // crow4
+  { tex: 2, count: 2  }, // crow3
+  { tex: 1, count: 3  }, // crow2
+]) {
+  for (let i = 0; i < count; i++) CROW_ANIM_SEQUENCE.push(tex);
+}
+const CROW_ANIM_TOTAL  = CROW_ANIM_SEQUENCE.length; // 32 frames
+const CROW_FRAMERATE   = 15; // fps
+
+// ─── Types internes ───────────────────────────────────────────────────────────
 
 interface CloudParticle {
-  x: number;       // position px écran
-  y: number;
-  vx: number;      // vitesse px/s
-  vy: number;
-  size: number;    // demi-côté du sprite en px
-  lifeNorm: number; // 0 → 1 (0 = spawn, 1 = mort)
-  lifeInc: number; // incrément par seconde (= 1 / lifetimeSec)
-  alpha: number;   // alpha calculé chaque frame
+  type: 'cloud';
+  x: number; y: number;
+  vx: number; vy: number;
+  size: number;        // demi-côté sprite px
+  lifeNorm: number;    // 0→1
+  lifeInc: number;     // incrément/s = 1/lifetimeSec
+  alpha: number;
   imgSrc: string;
 }
 
+interface CrowParticle {
+  type: 'crow';
+  x: number; y: number;
+  vx: number; vy: number;
+  size: number;
+  lifeNorm: number;
+  lifeInc: number;
+  alpha: number;
+  animTime: number;    // temps accumulé pour l'animation (s)
+  // Lateral wobble (FXMaster lateralMovement)
+  wobblePhase: number;
+  wobbleAmp: number;
+  wobblePeriod: number;
+  perpX: number;       // vecteur perpendiculaire normalisé
+  perpY: number;
+}
+
+type AnyParticle = CloudParticle | CrowParticle;
+
 interface WeatherLayer {
   effect: VTTWeatherEffect;
-  particles: CloudParticle[];
-  // paramètres calculés depuis les sliders
-  baseSpeedPx: number;   // vitesse px/s à density=1, speed=1
+  particles: AnyParticle[];
   maxParticles: number;
-  frequency: number;     // s entre chaque spawn
-  spawnAccum: number;    // accumulateur pour le spawn
+  frequency: number;   // s entre spawns
+  spawnAccum: number;
 }
 
 interface VTTWeatherOverlayProps {
@@ -55,141 +89,234 @@ interface VTTWeatherOverlayProps {
   height: number;
 }
 
-// ─── FXMaster Clouds : valeurs de base (reproduites depuis clouds.js) ────────
-// moveSpeedStatic : min=30, max=100 px/s (à scale=1, grid=100px)
-// scaleStatic     : min=0.08, max=0.8 → taille sprite = scale * 1000px de base
-// rotationStatic  : min=80, max=100° → direction ≈ 90° (gauche→droite)
+// ─── CLOUDS (FXMaster clouds.js) ─────────────────────────────────────────────
+// moveSpeedStatic : min=30, max=100 px/s
+// scaleStatic     : min=0.08, max=0.8 → size = scale × SPRITE_BASE
 // alpha list      : [0@0, 0.5@0.05, 0.5@0.95, 0@1]
 
-const CLOUD_SPEED_MIN = 30;   // px/s
-const CLOUD_SPEED_MAX = 100;  // px/s
-const CLOUD_SCALE_MIN = 0.08;
-const CLOUD_SCALE_MAX = 0.80;
-const CLOUD_SPRITE_BASE = 600; // px de base pour scale=1 (ajusté pour Canvas 2D sans PIXI grid)
-const CLOUD_ALPHA_MAX  = 0.5; // valeur max dans la liste alpha FXMaster
+const CLOUD_SPEED_MIN   = 30;
+const CLOUD_SPEED_MAX   = 100;
+const CLOUD_SCALE_MIN   = 0.08;
+const CLOUD_SCALE_MAX   = 0.80;
+const CLOUD_SPRITE_BASE = 600;   // px base (Canvas 2D, pas de grid PIXI)
+const CLOUD_ALPHA_MAX   = 0.5;
 
-function makeCloudParticle(
-  w: number,
-  h: number,
-  speedFactor: number,
-  alphaFactor: number,
-  spawnLeft: boolean,   // true = spawn hors écran à gauche, false = spawn aléatoire (init)
-): CloudParticle {
-  // vitesse individuelle (moveSpeedStatic min-max) × speed slider
-  const rawSpeed = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
-
-  // scale individuel (scaleStatic min-max) × density slider n'affecte pas la taille, juste le nombre
-  const scale = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
-  const size  = scale * CLOUD_SPRITE_BASE;
-
-  // direction ≈ 90° = cos(90°)=0, sin(90°)=1 → mais FXMaster oriente EN PIXELS/S horizontal
-  // rotationStatic 80-100° dans PIXI = angle de déplacement en degrés (0°=droite, 90°=bas)
-  // En pratique les nuages vont de gauche à droite (rotation 90° = est en PIXI coords)
-  // On garde vx = rawSpeed, vy = petit bruit vertical
-  const vx = rawSpeed;
-  const vy = (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05; // léger dérive verticale
-
-  // durée de vie = distance à parcourir / vitesse (FXMaster calcule diagonal / avgSpeed)
-  const travelDist = w + size * 2; // traversée complète
-  const lifetimeSec = travelDist / rawSpeed;
-
-  // position initiale
-  let x: number, y: number;
-  if (spawnLeft) {
-    x = -size - 10;
-    y = Math.random() * h * 0.75; // nuages dans les 3/4 supérieurs
-  } else {
-    // init : dispersion aléatoire sur toute la scène, life aléatoire
-    x = -size + Math.random() * (w + size);
-    y = Math.random() * h * 0.75;
-  }
+function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
+  const rawSpeed   = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
+  const scale      = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
+  const size       = scale * CLOUD_SPRITE_BASE;
+  const vx         = rawSpeed;
+  const vy         = (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05;
+  const travelDist = w + size * 2;
+  const lifeInc    = rawSpeed / travelDist; // = 1/lifetimeSec
 
   return {
-    x, y, vx, vy,
-    size,
+    type: 'cloud',
+    x: spawnLeft ? -size - 10 : -size + Math.random() * (w + size),
+    y: Math.random() * h * 0.75,
+    vx, vy, size,
     lifeNorm: spawnLeft ? 0 : Math.random(),
-    lifeInc: 1 / lifetimeSec,
+    lifeInc,
     alpha: 0,
     imgSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
   };
 }
 
-function buildCloudsLayer(
-  effect: VTTWeatherEffect,
-  w: number,
-  h: number,
-): WeatherLayer {
-  const speedFactor  = effect.speed;   // slider 0.1 → 3
-  const densityFactor = effect.density; // slider 0.1 → 3
-  const alphaFactor  = effect.alpha;   // slider 0 → 1
+// ─── CROWS (FXMaster crows.js) ───────────────────────────────────────────────
+// moveSpeed : 90-100 px/s (minMult 0.6 → min 54px/s), lifetime 20-40s
+// scale list: [0.03@0, 0.12@0.1, 0.12@0.9, 0.03@1] → size = scale × CROW_SPRITE_BASE
+// alpha list: [0@0, 1@0.02, 1@0.98, 0@1]
+// spawn : depuis les 4 bords (DefaultRectangleSpawnMixin)
+// rotation : 0-359° → direction aléatoire
 
-  // FXMaster: maxParticles ∝ density
-  const maxParticles = Math.max(2, Math.round(densityFactor * 8));
+const CROW_SPEED_MIN    = 54;    // 90 × minMult=0.6
+const CROW_SPEED_MAX    = 100;
+const CROW_SPRITE_BASE  = 800;   // px base
+const CROW_SCALE_MID    = 0.12;  // valeur plateau (t 0.1→0.9)
+const CROW_SCALE_EDGE   = 0.03;  // valeur aux bords
 
-  // FXMaster: frequency = avgLifetime / maxParticles
-  const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
-  const diagonal    = Math.sqrt(w * w + h * h);
-  const avgLifetime = diagonal / avgSpeed;
-  const frequency   = avgLifetime / maxParticles; // secondes entre spawns
+function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
+  const rawSpeed = (CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN)) * speedFactor;
 
-  // Créer les particules initiales avec life aléatoire (dispersion)
-  const particles = Array.from({ length: maxParticles }, () =>
-    makeCloudParticle(w, h, speedFactor, alphaFactor, false)
-  );
+  // Direction aléatoire (rotationStatic 0-359°)
+  const angle = Math.random() * Math.PI * 2;
+  const vx    = Math.cos(angle) * rawSpeed;
+  const vy    = Math.sin(angle) * rawSpeed;
+
+  // Spawn depuis les bords (DefaultRectangleSpawnMixin)
+  let x: number, y: number;
+  const border = Math.floor(Math.random() * 4);
+  if      (border === 0) { x = Math.random() * w; y = -50; }           // haut
+  else if (border === 1) { x = Math.random() * w; y = h + 50; }        // bas
+  else if (border === 2) { x = -50;               y = Math.random() * h; } // gauche
+  else                   { x = w + 50;             y = Math.random() * h; } // droite
+
+  // Durée de vie (20-40s × speedFactor inverse)
+  const baseLife   = 20 + Math.random() * 20;
+  const lifetimeSec = baseLife / speedFactor;
+  const lifeInc    = 1 / lifetimeSec;
+
+  // Wobble latéral (FXMaster lateralMovement, période 5-10s)
+  const wobblePeriod = 5 + Math.random() * 5;
+  const perpX = -vy / rawSpeed;  // vecteur perpendiculaire
+  const perpY =  vx / rawSpeed;
 
   return {
-    effect,
-    particles,
-    baseSpeedPx: avgSpeed,
-    maxParticles,
-    frequency,
-    spawnAccum: 0,
+    type: 'crow',
+    x, y, vx, vy,
+    size: CROW_SCALE_MID * CROW_SPRITE_BASE, // taille plateau
+    lifeNorm: 0,
+    lifeInc,
+    alpha: 0,
+    animTime: Math.random() * (CROW_ANIM_TOTAL / CROW_FRAMERATE), // phase aléatoire
+    wobblePhase: Math.random() * Math.PI * 2,
+    wobbleAmp: 0,      // pas de wobble par défaut (optionnel)
+    wobblePeriod,
+    perpX, perpY,
   };
 }
 
-// ─── Composant principal ─────────────────────────────────────────────────────
+// ─── Calcul alpha FXMaster par courbe de keyframes ───────────────────────────
+
+function fxAlpha(t: number, alphaFactor: number, list: { time: number; value: number }[]): number {
+  const clamped = Math.min(1, Math.max(0, t));
+  for (let i = 0; i < list.length - 1; i++) {
+    const a = list[i], b = list[i + 1];
+    if (clamped >= a.time && clamped <= b.time) {
+      const u = (clamped - a.time) / (b.time - a.time);
+      return (a.value + (b.value - a.value) * u) * alphaFactor;
+    }
+  }
+  return 0;
+}
+
+const CLOUD_ALPHA_LIST = [
+  { time: 0,    value: 0   },
+  { time: 0.05, value: CLOUD_ALPHA_MAX },
+  { time: 0.95, value: CLOUD_ALPHA_MAX },
+  { time: 1,    value: 0   },
+];
+
+const CROW_ALPHA_LIST = [
+  { time: 0,    value: 0 },
+  { time: 0.02, value: 1 },
+  { time: 0.98, value: 1 },
+  { time: 1,    value: 0 },
+];
+
+// ─── Calcul taille corbeau selon courbe de scale FXMaster ────────────────────
+// [0.03@0, 0.12@0.1, 0.12@0.9, 0.03@1]
+
+const CROW_SCALE_LIST = [
+  { time: 0,   value: CROW_SCALE_EDGE },
+  { time: 0.1, value: CROW_SCALE_MID  },
+  { time: 0.9, value: CROW_SCALE_MID  },
+  { time: 1,   value: CROW_SCALE_EDGE },
+];
+
+function interpScale(t: number): number {
+  const list = CROW_SCALE_LIST;
+  const clamped = Math.min(1, Math.max(0, t));
+  for (let i = 0; i < list.length - 1; i++) {
+    const a = list[i], b = list[i + 1];
+    if (clamped >= a.time && clamped <= b.time) {
+      const u = (clamped - a.time) / (b.time - a.time);
+      return a.value + (b.value - a.value) * u;
+    }
+  }
+  return CROW_SCALE_EDGE;
+}
+
+// ─── Builder de layer ────────────────────────────────────────────────────────
+
+function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLayer {
+  const speedFactor   = effect.speed;
+  const densityFactor = effect.density;
+
+  let maxParticles: number;
+  let frequency: number;
+
+  if (effect.type === 'clouds') {
+    maxParticles = Math.max(2, Math.round(densityFactor * 8));
+    const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+    const diagonal    = Math.sqrt(w * w + h * h);
+    const avgLifetime = diagonal / avgSpeed;
+    frequency = avgLifetime / maxParticles;
+  } else {
+    // crows
+    maxParticles = Math.max(2, Math.round(densityFactor * 6));
+    const avgLifetime = (20 + 40) / 2 / speedFactor;
+    frequency = avgLifetime / maxParticles;
+  }
+
+  // Init avec particules dispersées aléatoirement
+  const particles: AnyParticle[] = Array.from({ length: maxParticles }, () =>
+    effect.type === 'clouds'
+      ? { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() }
+      : { ...makeCrow(w, h, speedFactor),          lifeNorm: Math.random() }
+  );
+
+  return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
+}
+
+// ─── Composant React ─────────────────────────────────────────────────────────
 
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const layersRef  = useRef<WeatherLayer[]>([]);
-  const rafRef     = useRef<number>(0);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const layersRef   = useRef<WeatherLayer[]>([]);
+  const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // ── Sync layers quand effects change ────────────────────────────────────
+  // Sync layers quand effects change
   useEffect(() => {
-    const cloudsEffect = effects.find(e => e.type === 'clouds');
+    const activeTypes = effects.map(e => e.type);
 
-    if (!cloudsEffect) {
-      layersRef.current = [];
-      return;
-    }
+    // Supprimer les layers devenus inactifs
+    layersRef.current = layersRef.current.filter(l => activeTypes.includes(l.effect.type));
 
-    const existing = layersRef.current.find(l => l.effect.type === 'clouds');
-    if (existing) {
-      // Mettre à jour les paramètres sans recréer les particules
-      // FXMaster recalcule frequency/maxParticles à la volée
-      const speedFactor   = cloudsEffect.speed;
-      const densityFactor = cloudsEffect.density;
-      const avgSpeed      = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
-      const diagonal      = Math.sqrt(width * width + height * height);
-      const avgLifetime   = diagonal / avgSpeed;
-      const newMax        = Math.max(2, Math.round(densityFactor * 8));
-      existing.effect     = cloudsEffect;
-      existing.maxParticles = newMax;
-      existing.frequency  = avgLifetime / newMax;
-      // Ajuster le nombre de particules si density a changé
-      while (existing.particles.length < newMax) {
-        existing.particles.push(makeCloudParticle(width, height, speedFactor, cloudsEffect.alpha, false));
+    // Ajouter ou mettre à jour
+    for (const effect of effects) {
+      if (effect.type !== 'clouds' && effect.type !== 'crows') continue;
+
+      const existing = layersRef.current.find(l => l.effect.type === effect.type);
+      if (existing) {
+        // Recalculer frequency/maxParticles si sliders ont changé
+        const speedFactor   = effect.speed;
+        const densityFactor = effect.density;
+        existing.effect = effect;
+
+        if (effect.type === 'clouds') {
+          const newMax      = Math.max(2, Math.round(densityFactor * 8));
+          const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+          const diagonal    = Math.sqrt(width * width + height * height);
+          const avgLifetime = diagonal / avgSpeed;
+          existing.maxParticles = newMax;
+          existing.frequency    = avgLifetime / newMax;
+        } else {
+          const newMax      = Math.max(2, Math.round(densityFactor * 6));
+          const avgLifetime = (20 + 40) / 2 / speedFactor;
+          existing.maxParticles = newMax;
+          existing.frequency    = avgLifetime / newMax;
+        }
+
+        // Ajuster le nombre de particules si density a changé
+        while (existing.particles.length < existing.maxParticles) {
+          existing.particles.push(
+            effect.type === 'clouds'
+              ? makeCloud(width, height, effect.speed, false)
+              : makeCrow(width, height, effect.speed)
+          );
+        }
+        if (existing.particles.length > existing.maxParticles) {
+          existing.particles.splice(existing.maxParticles);
+        }
+      } else {
+        layersRef.current.push(buildLayer(effect, width, height));
       }
-      if (existing.particles.length > newMax) {
-        existing.particles.splice(newMax);
-      }
-    } else {
-      layersRef.current = [buildCloudsLayer(cloudsEffect, width, height)];
     }
   }, [effects, width, height]);
 
-  // ── Boucle d'animation ───────────────────────────────────────────────────
+  // Boucle d'animation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -199,62 +326,78 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     const animate = (time: number) => {
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
-      const dt = Math.min(dtMs / 1000, 0.1); // dt en secondes, max 100ms
+      const dt = Math.min(dtMs / 1000, 0.1); // secondes, max 100ms
 
       ctx.clearRect(0, 0, width, height);
 
       for (const layer of layersRef.current) {
-        if (layer.effect.type !== 'clouds') continue;
-
         const { effect, particles } = layer;
-        const speedFactor = effect.speed;
-        const alphaFactor = effect.alpha;
+        if (effect.type !== 'clouds' && effect.type !== 'crows') continue;
 
-        // ── Spawn de nouvelles particules (FXMaster: frequency) ──────────
+        // Spawn
         layer.spawnAccum += dt;
         while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
           layer.spawnAccum -= layer.frequency;
-          particles.push(makeCloudParticle(width, height, speedFactor, alphaFactor, true));
+          particles.push(
+            effect.type === 'clouds'
+              ? makeCloud(width, height, effect.speed, true)
+              : makeCrow(width, height, effect.speed)
+          );
         }
-        if (layer.spawnAccum > layer.frequency) layer.spawnAccum = 0;
+        if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
 
-        // ── Update + Draw chaque particule ────────────────────────────────
+        // Update + Draw
         for (let i = particles.length - 1; i >= 0; i--) {
           const p = particles[i];
-
-          // Avancer la vie (FXMaster: lifeNorm = elapsed / lifetime)
           p.lifeNorm += p.lifeInc * dt;
 
-          // Si speed a changé via slider, recalculer la vitesse
-          // (on ne recrée pas la particule mais on l'ajuste proportionnellement)
-          // NB : la vitesse de base a été fixée au spawn → on applique juste le ratio
-
-          // Déplacer
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-
-          // Alpha selon la courbe FXMaster : [0@0, 0.5@0.05, 0.5@0.95, 0@1]
-          const t = Math.min(1, Math.max(0, p.lifeNorm));
-          let rawAlpha: number;
-          if      (t < 0.05) rawAlpha = (t / 0.05) * CLOUD_ALPHA_MAX;
-          else if (t < 0.95) rawAlpha = CLOUD_ALPHA_MAX;
-          else               rawAlpha = ((1 - t) / 0.05) * CLOUD_ALPHA_MAX;
-          p.alpha = rawAlpha * alphaFactor;
-
-          // Mort : lifeNorm >= 1
           if (p.lifeNorm >= 1) {
             particles.splice(i, 1);
             continue;
           }
 
-          // Draw
-          const img = loadImg(p.imgSrc);
-          if (!img.complete || img.naturalWidth === 0) continue; // pas encore chargée
+          if (p.type === 'cloud') {
+            // ── Cloud ──────────────────────────────────────────
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CLOUD_ALPHA_LIST);
 
-          ctx.save();
-          ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-          ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
-          ctx.restore();
+            const img = loadImg(p.imgSrc);
+            if (!img.complete || img.naturalWidth === 0) continue;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+            ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+            ctx.restore();
+
+          } else {
+            // ── Crow ───────────────────────────────────────────
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.animTime += dt;
+
+            p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CROW_ALPHA_LIST);
+
+            // Taille selon la courbe de scale FXMaster
+            const scaledSize = interpScale(p.lifeNorm) * CROW_SPRITE_BASE;
+
+            // Frame d'animation (flipbook 32 frames à 15fps, en boucle)
+            const frameIdx = Math.floor(p.animTime * CROW_FRAMERATE) % CROW_ANIM_TOTAL;
+            const texIdx   = CROW_ANIM_SEQUENCE[frameIdx];
+            const img      = loadImg(CROW_SRCS[texIdx]);
+            if (!img.complete || img.naturalWidth === 0) continue;
+
+            // Orientation selon la direction de vol
+            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            const angle = speed > 0 ? Math.atan2(p.vy, p.vx) : 0;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+            ctx.translate(p.x, p.y);
+            ctx.rotate(angle);
+            ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
+            ctx.restore();
+          }
         }
       }
 
