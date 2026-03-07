@@ -491,7 +491,8 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   // FIX 3 : Découpage des sections "rub" par positions
   // ============================================================
   const rubPositions: Array<{ title: string; startIdx: number }> = [];
-  const rubRegex = /<div\s+class=['"]rub['"][^>]*>([\s\S]*?)<\/div>/gi;
+  // Matcher les deux classes : "titre" (AideDD réel) et "rub" (fallback)
+  const rubRegex = /<div\s+class=['"](?:titre|rub)['"][^>]*>([\s\S]*?)<\/div>/gi;
   let rubMatch;
   while ((rubMatch = rubRegex.exec(block)) !== null) {
     rubPositions.push({
