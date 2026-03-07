@@ -150,8 +150,38 @@ function parseNameDescPairs(
 ): Array<{ name: string; description: string }> {
   const items: Array<{ name: string; description: string }> = [];
 
-  // --- STRATÉGIE 1 : <div class="titre">Nom.</div> Description ---
-  // Structure réelle d'AideDD.org
+  // --- STRATÉGIE 1 : <div class="monstrefeature"> (structure réelle AideDD) ---
+  // Chaque trait/action est dans un div.monstrefeature avec <b><i>Nom.</i></b> desc
+  const featureRegex = /<div\s+class=['"]monstrefeature['"][^>]*>([\s\S]*?)<\/div>/gi;
+  const featureMatches = [...sectionHtml.matchAll(featureRegex)];
+
+  if (featureMatches.length > 0) {
+    for (const fm of featureMatches) {
+      const content = fm[1];
+      // Le nom est dans <b><i>...</i></b> ou <i><b>...</b></i> ou <strong><em> etc.
+      const nameMatch = content.match(
+        /<(?:b|strong)[^>]*>\s*<(?:i|em)[^>]*>([\s\S]*?)<\/(?:i|em)>\s*<\/(?:b|strong)>|<(?:i|em)[^>]*>\s*<(?:b|strong)[^>]*>([\s\S]*?)<\/(?:b|strong)>\s*<\/(?:i|em)>/i
+      );
+      if (nameMatch) {
+        const nameText = extractTextContent(nameMatch[1] || nameMatch[2] || "").replace(/\.\s*$/, "");
+        const startIdx = (nameMatch.index || 0) + nameMatch[0].length;
+        const desc = extractTextContent(content.substring(startIdx)).replace(/^\.\s*/, "").trim();
+        if (nameText) items.push({ name: nameText, description: desc });
+      } else {
+        // Fallback : <b>Nom.</b> ou <strong>Nom.</strong> seul
+        const boldMatch = content.match(/<(?:b|strong)[^>]*>([\s\S]*?)<\/(?:b|strong)>/i);
+        if (boldMatch) {
+          const nameText = extractTextContent(boldMatch[1]).replace(/\.\s*$/, "");
+          const startIdx = (boldMatch.index || 0) + boldMatch[0].length;
+          const desc = extractTextContent(content.substring(startIdx)).replace(/^\.\s*/, "").trim();
+          if (nameText && nameText.length < 100) items.push({ name: nameText, description: desc });
+        }
+      }
+    }
+    if (items.length > 0) return items;
+  }
+
+  // --- STRATÉGIE 2 (ancienne) : <div class="titre">Nom.</div> ---
   const titreRegex = /<div\s+class=['"]titre['"][^>]*>([\s\S]*?)<\/div>/gi;
   const titreMatches = [...sectionHtml.matchAll(titreRegex)];
 
