@@ -832,7 +832,7 @@ const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] =
   { type: 'embers', label: 'Braises',  icon: '🔥'    },
 ];
 
-const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8 };
+const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8, scale: 1.0 };
 
 const WeatherPopup = React.forwardRef<HTMLDivElement, {
   effects: VTTWeatherEffect[];
