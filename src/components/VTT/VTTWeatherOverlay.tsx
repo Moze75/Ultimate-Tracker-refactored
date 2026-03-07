@@ -485,11 +485,11 @@ function drawParticle(ctx: CanvasRenderingContext2D, p: Particle, type: VTTWeath
 // ─── Composant principal ─────────────────────────────────────────────────────
 
 // ─── Assets sprites (Moze75/Ultimate_Tracker) ────────────────────────────────
-const ASSETS = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/';
-const CLOUD_SRCS = [1, 2, 3].map(n => `${ASSETS}cloud${n}.webp`);
-const CROW_SRCS  = [1, 3, 4].map(n => `${ASSETS}crow${n}.webp`);
-const EMBER_SRC  = `${ASSETS}ember.webp`;
-const DROP_SRC   = `${ASSETS}drop.webp`;
+const FXMASTER_BASE = 'https://raw.githubusercontent.com/gambit07/fxmaster/main/assets/particle-effects/effects';
+const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
+const CROW_SRCS  = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/crows/crow${n}.webp`);
+const EMBER_SRC  = `${FXMASTER_BASE}/embers/ember.webp`;
+const DROP_SRC   = `${FXMASTER_BASE}/rain/drop.webp`;
 
 const _imgCache = new Map<string, HTMLImageElement>();
 function loadImg(src: string): HTMLImageElement {
