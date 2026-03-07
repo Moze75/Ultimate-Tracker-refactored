@@ -499,7 +499,7 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   // ============================================================
   const rubPositions: Array<{ title: string; startIdx: number }> = [];
   // Matcher les deux classes : "titre" (AideDD réel) et "rub" (fallback)
-  const rubRegex = /<div\s+class=['"](?:titre|rub)['"][^>]*>([\s\S]*?)<\/div>/gi;
+  const rubRegex = /<(?:div|h2)\s+class=['"](?:titre|rub)['"][^>]*>([\s\S]*?)<\/(?:div|h2)>/gi;
   let rubMatch;
   while ((rubMatch = rubRegex.exec(block)) !== null) {
     rubPositions.push({
