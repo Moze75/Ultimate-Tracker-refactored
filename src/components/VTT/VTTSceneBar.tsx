@@ -21,6 +21,7 @@ export function VTTSceneBar({
   onRenameScene,
   onDeleteScene,
   onRightClickScene,
+  onSaveView,
 }: VTTSceneBarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
