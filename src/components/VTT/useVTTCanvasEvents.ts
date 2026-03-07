@@ -523,13 +523,25 @@ export function useVTTCanvasEvents({
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const sp = getCanvasXY(e.clientX, e.clientY);
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
       const vp = viewportRef.current;
-      const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
-      const wx = (sp.x - vp.x) / vp.scale;
-      const wy = (sp.y - vp.y) / vp.scale;
-      viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+
+      // ── Pinch trackpad (ctrlKey=true) ou molette souris → ZOOM ──────────────
+      if (e.ctrlKey || e.metaKey) {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
+        const wx = (sp.x - vp.x) / vp.scale;
+        const wy = (sp.y - vp.y) / vp.scale;
+        viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+      } else {
+        // ── Scroll 2 doigts trackpad → PAN ────────────────────────────────────
+        viewportRef.current = {
+          ...vp,
+          x: vp.x - e.deltaX,
+          y: vp.y - e.deltaY,
+        };
+      }
+
       onViewportChangeRef.current?.(viewportRef.current);
       drawRef.current();
     };
