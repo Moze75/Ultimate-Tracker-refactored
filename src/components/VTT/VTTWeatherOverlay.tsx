@@ -334,6 +334,21 @@ function respawn(p: Particle, type: VTTWeatherType, w: number, h: number, speed:
 // ─── Draw particle ───────────────────────────────────────────────────────────
 
 function drawParticle(ctx: CanvasRenderingContext2D, p: Particle, type: VTTWeatherType) {
+  // ── Rendu sprite webp si disponible (Moze75/Ultimate_Tracker assets) ──
+  if (p.spriteSrc) {
+    const img = loadImg(p.spriteSrc);
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.drawImage(img, -p.size, -p.size, p.size * 2, p.size * 2);
+      ctx.restore();
+      return; // skip rendu procédural
+    }
+    // image pas encore chargée → fallback procédural ci-dessous
+  }
+
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
   ctx.translate(p.x, p.y);
