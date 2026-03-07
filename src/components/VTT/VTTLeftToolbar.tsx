@@ -843,13 +843,14 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
   const isActive = (type: VTTWeatherType) => effects.some(e => e.type === type);
   const getEffect = (type: VTTWeatherType) => effects.find(e => e.type === type);
 
+  // Clic = toggle ON/OFF uniquement, sans ouvrir les réglages
   const toggle = (type: VTTWeatherType) => {
     if (isActive(type)) {
       onChange(effects.filter(e => e.type !== type));
       if (editingType === type) setEditingType(null);
     } else {
       onChange([...effects, { type, ...DEFAULT_WEATHER }]);
-      setEditingType(type);
+      // Ne pas ouvrir les réglages automatiquement
     }
   };
 
@@ -865,6 +866,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
       className="absolute left-full ml-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64"
       style={{ top: '230px' }}
     >
+      {/* En-tête */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
           <Wind size={13} className="text-sky-400" />
@@ -894,47 +896,64 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
         </div>
       </div>
 
-      {/* Grille des presets */}
-      <div className="grid grid-cols-3 gap-1 mb-3">
+      {/* Liste des effets : ON/OFF + bouton réglages séparé */}
+      <div className="space-y-1 mb-3">
         {WEATHER_PRESETS.map(preset => {
           const active = isActive(preset.type);
+          const isEditing = editingType === preset.type;
           return (
-            <button
-              key={preset.type}
-              onClick={() => toggle(preset.type)}
-              onContextMenu={e => { e.preventDefault(); if (active) setEditingType(preset.type); }}
-              title={preset.label + (active ? ' — clic droit : régler' : '')}
-              className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg border text-[10px] transition-all ${
-                active
-                  ? 'border-sky-500/60 bg-sky-900/30 text-sky-200'
-                  : 'border-gray-700/60 bg-gray-800/50 text-gray-500 hover:text-gray-300 hover:border-gray-600'
-              }`}
-            >
-              <span className="text-base leading-none">{preset.icon}</span>
-              <span className="leading-tight text-center">{preset.label}</span>
-              {active && <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />}
-            </button>
+            <div key={preset.type} className="flex items-center gap-1.5">
+              {/* Bouton ON/OFF */}
+              <button
+                onClick={() => toggle(preset.type)}
+                className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                  active
+                    ? 'border-sky-500/60 bg-sky-900/30 text-sky-200'
+                    : 'border-gray-700/60 bg-gray-800/50 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                }`}
+              >
+                <span className="text-sm leading-none">{preset.icon}</span>
+                <span className="flex-1 text-left">{preset.label}</span>
+                {/* Indicateur ON/OFF */}
+                <span className={`text-[9px] font-bold px-1 rounded ${
+                  active ? 'text-sky-300' : 'text-gray-600'
+                }`}>
+                  {active ? 'ON' : 'OFF'}
+                </span>
+              </button>
+              {/* Bouton réglages — visible seulement si actif */}
+              {active && (
+                <button
+                  onClick={() => setEditingType(isEditing ? null : preset.type)}
+                  title="Régler les paramètres"
+                  className={`p-1.5 rounded-lg border transition-all ${
+                    isEditing
+                      ? 'border-sky-500/60 bg-sky-900/30 text-sky-300'
+                      : 'border-gray-700/60 bg-gray-800/50 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <SlidersHorizontal size={12} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
 
-      {/* Panneau de réglage */}
+      {/* Panneau de réglage — affiché si un effet est sélectionné */}
       {editingEffect && editingType && (
         <div className="border-t border-gray-700/60 pt-2 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-gray-400 font-medium">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-sky-400 font-semibold">
               {WEATHER_PRESETS.find(p => p.type === editingType)?.icon}{' '}
-              {WEATHER_PRESETS.find(p => p.type === editingType)?.label}
+              Réglages — {WEATHER_PRESETS.find(p => p.type === editingType)?.label}
             </span>
-            <button onClick={() => setEditingType(null)} className="text-gray-600 hover:text-gray-400">
-              <X size={10} />
-            </button>
           </div>
 
           <div>
             <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
               <span>Densité</span>
-              <span className="text-gray-400">{editingEffect.density.toFixed(1)}</span>
+              <span className="text-sky-400 font-mono">{editingEffect.density.toFixed(1)}</span>
             </div>
             <input type="range" min="0.1" max="3" step="0.1"
               value={editingEffect.density}
@@ -946,7 +965,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
           <div>
             <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
               <span>Vitesse</span>
-              <span className="text-gray-400">{editingEffect.speed.toFixed(1)}</span>
+              <span className="text-sky-400 font-mono">{editingEffect.speed.toFixed(1)}</span>
             </div>
             <input type="range" min="0.2" max="3" step="0.1"
               value={editingEffect.speed}
@@ -958,7 +977,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
           <div>
             <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
               <span>Opacité</span>
-              <span className="text-gray-400">{editingEffect.alpha.toFixed(2)}</span>
+              <span className="text-sky-400 font-mono">{(editingEffect.alpha * 100).toFixed(0)}%</span>
             </div>
             <input type="range" min="0.05" max="1" step="0.05"
               value={editingEffect.alpha}
@@ -970,10 +989,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
       )}
 
       {effects.length === 0 && (
-        <p className="text-[10px] text-gray-600 text-center pb-1">Cliquez pour activer un effet</p>
-      )}
-      {effects.length > 0 && !editingType && (
-        <p className="text-[10px] text-gray-600 text-center pb-1">Clic droit sur un effet actif pour régler</p>
+        <p className="text-[10px] text-gray-600 text-center pb-1">Cliquez sur un effet pour l'activer</p>
       )}
     </div>
   );
