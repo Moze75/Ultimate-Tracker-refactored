@@ -39,6 +39,7 @@ export interface VTTWeatherEffect {
   density: number;   // 0.1 → 3.0
   speed: number;     // 0.2 → 3.0
   alpha: number;     // 0.1 → 1.0
+  scale: number;     // 0.2 → 3.0 — FXMaster p.scale (multiplicateur de taille)
 }
 
 export interface VTTRoomConfig {
