@@ -81,7 +81,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [showAddToken, setShowAddToken] = useState(false);
-  const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
+  const [sceneContextMenu, setSceneContextMenu] = useState<{ sceneId: string; sceneName: string; config: VTTRoomConfig; x: number; y: number } | null>(null);
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
