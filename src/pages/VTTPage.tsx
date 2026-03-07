@@ -483,10 +483,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     }
   }, []);
 
-  const handleSceneRightClick = useCallback((sceneId: string) => {
+  const handleSceneRightClick = useCallback((sceneId: string, x: number, y: number) => {
     const scene = scenes.find(s => s.id === sceneId);
     if (!scene) return;
-    setSceneConfigEdit({ sceneId, config: scene.config });
+    setSceneContextMenu({ sceneId, sceneName: scene.name, config: scene.config, x, y });
   }, [scenes]);
 
   const handleSaveSceneConfig = useCallback(async (sceneId: string, changes: Partial<VTTRoomConfig>) => {
