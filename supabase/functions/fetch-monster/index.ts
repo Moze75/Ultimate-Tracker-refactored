@@ -677,8 +677,12 @@ Deno.serve(async (req: Request) => {
       const blockStart = html.indexOf('class="blocmonst"');
       const blockFallback = html.indexOf('class="jaune"');
       const startIdx = blockStart > -1 ? blockStart : blockFallback > -1 ? blockFallback : 0;
-      const snippet = html.substring(startIdx, startIdx + 8000);
-      return new Response(JSON.stringify({ html_snippet: snippet }), {
+      // On retourne le HTML brut (pas JSON) pour éviter la troncature
+      const snippet = html.substring(startIdx, startIdx + 20000);
+      return new Response(snippet, {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8" },
+      });
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
