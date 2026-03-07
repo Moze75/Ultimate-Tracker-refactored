@@ -46,12 +46,14 @@ function getParticleConfig(type: VTTWeatherType, w: number, h: number, density: 
         x: Math.random() * (w + 200) - 100,
         y: Math.random() * h,
         vx: -1.5 * speed, vy: (8 + Math.random() * 4) * speed,
-        size: 1 + Math.random() * 1.5,
+        size: 6 + Math.random() * 6,
         alpha: (0.4 + Math.random() * 0.4) * alpha,
         life: Math.random(), maxLife: 1,
-        rotation: 0, rotSpeed: 0,
+        rotation: Math.atan2(8 * speed, -1.5 * speed),
+        rotSpeed: 0,
         color: '#a8c8ff',
         wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
+        spriteSrc: DROP_SRC,
       })};
     case 'acid-rain':
       return { count, factory: (): Particle => ({
