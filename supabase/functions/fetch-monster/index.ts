@@ -525,18 +525,30 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   let legendaryActions: Array<{ name: string; description: string }> = [];
   let legendaryDescription = "";
 
+  // Trouver la première section "Traits" dans rubPositions
+  const firstTraitsSectionIdx = rubPositions.findIndex(r =>
+    r.title.includes("trait") || r.title === "traits"
+  );
   const firstRubIdx = rubPositions.length > 0
     ? block.lastIndexOf("<div", rubPositions[0].startIdx)
     : block.length;
   const preSection = block.substring(0, firstRubIdx);
 
-  // Chercher après le FP : les traits sont après la ligne FP
-  const fpStrongMatch = preSection.match(/<strong>FP<\/strong>\s*[\d\/]+\s*(?:\([^)]*\))?/i);
-  if (fpStrongMatch) {
-    const fpEnd = fpStrongMatch.index! + fpStrongMatch[0].length;
-    const traitBlock = preSection.substring(fpEnd);
-    if (traitBlock.match(/<(?:strong|em|p\b|div)/i)) {
-      traits = parseNameDescPairs(traitBlock);
+  // Si une section "Traits" est trouvée dans les sections, l'utiliser directement
+  if (firstTraitsSectionIdx !== -1) {
+    traits = parseNameDescPairs(sections[firstTraitsSectionIdx]?.content || "");
+  }
+
+  // Sinon chercher après FP dans le preSection
+  if (traits.length === 0) {
+    const fpStrongMatch = preSection.match(/<strong>FP<\/strong>\s*[\d\/]+\s*(?:\([^)]*\))?/i)
+      || preSection.match(/FP\s*[\d\/]+\s*(?:\([^)]*\))?/i);
+    if (fpStrongMatch) {
+      const fpEnd = fpStrongMatch.index! + fpStrongMatch[0].length;
+      const traitBlock = preSection.substring(fpEnd);
+      if (traitBlock.match(/<(?:strong|em|b|i|div|p\b)/i)) {
+        traits = parseNameDescPairs(traitBlock);
+      }
     }
   }
 
