@@ -110,6 +110,8 @@ const CLOUD_SPEED_MIN   = 30;
 const CLOUD_SPEED_MAX   = 100;
 const CLOUD_SCALE_MIN   = 0.08;
 const CLOUD_SCALE_MAX   = 0.80;
+// FXMaster _applyScaleToConfig : scale_value × (gridSize/100) × sprite_native
+// En Canvas 2D pur (pas de grid), on applique scale directement comme multiplicateur
 const CLOUD_SPRITE_BASE = 600;
 const CLOUD_ALPHA_MAX   = 0.5;
 
