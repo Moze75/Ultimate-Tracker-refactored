@@ -85,25 +85,6 @@ export function VTTSceneBar({
               }`}
             >
               {scene.name}
-              <span
-                className="flex items-center gap-0.5 ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={e => e.stopPropagation()}
-              >
-                <span
-                  onClick={e => startEdit(scene, e)}
-                  className="p-0.5 rounded hover:bg-black/20 cursor-pointer"
-                >
-                  <Pencil size={9} />
-                </span>
-                {scenes.length > 1 && (
-                  <span
-                    onClick={e => { e.stopPropagation(); if (window.confirm(`Supprimer "${scene.name}" ?`)) onDeleteScene(scene.id); }}
-                    className="p-0.5 rounded hover:bg-red-700/40 cursor-pointer text-red-400"
-                  >
-                    <Trash2 size={9} />
-                  </span>
-                )}
-              </span>
             </button>
           )}
         </div>
