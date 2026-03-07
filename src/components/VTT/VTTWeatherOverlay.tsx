@@ -131,7 +131,7 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
 
 const CROW_SPEED_MIN    = 54;    // 90 × minMult=0.6
 const CROW_SPEED_MAX    = 100;
-const CROW_SPRITE_BASE  = 800;   // px base
+const CROW_SPRITE_BASE  = 180;   // px base (0.12 × 180 = 22px demi-côté au plateau)
 const CROW_SCALE_MID    = 0.12;  // valeur plateau (t 0.1→0.9)
 const CROW_SCALE_EDGE   = 0.03;  // valeur aux bords
 
