@@ -425,7 +425,14 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
   // FIX 2 : Parsing robuste des champs (Jets de sauvegarde, etc.)
   // via extraction de toutes les paires <strong>Label</strong> Valeur
   // ============================================================
-  const headerEnd = block.search(/<div\s+class=['"]rub['"][^>]*>/i);
+  // Chercher la fin du header AVANT la première section titre OU rub
+  const headerEndTitre = block.search(/<div\s+class=['"]titre['"][^>]*>/i);
+  const headerEndRub = block.search(/<div\s+class=['"]rub['"][^>]*>/i);
+  const headerEnd = headerEndTitre > -1 && headerEndRub > -1
+    ? Math.min(headerEndTitre, headerEndRub)
+    : headerEndTitre > -1 ? headerEndTitre
+    : headerEndRub > -1 ? headerEndRub
+    : -1;
   const headerBlock = headerEnd > -1 ? block.substring(0, headerEnd) : block;
 
   const extractAllFields = (htmlBlock: string): Record<string, string> => {
