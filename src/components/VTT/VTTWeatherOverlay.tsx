@@ -349,19 +349,14 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     }
   }, [effects, width, height]);
 
-  // ── Boucle d'animation ──────────────��──────────────────────────────────────
+  // ── Boucle d'animation ──────────────
   useEffect(() => {
-    const canvasScreen = canvasScreenRef.current;
-    const canvasNormal = canvasNormalRef.current;
-    const canvasAdd    = canvasAddRef.current;
-    if (!canvasScreen && !canvasNormal && !canvasAdd) return;
-
-    const ctxScreen = canvasScreen?.getContext('2d') ?? null;
-    const ctxNormal = canvasNormal?.getContext('2d') ?? null;
-    const ctxAdd    = canvasAdd?.getContext('2d')    ?? null;
-    if (!ctxScreen && !ctxNormal && !ctxAdd) return;
-
     const animate = (time: number) => {
+      // Lire les contextes à chaque frame — les canvas peuvent être montés/démontés dynamiquement
+      const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
+      const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
+      const ctxAdd    = canvasAddRef.current?.getContext('2d')    ?? null;
+
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
       const dt = Math.min(dtMs / 1000, 0.1);
