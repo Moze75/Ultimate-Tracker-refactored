@@ -827,21 +827,8 @@ const HOUR_PRESETS = [
 // ─── WEATHER PRESETS (inspiré de FXMaster — gambit07/fxmaster) ───────────────
 
 const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] = [
-  { type: 'clouds',        label: 'Nuages',          icon: '☁️' },
-  { type: 'crows',         label: 'Corbeaux',        icon: '🐦‍⬛' },
-  { type: 'rain',          label: 'Pluie',           icon: '🌧' },
-  { type: 'acid-rain',     label: 'Pluie acide',     icon: '🧪' },
-  { type: 'sunshower',     label: 'Pluie dorée',     icon: '🌦' },
-  { type: 'snow',          label: 'Neige',           icon: '❄️' },
-  { type: 'blizzard',      label: 'Blizzard',        icon: '🌨' },
-  { type: 'fog',           label: 'Brouillard',      icon: '🌫' },
-  { type: 'embers',        label: 'Braises',         icon: '🔥' },
-  { type: 'leaves',        label: 'Feuilles',        icon: '🍂' },
-  { type: 'sandstorm',     label: 'Sable',           icon: '🏜' },
-  { type: 'bubbles',       label: 'Bulles',          icon: '🫧' },
-  { type: 'spiderwebs',    label: 'Toiles',          icon: '🕸' },
-  { type: 'magiccrystals', label: 'Cristaux',        icon: '💎' },
-  { type: 'magicstars',    label: 'Étoiles',         icon: '✨' },
+  { type: 'clouds', label: 'Nuages',    icon: '☁️'   },
+  { type: 'crows',  label: 'Corbeaux', icon: '🐦‍⬛' },
 ];
 
 const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8 };
