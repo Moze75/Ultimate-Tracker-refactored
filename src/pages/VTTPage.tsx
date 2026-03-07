@@ -657,6 +657,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     await saveCurrentSceneState(activeSceneIdRef.current);
   }, [role, saveCurrentSceneState]);
 
+  const handleSaveView = useCallback(async () => {
+    if (!activeSceneIdRef.current || role !== 'gm') return;
+    const vp = canvasViewport; // { x, y, scale }
+    await supabase
+      .from('vtt_scenes')
+      .update({
+        config: {
+          ...configRef.current,
+          savedViewport: { x: vp.x, y: vp.y, scale: vp.scale },
+        },
+      })
+      .eq('id', activeSceneIdRef.current);
+    setScenes(prev =>
+      prev.map(s =>
+        s.id === activeSceneIdRef.current
+          ? { ...s, config: { ...s.config, savedViewport: { x: vp.x, y: vp.y, scale: vp.scale } } }
+          : s
+      )
+    );
+  }, [role, canvasViewport]);
+  
     const handleUpdateWeather = useCallback((effects: VTTWeatherEffect[]) => {
     if (role !== 'gm') return;
     setWeatherEffects(effects);
