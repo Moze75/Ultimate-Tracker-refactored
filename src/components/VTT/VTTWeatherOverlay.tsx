@@ -323,6 +323,10 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
     const diagonal    = Math.sqrt(w * w + h * h);
     const avgLifetime = diagonal / avgSpeed;
     frequency = avgLifetime / maxParticles;
+  } else if (effect.type === 'embers') {
+    maxParticles = Math.max(4, Math.round(densityFactor * 40));
+    const avgLifetime = ((4 + 6) / 2) / speedFactor;
+    frequency = avgLifetime / maxParticles;
   } else {
     // crows
     maxParticles = Math.max(2, Math.round(densityFactor * 6));
@@ -330,12 +334,11 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
     frequency = avgLifetime / maxParticles;
   }
 
-  // Init avec particules dispersées aléatoirement
-  const particles: AnyParticle[] = Array.from({ length: maxParticles }, () =>
-    effect.type === 'clouds'
-      ? { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() }
-      : { ...makeCrow(w, h, speedFactor),          lifeNorm: Math.random() }
-  );
+  const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
+    if (effect.type === 'clouds') return { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() };
+    if (effect.type === 'embers') return makeEmber(w, h, speedFactor);
+    return { ...makeCrow(w, h, speedFactor), lifeNorm: Math.random() };
+  });
 
   return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
 }
