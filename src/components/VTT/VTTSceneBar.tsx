@@ -10,6 +10,7 @@ interface VTTSceneBarProps {
   onRenameScene: (sceneId: string, name: string) => void;
   onDeleteScene: (sceneId: string) => void;
   onRightClickScene?: (sceneId: string, x: number, y: number) => void;
+  onSaveView?: () => void;
 }
 
 export function VTTSceneBar({
