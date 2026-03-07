@@ -414,6 +414,23 @@ function drawParticle(ctx: CanvasRenderingContext2D, p: Particle, type: VTTWeath
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
+// ─── Assets sprites (Moze75/Ultimate_Tracker) ────────────────────────────────
+const ASSETS = 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/';
+const CLOUD_SRCS = [1, 2, 3].map(n => `${ASSETS}cloud${n}.webp`);
+const CROW_SRCS  = [1, 3, 4].map(n => `${ASSETS}crow${n}.webp`);
+const EMBER_SRC  = `${ASSETS}ember.webp`;
+const DROP_SRC   = `${ASSETS}drop.webp`;
+
+const _imgCache = new Map<string, HTMLImageElement>();
+function loadImg(src: string): HTMLImageElement {
+  if (!_imgCache.has(src)) {
+    const img = new Image();
+    img.src = src;
+    _imgCache.set(src, img);
+  }
+  return _imgCache.get(src)!;
+}
+
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layersRef = useRef<WeatherLayer[]>([]);
