@@ -22,6 +22,7 @@ interface Particle {
   wobble: number;
   wobbleSpeed: number;
   wobbleAmp: number;
+  spriteSrc?: string;
 }
 
 interface WeatherLayer {
