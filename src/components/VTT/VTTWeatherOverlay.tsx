@@ -149,6 +149,29 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
 // spawn : depuis les 4 bords (DefaultRectangleSpawnMixin)
 // rotation : 0-359° → direction aléatoire
 
+// ─── EMBERS (FXMaster embers.js) ─────────────────────────────────────────────
+// moveSpeedStatic : min=24, max=40 px/s
+// scale list      : [0.15@0, 0.01@1], minMult=0.85
+// alpha list      : [0@0, 0.9@0.3, 0.9@0.95, 0@1]
+// couleur         : #f77300 → #f72100 (orange→rouge)
+// blendMode       : ADD → canvas 'lighter'
+// spawn           : partout sur la scène
+// direction       : aléatoire (biaisé vers le haut)
+
+const EMBER_SPEED_MIN    = 24;
+const EMBER_SPEED_MAX    = 40;
+const EMBER_SPRITE_BASE  = 120;  // px base (scale 0.15 × 120 = 18px au départ)
+const EMBER_ALPHA_LIST = [
+  { time: 0,    value: 0   },
+  { time: 0.3,  value: 0.9 },
+  { time: 0.95, value: 0.9 },
+  { time: 1,    value: 0   },
+];
+const EMBER_SCALE_LIST = [
+  { time: 0, value: 0.15 },
+  { time: 1, value: 0.01 },
+];
+
 const CROW_SPEED_MIN    = 54;    // 90 × minMult=0.6
 const CROW_SPEED_MAX    = 100;
 const CROW_SPRITE_BASE  = 180;   // px base (0.12 × 180 = 22px demi-côté au plateau)
