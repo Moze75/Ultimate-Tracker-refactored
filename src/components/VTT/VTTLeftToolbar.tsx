@@ -150,7 +150,7 @@ export function VTTLeftToolbar({
   const isMeasureTool = activeTool === 'measure';
 
   return (
-    <div className="relative flex flex-col items-center w-12 bg-gray-900/95 border-r border-gray-700/60 shrink-0" style={{ paddingTop: '4px', paddingBottom: '8px', gap: '4px' }}>
+    <div className="relative flex flex-col items-center w-12 bg-transparent shrink-0" style={{ paddingTop: '4px', paddingBottom: '8px', gap: '4px' }}>
 
       <div className="w-8 h-8 rounded-lg flex items-center justify-center opacity-20 pointer-events-none mb-1">
         <div className="w-5 h-5 rounded-md bg-gray-500" />
