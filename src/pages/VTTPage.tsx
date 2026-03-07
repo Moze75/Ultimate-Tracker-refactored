@@ -842,8 +842,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           broadcastLockRatio={broadcastLockRatio}
           onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
           onOpenBroadcastWindow={handleOpenBroadcastWindow}
-          broadcastMode={broadcastMode}
-          onBroadcastModeChange={setBroadcastMode}
+          gmFollowEnabled={gmFollowEnabled}
+          onToggleGmFollow={() => setGmFollowEnabled(v => !v)}
           weatherEffects={weatherEffects}
           onUpdateWeather={handleUpdateWeather}
         />
