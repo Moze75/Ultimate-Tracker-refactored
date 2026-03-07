@@ -667,8 +667,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (!activeSceneIdRef.current || role !== 'gm') return;
     const vp = canvasViewport;
     const savedViewport = { x: vp.x, y: vp.y, scale: vp.scale };
-    // 1. Mettre à jour la config locale + propager aux joueurs connectés via UPDATE_MAP
-    setConfig(prev => ({ ...prev, savedViewport }));
+    // 1. Propager aux joueurs connectés via UPDATE_MAP (sans toucher au state config local)
     vttService.send({ type: 'UPDATE_MAP', config: { savedViewport } });
     // 2. Persister en base
     const newConfig = { ...configRef.current, savedViewport };
