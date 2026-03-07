@@ -74,6 +74,7 @@ export function VTTSceneBar({
           ) : (
             <button
               onClick={() => onSwitchScene(scene.id)}
+              onDoubleClick={e => { e.stopPropagation(); startEdit(scene, e); }}
               onContextMenu={e => {
                 e.preventDefault();
                 onRightClickScene?.(scene.id, e.clientX, e.clientY);
