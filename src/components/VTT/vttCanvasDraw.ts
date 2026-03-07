@@ -205,9 +205,11 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
     });
   });
 
-  // Hard blackout joueur : aucun token avec vision active => tout noir
+  // Hard blackout joueur : aucun token contrôlé du tout => tout noir
+  // (joueur sans token assigné = ne voit rien)
+  // Si le joueur a un token mais sans visionMode = il voit la carte (fog normal)
   // Exception broadcast : userId vide = fenêtre spectateur, pas de blackout
-  if (curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
+  if (curRole === 'player' && myControlledTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
     ctx.restore();
