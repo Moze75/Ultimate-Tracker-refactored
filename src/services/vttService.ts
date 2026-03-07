@@ -182,6 +182,8 @@ class VTTService {
           }
         } else if (serverEvent.type === 'WALLS_UPDATED') {
           this.localState.walls = serverEvent.walls;
+        } else if (serverEvent.type === 'WEATHER_UPDATED') {
+          this.localState.config = { ...this.localState.config, weatherEffects: serverEvent.effects };
         }
         this.messageHandlers.forEach(h => h(serverEvent));
       })
