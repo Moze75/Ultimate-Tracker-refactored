@@ -407,9 +407,10 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CLOUD_ALPHA_LIST);
             const img = loadImg(p.imgSrc);
             if (!img.complete || img.naturalWidth === 0) continue;
+            const drawSize = p.size * effect.scale;
             ctx.save();
             ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-            ctx.drawImage(img, p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+            ctx.drawImage(img, p.x - drawSize, p.y - drawSize, drawSize * 2, drawSize * 2);
             ctx.restore();
 
           // ── Crow ─────────────────────────────────────────────
