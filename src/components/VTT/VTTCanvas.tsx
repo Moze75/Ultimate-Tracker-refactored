@@ -329,6 +329,18 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (forceViewportProp) draw();
   }, [forceViewportProp, draw]);
 
+    // Applique la vue initiale sauvegardée (one-shot, n'écrase pas les mouvements ultérieurs)
+  const appliedInitialViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
+  useEffect(() => {
+    if (!initialViewport) return;
+    // On ne ré-applique que si la vue initiale a changé (nouvelle scène chargée)
+    const prev = appliedInitialViewportRef.current;
+    if (prev && prev.x === initialViewport.x && prev.y === initialViewport.y && prev.scale === initialViewport.scale) return;
+    appliedInitialViewportRef.current = initialViewport;
+    viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
+    draw();
+  }, [initialViewport, draw]);
+
   useVTTCanvasEvents({
     canvasRef,
     brushOverlayRef,
