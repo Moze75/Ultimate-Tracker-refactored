@@ -120,6 +120,41 @@ function getParticleConfig(type: VTTWeatherType, w: number, h: number, density: 
         rotSpeed: (Math.random() - 0.5) * 0.002,
         color: '#c8d8e8',
         wobble: 0, wobbleSpeed: 0, wobbleAmp: 0,
+        spriteSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
+      })};
+    case 'embers':
+      return { count, factory: (): Particle => ({
+        x: Math.random() * w,
+        y: h + 10,
+        vx: (-1 + Math.random() * 2) * speed,
+        vy: -(1.5 + Math.random() * 3) * speed,
+        size: 6 + Math.random() * 8,
+        alpha: (0.6 + Math.random() * 0.4) * alpha,
+        life: Math.random(), maxLife: 1,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.05,
+        color: Math.random() > 0.5 ? '#ff6600' : '#ffaa00',
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.04 + Math.random() * 0.06,
+        wobbleAmp: 1 + Math.random() * 2,
+        spriteSrc: EMBER_SRC,
+      })};
+    case 'crows':
+      return { count: Math.floor(density * 8), factory: (): Particle => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (1.2 + Math.random() * 1.5) * speed,
+        vy: (-0.3 + Math.random() * 0.6) * speed,
+        size: 20 + Math.random() * 25,
+        alpha: 0,
+        life: Math.random(), maxLife: 1,
+        rotation: 0,
+        rotSpeed: 0,
+        color: '#222222',
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.5 + Math.random() * 0.5,
+        wobbleAmp: 8 + Math.random() * 12,
+        spriteSrc: CROW_SRCS[Math.floor(Math.random() * CROW_SRCS.length)],
       })};
     case 'embers':
       return { count, factory: (): Particle => ({
