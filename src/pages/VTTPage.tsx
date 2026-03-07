@@ -728,15 +728,30 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (phase !== 'room' || !roomId || role !== 'player' || playerBoundTokenIds.length === 0) return;
     if (tokens.length === 0) return;
 
+    // Assigner userId aux tokens sélectionnés
     playerBoundTokenIds.forEach(tid => {
-        const token = tokens.find(t => t.id === tid);
-        if (!token) return;
-        vttService.send({
-          type: 'UPDATE_TOKEN',
-          tokenId: tid,
-          changes: { controlledByUserIds: [userId] },
-        });
+      const token = tokens.find(t => t.id === tid);
+      if (!token) return;
+      vttService.send({
+        type: 'UPDATE_TOKEN',
+        tokenId: tid,
+        changes: { controlledByUserIds: [userId] },
       });
+    });
+
+    // Retirer userId de tous les tokens NON sélectionnés (exclusivité)
+    tokens.forEach(token => {
+      if (playerBoundTokenIds.includes(token.id)) return;
+      if (!token.controlledByUserIds?.includes(userId)) return;
+      // Ce token avait userId mais n'est pas dans la sélection actuelle → on retire userId
+      const newControlled = token.controlledByUserIds.filter(id => id !== userId);
+      vttService.send({
+        type: 'UPDATE_TOKEN',
+        tokenId: token.id,
+        changes: { controlledByUserIds: newControlled },
+      });
+    });
+
     setPlayerBoundTokenIds([]);
   }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
 
