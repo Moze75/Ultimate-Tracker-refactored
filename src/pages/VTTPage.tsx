@@ -806,7 +806,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                   onCreateScene={handleCreateScene}
                   onRenameScene={handleRenameScene}
                   onDeleteScene={handleDeleteScene}
-                  onRightClickScene={handleSceneRightClick}
+                        onRightClickScene={handleSceneRightClick}
+                  onSaveView={handleSaveView}
                 />
               </div>
             </div>
