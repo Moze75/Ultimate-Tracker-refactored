@@ -282,7 +282,12 @@ function updateParticle(p: Particle, type: VTTWeatherType, w: number, h: number,
   p.x += (p.vx + wobbleX) * dt;
   p.y += p.vy * dt;
   p.rotation += p.rotSpeed * dt;
-  p.life += dt / 60;
+  // Pour clouds : life doit progresser sur ~20s (traversée de scène)
+  if (type === 'clouds') {
+    p.life += dt / 1200;
+  } else {
+    p.life += dt / 60;
+  }
 
   // fade in/out pour magicstars (FXMaster : 0→0.9→0.9→0)
   if (type === 'magicstars') {
