@@ -377,6 +377,11 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           const avgLifetime = diagonal / avgSpeed;
           existing.maxParticles = newMax;
           existing.frequency    = avgLifetime / newMax;
+        } else if (effect.type === 'embers') {
+          const newMax      = Math.max(4, Math.round(densityFactor * 40));
+          const avgLifetime = ((4 + 6) / 2) / speedFactor;
+          existing.maxParticles = newMax;
+          existing.frequency    = avgLifetime / newMax;
         } else {
           const newMax      = Math.max(2, Math.round(densityFactor * 6));
           const avgLifetime = (20 + 40) / 2 / speedFactor;
