@@ -93,7 +93,7 @@ interface EmberParticle {
   color: string;          // interpolation orange→rouge
 }
 
-type AnyParticle = CloudParticle | CrowParticle;
+type AnyParticle = CloudParticle | CrowParticle | EmberParticle;
 
 interface WeatherLayer {
   effect: VTTWeatherEffect;
