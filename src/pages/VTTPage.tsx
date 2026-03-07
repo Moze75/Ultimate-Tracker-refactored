@@ -202,8 +202,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
     const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
+    // Joueur : abonnement au viewport forcé par le MJ
+    const unsubVp = role === 'player'
+      ? vttService.onBroadcastViewport(vp => setPlayerForcedViewport(vp))
+      : () => {};
     vttService.connect(roomId, userId, authToken, userName, requestedRole);
-    return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
+    return () => { unsub(); unsubConn(); unsubPresence(); unsubVp(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
   const applySceneToLive = useCallback((scene: VTTScene) => {
