@@ -77,6 +77,22 @@ interface CrowParticle {
   perpY: number;
 }
 
+interface EmberParticle {
+  type: 'embers';
+  x: number; y: number;
+  vx: number; vy: number;
+  baseSpeed: number;      // px/s à speed=1
+  dirX: number; dirY: number;
+  size: number;           // scale courant (0.15→0.01 × EMBER_SPRITE_BASE)
+  lifeNorm: number;       // 0→1
+  baseLifetimeSec: number;
+  lifeInc: number;
+  alpha: number;
+  rotation: number;       // rotation sprite (rad)
+  rotSpeed: number;       // rad/s (100-200°/s en rad)
+  color: string;          // interpolation orange→rouge
+}
+
 type AnyParticle = CloudParticle | CrowParticle;
 
 interface WeatherLayer {
