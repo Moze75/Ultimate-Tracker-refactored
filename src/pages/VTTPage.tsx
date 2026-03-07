@@ -866,9 +866,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           }}
         >
           {role === 'gm' && scenes.length > 0 && (
-            <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-              <div className="pointer-events-auto inline-flex">
-                <VTTSceneBar
+          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none flex justify-center">
+            <div className="pointer-events-auto inline-flex">
+              <VTTSceneBar
                   scenes={scenes}
                   activeSceneId={activeSceneId}
                   onSwitchScene={handleSwitchScene}
