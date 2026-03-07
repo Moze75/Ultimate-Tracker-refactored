@@ -143,6 +143,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         setFogState(event.state.room.fogState);
         setWalls(event.state.room.walls || []);
         setRole(event.state.yourRole);
+        setWeatherEffects(event.state.room.config.weatherEffects || []);
         break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
