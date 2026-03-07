@@ -423,7 +423,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             p.y += p.vy * dt;
             p.animTime += dt;
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CROW_ALPHA_LIST);
-            const scaledSize = interpList(p.lifeNorm, CROW_SCALE_LIST) * CROW_SPRITE_BASE;
+                     const scaledSize = interpList(p.lifeNorm, CROW_SCALE_LIST) * CROW_SPRITE_BASE * effect.scale;
             const frameIdx   = Math.floor(p.animTime * CROW_FRAMERATE) % CROW_ANIM_TOTAL;
             const img        = loadImg(CROW_SRCS[CROW_ANIM_SEQUENCE[frameIdx]]);
             if (!img.complete || img.naturalWidth === 0) continue;
