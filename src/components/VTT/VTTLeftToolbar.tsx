@@ -118,14 +118,10 @@ export function VTTLeftToolbar({
         broadcastBtnRef.current && !broadcastBtnRef.current.contains(target)) {
         setBroadcastPopupOpen(false);
       }
+      if (timePopupOpen &&
         timePopupRef.current && !timePopupRef.current.contains(target) &&
         timeBtnRef.current && !timeBtnRef.current.contains(target)) {
-        setTimePopupOpen(false);
-      }
-      if (weatherPopupOpen &&
-        weatherPopupRef.current && !weatherPopupRef.current.contains(target) &&
-        weatherBtnRef.current && !weatherBtnRef.current.contains(target)) {
-        setWeatherPopupOpen(false);
+        setTimePopupOpen(false); 
       }
       if (weatherPopupOpen &&
         weatherPopupRef.current && !weatherPopupRef.current.contains(target) &&
