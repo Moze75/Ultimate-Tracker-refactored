@@ -361,7 +361,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
     // Ajouter ou mettre à jour
     for (const effect of effects) {
-      if (effect.type !== 'clouds' && effect.type !== 'crows') continue;
+          if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embers') continue;
 
       const existing = layersRef.current.find(l => l.effect.type === effect.type);
       if (existing) {
