@@ -510,8 +510,10 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
 
   const sections: Array<{ title: string; content: string }> = [];
   for (let i = 0; i < rubPositions.length; i++) {
+    const divIdx = block.lastIndexOf("<div", rubPositions[i + 1]?.startIdx ?? block.length);
+    const h2Idx = block.lastIndexOf("<h2", rubPositions[i + 1]?.startIdx ?? block.length);
     const endIdx = i + 1 < rubPositions.length
-      ? block.lastIndexOf("<div", rubPositions[i + 1].startIdx)
+      ? Math.max(divIdx, h2Idx)
       : block.length;
     sections.push({
       title: rubPositions[i].title,
