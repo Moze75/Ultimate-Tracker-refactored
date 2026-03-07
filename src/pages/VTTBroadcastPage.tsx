@@ -94,8 +94,8 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
 
   useEffect(() => {
     // Canal Supabase DÉDIÉ à la fenêtre broadcast — indépendant du vttService singleton
-    const channel = supabase.channel(`vtt-room-${roomId}-broadcast-${userId}`, {
-      config: { broadcast: { self: false } }, 
+   const channel = supabase.channel(`vtt-room-${roomId}`, {
+      config: { broadcast: { self: false } },
     });
 
     channel
