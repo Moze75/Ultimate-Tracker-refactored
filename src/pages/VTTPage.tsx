@@ -734,13 +734,36 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         vttService.send({
           type: 'UPDATE_TOKEN',
           tokenId: tid,
-          // On remplace entièrement : ce token appartient à CE joueur uniquement.
-          // Ne pas accumuler les userId qui laisserait la vision se partager.
           changes: { controlledByUserIds: [userId] },
         });
       });
     setPlayerBoundTokenIds([]);
   }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
+
+  // Centrer la vue joueur sur son premier token contrôlé (one-shot)
+  useEffect(() => {
+    if (role !== 'player') return;
+    if (playerInitialViewportSetRef.current) return;
+    if (tokens.length === 0) return;
+
+    const myToken = tokens.find(t =>
+      t.visible && t.controlledByUserIds?.includes(userId)
+    );
+    if (!myToken) return;
+
+    const container = canvasContainerRef.current;
+    const W = container?.clientWidth ?? window.innerWidth;
+    const H = container?.clientHeight ?? window.innerHeight;
+    const CELL = config.gridSize || 60;
+    const scale = 1;
+    const tokenCX = myToken.position.x + ((myToken.size || 1) * CELL) / 2;
+    const tokenCY = myToken.position.y + ((myToken.size || 1) * CELL) / 2;
+    const vx = W / 2 - tokenCX * scale;
+    const vy = H / 2 - tokenCY * scale;
+
+    playerInitialViewportSetRef.current = true;
+    setPlayerInitialViewport({ x: vx, y: vy, scale });
+  }, [role, tokens, userId, config.gridSize]);
 
   if (phase === 'lobby') {
     return (
