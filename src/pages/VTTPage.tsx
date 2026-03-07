@@ -117,7 +117,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   broadcastFrameRef.current = broadcastFrame;
   const broadcastModeRef = useRef(broadcastMode);
   broadcastModeRef.current = broadcastMode;
-  const [gmFollowEnabled, setGmFollowEnabled] = useState(false);
+  const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [gmFollowEnabled, setGmFollowEnabled] = useState(false);
   const gmFollowEnabledRef = useRef(false);
   const [playerForcedViewport, setPlayerForcedViewport] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
