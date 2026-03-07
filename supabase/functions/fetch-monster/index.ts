@@ -648,6 +648,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
+  // Bypass auth pour le debug (à retirer après)
+  // RIEN À AJOUTER ICI — voir ci-dessous
 
   try {
     const url = new URL(req.url);
