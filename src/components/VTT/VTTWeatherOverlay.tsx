@@ -294,12 +294,12 @@ function updateParticle(p: Particle, type: VTTWeatherType, w: number, h: number,
     const t = p.life % 1;
     p.alpha = t < 0.3 ? (t / 0.3) * alpha : t > 0.7 ? ((1 - t) / 0.3) * alpha : alpha;
   }
-  // FXMaster CLOUDS_CONFIG alpha : 0→0.5→0.5→0 (times: 0, 0.05, 0.95, 1)
+  // FXMaster CLOUDS_CONFIG alpha : times [0, 0.05, 0.95, 1] → values [0, 0.5, 0.5, 0]
   if (type === 'clouds') {
-    const t = p.life % 1;
-    if (t < 0.05) p.alpha = (t / 0.05) * 0.5 * alpha;
+    const t = Math.min(1, Math.max(0, p.life));
+    if      (t < 0.05) p.alpha = (t / 0.05) * 0.5 * alpha;
     else if (t < 0.95) p.alpha = 0.5 * alpha;
-    else p.alpha = ((1 - t) / 0.05) * 0.5 * alpha;
+    else               p.alpha = ((1 - t) / 0.05) * 0.5 * alpha;
   }
   // Crows : fade in/out rapide (0→1→1→0 sur les bords)
   if (type === 'crows') {
