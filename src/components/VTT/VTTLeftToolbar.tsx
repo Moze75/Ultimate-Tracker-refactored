@@ -680,6 +680,27 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
+            {/* Suivi MJ → joueurs */}
+            <div className="pt-2 border-t border-gray-700/60">
+              <button
+                onClick={onToggleGmFollow}
+                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                  gmFollowEnabled
+                    ? 'bg-purple-700/30 border-purple-500/60 text-purple-300'
+                    : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <Eye size={12} />
+                {gmFollowEnabled ? '🔒 Vue joueurs bloquée sur le MJ' : 'Forcer la vue des joueurs'}
+              </button>
+              {gmFollowEnabled && (
+                <p className="text-[10px] text-purple-400/70 mt-1.5 text-center leading-tight">
+                  Les joueurs suivent votre caméra en temps réel
+                </p>
+              )}
+            </div>
+
+            
             <div className="pt-2 border-t border-gray-700/60">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Mode de diffusion</p>
               <div className="flex gap-1 mb-2">
