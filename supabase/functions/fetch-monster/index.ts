@@ -537,7 +537,10 @@ async function fetchMonsterDetail(slug: string): Promise<MonsterDetail> {
     r.title.includes("trait") || r.title === "traits"
   );
   const firstRubIdx = rubPositions.length > 0
-    ? block.lastIndexOf("<div", rubPositions[0].startIdx)
+    ? Math.min(
+        block.lastIndexOf("<div", rubPositions[0].startIdx) > -1 ? block.lastIndexOf("<div", rubPositions[0].startIdx) : Infinity,
+        block.lastIndexOf("<h2", rubPositions[0].startIdx) > -1 ? block.lastIndexOf("<h2", rubPositions[0].startIdx) : Infinity
+      )
     : block.length;
   const preSection = block.substring(0, firstRubIdx);
 
