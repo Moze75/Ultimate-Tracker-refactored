@@ -136,7 +136,7 @@ export function VTTLeftToolbar({
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen]);
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen]); 
 
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
   const isGridTool = activeTool === 'grid-calibrate';
