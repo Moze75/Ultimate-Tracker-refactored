@@ -827,8 +827,9 @@ const HOUR_PRESETS = [
 // ─── WEATHER PRESETS (inspiré de FXMaster — gambit07/fxmaster) ───────────────
 
 const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] = [
-  { type: 'clouds', label: 'Nuages',    icon: '☁️'   },
+  { type: 'clouds', label: 'Nuages',   icon: '☁️'    },
   { type: 'crows',  label: 'Corbeaux', icon: '🐦‍⬛' },
+  { type: 'embers', label: 'Braises',  icon: '🔥'    },
 ];
 
 const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8 };
