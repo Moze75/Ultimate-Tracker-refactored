@@ -118,6 +118,16 @@ export function VTTSceneBar({
           <Plus size={12} />
         </button>
       )}
+
+      {onSaveView && (
+        <button
+          onClick={onSaveView}
+          className="flex items-center gap-1 h-8 px-3 rounded-md bg-gray-800/60 text-amber-400 hover:text-amber-200 hover:bg-gray-700/80 transition-colors shrink-0 text-xs backdrop-blur-sm border border-gray-700/40"
+          title="Enregistrer la vue (zoom + position)"
+        >
+          <Bookmark size={12} />
+        </button>
+      )}
     </div>
   );
 }
