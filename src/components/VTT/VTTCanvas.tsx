@@ -24,6 +24,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onRightClickToken,
   onMapDimensions,
   onDropToken,
+  onDropProp,
   onAddTokenAtPos,
   onResizeToken,
   calibrationPoints,
