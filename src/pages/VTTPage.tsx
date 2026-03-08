@@ -869,9 +869,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               setSelectedPropId(null);
             }
           }}
-          onDragOver={e => e.preventDefault()}
+          onDragOver={e => {
+            if (e.dataTransfer.types.includes('application/vtt-prop-url') ||
+                e.dataTransfer.types.includes('application/vtt-prop-id')) {
+              e.preventDefault();
+            }
+          }}
           onDrop={e => {
             e.preventDefault();
+            e.stopPropagation(); // ← empêche la remontée vers d'autres handlers
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
