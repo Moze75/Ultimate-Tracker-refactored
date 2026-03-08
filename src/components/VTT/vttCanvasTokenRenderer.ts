@@ -84,7 +84,7 @@ export function drawToken({
     ctx.setLineDash([]);
   }
 
-  if (token.id === currentSelectedId) {
+  if (token.id === currentSelectedId) { 
     const pad = 5 / scale;
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 1.5 / scale;
