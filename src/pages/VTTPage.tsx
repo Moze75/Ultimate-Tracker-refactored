@@ -1029,7 +1029,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               >
                 {prop.imageUrl ? (
                   isVidProp ? (
-                    <video src={prop.imageUrl} autoPlay loop muted playsInline draggable={false} className="w-full h-full object-contain pointer-events-none" />
+                    <video
+                      src={prop.imageUrl}
+                      autoPlay loop muted playsInline
+                      draggable={false}
+                      className="w-full h-full object-contain pointer-events-none bg-gray-800/50"
+                      onError={e => { (e.target as HTMLVideoElement).style.display = 'none'; }}
+                    />
                   ) : (
                     <img src={prop.imageUrl} alt={prop.label} draggable={false} className="w-full h-full object-contain pointer-events-none" />
                   )
