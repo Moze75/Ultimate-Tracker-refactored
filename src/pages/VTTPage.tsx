@@ -309,6 +309,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setActiveSceneId(sceneId);
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
+            localStorage.setItem(`vtt_last_scene_${roomId}`, sceneId);
             setSavedViewport(scene.config.savedViewport ?? null);
     } finally {
       switchingSceneRef.current = false;
