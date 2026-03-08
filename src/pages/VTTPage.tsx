@@ -314,7 +314,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     } finally {
       switchingSceneRef.current = false;
     }
-  }, [saveCurrentSceneState]);
+  }, [saveCurrentSceneState, roomId]);
 
   const handleCreateScene = useCallback(async (name: string) => {
     if (!roomId) return;
