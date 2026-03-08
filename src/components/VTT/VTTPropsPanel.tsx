@@ -337,9 +337,9 @@ export function VTTPropsPanel({
           )}
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             {/* Placer sur le canvas */}
-            <button
-              onMouseDown={e => e.stopPropagation()}
-              onClick={() => handlePlaceProp(entry)}
+               <button
+              onMouseDown={e => { e.stopPropagation(); console.log('[DEBUG PROP] onMouseDown bouton Placer'); }}
+              onClick={e => { e.stopPropagation(); e.preventDefault(); console.log('[DEBUG PROP] onClick bouton Placer', entry.name); handlePlaceProp(entry); }}
               className="p-0.5 rounded bg-amber-600/90 hover:bg-amber-500 text-white"
               title="Placer sur le canvas"
             >
