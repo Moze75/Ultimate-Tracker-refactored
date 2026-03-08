@@ -656,41 +656,68 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctxFog.restore();
           }
 
-          // ── Couche 3 : sprites cloud tournants (FogParticleEffect) ─────────
-          // Simule FogParticleEffect : cloud1-4.webp, rotation, alpha 0→0.3→0
-          const fogClouds = fogBlobsRef.current; // on réutilise les blobs comme "particules cloud"
-          for (let i = 0; i < Math.min(8, fogClouds.length); i++) {
-            const blob   = fogClouds[i];
-            const img    = loadImg(CLOUD_SRCS[i % CLOUD_SRCS.length]);
+                  // ── Couche 3 : particules cloud qui TRAVERSENT l'écran (FogParticleEffect) ─
+          // FXMaster : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s, lifetime 10-25s
+          // Les particules bougent EN TRANSLATION — pas de rotation sur place visible
+
+          // Init au premier passage
+          if (fogCloudsRef.current.length === 0) {
+            const count = Math.max(4, Math.round(density * 10));
+            for (let i = 0; i < count; i++) {
+              fogCloudsRef.current.push(makeFogCloud(width, height, fe.speed, false));
+            }
+          }
+
+          const targetCount = Math.max(4, Math.round(density * 10));
+          const fogClouds   = fogCloudsRef.current;
+
+          for (let i = fogClouds.length - 1; i >= 0; i--) {
+            const p = fogClouds[i];
+
+            // Avancer dans le temps
+            p.life  += dt;
+            p.x     += p.vx * dt;
+            p.y     += p.vy * dt;
+            p.angle += p.rotSpeed * dt; // rotation lente pendant le déplacement
+
+            // Mort → respawn depuis un bord
+            if (p.life >= p.lifetime) {
+              fogClouds[i] = makeFogCloud(width, height, fe.speed, true);
+              continue;
+            }
+
+            const img = loadImg(CLOUD_SRCS[p.imgIdx]);
             if (!img.complete || img.naturalWidth === 0) continue;
 
-            // Cycle de vie continu : lifeNorm dérivé de la phase + temps
-            const lifeT  = ((t * 0.04 * fe.speed + blob.phase) % 1 + 1) % 1;
-            // Courbe alpha FXMaster : 0→0.1→0.3→0.1→0
+            // Courbe alpha FXMaster : 0 → 0.1 → 0.3 → 0.1 → 0
+            const lifeT = p.life / p.lifetime;
             let cloudAlpha: number;
-            if      (lifeT < 0.1)  cloudAlpha = lifeT / 0.1 * 0.1;
-            else if (lifeT < 0.5)  cloudAlpha = 0.1 + (lifeT - 0.1) / 0.4 * 0.2;
-            else if (lifeT < 0.9)  cloudAlpha = 0.3 - (lifeT - 0.5) / 0.4 * 0.2;
-            else                   cloudAlpha = 0.1 - (lifeT - 0.9) / 0.1 * 0.1;
+            if      (lifeT < 0.1)  cloudAlpha = (lifeT / 0.1) * 0.1;
+            else if (lifeT < 0.5)  cloudAlpha = 0.1 + ((lifeT - 0.1) / 0.4) * 0.2;
+            else if (lifeT < 0.9)  cloudAlpha = 0.3 - ((lifeT - 0.5) / 0.4) * 0.2;
+            else                   cloudAlpha = 0.1 - ((lifeT - 0.9) / 0.1) * 0.1;
             cloudAlpha *= density * alphaMax;
 
-            if (cloudAlpha <= 0.005) continue;
+            if (cloudAlpha <= 0.003) continue;
 
-            // Scale FXMaster : 1.5 → 1.0
+            // Scale FXMaster : 1.5 → 1.0 (minMult 0.5 → taille min = 0.75)
             const cloudScale = (1.5 - 0.5 * lifeT) * scl;
-            const size       = 220 * cloudScale;
-
-            // Position + rotation lente
-            const angle  = t * (0.15 + blob.phase * 0.1) * fe.speed;
-            const cx     = blob.x * width;
-            const cy     = blob.y * height;
+            const sz         = p.size * cloudScale;
 
             ctxFog.save();
             ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha));
-            ctxFog.translate(cx, cy);
-            ctxFog.rotate(angle);
-            ctxFog.drawImage(img, -size, -size, size * 2, size * 2);
+            ctxFog.translate(p.x, p.y);
+            ctxFog.rotate(p.angle);
+            ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
             ctxFog.restore();
+          }
+
+          // Ajuster le nombre de particules si density a changé
+          while (fogClouds.length < targetCount) {
+            fogClouds.push(makeFogCloud(width, height, fe.speed, true));
+          }
+          if (fogClouds.length > targetCount) {
+            fogClouds.splice(targetCount);
           }
 
         } else {
