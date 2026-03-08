@@ -858,6 +858,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
+          onClick={e => {
+            // Désélectionner la prop si on clique sur le fond (pas sur une prop)
+            if ((e.target as HTMLElement).closest('[data-prop-id]') === null) {
+              setSelectedPropId(null);
+            }
+          }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
