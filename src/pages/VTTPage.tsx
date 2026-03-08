@@ -861,12 +861,33 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
-            const propId = e.dataTransfer.getData('application/vtt-prop-id');
-            if (propId) {
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              handleUpdateProp(propId, { position: { x, y } });
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // ── Déplacement d'une prop déjà sur le canvas ──────────────────
+            const existingPropId = e.dataTransfer.getData('application/vtt-prop-id');
+            const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
+
+            if (propUrl) {
+              // Drop depuis la bibliothèque → créer une nouvelle prop
+              const propName = e.dataTransfer.getData('application/vtt-prop-name') || 'Prop';
+              const isVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
+              handleAddProp({
+                label: propName,
+                imageUrl: propUrl,
+                position: { x: x - 75, y: y - 75 },
+                width: isVideo ? 200 : 150,
+                height: isVideo ? 200 : 150,
+                opacity: 1,
+                locked: false,
+              });
+            } else if (existingPropId) {
+              // Déplacement d'une prop existante
+              const prop = props.find(p => p.id === existingPropId);
+              if (prop) {
+                handleUpdateProp(existingPropId, { position: { x: x - prop.width / 2, y: y - prop.height / 2 } });
+              }
             }
           }}
         >
