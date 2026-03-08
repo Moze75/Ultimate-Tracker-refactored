@@ -864,6 +864,7 @@ const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] =
   { type: 'clouds', label: 'Nuages',   icon: '☁️'    },
   { type: 'crows',  label: 'Corbeaux', icon: '🐦‍⬛' },
   { type: 'embers', label: 'Braises',  icon: '🔥'    },
+  { type: 'fog',    label: 'Brume',    icon: '🌫️'   },
 ];
 
 const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = { density: 1.0, speed: 1.0, alpha: 0.8, scale: 1.0 };
