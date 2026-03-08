@@ -362,6 +362,7 @@ const visibleTokens = isGM
             props={props}
             selectedPropId={selectedPropId}
             role={role}
+            roomId={roomId}
             onSelectProp={onSelectProp}
             onAddProp={onAddProp}
             onRemoveProp={onRemoveProp}
