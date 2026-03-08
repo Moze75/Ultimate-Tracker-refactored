@@ -733,6 +733,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setTokens([]);
     setFogState(DEFAULT_FOG);
     setSelectedTokenId(null);
+        // On conserve la dernière scène pour la prochaine visite — ne pas effacer
     setScenes([]);
     setActiveSceneId(null);
     setProps([]);
