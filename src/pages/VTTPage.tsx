@@ -982,9 +982,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-                {props.map(prop => {
-            const isSelected = selectedPropId === prop.id;
-            const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
+        {(() => { console.log('[DEBUG PROP] rendu JSX — props.length:', props.length); return null; })()}
+        {props.map(prop => {
+          console.log('[DEBUG PROP] rendu prop:', prop.id, 'position:', prop.position, 'imageUrl:', prop.imageUrl?.slice(0, 60));
+          const isSelected = selectedPropId === prop.id;
+          const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
             return (
               <div
                 key={prop.id}
