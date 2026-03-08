@@ -413,6 +413,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
       setIsDragOver(true);
+    } else if (e.dataTransfer.types.includes('application/vtt-prop-url')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
     }
   };
 
