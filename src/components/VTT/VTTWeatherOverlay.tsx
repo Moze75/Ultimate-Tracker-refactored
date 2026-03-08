@@ -334,6 +334,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   const canvasFogRef    = useRef<HTMLCanvasElement>(null); // fog    → normal
   const fogBlobsRef     = useRef<FogBlob[]>(makeFogBlobs(22));
   const fogTimeRef      = useRef<number>(0);
+  const fogCloudsRef    = useRef<FogCloudParticle[]>([]);
   const effectsRef      = useRef<VTTWeatherEffect[]>(effects);
   const layersRef       = useRef<WeatherLayer[]>([]);
   const rafRef          = useRef<number>(0);
