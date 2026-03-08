@@ -1021,7 +1021,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
               className="w-full accent-sky-500"
             />
           </div>
-                    <div>
+                                  <div>
             <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
               <span>Taille</span>
               <span className="text-sky-400 font-mono">{editingEffect.scale.toFixed(1)}×</span>
@@ -1032,6 +1032,45 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
               className="w-full accent-sky-500"
             />
           </div>
+
+          {/* Color picker — uniquement pour la Brume */}
+          {editingType === 'fog' && (
+            <div>
+              <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                <span>Teinte de brume</span>
+                <span className="text-sky-400 font-mono">{editingEffect.color ?? '#b0c8e0'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={editingEffect.color ?? '#b0c8e0'}
+                  onChange={e => update(editingType, { color: e.target.value })}
+                  className="w-8 h-7 rounded cursor-pointer border border-gray-600 bg-transparent"
+                />
+                <div className="flex gap-1 flex-wrap">
+                  {[
+                    { hex: '#b0c8e0', label: 'Brume' },
+                    { hex: '#c8d8b0', label: 'Marais' },
+                    { hex: '#e0d0b0', label: 'Sable' },
+                    { hex: '#d0b0d0', label: 'Arcane' },
+                    { hex: '#b0b0b0', label: 'Cendre' },
+                  ].map(({ hex, label }) => (
+                    <button
+                      key={hex}
+                      onClick={() => update(editingType, { color: hex })}
+                      title={label}
+                      className={`w-5 h-5 rounded border transition-all ${
+                        editingEffect.color === hex
+                          ? 'border-sky-400 scale-110'
+                          : 'border-gray-600 hover:border-gray-400'
+                      }`}
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
