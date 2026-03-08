@@ -273,6 +273,58 @@ interface FogBlob {
   alphaBase: number;      // opacité de base [0–1]
 }
 
+// Particule cloud brume : traverse l'écran lentement en rotation douce
+// Inspiré de FogParticleEffect : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s,
+// lifetime 10-25s, alpha 0→0.1→0.3→0.1→0, scale 1.5→1.0
+interface FogCloudParticle {
+  x: number; y: number;       // position px
+  vx: number; vy: number;     // vitesse px/s
+  angle: number;              // rotation actuelle rad
+  rotSpeed: number;           // vitesse rotation rad/s (0.15–0.35)
+  size: number;               // taille de base px
+  life: number;               // durée de vie écoulée s
+  lifetime: number;           // durée de vie totale s (10–25)
+  imgIdx: number;             // index cloud (0–3)
+}
+
+function makeFogCloud(w: number, h: number, speedFactor: number, fromBorder: boolean): FogCloudParticle {
+  // Spawn depuis un bord aléatoire (comme DefaultRectangleSpawnMixin)
+  const border = Math.floor(Math.random() * 4);
+  let x: number, y: number;
+  if      (border === 0) { x = Math.random() * w; y = -150; }
+  else if (border === 1) { x = Math.random() * w; y = h + 150; }
+  else if (border === 2) { x = -150;              y = Math.random() * h; }
+  else                   { x = w + 150;            y = Math.random() * h; }
+
+  // Direction vers le centre avec dérive (moveSpeed 10–15 px/s, minMult 0.2)
+  const mult     = 0.2 + Math.random() * 0.8;
+  const speed    = (10 + Math.random() * 5) * mult * speedFactor;
+  const towardCX = (w / 2 - x);
+  const towardCY = (h / 2 - y);
+  const dist     = Math.sqrt(towardCX * towardCX + towardCY * towardCY) || 1;
+  // Légère dérive aléatoire autour de la direction centrale
+  const driftAngle = Math.atan2(towardCY, towardCX) + (Math.random() - 0.5) * Math.PI;
+  const vx = Math.cos(driftAngle) * speed;
+  const vy = Math.sin(driftAngle) * speed;
+
+  const lifetime = fromBorder
+    ? (10 + Math.random() * 15) / speedFactor
+    : (Math.random() * (25 / speedFactor)); // stagger initial
+
+  return {
+    x: fromBorder ? x : Math.random() * w,
+    y: fromBorder ? y : Math.random() * h,
+    vx, vy,
+    angle: Math.random() * Math.PI * 2,
+    rotSpeed: (0.15 + Math.random() * 0.20) * (Math.random() > 0.5 ? 1 : -1),
+    size: (200 + Math.random() * 160),   // scale 1.5→1.0 géré à l'affichage
+    life: fromBorder ? 0 : Math.random() * lifetime,
+    lifetime,
+    imgIdx: Math.floor(Math.random() * 4),
+  };
+}
+
+
 function makeFogBlobs(count: number): FogBlob[] {
   return Array.from({ length: count }, () => ({
     x: Math.random(),
