@@ -735,19 +735,56 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             const cloudScale = (1.5 - 0.5 * lifeT) * scl;
             const sz         = p.size * cloudScale;
 
-            ctxFog.save();
-            // colorStatic 'dddddd' : teinte gris clair comme FXMaster
-            // screen interne : les pixels sombres du sprite disparaissent → pas de bords rigides
-            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha));
+            // ── Déformation organique du sprite ─────────────────────────────
+            // On dessine le sprite 2 fois avec des transformations qui évoluent
+            // dans le temps → donne l'illusion que la forme du nuage "respire".
+            //
+            // Principe :
+            //  - Passe A : sprite principal avec étirement/cisaillement lent
+            //  - Passe B : même sprite, léger décalage + déformation inverse
+            //    → la superposition des 2 passes crée un contour mouvant irrégulier
+            //    sans jamais révéler que c'est le même rectangle
+
+            const deformT  = t + p.phase;   // phase propre à chaque particule
+            // Étirement non-uniforme : sx oscille indépendamment de sy
+            const sxA =  1.0 + 0.18 * Math.sin(deformT * 0.4 + 0.0);
+            const syA =  1.0 + 0.14 * Math.cos(deformT * 0.31 + 1.1);
+            // Cisaillement doux (simule le vent qui tire un côté)
+            const shA =  0.08 * Math.sin(deformT * 0.27 + 2.3);
+
+            // Passe B : déformation légèrement différente + décalage subpixel
+            const sxB =  1.0 + 0.14 * Math.sin(deformT * 0.35 + 1.6);
+            const syB =  1.0 + 0.20 * Math.cos(deformT * 0.28 + 0.4);
+            const shB = -0.06 * Math.cos(deformT * 0.33 + 3.1);
+            // Décalage relatif de la passe B (quelques % de la taille)
+            const offBx = sz * 0.08 * Math.sin(deformT * 0.19 + 1.0);
+            const offBy = sz * 0.06 * Math.cos(deformT * 0.23 + 2.5);
+
             ctxFog.globalCompositeOperation = 'screen';
+
+            // — Passe A ──────────────────────────────────────────────────────
+            ctxFog.save();
+            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha * 0.75));
             ctxFog.translate(p.x, p.y);
             ctxFog.rotate(p.angle);
-            // Teinte dddddd : filtre colorise le sprite en gris clair
-            ctxFog.filter = `brightness(0.9) saturate(0) sepia(0.15)`;
+            // transform(scaleX, skewY, skewX, scaleY, 0, 0)
+            ctxFog.transform(sxA, shA, shA, syA, 0, 0);
+            ctxFog.filter = `brightness(0.88) saturate(0) sepia(0.1)`;
             ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
             ctxFog.filter = 'none';
             ctxFog.restore();
-            // Rétablir le mode de composition normal pour les blobs suivants
+
+            // — Passe B : même sprite, déformation complémentaire ────────────
+            ctxFog.save();
+            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha * 0.55));
+            ctxFog.translate(p.x + offBx, p.y + offBy);
+            ctxFog.rotate(p.angle + 0.04 * Math.sin(deformT * 0.15));
+            ctxFog.transform(sxB, shB, shB, syB, 0, 0);
+            ctxFog.filter = `brightness(0.92) saturate(0) sepia(0.08)`;
+            ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
+            ctxFog.filter = 'none';
+            ctxFog.restore();
+
             ctxFog.globalCompositeOperation = 'source-over';
           }
 
