@@ -549,21 +549,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [calibrationPoints, handleUpdateMap]);
 
   const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
-    // Si la position est la valeur par défaut "neutre" (300,200), on recalcule
-    // au centre réel du container canvas pour que la prop soit toujours visible
-    let position = propData.position;
-    if (position.x === 300 && position.y === 200) {
-      const container = canvasContainerRef.current;
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        position = {
-          x: rect.width / 2 - (propData.width ?? 150) / 2,
-          y: rect.height / 2 - (propData.height ?? 150) / 2,
-        };
-      }
-    }
-    const newProp: VTTProp = { ...propData, position, id: crypto.randomUUID() };
-    setProps(prev => [...prev, newProp]);
+    const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
+    console.log('[DEBUG PROP] handleAddProp reçu dans VTTPage', newProp);
+    setProps(prev => {
+      const next = [...prev, newProp];
+      console.log('[DEBUG PROP] setProps → props total:', next.length);
+      return next;
+    });
   }, []);
 
   const handleRemoveProp = useCallback((propId: string) => {
