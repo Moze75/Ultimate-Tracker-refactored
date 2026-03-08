@@ -87,10 +87,9 @@ export function drawToken({
   if (token.id === currentSelectedId) {
     const pad = 5 / scale;
     ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 2.5 / scale;
-    ctx.setLineDash([6 / scale, 3 / scale]);
-    ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+    ctx.lineWidth = 1.5 / scale;
     ctx.setLineDash([]);
+    ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
     const hx = size / 2 + pad;
     const hy = size / 2 + pad;
     const hr = 7 / scale;
