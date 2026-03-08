@@ -490,10 +490,9 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         }
       }
 
-        // ── FOG — simulation FBM multi-octave (inspiré fog.frag FXMaster/gambit07) ─
-      // Stratégie : N couches de gradients très petits à alpha très faible,
-      // domaine-warpés par sin/cos imbriqués → formes organiques, pas de cercles durs.
-      // Blend mode 'screen' sur le canvas = accumulation lumineuse comme le shader GLSL.
+      // ── FOG — triple domain-warp + sprites cloud tournants (FXMaster/gambit07) ─
+      // Reproduit : fog.frag (triple FBM warp, contrast=3, HDR highlight vec3(1.5))
+      //           + FogParticleEffect (cloud sprites, alpha 0→0.3→0, rotation)
       const ctxFog = canvasFogRef.current?.getContext('2d') ?? null;
       if (ctxFog) {
         const fe = effectsRef.current.find(e => e.type === 'fog');
@@ -503,107 +502,142 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           ctxFog.clearRect(0, 0, width, height);
 
           const [cr, cg, cb] = fogHexToRgb(fe.color ?? '#b0c8e0');
+          // Surbrillance : simule vec3(1.5) du shader — on éclaircit la couleur de 50%
+          const hr = Math.min(255, Math.round(cr + (255 - cr) * 0.5));
+          const hg = Math.min(255, Math.round(cg + (255 - cg) * 0.5));
+          const hb = Math.min(255, Math.round(cb + (255 - cb) * 0.5));
+
           const density  = Math.min(2, Math.max(0.1, fe.density));
           const alphaMax = Math.min(1, Math.max(0, fe.alpha));
           const scl      = fe.scale ?? 1;
 
-          // ── Octave 0 : grande nappe de fond (1 blob très large, très doux) ──
-          {
-            const bx = 0.5 + 0.3 * Math.sin(t * 0.07);
-            const by = 0.5 + 0.2 * Math.cos(t * 0.05 + 1.2);
-            const r  = Math.max(width, height) * 0.85 * scl;
+          // ── Couche 1 : nappe de fond large (octave basse fréquence) ────────
+          // Simule le f de base du fbm, avec contrast=3 → peaks lumineux
+          for (let layer = 0; layer < 3; layer++) {
+            const phase = layer * 2.094; // 2π/3
+            const bx = 0.5 + 0.35 * Math.sin(t * 0.06 + phase)
+                          + 0.15 * Math.cos(t * 0.11 + phase * 1.7);
+            const by = 0.5 + 0.3  * Math.cos(t * 0.05 + phase * 1.3)
+                          + 0.12 * Math.sin(t * 0.09 + phase * 0.8);
+            const r  = Math.max(width, height) * (0.55 + 0.15 * Math.sin(t * 0.04 + phase)) * scl;
             const cx = bx * width;
             const cy = by * height;
-            const a  = 0.08 * density * alphaMax;
-            const g  = ctxFog.createRadialGradient(cx, cy, 0, cx, cy, r);
-            g.addColorStop(0,   `rgba(${cr},${cg},${cb},${a.toFixed(3)})`);
-            g.addColorStop(0.6, `rgba(${cr},${cg},${cb},${(a * 0.3).toFixed(3)})`);
-            g.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
+            // Courbe non-linéaire f³+0.6f²+0.5f → alpha élevé au centre, chute rapide
+            const fVal  = 0.5 + 0.5 * Math.sin(t * 0.08 + phase * 2.1);
+            const shape = fVal * fVal * fVal + 0.6 * fVal * fVal + 0.5 * fVal;
+            const a     = Math.min(1, shape * 0.22 * density * alphaMax);
+
+            const g = ctxFog.createRadialGradient(cx, cy, 0, cx, cy, r);
+            // Cœur : couleur surbrillante (vec3(1.5))
+            g.addColorStop(0,    `rgba(${hr},${hg},${hb},${a.toFixed(3)})`);
+            // Milieu : couleur de base
+            g.addColorStop(0.35, `rgba(${cr},${cg},${cb},${(a * 0.55).toFixed(3)})`);
+            // Bord : transparence
+            g.addColorStop(0.75, `rgba(${cr},${cg},${cb},${(a * 0.1).toFixed(3)})`);
+            g.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`);
             ctxFog.beginPath();
             ctxFog.arc(cx, cy, r, 0, Math.PI * 2);
             ctxFog.fillStyle = g;
             ctxFog.fill();
           }
 
-          // ── Octaves 1–3 : blobs moyens domain-warpés ──────────────────────
-          // Chaque blob est déplacé par une perturbation dépendant de ses voisins
-          // (équivalent canvas du q/r warping du shader FBM)
+          // ── Couche 2 : blobs domain-warpés (simule triple FBM warp) ────────
+          // q = fbm(p), r = fbm(p*q + offset + t), f = fbm(p*0.2 + r*3.102)
           const blobs = fogBlobsRef.current;
           for (let i = 0; i < blobs.length; i++) {
             const blob = blobs[i];
 
-            // Warp domaine : la position est perturbée par deux sinus imbriqués
-            // (simule fbm(p*q + offset + t) du shader)
-            const warpX = Math.sin(t * 0.13 + blob.phase)
-                        + 0.5 * Math.sin(t * 0.23 + blob.phase * 1.7 + 1.3);
-            const warpY = Math.cos(t * 0.11 + blob.phase * 1.4)
-                        + 0.5 * Math.cos(t * 0.19 + blob.phase * 0.9 + 2.1);
+            // Triple warp : q → r → f (3 niveaux de perturbation imbriqués)
+            const qx = Math.sin(t * 0.13 + blob.phase) * 0.5
+                     + Math.sin(t * 0.07 + blob.phase * 2.3 + 1.0) * 0.25;
+            const qy = Math.cos(t * 0.11 + blob.phase * 1.4) * 0.5
+                     + Math.cos(t * 0.09 + blob.phase * 0.7 + 2.0) * 0.25;
+            // r warp (second niveau, utilise q)
+            const rx2 = Math.sin(blob.x * qx * 4 + 1.7 + 0.15 * t) * 0.4
+                      + Math.sin(t * 0.19 + blob.phase * 1.9) * 0.2;
+            const ry2 = Math.cos(blob.y * qy * 4 + 9.3 + 0.35 * t) * 0.4
+                      + Math.cos(t * 0.17 + blob.phase * 1.1) * 0.2;
+            // Déplacement final avec triple warp
+            blob.x += blob.vx * fe.speed * (1 + Math.abs(rx2) * 0.5)
+                    + rx2 * 0.0004 * fe.speed;
+            blob.y += blob.vy * fe.speed * (1 + Math.abs(ry2) * 0.5)
+                    + ry2 * 0.0003 * fe.speed;
 
-            // Déplacement de base + warp
-            blob.x += blob.vx * fe.speed + warpX * 0.0003 * fe.speed;
-            blob.y += blob.vy * fe.speed + warpY * 0.0002 * fe.speed;
-
-            // Wrap-around
             if (blob.x < -blob.r) blob.x = 1 + blob.r;
             if (blob.x > 1 + blob.r) blob.x = -blob.r;
             if (blob.y < -blob.r) blob.y = 1 + blob.r;
             if (blob.y > 1 + blob.r) blob.y = -blob.r;
 
-            // Taille variable en ellipse déformée (évite les cercles parfaits)
-            const deformT = t * 0.4 + blob.phase;
-            const rx = blob.r * width  * scl * (1.0 + 0.5 * Math.sin(deformT));
-            const ry = blob.r * height * scl * (1.0 + 0.5 * Math.cos(deformT * 1.3 + 1.0));
-            if (rx <= 0 || ry <= 0) continue;
+            // Déformation elliptique non-uniforme (pas de cercles)
+            const deformT = t * 0.35 + blob.phase;
+            const ellRx = blob.r * width  * scl * (1.2 + 0.7 * Math.sin(deformT))
+                        * (1 + 0.3 * Math.cos(deformT * 2.1 + ry2));
+            const ellRy = blob.r * height * scl * (1.2 + 0.7 * Math.cos(deformT * 1.3))
+                        * (1 + 0.3 * Math.sin(deformT * 1.7 + rx2));
+            if (ellRx <= 2 || ellRy <= 2) continue;
 
             const cx = blob.x * width;
             const cy = blob.y * height;
 
-            // Alpha très faible — l'accumulation de N blobs crée la densité
-            // (équivalent de shape = f*f*f + 0.6*f*f + 0.5*f du shader)
-            const pulsation = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.3 + blob.phase * 2.1));
-            const a = Math.min(1, blob.alphaBase * 0.35 * density * alphaMax * pulsation);
+            // Courbe shape = f³+0.6f²+0.5f appliquée à pulsation
+            const fv    = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.25 + blob.phase * 2.1 + rx2));
+            const shape = fv * fv * fv + 0.6 * fv * fv + 0.5 * fv;
+            const a     = Math.min(1, blob.alphaBase * 0.55 * density * alphaMax * shape);
 
-            // Gradient avec stop intermédiaire irrégulier → bord moins net
-            const midStop = 0.35 + 0.25 * Math.sin(blob.phase * 3.7 + t * 0.2);
+            const rMax = Math.max(ellRx, ellRy);
+            const midStop = 0.3 + 0.25 * Math.sin(blob.phase * 3.7 + t * 0.2);
 
             ctxFog.save();
-            // Déformation elliptique via scale + arc (évite les cercles durs)
-            ctxFog.transform(rx / Math.max(rx, ry), 0, 0, ry / Math.max(rx, ry), 0, 0);
-            const r = Math.max(rx, ry);
-            const scx = cx * (Math.max(rx, ry) / rx);
-            const scy = cy * (Math.max(rx, ry) / ry);
-            const grad = ctxFog.createRadialGradient(scx, scy, 0, scx, scy, r);
-            grad.addColorStop(0,       `rgba(${cr},${cg},${cb},${a.toFixed(3)})`);
-            grad.addColorStop(midStop, `rgba(${cr},${cg},${cb},${(a * 0.5).toFixed(3)})`);
-            grad.addColorStop(1,       `rgba(${cr},${cg},${cb},0)`);
+            ctxFog.transform(ellRx / rMax, 0, 0, ellRy / rMax, 0, 0);
+            const scx = cx * (rMax / ellRx);
+            const scy = cy * (rMax / ellRy);
+            const grad = ctxFog.createRadialGradient(scx, scy, 0, scx, scy, rMax);
+            grad.addColorStop(0,        `rgba(${hr},${hg},${hb},${a.toFixed(3)})`);
+            grad.addColorStop(midStop,  `rgba(${cr},${cg},${cb},${(a * 0.45).toFixed(3)})`);
+            grad.addColorStop(0.85,     `rgba(${cr},${cg},${cb},${(a * 0.08).toFixed(3)})`);
+            grad.addColorStop(1,        `rgba(${cr},${cg},${cb},0)`);
             ctxFog.beginPath();
-            ctxFog.arc(scx, scy, r, 0, Math.PI * 2);
+            ctxFog.arc(scx, scy, rMax, 0, Math.PI * 2);
             ctxFog.fillStyle = grad;
             ctxFog.fill();
             ctxFog.restore();
           }
 
-          // ── Octave 4 : micro-détails haute fréquence ──────────────────────
-          // Petits blobs supplémentaires rapides = texture fine du FBM haute octave
-          for (let i = 0; i < 12; i++) {
-            const ph  = i * 2.399; // golden angle spacing
-            const bx  = 0.5 + 0.45 * Math.sin(t * 0.17 + ph)
-                           + 0.2  * Math.cos(t * 0.31 + ph * 1.6);
-            const by  = 0.5 + 0.4  * Math.cos(t * 0.13 + ph * 1.2)
-                           + 0.15 * Math.sin(t * 0.27 + ph * 0.8);
-            const r   = (0.06 + 0.04 * Math.sin(ph * 2.1 + t * 0.5)) * Math.min(width, height) * scl;
-            const cx  = bx * width;
-            const cy  = by * height;
-            const a   = Math.min(1, 0.025 * density * alphaMax
-                          * (0.6 + 0.4 * Math.abs(Math.sin(t * 0.4 + ph))));
-            const grad = ctxFog.createRadialGradient(cx, cy, 0, cx, cy, r);
-            grad.addColorStop(0,   `rgba(${cr},${cg},${cb},${a.toFixed(3)})`);
-            grad.addColorStop(0.7, `rgba(${cr},${cg},${cb},${(a * 0.2).toFixed(3)})`);
-            grad.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
-            ctxFog.beginPath();
-            ctxFog.arc(cx, cy, r, 0, Math.PI * 2);
-            ctxFog.fillStyle = grad;
-            ctxFog.fill();
+          // ── Couche 3 : sprites cloud tournants (FogParticleEffect) ─────────
+          // Simule FogParticleEffect : cloud1-4.webp, rotation, alpha 0→0.3→0
+          const fogClouds = fogBlobsRef.current; // on réutilise les blobs comme "particules cloud"
+          for (let i = 0; i < Math.min(8, fogClouds.length); i++) {
+            const blob   = fogClouds[i];
+            const img    = loadImg(CLOUD_SRCS[i % CLOUD_SRCS.length]);
+            if (!img.complete || img.naturalWidth === 0) continue;
+
+            // Cycle de vie continu : lifeNorm dérivé de la phase + temps
+            const lifeT  = ((t * 0.04 * fe.speed + blob.phase) % 1 + 1) % 1;
+            // Courbe alpha FXMaster : 0→0.1→0.3→0.1→0
+            let cloudAlpha: number;
+            if      (lifeT < 0.1)  cloudAlpha = lifeT / 0.1 * 0.1;
+            else if (lifeT < 0.5)  cloudAlpha = 0.1 + (lifeT - 0.1) / 0.4 * 0.2;
+            else if (lifeT < 0.9)  cloudAlpha = 0.3 - (lifeT - 0.5) / 0.4 * 0.2;
+            else                   cloudAlpha = 0.1 - (lifeT - 0.9) / 0.1 * 0.1;
+            cloudAlpha *= density * alphaMax;
+
+            if (cloudAlpha <= 0.005) continue;
+
+            // Scale FXMaster : 1.5 → 1.0
+            const cloudScale = (1.5 - 0.5 * lifeT) * scl;
+            const size       = 220 * cloudScale;
+
+            // Position + rotation lente
+            const angle  = t * (0.15 + blob.phase * 0.1) * fe.speed;
+            const cx     = blob.x * width;
+            const cy     = blob.y * height;
+
+            ctxFog.save();
+            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha));
+            ctxFog.translate(cx, cy);
+            ctxFog.rotate(angle);
+            ctxFog.drawImage(img, -size, -size, size * 2, size * 2);
+            ctxFog.restore();
           }
 
         } else {
