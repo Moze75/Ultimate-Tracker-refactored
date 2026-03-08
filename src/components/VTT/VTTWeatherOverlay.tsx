@@ -277,14 +277,15 @@ interface FogBlob {
 // Inspiré de FogParticleEffect : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s,
 // lifetime 10-25s, alpha 0→0.1→0.3→0.1→0, scale 1.5→1.0
 interface FogCloudParticle {
-  x: number; y: number;       // position px
-  vx: number; vy: number;     // vitesse px/s
-  angle: number;              // rotation actuelle rad
-  rotSpeed: number;           // vitesse rotation rad/s (0.15–0.35)
-  size: number;               // taille de base px
-  life: number;               // durée de vie écoulée s
-  lifetime: number;           // durée de vie totale s (10–25)
-  imgIdx: number;             // index cloud (0–3)
+  x: number; y: number;
+  vx: number; vy: number;
+  angle: number;
+  rotSpeed: number;
+  size: number;
+  life: number;
+  lifetime: number;
+  imgIdx: number;
+  phase: number;   // déphasage unique → déformation différente par particule
 }
 
 function makeFogCloud(w: number, h: number, speedFactor: number, fromBorder: boolean): FogCloudParticle {
