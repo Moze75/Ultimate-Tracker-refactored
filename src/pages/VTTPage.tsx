@@ -988,7 +988,19 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-
+        {(() => { console.log('[DEBUG PROP] rendu JSX — props.length:', props.length); return null; })()}
+        {/* DEBUG OVERLAY — à supprimer */}
+        {props.length > 0 && (
+          <div style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 9999,
+            background: 'red', color: 'white', padding: '8px 12px',
+            fontSize: 12, borderRadius: 6, pointerEvents: 'none',
+            fontFamily: 'monospace',
+          }}>
+            {props.length} prop(s) dans state  
+          </div>
+        )}
+        {props.map(prop => {
           console.log('[DEBUG PROP] rendu prop:', prop.id, 'position:', prop.position, 'imageUrl:', prop.imageUrl?.slice(0, 60));
           const isSelected = selectedPropId === prop.id;
           const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
