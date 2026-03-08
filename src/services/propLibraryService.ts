@@ -56,10 +56,13 @@ export async function fetchPropLibrary(roomId: string): Promise<PropLibrary> {
 }
 
 export async function savePropLibrary(roomId: string, lib: PropLibrary): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('vtt_rooms')
     .update({ prop_library: lib } as Record<string, unknown>)
     .eq('id', roomId);
+  if (error) {
+    console.error('[PropLib] Erreur sauvegarde Supabase:', error.message);
+  }
   saveLocal(lib);
 }
 
