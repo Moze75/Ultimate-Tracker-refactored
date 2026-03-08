@@ -1,11 +1,11 @@
 /**
  * VTTWeatherOverlay
- * Canvas overlay — effets Nuages, Corbeaux & Braises.
+ * Canvas overlay — effets Nuages, Corbeaux, Braises & Brume.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  * Implémentation Canvas 2D pure, indépendante de PIXI/Foundry.
  */
 import { useEffect, useRef } from 'react';
-import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
+import type { VTTWeatherEffect } from '../../types/vtt';
 
 // ─── Assets FXMaster (crédits : gambit07/fxmaster) ───────────────────────────
 const FXMASTER_BASE =
@@ -110,8 +110,6 @@ const CLOUD_SPEED_MIN   = 30;
 const CLOUD_SPEED_MAX   = 100;
 const CLOUD_SCALE_MIN   = 0.08;
 const CLOUD_SCALE_MAX   = 0.80;
-// FXMaster _applyScaleToConfig : scale_value × (gridSize/100) × sprite_native
-// En Canvas 2D pur (pas de grid), on applique scale directement comme multiplicateur
 const CLOUD_SPRITE_BASE = 600;
 const CLOUD_ALPHA_MAX   = 0.5;
 
@@ -125,7 +123,7 @@ const CLOUD_ALPHA_LIST = [
 function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
   const rawSpeed   = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
   const scale      = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
-  const size       = scale * CLOUD_SPRITE_BASE * speedFactor; // speedFactor ici = scaleFactor passé
+  const size       = scale * CLOUD_SPRITE_BASE * speedFactor;
   const travelDist = w + size * 2;
   return {
     type: 'cloud',
@@ -215,7 +213,7 @@ function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
   const baseSpeed       = EMBER_SPEED_MIN + Math.random() * (EMBER_SPEED_MAX - EMBER_SPEED_MIN);
   const angle           = Math.random() * Math.PI * 2;
   const rawDirX         = Math.cos(angle);
-  const rawDirY         = Math.sin(angle) * 0.4 - 0.6; // biais vers le haut
+  const rawDirY         = Math.sin(angle) * 0.4 - 0.6;
   const mag             = Math.sqrt(rawDirX * rawDirX + rawDirY * rawDirY);
   const dirX            = rawDirX / mag;
   const dirY            = rawDirY / mag;
@@ -264,6 +262,38 @@ function interpList(t: number, list: { time: number; value: number }[]): number 
   return list[list.length - 1]?.value ?? 0;
 }
 
+// ─── FOG — simulation par gradients radiaux (inspiré fog.frag FXMaster/gambit07) ─
+// Rendu GPU-friendly : radialGradient Canvas 2D, zéro getImageData/putImageData.
+
+interface FogBlob {
+  x: number; y: number;   // position normalisée [0–1]
+  vx: number; vy: number; // vitesse normalisée
+  r: number;              // rayon normalisé [0–1]
+  phase: number;          // déphasage ondulation
+  alphaBase: number;      // opacité de base [0–1]
+}
+
+function makeFogBlobs(count: number): FogBlob[] {
+  return Array.from({ length: count }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.00008,
+    vy: (Math.random() - 0.5) * 0.00003,
+    r: 0.15 + Math.random() * 0.25,
+    phase: Math.random() * Math.PI * 2,
+    alphaBase: 0.06 + Math.random() * 0.10,
+  }));
+}
+
+function fogHexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ];
+}
+
 // ─── Builder de layer ────────────────────────────────────────────────────────
 
 function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLayer {
@@ -279,11 +309,11 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
     frequency = (diagonal / avgSpeed) / maxParticles;
   } else if (effect.type === 'embers') {
     maxParticles = Math.max(4, Math.round(densityFactor * 40));
-    frequency = (5 / speedFactor) / maxParticles; // avgLifetime 5s
+    frequency = (5 / speedFactor) / maxParticles;
   } else {
     // crows
     maxParticles = Math.max(2, Math.round(densityFactor * 6));
-    frequency = (30 / speedFactor) / maxParticles; // avgLifetime 30s
+    frequency = (30 / speedFactor) / maxParticles;
   }
 
   const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
@@ -300,12 +330,19 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
   const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen
   const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
-  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen (ADD)
+  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen
+  const canvasFogRef    = useRef<HTMLCanvasElement>(null); // fog    → normal
+  const fogBlobsRef     = useRef<FogBlob[]>(makeFogBlobs(22));
+  const fogTimeRef      = useRef<number>(0);
+  const effectsRef      = useRef<VTTWeatherEffect[]>(effects);
   const layersRef       = useRef<WeatherLayer[]>([]);
   const rafRef          = useRef<number>(0);
   const lastTimeRef     = useRef<number>(0);
 
-  // ── Sync layers ────────────────────────────────────────────────────────────
+  // Garde effectsRef synchronisé sans déclencher de re-render dans la boucle RAF
+  effectsRef.current = effects;
+
+  // ── Sync layers ──────────────────────────────────────────────────────────
   useEffect(() => {
     const activeTypes = effects.map(e => e.type);
     layersRef.current = layersRef.current.filter(l => activeTypes.includes(l.effect.type));
@@ -349,10 +386,9 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     }
   }, [effects, width, height]);
 
-  // ── Boucle d'animation ──────────────
+  // ── Boucle d'animation ───────────────────────────────────────────────────
   useEffect(() => {
     const animate = (time: number) => {
-      // Lire les contextes à chaque frame — les canvas peuvent être montés/démontés dynamiquement
       const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
       const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
       const ctxAdd    = canvasAddRef.current?.getContext('2d')    ?? null;
@@ -368,14 +404,12 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
 
-        // Sélection du contexte canvas par effet
         let ctx: CanvasRenderingContext2D | null;
         if      (effect.type === 'clouds') ctx = ctxScreen;
         else if (effect.type === 'embers') ctx = ctxAdd;
         else                               ctx = ctxNormal;
         if (!ctx) continue;
 
-        // Spawn
         layer.spawnAccum += dt;
         while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
           layer.spawnAccum -= layer.frequency;
@@ -385,7 +419,6 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         }
         if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
 
-        // Update + Draw
         for (let i = particles.length - 1; i >= 0; i--) {
           const p = particles[i];
           p.lifeNorm += p.lifeInc * dt;
@@ -395,22 +428,21 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             continue;
           }
 
-          // ── Cloud ────────────────────────────────────────────
+          // ── Cloud ──────────────────────────────────────────────────────
           if (p.type === 'cloud') {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CLOUD_ALPHA_LIST);
             const img = loadImg(p.imgSrc);
             if (!img.complete || img.naturalWidth === 0) continue;
-                       const drawSize = p.size * (effect.scale ?? 1);
+            const drawSize = p.size * (effect.scale ?? 1);
             ctx.save();
             ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
             ctx.drawImage(img, p.x - drawSize, p.y - drawSize, drawSize * 2, drawSize * 2);
             ctx.restore();
 
-          // ── Crow ─────────────────────────────────────────────
+          // ── Crow ───────────────────────────────────────────────────────
           } else if (p.type === 'crow') {
-            // FXMaster _applySpeedToConfig : speed × factor, lifetime / factor
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
             p.lifeInc = effect.speed / p.baseLifetimeSec;
@@ -418,7 +450,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             p.y += p.vy * dt;
             p.animTime += dt;
             p.alpha = fxAlpha(p.lifeNorm, effect.alpha, CROW_ALPHA_LIST);
-                         const scaledSize = interpList(p.lifeNorm, CROW_SCALE_LIST) * CROW_SPRITE_BASE * (effect.scale ?? 1);
+            const scaledSize = interpList(p.lifeNorm, CROW_SCALE_LIST) * CROW_SPRITE_BASE * (effect.scale ?? 1);
             const frameIdx   = Math.floor(p.animTime * CROW_FRAMERATE) % CROW_ANIM_TOTAL;
             const img        = loadImg(CROW_SRCS[CROW_ANIM_SEQUENCE[frameIdx]]);
             if (!img.complete || img.naturalWidth === 0) continue;
@@ -430,9 +462,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
             ctx.restore();
 
-          // ── Embers ───────────────────────────────────────────
+          // ── Embers ─────────────────────────────────────────────────────
           } else if (p.type === 'embers') {
-            // FXMaster _applySpeedToConfig
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
             p.lifeInc = effect.speed / p.baseLifetimeSec;
@@ -441,10 +472,9 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             p.rotation += p.rotSpeed * dt;
             p.alpha     = fxAlpha(p.lifeNorm, effect.alpha, EMBER_ALPHA_LIST);
             const scaleFactor = interpList(p.lifeNorm, EMBER_SCALE_LIST);
-                       const eSize       = scaleFactor * EMBER_SPRITE_BASE * (effect.scale ?? 1);
-            // Couleur interpolée orange→rouge (#f77300 → #f72100)
+            const eSize       = scaleFactor * EMBER_SPRITE_BASE * (effect.scale ?? 1);
             const tc = Math.min(1, Math.max(0, p.lifeNorm));
-            const g  = Math.round(0x73 + (0x21 - 0x73) * tc); // 115→33
+            const g  = Math.round(0x73 + (0x21 - 0x73) * tc);
             p.color  = `rgb(247,${g},0)`;
             const img = loadImg(EMBER_SRC);
             if (!img.complete || img.naturalWidth === 0) continue;
@@ -452,12 +482,61 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
             ctx.translate(p.x, p.y);
             ctx.rotate(p.rotation);
-            // Teinte orange→rouge
             ctx.filter = `sepia(1) saturate(5) hue-rotate(${Math.round(tc * -20)}deg)`;
             ctx.drawImage(img, -eSize, -eSize, eSize * 2, eSize * 2);
             ctx.filter = 'none';
             ctx.restore();
           }
+        }
+      }
+
+      // ── FOG — gradients radiaux animés (inspiré fog.frag FXMaster/gambit07) ─
+      const ctxFog = canvasFogRef.current?.getContext('2d') ?? null;
+      if (ctxFog) {
+        const fe = effectsRef.current.find(e => e.type === 'fog');
+        if (fe) {
+          fogTimeRef.current += dt * fe.speed * 0.5;
+          const t = fogTimeRef.current;
+          ctxFog.clearRect(0, 0, width, height);
+
+          const [cr, cg, cb] = fogHexToRgb(fe.color ?? '#b0c8e0');
+          const density  = Math.min(3, Math.max(0.1, fe.density));
+          const alphaMax = Math.min(1, Math.max(0, fe.alpha));
+
+          for (const blob of fogBlobsRef.current) {
+            blob.x += blob.vx * fe.speed * (1 + 0.4 * Math.sin(t * 0.7 + blob.phase));
+            blob.y += blob.vy * fe.speed * (1 + 0.3 * Math.cos(t * 0.5 + blob.phase));
+            if (blob.x < -blob.r) blob.x = 1 + blob.r;
+            if (blob.x > 1 + blob.r) blob.x = -blob.r;
+            if (blob.y < -blob.r) blob.y = 1 + blob.r;
+            if (blob.y > 1 + blob.r) blob.y = -blob.r;
+
+            const scl = fe.scale ?? 1;
+            const rx = blob.r * width  * scl * (0.9 + 0.2 * Math.sin(t * 1.1 + blob.phase));
+            const ry = blob.r * height * scl * (0.9 + 0.2 * Math.cos(t * 0.9 + blob.phase));
+            const r  = Math.max(rx, ry);
+            if (r <= 0) continue;
+
+            const cx = blob.x * width;
+            const cy = blob.y * height;
+            const a  = Math.min(1, blob.alphaBase * density * alphaMax
+              * (0.7 + 0.3 * Math.sin(t * 0.6 + blob.phase + 1.2)));
+
+            const grad = ctxFog.createRadialGradient(cx, cy, 0, cx, cy, r);
+            grad.addColorStop(0,   `rgba(${cr},${cg},${cb},${a.toFixed(3)})`);
+            grad.addColorStop(0.5, `rgba(${cr},${cg},${cb},${(a * 0.4).toFixed(3)})`);
+            grad.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
+
+            ctxFog.save();
+            ctxFog.scale(rx / r, ry / r);
+            ctxFog.beginPath();
+            ctxFog.arc(cx * (r / rx), cy * (r / ry), r, 0, Math.PI * 2);
+            ctxFog.fillStyle = grad;
+            ctxFog.fill();
+            ctxFog.restore();
+          }
+        } else {
+          ctxFog.clearRect(0, 0, width, height);
         }
       }
 
@@ -472,6 +551,16 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
   return (
     <>
+      {/* Fog : gradients radiaux GPU — affiché sous les autres effets */}
+      {effects.some(e => e.type === 'fog') && (
+        <canvas
+          ref={canvasFogRef}
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ mixBlendMode: 'normal' }}
+        />
+      )}
       {/* Clouds : mode screen (sprites blancs) */}
       {effects.some(e => e.type === 'clouds') && (
         <canvas
@@ -492,7 +581,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           style={{ mixBlendMode: 'normal' }}
         />
       )}
-      {/* Embers : mode screen (sprites lumineux, ADD en canvas) */}
+      {/* Embers : mode screen (sprites lumineux) */}
       {effects.some(e => e.type === 'embers') && (
         <canvas
           ref={canvasAddRef}
