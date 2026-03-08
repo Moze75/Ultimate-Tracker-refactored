@@ -954,12 +954,24 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
             >
               {prop.imageUrl ? (
-                <img
-                  src={prop.imageUrl}
-                  alt={prop.label}
-                  className="w-full h-full object-contain pointer-events-none"
-                  draggable={false}
-                />
+                /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
+                  <video
+                    src={prop.imageUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    draggable={false}
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
+                ) : (
+                  <img
+                    src={prop.imageUrl}
+                    alt={prop.label}
+                    className="w-full h-full object-contain pointer-events-none"
+                    draggable={false}
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
                   <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
