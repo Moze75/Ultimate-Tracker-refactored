@@ -622,14 +622,14 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
   return (
     <>
-      {/* Fog : gradients radiaux GPU — affiché sous les autres effets */}
+      {/* Fog : simulation FBM multi-octave — screen blend = accumulation lumineuse */}
       {effects.some(e => e.type === 'fog') && (
         <canvas
           ref={canvasFogRef}
           width={width}
           height={height}
           className="absolute inset-0 pointer-events-none z-10"
-          style={{ mixBlendMode: 'normal' }}
+          style={{ mixBlendMode: 'screen' }}
         />
       )}
       {/* Clouds : mode screen (sprites blancs) */}
