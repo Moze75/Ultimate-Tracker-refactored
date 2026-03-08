@@ -714,11 +714,19 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             const sz         = p.size * cloudScale;
 
             ctxFog.save();
+            // colorStatic 'dddddd' : teinte gris clair comme FXMaster
+            // screen interne : les pixels sombres du sprite disparaissent → pas de bords rigides
             ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha));
+            ctxFog.globalCompositeOperation = 'screen';
             ctxFog.translate(p.x, p.y);
             ctxFog.rotate(p.angle);
+            // Teinte dddddd : filtre colorise le sprite en gris clair
+            ctxFog.filter = `brightness(0.9) saturate(0) sepia(0.15)`;
             ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
+            ctxFog.filter = 'none';
             ctxFog.restore();
+            // Rétablir le mode de composition normal pour les blobs suivants
+            ctxFog.globalCompositeOperation = 'source-over';
           }
 
           // Ajuster le nombre de particules si density a changé
