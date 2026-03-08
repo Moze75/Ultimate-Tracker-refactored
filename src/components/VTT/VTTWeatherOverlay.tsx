@@ -322,6 +322,7 @@ function makeFogCloud(w: number, h: number, speedFactor: number, fromBorder: boo
     life: fromBorder ? 0 : Math.random() * lifetime,
     lifetime,
     imgIdx: Math.floor(Math.random() * 4),
+    phase:  Math.random() * Math.PI * 2,
   };
 }
 
