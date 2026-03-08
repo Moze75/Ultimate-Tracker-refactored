@@ -240,9 +240,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
           if (!activeSceneId) {
-            const first = parsed[0];
-            setActiveSceneId(first.id);
-            applySceneToLive(first);
+            // Restaurer la dernière scène visitée si elle existe encore
+            const lastSceneId = localStorage.getItem(`vtt_last_scene_${roomId}`);
+            const lastScene = lastSceneId ? parsed.find(s => s.id === lastSceneId) : null;
+            const target = lastScene ?? parsed[0];
+            setActiveSceneId(target.id);
+            applySceneToLive(target);
           }
         } else {
           supabase
