@@ -674,11 +674,20 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           for (let i = fogClouds.length - 1; i >= 0; i--) {
             const p = fogClouds[i];
 
-            // Avancer dans le temps
-            p.life  += dt;
+            // Avancer dans le temps — resynchronise la vitesse si fe.speed a changé
+            p.life  += dt * fe.speed;
             p.x     += p.vx * dt;
             p.y     += p.vy * dt;
-            p.angle += p.rotSpeed * dt; // rotation lente pendant le déplacement
+            p.angle += p.rotSpeed * fe.speed * dt;
+            // Mise à jour dynamique de la vitesse (vx/vy normalisés × speed courant)
+            const currentSpeed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            if (currentSpeed > 0) {
+              const targetSpeed = (10 + (p.size - 200) / 160 * 5) * fe.speed
+                                * (0.2 + 0.8 * Math.abs(p.rotSpeed) / 0.35);
+              const ratio = targetSpeed / currentSpeed;
+              p.vx *= ratio;
+              p.vy *= ratio;
+            }
 
             // Mort → respawn depuis un bord
             if (p.life >= p.lifetime) {
