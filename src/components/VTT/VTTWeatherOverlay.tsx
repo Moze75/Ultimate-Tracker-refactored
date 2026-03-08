@@ -654,7 +654,28 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctxFog.fillStyle = grad;
             ctxFog.fill();
             ctxFog.restore();
-          }
+
+            // ── Franges de bord irrégulières (simule les filaments FBM) ───
+            // 4 mini-blobs au bord de chaque blob principal = contour organique
+            for (let fi = 0; fi < 4; fi++) {
+              const fAngle  = blob.phase + fi * 1.5708 + t * 0.08; // π/2 spacing
+              const fDist   = rMax * (0.75 + 0.2 * Math.sin(t * 0.3 + blob.phase + fi));
+              const fScaleX = ellRx / rMax;
+              const fScaleY = ellRy / rMax;
+              const fx      = cx + Math.cos(fAngle) * fDist * fScaleX;
+              const fy      = cy + Math.sin(fAngle) * fDist * fScaleY;
+              const fr      = rMax * (0.25 + 0.15 * Math.abs(Math.sin(t * 0.5 + fi * 2.3 + blob.phase)));
+              const fa      = a * (0.3 + 0.2 * Math.sin(t * 0.4 + fi + blob.phase));
+              if (fr <= 0 || fa <= 0) continue;
+              const fg = ctxFog.createRadialGradient(fx, fy, 0, fx, fy, fr);
+              fg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(1, fa).toFixed(3)})`);
+              fg.addColorStop(0.6, `rgba(${cr},${cg},${cb},${Math.min(1, fa * 0.2).toFixed(3)})`);
+              fg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
+              ctxFog.beginPath();
+              ctxFog.arc(fx, fy, fr, 0, Math.PI * 2);
+              ctxFog.fillStyle = fg;
+              ctxFog.fill();
+            }
 
                   // ── Couche 3 : particules cloud qui TRAVERSENT l'écran (FogParticleEffect) ─
           // FXMaster : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s, lifetime 10-25s
