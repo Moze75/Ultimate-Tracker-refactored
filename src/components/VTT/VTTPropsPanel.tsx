@@ -222,15 +222,21 @@ export function VTTPropsPanel({
 
   // Déposer sur le canvas via onAddProp (position centre-carte par défaut)
   const handlePlaceProp = (entry: PropEntry) => {
-    onAddProp({
+    console.log('[DEBUG PROP] handlePlaceProp appelé', entry.name, 'onAddProp type:', typeof onAddProp);
+    const w = entry.isVideo ? 200 : 150;
+    const h = entry.isVideo ? 200 : 150;
+    const propData = {
       label: entry.name,
       imageUrl: entry.url,
-      position: { x: 100, y: 100 },
-      width: entry.isVideo ? 200 : 150,
-      height: entry.isVideo ? 200 : 150,
+      position: { x: 300, y: 200 },
+      width: w,
+      height: h,
       opacity: 1,
       locked: false,
-    });
+    };
+    console.log('[DEBUG PROP] propData envoyé à onAddProp:', propData);
+    onAddProp(propData);
+    console.log('[DEBUG PROP] onAddProp appelé ✓');
   };
 
   // ── Thumbnail ──────────────────────────────────────────────────────────────
@@ -279,15 +285,11 @@ export function VTTPropsPanel({
           isDragging ? 'opacity-40' : 'opacity-100'
         }`}
       >
-        {/* Zone thumbnail : drag interne via mousedown, drag canvas via HTML5 draggable */}
+        {/* Zone thumbnail — drag HTML5 vers le canvas */}
         <div
-          className="w-full h-20 cursor-grab active:cursor-grabbing relative"
-          onMouseDown={e => startInternalDrag(e, entry)}
+          className="w-full h-20 relative"
           draggable
           onDragStart={e => {
-            // Drag HTML5 vers le canvas
-            e.stopPropagation();
-            e.dataTransfer.setData('application/vtt-prop-id', entry.id);
             e.dataTransfer.setData('application/vtt-prop-url', entry.url);
             e.dataTransfer.setData('application/vtt-prop-name', entry.name);
             e.dataTransfer.setData('application/vtt-prop-isvideo', String(isVid));
@@ -300,6 +302,18 @@ export function VTTPropsPanel({
               <Film size={9} className="text-purple-400" />
             </div>
           )}
+          {/* Poignée de drag interne (réorganisation vers dossier) */}
+          <div
+            className="absolute top-1 right-1 p-0.5 bg-black/50 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Déplacer vers un dossier"
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              startInternalDrag(e, entry);
+            }}
+          >
+            <span className="text-gray-300 text-[10px] leading-none select-none">⠿</span>
+          </div>
         </div>
 
         {/* Bandeau bas */}
@@ -323,9 +337,9 @@ export function VTTPropsPanel({
           )}
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             {/* Placer sur le canvas */}
-            <button
-              onMouseDown={e => e.stopPropagation()}
-              onClick={() => handlePlaceProp(entry)}
+               <button
+              onMouseDown={e => { e.stopPropagation(); console.log('[DEBUG PROP] onMouseDown bouton Placer'); }}
+              onClick={e => { e.stopPropagation(); e.preventDefault(); console.log('[DEBUG PROP] onClick bouton Placer', entry.name); handlePlaceProp(entry); }}
               className="p-0.5 rounded bg-amber-600/90 hover:bg-amber-500 text-white"
               title="Placer sur le canvas"
             >
@@ -489,6 +503,6 @@ export function VTTPropsPanel({
           if (file) handleFileUpload(file, fileTargetFolderRef.current);
         }}
       />
-    </div>
+    </div> 
   );
 }
