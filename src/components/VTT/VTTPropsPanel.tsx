@@ -222,15 +222,12 @@ export function VTTPropsPanel({
 
   // Déposer sur le canvas via onAddProp (position centre-carte par défaut)
   const handlePlaceProp = (entry: PropEntry) => {
-    // Centre de la fenêtre visible (coordonnées écran du canvas)
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
     const w = entry.isVideo ? 200 : 150;
     const h = entry.isVideo ? 200 : 150;
     onAddProp({
       label: entry.name,
       imageUrl: entry.url,
-      position: { x: cx - w / 2, y: cy - h / 2 },
+      position: { x: 300, y: 200 },
       width: w,
       height: h,
       opacity: 1,
