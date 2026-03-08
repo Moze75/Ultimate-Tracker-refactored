@@ -444,6 +444,24 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const tokenId = e.dataTransfer.getData('application/vtt-token-id');
     if (tokenId && onDropTokenRef.current) {
       onDropTokenRef.current(tokenId, snapped);
+      return;
+    }
+
+    // ── Props : laisser remonter au container parent ──────────────────────
+    const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
+    if (propUrl) {
+      // Re-dispatch sur le container parent pour que onDrop du canvasContainer s'exécute
+      const parent = containerRef.current?.parentElement;
+      if (parent) {
+        const newEvent = new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          dataTransfer: e.dataTransfer,
+        });
+        parent.dispatchEvent(newEvent);
+      }
     }
   };
 
