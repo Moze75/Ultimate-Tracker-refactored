@@ -1015,9 +1015,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                   width: prop.width,
                   height: prop.height,
                   opacity: prop.opacity,
-                  zIndex: 5,
-                  outline: isSelected ? '2px solid #f59e0b' : 'none',
-                  outlineOffset: '1px',
+                  zIndex: 9998,
+                  outline: isSelected ? '2px solid #f59e0b' : '2px solid red',
+                  outlineOffset: '2px',
+                  background: 'rgba(255,0,0,0.2)',
                 }}
                 onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
                 onMouseDown={e => {
