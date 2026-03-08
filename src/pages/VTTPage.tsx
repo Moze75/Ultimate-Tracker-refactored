@@ -966,51 +966,171 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-          {props.map(prop => (
-            <div
-              key={prop.id}
-              className={`absolute pointer-events-auto cursor-move select-none ${selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''}`}
-              style={{
-                left: prop.position.x,
-                top: prop.position.y,
-                width: prop.width,
-                height: prop.height,
-                opacity: prop.opacity,
-                zIndex: 5,
-              }}
-              draggable={role === 'gm' && !prop.locked}
-              onDragStart={e => {
-                e.dataTransfer.setData('application/vtt-prop-id', prop.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
-            >
-              {prop.imageUrl ? (
-                /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
-                  <video
-                    src={prop.imageUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    draggable={false}
-                    className="w-full h-full object-contain pointer-events-none"
-                  />
+                {props.map(prop => {
+            const isSelected = selectedPropId === prop.id;
+            const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
+            return (
+              <div
+                key={prop.id}
+                data-prop-id={prop.id}
+                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? '' : ''}`}
+                style={{
+                  left: prop.position.x,
+                  top: prop.position.y,
+                  width: prop.width,
+                  height: prop.height,
+                  opacity: prop.opacity,
+                  zIndex: 5,
+                  outline: isSelected ? '2px solid #f59e0b' : 'none',
+                  outlineOffset: '1px',
+                }}
+                onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
+                onMouseDown={e => {
+                  if (role !== 'gm' || prop.locked) return;
+                  if ((e.target as HTMLElement).dataset.resizeHandle) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const startX = e.clientX - prop.position.x;
+                  const startY = e.clientY - prop.position.y;
+                  const onMove = (mv: MouseEvent) => {
+                    handleUpdateProp(prop.id, { position: { x: mv.clientX - startX, y: mv.clientY - startY } });
+                  };
+                  const onUp = () => {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                  };
+                  window.addEventListener('mousemove', onMove);
+                  window.addEventListener('mouseup', onUp);
+                }}
+              >
+                {prop.imageUrl ? (
+                  isVidProp ? (
+                    <video src={prop.imageUrl} autoPlay loop muted playsInline draggable={false} className="w-full h-full object-contain pointer-events-none" />
+                  ) : (
+                    <img src={prop.imageUrl} alt={prop.label} draggable={false} className="w-full h-full object-contain pointer-events-none" />
+                  )
                 ) : (
-                  <img
-                    src={prop.imageUrl}
-                    alt={prop.label}
-                    className="w-full h-full object-contain pointer-events-none"
-                    draggable={false}
-                  />
-                )
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
-                  <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
-                </div>
-              )}
-            </div>
-          ))}
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
+                    <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
+                  </div>
+                )}
+
+                {/* Handles de resize — visibles seulement si sélectionné + GM */}
+                {isSelected && role === 'gm' && !prop.locked && (
+                  <>
+                    {/* SE */}
+                    <div
+                      data-resize-handle="se"
+                      className="absolute bottom-0 right-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-se-resize z-10"
+                      style={{ transform: 'translate(50%, 50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const onMove = (mv: MouseEvent) => {
+                          const newW = Math.max(30, startW + mv.clientX - startX);
+                          const newH = Math.max(30, startH + mv.clientY - startY);
+                          handleUpdateProp(prop.id, { width: newW, height: newH });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* SW */}
+                    <div
+                      data-resize-handle="sw"
+                      className="absolute bottom-0 left-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-sw-resize z-10"
+                      style={{ transform: 'translate(-50%, 50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startW = prop.width;
+                        const startPX = prop.position.x;
+                        const startH = prop.height;
+                        const startY = e.clientY;
+                        const onMove = (mv: MouseEvent) => {
+                          const dx = mv.clientX - startX;
+                          const newW = Math.max(30, startW - dx);
+                          const newH = Math.max(30, startH + mv.clientY - startY);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: startPX + startW - newW, y: prop.position.y } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* NE */}
+                    <div
+                      data-resize-handle="ne"
+                      className="absolute top-0 right-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-ne-resize z-10"
+                      style={{ transform: 'translate(50%, -50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const startPY = prop.position.y;
+                        const onMove = (mv: MouseEvent) => {
+                          const newW = Math.max(30, startW + mv.clientX - startX);
+                          const dy = mv.clientY - startY;
+                          const newH = Math.max(30, startH - dy);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: prop.position.x, y: startPY + startH - newH } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* NW */}
+                    <div
+                      data-resize-handle="nw"
+                      className="absolute top-0 left-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-nw-resize z-10"
+                      style={{ transform: 'translate(-50%, -50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const startPX = prop.position.x;
+                        const startPY = prop.position.y;
+                        const onMove = (mv: MouseEvent) => {
+                          const dx = mv.clientX - startX;
+                          const dy = mv.clientY - startY;
+                          const newW = Math.max(30, startW - dx);
+                          const newH = Math.max(30, startH - dy);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: startPX + startW - newW, y: startPY + startH - newH } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            );
+          })}
 
           <VTTPlayerList users={connectedUsers} />
 
