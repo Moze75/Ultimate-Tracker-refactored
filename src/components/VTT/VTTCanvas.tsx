@@ -444,8 +444,19 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const tokenId = e.dataTransfer.getData('application/vtt-token-id');
     if (tokenId && onDropTokenRef.current) {
       onDropTokenRef.current(tokenId, snapped);
+      return;
     }
-  }; 
+
+    // Drop depuis la bibliothèque de props
+    const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
+    if (propUrl && onDropPropRef.current) {
+      onDropPropRef.current({
+        url: propUrl,
+        name: e.dataTransfer.getData('application/vtt-prop-name') || 'Prop',
+        isVideo: e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true',
+      }, snapped);
+    }
+  };
 
   return (
     <div
