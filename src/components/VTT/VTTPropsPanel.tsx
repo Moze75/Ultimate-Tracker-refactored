@@ -279,15 +279,11 @@ export function VTTPropsPanel({
           isDragging ? 'opacity-40' : 'opacity-100'
         }`}
       >
-        {/* Zone thumbnail : drag interne via mousedown, drag canvas via HTML5 draggable */}
+        {/* Zone thumbnail — drag HTML5 vers le canvas */}
         <div
-          className="w-full h-20 cursor-grab active:cursor-grabbing relative"
-          onMouseDown={e => startInternalDrag(e, entry)}
+          className="w-full h-20 relative"
           draggable
           onDragStart={e => {
-            // Drag HTML5 vers le canvas
-            e.stopPropagation();
-            e.dataTransfer.setData('application/vtt-prop-id', entry.id);
             e.dataTransfer.setData('application/vtt-prop-url', entry.url);
             e.dataTransfer.setData('application/vtt-prop-name', entry.name);
             e.dataTransfer.setData('application/vtt-prop-isvideo', String(isVid));
@@ -300,6 +296,18 @@ export function VTTPropsPanel({
               <Film size={9} className="text-purple-400" />
             </div>
           )}
+          {/* Poignée de drag interne (réorganisation vers dossier) */}
+          <div
+            className="absolute top-1 right-1 p-0.5 bg-black/50 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Déplacer vers un dossier"
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              startInternalDrag(e, entry);
+            }}
+          >
+            <span className="text-gray-300 text-[10px] leading-none select-none">⠿</span>
+          </div>
         </div>
 
         {/* Bandeau bas */}
