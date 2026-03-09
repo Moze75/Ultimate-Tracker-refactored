@@ -1183,7 +1183,7 @@ useEffect(() => {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
-            forceViewport={role === 'player' && playerForcedViewport ? playerForcedViewport : undefined}
+         forceViewport={role === 'player' && gmFollowEnabled && playerForcedViewport ? playerForcedViewport : undefined}
             initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
           />
