@@ -79,6 +79,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [connected, setConnected] = useState(false);
 
   const [activeTool, setActiveTool] = useState<VTTActiveTool>('select');
+
+  const handleToolChange = useCallback((tool: VTTActiveTool) => {
+    setActiveTool(tool);
+
+    if (role === 'gm' && tool !== 'select') {
+      setSelectedTokenId(null);
+      setSelectedTokenIds([]);
+      setSelectedPropId(null);
+    }
+  }, [role]);
   const [calibrationPoints, setCalibrationPoints] = useState<{ x: number; y: number }[]>([]);
   const [fogBrushSize, setFogBrushSize] = useState(30);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
