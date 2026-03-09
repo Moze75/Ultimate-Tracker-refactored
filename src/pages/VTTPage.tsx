@@ -406,7 +406,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       moveThrottleRef.current.delete(tokenId);
     }, 50);
     moveThrottleRef.current.set(tokenId, timer);
-  }, []);
+  }, [saveCurrentSceneState]);
 
   const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
     setFogState(prev => ({
