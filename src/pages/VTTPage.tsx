@@ -625,6 +625,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
       if (propDragRef.current) {
         const { propId, offsetX, offsetY } = propDragRef.current;
+
         const nextX = e.clientX - containerRect.left - offsetX;
         const nextY = e.clientY - containerRect.top - offsetY;
 
@@ -634,10 +635,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             y: Math.max(0, nextY),
           },
         });
+        return;
       }
 
       if (propResizeRef.current) {
-        const { propId, startMouseX, startMouseY, startWidth, startHeight } = propResizeRef.current;
+        const {
+          propId,
+          startMouseX,
+          startMouseY,
+          startWidth,
+          startHeight,
+        } = propResizeRef.current;
+
         const deltaX = e.clientX - startMouseX;
         const deltaY = e.clientY - startMouseY;
 
