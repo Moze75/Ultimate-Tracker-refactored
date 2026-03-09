@@ -450,7 +450,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       } else if (selectedPropId) {
         e.preventDefault();
         setProps(prev => prev.filter(p => p.id !== selectedPropId));
-        setSelectedPropId(null); 
+        setSelectedPropId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -572,57 +572,37 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);
 
-   const persistSceneProps = useCallback((sceneId: string, nextProps: VTTProp[]) => {
-    setScenes(currentScenes =>
-      currentScenes.map(scene =>
-        scene.id === sceneId
-          ? { ...scene, props: nextProps }
-          : scene
-      )
-    );
-
-    supabase
-      .from('vtt_scenes')
-      .update({
-        props: nextProps,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', sceneId)
-      .then(({ error }) => {
-        if (error) console.error('[VTT] Persist props error:', error);
-      });
-  }, []);
-
-  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+   const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
     setProps(prev => {
       const next = [...prev, newProp];
+
+      setScenes(currentScenes =>
+        currentScenes.map(scene =>
+          scene.id === activeSceneIdRef.current
+            ? { ...scene, props: next }
+            : scene
+        )
+      );
+
       const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
+      if (sceneId) {
+        supabase 
+          .from('vtt_scenes')
+          .update({
+            props: next,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', sceneId)
+          .then(({ error }) => {
+            if (error) console.error('[VTT] Save props error:', error);
+          });
+      }
+
       return next;
     });
-  }, [persistSceneProps]);
-
-  const handleRemoveProp = useCallback((propId: string) => {
-    setProps(prev => {
-      const next = prev.filter(p => p.id !== propId);
-      const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
-      return next;
-    });
-
-    setSelectedPropId(id => (id === propId ? null : id));
-  }, [persistSceneProps]);
-
-  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
-    setProps(prev => {
-      const next = prev.map(p => (p.id === propId ? { ...p, ...changes } : p));
-      const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
-      return next;
-    });
-  }, [persistSceneProps]);
+  }, []);
 
   const handleRemoveProp = useCallback((propId: string) => {
     setProps(prev => {
