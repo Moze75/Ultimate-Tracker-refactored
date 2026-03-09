@@ -617,35 +617,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedPropId(id => (id === propId ? null : id));
   }, [persistSceneProps]);
 
-  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+    const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
     setProps(prev => {
       const next = prev.map(p => (p.id === propId ? { ...p, ...changes } : p));
-
-      setScenes(currentScenes =>
-        currentScenes.map(scene =>
-          scene.id === activeSceneIdRef.current
-            ? { ...scene, props: next }
-            : scene
-        )
-      );
-
       const sceneId = activeSceneIdRef.current;
-      if (sceneId) {
-        supabase
-          .from('vtt_scenes')
-          .update({
-            props: next,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sceneId)
-          .then(({ error }) => {
-            if (error) console.error('[VTT] Update prop error:', error);
-          }); 
-      }
-
+      if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
-  }, []);
+  }, [persistSceneProps]);
 
   useEffect(() => {
     if (phase !== 'room') return;
