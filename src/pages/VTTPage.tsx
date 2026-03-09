@@ -1214,7 +1214,15 @@ onMouseDown={e => {
   setSelectedTokenId(id);
 }}
             selectedTokenIds={selectedTokenIds}
-            onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
+          onSelectTokens={ids => {
+  setSelectedPropId(null);
+  setSelectedTokenIds(ids);
+  if (ids.length > 0) {
+    setSelectedTokenId(ids[0]);
+  } else {
+    setSelectedTokenId(null);
+  }
+}}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
             onAddTokenAtPos={handleAddTokenAtPos}
