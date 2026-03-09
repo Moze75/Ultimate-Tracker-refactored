@@ -393,7 +393,7 @@ if (!cfg.fogEnabled) {
   }
 
   // --- MASQUE NOIR jour sans vision ---
-  if (isDay && curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
+  if (cfg.fogEnabled && isDay && curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
   }
