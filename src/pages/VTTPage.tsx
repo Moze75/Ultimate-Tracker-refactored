@@ -1099,7 +1099,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               onMouseDown={e => handlePropMouseDown(e, prop)}
               onClick={e => {
                 e.stopPropagation();
-                setSelectedPropId(id => id === prop.id ? id : prop.id);
+              setSelectedPropId(prop.id);
               }}
             >
               {prop.imageUrl ? (
