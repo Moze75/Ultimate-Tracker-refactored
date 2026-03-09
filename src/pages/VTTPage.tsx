@@ -240,6 +240,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
+    setActiveSceneId(scene.id);
+
+    if (scene.roomId) {
+      localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
+    }
+
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
