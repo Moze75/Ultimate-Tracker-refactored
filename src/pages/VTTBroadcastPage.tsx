@@ -213,21 +213,21 @@ const defaultViewport = broadcastViewport ?? undefined;
         </div>
       )}
 
-      <VTTCanvas
-        config={config}
-        tokens={tokens}
-        fogState={fogState}
-        role="gm"
-        userId=""
-        activeTool="select"
-        fogBrushSize={0}
-        onMoveToken={noOp as any}
-        onRevealFog={noOpStroke as any}
-        selectedTokenId={null}
-        onSelectToken={noOp as any}
-        walls={walls}
-        forceViewport={defaultViewport}
-      />
+<VTTCanvas
+  config={config}
+  tokens={tokens}
+  fogState={fogState}
+  role="gm"
+  userId=""
+  activeTool="select"
+  fogBrushSize={0}
+  onMoveToken={noOp as any}
+  onRevealFog={noOpStroke as any}
+  selectedTokenId={null}
+  onSelectToken={noOp as any}
+  walls={walls}
+  forceViewport={defaultViewport}
+/>
 
       {(config.weatherEffects ?? []).length > 0 && (
         <VTTWeatherOverlay
