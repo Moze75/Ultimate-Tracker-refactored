@@ -768,8 +768,8 @@ const nextY = (e.clientY - containerRect.top - vp.y) / vp.scale - offsetY;
 
 handleUpdateProp(propId, {
   position: {
-    x: Math.max(0, nextX),
-    y: Math.max(0, nextY),
+    x: nextX,
+    y: nextY,
   },
 });
         return;
