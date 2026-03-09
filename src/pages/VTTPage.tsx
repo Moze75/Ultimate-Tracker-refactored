@@ -1083,7 +1083,7 @@ onToggleGmFollow={() => {
     }
     return next;
   });
-}}
+}} 
   weatherEffects={weatherEffects}
   onUpdateWeather={handleUpdateWeather}
 />
