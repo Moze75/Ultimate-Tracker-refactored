@@ -453,7 +453,7 @@ sendBroadcastViewport(viewport: BroadcastViewport) {
   this.channel.send({ type: 'broadcast', event: 'vtt-viewport', payload: viewport }).catch(console.error);
 }
 
-sendPlayerViewport(viewport: BroadcastViewport) {
+sendPlayerViewport(viewport: BroadcastViewport | null) {
   if (!this.channel) return;
   this.channel.send({ type: 'broadcast', event: 'vtt-player-viewport', payload: viewport }).catch(console.error);
 }
