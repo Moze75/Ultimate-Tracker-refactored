@@ -134,16 +134,24 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [broadcastFrame, setBroadcastFrame] = useState({ x: 200, y: 100, width: 1600, height: 900 });
   const [broadcastAspectRatio, setBroadcastAspectRatio] = useState('16:9');
   const [broadcastLockRatio, setBroadcastLockRatio] = useState(true);
-  const [broadcastMode, setBroadcastMode] = useState<'frame' | 'follow'>('follow');
-  const broadcastFrameRef = useRef(broadcastFrame);
-  broadcastFrameRef.current = broadcastFrame;
-  const broadcastModeRef = useRef(broadcastMode);
-  broadcastModeRef.current = broadcastMode;
-  const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [gmFollowEnabled, setGmFollowEnabled] = useState(false);
-  const gmFollowEnabledRef = useRef(false);
-  gmFollowEnabledRef.current = gmFollowEnabled;
+const [broadcastMode, setBroadcastMode] = useState<'frame' | 'follow'>('follow');
+const broadcastFrameRef = useRef(broadcastFrame);
+broadcastFrameRef.current = broadcastFrame;
+const broadcastModeRef = useRef(broadcastMode);
+broadcastModeRef.current = broadcastMode;
+const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const [gmFollowEnabled, setGmFollowEnabled] = useState(false);
+const gmFollowEnabledRef = useRef(false);
+gmFollowEnabledRef.current = gmFollowEnabled;
+
+const handleBroadcastModeChange = useCallback((mode: 'frame' | 'follow') => {
+  setBroadcastMode(mode);
+
+  if (mode === 'frame') {
+    setGmFollowEnabled(false);
+  }
+}, []);
   const [playerForcedViewport, setPlayerForcedViewport] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
