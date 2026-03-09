@@ -121,10 +121,18 @@ const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
   return t.controlledByUserIds?.includes(curUserId) ?? false;
 });
 
-// myVisionTokens = mes tokens qui ont une vision active
-const myVisionTokens = myControlledTokens.filter(
-  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+const spectatorVisionTokens = ctx2d.tokensRef.current.filter(t =>
+  !!t.visible &&
+  (t.controlledByUserIds?.length || 0) > 0 &&
+  (t.visionMode === 'normal' || t.visionMode === 'darkvision')
 );
+
+// myVisionTokens = mes tokens qui ont une vision active
+const myVisionTokens = isPlayerVisionSpectator
+  ? spectatorVisionTokens
+  : myControlledTokens.filter(
+      t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+    );
 
   // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
