@@ -206,7 +206,8 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   });
 
   // Hard blackout joueur : aucun token avec vision active => tout noir
-  if (curRole === 'player' && myVisionTokens.length === 0) {
+  // Exception : userId vide = fenêtre broadcast (pas de vision personnelle, on affiche quand même)
+  if (curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
     ctx.restore();
