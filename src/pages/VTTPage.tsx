@@ -232,34 +232,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     return () => { unsub(); unsubConn(); unsubPresence(); unsubVp(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
-  // GM : répondre aux demandes de broadcast-init (fenêtre présentiel)
-  useEffect(() => {
-    if (phase !== 'room' || !roomId || role !== 'gm') return;
-
-    const channel = supabase.channel(`vtt-room-${roomId}`, {
-      config: { broadcast: { self: false } },
-    });
-
-    channel
-      .on('broadcast', { event: 'vtt-broadcast-request' }, () => {
-        console.log('[VTTPage] Broadcast request received → sending init');
-        channel.send({
-          type: 'broadcast',
-          event: 'vtt-broadcast-init',
-          payload: {
-            config: configRef.current,
-            tokens: tokensRef.current,
-            fogState: fogStateRef.current,
-            walls: wallsRef.current,
-          },
-        }).catch(console.error);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [phase, roomId, role]);
+ 
   
   const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
