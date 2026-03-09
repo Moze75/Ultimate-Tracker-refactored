@@ -650,15 +650,23 @@ useEffect(() => {
               );
             }
 
-            if (showHomePage) {
+                   if (showHomePage) {
               return <HomePage onGetStarted={() => setShowHomePage(false)} />;
             }
 
-            if (!session) {
-              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            if (broadcastRoomId && VTTBroadcastPage) {
+              return (
+                <VTTBroadcastPage
+                  session={session ?? undefined}
+                  roomId={broadcastRoomId}
+                  onBack={() => { window.location.hash = ''; setBroadcastRoomId(null); }}
+                />
+              );
             }
 
-               if (broadcastRoomId && VTTBroadcastPage) {
+            if (!session) {
+              return <LoginPage onBackToHome={() => setShowHomePage(true)} />; 
+            }
               return (
                 <VTTBroadcastPage
                   session={session ?? undefined}
