@@ -1235,26 +1235,27 @@ onToggleGmFollow={() => {
             onViewportChange={handleCanvasViewportChange}
           />
 
-                {props.map(prop => (
-            <div
-              key={prop.id}
-              className={`absolute pointer-events-auto select-none ${
-                selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''
-              } ${draggingPropId === prop.id ? 'cursor-grabbing' : 'cursor-move'}`}
-              style={{
-                left: prop.position.x,
-                top: prop.position.y,
-                width: prop.width,
-                height: prop.height,
-                opacity: prop.opacity,
-                zIndex: selectedPropId === prop.id ? 15 : 5,
-              }}
-              onMouseDown={e => handlePropMouseDown(e, prop)}
-              onClick={e => {
-                e.stopPropagation();
-              setSelectedPropId(prop.id);
-              }}
-            >
+{props.map(prop => (
+  <div
+    key={prop.id}
+    className={`absolute pointer-events-auto select-none ${
+      selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''
+    } ${draggingPropId === prop.id ? 'cursor-grabbing' : 'cursor-move'}`}
+    style={{
+      left: prop.position.x * canvasViewport.scale + canvasViewport.x,
+      top: prop.position.y * canvasViewport.scale + canvasViewport.y,
+      width: prop.width * canvasViewport.scale,
+      height: prop.height * canvasViewport.scale,
+      opacity: prop.opacity,
+      zIndex: selectedPropId === prop.id ? 15 : 5,
+      transformOrigin: 'top left',
+    }}
+    onMouseDown={e => handlePropMouseDown(e, prop)}
+    onClick={e => {
+      e.stopPropagation();
+      setSelectedPropId(prop.id);
+    }}
+  >
               {prop.imageUrl ? (
                 /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
                   <video
