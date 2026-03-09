@@ -1066,14 +1066,8 @@ useEffect(() => {
   broadcastMode={broadcastMode}
   onBroadcastModeChange={handleBroadcastModeChange}
   gmFollowEnabled={gmFollowEnabled}
- onToggleGmFollow={() => {
-  setGmFollowEnabled(v => {
-    const next = !v;
-    if (!next) {
-      setPlayerForcedViewport(null);
-    }
-    return next;
-  });
+onToggleGmFollow={() => {
+  setGmFollowEnabled(v => !v);
 }}
   weatherEffects={weatherEffects}
   onUpdateWeather={handleUpdateWeather}
