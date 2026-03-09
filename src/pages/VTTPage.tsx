@@ -848,33 +848,27 @@ const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; w
   }, 50);
 }, [broadcastFrameEnabled]);
 
-  const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
-    setCanvasViewport(vp);
-    // Mode suivi joueurs : envoie viewport à tous les joueurs
-    if (role === 'gm' && gmFollowEnabledRef.current) {
-      const container = canvasContainerRef.current;
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        const worldX = -vp.x / vp.scale;
-        const worldY = -vp.y / vp.scale;
-        const worldW = rect.width / vp.scale;
-        const worldH = rect.height / vp.scale;
-        vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
-      }
-    }
-    if (broadcastModeRef.current !== 'follow') return;
-    const container = canvasContainerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const worldX = -vp.x / vp.scale;
-    const worldY = -vp.y / vp.scale;
-    const worldW = rect.width / vp.scale;
-    const worldH = rect.height / vp.scale;
-    if (followTimerRef.current) clearTimeout(followTimerRef.current);
-    followTimerRef.current = setTimeout(() => {
-      vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
-    }, 50);
-  }, []);
+const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
+  setCanvasViewport(vp);
+
+  if (role !== 'gm') return;
+  if (!gmFollowEnabledRef.current) return;
+  if (broadcastModeRef.current !== 'follow') return;
+
+  const container = canvasContainerRef.current;
+  if (!container) return;
+
+  const rect = container.getBoundingClientRect();
+  const worldX = -vp.x / vp.scale;
+  const worldY = -vp.y / vp.scale;
+  const worldW = rect.width / vp.scale;
+  const worldH = rect.height / vp.scale;
+
+  if (followTimerRef.current) clearTimeout(followTimerRef.current);
+  followTimerRef.current = setTimeout(() => {
+    vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
+  }, 50);
+}, [role]);
  
 const handleOpenBroadcastWindow = useCallback(() => {
   if (!roomId) return;
