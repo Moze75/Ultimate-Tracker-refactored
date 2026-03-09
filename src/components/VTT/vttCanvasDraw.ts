@@ -103,14 +103,14 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
   const isDay = !isNight;
 const currentWalls = ctx2d.wallsRef.current || [];
-const isBroadcastSpectator = curRole === 'player' && curUserId === '';
+const isPlayerVisionSpectator = ctx2d.spectatorModeRef.current === 'player-vision';
 
 // myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
 const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
   if (!t.visible) return false;
   if (curRole !== 'player') return true;
 
-  if (isBroadcastSpectator) {
+  if (isPlayerVisionSpectator) {
     return (t.controlledByUserIds?.length || 0) > 0;
   }
 
