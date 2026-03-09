@@ -720,11 +720,13 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     setResizingPropId(null);
     propResizeRef.current = null;
 
-    propDragRef.current = {
-      propId: prop.id,
-      offsetX: e.clientX - elementRect.left,
-      offsetY: e.clientY - elementRect.top,
-    };
+const vp = canvasViewport;
+
+propDragRef.current = {
+  propId: prop.id,
+  offsetX: (e.clientX - elementRect.left) / vp.scale,
+  offsetY: (e.clientY - elementRect.top) / vp.scale,
+};
   }, [role]);
 
   const handlePropResizeMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
