@@ -1209,7 +1209,10 @@ onMouseDown={e => {
             onMoveToken={handleMoveToken}
             onRevealFog={handleRevealFog}
             selectedTokenId={selectedTokenId}
-            onSelectToken={setSelectedTokenId}
+           onSelectToken={id => {
+  setSelectedPropId(null);
+  setSelectedTokenId(id);
+}}
             selectedTokenIds={selectedTokenIds}
             onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
