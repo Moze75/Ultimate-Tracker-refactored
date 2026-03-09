@@ -206,7 +206,8 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   });
 
   // Hard blackout joueur : aucun token avec vision active => tout noir
-  if (curRole === 'player' && myVisionTokens.length === 0) {
+  // Exception broadcast : userId vide = fenêtre spectateur, pas de blackout
+  if (curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
     ctx.restore();
@@ -261,7 +262,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   }
 
   // --- VISION DE JOUR ---
-  if (isDay && curRole === 'player' && currentWalls.length > 0) {
+  if (isDay && curRole === 'player' && currentWalls.length > 0 && curUserId !== '') {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
       const dayWallSegs = currentWalls.flatMap(w => {
@@ -375,13 +376,13 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   }
 
   // --- MASQUE NOIR jour sans vision ---
-  if (isDay && curRole === 'player' && myVisionTokens.length === 0) {
+  if (isDay && curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
   }
-
+ 
   // --- VISION DE NUIT ---
-  if (isNight && curRole === 'player') {
+  if (isNight && curRole === 'player' && curUserId !== '') {
     const playerTokens = myControlledTokens.filter(t =>
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );

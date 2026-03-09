@@ -654,21 +654,21 @@ useEffect(() => {
               return <HomePage onGetStarted={() => setShowHomePage(false)} />;
             }
 
-            if (!session) {
-              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
-            }
-
-            if (broadcastRoomId && VTTBroadcastPage && session) {
+            if (broadcastRoomId && VTTBroadcastPage) {
               return (
                 <VTTBroadcastPage
-                  session={session}
+                  session={session ?? undefined}
                   roomId={broadcastRoomId}
                   onBack={() => { window.location.hash = ''; setBroadcastRoomId(null); }}
                 />
               );
             }
 
-            if (showVTT && VTTPage) {
+            if (!session) {
+              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            }
+
+            if (showVTT && VTTPage) { 
               return (
                 <VTTPage
                   session={session}
