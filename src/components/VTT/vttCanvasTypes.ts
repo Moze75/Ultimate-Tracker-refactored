@@ -35,4 +35,5 @@ export interface VTTCanvasProps {
   forceViewport?: { x: number; y: number; width: number; height: number } | null;
   initialViewport?: { x: number; y: number; scale: number } | null;
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
+  spectatorMode?: 'none' | 'player-vision';
 }
