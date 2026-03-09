@@ -458,11 +458,20 @@ useEffect(() => {
     }
   }, [saveCurrentSceneState, role]);
 
-  const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
-    const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
-    vttService.send({ type: 'ADD_TOKEN', token: { ...token, position: center } });
-  }, []);
-
+const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
+  const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
+  vttService.send({
+    type: 'ADD_TOKEN',
+    token: {
+      ...token,
+      position: center,
+      visible: token.visible ?? true,
+      showLabel: token.showLabel ?? true,
+      visionMode: token.visionMode ?? 'none',
+      lightSource: token.lightSource ?? 'none',
+    },
+  });
+}, []);
   const canControlToken = useCallback((token: VTTToken): boolean => {
     if (role === 'gm') return true;
     if (token.controlledByUserIds && token.controlledByUserIds.includes(userId)) return true;
