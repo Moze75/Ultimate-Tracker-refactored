@@ -277,8 +277,10 @@ const fogPunchTokens =
 if (!cfg.fogEnabled) {
   // Brouillard désactivé : aucun masque de vision joueur à appliquer.
 } else if (isDay && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0) {
-  // De jour, sans murs, la vision joueur ne doit pas être limitée par un rayon de proximité.
-  // On ne rajoute donc aucun masque supplémentaire.
+  // De jour et sans murs, on ne doit appliquer aucun masque de vision supplémentaire.
+  // Le broadcast local (spectator) doit donc voir normalement la scène.
+} else if (isNight && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0 && isPlayerVisionSpectator) {
+  // Broadcast local sans murs : même logique, pas de masque noir supplémentaire.
 } else if (isDay && curRole === 'player' && currentWalls.length > 0 && (curUserId !== '' || isPlayerVisionSpectator)) {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
