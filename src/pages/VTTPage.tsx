@@ -571,16 +571,50 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
-    setProps(prev => [...prev, newProp]);
+
+    setProps(prev => {
+      const next = [...prev, newProp];
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ props: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Save props error:', error); });
+      }
+      return next;
+    });
   }, []);
 
   const handleRemoveProp = useCallback((propId: string) => {
-    setProps(prev => prev.filter(p => p.id !== propId));
+    setProps(prev => {
+      const next = prev.filter(p => p.id !== propId);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ props: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Remove prop error:', error); });
+      }
+      return next;
+    });
     setSelectedPropId(id => id === propId ? null : id);
   }, []);
 
   const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
-    setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
+    setProps(prev => {
+      const next = prev.map(p => p.id === propId ? { ...p, ...changes } : p);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ props: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Update prop error:', error); });
+      }
+      return next;
+    });
   }, []);
 
   const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
