@@ -259,7 +259,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
           if (!activeSceneId) {
-            const first = parsed[0];
+            const first = {
+              ...parsed[0],
+              props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
+            };
             setActiveSceneId(first.id);
             applySceneToLive(first);
           }
