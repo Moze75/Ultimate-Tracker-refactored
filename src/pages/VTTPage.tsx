@@ -830,13 +830,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     }
   }, []);
 
-  const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
-    setBroadcastFrame(frame);
-    if (broadcastTimerRef.current) clearTimeout(broadcastTimerRef.current);
-    broadcastTimerRef.current = setTimeout(() => {
+const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
+  setBroadcastFrame(frame);
+  if (broadcastTimerRef.current) clearTimeout(broadcastTimerRef.current);
+  broadcastTimerRef.current = setTimeout(() => {
+    if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
       vttService.sendBroadcastViewport(frame);
-    }, 50);
-  }, []);
+    }
+  }, 50);
+}, [broadcastFrameEnabled]);
 
   const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
     setCanvasViewport(vp);
