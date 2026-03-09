@@ -268,13 +268,19 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         if (data && data.length > 0) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
+
           if (!activeSceneId) {
-            const first = {
+            const savedSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
+            const savedScene = savedSceneId
+              ? parsed.find(scene => scene.id === savedSceneId)
+              : null;
+
+            const initialScene = savedScene ?? {
               ...parsed[0],
               props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
             };
-            setActiveSceneId(first.id);
-            applySceneToLive(first);
+
+            applySceneToLive(initialScene);
           }
         } else {
           supabase
