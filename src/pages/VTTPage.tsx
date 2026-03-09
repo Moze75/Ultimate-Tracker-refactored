@@ -381,7 +381,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
-    setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, position } : t));
+    setTokens(prev => {
+      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+      tokensRef.current = next;
+      return next;
+    });
+
     pendingMovesRef.current.set(tokenId, position);
     const existing = moveThrottleRef.current.get(tokenId);
     if (existing) clearTimeout(existing);
