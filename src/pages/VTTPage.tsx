@@ -1064,6 +1064,8 @@ useEffect(() => {
   broadcastLockRatio={broadcastLockRatio}
   onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
   onOpenBroadcastWindow={handleOpenBroadcastWindow}
+  broadcastMode={broadcastMode}
+  onBroadcastModeChange={handleBroadcastModeChange}
   gmFollowEnabled={gmFollowEnabled}
   onToggleGmFollow={() => setGmFollowEnabled(v => !v)}
   weatherEffects={weatherEffects}
