@@ -266,7 +266,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         } else {
           supabase
             .from('vtt_scenes')
-            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
+            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
             .select()
             .maybeSingle()
             .then(({ data: s }) => {
