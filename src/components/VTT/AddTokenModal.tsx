@@ -54,19 +54,23 @@ export function AddTokenModal({ onConfirm, onClose, userId, onCharDragStart }: A
     setMaxHp(char.max_hp != null ? String(char.max_hp) : '');
   };
 
-  const buildTokenData = (char: PlayerCharacter): Omit<VTTToken, 'id'> => ({
-    characterId: char.id,
-    ownerUserId: userId,
-    label: char.name || 'Token',
-    imageUrl: char.avatar_url || null,
-    position: { x: 0, y: 0 },
-    size: 1,
-    rotation: 0,
-    visible: true,
-    color: TOKEN_COLORS[0],
-    hp: char.current_hp ?? undefined,
-    maxHp: char.max_hp ?? undefined,
-  });
+const buildTokenData = (char: PlayerCharacter): Omit<VTTToken, 'id'> => ({
+  characterId: char.id,
+  ownerUserId: userId,
+  label: char.name || 'Token',
+  imageUrl: char.avatar_url || null,
+  position: { x: 0, y: 0 },
+  size: 1,
+  rotation: 0,
+  visible: true,
+  color: TOKEN_COLORS[0],
+  hp: char.current_hp ?? undefined,
+  maxHp: char.max_hp ?? undefined,
+  visionMode: 'normal',
+  visionRadius: 8,
+  lightSource: 'none',
+  lightRadius: 0,
+});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
