@@ -869,7 +869,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               setSelectedPropId(null);
             }
           }}
-           onDragOver={e => e.preventDefault()}
+          onDragOver={e => {
+            if (e.dataTransfer.types.includes('application/vtt-prop-url') ||
+                e.dataTransfer.types.includes('application/vtt-prop-id')) {
+              e.preventDefault();
+            }
+          }}
           onDrop={e => {
             e.preventDefault();
             e.stopPropagation(); // ← empêche la remontée vers d'autres handlers
@@ -953,6 +958,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
+                        onDropProp={(propData, worldPos) => {
+              handleAddProp({
+                label: propData.name,
+                imageUrl: propData.url,
+                position: { x: worldPos.x - 75, y: worldPos.y - 75 },
+                width: propData.isVideo ? 200 : 150,
+                height: propData.isVideo ? 200 : 150,
+                opacity: 1,
+                locked: false,
+              });
+            }}
             onAddTokenAtPos={handleAddTokenAtPos}
             onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
@@ -979,8 +995,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               <div
                 key={prop.id}
                 data-prop-id={prop.id}
-                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
-               
+                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? '' : ''}`}
+                style={{
+                  left: prop.position.x,
+                  top: prop.position.y,
+                  width: prop.width,
+                  height: prop.height,
+                  opacity: prop.opacity,
+                  zIndex: 9998,
+                  outline: isSelected ? '2px solid #f59e0b' : '2px solid red',
+                  outlineOffset: '2px',
+                  background: 'rgba(255,0,0,0.2)',
+                }}
                 onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
                 onMouseDown={e => {
                   if (role !== 'gm' || prop.locked) return;
@@ -996,7 +1022,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                     window.removeEventListener('mousemove', onMove);
                     window.removeEventListener('mouseup', onUp);
                   };
-                  window.addEventListener('mousemove', onMove); 
+                  window.addEventListener('mousemove', onMove);
                   window.addEventListener('mouseup', onUp);
                 }}
               >
@@ -1307,4 +1333,4 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       )}
     </div>
   );
-} 
+}
