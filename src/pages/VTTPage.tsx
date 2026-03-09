@@ -227,13 +227,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     return () => { unsub(); unsubConn(); unsubPresence(); unsubVp(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
-  const applySceneToLive = useCallback((scene: VTTScene) => {
+  const applySceneToLive = useCallback((scene: VTTScene & { props?: VTTProp[] }) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
     setFogState(scene.fogState);
     setWalls(scene.walls || []);
-        setWeatherEffects(scene.config.weatherEffects || []);
-        setSavedViewport(scene.config.savedViewport ?? null);
+    setProps(scene.props || []);
+    setSelectedPropId(null);
+    setWeatherEffects(scene.config.weatherEffects || []);
+    setSavedViewport(scene.config.savedViewport ?? null);
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
