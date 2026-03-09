@@ -211,7 +211,7 @@ private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState:
   this.broadcastViewportHandlers.forEach(h => h(vp));
 })
 .on('broadcast', { event: 'vtt-player-viewport' }, ({ payload }) => {
-  const vp = payload as BroadcastViewport;
+  const vp = (payload ?? null) as BroadcastViewport | null;
   this.playerViewportHandlers.forEach(h => h(vp));
 })
       .on('presence', { event: 'sync' }, () => {
