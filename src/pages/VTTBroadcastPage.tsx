@@ -64,6 +64,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const userId = userIdFallback;
   const authToken = authTokenFallback;
   const userName = userNameFallback;
+    const hasAnyAuthContext = !!session || !!tokenFromUrl;
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
