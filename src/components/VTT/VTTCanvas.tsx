@@ -148,6 +148,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const torchAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
+  const spectatorModeRef = useRef(spectatorMode);
+  spectatorModeRef.current = spectatorMode;
 
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
