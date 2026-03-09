@@ -454,7 +454,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp]);
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;
