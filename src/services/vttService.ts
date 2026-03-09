@@ -105,17 +105,22 @@ private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState:
     // Les murs sont stockés par scène (vtt_scenes), pas dans vtt_rooms.
     // On charge la scène active pour récupérer les murs courants.
     try {
-      const { data: scenes } = await supabase
-        .from('vtt_scenes')
-         .select('id, walls, fog_state')
-        .eq('room_id', roomId)
-        .order('order_index', { ascending: true })
-        .limit(1);
-      if (scenes && scenes.length > 0) {
-        if (scenes[0].walls) {
-          this.localState.walls = scenes[0].walls;
-        }
-        // Priorité au fog de la scène s'il existe (plus récent que vtt_rooms)
+const { data: scenes } = await supabase
+  .from('vtt_scenes')
+  .select('id, walls, fog_state')
+  .eq('room_id', roomId)
+  .order('order_index', { ascending: true });
+
+if (scenes && scenes.length > 0) {
+  const activeScene = this.activeSceneId
+    ? scenes.find(scene => scene.id === this.activeSceneId)
+    : scenes[0];
+
+  if (activeScene?.walls) {
+    this.localState.walls = activeScene.walls;
+  }
+
+  // Priorité au fog de la scène active s'il existe (plus récent que vtt_rooms)
         if (scenes[0].fog_state && typeof scenes[0].fog_state === 'object') {
           this.localState.fogState = scenes[0].fog_state;
         }
