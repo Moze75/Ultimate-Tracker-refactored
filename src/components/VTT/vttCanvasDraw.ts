@@ -103,21 +103,29 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const isDay = !isNight;
   const currentWalls = ctx2d.wallsRef.current || [];
 
-  // myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
-  const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
-    if (!t.visible) return false;
-    if (curRole !== 'player') return true;
-    // Un joueur ne contrôle un token QUE s'il figure dans controlledByUserIds.
-    // On N'utilise PAS ownerUserId : un joueur peut posséder plusieurs tokens
-    // mais ne doit voir QUE la vision du token qu'il a sélectionné dans le lobby.
-    // ownerUserId est réservé à l'administration (qui peut éditer/supprimer).
-    return t.controlledByUserIds?.includes(curUserId) ?? false; 
-  });
+ const currentWalls = ctx2d.wallsRef.current || [];
+const isBroadcastSpectator = curRole === 'player' && curUserId === '';
 
-  // myVisionTokens = mes tokens qui ont une vision active
-  const myVisionTokens = myControlledTokens.filter(
-    t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
-  );
+// myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
+const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
+  if (!t.visible) return false;
+  if (curRole !== 'player') return true;
+
+  if (isBroadcastSpectator) {
+    return true;
+  }
+
+  // Un joueur ne contrôle un token QUE s'il figure dans controlledByUserIds.
+  // On N'utilise PAS ownerUserId : un joueur peut posséder plusieurs tokens
+  // mais ne doit voir QUE la vision du token qu'il a sélectionné dans le lobby.
+  // ownerUserId est réservé à l'administration (qui peut éditer/supprimer).
+  return t.controlledByUserIds?.includes(curUserId) ?? false;
+});
+
+// myVisionTokens = mes tokens qui ont une vision active
+const myVisionTokens = myControlledTokens.filter(
+  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+);
 
   // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
