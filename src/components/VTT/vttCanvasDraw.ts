@@ -129,30 +129,25 @@ const myVisionTokens = myControlledTokens.filter(
   // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
 
- if (curRole === 'player') {
-  const wallSegs = currentWalls.length > 0
-    ? currentWalls.flatMap(w => {
-        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-        for (let i = 0; i < w.points.length - 1; i++) {
-          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-        }
-        return segs;
-      })
-    : [];
+  if (curRole === 'player') {
+    const wallSegs = currentWalls.length > 0
+      ? currentWalls.flatMap(w => {
+          const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+          for (let i = 0; i < w.points.length - 1; i++) {
+            segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
+          }
+          return segs;
+        })
+      : [];
 
-  const viewers = isNight
-    ? myControlledTokens.filter(t =>
-        (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
-      )
-    : myVisionTokens;
+    const viewers = isNight
+      ? myControlledTokens.filter(t =>
+          (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
+        )
+      : myVisionTokens;
 
-  if (isDay && currentWalls.length === 0 && viewers.length > 0) {
-    ctx2d.tokensRef.current.forEach(t => {
-      if (t.visible) directlyVisibleTokenIds.add(t.id);
-    });
-  } else {
     for (const viewer of viewers) {
-      const radii = getVisionRadii(viewer, CELL);
+      const radii = getVisionRadii(viewer, CELL);  
       const maxR = Math.max(radii.brightR, radii.dimR);
       if (maxR <= 0) continue;
 
