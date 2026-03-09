@@ -206,10 +206,14 @@ private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState:
         }
         this.messageHandlers.forEach(h => h(serverEvent));
       })
-      .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
-        const vp = payload as BroadcastViewport;
-        this.broadcastViewportHandlers.forEach(h => h(vp));
-      })
+.on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
+  const vp = payload as BroadcastViewport;
+  this.broadcastViewportHandlers.forEach(h => h(vp));
+})
+.on('broadcast', { event: 'vtt-player-viewport' }, ({ payload }) => {
+  const vp = payload as BroadcastViewport;
+  this.playerViewportHandlers.forEach(h => h(vp));
+})
       .on('presence', { event: 'sync' }, () => {
         this._emitPresence();
       })
