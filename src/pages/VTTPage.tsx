@@ -106,7 +106,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
     activeSceneIdRef.current = activeSceneId;
-   
+     const propsRef = useRef<VTTProp[]>([]);
+  propsRef.current = props;
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
@@ -285,8 +286,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       });
   }, [phase, roomId, role, applySceneToLive]);
 
-  const propsRef = useRef<VTTProp[]>([]);
-  propsRef.current = props;
+  
 
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
