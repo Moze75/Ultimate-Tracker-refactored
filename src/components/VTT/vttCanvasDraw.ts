@@ -273,10 +273,15 @@ const fogPunchTokens =
       }
 
           // De jour avec murs et vision active : le fog est géré par dayVision, pas besoin d'opacité élevée
-      const hasDayWallVision = isDay && curRole === 'player' && currentWalls.length > 0 && myVisionTokens.length > 0;
-      const fogAlpha = curRole === 'gm' ? 0.5 : (isNight ? 0.6 : (hasDayWallVision ? 0.0 : 0.95));
-      ctx.globalAlpha = fogAlpha;
-      ctx.drawImage(vc, 0, 0, mapW, mapH);
+const hasDayWallVision = isDay && curRole === 'player' && currentWalls.length > 0 && myVisionTokens.length > 0;
+const hasLocalSpectatorDayVision = isDay && isPlayerVisionSpectator && currentWalls.length === 0 && myVisionTokens.length > 0;
+const fogAlpha = curRole === 'gm'
+  ? 0.5
+  : (isNight
+      ? 0.6
+      : ((hasDayWallVision || hasLocalSpectatorDayVision) ? 0.0 : 0.95));
+ctx.globalAlpha = fogAlpha;
+ctx.drawImage(vc, 0, 0, mapW, mapH);
       ctx.globalAlpha = 1;
     }
   }
