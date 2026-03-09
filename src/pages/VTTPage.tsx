@@ -852,7 +852,6 @@ const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scal
   setCanvasViewport(vp);
 
   if (role !== 'gm') return;
-  if (broadcastModeRef.current !== 'follow') return;
 
   const container = canvasContainerRef.current;
   if (!container) return;
@@ -862,10 +861,13 @@ const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scal
   const worldY = -vp.y / vp.scale;
   const worldW = rect.width / vp.scale;
   const worldH = rect.height / vp.scale;
+  const nextViewport = { x: worldX, y: worldY, width: worldW, height: worldH };
 
   if (followTimerRef.current) clearTimeout(followTimerRef.current);
   followTimerRef.current = setTimeout(() => {
-    vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
+    if (broadcastModeRef.current === 'follow' || gmFollowEnabledRef.current) {
+      vttService.sendBroadcastViewport(nextViewport);
+    }
   }, 50);
 }, [role]);
  
