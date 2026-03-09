@@ -260,7 +260,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     });
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
     supabase
       .from('vtt_scenes')
@@ -285,6 +285,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
             setActiveSceneId(initialScene.id);
             applySceneToLive(initialScene);
+            // Force la mise à jour du localState dans vttService pour les broadcast-request
+            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || []);
           }
         } else {
           supabase
