@@ -227,7 +227,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     return () => { unsub(); unsubConn(); unsubPresence(); unsubVp(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
-  const applySceneToLive = useCallback((scene: VTTScene & { props?: VTTProp[] }) => {
+  const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
     setFogState(scene.fogState);
