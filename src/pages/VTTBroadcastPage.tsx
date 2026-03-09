@@ -219,6 +219,7 @@ const defaultViewport = broadcastViewport ?? undefined;
   fogState={fogState}
   role="player"
   userId=""
+  spectatorMode="player-vision"
   activeTool="select"
   fogBrushSize={0}
   onMoveToken={noOp as any}
