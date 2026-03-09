@@ -231,9 +231,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setConfig(scene.config);
     setTokens(scene.tokens);
     setFogState(scene.fogState);
-    setWalls(scene.walls || []);
-    setProps(scene.props || []);
-    setSelectedPropId(null);
+      setWalls(scene.walls || []);
+      setProps(scene.props || []);
+      setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
     vttService.setActiveSceneId(scene.id);
