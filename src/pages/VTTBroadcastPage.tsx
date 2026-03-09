@@ -14,7 +14,7 @@ import type {
 import { Maximize, Minimize } from 'lucide-react';
 
 interface VTTBroadcastPageProps {
-  session: Session;
+  session?: Session;
   roomId: string;
   onBack: () => void;
 }
