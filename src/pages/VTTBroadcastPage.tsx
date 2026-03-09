@@ -114,7 +114,23 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     }
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
+    // Si on a un token dans l'URL mais pas de session, on l'injecte dans Supabase
+    // pour que les RLS autorisent les requêtes SELECT
+    const initAuth = async () => {
+      if (!session && tokenFromUrl) {
+        try {
+          await supabase.auth.setSession({
+            access_token: tokenFromUrl,
+            refresh_token: '',
+          });
+        } catch (err) {
+          console.warn('[Broadcast] setSession fallback:', err);
+        }
+      }
+    };
+    initAuth();
+
     // Canal Supabase DÉDIÉ à la fenêtre broadcast — indépendant du vttService singleton
     const channel = supabase.channel(`vtt-room-${roomId}`, {
       config: { broadcast: { self: false } },
