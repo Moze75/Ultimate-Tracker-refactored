@@ -274,7 +274,10 @@ const fogPunchTokens =
   }
 
   // --- VISION DE JOUR ---
-if (isDay && curRole === 'player' && currentWalls.length > 0 && (curUserId !== '' || isPlayerVisionSpectator)) {
+if (isDay && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0) {
+  // De jour, sans murs, la vision joueur ne doit pas être limitée par un rayon de proximité.
+  // On ne rajoute donc aucun masque supplémentaire.
+} else if (isDay && curRole === 'player' && currentWalls.length > 0 && (curUserId !== '' || isPlayerVisionSpectator)) {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
       const dayWallSegs = currentWalls.flatMap(w => {
