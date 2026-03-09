@@ -37,6 +37,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   forceViewport: forceViewportProp = null,
   initialViewport = null,
   onViewportChange,
+  spectatorMode = 'none',
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
