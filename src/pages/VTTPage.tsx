@@ -858,13 +858,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
     }, 50);
   }, []);
-
+ 
   const handleOpenBroadcastWindow = useCallback(() => {
     if (!roomId) return;
   const token = encodeURIComponent(authToken);
-const token = encodeURIComponent(authToken);
-const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}?t=${token}`;
-window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
+  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}?t=${token}`;
+  window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
     setTimeout(() => {
       if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
         vttService.sendBroadcastViewport(broadcastFrameRef.current);
