@@ -346,6 +346,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         config: DEFAULT_CONFIG,
         fog_state: DEFAULT_FOG,
         tokens: [],
+        props: [],
       })
       .select()
       .maybeSingle();
