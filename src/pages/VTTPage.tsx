@@ -595,37 +595,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       });
   }, []);
 
-    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+     const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
     setProps(prev => {
       const next = [...prev, newProp];
-
-      setScenes(currentScenes =>
-        currentScenes.map(scene =>
-          scene.id === activeSceneIdRef.current
-            ? { ...scene, props: next }
-            : scene
-        )
-      );
-
       const sceneId = activeSceneIdRef.current;
-      if (sceneId) {
-        supabase
-          .from('vtt_scenes')
-          .update({
-            props: next,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sceneId)
-          .then(({ error }) => {
-            if (error) console.error('[VTT] Save props error:', error);
-          });
-      }
-
+      if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
-  }, []);
+  }, [persistSceneProps]);
 
   const handleRemoveProp = useCallback((propId: string) => {
     setProps(prev => {
