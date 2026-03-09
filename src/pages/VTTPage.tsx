@@ -860,34 +860,20 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         />
         </div>
 
-        <div
+           <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
-          onClick={e => {
-            // Désélectionner la prop si on clique sur le fond (pas sur une prop)
-            if ((e.target as HTMLElement).closest('[data-prop-id]') === null) {
-              setSelectedPropId(null);
-            }
-          }}
-          onDragOver={e => {
-            if (e.dataTransfer.types.includes('application/vtt-prop-url') ||
-                e.dataTransfer.types.includes('application/vtt-prop-id')) {
-              e.preventDefault();
-            }
-          }}
+          onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
-            e.stopPropagation(); // ← empêche la remontée vers d'autres handlers
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            // ── Déplacement d'une prop déjà sur le canvas ──────────────────
             const existingPropId = e.dataTransfer.getData('application/vtt-prop-id');
             const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
 
             if (propUrl) {
-              // Drop depuis la bibliothèque → créer une nouvelle prop
               const propName = e.dataTransfer.getData('application/vtt-prop-name') || 'Prop';
               const isVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
               handleAddProp({
@@ -900,7 +886,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 locked: false,
               });
             } else if (existingPropId) {
-              // Déplacement d'une prop existante
               const prop = props.find(p => p.id === existingPropId);
               if (prop) {
                 handleUpdateProp(existingPropId, { position: { x: x - prop.width / 2, y: y - prop.height / 2 } });
