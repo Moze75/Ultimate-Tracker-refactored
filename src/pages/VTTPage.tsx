@@ -869,12 +869,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               setSelectedPropId(null);
             }
           }}
-          onDragOver={e => {
-            if (e.dataTransfer.types.includes('application/vtt-prop-url') ||
-                e.dataTransfer.types.includes('application/vtt-prop-id')) {
-              e.preventDefault();
-            }
-          }}
+           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
             e.stopPropagation(); // ← empêche la remontée vers d'autres handlers
