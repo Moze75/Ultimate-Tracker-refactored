@@ -95,7 +95,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     }
   }, []);
 
-  // Canal Supabase DÉDIÉ à la fenêtre broadcast + chargement DB initial
+  // Connexion au canal Supabase Realtime — AUCUNE requête DB
   useEffect(() => {
     const channel = supabase.channel(`vtt-room-${roomId}`, {
       config: { broadcast: { self: false } },
@@ -109,38 +109,33 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
         setBroadcastViewport(payload as BroadcastViewport);
       })
-      .subscribe((status) => {
-        setConnected(status === 'SUBSCRIBED');
-      });
-
-    // Charger l'état initial depuis Supabase DB (la room + la scène active)
-    supabase
-      .from('vtt_rooms')
-      .select('state_json')
-      .eq('id', roomId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data?.state_json) return;
-        const s = data.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
+      // Écoute l'événement dédié d'initialisation broadcast
+      .on('broadcast', { event: 'vtt-broadcast-init' }, ({ payload }) => {
+        console.log('[Broadcast] Received init state from GM');
+        const s = payload as {
+          config?: VTTRoomConfig;
+          tokens?: VTTToken[];
+          fogState?: VTTFogState;
+          walls?: VTTWall[];
+        };
         if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
         if (s.tokens) setTokens(s.tokens);
         if (s.fogState) setFogState(s.fogState);
-      });
-
-    supabase
-      .from('vtt_scenes')
-      .select('walls, fog_state, config, tokens')
-      .eq('room_id', roomId)
-      .order('order_index', { ascending: true })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          if (data[0].walls) setWalls(data[0].walls);
-          if (data[0].fog_state) setFogState(data[0].fog_state);
-          if (data[0].config) setConfig(prev => ({ ...prev, ...data[0].config }));
-          if (data[0].tokens) setTokens(data[0].tokens);
-        }
+        if (s.walls) setWalls(s.walls);
         setWaitingForSync(false);
+      })
+      .subscribe((status) => {
+        const isConnected = status === 'SUBSCRIBED';
+        setConnected(isConnected);
+        if (isConnected) {
+          // Demander au MJ d'envoyer l'état initial
+          console.log('[Broadcast] Connected, requesting state from GM...');
+          channel.send({
+            type: 'broadcast',
+            event: 'vtt-broadcast-request',
+            payload: { requestedAt: Date.now() },
+          }).catch(console.error);
+        }
       });
 
     return () => {
@@ -148,6 +143,22 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       supabase.removeChannel(channel);
     };
   }, [roomId, handleServerEvent]);
+
+  // Redemander l'état périodiquement si toujours en attente
+  useEffect(() => {
+    if (!waitingForSync || !connected) return;
+    const interval = setInterval(() => {
+      if (channelRef.current) {
+        console.log('[Broadcast] Still waiting, re-requesting state...');
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'vtt-broadcast-request',
+          payload: { requestedAt: Date.now() },
+        }).catch(console.error);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [waitingForSync, connected]);
 
   // Fullscreen
   useEffect(() => {
