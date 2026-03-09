@@ -438,6 +438,9 @@ class VTTService {
     this.activeSceneId = sceneId;
   }
 
+    updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[]) {
+    this.localState = { config, tokens, fogState, walls };
+  }
   
   sendBroadcastViewport(viewport: BroadcastViewport) {
     if (!this.channel) return;
