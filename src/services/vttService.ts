@@ -14,7 +14,7 @@ export interface BroadcastViewport {
 }
 
 type BroadcastViewportHandler = (viewport: BroadcastViewport) => void;
-type PlayerViewportHandler = (viewport: BroadcastViewport) => void;
+type PlayerViewportHandler = (viewport: BroadcastViewport | null) => void;
 
 const DEFAULT_CONFIG: VTTRoomConfig = {
   mapImageUrl: '',
