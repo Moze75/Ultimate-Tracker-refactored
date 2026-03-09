@@ -210,6 +210,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       tokenImageCache,
       viewportRef,
       forceViewportRef,
+      spectatorModeRef,
       configRef,
       fogStateRef,
       roleRef,
