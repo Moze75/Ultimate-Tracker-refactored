@@ -868,28 +868,28 @@ const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; w
     }, 50);
   }, []);
  
-  const handleOpenBroadcastWindow = useCallback(() => {
-if (!roomId) return;
-const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
+const handleOpenBroadcastWindow = useCallback(() => {
+  if (!roomId) return;
+  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
   window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
-    setTimeout(() => {
-      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) { 
-        vttService.sendBroadcastViewport(broadcastFrameRef.current);
-      } else if (broadcastModeRef.current === 'follow') {
-        const container = canvasContainerRef.current;
-        if (container) {
-          const rect = container.getBoundingClientRect();
-          const vp = canvasViewport;
-          vttService.sendBroadcastViewport({
-            x: -vp.x / vp.scale,
-            y: -vp.y / vp.scale,
-            width: rect.width / vp.scale,
-            height: rect.height / vp.scale,
-          });
-        }
+  setTimeout(() => {
+    if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
+      vttService.sendBroadcastViewport(broadcastFrameRef.current);
+    } else if (broadcastModeRef.current === 'follow') {
+      const container = canvasContainerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const vp = canvasViewport;
+        vttService.sendBroadcastViewport({
+          x: -vp.x / vp.scale,
+          y: -vp.y / vp.scale,
+          width: rect.width / vp.scale,
+          height: rect.height / vp.scale,
+        });
       }
-    }, 500);
-  }, [roomId, broadcastFrameEnabled, canvasViewport]);
+    }
+  }, 500);
+}, [roomId, broadcastFrameEnabled, canvasViewport]);
 
   const handleSaveScene = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
