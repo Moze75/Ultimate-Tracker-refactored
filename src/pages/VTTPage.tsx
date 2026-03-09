@@ -47,8 +47,7 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
-const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
+const DEFAULT_FOG: VTTFogState = { revealedCells: [] }; 
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
   return {
@@ -240,12 +239,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
-    setActiveSceneId(scene.id);
-
-    if (scene.roomId) {
-      localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
-    }
-
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
@@ -275,7 +268,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             };
             setActiveSceneId(first.id);
             applySceneToLive(first);
-          } 
+          }
         } else {
           supabase
             .from('vtt_scenes')
@@ -342,11 +335,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
       setActiveSceneId(sceneId);
-
-      if (roomId) {
-        localStorage.setItem(getLastSceneStorageKey(roomId), sceneId);
-      }
-
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
       setSavedViewport(scene.config.savedViewport ?? null);
