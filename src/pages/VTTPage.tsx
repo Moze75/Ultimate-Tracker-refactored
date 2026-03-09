@@ -437,24 +437,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
 
   
-  useEffect(() => {
-    if (phase !== 'room') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
-      if (role !== 'gm') return;
-      if (selectedTokenId) {
-        e.preventDefault();
-        handleRemoveToken(selectedTokenId);
-      } else if (selectedPropId) {
-        e.preventDefault();
-        handleRemoveProp(selectedPropId);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp]);
+
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;
