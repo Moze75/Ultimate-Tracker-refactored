@@ -891,6 +891,14 @@ const handleOpenBroadcastWindow = useCallback(() => {
   }, 500);
 }, [roomId, broadcastFrameEnabled, canvasViewport]);
 
+useEffect(() => {
+  if (role !== 'gm') return;
+  if (!broadcastFrameEnabled) return;
+  if (broadcastMode !== 'frame') return;
+
+  vttService.sendBroadcastViewport(broadcastFrame);
+}, [role, broadcastFrameEnabled, broadcastMode, broadcastFrame]);
+
   const handleSaveScene = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
     await saveCurrentSceneState(activeSceneIdRef.current);
