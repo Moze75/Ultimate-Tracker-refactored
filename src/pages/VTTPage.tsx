@@ -425,53 +425,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
   }, [canControlToken]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = canvasContainerRef.current;
-      if (!container) return;
 
-      const containerRect = container.getBoundingClientRect();
-
-      if (propDragRef.current) {
-        const { propId, offsetX, offsetY } = propDragRef.current;
-        const nextX = e.clientX - containerRect.left - offsetX;
-        const nextY = e.clientY - containerRect.top - offsetY;
-
-        handleUpdateProp(propId, {
-          position: {
-            x: Math.max(0, nextX),
-            y: Math.max(0, nextY),
-          },
-        });
-      }
-
-      if (propResizeRef.current) {
-        const { propId, startMouseX, startMouseY, startWidth, startHeight } = propResizeRef.current;
-        const deltaX = e.clientX - startMouseX;
-        const deltaY = e.clientY - startMouseY;
-
-        handleUpdateProp(propId, {
-          width: Math.max(40, startWidth + deltaX),
-          height: Math.max(40, startHeight + deltaY),
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      propDragRef.current = null;
-      propResizeRef.current = null;
-      setDraggingPropId(null);
-      setResizingPropId(null);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleUpdateProp]);
   
   useEffect(() => {
     if (phase !== 'room') return;
