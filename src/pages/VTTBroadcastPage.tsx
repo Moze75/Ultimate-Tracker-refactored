@@ -228,7 +228,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         activeTool="select"
         fogBrushSize={0}
         onMoveToken={noOp as any}
-        onRevealFog={noOpStroke as any}
+        onRevealFog={noOpStroke as any} 
         selectedTokenId={null}
         onSelectToken={noOp as any}
         walls={walls}
