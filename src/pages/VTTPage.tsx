@@ -47,7 +47,9 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
+const DEFAULT_FOG: VTTFogState = { revealedCells: [] }; 
+
+const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
   return {
@@ -59,6 +61,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     fogState: (row.fog_state as VTTFogState) || DEFAULT_FOG,
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
+    props: (row.props as VTTProp[]) || [],
   };
 }
 
@@ -108,7 +111,26 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
+
+  const propsRef = useRef<VTTProp[]>([]);
+  propsRef.current = props;
   const [broadcastFrameEnabled, setBroadcastFrameEnabled] = useState(false);
+    const [draggingPropId, setDraggingPropId] = useState<string | null>(null);
+  const [resizingPropId, setResizingPropId] = useState<string | null>(null);
+
+  const propDragRef = useRef<{
+    propId: string;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const propResizeRef = useRef<{
+    propId: string;
+    startMouseX: number;
+    startMouseY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
   const [broadcastFrame, setBroadcastFrame] = useState({ x: 200, y: 100, width: 1600, height: 900 });
   const [broadcastAspectRatio, setBroadcastAspectRatio] = useState('16:9');
   const [broadcastLockRatio, setBroadcastLockRatio] = useState(true);
@@ -119,9 +141,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   broadcastModeRef.current = broadcastMode;
   const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const followTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [gmFollowEnabled, setGmFollowEnabled] = useState(false);
+  const gmFollowEnabledRef = useRef(false);
+  gmFollowEnabledRef.current = gmFollowEnabled;
+  const [playerForcedViewport, setPlayerForcedViewport] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
-    const [savedViewport, setSavedViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
+  const [savedViewport, setSavedViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
+  const [playerInitialViewport, setPlayerInitialViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
+  const playerInitialViewportSetRef = useRef(false);
   const [weatherEffects, setWeatherEffects] = useState<VTTWeatherEffect[]>([]);
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
@@ -200,13 +228,30 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
+  // Joueur : abonnement au viewport forcé par le MJ (séparé pour ne pas reconnecter)
+  useEffect(() => {
+    if (phase !== 'room' || !roomId || role !== 'player') return;
+    const unsubVp = vttService.onBroadcastViewport(vp => setPlayerForcedViewport(vp));
+    return () => { unsubVp(); };
+  }, [phase, roomId, role]);
+
+ 
+  
   const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
     setFogState(scene.fogState);
     setWalls(scene.walls || []);
-        setWeatherEffects(scene.config.weatherEffects || []);
-        setSavedViewport(scene.config.savedViewport ?? null);
+    setProps(Array.isArray(scene.props) ? scene.props : []);
+    setSelectedPropId(null);
+    setWeatherEffects(scene.config.weatherEffects || []);
+    setSavedViewport(scene.config.savedViewport ?? null);
+    setActiveSceneId(scene.id);
+
+    if (scene.roomId) {
+      localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
+    }
+
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
@@ -218,7 +263,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     });
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'gm') return;
     supabase
       .from('vtt_scenes')
@@ -229,15 +274,27 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         if (data && data.length > 0) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
+
           if (!activeSceneId) {
-            const first = parsed[0];
-            setActiveSceneId(first.id);
-            applySceneToLive(first);
+            const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
+            const restoredScene = lastSceneId
+              ? parsed.find(scene => scene.id === lastSceneId)
+              : null;
+
+            const initialScene = restoredScene ?? {
+              ...parsed[0],
+              props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
+            };
+
+            setActiveSceneId(initialScene.id);
+            applySceneToLive(initialScene);
+            // Force la mise à jour du localState dans vttService pour les broadcast-request
+            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || []);
           }
         } else {
           supabase
             .from('vtt_scenes')
-            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
+            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
             .select()
             .maybeSingle()
             .then(({ data: s }) => {
@@ -252,8 +309,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       });
   }, [phase, roomId, role, applySceneToLive]);
 
+  
+
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
+
     await supabase
       .from('vtt_scenes')
       .update({
@@ -261,6 +321,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
         walls: wallsRef.current,
+        props: propsRef.current,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
@@ -293,10 +354,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setFogState(scene.fogState);
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
+      setProps(Array.isArray(scene.props) ? scene.props : []);
+      setSelectedPropId(null);
       setActiveSceneId(sceneId);
+
+      localStorage.setItem(getLastSceneStorageKey(roomId!), sceneId);
+
       vttService.setActiveSceneId(sceneId);
-      setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
-            setSavedViewport(scene.config.savedViewport ?? null);
+      setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
+      setSavedViewport(scene.config.savedViewport ?? null);
     } finally {
       switchingSceneRef.current = false;
     }
@@ -314,6 +380,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         config: DEFAULT_CONFIG,
         fog_state: DEFAULT_FOG,
         tokens: [],
+        props: [],
       })
       .select()
       .maybeSingle();
@@ -340,7 +407,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
-    setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, position } : t));
+    setTokens(prev => {
+      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+      tokensRef.current = next;
+      return next;
+    });
+
     pendingMovesRef.current.set(tokenId, position);
     const existing = moveThrottleRef.current.get(tokenId);
     if (existing) clearTimeout(existing);
@@ -349,11 +421,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       if (pos) {
         vttService.send({ type: 'MOVE_TOKEN_REQUEST', tokenId, position: pos });
         pendingMovesRef.current.delete(tokenId);
+
+        const sceneId = activeSceneIdRef.current;
+        if (sceneId) {
+          saveCurrentSceneState(sceneId).catch(err => {
+            console.error('[VTT] Save scene after token move error:', err);
+          });
+        }
       }
       moveThrottleRef.current.delete(tokenId);
     }, 50);
     moveThrottleRef.current.set(tokenId, timer);
-  }, []);
+  }, [saveCurrentSceneState]);
 
   const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
     setFogState(prev => ({
@@ -399,25 +478,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
   }, [canControlToken]);
 
-  useEffect(() => {
-    if (phase !== 'room') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
-      if (role !== 'gm') return;
-      if (selectedTokenId) {
-        e.preventDefault();
-        handleRemoveToken(selectedTokenId);
-      } else if (selectedPropId) {
-        e.preventDefault();
-        setProps(prev => prev.filter(p => p.id !== selectedPropId));
-        setSelectedPropId(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
+
+  
+
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;
@@ -534,19 +597,175 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);
 
-  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+    const persistSceneProps = useCallback((sceneId: string, nextProps: VTTProp[]) => {
+    propsRef.current = nextProps;
+
+    setScenes(currentScenes =>
+      currentScenes.map(scene =>
+        scene.id === sceneId
+          ? { ...scene, props: nextProps }
+          : scene
+      )
+    );
+
+    supabase
+      .from('vtt_scenes')
+      .update({
+        props: nextProps,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sceneId)
+      .then(({ error }) => {
+        if (error) console.error('[VTT] Persist props error:', error);
+      });
+  }, []);
+
+     const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
-    setProps(prev => [...prev, newProp]);
-  }, []);
 
-  const handleRemoveProp = useCallback((propId: string) => {
-    setProps(prev => prev.filter(p => p.id !== propId));
-    setSelectedPropId(id => id === propId ? null : id);
-  }, []);
+    setProps(prev => {
+      const next = [...prev, newProp];
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) persistSceneProps(sceneId, next);
+      return next;
+    });
+  }, [persistSceneProps]);
 
-  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
-    setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
-  }, []);
+    const handleRemoveProp = useCallback((propId: string) => {
+    setProps(prev => {
+      const next = prev.filter(p => p.id !== propId);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) persistSceneProps(sceneId, next);
+      return next;
+    });
+
+    setSelectedPropId(id => (id === propId ? null : id));
+  }, [persistSceneProps]);
+
+    const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+    setProps(prev => {
+      const next = prev.map(p => (p.id === propId ? { ...p, ...changes } : p));
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) persistSceneProps(sceneId, next);
+      return next;
+    });
+  }, [persistSceneProps]);
+
+  useEffect(() => {
+    if (phase !== 'room') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      if (role !== 'gm') return;
+      if (selectedTokenId) {
+        e.preventDefault();
+        handleRemoveToken(selectedTokenId);
+      } else if (selectedPropId) {
+        e.preventDefault();
+        handleRemoveProp(selectedPropId);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp]);
+  
+  const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
+    if (role !== 'gm' || prop.locked) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const elementRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+    setSelectedPropId(prop.id);
+    setDraggingPropId(prop.id);
+    setResizingPropId(null);
+    propResizeRef.current = null;
+
+    propDragRef.current = {
+      propId: prop.id,
+      offsetX: e.clientX - elementRect.left,
+      offsetY: e.clientY - elementRect.top,
+    };
+  }, [role]);
+
+  const handlePropResizeMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
+    if (role !== 'gm' || prop.locked) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setSelectedPropId(prop.id);
+    setResizingPropId(prop.id);
+    setDraggingPropId(null);
+    propDragRef.current = null;
+
+    propResizeRef.current = {
+      propId: prop.id,
+      startMouseX: e.clientX,
+      startMouseY: e.clientY,
+      startWidth: prop.width,
+      startHeight: prop.height,
+    };
+  }, [role]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = canvasContainerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+
+      if (propDragRef.current) {
+        const { propId, offsetX, offsetY } = propDragRef.current;
+
+        const nextX = e.clientX - containerRect.left - offsetX;
+        const nextY = e.clientY - containerRect.top - offsetY;
+
+        handleUpdateProp(propId, {
+          position: {
+            x: Math.max(0, nextX),
+            y: Math.max(0, nextY),
+          },
+        });
+        return;
+      }
+
+      if (propResizeRef.current) {
+        const {
+          propId,
+          startMouseX,
+          startMouseY,
+          startWidth,
+          startHeight,
+        } = propResizeRef.current;
+
+        const deltaX = e.clientX - startMouseX;
+        const deltaY = e.clientY - startMouseY;
+
+        handleUpdateProp(propId, {
+          width: Math.max(40, startWidth + deltaX),
+          height: Math.max(40, startHeight + deltaY),
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      propDragRef.current = null;
+      propResizeRef.current = null;
+      setDraggingPropId(null);
+      setResizingPropId(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleUpdateProp]);
 
   const handleWallAdded = useCallback((wall: VTTWall) => {
     setWalls(prev => {
@@ -621,6 +840,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
     setCanvasViewport(vp);
+    // Mode suivi joueurs : envoie viewport à tous les joueurs
+    if (role === 'gm' && gmFollowEnabledRef.current) {
+      const container = canvasContainerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const worldX = -vp.x / vp.scale;
+        const worldY = -vp.y / vp.scale;
+        const worldW = rect.width / vp.scale;
+        const worldH = rect.height / vp.scale;
+        vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
+      }
+    }
     if (broadcastModeRef.current !== 'follow') return;
     const container = canvasContainerRef.current;
     if (!container) return;
@@ -634,13 +865,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
     }, 50);
   }, []);
-
+ 
   const handleOpenBroadcastWindow = useCallback(() => {
-    if (!roomId) return;
-    const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
-    window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
+if (!roomId) return;
+  const broadcastToken = encodeURIComponent(authToken);
+  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}?t=${broadcastToken}`;
+  window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
     setTimeout(() => {
-      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
+      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) { 
         vttService.sendBroadcastViewport(broadcastFrameRef.current);
       } else if (broadcastModeRef.current === 'follow') {
         const container = canvasContainerRef.current;
@@ -726,19 +958,57 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     if (phase !== 'room' || !roomId || role !== 'player' || playerBoundTokenIds.length === 0) return;
     if (tokens.length === 0) return;
 
+    // Assigner userId aux tokens sélectionnés
     playerBoundTokenIds.forEach(tid => {
-        const token = tokens.find(t => t.id === tid);
-        if (!token) return;
-        vttService.send({
-          type: 'UPDATE_TOKEN',
-          tokenId: tid,
-          // On remplace entièrement : ce token appartient à CE joueur uniquement.
-          // Ne pas accumuler les userId qui laisserait la vision se partager.
-          changes: { controlledByUserIds: [userId] },
-        });
+      const token = tokens.find(t => t.id === tid);
+      if (!token) return;
+      vttService.send({
+        type: 'UPDATE_TOKEN',
+        tokenId: tid,
+        changes: { controlledByUserIds: [userId] },
       });
+    });
+
+    // Retirer userId de tous les tokens NON sélectionnés (exclusivité)
+    tokens.forEach(token => {
+      if (playerBoundTokenIds.includes(token.id)) return;
+      if (!token.controlledByUserIds?.includes(userId)) return;
+      // Ce token avait userId mais n'est pas dans la sélection actuelle → on retire userId
+      const newControlled = token.controlledByUserIds.filter(id => id !== userId);
+      vttService.send({
+        type: 'UPDATE_TOKEN',
+        tokenId: token.id,
+        changes: { controlledByUserIds: newControlled },
+      });
+    });
+
     setPlayerBoundTokenIds([]);
   }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
+
+  // Centrer la vue joueur sur son premier token contrôlé (one-shot)
+  useEffect(() => {
+    if (role !== 'player') return;
+    if (playerInitialViewportSetRef.current) return;
+    if (tokens.length === 0) return;
+
+    const myToken = tokens.find(t =>
+      t.visible && t.controlledByUserIds?.includes(userId)
+    );
+    if (!myToken) return;
+
+    const container = canvasContainerRef.current;
+    const W = container?.clientWidth ?? window.innerWidth;
+    const H = container?.clientHeight ?? window.innerHeight;
+    const CELL = config.gridSize || 60;
+    const scale = 1;
+    const tokenCX = myToken.position.x + ((myToken.size || 1) * CELL) / 2;
+    const tokenCY = myToken.position.y + ((myToken.size || 1) * CELL) / 2;
+    const vx = W / 2 - tokenCX * scale;
+    const vy = H / 2 - tokenCY * scale;
+
+    playerInitialViewportSetRef.current = true;
+    setPlayerInitialViewport({ x: vx, y: vy, scale });
+  }, [role, tokens, userId, config.gridSize]);
 
   if (phase === 'lobby') {
     return (
@@ -753,8 +1023,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
-      <div className="flex flex-1 overflow-hidden">
-        <VTTLeftToolbar
+      <div className="flex flex-1 overflow-hidden relative">
+        <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-auto">
+          <VTTLeftToolbar
           role={role}
           activeTool={activeTool}
           fogBrushSize={fogBrushSize}
@@ -782,31 +1053,65 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           broadcastLockRatio={broadcastLockRatio}
           onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
           onOpenBroadcastWindow={handleOpenBroadcastWindow}
-          broadcastMode={broadcastMode}
-          onBroadcastModeChange={setBroadcastMode}
+          gmFollowEnabled={gmFollowEnabled}
+          onToggleGmFollow={() => setGmFollowEnabled(v => !v)}
           weatherEffects={weatherEffects}
           onUpdateWeather={handleUpdateWeather}
         />
+        </div>
 
         <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
+          onMouseDown={e => {
+            if (e.target !== e.currentTarget) return;
+            setSelectedPropId(null);
+            setSelectedTokenId(null);
+            setSelectedTokenIds([]);
+          }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
+
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const dropX = e.clientX - rect.left;
+            const dropY = e.clientY - rect.top;
+
             const propId = e.dataTransfer.getData('application/vtt-prop-id');
             if (propId) {
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              handleUpdateProp(propId, { position: { x, y } });
+              handleUpdateProp(propId, {
+                position: { x: dropX, y: dropY },
+              });
+              return;
+            }
+
+            const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
+            const propName = e.dataTransfer.getData('application/vtt-prop-name');
+            const propIsVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
+
+            if (propUrl) {
+              const width = propIsVideo ? 200 : 150;
+              const height = propIsVideo ? 200 : 150;
+
+              handleAddProp({
+                label: propName || 'Prop',
+                imageUrl: propUrl,
+                position: {
+                  x: dropX - width / 2,
+                  y: dropY - height / 2,
+                },
+                width,
+                height,
+                opacity: 1,
+                locked: false,
+              });
             }
           }}
         >
           {role === 'gm' && scenes.length > 0 && (
-            <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-              <div className="pointer-events-auto inline-flex">
-                <VTTSceneBar
+          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none flex justify-center">
+            <div className="pointer-events-auto inline-flex">
+              <VTTSceneBar
                   scenes={scenes}
                   activeSceneId={activeSceneId}
                   onSwitchScene={handleSwitchScene}
@@ -867,40 +1172,64 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
               }
             }}
-            initialViewport={savedViewport}
+            forceViewport={role === 'player' && playerForcedViewport ? playerForcedViewport : undefined}
+            initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
           />
 
-          {props.map(prop => (
+                {props.map(prop => (
             <div
               key={prop.id}
-              className={`absolute pointer-events-auto cursor-move select-none ${selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''}`}
+              className={`absolute pointer-events-auto select-none ${
+                selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''
+              } ${draggingPropId === prop.id ? 'cursor-grabbing' : 'cursor-move'}`}
               style={{
                 left: prop.position.x,
                 top: prop.position.y,
                 width: prop.width,
                 height: prop.height,
                 opacity: prop.opacity,
-                zIndex: 5,
+                zIndex: selectedPropId === prop.id ? 15 : 5,
               }}
-              draggable={role === 'gm' && !prop.locked}
-              onDragStart={e => {
-                e.dataTransfer.setData('application/vtt-prop-id', prop.id);
-                e.dataTransfer.effectAllowed = 'move';
+              onMouseDown={e => handlePropMouseDown(e, prop)}
+              onClick={e => {
+                e.stopPropagation();
+              setSelectedPropId(prop.id);
               }}
-              onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
             >
               {prop.imageUrl ? (
-                <img
-                  src={prop.imageUrl}
-                  alt={prop.label}
-                  className="w-full h-full object-contain pointer-events-none"
-                  draggable={false}
-                />
+                /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
+                  <video
+                    src={prop.imageUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    draggable={false}
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
+                ) : (
+                  <img
+                    src={prop.imageUrl}
+                    alt={prop.label}
+                    className="w-full h-full object-contain pointer-events-none"
+                    draggable={false}
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
                   <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
                 </div>
+              )}
+
+              {selectedPropId === prop.id && role === 'gm' && !prop.locked && (
+                <button
+                  type="button"
+                  className="absolute bottom-1 right-1 z-20 w-1.5 h-1.5 rounded-[2px] bg-white/80 hover:bg-white border border-black/10 shadow-none cursor-se-resize"
+                  onMouseDown={e => handlePropResizeMouseDown(e, prop)}
+                  onClick={e => e.stopPropagation()}
+                  title="Redimensionner"
+                />
               )}
             </div>
           ))}
@@ -1075,6 +1404,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onClose={() => setSceneConfigEdit(null)}
         />
       )}
-    </div>
-  );
-}
+    </div>   
+  ); 
+} 
