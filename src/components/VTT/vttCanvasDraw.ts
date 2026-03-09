@@ -191,7 +191,12 @@ const myVisionTokens = myControlledTokens.filter(
   const hasWalls = currentWalls.length > 0;
   const hasVision = myVisionTokens.length > 0;
 
- const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
+const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
+  // Broadcast local : sans murs, tous les tokens visibles doivent être affichés.
+  if (isPlayerVisionSpectator && currentWalls.length === 0) {
+    return !!token.visible;
+  }
+
   // Les tokens visibles doivent rester affichés aux joueurs,
   // même s'ils ne sont assignés à personne (ex: monstres / PNJ).
   if (token.visible) return true;
