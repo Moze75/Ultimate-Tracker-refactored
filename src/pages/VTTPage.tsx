@@ -1066,24 +1066,25 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-          {props.map(prop => (
+                {props.map(prop => (
             <div
               key={prop.id}
-              className={`absolute pointer-events-auto cursor-move select-none ${selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''}`}
+              className={`absolute pointer-events-auto select-none ${
+                selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''
+              } ${draggingPropId === prop.id ? 'cursor-grabbing' : 'cursor-move'}`}
               style={{
                 left: prop.position.x,
                 top: prop.position.y,
                 width: prop.width,
                 height: prop.height,
                 opacity: prop.opacity,
-                zIndex: 5,
+                zIndex: selectedPropId === prop.id ? 15 : 5,
               }}
-              draggable={role === 'gm' && !prop.locked}
-              onDragStart={e => {
-                e.dataTransfer.setData('application/vtt-prop-id', prop.id);
-                e.dataTransfer.effectAllowed = 'move';
+              onMouseDown={e => handlePropMouseDown(e, prop)}
+              onClick={e => {
+                e.stopPropagation();
+                setSelectedPropId(id => id === prop.id ? id : prop.id);
               }}
-              onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
             >
               {prop.imageUrl ? (
                 /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
@@ -1108,6 +1109,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                 <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
                   <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
                 </div>
+              )}
+
+              {selectedPropId === prop.id && role === 'gm' && !prop.locked && (
+                <button
+                  type="button"
+                  className="absolute bottom-0 right-0 w-4 h-4 bg-amber-500 hover:bg-amber-400 border border-black/40 rounded-tl cursor-se-resize"
+                  onMouseDown={e => handlePropResizeMouseDown(e, prop)}
+                  onClick={e => e.stopPropagation()}
+                  title="Redimensionner"
+                />
               )}
             </div>
           ))}
