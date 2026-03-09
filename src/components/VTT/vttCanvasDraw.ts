@@ -274,7 +274,7 @@ const fogPunchTokens =
   }
 
   // --- VISION DE JOUR ---
-if (!cfg.fogEnabled) { 
+if (!cfg.fogEnabled) {  
   // Brouillard désactivé : aucun masque de vision joueur à appliquer.
 } else if (isDay && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0) {
   // De jour, sans murs, la vision joueur ne doit pas être limitée par un rayon de proximité.
