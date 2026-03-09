@@ -1215,8 +1215,11 @@ onMouseDown={e => {
             onMoveToken={handleMoveToken}
             onRevealFog={handleRevealFog}
             selectedTokenId={selectedTokenId}
-           onSelectToken={id => {
+onSelectToken={id => {
   setSelectedPropId(null);
+  if (role === 'gm' && activeTool !== 'select') {
+    setActiveTool('select');
+  }
   setSelectedTokenId(id);
 }}
             selectedTokenIds={selectedTokenIds}
