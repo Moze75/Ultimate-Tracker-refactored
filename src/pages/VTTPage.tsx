@@ -1170,7 +1170,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               {selectedPropId === prop.id && role === 'gm' && !prop.locked && (
                 <button
                   type="button"
-                  className="absolute bottom-0 right-0 z-20 w-4 h-4 bg-amber-500 hover:bg-amber-400 border border-black/40 rounded-tl cursor-se-resize"
+                  className="absolute bottom-1 right-1 z-20 w-2.5 h-2.5 rounded-sm bg-amber-400/90 hover:bg-amber-300 border border-black/30 shadow-sm cursor-se-resize"
                   onMouseDown={e => handlePropResizeMouseDown(e, prop)}
                   onClick={e => e.stopPropagation()}
                   title="Redimensionner"
