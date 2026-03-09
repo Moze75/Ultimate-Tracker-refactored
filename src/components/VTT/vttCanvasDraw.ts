@@ -399,7 +399,7 @@ if (!cfg.fogEnabled) {
   }
  
   // --- VISION DE NUIT ---
-  if (isNight && curRole === 'player' && curUserId !== '') {
+  if (cfg.fogEnabled && isNight && curRole === 'player' && curUserId !== '') {
     const playerTokens = myControlledTokens.filter(t =>
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );
