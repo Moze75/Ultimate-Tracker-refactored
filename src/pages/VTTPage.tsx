@@ -572,45 +572,57 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedPropId(id => id === propId ? null : id);
   }, []);
 
-  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+   const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
     setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
   }, []);
 
-    const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
-    if (role !== 'gm' || prop.locked) return;
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = canvasContainerRef.current;
+      if (!container) return;
 
-    e.preventDefault();
-    e.stopPropagation();
+      const containerRect = container.getBoundingClientRect();
 
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      if (propDragRef.current) {
+        const { propId, offsetX, offsetY } = propDragRef.current;
+        const nextX = e.clientX - containerRect.left - offsetX;
+        const nextY = e.clientY - containerRect.top - offsetY;
 
-    setSelectedPropId(prop.id);
-    setDraggingPropId(prop.id);
+        handleUpdateProp(propId, {
+          position: {
+            x: Math.max(0, nextX),
+            y: Math.max(0, nextY),
+          },
+        });
+      }
 
-    propDragRef.current = {
-      propId: prop.id,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
+      if (propResizeRef.current) {
+        const { propId, startMouseX, startMouseY, startWidth, startHeight } = propResizeRef.current;
+        const deltaX = e.clientX - startMouseX;
+        const deltaY = e.clientY - startMouseY;
+
+        handleUpdateProp(propId, {
+          width: Math.max(40, startWidth + deltaX),
+          height: Math.max(40, startHeight + deltaY),
+        });
+      }
     };
-  }, [role]);
 
-  const handlePropResizeMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
-    if (role !== 'gm' || prop.locked) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    setSelectedPropId(prop.id);
-    setResizingPropId(prop.id);
-
-    propResizeRef.current = {
-      propId: prop.id,
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-      startWidth: prop.width,
-      startHeight: prop.height,
+    const handleMouseUp = () => {
+      propDragRef.current = null;
+      propResizeRef.current = null;
+      setDraggingPropId(null);
+      setResizingPropId(null);
     };
-  }, [role]);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleUpdateProp]);
 
   const handleWallAdded = useCallback((wall: VTTWall) => {
     setWalls(prev => {
