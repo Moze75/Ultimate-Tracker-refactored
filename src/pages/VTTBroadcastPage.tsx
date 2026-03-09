@@ -32,24 +32,6 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
 const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
 
 export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPageProps) {
-  // Support ouverture directe (window.open) : on peut transmettre le token via l'URL
-  // Exemple: #/vtt-broadcast/<roomId>?t=<access_token>
-  const tokenFromUrl = (() => {
-    try {
-      const hash = window.location.hash || '';
-      const queryIndex = hash.indexOf('?');
-      const query = queryIndex >= 0 ? hash.slice(queryIndex + 1) : '';
-      const params = new URLSearchParams(query);
-      return params.get('t') || '';
-    } catch {
-      return '';
-    }
-  })();
-
-  const authTokenFallback = tokenFromUrl || session?.access_token || '';
-  const userIdFallback = session?.user?.id || 'broadcast';
-  const userNameFallback =
-    `${session?.user?.user_metadata?.display_name || session?.user?.email?.split('@')[0] || 'Spectateur'} (Broadcast)`;
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
@@ -58,14 +40,12 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [broadcastViewport, setBroadcastViewport] = useState<BroadcastViewport | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [waitingForSync, setWaitingForSync] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  const userId = userIdFallback;
-  const authToken = authTokenFallback;
-  const userName = userNameFallback;
-    const hasAnyAuthContext = !!session || !!tokenFromUrl;
-
+  // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
@@ -73,6 +53,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setTokens(event.state.room.tokens);
         setFogState(event.state.room.fogState);
         setWalls(event.state.room.walls || []);
+        setWaitingForSync(false);
         break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
@@ -114,99 +95,72 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     }
   }, []);
 
+  // Connexion au canal Supabase Realtime — AUCUNE requête DB
   useEffect(() => {
-    let cancelled = false;
+    const channel = supabase.channel(`vtt-room-${roomId}`, {
+      config: { broadcast: { self: false } },
+    });
+    channelRef.current = channel;
 
-    const setup = async () => {
-      // 1. Si pas de session mais token dans l'URL → injecter dans Supabase pour passer les RLS
-      if (!session && tokenFromUrl) {
-        try {
-          await supabase.auth.setSession({
-            access_token: tokenFromUrl,
-            refresh_token: '',
-          });
-        } catch (err) {
-          console.warn('[Broadcast] setSession fallback:', err);
+    channel
+      .on('broadcast', { event: 'vtt' }, ({ payload }) => {
+        handleServerEvent(payload as VTTServerEvent);
+      })
+      .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
+        setBroadcastViewport(payload as BroadcastViewport);
+      })
+      // Écoute l'événement dédié d'initialisation broadcast
+      .on('broadcast', { event: 'vtt-broadcast-init' }, ({ payload }) => {
+        console.log('[Broadcast] Received init state from GM');
+        const s = payload as {
+          config?: VTTRoomConfig;
+          tokens?: VTTToken[];
+          fogState?: VTTFogState;
+          walls?: VTTWall[];
+        };
+        if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
+        if (s.tokens) setTokens(s.tokens);
+        if (s.fogState) setFogState(s.fogState);
+        if (s.walls) setWalls(s.walls);
+        setWaitingForSync(false);
+      })
+      .subscribe((status) => {
+        const isConnected = status === 'SUBSCRIBED';
+        setConnected(isConnected);
+        if (isConnected) {
+          // Demander au MJ d'envoyer l'état initial
+          console.log('[Broadcast] Connected, requesting state from GM...');
+          channel.send({
+            type: 'broadcast',
+            event: 'vtt-broadcast-request',
+            payload: { requestedAt: Date.now() },
+          }).catch(console.error);
         }
-      }
-
-      if (cancelled) return;
-
-      // 2. S'abonner au canal broadcast
-      const channel = supabase.channel(`vtt-room-${roomId}`, {
-        config: { broadcast: { self: false } },
       });
 
-      channel
-        .on('broadcast', { event: 'vtt' }, ({ payload }) => {
-          handleServerEvent(payload as VTTServerEvent);
-        })
-        .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
-          setBroadcastViewport(payload as BroadcastViewport);
-        })
-        .subscribe((status) => {
-          setConnected(status === 'SUBSCRIBED');
-        });
-
-      // 3. Charger l'état initial : d'abord vtt_rooms (fallback), puis vtt_scenes (prioritaire)
-      try {
-        const { data: roomData } = await supabase
-          .from('vtt_rooms')
-          .select('state_json')
-          .eq('id', roomId)
-          .maybeSingle();
-
-        if (cancelled) return;
-
-        let roomConfig: Partial<VTTRoomConfig> = {};
-        let roomTokens: VTTToken[] = [];
-        let roomFog: VTTFogState | null = null;
-
-        if (roomData?.state_json) {
-          const s = roomData.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
-          if (s.config) roomConfig = s.config;
-          if (s.tokens) roomTokens = s.tokens;
-          if (s.fogState) roomFog = s.fogState;
-        }
-
-        const { data: sceneData } = await supabase
-          .from('vtt_scenes')
-          .select('walls, fog_state, config, tokens')
-          .eq('room_id', roomId)
-          .order('order_index', { ascending: true })
-          .limit(1);
-
-        if (cancelled) return;
-
-        if (sceneData && sceneData.length > 0) {
-          const scene = sceneData[0];
-          const mergedConfig = { ...DEFAULT_CONFIG, ...roomConfig, ...(scene.config || {}) };
-          setConfig(mergedConfig);
-          setTokens(scene.tokens || roomTokens);
-          setFogState(scene.fog_state || roomFog || DEFAULT_FOG);
-          if (scene.walls) setWalls(scene.walls);
-        } else {
-          if (Object.keys(roomConfig).length > 0) setConfig(prev => ({ ...prev, ...roomConfig }));
-          if (roomTokens.length > 0) setTokens(roomTokens);
-          if (roomFog) setFogState(roomFog);
-        }
-      } catch (err) {
-        console.error('[Broadcast] Load error:', err);
-      }
-
-      // Cleanup : retirer le channel à la destruction
-      return channel;
-    };
-
-    let channelRef: ReturnType<typeof supabase.channel> | undefined;
-    setup().then(ch => { channelRef = ch; });
-
     return () => {
-      cancelled = true;
-      if (channelRef) supabase.removeChannel(channelRef);
+      channelRef.current = null;
+      supabase.removeChannel(channel);
     };
-  }, [roomId, session, tokenFromUrl, handleServerEvent]);
+  }, [roomId, handleServerEvent]);
 
+  // Redemander l'état périodiquement si toujours en attente
+  useEffect(() => {
+    if (!waitingForSync || !connected) return;
+    const interval = setInterval(() => {
+      if (channelRef.current) {
+        console.log('[Broadcast] Still waiting, re-requesting state...');
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'vtt-broadcast-request',
+          payload: { requestedAt: Date.now() },
+        }).catch(console.error);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [waitingForSync, connected]);
+
+  // Fullscreen
   useEffect(() => {
     const handleFS = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFS);
@@ -221,6 +175,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     }
   }, []);
 
+  // Auto-hide controls
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -245,11 +200,12 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   return (
     <div
       ref={containerRef}
-      className="h-screen w-screen bg-black relative overflow-hidden cursor-none"
+      className="h-screen w-screen bg-black relative overflow-hidden"
       onMouseMove={handleMouseMove}
       style={{ cursor: showControls ? 'default' : 'none' }}
     >
-      {!config.mapImageUrl && (
+      {/* Écran d'attente tant que le MJ n'a pas envoyé l'état */}
+      {waitingForSync && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="text-center space-y-3">
             <div className="w-16 h-16 mx-auto rounded-full bg-gray-800/80 border border-gray-700/60 flex items-center justify-center">
@@ -257,6 +213,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
             </div>
             <p className="text-gray-500 text-sm">En attente du MJ...</p>
             {!connected && <p className="text-red-400 text-xs">Connexion en cours...</p>}
+            {connected && <p className="text-emerald-400 text-xs">Connecté — synchronisation en cours...</p>}
           </div>
         </div>
       )}
@@ -267,7 +224,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         fogState={fogState}
         role="gm"
         userId=""
-        activeTool="select" 
+        activeTool="select"
         fogBrushSize={0}
         onMoveToken={noOp as any}
         onRevealFog={noOpStroke as any}
@@ -285,6 +242,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         />
       )}
 
+      {/* Barre de contrôle auto-hide */}
       <div className={`absolute top-0 left-0 right-0 z-30 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-black/80 to-transparent">
           <button
@@ -297,12 +255,12 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-              {connected ? 'Connecte' : 'Deconnecte'}
+              {connected ? 'Connecté' : 'Déconnecté'}
             </div>
             <button
               onClick={toggleFullscreen}
               className="p-1.5 bg-gray-800/80 hover:bg-gray-700 border border-gray-700/60 rounded-lg text-gray-300 transition-colors"
-              title={isFullscreen ? 'Quitter le plein ecran' : 'Plein ecran'}
+              title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
             >
               {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
             </button>
