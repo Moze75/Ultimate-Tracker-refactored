@@ -251,7 +251,7 @@ const fogPunchTokens =
     : curRole === 'player'
       ? (isDay
           ? myVisionTokens
-          : myControlledTokens.filter(t => 
+          : myControlledTokens.filter(t =>
               (t.visionMode === 'darkvision') || (t.lightSource && t.lightSource !== 'none')
             ))
       : (isDay
@@ -399,7 +399,7 @@ if (!cfg.fogEnabled) {
   }
  
   // --- VISION DE NUIT ---
- if (cfg.fogEnabled && isNight && curRole === 'player' && (curUserId !== '' || isPlayerVisionSpectator)) {
+  if (cfg.fogEnabled && isNight && curRole === 'player' && curUserId !== '') { 
     const playerTokens = myControlledTokens.filter(t =>
       (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
     );
