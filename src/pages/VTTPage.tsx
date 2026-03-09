@@ -105,12 +105,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
-    activeSceneIdRef.current = activeSceneId;
-     const propsRef = useRef<VTTProp[]>([]);
-  propsRef.current = props;
+  activeSceneIdRef.current = activeSceneId;
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
+
+  const propsRef = useRef<VTTProp[]>([]);
+  propsRef.current = props;
   const [broadcastFrameEnabled, setBroadcastFrameEnabled] = useState(false);
     const [draggingPropId, setDraggingPropId] = useState<string | null>(null);
   const [resizingPropId, setResizingPropId] = useState<string | null>(null);
