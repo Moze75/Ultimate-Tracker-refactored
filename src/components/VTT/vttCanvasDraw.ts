@@ -110,7 +110,7 @@ const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
   if (curRole !== 'player') return true;
 
   if (isBroadcastSpectator) {
-    return true;
+    return (t.controlledByUserIds?.length || 0) > 0;
   }
 
   // Un joueur ne contrôle un token QUE s'il figure dans controlledByUserIds.
