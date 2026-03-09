@@ -247,7 +247,11 @@ if (curRole === 'player' && myVisionTokens.length === 0 && !isPlayerVisionSpecta
 
 const fogPunchTokens =
   isPlayerVisionSpectator
-    ? []
+    ? (isDay
+        ? myVisionTokens
+        : myControlledTokens.filter(t =>
+            (t.visionMode === 'darkvision') || (t.lightSource && t.lightSource !== 'none')
+          ))
     : curRole === 'player'
       ? (isDay
           ? myVisionTokens
