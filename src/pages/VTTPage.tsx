@@ -968,7 +968,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
-          onMouseDown={() => {
+          onMouseDown={e => {
+            if (e.target !== e.currentTarget) return;
             setSelectedPropId(null);
             setSelectedTokenId(null);
             setSelectedTokenIds([]);
