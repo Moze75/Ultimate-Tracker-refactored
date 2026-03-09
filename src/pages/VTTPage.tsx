@@ -224,13 +224,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
     const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
-    // Joueur : abonnement au viewport forcé par le MJ
-    const unsubVp = role === 'player'
-      ? vttService.onBroadcastViewport(vp => setPlayerForcedViewport(vp))
-      : () => {};
     vttService.connect(roomId, userId, authToken, userName, requestedRole);
-    return () => { unsub(); unsubConn(); unsubPresence(); unsubVp(); vttService.disconnect(); };
+    return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
+
+  // Joueur : abonnement au viewport forcé par le MJ (séparé pour ne pas reconnecter)
+  useEffect(() => {
+    if (phase !== 'room' || !roomId || role !== 'player') return;
+    const unsubVp = vttService.onBroadcastViewport(vp => setPlayerForcedViewport(vp));
+    return () => { unsubVp(); };
+  }, [phase, roomId, role]);
 
  
   
