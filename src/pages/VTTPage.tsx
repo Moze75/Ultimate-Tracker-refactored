@@ -979,7 +979,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               <div
                 key={prop.id}
                 data-prop-id={prop.id}
-                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? '' : ''}`}
+                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
                
                 onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
                 onMouseDown={e => {
