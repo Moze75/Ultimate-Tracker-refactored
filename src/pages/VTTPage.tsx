@@ -856,12 +856,39 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
             e.preventDefault();
+
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const dropX = e.clientX - rect.left;
+            const dropY = e.clientY - rect.top;
+
             const propId = e.dataTransfer.getData('application/vtt-prop-id');
             if (propId) {
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              handleUpdateProp(propId, { position: { x, y } });
+              handleUpdateProp(propId, {
+                position: { x: dropX, y: dropY },
+              });
+              return;
+            }
+
+            const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
+            const propName = e.dataTransfer.getData('application/vtt-prop-name');
+            const propIsVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
+
+            if (propUrl) {
+              const width = propIsVideo ? 200 : 150;
+              const height = propIsVideo ? 200 : 150;
+
+              handleAddProp({
+                label: propName || 'Prop',
+                imageUrl: propUrl,
+                position: {
+                  x: dropX - width / 2,
+                  y: dropY - height / 2,
+                },
+                width,
+                height,
+                opacity: 1,
+                locked: false,
+              });
             }
           }}
         >
