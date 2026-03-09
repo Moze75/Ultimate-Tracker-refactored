@@ -32,6 +32,24 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
 const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
 
 export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPageProps) {
+  // Support ouverture directe (window.open) : on peut transmettre le token via l'URL
+  // Exemple: #/vtt-broadcast/<roomId>?t=<access_token>
+  const tokenFromUrl = (() => {
+    try {
+      const hash = window.location.hash || '';
+      const queryIndex = hash.indexOf('?');
+      const query = queryIndex >= 0 ? hash.slice(queryIndex + 1) : '';
+      const params = new URLSearchParams(query);
+      return params.get('t') || '';
+    } catch {
+      return '';
+    }
+  })();
+
+  const authTokenFallback = tokenFromUrl || session?.access_token || '';
+  const userIdFallback = session?.user?.id || 'broadcast';
+  const userNameFallback =
+    `${session?.user?.user_metadata?.display_name || session?.user?.email?.split('@')[0] || 'Spectateur'} (Broadcast)`;
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
