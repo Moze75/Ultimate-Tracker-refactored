@@ -221,20 +221,8 @@ export function VTTPropsPanel({
   };
 
   // Déposer sur le canvas via onAddProp (position centre-carte par défaut)
-  const handlePlaceProp = (entry: PropEntry) => {
-    const w = entry.isVideo ? 200 : 150;
-    const h = entry.isVideo ? 200 : 150;
-
-    onAddProp({
-      label: entry.name,
-      imageUrl: entry.url,
-      position: { x: 300, y: 200 },
-      width: w,
-      height: h,
-      opacity: 1,
-      locked: false,
-    });
-  };
+  const handlePlaceProp = (entry: PropEntry) => { 
+    console.log('[DEBUG PROP] handlePlaceProp appelé', entry.name, 'onAddProp type:', typeof onAddProp); 
     const w = entry.isVideo ? 200 : 150;
     const h = entry.isVideo ? 200 : 150;
     const propData = {
