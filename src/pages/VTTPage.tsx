@@ -759,15 +759,17 @@ propDragRef.current = {
       if (propDragRef.current) {
         const { propId, offsetX, offsetY } = propDragRef.current;
 
-        const nextX = e.clientX - containerRect.left - offsetX;
-        const nextY = e.clientY - containerRect.top - offsetY;
+const vp = canvasViewport;
 
-        handleUpdateProp(propId, {
-          position: {
-            x: Math.max(0, nextX),
-            y: Math.max(0, nextY),
-          },
-        });
+const nextX = (e.clientX - containerRect.left - vp.x) / vp.scale - offsetX;
+const nextY = (e.clientY - containerRect.top - vp.y) / vp.scale - offsetY;
+
+handleUpdateProp(propId, {
+  position: {
+    x: Math.max(0, nextX),
+    y: Math.max(0, nextY),
+  },
+});
         return;
       }
 
