@@ -72,24 +72,28 @@ const buildTokenData = (char: PlayerCharacter): Omit<VTTToken, 'id'> => ({
   lightRadius: 0,
 });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!label.trim()) return;
-    onConfirm({
-      characterId: selectedCharId,
-      ownerUserId: userId,
-      label: label.trim(),
-      imageUrl: imageUrl.trim() || null,
-      position: { x: 60, y: 60 },
-      size,
-      rotation: 0,
-      visible: true,
-      color,
-      hp: hp ? parseInt(hp) : undefined,
-      maxHp: maxHp ? parseInt(maxHp) : undefined,
-    });
-    onClose();
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!label.trim()) return;
+  onConfirm({
+    characterId: selectedCharId,
+    ownerUserId: userId,
+    label: label.trim(),
+    imageUrl: imageUrl.trim() || null,
+    position: { x: 60, y: 60 },
+    size,
+    rotation: 0,
+    visible: true,
+    color,
+    hp: hp ? parseInt(hp) : undefined,
+    maxHp: maxHp ? parseInt(maxHp) : undefined,
+    visionMode: 'normal',
+    visionRadius: 8,
+    lightSource: 'none',
+    lightRadius: 0,
+  });
+  onClose();
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
