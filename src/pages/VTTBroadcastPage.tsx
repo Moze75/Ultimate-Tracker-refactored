@@ -190,12 +190,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const noOp = useCallback(() => {}, []);
   const noOpStroke = useCallback(() => {}, []);
 
-  const defaultViewport = broadcastViewport || (config.mapWidth > 0 ? {
-    x: 0,
-    y: 0,
-    width: config.mapWidth,
-    height: config.mapHeight,
-  } : null);
+const defaultViewport = broadcastViewport ?? undefined;
 
   return (
     <div
