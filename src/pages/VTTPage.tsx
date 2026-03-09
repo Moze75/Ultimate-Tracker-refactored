@@ -514,9 +514,19 @@ useEffect(() => {
     handleUpdateToken(tokenId, { size });
   }, [handleUpdateToken]);
 
-  const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
-    vttService.send({ type: 'ADD_TOKEN', token: { ...tokenData, position: worldPos } });
-  }, []);
+const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
+  vttService.send({
+    type: 'ADD_TOKEN',
+    token: {
+      ...tokenData,
+      position: worldPos,
+      visible: tokenData.visible ?? true,
+      showLabel: tokenData.showLabel ?? true,
+      visionMode: tokenData.visionMode ?? 'none',
+      lightSource: tokenData.lightSource ?? 'none',
+    },
+  });
+}, []);
 
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
