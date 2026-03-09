@@ -185,32 +185,29 @@ const myVisionTokens = myControlledTokens.filter(
   const hasWalls = currentWalls.length > 0;
   const hasVision = myVisionTokens.length > 0;
 
-  const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
-    // Token du joueur lui-même : toujours visible
-    if (myControlledTokens.some(mt => mt.id === token.id)) return true;
-    // Sans vision active : rien n'est visible (le blackout s'en chargera)
-    if (!hasVision) return false;
-    // Sans murs : tout token visible est vu (pas d'occlusion)
-    if (!hasWalls) return true;
-    // Avec murs : seulement les tokens dans le polygone de vision
-    return directlyVisibleTokenIds.has(token.id);
-  };
+ const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
+  // Les tokens visibles doivent rester affichés aux joueurs,
+  // même s'ils ne sont assignés à personne (ex: monstres / PNJ).
+  if (token.visible) return true;
 
-  ctx2d.tokensRef.current.forEach(token => {
-    if (!token.visible && curRole === 'player') return;
-    if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
-    drawToken({
-      ctx,
-      token,
-      CELL,
-      scale: vp.scale,
-      currentSelectedId,
-      multiIds,
-      curUserId,
-      tokenImageCache: ctx2d.tokenImageCache.current,
-      onImageLoad: () => ctx2d.drawRef.current(),
-    });
+  // Sécurité supplémentaire : le token du joueur lui-même reste visible.
+  return myControlledTokens.some(mt => mt.id === token.id);
+};
+
+ctx2d.tokensRef.current.forEach(token => {
+  if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
+  drawToken({
+    ctx,
+    token,
+    CELL,
+    scale: vp.scale,
+    currentSelectedId,
+    multiIds,
+    curUserId,
+    tokenImageCache: ctx2d.tokenImageCache.current,
+    onImageLoad: () => ctx2d.drawRef.current(),
   });
+});
 
 // Hard blackout joueur : aucun token avec vision active => tout noir
 // Exception broadcast joueur : spectatorMode = player-vision
