@@ -395,6 +395,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       if (pos) {
         vttService.send({ type: 'MOVE_TOKEN_REQUEST', tokenId, position: pos });
         pendingMovesRef.current.delete(tokenId);
+
+        const sceneId = activeSceneIdRef.current;
+        if (sceneId) {
+          saveCurrentSceneState(sceneId).catch(err => {
+            console.error('[VTT] Save scene after token move error:', err);
+          });
+        }
       }
       moveThrottleRef.current.delete(tokenId);
     }, 50);
