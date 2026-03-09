@@ -101,23 +101,29 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const timeOfDay = cfg.timeOfDay;
   const isNight = timeOfDay != null && (timeOfDay >= 19 || timeOfDay < 5);
   const isDay = !isNight;
-  const currentWalls = ctx2d.wallsRef.current || [];
+const currentWalls = ctx2d.wallsRef.current || [];
+const isBroadcastSpectator = curRole === 'player' && curUserId === '';
 
-  // myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
-  const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
-    if (!t.visible) return false;
-    if (curRole !== 'player') return true;
-    // Un joueur ne contrôle un token QUE s'il figure dans controlledByUserIds.
-    // On N'utilise PAS ownerUserId : un joueur peut posséder plusieurs tokens
-    // mais ne doit voir QUE la vision du token qu'il a sélectionné dans le lobby.
-    // ownerUserId est réservé à l'administration (qui peut éditer/supprimer).
-    return t.controlledByUserIds?.includes(curUserId) ?? false; 
-  });
+// myControlledTokens = tokens que CE joueur contrôle (pour calculer SA vision)
+const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
+  if (!t.visible) return false;
+  if (curRole !== 'player') return true;
 
-  // myVisionTokens = mes tokens qui ont une vision active
-  const myVisionTokens = myControlledTokens.filter(
-    t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
-  ); 
+  if (isBroadcastSpectator) {
+    return true;
+  }
+
+  // Un joueur ne contrôle un token QUE s'il figure dans controlledByUserIds.
+  // On N'utilise PAS ownerUserId : un joueur peut posséder plusieurs tokens
+  // mais ne doit voir QUE la vision du token qu'il a sélectionné dans le lobby.
+  // ownerUserId est réservé à l'administration (qui peut éditer/supprimer).
+  return t.controlledByUserIds?.includes(curUserId) ?? false;
+});
+
+// myVisionTokens = mes tokens qui ont une vision active
+const myVisionTokens = myControlledTokens.filter(
+  t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
+);
 
   // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
