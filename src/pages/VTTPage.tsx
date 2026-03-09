@@ -1034,39 +1034,39 @@ useEffect(() => {
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
       <div className="flex flex-1 overflow-hidden relative">
         <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-auto">
-          <VTTLeftToolbar
-          role={role}
-          activeTool={activeTool}
-          fogBrushSize={fogBrushSize}
-          config={config}
-          onToolChange={setActiveTool}
-          onFogBrushSizeChange={setFogBrushSize}
-          onAddToken={() => setShowAddToken(true)}
-          onResetFog={handleResetFog}
-          onRevealAll={handleRevealAll}
-          onMaskAll={handleMaskAll}
-          onUpdateMap={handleUpdateMap}
-          onBack={leaveRoom}
-          calibrationPoints={calibrationPoints}
-          onClearCalibration={handleClearCalibration}
-          onApplyCalibration={handleApplyCalibration}
-          wallCount={walls.length}
-          onClearWalls={handleClearWalls}
-          showWalls={showWalls}
-          onToggleShowWalls={() => setShowWalls(v => !v)}
-          roomId={roomId!}
-          broadcastFrameEnabled={broadcastFrameEnabled}
-          onToggleBroadcastFrame={() => setBroadcastFrameEnabled(v => !v)}
-          broadcastAspectRatio={broadcastAspectRatio}
-          onBroadcastAspectRatioChange={setBroadcastAspectRatio}
-          broadcastLockRatio={broadcastLockRatio}
-          onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
-          onOpenBroadcastWindow={handleOpenBroadcastWindow}
-          gmFollowEnabled={gmFollowEnabled}
-          onToggleGmFollow={() => setGmFollowEnabled(v => !v)}
-          weatherEffects={weatherEffects}
-          onUpdateWeather={handleUpdateWeather}
-        />
+<VTTLeftToolbar
+  role={role}
+  activeTool={activeTool}
+  fogBrushSize={fogBrushSize}
+  config={config}
+  onToolChange={setActiveTool}
+  onFogBrushSizeChange={setFogBrushSize}
+  onAddToken={() => setShowAddToken(true)}
+  onResetFog={handleResetFog}
+  onRevealAll={handleRevealAll}
+  onMaskAll={handleMaskAll}
+  onUpdateMap={handleUpdateMap}
+  onBack={leaveRoom}
+  calibrationPoints={calibrationPoints}
+  onClearCalibration={handleClearCalibration}
+  onApplyCalibration={handleApplyCalibration}
+  wallCount={walls.length}
+  onClearWalls={handleClearWalls}
+  showWalls={showWalls}
+  onToggleShowWalls={() => setShowWalls(v => !v)}
+  roomId={roomId!}
+  broadcastFrameEnabled={broadcastFrameEnabled}
+  onToggleBroadcastFrame={() => setBroadcastFrameEnabled(v => !v)}
+  broadcastAspectRatio={broadcastAspectRatio}
+  onBroadcastAspectRatioChange={setBroadcastAspectRatio}
+  broadcastLockRatio={broadcastLockRatio}
+  onToggleBroadcastLockRatio={() => setBroadcastLockRatio(v => !v)}
+  onOpenBroadcastWindow={handleOpenBroadcastWindow}
+  gmFollowEnabled={gmFollowEnabled}
+  onToggleGmFollow={() => setGmFollowEnabled(v => !v)}
+  weatherEffects={weatherEffects}
+  onUpdateWeather={handleUpdateWeather}
+/>
         </div>
 
         <div
