@@ -572,7 +572,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);
 
-   const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
     setProps(prev => {
@@ -588,7 +588,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
       const sceneId = activeSceneIdRef.current;
       if (sceneId) {
-        supabase 
+        supabase
           .from('vtt_scenes')
           .update({
             props: next,
