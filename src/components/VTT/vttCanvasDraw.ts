@@ -212,14 +212,14 @@ const myVisionTokens = myControlledTokens.filter(
     });
   });
 
-  // Hard blackout joueur : aucun token avec vision active => tout noir
-  // Exception broadcast : userId vide = fenêtre spectateur, pas de blackout
-  if (curRole === 'player' && myVisionTokens.length === 0 && curUserId !== '') {
-    ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.fillRect(0, 0, mapW, mapH);
-    ctx.restore();
-    return;
-  }
+// Hard blackout joueur : aucun token avec vision active => tout noir
+// Exception broadcast joueur : spectatorMode = player-vision
+if (curRole === 'player' && myVisionTokens.length === 0 && !isPlayerVisionSpectator) {
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(0, 0, mapW, mapH);
+  ctx.restore();
+  return;
+}
 
   // --- FOG DE GUERRE ---
   if (cfg.fogEnabled) {
