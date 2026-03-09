@@ -47,9 +47,7 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-const DEFAULT_FOG: VTTFogState = { revealedCells: [] }; 
-
-const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
+const DEFAULT_FOG: VTTFogState = { revealedCells: [] };
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
   return {
@@ -61,7 +59,6 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     fogState: (row.fog_state as VTTFogState) || DEFAULT_FOG,
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
-    props: (row.props as VTTProp[]) || [],
   };
 }
 
@@ -111,26 +108,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
-
-  const propsRef = useRef<VTTProp[]>([]);
-  propsRef.current = props;
   const [broadcastFrameEnabled, setBroadcastFrameEnabled] = useState(false);
-    const [draggingPropId, setDraggingPropId] = useState<string | null>(null);
-  const [resizingPropId, setResizingPropId] = useState<string | null>(null);
-
-  const propDragRef = useRef<{
-    propId: string;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
-
-  const propResizeRef = useRef<{
-    propId: string;
-    startMouseX: number;
-    startMouseY: number;
-    startWidth: number;
-    startHeight: number;
-  } | null>(null);
   const [broadcastFrame, setBroadcastFrame] = useState({ x: 200, y: 100, width: 1600, height: 900 });
   const [broadcastAspectRatio, setBroadcastAspectRatio] = useState('16:9');
   const [broadcastLockRatio, setBroadcastLockRatio] = useState(true);
@@ -237,16 +215,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setTokens(scene.tokens);
     setFogState(scene.fogState);
     setWalls(scene.walls || []);
-    setProps(Array.isArray(scene.props) ? scene.props : []);
-    setSelectedPropId(null);
-    setWeatherEffects(scene.config.weatherEffects || []);
-    setSavedViewport(scene.config.savedViewport ?? null);
-    setActiveSceneId(scene.id);
-
-    if (scene.roomId) {
-      localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
-    }
-
+        setWeatherEffects(scene.config.weatherEffects || []);
+        setSavedViewport(scene.config.savedViewport ?? null);
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
@@ -269,25 +239,18 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         if (data && data.length > 0) {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
-
           if (!activeSceneId) {
-            const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
-            const restoredScene = lastSceneId
-              ? parsed.find(scene => scene.id === lastSceneId)
-              : null;
-
-            const initialScene = restoredScene ?? {
-              ...parsed[0],
-              props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
-            };
-
-            setActiveSceneId(initialScene.id);
-            applySceneToLive(initialScene);
+            // Restaurer la dernière scène visitée si elle existe encore
+            const lastSceneId = localStorage.getItem(`vtt_last_scene_${roomId}`);
+            const lastScene = lastSceneId ? parsed.find(s => s.id === lastSceneId) : null;
+            const target = lastScene ?? parsed[0];
+            setActiveSceneId(target.id);
+            applySceneToLive(target);
           }
         } else {
           supabase
             .from('vtt_scenes')
-            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
+            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [] })
             .select()
             .maybeSingle()
             .then(({ data: s }) => {
@@ -302,11 +265,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       });
   }, [phase, roomId, role, applySceneToLive]);
 
-  
-
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
-
     await supabase
       .from('vtt_scenes')
       .update({
@@ -314,7 +274,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
         walls: wallsRef.current,
-        props: propsRef.current,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
@@ -347,19 +306,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setFogState(scene.fogState);
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
-      setProps(Array.isArray(scene.props) ? scene.props : []);
-      setSelectedPropId(null);
       setActiveSceneId(sceneId);
-
-      localStorage.setItem(getLastSceneStorageKey(roomId!), sceneId);
-
       vttService.setActiveSceneId(sceneId);
-      setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
-      setSavedViewport(scene.config.savedViewport ?? null);
+      setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
+            localStorage.setItem(`vtt_last_scene_${roomId}`, sceneId);
+            setSavedViewport(scene.config.savedViewport ?? null);
     } finally {
       switchingSceneRef.current = false;
     }
-  }, [saveCurrentSceneState]);
+  }, [saveCurrentSceneState, roomId]);
 
   const handleCreateScene = useCallback(async (name: string) => {
     if (!roomId) return;
@@ -373,7 +328,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         config: DEFAULT_CONFIG,
         fog_state: DEFAULT_FOG,
         tokens: [],
-        props: [],
       })
       .select()
       .maybeSingle();
@@ -400,12 +354,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   }, [handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
-    setTokens(prev => {
-      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
-      tokensRef.current = next;
-      return next;
-    });
-
+    setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, position } : t));
     pendingMovesRef.current.set(tokenId, position);
     const existing = moveThrottleRef.current.get(tokenId);
     if (existing) clearTimeout(existing);
@@ -414,18 +363,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       if (pos) {
         vttService.send({ type: 'MOVE_TOKEN_REQUEST', tokenId, position: pos });
         pendingMovesRef.current.delete(tokenId);
-
-        const sceneId = activeSceneIdRef.current;
-        if (sceneId) {
-          saveCurrentSceneState(sceneId).catch(err => {
-            console.error('[VTT] Save scene after token move error:', err);
-          });
-        }
       }
       moveThrottleRef.current.delete(tokenId);
     }, 50);
     moveThrottleRef.current.set(tokenId, timer);
-  }, [saveCurrentSceneState]);
+  }, []);
 
   const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
     setFogState(prev => ({
@@ -471,9 +413,25 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
   }, [canControlToken]);
 
-
-  
-
+  useEffect(() => {
+    if (phase !== 'room') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      if (role !== 'gm') return;
+      if (selectedTokenId) {
+        e.preventDefault();
+        handleRemoveToken(selectedTokenId);
+      } else if (selectedPropId) {
+        e.preventDefault();
+        setProps(prev => prev.filter(p => p.id !== selectedPropId));
+        setSelectedPropId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken]);
 
   const handleToggleVisibility = useCallback((tokenId: string) => {
     if (role !== 'gm') return;
@@ -590,175 +548,24 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);
 
-    const persistSceneProps = useCallback((sceneId: string, nextProps: VTTProp[]) => {
-    propsRef.current = nextProps;
-
-    setScenes(currentScenes =>
-      currentScenes.map(scene =>
-        scene.id === sceneId
-          ? { ...scene, props: nextProps }
-          : scene
-      )
-    );
-
-    supabase
-      .from('vtt_scenes')
-      .update({
-        props: nextProps,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', sceneId)
-      .then(({ error }) => {
-        if (error) console.error('[VTT] Persist props error:', error);
-      });
-  }, []);
-
-     const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
-
+    console.log('[DEBUG PROP] handleAddProp reçu dans VTTPage', newProp);
     setProps(prev => {
       const next = [...prev, newProp];
-      const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
+      console.log('[DEBUG PROP] setProps → props total:', next.length);
       return next;
     });
-  }, [persistSceneProps]);
+  }, []);
 
-    const handleRemoveProp = useCallback((propId: string) => {
-    setProps(prev => {
-      const next = prev.filter(p => p.id !== propId);
-      const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
-      return next;
-    });
+  const handleRemoveProp = useCallback((propId: string) => {
+    setProps(prev => prev.filter(p => p.id !== propId));
+    setSelectedPropId(id => id === propId ? null : id);
+  }, []);
 
-    setSelectedPropId(id => (id === propId ? null : id));
-  }, [persistSceneProps]);
-
-    const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
-    setProps(prev => {
-      const next = prev.map(p => (p.id === propId ? { ...p, ...changes } : p));
-      const sceneId = activeSceneIdRef.current;
-      if (sceneId) persistSceneProps(sceneId, next);
-      return next;
-    });
-  }, [persistSceneProps]);
-
-  useEffect(() => {
-    if (phase !== 'room') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
-      if (role !== 'gm') return;
-      if (selectedTokenId) {
-        e.preventDefault();
-        handleRemoveToken(selectedTokenId);
-      } else if (selectedPropId) {
-        e.preventDefault();
-        handleRemoveProp(selectedPropId);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp]);
-  
-  const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
-    if (role !== 'gm' || prop.locked) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const elementRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-
-    setSelectedPropId(prop.id);
-    setDraggingPropId(prop.id);
-    setResizingPropId(null);
-    propResizeRef.current = null;
-
-    propDragRef.current = {
-      propId: prop.id,
-      offsetX: e.clientX - elementRect.left,
-      offsetY: e.clientY - elementRect.top,
-    };
-  }, [role]);
-
-  const handlePropResizeMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
-    if (role !== 'gm' || prop.locked) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    setSelectedPropId(prop.id);
-    setResizingPropId(prop.id);
-    setDraggingPropId(null);
-    propDragRef.current = null;
-
-    propResizeRef.current = {
-      propId: prop.id,
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-      startWidth: prop.width,
-      startHeight: prop.height,
-    };
-  }, [role]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = canvasContainerRef.current;
-      if (!container) return;
-
-      const containerRect = container.getBoundingClientRect();
-
-      if (propDragRef.current) {
-        const { propId, offsetX, offsetY } = propDragRef.current;
-
-        const nextX = e.clientX - containerRect.left - offsetX;
-        const nextY = e.clientY - containerRect.top - offsetY;
-
-        handleUpdateProp(propId, {
-          position: {
-            x: Math.max(0, nextX),
-            y: Math.max(0, nextY),
-          },
-        });
-        return;
-      }
-
-      if (propResizeRef.current) {
-        const {
-          propId,
-          startMouseX,
-          startMouseY,
-          startWidth,
-          startHeight,
-        } = propResizeRef.current;
-
-        const deltaX = e.clientX - startMouseX;
-        const deltaY = e.clientY - startMouseY;
-
-        handleUpdateProp(propId, {
-          width: Math.max(40, startWidth + deltaX),
-          height: Math.max(40, startHeight + deltaY),
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      propDragRef.current = null;
-      propResizeRef.current = null;
-      setDraggingPropId(null);
-      setResizingPropId(null);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleUpdateProp]);
+  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+    setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
+  }, []);
 
   const handleWallAdded = useCallback((wall: VTTWall) => {
     setWalls(prev => {
@@ -858,14 +665,13 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       vttService.sendBroadcastViewport({ x: worldX, y: worldY, width: worldW, height: worldH });
     }, 50);
   }, []);
- 
+
   const handleOpenBroadcastWindow = useCallback(() => {
     if (!roomId) return;
-  const token = encodeURIComponent(authToken);
-  const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}?t=${token}`;
-  window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no'); 
+    const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
+    window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
     setTimeout(() => {
-      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) { 
+      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
         vttService.sendBroadcastViewport(broadcastFrameRef.current);
       } else if (broadcastModeRef.current === 'follow') {
         const container = canvasContainerRef.current;
@@ -932,6 +738,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setTokens([]);
     setFogState(DEFAULT_FOG);
     setSelectedTokenId(null);
+        // On conserve la dernière scène pour la prochaine visite — ne pas effacer
     setScenes([]);
     setActiveSceneId(null);
     setProps([]);
@@ -1056,48 +863,48 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
-          onMouseDown={e => {
-            if (e.target !== e.currentTarget) return;
-            setSelectedPropId(null);
-            setSelectedTokenId(null);
-            setSelectedTokenIds([]);
+          onClick={e => {
+            // Désélectionner la prop si on clique sur le fond (pas sur une prop)
+            if ((e.target as HTMLElement).closest('[data-prop-id]') === null) {
+              setSelectedPropId(null);
+            }
           }}
-          onDragOver={e => e.preventDefault()}
+          onDragOver={e => {
+            if (e.dataTransfer.types.includes('application/vtt-prop-url') ||
+                e.dataTransfer.types.includes('application/vtt-prop-id')) {
+              e.preventDefault();
+            }
+          }}
           onDrop={e => {
             e.preventDefault();
-
+            e.stopPropagation(); // ← empêche la remontée vers d'autres handlers
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            const dropX = e.clientX - rect.left;
-            const dropY = e.clientY - rect.top;
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-            const propId = e.dataTransfer.getData('application/vtt-prop-id');
-            if (propId) {
-              handleUpdateProp(propId, {
-                position: { x: dropX, y: dropY },
-              });
-              return;
-            }
-
+            // ── Déplacement d'une prop déjà sur le canvas ──────────────────
+            const existingPropId = e.dataTransfer.getData('application/vtt-prop-id');
             const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
-            const propName = e.dataTransfer.getData('application/vtt-prop-name');
-            const propIsVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
 
             if (propUrl) {
-              const width = propIsVideo ? 200 : 150;
-              const height = propIsVideo ? 200 : 150;
-
+              // Drop depuis la bibliothèque → créer une nouvelle prop
+              const propName = e.dataTransfer.getData('application/vtt-prop-name') || 'Prop';
+              const isVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
               handleAddProp({
-                label: propName || 'Prop',
+                label: propName,
                 imageUrl: propUrl,
-                position: {
-                  x: dropX - width / 2,
-                  y: dropY - height / 2,
-                },
-                width,
-                height,
+                position: { x: x - 75, y: y - 75 },
+                width: isVideo ? 200 : 150,
+                height: isVideo ? 200 : 150,
                 opacity: 1,
                 locked: false,
               });
+            } else if (existingPropId) {
+              // Déplacement d'une prop existante
+              const prop = props.find(p => p.id === existingPropId);
+              if (prop) {
+                handleUpdateProp(existingPropId, { position: { x: x - prop.width / 2, y: y - prop.height / 2 } });
+              }
             }
           }}
         >
@@ -1151,6 +958,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
+                        onDropProp={(propData, worldPos) => {
+              handleAddProp({
+                label: propData.name,
+                imageUrl: propData.url,
+                position: { x: worldPos.x - 75, y: worldPos.y - 75 },
+                width: propData.isVideo ? 200 : 150,
+                height: propData.isVideo ? 200 : 150,
+                opacity: 1,
+                locked: false,
+              });
+            }}
             onAddTokenAtPos={handleAddTokenAtPos}
             onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
@@ -1170,62 +988,191 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-                {props.map(prop => (
-            <div
-              key={prop.id}
-              className={`absolute pointer-events-auto select-none ${
-                selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''
-              } ${draggingPropId === prop.id ? 'cursor-grabbing' : 'cursor-move'}`}
-              style={{
-                left: prop.position.x,
-                top: prop.position.y,
-                width: prop.width,
-                height: prop.height,
-                opacity: prop.opacity,
-                zIndex: selectedPropId === prop.id ? 15 : 5,
-              }}
-              onMouseDown={e => handlePropMouseDown(e, prop)}
-              onClick={e => {
-                e.stopPropagation();
-              setSelectedPropId(prop.id);
-              }}
-            >
-              {prop.imageUrl ? (
-                /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
-                  <video
-                    src={prop.imageUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    draggable={false}
-                    className="w-full h-full object-contain pointer-events-none"
-                  />
+        {(() => { console.log('[DEBUG PROP] rendu JSX — props.length:', props.length); return null; })()}
+        {/* DEBUG OVERLAY — à supprimer */}
+        {props.length > 0 && (
+          <div style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 9999,
+            background: 'red', color: 'white', padding: '8px 12px',
+            fontSize: 12, borderRadius: 6, pointerEvents: 'none',
+            fontFamily: 'monospace',
+          }}>
+            {props.length} prop(s) dans state
+          </div>
+        )}
+        {props.map(prop => {
+          console.log('[DEBUG PROP] rendu prop:', prop.id, 'position:', prop.position, 'imageUrl:', prop.imageUrl?.slice(0, 60));
+          const isSelected = selectedPropId === prop.id;
+          const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
+            return (
+              <div
+                key={prop.id}
+                data-prop-id={prop.id}
+                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? '' : ''}`}
+                style={{
+                  left: prop.position.x,
+                  top: prop.position.y,
+                  width: prop.width,
+                  height: prop.height,
+                  opacity: prop.opacity,
+                  zIndex: 9998,
+                  outline: isSelected ? '2px solid #f59e0b' : '2px solid red',
+                  outlineOffset: '2px',
+                  background: 'rgba(255,0,0,0.2)',
+                }}
+                onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
+                onMouseDown={e => {
+                  if (role !== 'gm' || prop.locked) return;
+                  if ((e.target as HTMLElement).dataset.resizeHandle) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const startX = e.clientX - prop.position.x;
+                  const startY = e.clientY - prop.position.y;
+                  const onMove = (mv: MouseEvent) => {
+                    handleUpdateProp(prop.id, { position: { x: mv.clientX - startX, y: mv.clientY - startY } });
+                  };
+                  const onUp = () => {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                  };
+                  window.addEventListener('mousemove', onMove);
+                  window.addEventListener('mouseup', onUp);
+                }}
+              >
+                {prop.imageUrl ? (
+                  isVidProp ? (
+                    <video
+                      src={prop.imageUrl}
+                      autoPlay loop muted playsInline
+                      draggable={false}
+                      className="w-full h-full object-contain pointer-events-none bg-gray-800/50"
+                      onError={e => { (e.target as HTMLVideoElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <img src={prop.imageUrl} alt={prop.label} draggable={false} className="w-full h-full object-contain pointer-events-none" />
+                  )
                 ) : (
-                  <img
-                    src={prop.imageUrl}
-                    alt={prop.label}
-                    className="w-full h-full object-contain pointer-events-none"
-                    draggable={false}
-                  />
-                )
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
-                  <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
-                </div>
-              )}
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
+                    <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
+                  </div>
+                )}
 
-              {selectedPropId === prop.id && role === 'gm' && !prop.locked && (
-                <button
-                  type="button"
-                  className="absolute bottom-1 right-1 z-20 w-1.5 h-1.5 rounded-[2px] bg-white/80 hover:bg-white border border-black/10 shadow-none cursor-se-resize"
-                  onMouseDown={e => handlePropResizeMouseDown(e, prop)}
-                  onClick={e => e.stopPropagation()}
-                  title="Redimensionner"
-                />
-              )}
-            </div>
-          ))}
+                {/* Handles de resize — visibles seulement si sélectionné + GM */}
+                {isSelected && role === 'gm' && !prop.locked && (
+                  <>
+                    {/* SE */}
+                    <div
+                      data-resize-handle="se"
+                      className="absolute bottom-0 right-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-se-resize z-10"
+                      style={{ transform: 'translate(50%, 50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const onMove = (mv: MouseEvent) => {
+                          const newW = Math.max(30, startW + mv.clientX - startX);
+                          const newH = Math.max(30, startH + mv.clientY - startY);
+                          handleUpdateProp(prop.id, { width: newW, height: newH });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* SW */}
+                    <div
+                      data-resize-handle="sw"
+                      className="absolute bottom-0 left-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-sw-resize z-10"
+                      style={{ transform: 'translate(-50%, 50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startW = prop.width;
+                        const startPX = prop.position.x;
+                        const startH = prop.height;
+                        const startY = e.clientY;
+                        const onMove = (mv: MouseEvent) => {
+                          const dx = mv.clientX - startX;
+                          const newW = Math.max(30, startW - dx);
+                          const newH = Math.max(30, startH + mv.clientY - startY);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: startPX + startW - newW, y: prop.position.y } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* NE */}
+                    <div
+                      data-resize-handle="ne"
+                      className="absolute top-0 right-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-ne-resize z-10"
+                      style={{ transform: 'translate(50%, -50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const startPY = prop.position.y;
+                        const onMove = (mv: MouseEvent) => {
+                          const newW = Math.max(30, startW + mv.clientX - startX);
+                          const dy = mv.clientY - startY;
+                          const newH = Math.max(30, startH - dy);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: prop.position.x, y: startPY + startH - newH } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    {/* NW */}
+                    <div
+                      data-resize-handle="nw"
+                      className="absolute top-0 left-0 w-4 h-4 bg-amber-500 border-2 border-white rounded-sm cursor-nw-resize z-10"
+                      style={{ transform: 'translate(-50%, -50%)' }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = prop.width;
+                        const startH = prop.height;
+                        const startPX = prop.position.x;
+                        const startPY = prop.position.y;
+                        const onMove = (mv: MouseEvent) => {
+                          const dx = mv.clientX - startX;
+                          const dy = mv.clientY - startY;
+                          const newW = Math.max(30, startW - dx);
+                          const newH = Math.max(30, startH - dy);
+                          handleUpdateProp(prop.id, { width: newW, height: newH, position: { x: startPX + startW - newW, y: startPY + startH - newH } });
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            );
+          })}
 
           <VTTPlayerList users={connectedUsers} />
 
