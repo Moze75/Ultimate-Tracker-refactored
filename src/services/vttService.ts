@@ -487,8 +487,9 @@ onPlayerViewport(handler: PlayerViewportHandler) {
     this.messageHandlers = [];
     this.connectionHandlers = [];
     this.presenceHandlers = [];
-    this.broadcastViewportHandlers = [];
-    this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
+this.broadcastViewportHandlers = [];
+this.playerViewportHandlers = [];
+this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
     this.activeSceneId = null;
   }
 
