@@ -449,7 +449,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         handleRemoveToken(selectedTokenId);
       } else if (selectedPropId) {
         e.preventDefault();
-        handleRemoveProp(selectedPropId);
+        setProps(prev => prev.filter(p => p.id !== selectedPropId));
+        setSelectedPropId(null); 
       }
     };
     window.addEventListener('keydown', handleKeyDown);
