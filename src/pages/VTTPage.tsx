@@ -722,12 +722,12 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     setResizingPropId(null);
     propResizeRef.current = null;
 
-const vp = canvasViewport;
+const vp = canvasViewportRef.current;
 
 propDragRef.current = {
   propId: prop.id,
   offsetX: (e.clientX - elementRect.left) / vp.scale,
-  offsetY: (e.clientY - elementRect.top) / vp.scale, 
+  offsetY: (e.clientY - elementRect.top) / vp.scale,
 };
   }, [role]);
 
