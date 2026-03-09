@@ -572,6 +572,29 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setActiveTool('select');
   }, [calibrationPoints, handleUpdateMap]);
 
+    const persistSceneProps = useCallback((sceneId: string, nextProps: VTTProp[]) => {
+    propsRef.current = nextProps;
+
+    setScenes(currentScenes =>
+      currentScenes.map(scene =>
+        scene.id === sceneId
+          ? { ...scene, props: nextProps }
+          : scene
+      )
+    );
+
+    supabase
+      .from('vtt_scenes')
+      .update({
+        props: nextProps,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sceneId)
+      .then(({ error }) => {
+        if (error) console.error('[VTT] Persist props error:', error);
+      });
+  }, []);
+
     const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
