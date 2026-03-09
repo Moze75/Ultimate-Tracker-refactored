@@ -958,17 +958,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onSelectTokens={ids => { setSelectedTokenIds(ids); if (ids.length > 0) setSelectedTokenId(ids[0]); }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onDropToken={handleDropToken}
-                        onDropProp={(propData, worldPos) => {
-              handleAddProp({
-                label: propData.name,
-                imageUrl: propData.url,
-                position: { x: worldPos.x - 75, y: worldPos.y - 75 },
-                width: propData.isVideo ? 200 : 150,
-                height: propData.isVideo ? 200 : 150,
-                opacity: 1,
-                locked: false,
-              });
-            }}
             onAddTokenAtPos={handleAddTokenAtPos}
             onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
