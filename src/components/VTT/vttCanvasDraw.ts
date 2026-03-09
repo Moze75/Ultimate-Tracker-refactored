@@ -191,12 +191,7 @@ const myVisionTokens = myControlledTokens.filter(
   const hasWalls = currentWalls.length > 0;
   const hasVision = myVisionTokens.length > 0;
 
-const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
-  // Broadcast local : sans murs, tous les tokens visibles doivent être affichés.
-  if (isPlayerVisionSpectator && currentWalls.length === 0) {
-    return !!token.visible;
-  }
-
+ const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
   // Les tokens visibles doivent rester affichés aux joueurs,
   // même s'ils ne sont assignés à personne (ex: monstres / PNJ).
   if (token.visible) return true;
@@ -204,7 +199,7 @@ const isTokenVisibleToPlayer = (token: VTTToken): boolean => {
   // Sécurité supplémentaire : le token du joueur lui-même reste visible.
   return myControlledTokens.some(mt => mt.id === token.id);
 };
-
+ 
 ctx2d.tokensRef.current.forEach(token => {
   if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
   drawToken({
@@ -278,7 +273,7 @@ const fogPunchTokens =
     }
   }
 
-  // --- VISION DE JOUR --- 
+  // --- VISION DE JOUR ---
 if (!cfg.fogEnabled) {
   // Brouillard désactivé : aucun masque de vision joueur à appliquer.
 } else if (isDay && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0) {
