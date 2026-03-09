@@ -1076,7 +1076,7 @@ useEffect(() => {
   activeTool={activeTool}
   fogBrushSize={fogBrushSize}
   config={config}
-  onToolChange={setActiveTool}
+  onToolChange={handleToolChange}
   onFogBrushSizeChange={setFogBrushSize}
   onAddToken={() => setShowAddToken(true)}
   onResetFog={handleResetFog}
