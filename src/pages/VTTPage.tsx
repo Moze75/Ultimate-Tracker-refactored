@@ -1223,8 +1223,11 @@ onSelectToken={id => {
   setSelectedTokenId(id);
 }}
             selectedTokenIds={selectedTokenIds}
-          onSelectTokens={ids => {
+onSelectTokens={ids => {
   setSelectedPropId(null);
+  if (role === 'gm' && activeTool !== 'select' && ids.length > 0) {
+    setActiveTool('select');
+  }
   setSelectedTokenIds(ids);
   if (ids.length > 0) {
     setSelectedTokenId(ids[0]);
