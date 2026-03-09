@@ -150,6 +150,27 @@ class VTTService {
       config: { broadcast: { self: false }, presence: { key: userId } },
     });
 
+    this.channel = supabase.channel(`vtt-room-${roomId}`, {
+      config: { broadcast: { self: false }, presence: { key: userId } },
+    });
+
+    // GM : écouter les demandes d'état initial de la fenêtre broadcast
+    if (this.isGM) {
+      this.channel.on('broadcast', { event: 'vtt-broadcast-request' }, () => {
+        console.log('[VTT] Broadcast requested state, sending vtt-broadcast-init...');
+        this.channel?.send({
+          type: 'broadcast',
+          event: 'vtt-broadcast-init',
+          payload: {
+            config: this.localState.config,
+            tokens: this.localState.tokens,
+            fogState: this.localState.fogState,
+            walls: this.localState.walls,
+          },
+        }).catch(console.error);
+      });
+    }
+    
     this.channel
       .on('broadcast', { event: 'vtt' }, ({ payload }) => {
         const serverEvent = payload as VTTServerEvent;
