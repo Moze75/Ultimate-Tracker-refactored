@@ -151,6 +151,7 @@ const handleBroadcastModeChange = useCallback((mode: 'frame' | 'follow') => {
   if (mode === 'frame') {
     setGmFollowEnabled(false);
     setBroadcastFrameEnabled(true);
+    setPlayerForcedViewport(null);
   }
 }, []);
   const [playerForcedViewport, setPlayerForcedViewport] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
