@@ -290,10 +290,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
         walls: wallsRef.current,
+        props,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
-  }, [roomId]);
+  }, [roomId, props]);
 
   const handleSwitchScene = useCallback(async (sceneId: string) => {
     if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
