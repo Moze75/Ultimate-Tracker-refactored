@@ -900,23 +900,7 @@ useEffect(() => {
   vttService.sendBroadcastViewport(broadcastFrame);
 }, [role, broadcastFrameEnabled, broadcastMode, broadcastFrame]);
 
-  useEffect(() => {
-  if (role !== 'gm') return;
-  if (!gmFollowEnabled) return;
 
-  const container = canvasContainerRef.current;
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  const vp = canvasViewport;
-
-  vttService.sendBroadcastViewport({
-    x: -vp.x / vp.scale,
-    y: -vp.y / vp.scale,
-    width: rect.width / vp.scale,
-    height: rect.height / vp.scale,
-  });
-}, [role, gmFollowEnabled, canvasViewport]);
 
   const handleSaveScene = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
