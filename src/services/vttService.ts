@@ -448,17 +448,29 @@ private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState:
     this.localState = { config, tokens, fogState, walls };
   }
   
-  sendBroadcastViewport(viewport: BroadcastViewport) {
-    if (!this.channel) return;
-    this.channel.send({ type: 'broadcast', event: 'vtt-viewport', payload: viewport }).catch(console.error);
-  }
+sendBroadcastViewport(viewport: BroadcastViewport) {
+  if (!this.channel) return;
+  this.channel.send({ type: 'broadcast', event: 'vtt-viewport', payload: viewport }).catch(console.error);
+}
 
-  onBroadcastViewport(handler: BroadcastViewportHandler) {
-    this.broadcastViewportHandlers.push(handler);
-    return () => {
-      this.broadcastViewportHandlers = this.broadcastViewportHandlers.filter(h => h !== handler);
-    };
-  }
+sendPlayerViewport(viewport: BroadcastViewport) {
+  if (!this.channel) return;
+  this.channel.send({ type: 'broadcast', event: 'vtt-player-viewport', payload: viewport }).catch(console.error);
+}
+
+onBroadcastViewport(handler: BroadcastViewportHandler) {
+  this.broadcastViewportHandlers.push(handler);
+  return () => {
+    this.broadcastViewportHandlers = this.broadcastViewportHandlers.filter(h => h !== handler);
+  };
+}
+
+onPlayerViewport(handler: PlayerViewportHandler) {
+  this.playerViewportHandlers.push(handler);
+  return () => {
+    this.playerViewportHandlers = this.playerViewportHandlers.filter(h => h !== handler);
+  };
+}
 
   disconnect() {
     if (this.persistDebounce) {
