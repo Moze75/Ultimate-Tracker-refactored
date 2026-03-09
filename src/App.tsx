@@ -650,19 +650,7 @@ useEffect(() => {
               );
             }
 
-            if (showHomePage) {
-              return <HomePage onGetStarted={() => setShowHomePage(false)} />;
-            } 
 
-            if (broadcastRoomId && VTTBroadcastPage) {
-              return (
-                <VTTBroadcastPage
-                  session={session ?? undefined}
-                  roomId={broadcastRoomId}
-                  onBack={() => { window.location.hash = ''; setBroadcastRoomId(null); }}
-                />
-              );
-            }
 
             if (!session) { 
               return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
