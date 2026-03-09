@@ -144,7 +144,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
 
     supabase
       .from('vtt_scenes')
-      .select('walls, fog_state, config')
+      .select('walls, fog_state, config, tokens')
       .eq('room_id', roomId)
       .order('order_index', { ascending: true })
       .limit(1)
@@ -153,6 +153,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
           if (data[0].walls) setWalls(data[0].walls);
           if (data[0].fog_state) setFogState(data[0].fog_state);
           if (data[0].config) setConfig(prev => ({ ...prev, ...data[0].config }));
+          if (data[0].tokens) setTokens(data[0].tokens);
         }
       });
 
