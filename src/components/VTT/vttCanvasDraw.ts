@@ -15,6 +15,7 @@ export interface VTTDrawContext {
   tokenImageCache: React.MutableRefObject<Map<string, HTMLImageElement>>;
   viewportRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
   forceViewportRef: React.MutableRefObject<{ x: number; y: number; width: number; height: number } | null>;
+  spectatorModeRef: React.MutableRefObject<'none' | 'player-vision'>;
   configRef: React.MutableRefObject<VTTRoomConfig>;
   fogStateRef: React.MutableRefObject<VTTFogState>;
   roleRef: React.MutableRefObject<string>;
