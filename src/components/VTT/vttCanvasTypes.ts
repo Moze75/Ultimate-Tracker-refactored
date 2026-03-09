@@ -23,7 +23,6 @@ export interface VTTCanvasProps {
   onMapDimensions?: (w: number, h: number) => void;
   onDropToken?: (tokenId: string, worldPos: { x: number; y: number }) => void;
     onDropProp?: (propData: { url: string; name: string; isVideo: boolean }, worldPos: { x: number; y: number }) => void;
-    onDropProp?: (propData: { url: string; name: string; isVideo: boolean }, worldPos: { x: number; y: number }) => void;
   onAddTokenAtPos?: (token: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => void;
   onResizeToken?: (tokenId: string, size: number) => void;
   calibrationPoints?: { x: number; y: number }[];
