@@ -284,8 +284,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       });
   }, [phase, roomId, role, applySceneToLive]);
 
+  const propsRef = useRef<VTTProp[]>([]);
+  propsRef.current = props;
+
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
+
     await supabase
       .from('vtt_scenes')
       .update({
@@ -293,11 +297,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
         walls: wallsRef.current,
-        props,
+        props: propsRef.current,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sceneId);
-  }, [roomId, props]);
+  }, [roomId]);
 
   const handleSwitchScene = useCallback(async (sceneId: string) => {
     if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
