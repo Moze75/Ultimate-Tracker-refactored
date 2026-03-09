@@ -1218,13 +1218,11 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
               {selectedPropId === prop.id && role === 'gm' && !prop.locked && (
                 <button
                   type="button"
-                  className="absolute bottom-1 right-1 z-20 flex items-center justify-center w-2 h-2 rounded-[2px] bg-white/70 hover:bg-white border border-black/20 shadow-[0_0_0_1px_rgba(0,0,0,0.12)] cursor-se-resize"
+                  className="absolute bottom-1 right-1 z-20 w-1.5 h-1.5 rounded-[2px] bg-white/80 hover:bg-white border border-black/10 shadow-none cursor-se-resize"
                   onMouseDown={e => handlePropResizeMouseDown(e, prop)}
                   onClick={e => e.stopPropagation()}
                   title="Redimensionner"
-                >
-                  <span className="block w-[3px] h-[3px] rounded-full bg-gray-700/70" />
-                </button>
+                />
               )}
             </div>
           ))}
