@@ -1253,15 +1253,15 @@ useEffect(() => {
 
           <VTTPlayerList users={connectedUsers} />
 
-          {broadcastFrameEnabled && broadcastMode === 'frame' && role === 'gm' && (
-            <VTTBroadcastFrame
-              frame={broadcastFrame}
-              onChange={handleBroadcastFrameChange}
-              aspectRatio={broadcastAspectRatio}
-              lockRatio={broadcastLockRatio}
-              viewport={canvasViewport}
-            />
-          )}
+{role === 'gm' && broadcastFrameEnabled && broadcastMode === 'frame' && (
+  <VTTBroadcastFrame
+    frame={broadcastFrame}
+    onChange={handleBroadcastFrameChange}
+    aspectRatio={broadcastAspectRatio}
+    lockRatio={broadcastLockRatio}
+    viewport={canvasViewport}
+  />
+)}
 
           {activeSceneId && scenes.length > 0 && (
             <div className="absolute bottom-4 right-60 pointer-events-none z-10">
