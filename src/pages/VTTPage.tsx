@@ -109,6 +109,22 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
   const [broadcastFrameEnabled, setBroadcastFrameEnabled] = useState(false);
+    const [draggingPropId, setDraggingPropId] = useState<string | null>(null);
+  const [resizingPropId, setResizingPropId] = useState<string | null>(null);
+
+  const propDragRef = useRef<{
+    propId: string;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const propResizeRef = useRef<{
+    propId: string;
+    startMouseX: number;
+    startMouseY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
   const [broadcastFrame, setBroadcastFrame] = useState({ x: 200, y: 100, width: 1600, height: 900 });
   const [broadcastAspectRatio, setBroadcastAspectRatio] = useState('16:9');
   const [broadcastLockRatio, setBroadcastLockRatio] = useState(true);
