@@ -574,6 +574,42 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     setProps(prev => prev.map(p => p.id === propId ? { ...p, ...changes } : p));
   }, []);
 
+    const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
+    if (role !== 'gm' || prop.locked) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+    setSelectedPropId(prop.id);
+    setDraggingPropId(prop.id);
+
+    propDragRef.current = {
+      propId: prop.id,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+    };
+  }, [role]);
+
+  const handlePropResizeMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
+    if (role !== 'gm' || prop.locked) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setSelectedPropId(prop.id);
+    setResizingPropId(prop.id);
+
+    propResizeRef.current = {
+      propId: prop.id,
+      startMouseX: e.clientX,
+      startMouseY: e.clientY,
+      startWidth: prop.width,
+      startHeight: prop.height,
+    };
+  }, [role]);
+
   const handleWallAdded = useCallback((wall: VTTWall) => {
     setWalls(prev => {
       const next = [...prev, wall];
