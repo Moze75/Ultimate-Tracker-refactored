@@ -973,53 +973,29 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             onViewportChange={handleCanvasViewportChange}
           />
 
-              {props.map(prop => (
-            <div
-              key={prop.id}
-              className={`absolute pointer-events-auto cursor-move select-none ${selectedPropId === prop.id ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent' : ''}`}
-              style={{
-                left: prop.position.x,
-                top: prop.position.y,
-                width: prop.width,
-                height: prop.height,
-                opacity: prop.opacity,
-                zIndex: 5,
-              }}
-              draggable={role === 'gm' && !prop.locked}
-              onDragStart={e => {
-                e.dataTransfer.setData('application/vtt-prop-id', prop.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onClick={() => setSelectedPropId(id => id === prop.id ? null : prop.id)}
-            >
-              {prop.imageUrl ? (
-                /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
-                  <video
-                    src={prop.imageUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    draggable={false}
-                    className="w-full h-full object-contain pointer-events-none"
-                  />
-                ) : (
-                  <img
-                    src={prop.imageUrl}
-                    alt={prop.label}
-                    className="w-full h-full object-contain pointer-events-none"
-                    draggable={false}
-                  />
-                )
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
-                  <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
-                </div>
-              )}
-            </div>
-          ))}
+          {props.map(prop => {
+            const isSelected = selectedPropId === prop.id;
+            const isVidProp = /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl ?? '');
+            return (
+              <div
+                key={prop.id}
+                data-prop-id={prop.id}
+                className={`absolute select-none group ${role === 'gm' && !prop.locked ? 'cursor-move' : 'cursor-default'} ${isSelected ? '' : ''}`}
+                style={{
+                  left: prop.position.x,
+                  top: prop.position.y,
+                  width: prop.width,
+                  height: prop.height,
+                  opacity: prop.opacity,
+                  zIndex: 9998,
+                  outline: isSelected ? '2px solid #f59e0b' : '2px solid red',
+                  outlineOffset: '2px',
+                  background: 'rgba(255,0,0,0.2)',
+                }}
+                onClick={e => { e.stopPropagation(); setSelectedPropId(id => id === prop.id ? null : prop.id); }}
+                onMouseDown={e => {
                   if (role !== 'gm' || prop.locked) return;
-                  if ((e.target as HTMLElement).dataset.resizeHandle) return;
+                  if ((e.target as HTMLElement).dataset.resizeHandle) return; 
                   e.preventDefault();
                   e.stopPropagation();
                   const startX = e.clientX - prop.position.x;
