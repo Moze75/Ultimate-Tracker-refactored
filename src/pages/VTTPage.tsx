@@ -1078,6 +1078,8 @@ onToggleGmFollow={() => {
     const next = !v;
     if (next) {
       setBroadcastMode('follow');
+    } else {
+      vttService.sendPlayerViewport(null);
     }
     return next;
   });
