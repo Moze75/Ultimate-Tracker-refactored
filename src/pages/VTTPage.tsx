@@ -105,8 +105,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
-    const propsRef = useRef<VTTProp[]>([]);
-  propsRef.current = props;
+   
   activeSceneIdRef.current = activeSceneId;
 
   const [props, setProps] = useState<VTTProp[]>([]);
