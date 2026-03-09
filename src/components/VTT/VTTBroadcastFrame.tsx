@@ -132,16 +132,31 @@ export function VTTBroadcastFrame({ frame, onChange, aspectRatio, lockRatio, vie
 
   return (
     <>
-      <div
-        className="absolute inset-0 pointer-events-none z-20"
-        style={{
-          background: `
-            linear-gradient(to right, rgba(0,0,0,0.45) ${screenFrame.x}px, transparent ${screenFrame.x}px, transparent ${screenFrame.x + screenFrame.width}px, rgba(0,0,0,0.45) ${screenFrame.x + screenFrame.width}px),
-            linear-gradient(to bottom, rgba(0,0,0,0.45) ${screenFrame.y}px, transparent ${screenFrame.y}px, transparent ${screenFrame.y + screenFrame.height}px, rgba(0,0,0,0.45) ${screenFrame.y + screenFrame.height}px)
-          `,
-          backgroundBlendMode: 'darken',
-        }}
-      />
+<div
+  className="absolute inset-0 pointer-events-none z-20"
+  style={{
+    backgroundImage: `
+      linear-gradient(
+        to right,
+        rgba(0,0,0,0.45) 0,
+        rgba(0,0,0,0.45) ${screenFrame.x}px,
+        transparent ${screenFrame.x}px,
+        transparent ${screenFrame.x + screenFrame.width}px,
+        rgba(0,0,0,0.45) ${screenFrame.x + screenFrame.width}px,
+        rgba(0,0,0,0.45) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.45) 0,
+        rgba(0,0,0,0.45) ${screenFrame.y}px,
+        transparent ${screenFrame.y}px,
+        transparent ${screenFrame.y + screenFrame.height}px,
+        rgba(0,0,0,0.45) ${screenFrame.y + screenFrame.height}px,
+        rgba(0,0,0,0.45) 100%
+      )
+    `,
+  }}
+/>
 
       <div
         ref={frameRef}
