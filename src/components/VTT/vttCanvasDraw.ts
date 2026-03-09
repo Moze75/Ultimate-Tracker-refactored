@@ -380,7 +380,7 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, mapW, mapH);
   }
-
+ 
   // --- VISION DE NUIT ---
   if (isNight && curRole === 'player' && curUserId !== '') {
     const playerTokens = myControlledTokens.filter(t =>
