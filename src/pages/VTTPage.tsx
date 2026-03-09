@@ -337,6 +337,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
       setActiveSceneId(sceneId);
+
+      localStorage.setItem(getLastSceneStorageKey(roomId!), sceneId);
+
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
       setSavedViewport(scene.config.savedViewport ?? null);
