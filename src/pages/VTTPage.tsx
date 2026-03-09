@@ -323,12 +323,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
       setFogState(scene.fogState);
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
-      setProps((scene as VTTScene & { props?: VTTProp[] }).props || []);
+      setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
       setActiveSceneId(sceneId);
       vttService.setActiveSceneId(sceneId);
-      setScenes(prev => prev.map(s => s.id === sceneId ? scene : s));
-            setSavedViewport(scene.config.savedViewport ?? null);
+      setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
+      setSavedViewport(scene.config.savedViewport ?? null);
     } finally {
       switchingSceneRef.current = false;
     }
