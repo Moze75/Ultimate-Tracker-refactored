@@ -986,7 +986,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
             forceViewport={role === 'player' && playerForcedViewport ? playerForcedViewport : undefined}
             initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
-              />
+          />
 
           {props.map(prop => {
             const isSelected = selectedPropId === prop.id;
@@ -1022,7 +1022,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                     window.removeEventListener('mousemove', onMove);
                     window.removeEventListener('mouseup', onUp);
                   };
-                  window.addEventListener('mousemove', onMove);
+                  window.addEventListener('mousemove', onMove); 
                   window.addEventListener('mouseup', onUp);
                 }}
               >
