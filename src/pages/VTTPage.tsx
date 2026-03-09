@@ -60,7 +60,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
     props: (row.props as VTTProp[]) || [],
-  } as VTTScene & { props: VTTProp[] };
+  };
 }
 
 export function VTTPage({ session, onBack }: VTTPageProps) {
