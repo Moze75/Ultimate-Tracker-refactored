@@ -30,6 +30,7 @@ interface VTTSidebarProps {
   onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
+  onSaveScene?: () => Promise<void>;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -79,7 +80,10 @@ export function VTTSidebar({
   onUpdateProp,
   onHome,
   authToken,
+  onSaveScene,
 }: VTTSidebarProps) {
+  const [saving, setSaving] = React.useState(false);
+  const [saveOk, setSaveOk] = React.useState(false);
 const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
@@ -358,6 +362,7 @@ const visibleTokens = isGM
             props={props}
             selectedPropId={selectedPropId}
             role={role}
+            roomId={roomId}
             onSelectProp={onSelectProp}
             onAddProp={onAddProp}
             onRemoveProp={onRemoveProp}
@@ -367,6 +372,34 @@ const visibleTokens = isGM
 
         {activeTab === 'settings' && (
           <div className="p-3 space-y-4">
+            {onSaveScene && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2 font-medium">Scène</p>
+                <button
+                  onClick={async () => {
+                    setSaving(true);
+                    setSaveOk(false);
+                    await onSaveScene();
+                    setSaving(false);
+                    setSaveOk(true);
+                    setTimeout(() => setSaveOk(false), 2500);
+                  }}
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-colors"
+                >
+                  {saving ? (
+                    <RefreshCw size={12} className="animate-spin" />
+                  ) : saveOk ? (
+                    <span className="text-green-300">✓ Sauvegardé !</span>
+                  ) : (
+                    <>
+                      <Upload size={12} />
+                      Enregistrer la scène
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-500 mb-1 font-medium">ID Room</p>
               <p className="font-mono text-gray-400 text-xs break-all bg-gray-800/60 rounded px-2 py-1.5 border border-gray-700/50">{roomId}</p>
@@ -422,4 +455,4 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
       </span>
     </button>
   );
-}
+} 
