@@ -14,7 +14,7 @@ import type {
 import { Maximize, Minimize } from 'lucide-react';
 
 interface VTTBroadcastPageProps {
-  session?: Session;
+  session: Session;
   roomId: string;
   onBack: () => void;
 }
@@ -40,12 +40,13 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [broadcastViewport, setBroadcastViewport] = useState<BroadcastViewport | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [waitingForSync, setWaitingForSync] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  // Traitement des événements serveur VTT (identique à avant)
+  const userId = session.user.id;
+  const authToken = session.access_token;
+  const userName = `${session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Spectateur'} (Broadcast)`;
+
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
@@ -53,7 +54,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setTokens(event.state.room.tokens);
         setFogState(event.state.room.fogState);
         setWalls(event.state.room.walls || []);
-        setWaitingForSync(false);
         break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
@@ -89,18 +89,14 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       case 'WALLS_UPDATED':
         setWalls(event.walls);
         break;
-      case 'WEATHER_UPDATED':
-        setConfig(prev => ({ ...prev, weatherEffects: event.effects }));
-        break;
     }
   }, []);
 
-  // Connexion au canal Supabase Realtime — AUCUNE requête DB
   useEffect(() => {
+    // Canal Supabase DÉDIÉ à la fenêtre broadcast — indépendant du vttService singleton
     const channel = supabase.channel(`vtt-room-${roomId}`, {
       config: { broadcast: { self: false } },
     });
-    channelRef.current = channel;
 
     channel
       .on('broadcast', { event: 'vtt' }, ({ payload }) => {
@@ -109,58 +105,43 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
         setBroadcastViewport(payload as BroadcastViewport);
       })
-      // Écoute l'événement dédié d'initialisation broadcast
-      .on('broadcast', { event: 'vtt-broadcast-init' }, ({ payload }) => {
-        console.log('[Broadcast] Received init state from GM');
-        const s = payload as {
-          config?: VTTRoomConfig;
-          tokens?: VTTToken[];
-          fogState?: VTTFogState;
-          walls?: VTTWall[];
-        };
+      .subscribe((status) => {
+        setConnected(status === 'SUBSCRIBED');
+      });
+
+    // Charger l'état initial depuis Supabase DB (la room + la première scène)
+    supabase
+      .from('vtt_rooms')
+      .select('state_json')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.state_json) return;
+        const s = data.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
         if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
         if (s.tokens) setTokens(s.tokens);
         if (s.fogState) setFogState(s.fogState);
-        if (s.walls) setWalls(s.walls);
-        setWaitingForSync(false);
-      })
-      .subscribe((status) => {
-        const isConnected = status === 'SUBSCRIBED';
-        setConnected(isConnected);
-        if (isConnected) {
-          // Demander au MJ d'envoyer l'état initial
-          console.log('[Broadcast] Connected, requesting state from GM...');
-          channel.send({
-            type: 'broadcast',
-            event: 'vtt-broadcast-request',
-            payload: { requestedAt: Date.now() },
-          }).catch(console.error);
+      });
+
+    supabase
+      .from('vtt_scenes')
+      .select('walls, fog_state, config')
+      .eq('room_id', roomId)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          if (data[0].walls) setWalls(data[0].walls);
+          if (data[0].fog_state) setFogState(data[0].fog_state);
+          if (data[0].config) setConfig(prev => ({ ...prev, ...data[0].config }));
         }
       });
 
     return () => {
-      channelRef.current = null;
       supabase.removeChannel(channel);
     };
-  }, [roomId, handleServerEvent]);
+  }, [roomId, userId, handleServerEvent]);
 
-  // Redemander l'état périodiquement si toujours en attente
-  useEffect(() => {
-    if (!waitingForSync || !connected) return;
-    const interval = setInterval(() => {
-      if (channelRef.current) {
-        console.log('[Broadcast] Still waiting, re-requesting state...');
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'vtt-broadcast-request',
-          payload: { requestedAt: Date.now() },
-        }).catch(console.error);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [waitingForSync, connected]);
-
-  // Fullscreen
   useEffect(() => {
     const handleFS = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFS);
@@ -175,7 +156,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     }
   }, []);
 
-  // Auto-hide controls
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -200,12 +180,11 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   return (
     <div
       ref={containerRef}
-      className="h-screen w-screen bg-black relative overflow-hidden"
+      className="h-screen w-screen bg-black relative overflow-hidden cursor-none"
       onMouseMove={handleMouseMove}
       style={{ cursor: showControls ? 'default' : 'none' }}
     >
-      {/* Écran d'attente tant que le MJ n'a pas envoyé l'état */}
-      {waitingForSync && (
+      {!config.mapImageUrl && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="text-center space-y-3">
             <div className="w-16 h-16 mx-auto rounded-full bg-gray-800/80 border border-gray-700/60 flex items-center justify-center">
@@ -213,7 +192,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
             </div>
             <p className="text-gray-500 text-sm">En attente du MJ...</p>
             {!connected && <p className="text-red-400 text-xs">Connexion en cours...</p>}
-            {connected && <p className="text-emerald-400 text-xs">Connecté — synchronisation en cours...</p>}
           </div>
         </div>
       )}
@@ -242,7 +220,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         />
       )}
 
-      {/* Barre de contrôle auto-hide */}
       <div className={`absolute top-0 left-0 right-0 z-30 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-black/80 to-transparent">
           <button
@@ -255,12 +232,12 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-              {connected ? 'Connecté' : 'Déconnecté'}
+              {connected ? 'Connecte' : 'Deconnecte'}
             </div>
             <button
               onClick={toggleFullscreen}
               className="p-1.5 bg-gray-800/80 hover:bg-gray-700 border border-gray-700/60 rounded-lg text-gray-300 transition-colors"
-              title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+              title={isFullscreen ? 'Quitter le plein ecran' : 'Plein ecran'}
             >
               {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
             </button>

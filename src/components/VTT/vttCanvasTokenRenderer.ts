@@ -78,17 +78,19 @@ export function drawToken({
   if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
     const pad = 4 / scale;
     ctx.strokeStyle = 'rgba(99,179,237,0.9)';
-    ctx.lineWidth = 1.5 / scale;
-    ctx.setLineDash([]);
+    ctx.lineWidth = 2 / scale;
+    ctx.setLineDash([4 / scale, 3 / scale]);
     ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+    ctx.setLineDash([]);
   }
 
-  if (token.id === currentSelectedId) { 
+  if (token.id === currentSelectedId) {
     const pad = 5 / scale;
     ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 1.5 / scale;
-    ctx.setLineDash([]);
+    ctx.lineWidth = 2.5 / scale;
+    ctx.setLineDash([6 / scale, 3 / scale]);
     ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
+    ctx.setLineDash([]);
     const hx = size / 2 + pad;
     const hy = size / 2 + pad;
     const hr = 7 / scale;

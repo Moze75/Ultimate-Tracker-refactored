@@ -24,7 +24,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onRightClickToken,
   onMapDimensions,
   onDropToken,
-  onDropProp,
   onAddTokenAtPos,
   onResizeToken,
   calibrationPoints,
@@ -108,8 +107,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onMapDimensionsRef.current = onMapDimensions;
   const onDropTokenRef = useRef(onDropToken);
   onDropTokenRef.current = onDropToken;
-    const onDropPropRef = useRef(onDropProp);
-  onDropPropRef.current = onDropProp;
   const onAddTokenAtPosRef = useRef(onAddTokenAtPos);
   onAddTokenAtPosRef.current = onAddTokenAtPos;
   const onResizeTokenRef = useRef(onResizeToken);
@@ -413,9 +410,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
       setIsDragOver(true);
-    } else if (e.dataTransfer.types.includes('application/vtt-prop-url')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
     }
   };
 
@@ -450,17 +444,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const tokenId = e.dataTransfer.getData('application/vtt-token-id');
     if (tokenId && onDropTokenRef.current) {
       onDropTokenRef.current(tokenId, snapped);
-      return;
-    }
-
-    // Drop depuis la bibliothèque de props
-    const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
-    if (propUrl && onDropPropRef.current) {
-      onDropPropRef.current({
-        url: propUrl,
-        name: e.dataTransfer.getData('application/vtt-prop-name') || 'Prop',
-        isVideo: e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true',
-      }, snapped);
     }
   };
 

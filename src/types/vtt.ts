@@ -96,14 +96,6 @@ export interface VTTScene {
   fogState: VTTFogState;
   tokens: VTTToken[];
   walls: VTTWall[];
-  props?: VTTProp[];
-}
-  name: string;
-  orderIndex: number;
-  config: VTTRoomConfig;
-  fogState: VTTFogState;
-  tokens: VTTToken[];
-  walls: VTTWall[];
 }
 
 export interface VTTRoom {
