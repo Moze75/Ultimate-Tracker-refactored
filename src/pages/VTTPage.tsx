@@ -1135,10 +1135,6 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
                   onClick={e => e.stopPropagation()}
                   title="Redimensionner"
                 />
-                  onMouseDown={e => handlePropResizeMouseDown(e, prop)}
-                  onClick={e => e.stopPropagation()}
-                  title="Redimensionner"
-                />
               )}
             </div>
           ))}
