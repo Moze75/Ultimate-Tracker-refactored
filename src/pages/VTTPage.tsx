@@ -164,7 +164,9 @@ const handleBroadcastModeChange = useCallback((mode: 'frame' | 'follow') => {
 }, []);
   const [playerForcedViewport, setPlayerForcedViewport] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
+const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
+const canvasViewportRef = useRef(canvasViewport);
+canvasViewportRef.current = canvasViewport;
   const [savedViewport, setSavedViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [playerInitialViewport, setPlayerInitialViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
   const playerInitialViewportSetRef = useRef(false);
