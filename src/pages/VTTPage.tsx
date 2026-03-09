@@ -1121,10 +1121,9 @@ onToggleGmFollow={() => {
         <div
           ref={canvasContainerRef}
           className="flex-1 relative overflow-hidden"
-onMouseDown={() => {
+onMouseDown={e => {
+  if (e.target !== e.currentTarget) return;
   setSelectedPropId(null);
-  setSelectedTokenId(null);
-  setSelectedTokenIds([]);
 }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => {
