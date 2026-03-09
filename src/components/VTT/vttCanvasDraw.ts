@@ -270,15 +270,11 @@ const fogPunchTokens =
       ctx.globalAlpha = fogAlpha;
       ctx.drawImage(vc, 0, 0, mapW, mapH);
       ctx.globalAlpha = 1;
-    }
+    } 
   }
 
-  // Broadcast local sans murs : rien à masquer, on garde simplement le rendu visible.
-if (cfg.fogEnabled && isPlayerVisionSpectator && currentWalls.length === 0) {
-  // no-op
-}
   // --- VISION DE JOUR ---
-else if (!cfg.fogEnabled) {
+if (!cfg.fogEnabled) { 
   // Brouillard désactivé : aucun masque de vision joueur à appliquer.
 } else if (isDay && curRole === 'player' && currentWalls.length === 0 && myVisionTokens.length > 0) {
   // De jour, sans murs, la vision joueur ne doit pas être limitée par un rayon de proximité.
