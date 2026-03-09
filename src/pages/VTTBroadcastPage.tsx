@@ -61,9 +61,9 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const userId = session.user.id;
-  const authToken = session.access_token;
-  const userName = `${session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Spectateur'} (Broadcast)`;
+  const userId = userIdFallback;
+  const authToken = authTokenFallback;
+  const userName = userNameFallback;
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
