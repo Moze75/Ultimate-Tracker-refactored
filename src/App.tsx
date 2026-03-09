@@ -654,11 +654,7 @@ useEffect(() => {
               return <HomePage onGetStarted={() => setShowHomePage(false)} />;
             }
 
-            if (!session) {
-              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
-            }
-
-               if (broadcastRoomId && VTTBroadcastPage) {
+            if (broadcastRoomId && VTTBroadcastPage) {
               return (
                 <VTTBroadcastPage
                   session={session ?? undefined}
@@ -666,7 +662,11 @@ useEffect(() => {
                   onBack={() => { window.location.hash = ''; setBroadcastRoomId(null); }}
                 />
               );
-            } 
+            }
+
+            if (!session) {
+              return <LoginPage onBackToHome={() => setShowHomePage(true)} />;
+            }
 
             if (showVTT && VTTPage) { 
               return (
