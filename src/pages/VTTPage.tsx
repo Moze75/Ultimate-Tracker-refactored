@@ -1069,7 +1069,13 @@ useEffect(() => {
   onBroadcastModeChange={handleBroadcastModeChange}
   gmFollowEnabled={gmFollowEnabled}
 onToggleGmFollow={() => {
-  setGmFollowEnabled(v => !v);
+  setGmFollowEnabled(v => {
+    const next = !v;
+    if (next) {
+      setBroadcastMode('follow');
+    }
+    return next;
+  });
 }}
   weatherEffects={weatherEffects}
   onUpdateWeather={handleUpdateWeather}
