@@ -854,7 +854,6 @@ const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scal
   setCanvasViewport(vp);
 
   if (role !== 'gm') return;
-  if (!gmFollowEnabledRef.current) return;
   if (broadcastModeRef.current !== 'follow') return;
 
   const container = canvasContainerRef.current;
