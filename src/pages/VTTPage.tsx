@@ -237,11 +237,11 @@ const handleBroadcastModeChange = useCallback((mode: 'frame' | 'follow') => {
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
   // Joueur : abonnement au viewport forcé par le MJ (séparé pour ne pas reconnecter)
-  useEffect(() => {
-    if (phase !== 'room' || !roomId || role !== 'player') return;
-    const unsubVp = vttService.onBroadcastViewport(vp => setPlayerForcedViewport(vp));
-    return () => { unsubVp(); };
-  }, [phase, roomId, role]);
+useEffect(() => {
+  if (phase !== 'room' || !roomId || role !== 'player') return;
+  const unsubVp = vttService.onPlayerViewport(vp => setPlayerForcedViewport(vp));
+  return () => { unsubVp(); };
+}, [phase, roomId, role]);
 
  
   
