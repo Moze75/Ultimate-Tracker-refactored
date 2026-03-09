@@ -108,6 +108,9 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       case 'WALLS_UPDATED':
         setWalls(event.walls);
         break;
+      case 'WEATHER_UPDATED':
+        setConfig(prev => ({ ...prev, weatherEffects: event.effects }));
+        break;
     }
   }, []);
 
