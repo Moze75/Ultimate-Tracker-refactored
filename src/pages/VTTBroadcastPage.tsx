@@ -133,69 +133,33 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
 
     // Charger l'état initial depuis Supabase DB (la room + la première scène)
     supabase
-       useEffect(() => {
-    // Canal Supabase DÉDIÉ à la fenêtre broadcast — indépendant du vttService singleton
-    const channel = supabase.channel(`vtt-room-${roomId}`, {
-      config: { broadcast: { self: false } },
-    });
-
-    channel
-      .on('broadcast', { event: 'vtt' }, ({ payload }) => {
-        handleServerEvent(payload as VTTServerEvent);
-      })
-      .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
-        setBroadcastViewport(payload as BroadcastViewport);
-      })
-      .subscribe((status) => {
-        setConnected(status === 'SUBSCRIBED');
+      .from('vtt_rooms')
+      .select('state_json')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.state_json) return;
+        const s = data.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
+        if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
+        if (s.tokens) setTokens(s.tokens);
+        if (s.fogState) setFogState(s.fogState);
       });
 
-    // Charger l'état initial : d'abord vtt_rooms (fallback), puis vtt_scenes (prioritaire)
-    const loadInitialState = async () => {
-      // 1. Charger le state_json de la room (fallback de base)
-      const { data: roomData } = await supabase
-        .from('vtt_rooms')
-        .select('state_json')
-        .eq('id', roomId)
-        .maybeSingle();
-
-      let roomConfig: Partial<VTTRoomConfig> = {};
-      let roomTokens: VTTToken[] = [];
-      let roomFog: VTTFogState | null = null;
-
-      if (roomData?.state_json) {
-        const s = roomData.state_json as { config?: VTTRoomConfig; tokens?: VTTToken[]; fogState?: VTTFogState };
-        if (s.config) roomConfig = s.config;
-        if (s.tokens) roomTokens = s.tokens;
-        if (s.fogState) roomFog = s.fogState;
-      }
-
-      // 2. Charger la première scène (prioritaire sur vtt_rooms)
-      const { data: sceneData } = await supabase
-        .from('vtt_scenes')
-        .select('walls, fog_state, config, tokens')
-        .eq('room_id', roomId)
-        .order('order_index', { ascending: true })
-        .limit(1);
-
-      if (sceneData && sceneData.length > 0) {
-        const scene = sceneData[0];
-        // La config de la scène est prioritaire (contient mapImageUrl, gridSize, etc.)
-        const mergedConfig = { ...DEFAULT_CONFIG, ...roomConfig, ...(scene.config || {}) };
-        setConfig(mergedConfig);
-        setTokens(scene.tokens || roomTokens);
-        setFogState(scene.fog_state || roomFog || DEFAULT_FOG);
-        if (scene.walls) setWalls(scene.walls);
-      } else {
-        // Pas de scène : fallback sur vtt_rooms uniquement
-        if (Object.keys(roomConfig).length > 0) setConfig(prev => ({ ...prev, ...roomConfig }));
-        if (roomTokens.length > 0) setTokens(roomTokens);
-        if (roomFog) setFogState(roomFog);
-      }
-    };
-
-    loadInitialState().catch(err => console.error('[Broadcast] Load error:', err));
-
+    supabase
+      .from('vtt_scenes')
+      .select('walls, fog_state, config, tokens')
+      .eq('room_id', roomId)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          if (data[0].walls) setWalls(data[0].walls);
+          if (data[0].fog_state) setFogState(data[0].fog_state);
+          if (data[0].config) setConfig(prev => ({ ...prev, ...data[0].config }));
+          if (data[0].tokens) setTokens(data[0].tokens);
+        }
+      });
+ 
     return () => {
       supabase.removeChannel(channel);
     };
