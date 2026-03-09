@@ -49,6 +49,8 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
 
 const DEFAULT_FOG: VTTFogState = { revealedCells: [] }; 
 
+const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
+
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
   return {
     id: row.id as string,
