@@ -125,7 +125,7 @@ const myControlledTokens = ctx2d.tokensRef.current.filter(t => {
 const myVisionTokens = myControlledTokens.filter(
   t => t.visionMode === 'normal' || t.visionMode === 'darkvision'
 );
- 
+
   // directlyVisibleTokenIds = tous les tokens visibles depuis ma vision
   const directlyVisibleTokenIds = new Set<string>();
 
