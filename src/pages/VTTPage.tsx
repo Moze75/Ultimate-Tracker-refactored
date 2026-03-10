@@ -764,11 +764,34 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
 
   useEffect(() => {
     if (phase !== 'room') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
       if (role !== 'gm') return;
+
+      const key = e.key.toLowerCase();
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (key === 'z' && e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+          return;
+        }
+        if (key === 'z') {
+          e.preventDefault();
+          handleUndo();
+          return;
+        }
+        if (key === 'y') {
+          e.preventDefault();
+          handleRedo();
+          return;
+        }
+      }
+
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+
       if (selectedTokenId) {
         e.preventDefault();
         handleRemoveToken(selectedTokenId);
@@ -777,9 +800,10 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
         handleRemoveProp(selectedPropId);
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp]);
+  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp, handleUndo, handleRedo]);
   
   const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
     if (role !== 'gm' || prop.locked) return;
