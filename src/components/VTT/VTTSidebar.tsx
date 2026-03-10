@@ -209,18 +209,12 @@ const visibleTokens = isGM
 
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'tokens' && (
-          <div className="flex flex-col h-full">
-            {/* -------------------
-                Gestion des tokens sur la carte
-                -------------------
-                Cette section affiche les tokens deja presents sur le canvas.
-            */}
-            <div className="shrink-0 border-b border-gray-700/60">
-              <div ref={tokenListRef} className="p-2 space-y-1 max-h-64 overflow-y-auto">
-                {visibleTokens.length === 0 && (
-                  <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
-                )}
-                {visibleTokens.map(token => {
+          <div className="flex flex-col">
+            <div ref={tokenListRef} className="p-2 space-y-1">
+             {visibleTokens.length === 0 && (
+                <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
+              )}
+          {visibleTokens.map(token => { 
                 const canEdit = role === 'gm' || token.ownerUserId === userId;
                 const isSelected = token.id === selectedTokenId;
                 return (
