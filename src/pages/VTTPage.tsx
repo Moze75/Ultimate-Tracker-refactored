@@ -1562,6 +1562,7 @@ onSelectTokens={ids => {
           roomId={roomId!}
           connected={connected}
           connectedCount={connectedUsers.length || 1}
+          connectedUsers={connectedUsers}
           onSelectToken={setSelectedTokenId}
           onEditToken={setEditingToken}
           onRemoveToken={handleRemoveToken}
