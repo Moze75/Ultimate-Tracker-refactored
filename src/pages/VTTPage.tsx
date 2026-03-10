@@ -614,9 +614,16 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
   }, [canControlToken, pushUndoSnapshot]);
 
-  const handleResizeToken = useCallback((tokenId: string, size: number) => {
-    handleUpdateToken(tokenId, { size });
-  }, [handleUpdateToken]);
+// -------------------
+// Gestion du resize des tokens
+// -------------------
+// Empêche les joueurs connectés de redimensionner les tokens,
+// même lorsqu'ils contrôlent ces derniers.
+const handleResizeToken = useCallback((tokenId: string, size: number) => {
+  if (role === 'player') return;
+
+  handleUpdateToken(tokenId, { size });
+}, [handleUpdateToken, role]);
 
 const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
   pushUndoSnapshot();
