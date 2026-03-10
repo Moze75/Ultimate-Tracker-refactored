@@ -195,11 +195,24 @@ function drawPolyPath(ctx: CanvasRenderingContext2D, polygon: Float64Array) {
   ctx.closePath();
 }
 
+// -------------------
+// Gestion de l'oscillation irrégulière de la torche
+// -------------------
 let _flickerPhase = 0;
+let _torchNoise = 0;
+
 function getTorchFlicker(): number {
-  _flickerPhase += 0.015 + Math.random() * 0.008;
-  const base = Math.sin(_flickerPhase * 2.1) * Math.sin(_flickerPhase * 0.9);
-  return 0.96 + 0.04 * base;
+  _flickerPhase += 0.045 + Math.random() * 0.02;
+
+  // Bruit lissé pour éviter un scintillement trop brutal
+  const targetNoise = (Math.random() - 0.5) * 0.12;
+  _torchNoise += (targetNoise - _torchNoise) * 0.18;
+
+  // Mélange de deux oscillations + bruit léger
+  const waveA = Math.sin(_flickerPhase * 2.8) * 0.035;
+  const waveB = Math.sin(_flickerPhase * 6.4 + 1.7) * 0.02;
+
+  return 0.95 + waveA + waveB + _torchNoise;
 }
 
 export function drawNightVisionOverlay(
