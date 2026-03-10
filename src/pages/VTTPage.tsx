@@ -261,18 +261,9 @@ canvasViewportRef.current = canvasViewport;
     });
   }, [role, makeSnapshot, applySnapshot]);
 
- const handleOpenBroadcastWindow = useCallback(() => {
-    if (!roomId) return;
-    const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
-    window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
-    setTimeout(() => {
-      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
-        vttService.sendBroadcastViewport(broadcastFrameRef.current);
-      } else if (broadcastModeRef.current === 'follow') {
-
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-    const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
