@@ -160,7 +160,11 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center w-8 bg-gray-900/95 border-l border-gray-700/60 shrink-0">
+        // -------------------
+      // Gestion de la transparence de la sidebar repliee
+      // -------------------
+      // Le panneau replie reste lui aussi en surimpression.
+      <div className="flex flex-col items-center w-8 h-full bg-slate-950/45 backdrop-blur-xl border-l border-white/10 shadow-2xl">
         <button
           onClick={() => setCollapsed(false)}
           className="mt-2 p-1 text-gray-500 hover:text-amber-400 hover:bg-gray-800 rounded transition-colors"
