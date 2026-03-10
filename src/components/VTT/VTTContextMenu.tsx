@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
