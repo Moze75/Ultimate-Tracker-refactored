@@ -351,10 +351,9 @@ useEffect(() => {
     // -------------------
     // Synchronisation du viewport React pour les props HTML
     // -------------------
-    if (scene.config.savedViewport) {
-      setCanvasViewport(scene.config.savedViewport);
-      canvasViewportRef.current = scene.config.savedViewport;
-    }
+    const nextViewport = scene.config.savedViewport ?? { x: 0, y: 0, scale: 1 };
+    setCanvasViewport(nextViewport);
+    canvasViewportRef.current = nextViewport;
 
     setActiveSceneId(scene.id);
 
