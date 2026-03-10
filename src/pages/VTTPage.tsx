@@ -37,11 +37,12 @@ type VTTUndoSnapshot = {
   props: VTTProp[];
 };
 
+import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
+
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
   | { kind: 'prop'; data: VTTProp }
   | null;
-import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 
 interface VTTPageProps {
   session: Session;
