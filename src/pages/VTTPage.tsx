@@ -961,7 +961,7 @@ handleUpdateProp(propId, {
       vttService.send({ type: 'UPDATE_WALLS', walls: next });
       return next;
     });
-  }, []);
+  }, [pushUndoSnapshot]);
   
   const handleClearWalls = useCallback(() => {
     setWalls([]);
