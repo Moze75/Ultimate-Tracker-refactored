@@ -83,22 +83,17 @@ export function drawToken({
     ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
   }
 
-  if (token.id === currentSelectedId) { 
+  // -------------------
+  // Gestion du resize des tokens
+  // -------------------
+  // Le contour de selection reste visible,
+  // mais le point de redimensionnement est masque.
+  if (token.id === currentSelectedId) {
     const pad = 5 / scale;
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 1.5 / scale;
     ctx.setLineDash([]);
     ctx.strokeRect(-size / 2 - pad, -size / 2 - pad, size + pad * 2, size + pad * 2);
-    const hx = size / 2 + pad;
-    const hy = size / 2 + pad;
-    const hr = 7 / scale;
-    ctx.beginPath();  
-    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
-    ctx.fillStyle = '#facc15';
-    ctx.fill();
-    ctx.strokeStyle = '#92400e';
-    ctx.lineWidth = 1.5 / scale;
-    ctx.stroke();
   }
 
   const controlled = token.controlledByUserIds?.includes(curUserId);
