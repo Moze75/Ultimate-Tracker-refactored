@@ -1532,7 +1532,7 @@ onSelectTokens={ids => {
             </div>
           ))}
 
-          <VTTPlayerList users={connectedUsers} />
+       
 
 {role === 'gm' && broadcastFrameEnabled && broadcastMode === 'frame' && (
   <VTTBroadcastFrame
