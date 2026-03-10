@@ -75,6 +75,12 @@ export function VTTContextMenu({
         onClick={() => { onEdit(); onClose(); }}
       />
 
+      <MenuItem
+        icon={<Flame size={13} />}
+        label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
+        onClick={() => { onToggleTorch(); onClose(); }}
+      />
+
       {role === 'gm' && (
         <MenuItem
           icon={token.visible ? <EyeOff size={13} /> : <Eye size={13} />}
