@@ -262,19 +262,17 @@ if (curRole === 'player' && myVisionTokens.length === 0 && !isPlayerVisionSpecta
       vCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
 
 const fogPunchTokens =
-  isPlayerVisionSpectator
-    ? []
-    : curRole === 'player'
-      ? (isDay
-          ? myVisionTokens
-          : myControlledTokens.filter(t =>
-              (t.visionMode === 'darkvision') || (t.lightSource && t.lightSource !== 'none')
-            ))
-      : (isDay
-          ? ctx2d.tokensRef.current.filter(t => t.visible && (t.visionMode === 'normal' || t.visionMode === 'darkvision'))
-          : ctx2d.tokensRef.current.filter(t => t.visible && (
-              (t.lightSource && t.lightSource !== 'none') || (t.visionMode === 'darkvision')
-            )));
+  curRole === 'player'
+    ? (isDay
+        ? myVisionTokens
+        : myVisionTokens.filter(t =>
+            (t.visionMode === 'darkvision') || (t.lightSource && t.lightSource !== 'none')
+          ))
+    : (isDay
+        ? ctx2d.tokensRef.current.filter(t => t.visible && (t.visionMode === 'normal' || t.visionMode === 'darkvision'))
+        : ctx2d.tokensRef.current.filter(t => t.visible && (
+            (t.lightSource && t.lightSource !== 'none') || (t.visionMode === 'darkvision')
+          )));
 
       if (fogPunchTokens.length > 0) {
         punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay);
