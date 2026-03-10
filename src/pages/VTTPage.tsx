@@ -30,6 +30,12 @@ import type {
   VTTConnectedUser,
   VTTWeatherEffect,
 } from '../types/vtt';
+
+type VTTUndoSnapshot = {
+  tokens: VTTToken[];
+  walls: VTTWall[];
+  props: VTTProp[];
+};
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 
 interface VTTPageProps {
