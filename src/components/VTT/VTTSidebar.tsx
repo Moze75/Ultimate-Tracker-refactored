@@ -187,7 +187,7 @@ const visibleTokens = isGM
     // Gestion de la transparence de la sidebar
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
-    <div className="flex flex-col w-56 h-full bg-slate-950/30 backdrop-blur-xl border-l border-white/10 overflow-hidden shadow-2xl">
+    <div className="flex flex-col w-56 h-full bg-slate-950/20 backdrop-blur-xl border-l border-white/10 overflow-hidden shadow-2xl">
       <div className="flex border-b border-gray-700/60 shrink-0">
    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
