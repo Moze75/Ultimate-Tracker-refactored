@@ -976,7 +976,7 @@ handleUpdateProp(propId, {
         .eq('id', sceneId)
         .then(({ error }) => { if (error) console.error('[VTT] Clear walls error:', error); });
     }
-  }, []);
+  }, [pushUndoSnapshot]);
 
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
   setBroadcastFrame(frame);
