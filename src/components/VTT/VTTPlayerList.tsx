@@ -14,7 +14,9 @@ interface VTTPlayerListProps {
   users: VTTConnectedUser[];
 }
 
-export function VTTPlayerList({ users }: VTTPlayerListProps) {
+export function VTTPlayerList() {
+  return null;
+}
   if (users.length === 0) return null;
 
   return (
