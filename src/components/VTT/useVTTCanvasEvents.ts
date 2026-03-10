@@ -147,7 +147,13 @@ export function useVTTCanvasEvents({
 
       if (tool === 'select') {
         const selId = selectedTokenIdRef.current;
-        if (selId) {
+        
+        // -------------------
+        // Gestion du resize des tokens
+        // -------------------
+        // Le redimensionnement interactif des tokens est reserve au MJ.
+        
+        if (selId && roleRef.current === 'gm') {
           const selToken = tokensRef.current.find(t => t.id === selId);
           if (selToken) {
             const CELL2 = configRef.current.gridSize || 50;
@@ -160,8 +166,13 @@ export function useVTTCanvasEvents({
               Math.pow((wp.x - handleWx) * vp2.scale, 2) +
               Math.pow((wp.y - handleWy) * vp2.scale, 2)
             );
+
             if (distPx < 12) {
-              resizingTokenRef.current = { id: selId, tokenPx: selToken.position.x, tokenPy: selToken.position.y };
+              resizingTokenRef.current = {
+                id: selId,
+                tokenPx: selToken.position.x,
+                tokenPy: selToken.position.y,
+              };
               return;
             }
           }
