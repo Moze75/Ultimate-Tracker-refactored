@@ -857,6 +857,16 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
       const key = e.key.toLowerCase();
 
       if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (key === 'c') {
+          e.preventDefault();
+          handleCopySelection();
+          return;
+        }
+        if (key === 'v') {
+          e.preventDefault();
+          handlePasteSelection();
+          return;
+        }
         if (key === 'z' && e.shiftKey) {
           e.preventDefault();
           handleRedo();
