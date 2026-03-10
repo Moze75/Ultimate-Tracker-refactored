@@ -1602,6 +1602,18 @@ onSelectTokens={ids => {
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onToggleTorch={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            const token = freshToken || contextMenu.token;
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: token.id,
+              changes: {
+                lightSource: token.lightSource === 'torch' ? 'none' : 'torch',
+              },
+            });
+            setContextMenu(null);
+          }}
           onManageBinding={() => {
             const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
             setBindingToken(freshToken || contextMenu.token);
