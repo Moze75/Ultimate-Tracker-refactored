@@ -216,110 +216,154 @@ const visibleTokens = isGM
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'tokens' && (
-          <div className="flex flex-col h-full">
+             {activeTab === 'tokens' && (
+          <div className="flex flex-col h-full min-h-0">
             {/* -------------------
-                Gestion des tokens sur la carte
+                Gestion des tokens presents sur la carte
                 -------------------
-                Cette section affiche les tokens deja presents sur le canvas.
+                Cette section affiche les tokens actuellement poses sur le canvas.
             */}
             <div className="shrink-0 border-b border-gray-700/60">
-              <div ref={tokenListRef} className="p-2 space-y-1 max-h-64 overflow-y-auto">
-                {visibleTokens.length === 0 && (
-                  <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
+              <button
+                type="button"
+                onClick={() => setShowCanvasTokens(prev => !prev)}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors"
+              >
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                  Tokens sur la carte
+                </span>
+                {showCanvasTokens ? (
+                  <ChevronDown size={12} className="text-gray-500" />
+                ) : (
+                  <ChevronRight size={12} className="text-gray-500" />
                 )}
-                {visibleTokens.map(token => {
-                const canEdit = role === 'gm' || token.ownerUserId === userId;
-                const isSelected = token.id === selectedTokenId;
-                return (
-                  <div
-                    key={token.id}
-                    data-token-id={token.id}
-                    draggable
-                    onDragStart={e => {
-                      e.dataTransfer.setData('application/vtt-token-id', token.id);
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
-                      isSelected
-                        ? 'bg-amber-500/15 border border-amber-500/40'
-                        : 'hover:bg-gray-800 border border-transparent'
-                    }`}
-                    onClick={() => onSelectToken(isSelected ? null : token.id)}
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white overflow-hidden"
-                      style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
-                    >
-                      {token.imageUrl ? (
-                        <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
-                      ) : (
-                        token.label.slice(0, 2)
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-gray-300'}`}>
-                        {token.label}
-                      </p>
-                      {token.maxHp != null && token.hp != null && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{
-                                width: `${Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100))}%`,
-                                backgroundColor: token.hp / token.maxHp > 0.5 ? '#22c55e' : token.hp / token.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
-                              }}
-                            />
-                          </div>
-                          <span className="text-[9px] text-gray-500">{token.hp}/{token.maxHp}</span>
-                        </div>
-                      )}
-                    </div>
-                    {!token.visible && <EyeOff size={11} className="text-gray-500 shrink-0" />}
-                    {canEdit && (
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        {role === 'gm' && (
-                          <button
-                            onClick={e => { e.stopPropagation(); onToggleVisibility(token.id); }}
-                            className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
-                            title={token.visible ? 'Masquer' : 'Afficher'}
-                          >
-                            {token.visible ? <Eye size={11} /> : <EyeOff size={11} />}
-                          </button>
-                        )}
-                        <button
-                          onClick={e => { e.stopPropagation(); onEditToken(token); }}
-                          className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
-                          title="Éditer"
+              </button>
+
+              {showCanvasTokens && (
+                <div ref={tokenListRef} className="p-2 space-y-1 max-h-64 overflow-y-auto">
+                  {visibleTokens.length === 0 && (
+                    <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
+                  )}
+
+                  {visibleTokens.map(token => {
+                    const canEdit = role === 'gm' || token.ownerUserId === userId;
+                    const isSelected = token.id === selectedTokenId;
+
+                    return (
+                      <div
+                        key={token.id}
+                        data-token-id={token.id}
+                        draggable
+                        onDragStart={e => {
+                          e.dataTransfer.setData('application/vtt-token-id', token.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
+                          isSelected
+                            ? 'bg-amber-500/15 border border-amber-500/40'
+                            : 'hover:bg-gray-800 border border-transparent'
+                        }`}
+                        onClick={() => onSelectToken(isSelected ? null : token.id)}
+                      >
+                        <div
+                          className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white overflow-hidden"
+                          style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
                         >
-                          <Settings size={11} />
-                        </button>
-                        {role === 'gm' && (
-                          <button
-                            onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
-                            className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={11} />
-                          </button>
+                          {token.imageUrl ? (
+                            <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
+                          ) : (
+                            token.label.slice(0, 2)
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-gray-300'}`}>
+                            {token.label}
+                          </p>
+
+                          {token.maxHp != null && token.hp != null && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100))}%`,
+                                    backgroundColor: token.hp / token.maxHp > 0.5 ? '#22c55e' : token.hp / token.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
+                                  }}
+                                />
+                              </div>
+                              <span className="text-[9px] text-gray-500">{token.hp}/{token.maxHp}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {!token.visible && <EyeOff size={11} className="text-gray-500 shrink-0" />}
+
+                        {canEdit && (
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            {role === 'gm' && (
+                              <button
+                                onClick={e => { e.stopPropagation(); onToggleVisibility(token.id); }}
+                                className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                                title={token.visible ? 'Masquer' : 'Afficher'}
+                              >
+                                {token.visible ? <Eye size={11} /> : <EyeOff size={11} />}
+                              </button>
+                            )}
+
+                            <button
+                              onClick={e => { e.stopPropagation(); onEditToken(token); }}
+                              className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                              title="Éditer"
+                            >
+                              <Settings size={11} />
+                            </button>
+
+                            {role === 'gm' && (
+                              <button
+                                onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
+                                className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* -------------------
                 Gestion de la bibliotheque de tokens
                 -------------------
-                Bibliotheque persistante avec dossiers, upload
-                et drag and drop vers le canvas.
+                Cette section contient les tokens importes et ranges
+                dans des dossiers, avec drag and drop vers le canvas.
             */}
-            <div className="flex-1 min-h-0">
-              <VTTTokenLibraryPanel roomId={roomId} />
+            <div className="flex-1 min-h-0 flex flex-col">
+              <button
+                type="button"
+                onClick={() => setShowTokenLibrary(prev => !prev)}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors border-b border-gray-700/60"
+              >
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                  Bibliothèque de tokens
+                </span>
+                {showTokenLibrary ? (
+                  <ChevronDown size={12} className="text-gray-500" />
+                ) : (
+                  <ChevronRight size={12} className="text-gray-500" />
+                )}
+              </button>
+
+              {showTokenLibrary && (
+                <div className="flex-1 min-h-0">
+                  <VTTTokenLibraryPanel roomId={roomId} />
+                </div>
+              )}
             </div>
           </div>
         )}
