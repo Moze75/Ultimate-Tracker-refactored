@@ -734,7 +734,8 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
       });
   }, []);
 
-     const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+    pushUndoSnapshot();
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
     setProps(prev => {
@@ -743,7 +744,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
       if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
-  }, [persistSceneProps]);
+  }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleRemoveProp = useCallback((propId: string) => {
     setProps(prev => {
