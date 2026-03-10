@@ -187,6 +187,7 @@ canvasViewportRef.current = canvasViewport;
 
   const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
   const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
+  const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
   const userId = session.user.id;
   const authToken = session.access_token;
