@@ -31,13 +31,12 @@ import type {
   VTTWeatherEffect,
 } from '../types/vtt';
 
-type VTTUndoSnapshot = {
-  tokens: VTTToken[];
-  walls: VTTWall[];
-  props: VTTProp[];
-};
-
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
+
+type VTTCopyBuffer =
+  | { kind: 'token'; data: VTTToken }
+  | { kind: 'prop'; data: VTTProp }
+  | null;
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
