@@ -26,6 +26,7 @@ export function VTTContextMenu({
   onEdit,
   onDelete,
   onToggleVisibility,
+  onToggleTorch,
   onManageBinding,
   onConfigureVision,
   onClose,
