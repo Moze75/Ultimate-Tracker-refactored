@@ -180,6 +180,9 @@ canvasViewportRef.current = canvasViewport;
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
 
+  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
+
   const userId = session.user.id;
   const authToken = session.access_token;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
