@@ -930,6 +930,7 @@ handleUpdateProp(propId, {
   }, [pushUndoSnapshot]);
 
   const handleWallUpdated = useCallback((wall: VTTWall) => {
+    pushUndoSnapshot();
     setWalls(prev => {
       const next = prev.map(w => w.id === wall.id ? wall : w);
       const sceneId = activeSceneIdRef.current;
