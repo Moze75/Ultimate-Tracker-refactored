@@ -347,6 +347,15 @@ useEffect(() => {
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
+
+    // -------------------
+    // Synchronisation du viewport React pour les props HTML
+    // -------------------
+    if (scene.config.savedViewport) {
+      setCanvasViewport(scene.config.savedViewport);
+      canvasViewportRef.current = scene.config.savedViewport;
+    }
+
     setActiveSceneId(scene.id);
 
     if (scene.roomId) {
