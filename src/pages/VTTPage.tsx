@@ -38,10 +38,7 @@ type VTTCopyBuffer =
   | { kind: 'prop'; data: VTTProp }
   | null;
 
-type VTTCopyBuffer =
-  | { kind: 'token'; data: VTTToken }
-  | { kind: 'prop'; data: VTTProp }
-  | null;
+
 
 interface VTTPageProps {
   session: Session;
