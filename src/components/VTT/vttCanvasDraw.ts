@@ -285,13 +285,10 @@ const fogPunchTokens =
 // -------------------
 const hasDayWallVision = isDay && curRole === 'player' && currentWalls.length > 0 && myVisionTokens.length > 0;
 const hasLocalSpectatorDayVision = isDay && isPlayerVisionSpectator && currentWalls.length === 0 && myVisionTokens.length > 0;
-const hasLocalSpectatorNightVision = isNight && isPlayerVisionSpectator && myControlledTokens.some(t =>
-  (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
-);
 const fogAlpha = curRole === 'gm'
   ? 0.5
   : (isNight
-      ? (hasLocalSpectatorNightVision ? 0.0 : 0.6)
+      ? 0.6
       : ((hasDayWallVision || hasLocalSpectatorDayVision) ? 0.0 : 0.95));
 ctx.globalAlpha = fogAlpha;
 ctx.drawImage(vc, 0, 0, mapW, mapH);
