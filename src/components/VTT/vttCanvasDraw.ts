@@ -272,7 +272,9 @@ const fogPunchTokens =
         punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay);
       }
 
-          // De jour avec murs et vision active : le fog est géré par dayVision, pas besoin d'opacité élevée
+// -------------------
+// Gestion du voile de brouillard / mémoire
+// -------------------
 const hasDayWallVision = isDay && curRole === 'player' && currentWalls.length > 0 && myVisionTokens.length > 0;
 const hasLocalSpectatorDayVision = isDay && isPlayerVisionSpectator && currentWalls.length === 0 && myVisionTokens.length > 0;
 const hasLocalSpectatorNightVision = isNight && isPlayerVisionSpectator && myControlledTokens.some(t =>
