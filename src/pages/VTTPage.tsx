@@ -543,6 +543,7 @@ useEffect(() => {
   }, [saveCurrentSceneState, role]);
 
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
+  pushUndoSnapshot();
   const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
   vttService.send({
     type: 'ADD_TOKEN',
@@ -555,7 +556,7 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
       lightSource: token.lightSource ?? 'none',
     },
   });
-}, []);
+}, [pushUndoSnapshot]);
   const canControlToken = useCallback((token: VTTToken): boolean => {
     if (role === 'gm') return true;
     if (token.controlledByUserIds && token.controlledByUserIds.includes(userId)) return true;
