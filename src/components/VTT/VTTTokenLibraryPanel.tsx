@@ -392,9 +392,17 @@ export function VTTTokenLibraryPanel({ roomId }: VTTTokenLibraryPanelProps) {
         </div>
       )}
 
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-700/60">
-        <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Bibliothèque de Tokens</span>
-        <button onClick={() => { setNewFolderMode(true); setNewFolderName(''); }} className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors">
+      {/* -------------------
+          Gestion de la bibliotheque de tokens
+          -------------------
+          Le titre est deja porte par le bandeau repliable du parent.
+          On ne garde ici que l'action de creation de dossier.
+      */}
+      <div className="flex items-center justify-end px-2 py-1.5 border-b border-gray-700/60">
+        <button
+          onClick={() => { setNewFolderMode(true); setNewFolderName(''); }}
+          className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
+        >
           <FolderPlus size={10} /> Dossier
         </button>
       </div>
