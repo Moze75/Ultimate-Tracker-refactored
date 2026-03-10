@@ -897,7 +897,18 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, role, selectedTokenId, selectedPropId, handleRemoveToken, handleRemoveProp, handleUndo, handleRedo]);
+  }, [
+    phase,
+    role,
+    selectedTokenId,
+    selectedPropId,
+    handleRemoveToken,
+    handleRemoveProp,
+    handleUndo,
+    handleRedo,
+    handleCopySelection,
+    handlePasteSelection,
+  ]);
   
   const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
     if (role !== 'gm' || prop.locked) return;
