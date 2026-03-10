@@ -574,12 +574,12 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
     if (!canControlToken(token)) return;
+    pushUndoSnapshot();
     vttService.send({ type: 'REMOVE_TOKEN', tokenId });
     setTokens(prev => prev.filter(t => t.id !== tokenId));
     setSelectedTokenId(id => id === tokenId ? null : id);
     setSelectedTokenIds(prev => prev.filter(id => id !== tokenId));
-  }, [canControlToken]);
-
+  }, [canControlToken, pushUndoSnapshot]);
 
   
 
