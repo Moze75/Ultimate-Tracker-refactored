@@ -13,7 +13,7 @@ import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
 import { VTTVisionConfigModal } from '../components/VTT/VTTVisionConfigModal';
 import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
-import { VTTPlayerList } from '../components/VTT/VTTPlayerList';
+
 import { VTTBroadcastFrame } from '../components/VTT/VTTBroadcastFrame';
 import { VTTTokenBindingModal } from '../components/VTT/VTTTokenBindingModal';
 import { vttService } from '../services/vttService';
