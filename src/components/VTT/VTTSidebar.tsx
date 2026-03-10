@@ -486,8 +486,8 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
       title={title}
       className={`relative group flex-1 flex items-center justify-center py-2.5 transition-colors border-b-2 ${
         active
-          ? 'text-amber-400 border-amber-500 bg-amber-500/5'
-          : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/50'
+          ? 'text-amber-400 border-amber-500 bg-amber-500/10'
+          : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/30'
       }`}
     >
       {icon}
