@@ -601,8 +601,9 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
     if (!canControlToken(token)) return;
+    pushUndoSnapshot();
     vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
-  }, [canControlToken]);
+  }, [canControlToken, pushUndoSnapshot]);
 
   const handleResizeToken = useCallback((tokenId: string, size: number) => {
     handleUpdateToken(tokenId, { size });
