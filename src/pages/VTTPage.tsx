@@ -964,6 +964,7 @@ handleUpdateProp(propId, {
   }, [pushUndoSnapshot]);
   
   const handleClearWalls = useCallback(() => {
+    pushUndoSnapshot();
     setWalls([]);
     vttService.send({ type: 'UPDATE_WALLS', walls: [] });
     // Sauvegarder dans la scène active
