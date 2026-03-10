@@ -16,6 +16,7 @@ interface VTTSidebarProps {
   roomId: string;
   connected: boolean;
   connectedCount: number;
+  connectedUsers: { userId: string; name: string; role: 'gm' | 'player' }[];
   onSelectToken: (id: string | null) => void;
   onEditToken: (token: VTTToken) => void;
   onRemoveToken: (tokenId: string) => void;
