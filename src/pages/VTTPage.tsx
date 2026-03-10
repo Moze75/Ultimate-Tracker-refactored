@@ -266,7 +266,7 @@ canvasViewportRef.current = canvasViewport;
     setTimeout(() => {
       if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
         vttService.sendBroadcastViewport(broadcastFrameRef.current);
-      } else if (broadcastModeRef.current === 'follow') {
+      } else if (broadcastModeRef.current === 'follow') { 
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
