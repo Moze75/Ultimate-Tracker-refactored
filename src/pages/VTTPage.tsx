@@ -609,6 +609,7 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   }, [handleUpdateToken]);
 
 const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
+  pushUndoSnapshot();
   vttService.send({
     type: 'ADD_TOKEN',
     token: {
@@ -620,7 +621,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
       lightSource: tokenData.lightSource ?? 'none',
     },
   });
-}, []);
+}, [pushUndoSnapshot]);
 
   const handleResetFog = useCallback(() => {
     if (role !== 'gm') return;
