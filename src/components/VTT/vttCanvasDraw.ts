@@ -423,9 +423,7 @@ if (!cfg.fogEnabled) {
  
   // --- VISION DE NUIT ---
   if (cfg.fogEnabled && isNight && curRole === 'player' && (curUserId !== '' || isPlayerVisionSpectator)) { 
-    const playerTokens = myControlledTokens.filter(t =>
-      (t.visionMode && t.visionMode !== 'none') || (t.lightSource && t.lightSource !== 'none')
-    );
+    const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
       // Canvas temporaire local pour la vision de nuit
       // On ne réutilise PAS visionCanvasRef (déjà utilisé par le fog)
