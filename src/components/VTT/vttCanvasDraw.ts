@@ -515,7 +515,7 @@ if (!cfg.fogEnabled) {
       invCtx.globalCompositeOperation = 'source-over';
 
       cCtx.globalCompositeOperation = 'destination-out';
-      cCtx.globalAlpha = isPlayerVisionSpectator ? 1 : 0.70;
+      cCtx.globalAlpha = 0.70;
       cCtx.drawImage(invCanvas, 0, 0);
       cCtx.globalAlpha = 1;
       cCtx.globalCompositeOperation = 'source-over';
