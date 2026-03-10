@@ -66,6 +66,7 @@ export function VTTSidebar({
   roomId,
   connected,
   connectedCount,
+  connectedUsers,
   onSelectToken,
   onEditToken,
   onRemoveToken,
