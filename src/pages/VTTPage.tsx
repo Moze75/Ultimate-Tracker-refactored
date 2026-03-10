@@ -947,6 +947,7 @@ handleUpdateProp(propId, {
   }, [pushUndoSnapshot]);
 
   const handleWallRemoved = useCallback((wallId: string) => {
+    pushUndoSnapshot();
     setWalls(prev => {
       const next = prev.filter(w => w.id !== wallId);
       const sceneId = activeSceneIdRef.current;
