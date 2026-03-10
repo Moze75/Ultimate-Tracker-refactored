@@ -14,9 +14,8 @@ interface VTTPlayerListProps {
   users: VTTConnectedUser[];
 }
 
-export function VTTPlayerList() {
-  return null;
-}
+export function VTTPlayerList({ users }: VTTPlayerListProps) { 
+  if (users.length === 0) return null; 
 
   return (
     <div className="absolute bottom-3 left-14 z-30 flex flex-col gap-1 pointer-events-auto">
