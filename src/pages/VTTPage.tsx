@@ -912,6 +912,7 @@ handleUpdateProp(propId, {
   }, [handleUpdateProp]);
 
   const handleWallAdded = useCallback((wall: VTTWall) => {
+    pushUndoSnapshot();
     setWalls(prev => {
       const next = [...prev, wall];
       // Sauvegarder immédiatement dans la scène active
