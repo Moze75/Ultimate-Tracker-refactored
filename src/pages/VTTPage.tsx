@@ -259,78 +259,14 @@ canvasViewportRef.current = canvasViewport;
     });
   }, [role, makeSnapshot, applySnapshot]);
 
-  const handleCopySelection = useCallback(() => {
-    if (role !== 'gm') return;
-
-    if (selectedTokenId) {
-      const token = tokensRef.current.find(t => t.id === selectedTokenId);
-      if (token) {
-        setCopyBuffer({ kind: 'token', data: structuredClone(token) });
-        return;
-      }
-    }
-
-    if (selectedPropId) {
-      const prop = propsRef.current.find(p => p.id === selectedPropId);
-      if (prop) {
-        setCopyBuffer({ kind: 'prop', data: structuredClone(prop) });
-      }
-    }
-  }, [role, selectedTokenId, selectedPropId]);
-
-  const handlePasteSelection = useCallback(() => {
-    if (role !== 'gm' || !copyBuffer) return;
-
-    pushUndoSnapshot();
-
-    if (copyBuffer.kind === 'token') {
-      const source = copyBuffer.data;
-      const newId = crypto.randomUUID();
-      const newToken: VTTToken = {
-        ...structuredClone(source),
-        id: newId,
-        position: {
-          x: source.position.x + 40,
-          y: source.position.y + 40,
-        },
-      };
-
-      vttService.send({
-        type: 'ADD_TOKEN',
-        token: {
-          ...newToken,
-        },
-      });
-
-      setSelectedPropId(null);
-      setSelectedTokenIds([newId]);
-      setSelectedTokenId(newId);
-      return;
-    }
-
-    if (copyBuffer.kind === 'prop') {
-      const source = copyBuffer.data;
-      const newProp: VTTProp = {
-        ...structuredClone(source),
-        id: crypto.randomUUID(),
-        position: {
-          x: source.position.x + 40,
-          y: source.position.y + 40,
-        },
-      };
-
-      setProps(prev => {
-        const next = [...prev, newProp];
-        const sceneId = activeSceneIdRef.current;
-        if (sceneId) persistSceneProps(sceneId, next);
-        return next;
-      });
-
-      setSelectedTokenId(null);
-      setSelectedTokenIds([]);
-      setSelectedPropId(newProp.id);
-    }
-  }, [role, copyBuffer, pushUndoSnapshot, persistSceneProps]);
+ const handleOpenBroadcastWindow = useCallback(() => {
+    if (!roomId) return;
+    const url = `${window.location.origin}${window.location.pathname}#/vtt-broadcast/${roomId}`;
+    window.open(url, `vtt-broadcast-${roomId}`, 'width=1280,height=720,menubar=no,toolbar=no');
+    setTimeout(() => {
+      if (broadcastModeRef.current === 'frame' && broadcastFrameEnabled) {
+        vttService.sendBroadcastViewport(broadcastFrameRef.current);
+      } else if (broadcastModeRef.current === 'follow') {
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
