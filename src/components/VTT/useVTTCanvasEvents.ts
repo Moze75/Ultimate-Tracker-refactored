@@ -413,13 +413,23 @@ export function useVTTCanvasEvents({
         return;
       }
 
+      // -------------------
+      // Gestion du resize des tokens
+      // -------------------
+      // Securite supplementaire : seul le MJ peut appliquer un resize.
       if (resizingTokenRef.current) {
+        if (roleRef.current !== 'gm') {
+          resizingTokenRef.current = null;
+          return;
+        }
+
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         const wp2 = screenToWorld(sp2.x, sp2.y);
         const { id: rId, tokenPx, tokenPy } = resizingTokenRef.current;
         const CELLR = configRef.current.gridSize || 50;
         const rawPx = Math.max(wp2.x - tokenPx, wp2.y - tokenPy, CELLR * 0.1);
         const newSize = Math.max(Math.round((rawPx / CELLR) * 10) / 10, 0.1);
+
         onResizeTokenRef.current?.(rId, newSize);
         return;
       }
