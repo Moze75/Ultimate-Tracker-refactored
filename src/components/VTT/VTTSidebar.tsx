@@ -91,6 +91,14 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  // -------------------
+  // Gestion des sections du panel tokens
+  // -------------------
+  // Permet de replier la liste des tokens presents sur la carte
+  // ainsi que la bibliotheque de tokens.
+  const [showCanvasTokens, setShowCanvasTokens] = useState(true);
+  const [showTokenLibrary, setShowTokenLibrary] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
 
