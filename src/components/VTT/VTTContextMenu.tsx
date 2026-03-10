@@ -11,8 +11,9 @@ interface VTTContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
-  onManageBinding?: () => void;
-  onConfigureVision?: () => void;
+  onToggleTorch: () => void;
+  onManageBinding: () => void;
+  onConfigureVision: () => void;
   onClose: () => void;
 }
 
