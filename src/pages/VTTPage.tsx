@@ -1553,34 +1553,33 @@ onSelectTokens={ids => {
           )}
         </div>
 
-        <div className="absolute top-0 right-0 bottom-0 z-30 pointer-events-auto">
-          <VTTSidebar
-            role={role}
-            tokens={tokens}
-            config={config}
-            selectedTokenId={selectedTokenId}
-            userId={userId}
-            roomId={roomId!}
-            connected={connected}
-            connectedCount={connectedUsers.length || 1}
-            connectedUsers={connectedUsers}
-            onSelectToken={setSelectedTokenId}
-            onEditToken={setEditingToken}
-            onRemoveToken={handleRemoveToken}
-            onToggleVisibility={handleToggleVisibility}
-            onUpdateMap={handleUpdateMap}
-            onResetFog={handleResetFog}
-            onBack={leaveRoom}
-            onHome={onBack}
-            props={props}
-            selectedPropId={selectedPropId}
-            onSelectProp={setSelectedPropId}
-            onAddProp={handleAddProp}
-            onRemoveProp={handleRemoveProp}
-            onUpdateProp={handleUpdateProp}
-            onSaveScene={role === 'gm' ? handleSaveScene : undefined}
-          />
-        </div>
+        <VTTSidebar
+          role={role}
+          tokens={tokens}
+          config={config}
+          selectedTokenId={selectedTokenId}
+          userId={userId}
+          roomId={roomId!}
+          connected={connected}
+          connectedCount={connectedUsers.length || 1}
+          connectedUsers={connectedUsers}
+          onSelectToken={setSelectedTokenId}
+          onEditToken={setEditingToken}
+          onRemoveToken={handleRemoveToken}
+          onToggleVisibility={handleToggleVisibility}
+          onUpdateMap={handleUpdateMap}
+          onResetFog={handleResetFog}
+          onBack={leaveRoom}
+          onHome={onBack} 
+          props={props}
+          selectedPropId={selectedPropId}
+          onSelectProp={setSelectedPropId}
+          onAddProp={handleAddProp}
+          onRemoveProp={handleRemoveProp}
+          onUpdateProp={handleUpdateProp}
+          onSaveScene={role === 'gm' ? handleSaveScene : undefined}
+        />
+      </div>
 
       {showAddToken && (
         <AddTokenModal
