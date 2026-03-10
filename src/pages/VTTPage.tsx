@@ -473,6 +473,14 @@ useEffect(() => {
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
       setSavedViewport(scene.config.savedViewport ?? null);
+
+      // -------------------
+      // Synchronisation du viewport React pour les props HTML
+      // -------------------
+      if (scene.config.savedViewport) {
+        setCanvasViewport(scene.config.savedViewport);
+        canvasViewportRef.current = scene.config.savedViewport;
+      }
     } finally {
       switchingSceneRef.current = false;
     }
