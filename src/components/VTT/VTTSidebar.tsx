@@ -410,11 +410,45 @@ const visibleTokens = isGM
       </div>
 
       <div className="border-t border-gray-700/60 shrink-0">
-        <div className={`px-3 py-2 flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-          {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
+        {/* -------------------
+            Gestion des joueurs connectes
+            -------------------
+            Fusion de l'indicateur de connexion de la sidebar
+            avec l'ancienne liste flottante du canvas.
+        */}
+        <div className="px-3 py-2 border-b border-gray-700/60">
+          <div className={`flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+            {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
+          </div>
+
+          {connectedUsers.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {connectedUsers.map(user => (
+                <div key={user.userId} className="flex items-center gap-2 min-w-0">
+                  <div className="relative shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[9px] font-bold text-white">
+                      {user.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-gray-900" />
+                  </div>
+
+                  <span className="text-xs text-gray-300 truncate flex-1">
+                    {user.name}
+                  </span>
+
+                  {user.role === 'gm' && (
+                    <span className="text-[9px] text-amber-400 uppercase tracking-wide shrink-0">
+                      MJ
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex border-t border-gray-700/60">
+
+        <div className="flex">
           <button
             onClick={onHome}
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-[11px]"
