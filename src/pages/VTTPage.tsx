@@ -747,6 +747,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
   }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleRemoveProp = useCallback((propId: string) => {
+    pushUndoSnapshot();
     setProps(prev => {
       const next = prev.filter(p => p.id !== propId);
       const sceneId = activeSceneIdRef.current;
@@ -755,7 +756,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     });
 
     setSelectedPropId(id => (id === propId ? null : id));
-  }, [persistSceneProps]);
+  }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
     setProps(prev => {
