@@ -462,8 +462,24 @@ if (!cfg.fogEnabled) {
           })
         : [];
 
-          // La mémoire explorée n'est plus accumulée localement ici :
-      // elle est reconstruite depuis fogState.exploredStrokes.
+      // Graver dans exploredCanvas les zones visibles actuellement (destination-out = effacer le noir)
+      eCtx.globalCompositeOperation = 'destination-out';
+      for (const token of playerTokens) {
+        if (!token.visible) continue;
+        const tSize = (token.size || 1) * CELL;
+        const tcx = token.position.x + tSize / 2;
+        const tcy = token.position.y + tSize / 2;
+        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+        if (poly.length >= 6) {
+          eCtx.fillStyle = 'rgba(0,0,0,1)';
+          eCtx.beginPath();
+          eCtx.moveTo(poly[0], poly[1]);
+          for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
+          eCtx.closePath();
+          eCtx.fill();
+        }
+      }
+      eCtx.globalCompositeOperation = 'source-over';
 
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
