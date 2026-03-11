@@ -71,6 +71,15 @@ const DEFAULT_FOG: VTTFogState = {
   exploredStrokes: [],
 };
 
+// -------------------
+// Normalisation du brouillard de guerre persisté
+// -------------------
+const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
+  revealedCells: [...(fog?.revealedCells || [])],
+  strokes: [...(fog?.strokes || [])],
+  exploredStrokes: [...(fog?.exploredStrokes || [])],
+});
+
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
