@@ -5,7 +5,11 @@ import { wallBlocksToken } from './vttCanvasUtils';
 import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
 import { useVTTCanvasEvents } from './useVTTCanvasEvents';
 import { drawVTTCanvas } from './vttCanvasDraw';
- 
+
+// -------------------
+// Gestion du snapshot local du masque exploré
+// -------------------
+const getExploredMaskStorageKey = (sceneId: string) => `vtt:explored-mask:${sceneId}`;
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
   sceneId,
