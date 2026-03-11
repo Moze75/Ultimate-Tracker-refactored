@@ -89,7 +89,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     name: row.name as string,
     orderIndex: row.order_index as number,
     config: { ...DEFAULT_CONFIG, ...(row.config as Partial<VTTRoomConfig>) },
-    fogState: (row.fog_state as VTTFogState) || DEFAULT_FOG,
+       fogState: normalizeFogState((row.fog_state as VTTFogState) || DEFAULT_FOG),
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
     props: (row.props as VTTProp[]) || [],
