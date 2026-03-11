@@ -39,6 +39,17 @@ function generateTokenId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+// -------------------
+// Normalisation du brouillard de guerre persisté
+// -------------------
+function normalizeFogState(fog?: VTTFogState | null): VTTFogState {
+  return {
+    revealedCells: [...(fog?.revealedCells || [])],
+    strokes: [...(fog?.strokes || [])],
+    exploredStrokes: [...(fog?.exploredStrokes || [])],
+  };
+}
+
 interface LocalState {
   config: VTTRoomConfig;
   tokens: VTTToken[];
