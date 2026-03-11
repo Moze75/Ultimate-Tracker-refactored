@@ -71,15 +71,7 @@ const DEFAULT_FOG: VTTFogState = {
   exploredStrokes: [],
 };
 
-// -------------------
-// Normalisation du brouillard de guerre persisté
-// -------------------
-const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
-  revealedCells: [...(fog?.revealedCells || [])],
-  strokes: [...(fog?.strokes || [])],
-  exploredStrokes: [...(fog?.exploredStrokes || [])],
-});
-
+ 
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
@@ -612,16 +604,9 @@ useEffect(() => {
 // Gestion de la levée du brouillard de guerre
 // -------------------
 const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
-  const nextFogState: VTTFogState = {
-    revealedCells: [...(fogStateRef.current.revealedCells || [])],
+  const nextFogState = {
+    revealedCells: fogStateRef.current.revealedCells,
     strokes: [...(fogStateRef.current.strokes || []), stroke],
-
-    // -------------------
-    // Gestion de la mémoire explorée persistée par scène
-    // -------------------
-    exploredStrokes: stroke.erase
-      ? [...(fogStateRef.current.exploredStrokes || [])]
-      : [...(fogStateRef.current.exploredStrokes || []), stroke],
   };
 
   fogStateRef.current = nextFogState;
@@ -732,7 +717,8 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     if (role !== 'gm') return;
     if (!window.confirm('Reinitialiser tout le brouillard de guerre ?')) return;
     vttService.send({ type: 'RESET_FOG' });
-    setFogState({ revealedCells: [], strokes: [], exploredStrokes: [] });
+    setFogState({ revealedCells: [], strokes: [] });
+  }, [role]);
 
   const handleRevealAll = useCallback(() => {
     if (role !== 'gm') return;
