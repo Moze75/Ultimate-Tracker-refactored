@@ -215,14 +215,10 @@ if (scenes && scenes.length > 0) {
           this.localState.fogState = normalizeFogState(serverEvent.fogState);
         } else if (serverEvent.type === 'MAP_UPDATED') {
           this.localState.config = { ...this.localState.config, ...serverEvent.config };
-           } else if (serverEvent.type === 'SCENE_SWITCHED') {
+        } else if (serverEvent.type === 'SCENE_SWITCHED') {
           this.localState.config = serverEvent.config;
           this.localState.tokens = serverEvent.tokens;
-          this.localState.fogState = {
-            ...serverEvent.fogState,
-            revealedCells: [...(serverEvent.fogState.revealedCells || [])],
-            strokes: [...(serverEvent.fogState.strokes || [])],
-          };
+          this.localState.fogState = normalizeFogState(serverEvent.fogState);
           this.localState.walls = serverEvent.walls;
           if (serverEvent.sceneId) {
             this.activeSceneId = serverEvent.sceneId;
