@@ -280,6 +280,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     restoreExploredMaskSnapshot();
   }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
 
+    // -------------------
+  // Gestion du snapshot local du masque exploré
+  // -------------------
+  useEffect(() => {
+    return () => {
+      saveExploredMaskSnapshot(sceneIdRef.current);
+    };
+  }, [saveExploredMaskSnapshot]);
+
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
 
