@@ -440,7 +440,20 @@ useEffect(() => {
     if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
     switchingSceneRef.current = true;
     try {
-      if (activeSceneIdRef.current) await saveCurrentSceneState(activeSceneIdRef.current);
+      // -------------------
+      // Sauvegarde immédiate du brouillard de guerre avant changement de scène
+      // -------------------
+      if (activeSceneIdRef.current) {
+        await supabase
+          .from('vtt_scenes')
+          .update({
+            fog_state: fogStateRef.current,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', activeSceneIdRef.current);
+
+        await saveCurrentSceneState(activeSceneIdRef.current);
+      }
 
       const { data } = await supabase
         .from('vtt_scenes')
