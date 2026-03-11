@@ -763,7 +763,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
 
   const handleMaskAll = useCallback(() => {
     if (role !== 'gm') return;
-    const newFog = { revealedCells: [], strokes: [] };
+       const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
     setFogState(newFog);
     vttService.send({ type: 'RESET_FOG' });
   }, [role]);
