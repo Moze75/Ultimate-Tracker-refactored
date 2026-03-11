@@ -114,7 +114,7 @@ private localState: LocalState = {
     this.localState = {
       config: { ...DEFAULT_CONFIG, ...(stateJson.config || {}) },
       tokens: stateJson.tokens || [],
-      fogState: stateJson.fogState || { revealedCells: [] },
+      fogState: normalizeFogState(stateJson.fogState || { revealedCells: [] }),
       walls: stateJson.walls || [],
     };
 
