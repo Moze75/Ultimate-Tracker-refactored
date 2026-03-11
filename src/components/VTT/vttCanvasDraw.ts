@@ -462,44 +462,8 @@ if (!cfg.fogEnabled) {
           })
         : [];
 
-      eCtx.globalCompositeOperation = 'destination-out';
-      for (const token of playerTokens) {
-        if (!token.visible) continue;
-        const tSize = (token.size || 1) * CELL;
-        const tcx = token.position.x + tSize / 2;
-        const tcy = token.position.y + tSize / 2;
-        const vm = token.visionMode || 'none';
-        const vr = token.visionRange ?? 18;
-        const ls = token.lightSource || 'none';
-        const lr = token.lightRange ?? 6;
-        let maxR = 0;
-        if (vm === 'normal') maxR = metersToPixels(3, CELL);
-        else if (vm === 'darkvision') maxR = metersToPixels(vr, CELL);
-        if (ls !== 'none') {
-          let dimM = lr * 2;
-          if (ls === 'torch') dimM = 12;
-          else if (ls === 'lantern') dimM = 18;
-          maxR = Math.max(maxR, metersToPixels(dimM, CELL));
-        }
-        if (maxR <= 0) continue;
-        if (wallSegs.length > 0) {
-          const poly = buildVisibilityPolygon(tcx, tcy, maxR, wallSegs, mapW, mapH);
-          if (poly.length >= 6) {
-            eCtx.fillStyle = 'rgba(0,0,0,1)';
-            eCtx.beginPath();
-            eCtx.moveTo(poly[0], poly[1]);
-            for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
-            eCtx.closePath();
-            eCtx.fill();
-          }
-        } else {
-          eCtx.fillStyle = 'rgba(0,0,0,1)';
-          eCtx.beginPath();
-          eCtx.arc(tcx, tcy, maxR, 0, Math.PI * 2);
-          eCtx.fill();
-        }
-      }
-      eCtx.globalCompositeOperation = 'source-over';
+          // La mémoire explorée n'est plus accumulée localement ici :
+      // elle est reconstruite depuis fogState.exploredStrokes.
 
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
