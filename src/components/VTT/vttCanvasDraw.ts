@@ -312,7 +312,9 @@ if (!cfg.fogEnabled) {
       });
       const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
 
-      // --- exploredCanvas : mémoire permanente des zones déjà vues (noir = jamais vu, transparent = déjà exploré)
+      // -------------------
+      // Gestion de la mémoire explorée persistée par scène
+      // -------------------
       let evc = ctx2d.exploredCanvasRef.current;
       if (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH) {
         evc = document.createElement('canvas');
@@ -321,6 +323,17 @@ if (!cfg.fogEnabled) {
         const eCtx2 = evc.getContext('2d')!;
         eCtx2.fillStyle = 'rgba(0,0,0,1)';
         eCtx2.fillRect(0, 0, mapW, mapH);
+
+        // Rejouer la mémoire explorée persistée
+        const exploredStrokes = ctx2d.fogStateRef.current.exploredStrokes || [];
+        eCtx2.globalCompositeOperation = 'destination-out';
+        for (const stroke of exploredStrokes) {
+          eCtx2.beginPath();
+          eCtx2.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+          eCtx2.fill();
+        }
+        eCtx2.globalCompositeOperation = 'source-over';
+
         ctx2d.exploredCanvasRef.current = evc;
         ctx2d.exploredCanvasSizeRef.current = { w: mapW, h: mapH };
       }
