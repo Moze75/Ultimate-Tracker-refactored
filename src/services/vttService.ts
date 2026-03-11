@@ -68,7 +68,12 @@ class VTTService {
   private presenceHandlers: PresenceHandler[] = [];
 private broadcastViewportHandlers: BroadcastViewportHandler[] = [];
 private playerViewportHandlers: PlayerViewportHandler[] = [];
-private localState: LocalState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
+private localState: LocalState = {
+  config: DEFAULT_CONFIG,
+  tokens: [],
+  fogState: { revealedCells: [], strokes: [], exploredStrokes: [] },
+  walls: [],
+};
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
   private activeSceneId: string | null = null;
