@@ -612,9 +612,16 @@ useEffect(() => {
 // Gestion de la levée du brouillard de guerre
 // -------------------
 const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
-  const nextFogState = {
-    revealedCells: fogStateRef.current.revealedCells,
+  const nextFogState: VTTFogState = {
+    revealedCells: [...(fogStateRef.current.revealedCells || [])],
     strokes: [...(fogStateRef.current.strokes || []), stroke],
+
+    // -------------------
+    // Gestion de la mémoire explorée persistée par scène
+    // -------------------
+    exploredStrokes: stroke.erase
+      ? [...(fogStateRef.current.exploredStrokes || [])]
+      : [...(fogStateRef.current.exploredStrokes || []), stroke],
   };
 
   fogStateRef.current = nextFogState;
