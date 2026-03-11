@@ -50,6 +50,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
 
+    const sceneIdRef = useRef<string | null>(sceneId ?? null);
+
   useImperativeHandle(ref, () => ({
     getViewportCenter: () => {
       const vp = viewportRef.current;
