@@ -1243,7 +1243,20 @@ useEffect(() => {
 
   
   const leaveRoom = useCallback(async () => {
+    if (fogSaveTimerRef.current) {
+      clearTimeout(fogSaveTimerRef.current);
+      fogSaveTimerRef.current = null;
+    }
+
     if (activeSceneIdRef.current && role === 'gm') {
+      await supabase
+        .from('vtt_scenes')
+        .update({
+          fog_state: fogStateRef.current,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', activeSceneIdRef.current);
+
       await saveCurrentSceneState(activeSceneIdRef.current);
     }
     setPhase('lobby');
