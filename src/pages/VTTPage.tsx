@@ -744,6 +744,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     if (!window.confirm('Reinitialiser tout le brouillard de guerre ?')) return;
     vttService.send({ type: 'RESET_FOG' });
     setFogState({ revealedCells: [], strokes: [], exploredStrokes: [] });
+  }, [role]);
  
   const handleRevealAll = useCallback(() => {
     if (role !== 'gm') return;
