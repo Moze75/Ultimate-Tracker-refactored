@@ -427,30 +427,18 @@ if (!cfg.fogEnabled) {
       const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
       drawNightVisionOverlay(nCtx, mapW, mapH, playerTokens, currentWalls, CELL, tod.opacity, tod.color);
 
-      const exploredStrokes = ctx2d.fogStateRef.current.exploredStrokes || [];
-
       let evc = ctx2d.exploredCanvasRef.current;
       if (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH) {
         evc = document.createElement('canvas');
         evc.width = mapW;
         evc.height = mapH;
+        const eCtx2 = evc.getContext('2d')!;
+        eCtx2.fillStyle = 'rgba(0,0,0,1)';
+        eCtx2.fillRect(0, 0, mapW, mapH);
         ctx2d.exploredCanvasRef.current = evc;
         ctx2d.exploredCanvasSizeRef.current = { w: mapW, h: mapH };
       }
-
       const eCtx = evc.getContext('2d')!;
-      eCtx.clearRect(0, 0, mapW, mapH);
-      eCtx.fillStyle = 'rgba(0,0,0,1)';
-      eCtx.fillRect(0, 0, mapW, mapH);
-      eCtx.globalCompositeOperation = 'destination-out';
-
-      for (const stroke of exploredStrokes) {
-        eCtx.beginPath();
-        eCtx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-        eCtx.fill();
-      }
-
-      eCtx.globalCompositeOperation = 'source-over';
 
       const wallSegs = currentWalls.length > 0
         ? currentWalls.flatMap(w => {
