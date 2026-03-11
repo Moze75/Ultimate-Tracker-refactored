@@ -408,18 +408,21 @@ if (scenes && scenes.length > 0) {
     // Le fog est sauvegardé exclusivement via _saveFogToScene() dans le case REVEAL_FOG
   }
 
-  private _saveFogNow(fogState: VTTFogState) {
+  // -------------------
+  // Persistance du brouillard de guerre par scène
+  // -------------------
+  private _saveFogToScene(fogState: VTTFogState) {
     if (!this.activeSceneId) return;
     const sceneId = this.activeSceneId;
-    console.log('[VTT] _saveFogNow strokes:', (fogState.strokes || []).length);
+    console.log('[VTT] _saveFogToScene strokes:', (fogState.strokes || []).length);
     supabase
       .rpc('update_scene_fog_state', {
         p_scene_id: sceneId,
         p_fog_state: fogState,
       })
       .then(({ error }) => {
-        if (error) console.error('[VTT] _saveFogNow error:', error);
-        else console.log('[VTT] _saveFogNow OK strokes:', (fogState.strokes || []).length);
+        if (error) console.error('[VTT] _saveFogToScene error:', error);
+        else console.log('[VTT] _saveFogToScene OK strokes:', (fogState.strokes || []).length);
       });
   }
 
