@@ -212,7 +212,7 @@ if (scenes && scenes.length > 0) {
             t.id === serverEvent.tokenId ? { ...t, ...serverEvent.changes } : t
           );
         } else if (serverEvent.type === 'FOG_UPDATED') {
-          this.localState.fogState = serverEvent.fogState;
+          this.localState.fogState = normalizeFogState(serverEvent.fogState);
         } else if (serverEvent.type === 'MAP_UPDATED') {
           this.localState.config = { ...this.localState.config, ...serverEvent.config };
            } else if (serverEvent.type === 'SCENE_SWITCHED') {
