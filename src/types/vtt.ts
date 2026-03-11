@@ -69,6 +69,11 @@ export interface VTTFogStroke {
 export interface VTTFogState {
   revealedCells: string[];
   strokes?: VTTFogStroke[];
+
+  // -------------------
+  // Gestion de la mémoire explorée persistée par scène
+  // -------------------
+  exploredStrokes?: VTTFogStroke[];
 }
 
 export interface VTTWall {
