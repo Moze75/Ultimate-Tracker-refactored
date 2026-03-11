@@ -366,6 +366,11 @@ useEffect(() => {
       ...scene.fogState,
       revealedCells: [...(scene.fogState.revealedCells || [])],
       strokes: [...(scene.fogState.strokes || [])],
+
+      // -------------------
+      // Gestion de la mémoire explorée persistée par scène
+      // -------------------
+      exploredStrokes: [...(scene.fogState.exploredStrokes || [])],
     };
     fogStateRef.current = nextFogState;
     setFogState(nextFogState);
