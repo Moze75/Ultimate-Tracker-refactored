@@ -476,7 +476,7 @@ if (!cfg.fogEnabled) {
           eCtx.moveTo(poly[0], poly[1]);
           for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
           eCtx.closePath();
-          eCtx.fill();
+          eCtx.fill(); 
         }
       }
       eCtx.globalCompositeOperation = 'source-over';
