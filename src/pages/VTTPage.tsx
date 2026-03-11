@@ -443,6 +443,11 @@ useEffect(() => {
       // -------------------
       // Sauvegarde immédiate du brouillard de guerre avant changement de scène
       // -------------------
+      if (fogSaveTimerRef.current) {
+        clearTimeout(fogSaveTimerRef.current);
+        fogSaveTimerRef.current = null;
+      }
+
       if (activeSceneIdRef.current) {
         await supabase
           .from('vtt_scenes')
