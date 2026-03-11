@@ -287,7 +287,7 @@ canvasViewportRef.current = canvasViewport;
       case 'STATE_SYNC':
         setConfig(event.state.room.config);
         setTokens(event.state.room.tokens);
-        setFogState(event.state.room.fogState);
+        setFogState(normalizeFogState(event.state.room.fogState));
         setWalls(event.state.room.walls || []);
         setRole(event.state.yourRole);
         setWeatherEffects(event.state.room.config.weatherEffects || []);
