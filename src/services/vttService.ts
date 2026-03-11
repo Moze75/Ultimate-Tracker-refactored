@@ -533,7 +533,12 @@ onPlayerViewport(handler: PlayerViewportHandler) {
     this.presenceHandlers = [];
 this.broadcastViewportHandlers = [];
 this.playerViewportHandlers = [];
-this.localState = { config: DEFAULT_CONFIG, tokens: [], fogState: { revealedCells: [] }, walls: [] };
+this.localState = {
+  config: DEFAULT_CONFIG,
+  tokens: [],
+  fogState: { revealedCells: [], strokes: [], exploredStrokes: [] },
+  walls: [],
+};
     this.activeSceneId = null;
   }
 
