@@ -1500,6 +1500,7 @@ onMouseDown={e => {
           
           <VTTCanvas
             ref={vttCanvasRef}
+            sceneId={activeSceneId}
             config={config}
             tokens={tokens}
             fogState={fogState}
