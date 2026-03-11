@@ -345,8 +345,13 @@ useEffect(() => {
     // -------------------
     // Rechargement immédiat du brouillard de guerre de la scène
     // -------------------
-    fogStateRef.current = scene.fogState;
-    setFogState(scene.fogState);
+    const nextFogState = {
+      ...scene.fogState,
+      revealedCells: [...(scene.fogState.revealedCells || [])],
+      strokes: [...(scene.fogState.strokes || [])],
+    };
+    fogStateRef.current = nextFogState;
+    setFogState(nextFogState);
 
     setWalls(scene.walls || []);
     setProps(Array.isArray(scene.props) ? scene.props : []);
