@@ -339,16 +339,16 @@ useEffect(() => {
  
   
   const applySceneToLive = useCallback((scene: VTTScene) => {
-      setConfig(scene.config);
+    setConfig(scene.config);
+    setTokens(scene.tokens);
 
-      // -------------------
-      // Rechargement immédiat du brouillard de guerre de la scène
-      // -------------------
-      fogStateRef.current = scene.fogState;
-      setFogState(scene.fogState);
+    // -------------------
+    // Rechargement immédiat du brouillard de guerre de la scène
+    // -------------------
+    fogStateRef.current = scene.fogState;
+    setFogState(scene.fogState);
 
-      setTokens(scene.tokens);
-      setWalls(scene.walls || []);
+    setWalls(scene.walls || []);
     setProps(Array.isArray(scene.props) ? scene.props : []);
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
