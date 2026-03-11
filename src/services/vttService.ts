@@ -329,15 +329,32 @@ if (scenes && scenes.length > 0) {
         this._persistNow();
         break;
 
+         // -------------------
+      // Gestion de la levée du brouillard de guerre persistée
+      // -------------------
       case 'REVEAL_FOG': {
         const stroke = event.stroke;
         console.log('[VTT] REVEAL_FOG event:', JSON.stringify(event));
         console.log('[VTT] stroke value:', stroke);
+
         const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || [])];
         if (stroke) strokes.push(stroke);
-        const newFog: VTTFogState = { revealedCells: this.localState.fogState.revealedCells, strokes };
+
+        const exploredStrokes: VTTFogStroke[] = stroke?.erase
+          ? [...(this.localState.fogState.exploredStrokes || [])]
+          : stroke
+            ? [...(this.localState.fogState.exploredStrokes || []), stroke]
+            : [...(this.localState.fogState.exploredStrokes || [])];
+
+        const newFog: VTTFogState = {
+          revealedCells: [...(this.localState.fogState.revealedCells || [])],
+          strokes,
+          exploredStrokes,
+        };
+
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
+
         // Sauvegarde immédiate dans vtt_scenes (sans debounce pour ne pas perdre les strokes)
         this._saveFogToScene(newFog);
         break;
