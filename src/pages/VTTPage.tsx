@@ -313,7 +313,7 @@ canvasViewportRef.current = canvasViewport;
         ));
         break;
       case 'FOG_UPDATED':
-        setFogState(event.fogState);
+        setFogState(normalizeFogState(event.fogState));
         break;
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
