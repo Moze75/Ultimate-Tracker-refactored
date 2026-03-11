@@ -121,7 +121,7 @@ if (scenes && scenes.length > 0) {
   }
 
   // -------------------
-  // Chargement du fog de la scène active
+  // Chargement du brouillard de guerre de la scène active
   // -------------------
   if (activeScene?.fog_state && typeof activeScene.fog_state === 'object') {
     this.localState.fogState = activeScene.fog_state;
