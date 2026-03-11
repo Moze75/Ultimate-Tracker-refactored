@@ -61,7 +61,15 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-const DEFAULT_FOG: VTTFogState = { revealedCells: [] }; 
+const DEFAULT_FOG: VTTFogState = {
+  revealedCells: [],
+  strokes: [],
+
+  // -------------------
+  // Gestion de la mémoire explorée persistée par scène
+  // -------------------
+  exploredStrokes: [],
+};
 
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
