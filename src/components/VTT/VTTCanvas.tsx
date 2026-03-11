@@ -288,11 +288,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
     buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
-    // Reset explored memory on scene change
+
+    // -------------------
+    // Réinitialisation de la mémoire explorée lors d'un changement de fog/scène
+    // -------------------
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
+
     drawRef.current();
-  }, [fogState.strokes, config.mapWidth, config.mapHeight]);
+  }, [fogState, config.mapWidth, config.mapHeight]);
 
   // Redraw when visual state changes
   useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls]);
