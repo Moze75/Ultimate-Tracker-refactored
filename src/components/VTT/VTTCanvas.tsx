@@ -291,8 +291,23 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     };
   }, [saveExploredMaskSnapshot]);
 
-  // drawRef allows image load callbacks to always call latest draw
-  const drawRef = useRef<() => void>(() => {});
+  const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
+    const movingToken = tokensRef.current.find(t => t.id === tokenId);
+
+    setTokens(prev => {
+      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+      tokensRef.current = next;
+      return next;
+    });
+
+    // -------------------
+    // Gestion de la mémoire explorée persistée par déplacement de token
+    // -------------------
+    if (movingToken) {
+      persistTokenExploration(movingToken, position);
+    }
+
+    pendingMovesRef.current.set(tokenId, position);
 
   const getCanvasXY = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
