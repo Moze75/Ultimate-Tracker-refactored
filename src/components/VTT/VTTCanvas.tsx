@@ -162,9 +162,55 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // Gestion du snapshot local du masque exploré
   // -------------------
   const saveExploredMaskSnapshot = useCallback((targetSceneId?: string | null) => {
+    
+      // -------------------
+  // Gestion du snapshot local du masque exploré
+  // -------------------
+  const restoreExploredMaskSnapshot = useCallback(() => {
+    if (!sceneId) return false;
+
+    const mapW = configRef.current.mapWidth || 2000;
+    const mapH = configRef.current.mapHeight || 2000;
+
+    if (!exploredCanvasRef.current || exploredCanvasRef.current.width !== mapW || exploredCanvasRef.current.height !== mapH) {
+      const nextCanvas = document.createElement('canvas');
+      nextCanvas.width = mapW;
+      nextCanvas.height = mapH;
+      exploredCanvasRef.current = nextCanvas;
+      exploredCanvasSizeRef.current = { w: mapW, h: mapH };
+    }
+
+    const targetCanvas = exploredCanvasRef.current;
+    const targetCtx = targetCanvas?.getContext('2d');
+    if (!targetCanvas || !targetCtx) return false;
+
+    try {
+      const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
+      if (!raw) return false;
+
+      const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
+      if (!parsed?.dataUrl) return false;
+
+      const img = new Image();
+      img.onload = () => {
+        targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+        targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+        drawRef.current();
+      };
+      img.src = parsed.dataUrl;
+
+      return true;
+    } catch (error) {
+      console.warn('[VTT] Impossible de restaurer le snapshot local du masque exploré:', error);
+      return false;
+    }
+  }, [sceneId]);
+    
     const sceneIdToSave = targetSceneId ?? sceneId;
     if (!sceneIdToSave) return;
 
+
+    
     const exploredCanvas = exploredCanvasRef.current;
     if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) return;
 
