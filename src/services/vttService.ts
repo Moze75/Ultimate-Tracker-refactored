@@ -378,7 +378,7 @@ if (scenes && scenes.length > 0) {
       case 'SWITCH_SCENE':
         this.localState.config = event.config;
         this.localState.tokens = event.tokens;
-        this.localState.fogState = event.fogState;
+        this.localState.fogState = normalizeFogState(event.fogState);
         this.localState.walls = event.walls;
         if (event.sceneId) {
           this.activeSceneId = event.sceneId;
