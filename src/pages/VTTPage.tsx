@@ -321,7 +321,7 @@ canvasViewportRef.current = canvasViewport;
       case 'SCENE_SWITCHED':
         setConfig(event.config);
         setTokens(event.tokens);
-        setFogState(event.fogState);
+        setFogState(normalizeFogState(event.fogState));
         setWalls(event.walls);
         setWeatherEffects(event.config.weatherEffects || []);
         break;
