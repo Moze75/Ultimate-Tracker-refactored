@@ -312,37 +312,32 @@ if (!cfg.fogEnabled) {
       });
       const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
 
-      // --- exploredCanvas : mémoire permanente des zones déjà vues (noir = jamais vu, transparent = déjà exploré)
+        // -------------------
+      // Gestion de la mémoire explorée reconstruite depuis l'état persisté
+      // -------------------
+      const exploredStrokes = ctx2d.fogStateRef.current.exploredStrokes || [];
+
       let evc = ctx2d.exploredCanvasRef.current;
       if (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH) {
         evc = document.createElement('canvas');
         evc.width = mapW;
         evc.height = mapH;
-        const eCtx2 = evc.getContext('2d')!;
-        eCtx2.fillStyle = 'rgba(0,0,0,1)';
-        eCtx2.fillRect(0, 0, mapW, mapH);
         ctx2d.exploredCanvasRef.current = evc;
         ctx2d.exploredCanvasSizeRef.current = { w: mapW, h: mapH };
       }
-      const eCtx = evc.getContext('2d')!;
 
-      // Graver dans exploredCanvas les zones visibles actuellement (destination-out = effacer le noir)
+      const eCtx = evc.getContext('2d')!;
+      eCtx.clearRect(0, 0, mapW, mapH);
+      eCtx.fillStyle = 'rgba(0,0,0,1)';
+      eCtx.fillRect(0, 0, mapW, mapH);
       eCtx.globalCompositeOperation = 'destination-out';
-      for (const token of playerTokens) {
-        if (!token.visible) continue;
-        const tSize = (token.size || 1) * CELL;
-        const tcx = token.position.x + tSize / 2;
-        const tcy = token.position.y + tSize / 2;
-        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
-        if (poly.length >= 6) {
-          eCtx.fillStyle = 'rgba(0,0,0,1)';
-          eCtx.beginPath();
-          eCtx.moveTo(poly[0], poly[1]);
-          for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
-          eCtx.closePath();
-          eCtx.fill();
-        }
+
+      for (const stroke of exploredStrokes) {
+        eCtx.beginPath();
+        eCtx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+        eCtx.fill();
       }
+
       eCtx.globalCompositeOperation = 'source-over';
 
       // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
