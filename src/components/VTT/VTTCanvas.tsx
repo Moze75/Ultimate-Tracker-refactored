@@ -193,10 +193,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     };
   };
 
+  // -------------------
+  // Gestion de la peinture du brouillard de guerre
+  // -------------------
   const paintFogAt = (wx: number, wy: number) => {
     const erase = activeToolRef.current === 'fog-erase';
     const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
-    applyStrokeToFogCanvas(stroke, fogCanvasRef);
+
+    // On laisse le state partagé reconstruire le fog canvas,
+    // pour garantir que l'affichage reflète uniquement l'état persisté/synchronisé.
     onRevealFogRef.current(stroke);
   };
 
