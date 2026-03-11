@@ -8,6 +8,7 @@ import { drawVTTCanvas } from './vttCanvasDraw';
  
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
+  sceneId,
   config,
   tokens,
   fogState,
