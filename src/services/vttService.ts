@@ -140,11 +140,7 @@ if (scenes && scenes.length > 0) {
   // Chargement du brouillard de guerre de la scène active
   // -------------------
   if (activeScene?.fog_state && typeof activeScene.fog_state === 'object') {
-    this.localState.fogState = {
-      ...activeScene.fog_state,
-      revealedCells: [...((activeScene.fog_state as VTTFogState).revealedCells || [])],
-      strokes: [...((activeScene.fog_state as VTTFogState).strokes || [])],
-    };
+    this.localState.fogState = normalizeFogState(activeScene.fog_state as VTTFogState);
   }
 
   // Mémorise le sceneId actif pour les sauvegardes fog ultérieures
