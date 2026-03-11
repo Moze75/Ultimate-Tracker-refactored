@@ -618,9 +618,7 @@ useEffect(() => {
     moveThrottleRef.current.set(tokenId, timer);
   }, [saveCurrentSceneState]);
 
-// -------------------
-// Gestion de la levée du brouillard de guerre
-// -------------------
+
 // -------------------
 // Gestion de la levée du brouillard de guerre
 // -------------------
@@ -753,7 +751,11 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     const mapH = configRef.current.mapHeight || 2000;
     const r = Math.sqrt(mapW * mapW + mapH * mapH);
     const stroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
-    const newFog = { revealedCells: [], strokes: [stroke] };
+      const newFog: VTTFogState = {
+      revealedCells: [],
+      strokes: [stroke],
+      exploredStrokes: [stroke],
+    };
     setFogState(newFog);
     vttService.send({ type: 'RESET_FOG' });
     vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
