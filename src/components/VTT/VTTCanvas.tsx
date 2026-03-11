@@ -152,6 +152,25 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const spectatorModeRef = useRef(spectatorMode);
   spectatorModeRef.current = spectatorMode;
 
+    // -------------------
+  // Réinitialisation des canvases mémoire au changement de scène
+  // -------------------
+  useEffect(() => {
+    fogCanvasRef.current = null;
+    fogCanvasSizeRef.current = { w: 0, h: 0 };
+
+    visionCanvasRef.current = null;
+    visionCanvasSizeRef.current = { w: 0, h: 0 };
+
+    dayVisionCanvasRef.current = null;
+    dayVisionCanvasSizeRef.current = { w: 0, h: 0 };
+
+    exploredCanvasRef.current = null;
+    exploredCanvasSizeRef.current = { w: 0, h: 0 };
+
+    drawRef.current();
+  }, [sceneId]);
+
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
 
