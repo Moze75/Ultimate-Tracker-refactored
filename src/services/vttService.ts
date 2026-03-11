@@ -113,22 +113,25 @@ const { data: scenes } = await supabase
 
 if (scenes && scenes.length > 0) {
   const activeScene = this.activeSceneId
-    ? scenes.find(scene => scene.id === this.activeSceneId)
+    ? scenes.find(scene => scene.id === this.activeSceneId) ?? scenes[0]
     : scenes[0];
 
   if (activeScene?.walls) {
     this.localState.walls = activeScene.walls;
   }
 
-  // Priorité au fog de la scène active s'il existe (plus récent que vtt_rooms)
-        if (scenes[0].fog_state && typeof scenes[0].fog_state === 'object') {
-          this.localState.fogState = scenes[0].fog_state;
-        }
-        // Mémorise le sceneId actif pour les sauvegardes fog ultérieures
-        if (scenes[0].id) {
-          this.activeSceneId = scenes[0].id;
-        }
-      }
+  // -------------------
+  // Chargement du fog de la scène active
+  // -------------------
+  if (activeScene?.fog_state && typeof activeScene.fog_state === 'object') {
+    this.localState.fogState = activeScene.fog_state;
+  }
+
+  // Mémorise le sceneId actif pour les sauvegardes fog ultérieures
+  if (activeScene?.id) {
+    this.activeSceneId = activeScene.id;
+  }
+}
     } catch {
       // Silencieux : on garde les valeurs déjà chargées
     }
