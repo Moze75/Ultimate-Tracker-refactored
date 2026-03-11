@@ -6,6 +6,8 @@ import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
 import { useVTTCanvasEvents } from './useVTTCanvasEvents';
 import { drawVTTCanvas } from './vttCanvasDraw';
 
+
+
 // -------------------
 // Gestion du snapshot local du masque exploré
 // -------------------
@@ -162,6 +164,84 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // Gestion du snapshot local du masque exploré
   // -------------------
   const saveExploredMaskSnapshot = useCallback((targetSceneId?: string | null) => {
+    const sceneIdToSave = targetSceneId ?? sceneId;
+    if (!sceneIdToSave) return;
+
+    const exploredCanvas = exploredCanvasRef.current;
+    if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) return;
+
+    try {
+      const maxSnapshotWidth = 512;
+      const scale = Math.min(1, maxSnapshotWidth / exploredCanvas.width);
+      const snapshotWidth = Math.max(1, Math.round(exploredCanvas.width * scale));
+      const snapshotHeight = Math.max(1, Math.round(exploredCanvas.height * scale));
+
+      const snapshotCanvas = document.createElement('canvas');
+      snapshotCanvas.width = snapshotWidth;
+      snapshotCanvas.height = snapshotHeight;
+
+      const snapshotCtx = snapshotCanvas.getContext('2d');
+      if (!snapshotCtx) return;
+
+      snapshotCtx.drawImage(exploredCanvas, 0, 0, snapshotWidth, snapshotHeight);
+
+      const dataUrl = snapshotCanvas.toDataURL('image/png');
+
+      localStorage.setItem(
+        getExploredMaskStorageKey(sceneIdToSave),
+        JSON.stringify({
+          width: snapshotWidth,
+          height: snapshotHeight,
+          dataUrl,
+        })
+      );
+    } catch (error) {
+      console.warn('[VTT] Impossible de sauvegarder le snapshot local du masque exploré:', error);
+    }
+  }, [sceneId]);
+
+  // -------------------
+  // Gestion du snapshot local du masque exploré
+  // -------------------
+  const restoreExploredMaskSnapshot = useCallback(() => {
+    if (!sceneId) return false;
+
+    const mapW = configRef.current.mapWidth || 2000;
+    const mapH = configRef.current.mapHeight || 2000;
+
+    if (!exploredCanvasRef.current || exploredCanvasRef.current.width !== mapW || exploredCanvasRef.current.height !== mapH) {
+      const nextCanvas = document.createElement('canvas');
+      nextCanvas.width = mapW;
+      nextCanvas.height = mapH;
+      exploredCanvasRef.current = nextCanvas;
+      exploredCanvasSizeRef.current = { w: mapW, h: mapH };
+    }
+
+    const targetCanvas = exploredCanvasRef.current;
+    const targetCtx = targetCanvas?.getContext('2d');
+    if (!targetCanvas || !targetCtx) return false;
+
+    try {
+      const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
+      if (!raw) return false;
+
+      const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
+      if (!parsed?.dataUrl) return false;
+
+      const img = new Image();
+      img.onload = () => {
+        targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+        targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+        drawRef.current();
+      };
+      img.src = parsed.dataUrl;
+
+      return true;
+    } catch (error) {
+      console.warn('[VTT] Impossible de restaurer le snapshot local du masque exploré:', error);
+      return false;
+    }
+  }, [sceneId]);
     
       // -------------------
   // Gestion du snapshot local du masque exploré
