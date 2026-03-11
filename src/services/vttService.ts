@@ -361,7 +361,7 @@ if (scenes && scenes.length > 0) {
       }
 
       case 'RESET_FOG': {
-        const newFog: VTTFogState = { revealedCells: [], strokes: [] };
+        const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
         this._saveFogToScene(newFog);
