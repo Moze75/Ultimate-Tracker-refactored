@@ -551,21 +551,29 @@ useEffect(() => {
     moveThrottleRef.current.set(tokenId, timer);
   }, [saveCurrentSceneState]);
 
-  const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
-    setFogState(prev => ({
-      revealedCells: prev.revealedCells,
-      strokes: [...(prev.strokes || []), stroke],
-    }));
-    vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
-    // Pour le GM uniquement : sauvegarde complète de la scène (config + tokens + fog + walls)
-    // Pour les joueurs, c'est vttService._persistNow() via RPC qui gère le fog
-    if (activeSceneIdRef.current && role === 'gm') {
-      if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
-      fogSaveTimerRef.current = setTimeout(() => {
-        saveCurrentSceneState(activeSceneIdRef.current!);
-      }, 2000);
-    }
-  }, [saveCurrentSceneState, role]);
+// -------------------
+// Gestion de la levée du brouillard de guerre
+// -------------------
+const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
+  const nextFogState = {
+    revealedCells: fogStateRef.current.revealedCells,
+    strokes: [...(fogStateRef.current.strokes || []), stroke],
+  };
+
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
+
+  // Pour le GM uniquement : sauvegarde complète de la scène (config + tokens + fog + walls)
+  // Pour les joueurs, c'est vttService._persistNow() via RPC qui gère le fog
+  if (activeSceneIdRef.current && role === 'gm') {
+    if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
+    fogSaveTimerRef.current = setTimeout(() => {
+      saveCurrentSceneState(activeSceneIdRef.current!);
+    }, 2000);
+  }
+}, [saveCurrentSceneState, role]);
 
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
