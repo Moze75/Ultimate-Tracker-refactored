@@ -245,10 +245,19 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [sceneId]);
 
   
-    // -------------------
+  // -------------------
   // Réinitialisation des canvases mémoire au changement de scène
   // -------------------
   useEffect(() => {
+    const previousSceneId = sceneIdRef.current;
+
+    // -------------------
+    // Gestion du snapshot local du masque exploré
+    // -------------------
+    if (previousSceneId && previousSceneId !== sceneId) {
+      saveExploredMaskSnapshot(previousSceneId);
+    }
+
     fogCanvasRef.current = null;
     fogCanvasSizeRef.current = { w: 0, h: 0 };
 
@@ -261,8 +270,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
 
+    sceneIdRef.current = sceneId ?? null;
+
     drawRef.current();
-  }, [sceneId]);
+
+    // -------------------
+    // Gestion du snapshot local du masque exploré
+    // -------------------
+    restoreExploredMaskSnapshot();
+  }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
 
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
