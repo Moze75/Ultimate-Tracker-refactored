@@ -68,6 +68,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         y: (canvas.height / 2 - vp.y) / vp.scale,
       };
     },
+    // -------------------
+    // Sauvegarde manuelle du snapshot exploré (appelé par VTTPage au changement de scène
+    // et au retour lobby)
+    // -------------------
+    saveExploredMask: () => {
+      const sid = sceneIdRef.current;
+      console.log('[FOG-SNAP] saveExploredMask appelé, sceneId=', sid);
+      if (sid) saveExploredMaskSnapshot(sid);
+    },
   }));
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
