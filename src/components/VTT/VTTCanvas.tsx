@@ -82,6 +82,36 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       console.log('[FOG-SNAPSHOT] saveExploredMaskSnapshot appelé via ref (retour lobby)');
       saveExploredMaskSnapshotRef.current?.(sceneIdRef.current);
     },
+    // -------------------
+    // Encode le canvas exploré actuel pour broadcast Realtime vers clients distants
+    // Résolution réduite à 256px max + WebP pour rester sous 32KB (limite Supabase)
+    // -------------------
+    getExploredMaskDataUrl: () => {
+      const exploredCanvas = exploredCanvasRef.current;
+      if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) return null;
+      try {
+        const maxW = 256;
+        const scale = Math.min(1, maxW / exploredCanvas.width);
+        const sw = Math.max(1, Math.round(exploredCanvas.width * scale));
+        const sh = Math.max(1, Math.round(exploredCanvas.height * scale));
+        const snap = document.createElement('canvas');
+        snap.width = sw;
+        snap.height = sh;
+        const ctx = snap.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(exploredCanvas, 0, 0, sw, sh);
+        // -------------------
+        // WebP avec fallback PNG si navigateur non compatible
+        // -------------------
+        const webpDataUrl = snap.toDataURL('image/webp', 0.85);
+        const dataUrl = webpDataUrl.startsWith('data:image/webp')
+          ? webpDataUrl
+          : snap.toDataURL('image/png');
+        return { dataUrl, width: sw, height: sh };
+      } catch {
+        return null;
+      }
+    },
   }));
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
