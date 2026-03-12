@@ -237,29 +237,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       return;
     }
 
-    // -------------------
-    // Vérification du contenu réel du canvas avant sauvegarde
-    // Si tous les pixels sont noirs → le canvas n'a pas été peint par vttCanvasDraw
-    // -------------------
-    const debugCtx = exploredCanvas.getContext('2d');
-    let nonBlackPixels = 0;
-    if (debugCtx) {
-      const sample = debugCtx.getImageData(
-        Math.floor(exploredCanvas.width * 0.25),
-        Math.floor(exploredCanvas.height * 0.25),
-        Math.floor(exploredCanvas.width * 0.5),
-        Math.floor(exploredCanvas.height * 0.5)
-      );
-      for (let pi = 3; pi < sample.data.length; pi += 4) {
-        if (sample.data[pi] < 200) nonBlackPixels++;
-      }
-    }
-    console.log('[FOG-SNAPSHOT] save: début pour scène', sceneIdToSave, {
-      canvasW: exploredCanvas.width,
-      canvasH: exploredCanvas.height,
-      nonBlackPixels,
-      canvasIsExplored: nonBlackPixels > 0,
-    });
+
     try {
       const maxSnapshotWidth = 512;
       const scale = Math.min(1, maxSnapshotWidth / exploredCanvas.width);
