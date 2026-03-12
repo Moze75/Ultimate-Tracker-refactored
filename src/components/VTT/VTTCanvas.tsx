@@ -211,16 +211,29 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   // Gestion du snapshot local du masque exploré
   // -------------------
+   // -------------------
+  // Restauration du snapshot local du masque exploré
+  // Utilise exploredCanvasRestoringRef pour protéger le canvas pendant
+  // le chargement asynchrone de l'image, afin que vttCanvasDraw ne
+  // le recrée pas en noir entre-temps
+  // -------------------
   const restoreExploredMaskSnapshot = useCallback(() => {
     if (!sceneId) return false;
 
     const mapW = configRef.current.mapWidth || 2000;
     const mapH = configRef.current.mapHeight || 2000;
 
+    // Réutilise le canvas pré-créé si les dimensions correspondent,
+    // sinon en crée un nouveau (cas de changement de taille de carte)
     if (!exploredCanvasRef.current || exploredCanvasRef.current.width !== mapW || exploredCanvasRef.current.height !== mapH) {
       const nextCanvas = document.createElement('canvas');
       nextCanvas.width = mapW;
       nextCanvas.height = mapH;
+      const nextCtx = nextCanvas.getContext('2d');
+      if (nextCtx) {
+        nextCtx.fillStyle = 'rgba(0,0,0,1)';
+        nextCtx.fillRect(0, 0, mapW, mapH);
+      }
       exploredCanvasRef.current = nextCanvas;
       exploredCanvasSizeRef.current = { w: mapW, h: mapH };
     }
@@ -231,21 +244,41 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     try {
       const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
-      if (!raw) return false;
+      if (!raw) {
+        // Pas de snapshot : le canvas noir pré-créé sera utilisé tel quel
+        return false;
+      }
 
       const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
       if (!parsed?.dataUrl) return false;
 
+      // -------------------
+      // Pose le flag de restauration : vttCanvasDraw ne doit PAS recréer
+      // exploredCanvasRef tant que ce flag est true
+      // -------------------
+      exploredCanvasRestoringRef.current = true;
+
       const img = new Image();
       img.onload = () => {
+        // Vérifie que le canvas n'a pas été remplacé entre-temps
+        if (exploredCanvasRef.current !== targetCanvas) {
+          exploredCanvasRestoringRef.current = false;
+          return;
+        }
         targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+        // Lève le flag avant le draw pour que vttCanvasDraw utilise le canvas restauré
+        exploredCanvasRestoringRef.current = false;
         drawRef.current();
+      };
+      img.onerror = () => {
+        exploredCanvasRestoringRef.current = false;
       };
       img.src = parsed.dataUrl;
 
       return true;
     } catch (error) {
+      exploredCanvasRestoringRef.current = false;
       console.warn('[VTT] Impossible de restaurer le snapshot local du masque exploré:', error);
       return false;
     }
