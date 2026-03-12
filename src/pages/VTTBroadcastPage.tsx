@@ -250,6 +250,8 @@ const defaultViewport = broadcastViewport ?? undefined;
       )}
 
 <VTTCanvas
+  ref={null as never}
+  sceneId={currentSceneId ?? undefined}
   config={config}
   tokens={tokens}
   fogState={fogState}
