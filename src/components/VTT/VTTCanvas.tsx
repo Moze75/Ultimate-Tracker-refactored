@@ -610,13 +610,23 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   // Mémorise la longueur précédente de exploredStrokes pour détecter
   // uniquement un reset intentionnel (transition N→0), pas le premier chargement
+  // -------------------
+  // Reconstruction du canvas de brouillard de guerre
+  // + détection du reset fog intentionnel via transition exploredStrokes > 0 → 0
+  // + application des strokes erase sur le canvas exploré (mémoire)
+  // -------------------
   const prevExploredStrokesLenRef = useRef<number>(-1);
+  const prevStrokesLenRef = useRef<number>(0);
 
   useEffect(() => {
     const strokes = fogState.strokes || [];
     const exploredStrokes = fogState.exploredStrokes || [];
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
+
+    // -------------------
+    // Reconstruction du fogCanvas principal (noir opaque + trous reveal)
+    // -------------------
     buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
 
     // -------------------
@@ -642,8 +652,37 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
-    drawRef.current();
-  }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, sceneId]);
+    // -------------------
+    // Application des strokes erase sur le canvas exploré (mémoire)
+    // Quand le MJ utilise le pinceau fog-erase, le stroke erase est ajouté
+    // aux strokes mais PAS aux exploredStrokes. Il faut donc repérer
+    // les nouveaux strokes erase et les peindre en noir sur le canvas exploré
+    // pour effacer la mémoire de cette zone (sinon on voit du gris au lieu du noir).
+    // -------------------
+    const prevStrokesLen = prevStrokesLenRef.current;
+    prevStrokesLenRef.current = strokes.length;
+
+    if (strokes.length > prevStrokesLen && exploredCanvasRef.current) {
+      const ec = exploredCanvasRef.current;
+      const eCtx = ec.getContext('2d');
+      if (eCtx) {
+        // Parcourt uniquement les nouveaux strokes ajoutés depuis le dernier rendu
+        for (let i = prevStrokesLen; i < strokes.length; i++) {
+          const s = strokes[i];
+          if (s.erase) {
+            // Peint du noir opaque sur le canvas exploré pour cette zone
+            eCtx.globalCompositeOperation = 'source-over';
+            eCtx.fillStyle = 'rgba(0,0,0,1)';
+            eCtx.beginPath();
+            eCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            eCtx.fill();
+          }
+        }
+      }
+    }
+
+    draw();
+  }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, draw, sceneId]);
 
   // Redraw when visual state changes
   useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls]);
