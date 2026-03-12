@@ -268,15 +268,21 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const targetCtx = targetCanvas?.getContext('2d');
     if (!targetCanvas || !targetCtx) return false;
 
-    try {
+       try {
       const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
       if (!raw) {
-        // Pas de snapshot : le canvas noir pré-créé sera utilisé tel quel
+        console.log('[FOG-SNAP] aucun snapshot trouvé pour scène', sceneId);
         return false;
       }
 
       const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
-      if (!parsed?.dataUrl) return false;
+      if (!parsed?.dataUrl) {
+        console.log('[FOG-SNAP] snapshot corrompu pour scène', sceneId);
+        return false;
+      }
+
+      console.log('[FOG-SNAP] snapshot trouvé pour scène', sceneId,
+        `(${parsed.width}x${parsed.height}) — chargement async en cours`);
 
       // -------------------
       // Pose le flag de restauration : vttCanvasDraw ne doit PAS recréer
@@ -286,19 +292,22 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       const img = new Image();
       img.onload = () => {
-        // Vérifie que le canvas n'a pas été remplacé entre-temps
-        if (exploredCanvasRef.current !== targetCanvas) {
-          exploredCanvasRestoringRef.current = false;
-          return;
-        }
+        // -------------------
+        // On dessine dans targetCanvas puis on force la réassignation dans exploredCanvasRef
+        // Si le canvas a été recréé entre-temps, on l'écrase : le snapshot prime
+        // -------------------
         targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
-        // Lève le flag avant le draw pour que vttCanvasDraw utilise le canvas restauré
+        // Force la réassignation : le snapshot restauré doit être utilisé par vttCanvasDraw
+        exploredCanvasRef.current = targetCanvas;
+        exploredCanvasSizeRef.current = { w: targetCanvas.width, h: targetCanvas.height };
         exploredCanvasRestoringRef.current = false;
+        console.log('[FOG-SNAP] ✅ snapshot restauré dans exploredCanvasRef pour scène', sceneId);
         drawRef.current();
       };
       img.onerror = () => {
         exploredCanvasRestoringRef.current = false;
+        console.warn('[FOG-SNAP] ❌ erreur chargement image snapshot pour scène', sceneId);
       };
       img.src = parsed.dataUrl;
 
