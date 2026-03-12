@@ -8,6 +8,13 @@ export interface VTTCanvasHandle {
   // avant de quitter vers le lobby
   // -------------------
   saveExploredMaskSnapshot: () => void;
+  // -------------------
+  // Encode le canvas exploré en WebP compressé pour broadcast Realtime
+  // Utilisé par VTTPage au changement de scène pour transmettre
+  // la mémoire du fog aux clients distants sans passer par Supabase Storage
+  // Retourne null si le canvas est absent ou vide
+  // -------------------
+  getExploredMaskDataUrl: () => { dataUrl: string; width: number; height: number } | null;
 }
 
 export interface VTTCanvasProps {
