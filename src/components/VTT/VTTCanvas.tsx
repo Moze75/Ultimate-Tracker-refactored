@@ -478,28 +478,37 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // -------------------
   // Reconstruction du canvas de brouillard de guerre
-  // + réinitialisation de la mémoire explorée si exploredStrokes est vide (reset fog)
+  // + détection du reset fog intentionnel via transition exploredStrokes > 0 → 0
   // -------------------
+  // Mémorise la longueur précédente de exploredStrokes pour détecter
+  // uniquement un reset intentionnel (transition N→0), pas le premier chargement
+  const prevExploredStrokesLenRef = useRef<number>(-1);
+
   useEffect(() => {
     const strokes = fogState.strokes || [];
+    const exploredStrokes = fogState.exploredStrokes || [];
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
     buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
 
     // -------------------
-    // Détection du reset fog : exploredStrokes vide = reset complet
-    // On réinitialise exploredCanvasRef et on supprime le snapshot localStorage
-    // pour éviter une restauration fantôme au prochain changement de scène
+    // Détection du reset fog intentionnel UNIQUEMENT
+    // On ne réagit que si exploredStrokes passe de > 0 à 0
+    // (évite de déclencher au premier chargement ou après un changement de scène)
     // -------------------
-    const exploredStrokes = fogState.exploredStrokes || [];
-    if (exploredStrokes.length === 0 && exploredCanvasRef.current) {
+    const prevLen = prevExploredStrokesLenRef.current;
+    const currLen = exploredStrokes.length;
+    const isIntentionalReset = prevLen > 0 && currLen === 0;
+    prevExploredStrokesLenRef.current = currLen;
+
+    if (isIntentionalReset && exploredCanvasRef.current) {
       // Réinitialise le canvas exploré en noir (tout masqué)
       const eCtx = exploredCanvasRef.current.getContext('2d');
       if (eCtx) {
         eCtx.fillStyle = 'rgba(0,0,0,1)';
         eCtx.fillRect(0, 0, mapW, mapH);
       }
-      // Supprime le snapshot localStorage pour cette scène
+      // Supprime le snapshot localStorage pour éviter une restauration fantôme
       if (sceneId) {
         localStorage.removeItem(getExploredMaskStorageKey(sceneId));
       }
