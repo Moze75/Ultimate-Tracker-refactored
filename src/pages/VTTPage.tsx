@@ -379,10 +379,42 @@ canvasViewportRef.current = canvasViewport;
     return () => { unsub(); unsubConn(); unsubPresence(); unsubBroadcastReq(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
-  // Joueur : abonnement au viewport forcé par le MJ (séparé pour ne pas reconnecter)
+// ===================================
+// Joueur : abonnements Realtime spécifiques
+// ===================================
+// - Viewport forcé par le MJ
+// - Masque exploré broadcasted par le MJ (fog de vision persisté)
 useEffect(() => {
   if (phase !== 'room' || !roomId || role !== 'player') return;
   const unsubVp = vttService.onPlayerViewport(vp => setPlayerForcedViewport(vp));
+
+  // -------------------
+  // Écoute du masque exploré envoyé par le MJ
+  // Sauvegarde dans localStorage pour que VTTCanvas.restoreExploredMaskSnapshot()
+  // le retrouve au changement de scène
+  // -------------------
+  const channel = (vttService as any).channel;
+  const fogExploredHandler = ({ payload }: { payload: any }) => {
+    const p = payload as { sceneId: string; dataUrl: string; width: number; height: number };
+    if (!p?.sceneId || !p?.dataUrl) return;
+    console.log('[Player] vtt-fog-explored reçu pour scène', p.sceneId, `(${p.width}x${p.height})`);
+    try {
+      const storageKey = `vtt:explored-mask:${p.sceneId}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        width: p.width,
+        height: p.height,
+        dataUrl: p.dataUrl,
+      }));
+      console.log('[Player] masque exploré sauvegardé dans localStorage pour', p.sceneId);
+    } catch (e) {
+      console.warn('[Player] vtt-fog-explored: impossible d\'écrire localStorage', e);
+    }
+  };
+
+  if (channel) {
+    channel.on('broadcast', { event: 'vtt-fog-explored' }, fogExploredHandler);
+  }
+
   return () => { unsubVp(); };
 }, [phase, roomId, role]);
 
