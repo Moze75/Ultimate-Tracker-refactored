@@ -280,20 +280,7 @@ if (scenes && scenes.length > 0) {
   }
 
   // -------------------
-  // Broadcast du masque exploré (fog levé par vision) aux clients distants
-  // Envoyé via Supabase Realtime — event "vtt-fog-explored"
-  // Permet la persistance inter-scènes pour les joueurs distants sans Supabase Storage
-  // -------------------
-  broadcastExploredMask(sceneId: string, maskData: { dataUrl: string; width: number; height: number }): void {
-    if (!this.channel) return;
-    this.channel.send({
-      type: 'broadcast',
-      event: 'vtt-fog-explored',
-      payload: { sceneId, ...maskData },
-    }).catch((e: unknown) => console.warn('[VTT] broadcastExploredMask error', e));
-  }
-
-  // ===================================
+   // ===================================
   // Broadcast du masque exploré (fog)
   // ===================================
   // Encode et envoie le canvas exploré aux clients distants
