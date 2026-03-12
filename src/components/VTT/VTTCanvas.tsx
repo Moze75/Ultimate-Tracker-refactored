@@ -152,8 +152,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
   const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const dayVisionCanvasSizeRef = useRef({ w: 0, h: 0 });
-    const exploredCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const exploredCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const exploredCanvasSizeRef = useRef({ w: 0, h: 0 });
+  // -------------------
+  // Flag de protection : empêche vttCanvasDraw de recréer exploredCanvas
+  // pendant qu'une restauration asynchrone est en cours
+  // -------------------
+  const exploredCanvasRestoringRef = useRef(false);
   const torchAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
