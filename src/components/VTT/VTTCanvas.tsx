@@ -384,17 +384,96 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   // Réinitialisation des canvases mémoire au changement de scène
   // -------------------
-  useEffect(() => {
+   useEffect(() => {
     const previousSceneId = sceneIdRef.current;
 
     // -------------------
-    // Gestion du snapshot local du masque exploré
-    // Sauvegarde de l'ancienne scène avant tout reset
+    // Sauvegarde de la scène précédente
+    // On capture le canvas MAINTENANT, avant tout reset ou redraw
+    // On travaille sur une copie gelée pour éviter qu'un draw concurrent l'écrase
     // -------------------
     if (previousSceneId && previousSceneId !== sceneId) {
-      saveExploredMaskSnapshot(previousSceneId);
+      const canvasToSave = exploredCanvasRef.current;
+      if (canvasToSave && canvasToSave.width > 0 && canvasToSave.height > 0) {
+        // -------------------
+        // Copie défensive : on clone le canvas MAINTENANT pour éviter
+        // qu'un draw suivant l'écrase avant la fin de la sauvegarde
+        // -------------------
+        const frozenCanvas = document.createElement('canvas');
+        frozenCanvas.width = canvasToSave.width;
+        frozenCanvas.height = canvasToSave.height;
+        const frozenCtx = frozenCanvas.getContext('2d');
+        if (frozenCtx) {
+          frozenCtx.drawImage(canvasToSave, 0, 0);
+
+          // Vérification contenu
+          const sample = frozenCtx.getImageData(
+            Math.floor(frozenCanvas.width * 0.25),
+            Math.floor(frozenCanvas.height * 0.25),
+            Math.floor(frozenCanvas.width * 0.5),
+            Math.floor(frozenCanvas.height * 0.5)
+          );
+          let nonBlack = 0;
+          for (let pi = 3; pi < sample.data.length; pi += 4) {
+            if (sample.data[pi] < 200) nonBlack++;
+          }
+          console.log('[FOG-SNAPSHOT] save gelé avant reset:', {
+            scène: previousSceneId,
+            w: frozenCanvas.width,
+            h: frozenCanvas.height,
+            nonBlackPixels: nonBlack,
+            estExploré: nonBlack > 0,
+          });
+
+          // Sauvegarde depuis la copie gelée
+          try {
+            const maxW = 512;
+            const scale = Math.min(1, maxW / frozenCanvas.width);
+            const sw = Math.max(1, Math.round(frozenCanvas.width * scale));
+            const sh = Math.max(1, Math.round(frozenCanvas.height * scale));
+            const snapCanvas = document.createElement('canvas');
+            snapCanvas.width = sw;
+            snapCanvas.height = sh;
+            const snapCtx = snapCanvas.getContext('2d');
+            if (snapCtx) {
+              snapCtx.drawImage(frozenCanvas, 0, 0, sw, sh);
+              const dataUrl = snapCanvas.toDataURL('image/png');
+              localStorage.setItem(
+                getExploredMaskStorageKey(previousSceneId),
+                JSON.stringify({ width: sw, height: sh, dataUrl })
+              );
+              console.log('[FOG-SNAPSHOT] save gelé OK:', { scène: previousSceneId, dataUrlLen: dataUrl.length });
+
+              // Debug visuel 5s
+              const debugImg = new Image();
+              debugImg.src = dataUrl;
+              Object.assign(debugImg.style, {
+                border: '2px solid lime',
+                position: 'fixed',
+                bottom: '10px',
+                right: '10px',
+                zIndex: '99999',
+                width: '256px',
+                height: 'auto',
+              });
+              debugImg.title = `Save gelé — ${previousSceneId}`;
+              document.body.appendChild(debugImg);
+              setTimeout(() => debugImg.remove(), 5000);
+            }
+          } catch (e) {
+            console.warn('[FOG-SNAPSHOT] save gelé ERREUR:', e);
+          }
+        }
+      } else {
+        console.warn('[FOG-SNAPSHOT] save gelé: canvas absent ou vide au moment du changement de scène');
+        // Fallback : tentative via saveExploredMaskSnapshot classique
+        saveExploredMaskSnapshot(previousSceneId);
+      }
     }
 
+    // -------------------
+    // Reset des canvases mémoire après sauvegarde
+    // -------------------
     fogCanvasRef.current = null;
     fogCanvasSizeRef.current = { w: 0, h: 0 };
 
@@ -405,8 +484,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     dayVisionCanvasSizeRef.current = { w: 0, h: 0 };
 
     // -------------------
-    // Pré-création du canvas exploré AVANT le draw pour éviter
-    // la recréation en noir par vttCanvasDraw pendant la restauration async
+    // Pré-création du canvas exploré AVANT le draw
     // -------------------
     const mapW = configRef.current.mapWidth || 2000;
     const mapH = configRef.current.mapHeight || 2000;
@@ -422,14 +500,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     exploredCanvasSizeRef.current = { w: mapW, h: mapH };
 
     sceneIdRef.current = sceneId ?? null;
-
-    // -------------------
-    // Réinitialise le compteur de strokes explorés pour que la détection
-    // de reset intentionnel ne se déclenche pas faussement sur la nouvelle scène
-    // -------------------
     prevExploredStrokesLenRef.current = -1;
 
     drawRef.current();
+
+    restoreExploredMaskSnapshot();
+  }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
 
     // -------------------
     // Restauration du snapshot de la nouvelle scène
