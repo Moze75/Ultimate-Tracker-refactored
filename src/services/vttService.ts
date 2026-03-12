@@ -496,7 +496,7 @@ if (scenes && scenes.length > 0) {
   private _saveFogToScene(fogState: VTTFogState) {
     if (!this.activeSceneId) return;
     const sceneId = this.activeSceneId;
-    console.log('[VTT] _saveFogToScene strokes:', (fogState.strokes || []).length);
+
     supabase
       .rpc('update_scene_fog_state', {
         p_scene_id: sceneId,
