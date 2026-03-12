@@ -298,24 +298,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         dataUrlLen: dataUrl.length,
       });
 
-      // -------------------
-      // Debug visuel : affiche le snapshot dans la console
-      // Copie l'URL dans la console → clique → si l'image est noire = canvas vide
-      // Supprime ce bloc après debug
-      // -------------------
-      console.log('[FOG-SNAPSHOT] DEBUG dataUrl (ouvre dans onglet):', dataUrl.substring(0, 100) + '...');
-      const debugImg = new Image();
-      debugImg.src = dataUrl;
-      debugImg.style.border = '2px solid red';
-      debugImg.style.position = 'fixed';
-      debugImg.style.bottom = '10px';
-      debugImg.style.right = '10px';
-      debugImg.style.zIndex = '99999';
-      debugImg.style.width = '256px';
-      debugImg.style.height = 'auto';
-      debugImg.title = `Snapshot save — scène ${sceneIdToSave}`;
-      document.body.appendChild(debugImg);
-      setTimeout(() => debugImg.remove(), 5000);
+
     } catch (error) {
       console.warn('[FOG-SNAPSHOT] save: ERREUR', error);
     }
