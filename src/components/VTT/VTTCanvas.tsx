@@ -306,21 +306,25 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       const img = new Image();
       img.onload = () => {
         // -------------------
-        // On dessine dans targetCanvas puis on force la réassignation dans exploredCanvasRef
-        // Si le canvas a été recréé entre-temps, on l'écrase : le snapshot prime
+        // On force la réassignation dans exploredCanvasRef : le snapshot prime
+        // même si vttCanvasDraw a recréé le canvas entre-temps
         // -------------------
+        console.log('[FOG-SNAPSHOT] restore: img.onload OK, dessin dans canvas', {
+          targetW: targetCanvas.width,
+          targetH: targetCanvas.height,
+          sameRef: exploredCanvasRef.current === targetCanvas,
+        });
         targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
-        // Force la réassignation : le snapshot restauré doit être utilisé par vttCanvasDraw
         exploredCanvasRef.current = targetCanvas;
         exploredCanvasSizeRef.current = { w: targetCanvas.width, h: targetCanvas.height };
         exploredCanvasRestoringRef.current = false;
-        console.log('[FOG-SNAP] ✅ snapshot restauré dans exploredCanvasRef pour scène', sceneId);
+        console.log('[FOG-SNAPSHOT] restore: restauration terminée, drawRef appelé');
         drawRef.current();
       };
       img.onerror = () => {
+        console.error('[FOG-SNAPSHOT] restore: img.onerror — snapshot corrompu ou inaccessible');
         exploredCanvasRestoringRef.current = false;
-        console.warn('[FOG-SNAP] ❌ erreur chargement image snapshot pour scène', sceneId);
       };
       img.src = parsed.dataUrl;
 
