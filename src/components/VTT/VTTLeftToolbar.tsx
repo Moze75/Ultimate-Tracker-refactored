@@ -376,12 +376,16 @@ export function VTTLeftToolbar({
                   <Sun size={11} />
                   Tout reveler
                 </button>
-                <button
-                  onClick={() => { onMaskAll?.(); setFogPopupOpen(false); }}
+                 <button
+                  onClick={() => {
+                    if (!window.confirm('Tout masquer le brouillard de guerre ?')) return;
+                    onMaskAll?.();
+                    setFogPopupOpen(false);
+                  }}
                   className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-blue-800/60 text-gray-400 hover:text-blue-400 rounded text-xs transition-colors"
                 >
                   <Moon size={11} />
-                  Tout masquer 
+                  Tout masquer
                 </button>
               </div>
 
