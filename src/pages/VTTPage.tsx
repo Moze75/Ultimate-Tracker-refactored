@@ -399,14 +399,29 @@ useEffect(() => {
     // requestAnimationFrame laisse le temps à VTTCanvas de restaurer son
     // exploredCanvasRef depuis localStorage avant d'encoder le snapshot
     // -------------------
-    if (scene.id) {
+     if (scene.id) {
+      // ===================================
+      // Broadcast du masque exploré (fog de vision)
+      // ===================================
+      // IMPORTANT : 2 rAF sont nécessaires.
+      // Le 1er rAF laisse VTTCanvas déclencher son useEffect[sceneId] (reset + pré-création canvas).
+      // Le 2ème rAF laisse restoreExploredMaskSnapshot() finir de charger l'image en async.
+      // Sans le 2ème rAF, getExploredMaskDataUrl() encode un canvas encore noir.
+      const sceneIdToSend = scene.id;
       requestAnimationFrame(() => {
-        const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
-        if (maskData?.dataUrl) {
-          vttService.broadcastExploredMask(scene.id, maskData);
-          console.log('[FOG-BROADCAST] masque exploré broadcasté pour scène', scene.id,
-            `(${maskData.width}x${maskData.height})`);
-        }
+        requestAnimationFrame(() => {
+          // Petit délai supplémentaire pour la restauration async de l'image
+          setTimeout(() => {
+            const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+            if (maskData?.dataUrl) {
+              vttService.broadcastExploredMask(sceneIdToSend, maskData);
+              console.log('[FOG-BROADCAST] masque exploré broadcasté pour scène', sceneIdToSend,
+                `(${maskData.width}x${maskData.height})`);
+            } else {
+              console.log('[FOG-BROADCAST] pas de masque à broadcaster pour', sceneIdToSend);
+            }
+          }, 300);
+        });
       });
     }
 
