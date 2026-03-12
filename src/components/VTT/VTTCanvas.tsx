@@ -69,15 +69,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       };
     },
     // -------------------
-    // Sauvegarde manuelle du snapshot exploré (appelé par VTTPage au changement de scène
-    // et au retour lobby)
+    // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
     // -------------------
-    saveExploredMask: () => {
-      const sid = sceneIdRef.current;
-      console.log('[FOG-SNAP] saveExploredMask appelé, sceneId=', sid);
-      if (sid) saveExploredMaskSnapshot(sid);
+    saveExploredMaskSnapshot: () => {
+      console.log('[FOG-SNAPSHOT] saveExploredMaskSnapshot appelé via ref (retour lobby)');
+      saveExploredMaskSnapshot(sceneIdRef.current);
     },
-  }));
+  }), [saveExploredMaskSnapshot]);
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
   const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
