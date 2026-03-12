@@ -408,15 +408,35 @@ useEffect(() => {
   const fogExploredHandler = ({ payload }: { payload: any }) => {
     const p = payload as { sceneId: string; dataUrl: string; width: number; height: number };
     if (!p?.sceneId || !p?.dataUrl) return;
-    console.log('[Player] vtt-fog-explored reçu pour scène', p.sceneId, `(${p.width}x${p.height})`);
     try {
+      // -------------------
+      // Sauvegarde du masque exploré dans localStorage
+      // -------------------
       const storageKey = `vtt:explored-mask:${p.sceneId}`;
       localStorage.setItem(storageKey, JSON.stringify({
         width: p.width,
         height: p.height,
         dataUrl: p.dataUrl,
       }));
-      console.log('[Player] masque exploré sauvegardé dans localStorage pour', p.sceneId);
+
+      // -------------------
+      // Si le masque concerne la scène actuellement affichée,
+      // on force VTTCanvas à restaurer immédiatement le snapshot
+      // (sinon il faudrait attendre un changement de scène pour le voir)
+      // -------------------
+      if (p.sceneId === activeSceneIdRef.current) {
+        // Petit délai pour laisser localStorage se stabiliser
+        requestAnimationFrame(() => {
+          // On force un "faux" changement de sceneId pour que le useEffect[sceneId]
+          // de VTTCanvas se redéclenche : null → sceneId
+          const currentId = activeSceneIdRef.current;
+          setActiveSceneId(null);
+          requestAnimationFrame(() => {
+            setActiveSceneId(currentId);
+            activeSceneIdRef.current = currentId;
+          });
+        });
+      }
     } catch (e) {
       console.warn('[Player] vtt-fog-explored: impossible d\'écrire localStorage', e);
     }
