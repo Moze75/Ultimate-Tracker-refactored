@@ -332,8 +332,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         return false;
       }
 
-      console.log('[FOG-SNAP] snapshot trouvé pour scène', sceneId,
-        `(${parsed.width}x${parsed.height}) — chargement async en cours`);
+
 
       // -------------------
       // Pose le flag de restauration : vttCanvasDraw ne doit PAS recréer
@@ -347,11 +346,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         // On force la réassignation dans exploredCanvasRef : le snapshot prime
         // même si vttCanvasDraw a recréé le canvas entre-temps
         // -------------------
-        console.log('[FOG-SNAPSHOT] restore: img.onload OK, dessin dans canvas', {
-          targetW: targetCanvas.width,
-          targetH: targetCanvas.height,
-          sameRef: exploredCanvasRef.current === targetCanvas,
-        });
+
         targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
         exploredCanvasRef.current = targetCanvas;
