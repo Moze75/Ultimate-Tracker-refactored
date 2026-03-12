@@ -868,35 +868,74 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
   });
 }, [pushUndoSnapshot]);
 
-  const handleResetFog = useCallback(() => { 
+  // ===================================
+  // Tout masquer — remet le fog en noir complet
+  // ===================================
+  // Réinitialise strokes + exploredStrokes à vide.
+  // Un seul envoi atomique RESET_FOG (évite les doubles broadcasts).
+  // Aussi utilisé comme "Réinitialiser le brouillard" (même effet).
+  const handleMaskAll = useCallback(() => {
     if (role !== 'gm') return;
-    if (!window.confirm('Reinitialiser tout le brouillard de guerre ?')) return;
+    const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
+    setFogState(newFog);
+    // -------------------
+    // 2. Broadcast + persistance via vttService
+    // -------------------
     vttService.send({ type: 'RESET_FOG' });
-    setFogState({ revealedCells: [], strokes: [], exploredStrokes: [] });
-  }, [role]);
- 
+    // -------------------
+    // 3. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
+
+  // ===================================
+  // Tout révéler — lève le fog sur toute la carte d'un coup
+  // ===================================
+  // Crée un unique stroke géant (rayon = diagonale de la carte)
+  // qui couvre toute la surface. Un seul envoi REVEAL_FOG (pas de RESET d'abord).
   const handleRevealAll = useCallback(() => {
     if (role !== 'gm') return;
     const mapW = configRef.current.mapWidth || 3000;
     const mapH = configRef.current.mapHeight || 2000;
+    // -------------------
+    // Le rayon couvre la diagonale entière de la carte
+    // -------------------
     const r = Math.sqrt(mapW * mapW + mapH * mapH);
-    const stroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
-      const newFog: VTTFogState = {
+    const stroke: VTTFogStroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
+    const newFog: VTTFogState = {
       revealedCells: [],
       strokes: [stroke],
       exploredStrokes: [stroke],
     };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
     setFogState(newFog);
+    // -------------------
+    // 2. Reset d'abord pour vider l'ancien state dans vttService,
+    //    puis envoi du stroke géant
+    // -------------------
     vttService.send({ type: 'RESET_FOG' });
     vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
-  }, [role]);
+    // -------------------
+    // 3. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
 
-  const handleMaskAll = useCallback(() => {
-    if (role !== 'gm') return;
-       const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
-    setFogState(newFog);
-    vttService.send({ type: 'RESET_FOG' });
-  }, [role]);
+  // ===================================
+  // Réinitialiser le fog — alias de "Tout masquer" (même comportement)
+  // ===================================
+  const handleResetFog = handleMaskAll;
 
   const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
     setConfig(prev => ({ ...prev, ...changes }));
