@@ -384,13 +384,7 @@ export function VTTLeftToolbar({
                   Tout masquer 
                 </button>
               </div>
-              <button
-                onClick={() => { onResetFog(); setFogPopupOpen(false); }}
-                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-red-800/60 text-gray-400 hover:text-red-400 rounded text-xs transition-colors"
-              >
-                <RefreshCw size={12} />
-                Reinitialiser le brouillard
-              </button>
+
             </div>
           </div>
         </div>
