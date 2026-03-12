@@ -81,6 +81,12 @@ private localState: LocalState = {
   private requestedRole: 'gm' | 'player' | null = null;
 
   // -------------------
+  // Callback déclenché quand un joueur distant envoie vtt-broadcast-request
+  // Permet à VTTPage d'envoyer le masque exploré au nouveau connecté
+  // -------------------
+  private onBroadcastRequestCallback: (() => void) | null = null;
+
+  // -------------------
   // Callback appelé quand un joueur distant demande l'état initial
   // Permet à VTTPage d'envoyer le masque exploré au nouveau connecté
   // -------------------
