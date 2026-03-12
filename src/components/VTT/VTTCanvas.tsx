@@ -232,10 +232,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           dataUrl,
         })
       );
-      console.log('[FOG-SNAP] ✅ snapshot sauvegardé pour scène', sceneIdToSave,
-        `(${snapshotWidth}x${snapshotHeight})`);
+      console.log('[FOG-SNAPSHOT] save: OK pour scène', sceneIdToSave, {
+        snapshotW: snapshotWidth,
+        snapshotH: snapshotHeight,
+        dataUrlLen: dataUrl.length,
+      });
     } catch (error) {
-      console.warn('[VTT] Impossible de sauvegarder le snapshot local du masque exploré:', error);
+      console.warn('[FOG-SNAPSHOT] save: ERREUR', error);
     }
   }, [sceneId]);
 
