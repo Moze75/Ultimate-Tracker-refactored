@@ -79,7 +79,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // Passe par une ref pour éviter le problème d'ordre de déclaration
     // -------------------
     saveExploredMaskSnapshot: () => {
-      console.log('[FOG-SNAPSHOT] saveExploredMaskSnapshot appelé via ref (retour lobby)');
+
       saveExploredMaskSnapshotRef.current?.(sceneIdRef.current);
     },
     // -------------------
@@ -352,7 +352,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         exploredCanvasRef.current = targetCanvas;
         exploredCanvasSizeRef.current = { w: targetCanvas.width, h: targetCanvas.height };
         exploredCanvasRestoringRef.current = false;
-        console.log('[FOG-SNAPSHOT] restore: restauration terminée, drawRef appelé');
         drawRef.current();
       };
       img.onerror = () => {
