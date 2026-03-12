@@ -157,13 +157,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   // Flag de protection : empêche vttCanvasDraw de recréer exploredCanvas
   // pendant qu'une restauration asynchrone est en cours
-  // -------------------
+  // ------------------- 
   const exploredCanvasRestoringRef = useRef(false);
-  // -------------------
-  // Mémorise la longueur précédente de exploredStrokes
-  // pour détecter uniquement un reset fog intentionnel (transition N→0)
-  // -------------------
-  const prevExploredStrokesLenRef = useRef<number>(-1);
   const torchAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
