@@ -36,6 +36,11 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [walls, setWalls] = useState<VTTWall[]>([]);
+  // -------------------
+  // Suivi de la scène active reçue du MJ
+  // Nécessaire pour déclencher save/restore du fog exploré dans VTTCanvas
+  // -------------------
+  const [currentSceneId, setCurrentSceneId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [broadcastViewport, setBroadcastViewport] = useState<BroadcastViewport | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
