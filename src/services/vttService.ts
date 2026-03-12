@@ -504,7 +504,7 @@ if (scenes && scenes.length > 0) {
       })
       .then(({ error }) => {
         if (error) console.error('[VTT] _saveFogToScene error:', error);
-        else console.log('[VTT] _saveFogToScene OK strokes:', (fogState.strokes || []).length);
+
       });
   }
 
