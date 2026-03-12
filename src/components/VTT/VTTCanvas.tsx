@@ -508,13 +508,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
 
     // -------------------
-    // Restauration du snapshot de la nouvelle scène
-    // Le flag exploredCanvasRestoringRef protège le canvas pendant le chargement async
-    // -------------------
-    restoreExploredMaskSnapshot();
-  }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
-
-    // -------------------
   // Gestion du snapshot local du masque exploré
   // -------------------
   useEffect(() => {
