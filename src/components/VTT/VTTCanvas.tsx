@@ -270,11 +270,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           dataUrl,
         })
       );
-      console.log('[FOG-SNAPSHOT] save: OK pour scène', sceneIdToSave, {
-        snapshotW: snapshotWidth,
-        snapshotH: snapshotHeight,
-        dataUrlLen: dataUrl.length,
-      });
+
 
 
     } catch (error) {
