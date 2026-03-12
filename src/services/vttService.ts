@@ -503,7 +503,7 @@ if (scenes && scenes.length > 0) {
         p_fog_state: fogState,
       })
       .then(({ error }) => {
-        if (error) console.error('[VTT] _saveFogToScene error:', error);
+          if (error) console.error('[VTT] _saveFogToScene error:', error);
 
       });
   }
