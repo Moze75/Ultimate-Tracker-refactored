@@ -80,6 +80,12 @@ private localState: LocalState = {
 
   private requestedRole: 'gm' | 'player' | null = null;
 
+  // -------------------
+  // Callback appelé quand un joueur distant demande l'état initial
+  // Permet à VTTPage d'envoyer le masque exploré au nouveau connecté
+  // -------------------
+  private onBroadcastRequestCallback: (() => void) | null = null;
+
   connect(roomId: string, userId: string, _authToken: string, userName?: string, requestedRole?: 'gm' | 'player') {
     this.roomId = roomId;
     this.userId = userId;
