@@ -314,7 +314,7 @@ if (scenes && scenes.length > 0) {
       console.warn('[VTT] broadcastExploredMask: pas de channel actif');
       return;
     }
-    console.log('[VTT] broadcastExploredMask → envoi pour scène', sceneId, `(${maskData.width}x${maskData.height})`);
+
     this.channel.send({
       type: 'broadcast',
       event: 'vtt-fog-explored',
