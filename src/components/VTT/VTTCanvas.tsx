@@ -187,10 +187,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   const saveExploredMaskSnapshot = useCallback((targetSceneId?: string | null) => {
     const sceneIdToSave = targetSceneId ?? sceneId;
-    if (!sceneIdToSave) return;
+    if (!sceneIdToSave) {
+      console.log('[FOG-SNAP] save ignoré : pas de sceneId');
+      return;
+    }
 
     const exploredCanvas = exploredCanvasRef.current;
-    if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) return;
+    if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) {
+      console.log('[FOG-SNAP] save ignoré : canvas null ou vide', {
+        canvas: !!exploredCanvas,
+        w: exploredCanvas?.width,
+        h: exploredCanvas?.height,
+      });
+      return;
+    }
 
     try {
       const maxSnapshotWidth = 512;
