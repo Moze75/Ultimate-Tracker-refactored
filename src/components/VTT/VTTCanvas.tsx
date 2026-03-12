@@ -227,6 +227,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           dataUrl,
         })
       );
+      console.log('[FOG-SNAP] ✅ snapshot sauvegardé pour scène', sceneIdToSave,
+        `(${snapshotWidth}x${snapshotHeight})`);
     } catch (error) {
       console.warn('[VTT] Impossible de sauvegarder le snapshot local du masque exploré:', error);
     }
