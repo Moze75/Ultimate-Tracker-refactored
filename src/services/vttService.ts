@@ -293,6 +293,24 @@ if (scenes && scenes.length > 0) {
     }).catch((e: unknown) => console.warn('[VTT] broadcastExploredMask error', e));
   }
 
+  // ===================================
+  // Broadcast du masque exploré (fog)
+  // ===================================
+  // Encode et envoie le canvas exploré aux clients distants
+  // via Supabase Realtime. Contourne le localStorage (local uniquement).
+  broadcastExploredMask(sceneId: string, maskData: { dataUrl: string; width: number; height: number }): void {
+    if (!this.channel) {
+      console.warn('[VTT] broadcastExploredMask: pas de channel actif');
+      return;
+    }
+    console.log('[VTT] broadcastExploredMask → envoi pour scène', sceneId, `(${maskData.width}x${maskData.height})`);
+    this.channel.send({
+      type: 'broadcast',
+      event: 'vtt-fog-explored',
+      payload: { sceneId, ...maskData },
+    }).catch((e: unknown) => console.warn('[VTT] broadcastExploredMask error', e));
+  }
+
   private _emitPresence() {
     if (!this.channel) return;
     const state = this.channel.presenceState();
