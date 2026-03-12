@@ -1587,7 +1587,7 @@ useEffect(() => {
   onToolChange={handleToolChange}
   onFogBrushSizeChange={setFogBrushSize}
   onAddToken={() => setShowAddToken(true)}
-  onResetFog={handleResetFog}
+  
   onRevealAll={handleRevealAll}
   onMaskAll={handleMaskAll}
   onUpdateMap={handleUpdateMap}
