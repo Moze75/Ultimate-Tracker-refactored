@@ -529,6 +529,19 @@ if (scenes && scenes.length > 0) {
     this.activeSceneId = sceneId;
   }
 
+  // -------------------
+  // Enregistrement du callback de réponse au broadcast-request
+  // Appelé par VTTPage pour fournir le masque exploré aux nouveaux connectés
+  // -------------------
+  onBroadcastRequest(callback: (() => void) | null) {
+    this.onBroadcastRequestCallback = callback;
+    return () => {
+      if (this.onBroadcastRequestCallback === callback) {
+        this.onBroadcastRequestCallback = null;
+      }
+    };
+  }
+
     updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[]) {
     this.localState = { config, tokens, fogState, walls };
   }
