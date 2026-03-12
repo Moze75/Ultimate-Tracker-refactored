@@ -461,7 +461,12 @@ if (!cfg.fogEnabled) {
       // Gestion de la mémoire explorée persistée par scène
       // -------------------
       let evc = ctx2d.exploredCanvasRef.current;
-      if (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH) {
+      // -------------------
+      // Protection snapshot : si une restauration async est en cours,
+      // on NE recrée PAS exploredCanvas (cela écraserait le snapshot en chargement)
+      // -------------------
+      const isRestoring = ctx2d.exploredCanvasRestoringRef.current;
+      if (!isRestoring && (!evc || ctx2d.exploredCanvasSizeRef.current.w !== mapW || ctx2d.exploredCanvasSizeRef.current.h !== mapH)) {
         evc = document.createElement('canvas');
         evc.width = mapW;
         evc.height = mapH;
@@ -469,7 +474,7 @@ if (!cfg.fogEnabled) {
         eCtx2.fillStyle = 'rgba(0,0,0,1)';
         eCtx2.fillRect(0, 0, mapW, mapH);
 
-        // Rejouer la mémoire explorée persistée
+        // Rejouer la mémoire explorée persistée (exploredStrokes serveur)
         const exploredStrokes = ctx2d.fogStateRef.current.exploredStrokes || [];
         eCtx2.globalCompositeOperation = 'destination-out';
         for (const stroke of exploredStrokes) {
@@ -482,6 +487,8 @@ if (!cfg.fogEnabled) {
         ctx2d.exploredCanvasRef.current = evc;
         ctx2d.exploredCanvasSizeRef.current = { w: mapW, h: mapH };
       }
+      // Si evc est toujours null après protection (cas improbable), on skip le bloc
+      if (!evc) return;
       const eCtx = evc.getContext('2d')!;
 
       const wallSegs = currentWalls.length > 0
