@@ -342,8 +342,27 @@ canvasViewportRef.current = canvasViewport;
     const unsub = vttService.onMessage(handleServerEvent);
     const unsubConn = vttService.onConnectionChange(setConnected);
     const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
+
+    // ===================================
+    // Envoi du masque exploré aux joueurs qui se connectent
+    // ===================================
+    // Quand un joueur distant envoie vtt-broadcast-request, le MJ
+    // doit renvoyer le masque exploré de la scène courante en plus
+    // de l'état initial (config/tokens/fog/walls/sceneId).
+    // Sans cela, le localStorage du joueur est vide → canvas noir.
+    const unsubBroadcastReq = vttService.onBroadcastRequest(() => {
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+        if (maskData?.dataUrl) {
+          vttService.broadcastExploredMask(sceneId, maskData);
+          console.log('[FOG-BROADCAST] masque renvoyé au nouveau connecté pour scène', sceneId);
+        }
+      }
+    });
+
     vttService.connect(roomId, userId, authToken, userName, requestedRole);
-    return () => { unsub(); unsubConn(); unsubPresence(); vttService.disconnect(); };
+    return () => { unsub(); unsubConn(); unsubPresence(); unsubBroadcastReq(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
 
   // Joueur : abonnement au viewport forcé par le MJ (séparé pour ne pas reconnecter)
