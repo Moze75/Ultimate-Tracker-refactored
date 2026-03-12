@@ -318,12 +318,27 @@ canvasViewportRef.current = canvasViewport;
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
         break;
+      // ===================================
+      // Réception d'un changement de scène (joueur ou broadcast)
+      // ===================================
+      // Met à jour config/tokens/fog/walls + activeSceneId
+      // Le sceneId est indispensable pour le cycle save/restore du fog exploré
       case 'SCENE_SWITCHED':
         setConfig(event.config);
         setTokens(event.tokens);
         setFogState(normalizeFogState(event.fogState));
         setWalls(event.walls);
         setWeatherEffects(event.config.weatherEffects || []);
+        // -------------------
+        // Propagation du sceneId au joueur distant
+        // Sans cela, le VTTCanvas du joueur ne déclenche jamais
+        // le cycle save/restore du masque exploré
+        // -------------------
+        if (event.sceneId) {
+          setActiveSceneId(event.sceneId);
+          activeSceneIdRef.current = event.sceneId;
+          vttService.setActiveSceneId(event.sceneId);
+        }
         break;
       case 'WALLS_UPDATED':
         setWalls(event.walls);
