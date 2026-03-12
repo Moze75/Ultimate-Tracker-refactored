@@ -90,6 +90,10 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setTokens(event.tokens);
         setFogState(event.fogState);
         setWalls(event.walls);
+        // -------------------
+        // Mise à jour du sceneId → déclenche le cycle save/restore dans VTTCanvas
+        // -------------------
+        if (event.sceneId) setCurrentSceneId(event.sceneId);
         break;
       case 'WALLS_UPDATED':
         setWalls(event.walls);
