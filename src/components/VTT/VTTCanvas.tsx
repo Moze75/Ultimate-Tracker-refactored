@@ -330,9 +330,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     exploredCanvasRef.current = preCanvas;
     exploredCanvasSizeRef.current = { w: mapW, h: mapH };
 
-    sceneIdRef.current = sceneId ?? null; 
+    sceneIdRef.current = sceneId ?? null;
 
-    drawRef.current(); 
+    // -------------------
+    // Réinitialise le compteur de strokes explorés pour que la détection
+    // de reset intentionnel ne se déclenche pas faussement sur la nouvelle scène
+    // -------------------
+    prevExploredStrokesLenRef.current = -1;
+
+    drawRef.current();
 
     // -------------------
     // Restauration du snapshot de la nouvelle scène
