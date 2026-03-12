@@ -252,7 +252,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // le recrée pas en noir entre-temps
   // -------------------
   const restoreExploredMaskSnapshot = useCallback(() => {
-    if (!sceneId) return false;
+    if (!sceneId) {
+      console.warn('[FOG-SNAPSHOT] restore: sceneId manquant');
+      return false;
+    }
+    console.log('[FOG-SNAPSHOT] restore: tentative pour scène', sceneId);
 
     const mapW = configRef.current.mapWidth || 2000;
     const mapH = configRef.current.mapHeight || 2000;
