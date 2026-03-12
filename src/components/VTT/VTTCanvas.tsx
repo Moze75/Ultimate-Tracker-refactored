@@ -246,6 +246,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       console.warn('[FOG-SNAPSHOT] save: ERREUR', error);
     }
   }, [sceneId]);
+  // Maintient la ref synchronisée avec la dernière version du callback
+  saveExploredMaskSnapshotRef.current = saveExploredMaskSnapshot;
 
   // -------------------
   // Gestion du snapshot local du masque exploré
