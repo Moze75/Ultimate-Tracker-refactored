@@ -188,6 +188,10 @@ if (scenes && scenes.length > 0) {
             tokens: this.localState.tokens,
             fogState: this.localState.fogState,
             walls: this.localState.walls,
+            // -------------------
+            // sceneId actif — nécessaire pour le restore du fog exploré côté broadcast
+            // -------------------
+            sceneId: this.activeSceneId,
           },
         }).catch(console.error);
       });
