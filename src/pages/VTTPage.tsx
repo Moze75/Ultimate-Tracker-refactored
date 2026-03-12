@@ -359,12 +359,11 @@ canvasViewportRef.current = canvasViewport;
     const unsubPresence = vttService.onPresenceChange(setConnectedUsers);
 
     // ===================================
-    // Envoi du masque exploré aux joueurs qui se connectent
+    // Envoi du masque exploré au joueur qui se connecte (côté MJ)
     // ===================================
     // Quand un joueur distant envoie vtt-broadcast-request, le MJ
     // doit renvoyer le masque exploré de la scène courante en plus
     // de l'état initial (config/tokens/fog/walls/sceneId).
-    // Sans cela, le localStorage du joueur est vide → canvas noir.
     const unsubBroadcastReq = vttService.onBroadcastRequest(() => {
       const sceneId = activeSceneIdRef.current;
       if (sceneId) {
