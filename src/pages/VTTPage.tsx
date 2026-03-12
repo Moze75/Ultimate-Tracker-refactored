@@ -419,6 +419,26 @@ useEffect(() => {
       fogState: scene.fogState,
       walls: scene.walls || [],
     });
+
+    // ===================================
+    // Broadcast du masque exploré aux clients distants
+    // ===================================
+    // On attend 2 frames : VTTCanvas doit d'abord restaurer son exploredCanvas
+    // depuis le localStorage (cycle save → reset → restoreExploredMaskSnapshot)
+    // avant qu'on puisse encoder et envoyer le snapshot.
+    const sceneIdToSend = scene.id;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+        if (maskData?.dataUrl) {
+          vttService.broadcastExploredMask(sceneIdToSend, maskData);
+          console.log('[FOG-BROADCAST] masque exploré envoyé pour scène', sceneIdToSend,
+            `(${maskData.width}x${maskData.height})`);
+        } else {
+          console.log('[FOG-BROADCAST] pas de masque exploré à envoyer pour scène', sceneIdToSend);
+        }
+      });
+    });
   }, []);
 
    useEffect(() => {
