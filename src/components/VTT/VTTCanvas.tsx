@@ -464,21 +464,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
               );
               console.log('[FOG-SNAPSHOT] save gelé OK:', { scène: previousSceneId, dataUrlLen: dataUrl.length });
 
-              // Debug visuel 5s
-              const debugImg = new Image();
-              debugImg.src = dataUrl;
-              Object.assign(debugImg.style, {
-                border: '2px solid lime',
-                position: 'fixed',
-                bottom: '10px',
-                right: '10px',
-                zIndex: '99999',
-                width: '256px',
-                height: 'auto',
-              });
-              debugImg.title = `Save gelé — ${previousSceneId}`;
-              document.body.appendChild(debugImg);
-              setTimeout(() => debugImg.remove(), 5000);
+
             }
           } catch (e) {
             console.warn('[FOG-SNAPSHOT] save gelé ERREUR:', e);
