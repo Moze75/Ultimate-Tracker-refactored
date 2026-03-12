@@ -138,6 +138,28 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         if (s.sceneId) setCurrentSceneId(s.sceneId);
         setWaitingForSync(false);
       })
+      // ===================================
+      // Réception du masque exploré broadcasted par le MJ
+      // ===================================
+      // Applique directement le dataUrl dans le localStorage local
+      // afin que VTTCanvas.restoreExploredMaskSnapshot() le retrouve
+      // au prochain changement de scène ou au montage.
+      .on('broadcast', { event: 'vtt-fog-explored' }, ({ payload }) => {
+        const p = payload as { sceneId: string; dataUrl: string; width: number; height: number };
+        if (!p?.sceneId || !p?.dataUrl) return;
+        console.log('[Broadcast] vtt-fog-explored reçu pour scène', p.sceneId, `(${p.width}x${p.height})`);
+        try {
+          const storageKey = `vtt:explored-mask:${p.sceneId}`;
+          localStorage.setItem(storageKey, JSON.stringify({
+            width: p.width,
+            height: p.height,
+            dataUrl: p.dataUrl,
+          }));
+          console.log('[Broadcast] masque exploré sauvegardé dans localStorage pour', p.sceneId);
+        } catch (e) {
+          console.warn('[Broadcast] vtt-fog-explored: impossible d\'écrire localStorage', e);
+        }
+      })
       .subscribe((status) => {
         const isConnected = status === 'SUBSCRIBED';
         setConnected(isConnected);
