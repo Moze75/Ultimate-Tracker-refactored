@@ -283,9 +283,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
        try {
       const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
       if (!raw) {
-        console.log('[FOG-SNAP] aucun snapshot trouvé pour scène', sceneId);
+        console.log('[FOG-SNAPSHOT] restore: aucun snapshot en localStorage pour', sceneId);
         return false;
       }
+      console.log('[FOG-SNAPSHOT] restore: snapshot trouvé, taille JSON =', raw.length);
 
       const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
       if (!parsed?.dataUrl) {
