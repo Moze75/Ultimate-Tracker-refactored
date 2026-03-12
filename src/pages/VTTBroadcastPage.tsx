@@ -242,6 +242,7 @@ const defaultViewport = broadcastViewport ?? undefined;
   onSelectToken={noOp as any}
   walls={walls}
   forceViewport={defaultViewport}
+  sceneId={currentSceneId}
 />
 
       {(config.weatherEffects ?? []).length > 0 && (
