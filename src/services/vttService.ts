@@ -593,6 +593,10 @@ onPlayerViewport(handler: PlayerViewportHandler) {
     this.presenceHandlers = [];
 this.broadcastViewportHandlers = [];
 this.playerViewportHandlers = [];
+// -------------------
+// Nettoyage du callback broadcast-request
+// -------------------
+this.onBroadcastRequestCallback = null;
 this.localState = {
   config: DEFAULT_CONFIG,
   tokens: [],
