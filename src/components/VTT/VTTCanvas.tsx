@@ -260,6 +260,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     // -------------------
     // Gestion du snapshot local du masque exploré
+    // Sauvegarde de l'ancienne scène avant tout reset
     // -------------------
     if (previousSceneId && previousSceneId !== sceneId) {
       saveExploredMaskSnapshot(previousSceneId);
@@ -274,15 +275,30 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     dayVisionCanvasRef.current = null;
     dayVisionCanvasSizeRef.current = { w: 0, h: 0 };
 
-    exploredCanvasRef.current = null;
-    exploredCanvasSizeRef.current = { w: 0, h: 0 };
+    // -------------------
+    // Pré-création du canvas exploré AVANT le draw pour éviter
+    // la recréation en noir par vttCanvasDraw pendant la restauration async
+    // -------------------
+    const mapW = configRef.current.mapWidth || 2000;
+    const mapH = configRef.current.mapHeight || 2000;
+    const preCanvas = document.createElement('canvas');
+    preCanvas.width = mapW;
+    preCanvas.height = mapH;
+    const preCtx = preCanvas.getContext('2d');
+    if (preCtx) {
+      preCtx.fillStyle = 'rgba(0,0,0,1)';
+      preCtx.fillRect(0, 0, mapW, mapH);
+    }
+    exploredCanvasRef.current = preCanvas;
+    exploredCanvasSizeRef.current = { w: mapW, h: mapH };
 
     sceneIdRef.current = sceneId ?? null;
 
     drawRef.current();
 
     // -------------------
-    // Gestion du snapshot local du masque exploré
+    // Restauration du snapshot de la nouvelle scène
+    // Le flag exploredCanvasRestoringRef protège le canvas pendant le chargement async
     // -------------------
     restoreExploredMaskSnapshot();
   }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
