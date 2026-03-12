@@ -478,14 +478,35 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // -------------------
   // Reconstruction du canvas de brouillard de guerre
+  // + réinitialisation de la mémoire explorée si exploredStrokes est vide (reset fog)
   // -------------------
   useEffect(() => {
     const strokes = fogState.strokes || [];
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
     buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
+
+    // -------------------
+    // Détection du reset fog : exploredStrokes vide = reset complet
+    // On réinitialise exploredCanvasRef et on supprime le snapshot localStorage
+    // pour éviter une restauration fantôme au prochain changement de scène
+    // -------------------
+    const exploredStrokes = fogState.exploredStrokes || [];
+    if (exploredStrokes.length === 0 && exploredCanvasRef.current) {
+      // Réinitialise le canvas exploré en noir (tout masqué)
+      const eCtx = exploredCanvasRef.current.getContext('2d');
+      if (eCtx) {
+        eCtx.fillStyle = 'rgba(0,0,0,1)';
+        eCtx.fillRect(0, 0, mapW, mapH);
+      }
+      // Supprime le snapshot localStorage pour cette scène
+      if (sceneId) {
+        localStorage.removeItem(getExploredMaskStorageKey(sceneId));
+      }
+    }
+
     drawRef.current();
-  }, [fogState.strokes, config.mapWidth, config.mapHeight]);
+  }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, sceneId]);
 
   // Redraw when visual state changes
   useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls]);
