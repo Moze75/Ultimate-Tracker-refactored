@@ -478,12 +478,11 @@ useEffect(() => {
           // Petit délai supplémentaire pour la restauration async de l'image
           setTimeout(() => {
             const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+            // -------------------
+            // Envoi du masque exploré aux clients distants
+            // -------------------
             if (maskData?.dataUrl) {
               vttService.broadcastExploredMask(sceneIdToSend, maskData);
-              console.log('[FOG-BROADCAST] masque exploré broadcasté pour scène', sceneIdToSend,
-                `(${maskData.width}x${maskData.height})`);
-            } else {
-              console.log('[FOG-BROADCAST] pas de masque à broadcaster pour', sceneIdToSend);
             }
           }, 300);
         });
