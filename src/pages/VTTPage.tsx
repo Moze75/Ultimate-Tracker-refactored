@@ -291,6 +291,17 @@ canvasViewportRef.current = canvasViewport;
         setWalls(event.state.room.walls || []);
         setRole(event.state.yourRole);
         setWeatherEffects(event.state.room.config.weatherEffects || []);
+        // -------------------
+        // Récupération du sceneId actif dès la première connexion
+        // Sans cela, le VTTCanvas du joueur reste sur sceneId=null
+        // et ne restaure jamais le masque exploré depuis localStorage
+        // -------------------
+        if ((event.state as any).activeSceneId && !activeSceneIdRef.current) {
+          const scId = (event.state as any).activeSceneId as string;
+          setActiveSceneId(scId);
+          activeSceneIdRef.current = scId;
+          vttService.setActiveSceneId(scId);
+        }
         break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
