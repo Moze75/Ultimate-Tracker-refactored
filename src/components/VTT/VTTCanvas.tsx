@@ -245,7 +245,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       snapshotCtx.drawImage(exploredCanvas, 0, 0, snapshotWidth, snapshotHeight);
 
-      const dataUrl = snapshotCanvas.toDataURL('image/png');
+       // -------------------
+      // WebP est 5-8x plus léger que PNG sur un masque monochromatique
+      // Fallback PNG si le navigateur ne supporte pas WebP (rare)
+      // -------------------
+      const webpDataUrl = snapshotCanvas.toDataURL('image/webp', 0.85);
+      const dataUrl = webpDataUrl.startsWith('data:image/webp')
+        ? webpDataUrl
+        : snapshotCanvas.toDataURL('image/png');
 
       localStorage.setItem(
         getExploredMaskStorageKey(sceneIdToSave),
