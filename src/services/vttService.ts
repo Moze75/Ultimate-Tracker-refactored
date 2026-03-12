@@ -180,6 +180,11 @@ if (scenes && scenes.length > 0) {
         },
         yourRole: this.isGM ? 'gm' : 'player',
         yourUserId: userId,
+        // -------------------
+        // SceneId actif : permet au joueur de connaître la scène dès la connexion
+        // Sans cela, activeSceneId reste null et le masque exploré n'est jamais restauré
+        // -------------------
+        activeSceneId: this.activeSceneId,
       },
     };
     this.messageHandlers.forEach(h => h(initialEvent));
