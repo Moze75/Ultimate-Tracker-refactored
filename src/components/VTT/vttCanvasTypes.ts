@@ -18,6 +18,11 @@ export interface VTTCanvasHandle {
 }
 
 export interface VTTCanvasProps {
+  // -------------------
+  // Identifiant de la scène active — nécessaire pour save/restore du masque exploré
+  // Doit être fourni par VTTBroadcastPage aussi, pas seulement VTTPage
+  // -------------------
+  sceneId?: string;
   config: VTTRoomConfig;
   tokens: VTTToken[];
   fogState: VTTFogState;
