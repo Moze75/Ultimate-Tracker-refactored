@@ -42,6 +42,11 @@ export interface VTTDrawContext {
   dayVisionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   exploredCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   exploredCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
+  // -------------------
+  // Flag de protection contre la recréation du canvas exploré
+  // pendant une restauration de snapshot asynchrone
+  // -------------------
+  exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
   drawRef: React.MutableRefObject<() => void>;
 }
 
