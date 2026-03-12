@@ -58,6 +58,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     const sceneIdRef = useRef<string | null>(sceneId ?? null);
 
+  // -------------------
+  // Ref de la fonction save pour éviter la dépendance d'ordre avec useImperativeHandle
+  // (useImperativeHandle est déclaré avant saveExploredMaskSnapshot dans le fichier)
+  // -------------------
+  const saveExploredMaskSnapshotRef = useRef<((targetSceneId?: string | null) => void) | null>(null);
+
   useImperativeHandle(ref, () => ({
     getViewportCenter: () => {
       const vp = viewportRef.current;
@@ -70,12 +76,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     },
     // -------------------
     // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
+    // Passe par une ref pour éviter le problème d'ordre de déclaration
     // -------------------
     saveExploredMaskSnapshot: () => {
       console.log('[FOG-SNAPSHOT] saveExploredMaskSnapshot appelé via ref (retour lobby)');
-      saveExploredMaskSnapshot(sceneIdRef.current);
+      saveExploredMaskSnapshotRef.current?.(sceneIdRef.current);
     },
-  }), [saveExploredMaskSnapshot]);
+  }));
 
   const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
   const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
