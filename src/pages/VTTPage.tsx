@@ -394,6 +394,22 @@ useEffect(() => {
       localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
     }
 
+    // -------------------
+    // Broadcast du masque exploré aux clients distants après changement de scène
+    // requestAnimationFrame laisse le temps à VTTCanvas de restaurer son
+    // exploredCanvasRef depuis localStorage avant d'encoder le snapshot
+    // -------------------
+    if (scene.id) {
+      requestAnimationFrame(() => {
+        const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+        if (maskData?.dataUrl) {
+          vttService.broadcastExploredMask(scene.id, maskData);
+          console.log('[FOG-BROADCAST] masque exploré broadcasté pour scène', scene.id,
+            `(${maskData.width}x${maskData.height})`);
+        }
+      });
+    }
+
     vttService.setActiveSceneId(scene.id);
     vttService.send({
       type: 'SWITCH_SCENE',
