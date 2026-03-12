@@ -419,7 +419,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
                 getExploredMaskStorageKey(previousSceneId),
                 JSON.stringify({ width: sw, height: sh, dataUrl })
               );
-              console.log('[FOG-SNAPSHOT] save gelé OK:', { scène: previousSceneId, dataUrlLen: dataUrl.length });
+
 
 
             }
