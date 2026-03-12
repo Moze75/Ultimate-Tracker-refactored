@@ -182,7 +182,11 @@ if (scenes && scenes.length > 0) {
       config: { broadcast: { self: false }, presence: { key: userId } },
     });
 
-    // GM : répondre aux demandes d'état initial de la fenêtre broadcast (présentiel)
+    // ===================================
+    // Réponse aux demandes d'état initial (broadcast-request)
+    // ===================================
+    // Le MJ renvoie config/tokens/fog/walls/sceneId au joueur qui se connecte,
+    // puis déclenche le callback pour que VTTPage envoie aussi le masque exploré
     if (this.isGM) {
       this.channel.on('broadcast', { event: 'vtt-broadcast-request' }, () => {
         console.log('[VTT] Broadcast requested state → sending vtt-broadcast-init');
@@ -200,6 +204,14 @@ if (scenes && scenes.length > 0) {
             sceneId: this.activeSceneId,
           },
         }).catch(console.error);
+
+        // -------------------
+        // Envoi du masque exploré au joueur qui vient de se connecter
+        // Le callback est enregistré par VTTPage via onBroadcastRequest()
+        // -------------------
+        if (this.onBroadcastRequestCallback) {
+          this.onBroadcastRequestCallback();
+        }
       });
     }
 
