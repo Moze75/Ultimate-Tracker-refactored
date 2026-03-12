@@ -400,24 +400,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         if (frozenCtx) {
           frozenCtx.drawImage(canvasToSave, 0, 0);
 
-          // Vérification contenu
-          const sample = frozenCtx.getImageData(
-            Math.floor(frozenCanvas.width * 0.25),
-            Math.floor(frozenCanvas.height * 0.25),
-            Math.floor(frozenCanvas.width * 0.5),
-            Math.floor(frozenCanvas.height * 0.5)
-          );
-          let nonBlack = 0;
-          for (let pi = 3; pi < sample.data.length; pi += 4) {
-            if (sample.data[pi] < 200) nonBlack++;
-          }
-          console.log('[FOG-SNAPSHOT] save gelé avant reset:', {
-            scène: previousSceneId,
-            w: frozenCanvas.width,
-            h: frozenCanvas.height,
-            nonBlackPixels: nonBlack,
-            estExploré: nonBlack > 0,
-          });
+
 
           // Sauvegarde depuis la copie gelée
           try {
