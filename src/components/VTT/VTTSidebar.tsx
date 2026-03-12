@@ -23,7 +23,6 @@ interface VTTSidebarProps {
   onRemoveToken: (tokenId: string) => void;
   onToggleVisibility: (tokenId: string) => void;
   onUpdateMap: (changes: Partial<VTTRoomConfig>) => void;
-  onResetFog: () => void;
   onBack: () => void;
   onHome: () => void;
   props: VTTProp[];
