@@ -435,6 +435,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       dayVisionCanvasSizeRef,
       exploredCanvasRef,
       exploredCanvasSizeRef,
+      exploredCanvasRestoringRef,
       drawRef,
     });
   }, []);
