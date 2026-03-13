@@ -596,6 +596,22 @@ onPlayerViewport(handler: PlayerViewportHandler) {
       clearTimeout(this.persistDebounce);
       this._persistNow();
     }
+    // -------------------
+    // Flush la sauvegarde fog en cours avant déconnexion
+    // -------------------
+    if (this._fogSaveTimer) {
+      clearTimeout(this._fogSaveTimer);
+      this._fogSaveTimer = null;
+      if (this._pendingFogState && this.activeSceneId) {
+        supabase
+          .rpc('update_scene_fog_state', {
+            p_scene_id: this.activeSceneId,
+            p_fog_state: this._pendingFogState,
+          })
+          .catch(console.error);
+        this._pendingFogState = null;
+      }
+    }
     if (this.channel) {
       supabase.removeChannel(this.channel);
       this.channel = null;
