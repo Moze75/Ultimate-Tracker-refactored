@@ -907,7 +907,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     activeTool,
   });
 
+  // -------------------
+  // Détection de tous les outils fog (pinceau + rectangle)
+  // -------------------
   const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
+  const isFogRectTool = activeTool === 'fog-rect-reveal' || activeTool === 'fog-rect-erase';
+  const isAnyFogTool = isFogTool || isFogRectTool;
   const isWallTool = activeTool === 'wall-draw';
   const isWallSelectTool = activeTool === 'wall-select';
   const isAnyWallTool = isWallTool || isWallSelectTool;
