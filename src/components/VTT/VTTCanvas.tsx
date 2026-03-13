@@ -631,48 +631,26 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const prevExploredStrokesLenRef = useRef<number>(-1);
   const prevStrokesLenRef = useRef<number>(0);
 
-   useEffect(() => {
+  useEffect(() => {
     const strokes = fogState.strokes || [];
     const exploredStrokes = fogState.exploredStrokes || [];
     const mapW = config.mapWidth || 2000;
     const mapH = config.mapHeight || 2000;
 
     // -------------------
-    // Reconstruction du fogCanvas — incrémentale ou totale
-    // On ne reconstruit depuis zéro QUE si :
-    //   - le fogCanvas n'existe pas encore (premier render, changement de scène)
-    //   - la taille de la carte a changé
-    //   - un reset fog a eu lieu (strokes est vide ou a diminué)
-    // Sinon on applique uniquement les nouveaux strokes pour la performance.
+    // Reconstruction forcée du fogCanvas à chaque changement de strokes
+    // Force la recréation pour que reset (0 strokes) et reveal all soient pris en compte
     // -------------------
-    const prevLen = prevStrokesLenRef.current;
-    const needsFullRebuild =
-      !fogCanvasRef.current ||
-      fogCanvasSizeRef.current.w !== mapW ||
-      fogCanvasSizeRef.current.h !== mapH ||
-      strokes.length < prevLen ||
-      strokes.length === 0;
-
-    if (needsFullRebuild) {
-      fogCanvasRef.current = null;
-      fogCanvasSizeRef.current = { w: 0, h: 0 };
-      buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
-    } else if (strokes.length > prevLen) {
-      // -------------------
-      // Application incrémentale : seuls les nouveaux strokes sont dessinés
-      // Évite de rejouer N strokes à chaque coup de pinceau (O(1) au lieu de O(N))
-      // -------------------
-      for (let i = prevLen; i < strokes.length; i++) {
-        applyStrokeToFogCanvas(strokes[i], fogCanvasRef);
-      }
-    }
+    fogCanvasRef.current = null;
+    fogCanvasSizeRef.current = { w: 0, h: 0 };
+    buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
 
     // -------------------
     // Invalidation du cache fogInv (masque inversé du fog)
     // Sera recalculé au prochain draw() uniquement
     // -------------------
     fogInvCanvasRef.current = null;
-    fogInvVersionRef.current++;
+    fogInvVersionRef.current++; 
  
     // -------------------
     // Détection du reset fog (tout masquer)
