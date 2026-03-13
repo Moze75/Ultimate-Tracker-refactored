@@ -376,21 +376,19 @@ if (scenes && scenes.length > 0) {
         this._persistNow();
         break;
 
-         // -------------------
+             // -------------------
       // Gestion de la levée du brouillard de guerre persistée
+      // Supporte un batch de strokes pour le painting continu.
+      // Un seul broadcast + une seule RPC Supabase pour tout le batch.
       // -------------------
       case 'REVEAL_FOG': {
-        const stroke = event.stroke;
+        const batch: VTTFogStroke[] = event.batch || (event.stroke ? [event.stroke] : []);
 
-
-        const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || [])];
-        if (stroke) strokes.push(stroke);
-
-        const exploredStrokes: VTTFogStroke[] = stroke?.erase
-          ? [...(this.localState.fogState.exploredStrokes || [])]
-          : stroke
-            ? [...(this.localState.fogState.exploredStrokes || []), stroke]
-            : [...(this.localState.fogState.exploredStrokes || [])];
+        const strokes: VTTFogStroke[] = [...(this.localState.fogState.strokes || []), ...batch];
+        const exploredStrokes: VTTFogStroke[] = [
+          ...(this.localState.fogState.exploredStrokes || []),
+          ...batch.filter(s => !s.erase),
+        ];
 
         const newFog: VTTFogState = {
           revealedCells: [...(this.localState.fogState.revealedCells || [])],
@@ -401,7 +399,9 @@ if (scenes && scenes.length > 0) {
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
 
-        // Sauvegarde immédiate dans vtt_scenes (sans debounce pour ne pas perdre les strokes)
+        // -------------------
+        // UNE SEULE sauvegarde RPC pour tout le batch
+        // -------------------
         this._saveFogToScene(newFog);
         break;
       }
