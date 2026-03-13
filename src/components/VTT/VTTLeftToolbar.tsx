@@ -338,6 +338,16 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
+            {/* -------------------
+                Mode de l'outil fog : Pinceau / Rectangle
+                ------------------- */}
+            <div className="mb-1">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Mode</span>
+            </div>
+
+            {/* -------------------
+                Ligne 1 : Pinceau (reveal + masquer)
+                ------------------- */}
             <div className="flex gap-1">
               <button
                 onClick={() => onToolChange('fog-reveal')}
@@ -345,7 +355,7 @@ export function VTTLeftToolbar({
                   activeTool === 'fog-reveal' ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                 }`}
               >
-                <Eye size={11} /> Reveler
+                <Eye size={11} /> Révéler
               </button>
               <button
                 onClick={() => onToolChange('fog-erase')}
@@ -357,6 +367,44 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
+            {/* -------------------
+                Ligne 2 : Rectangle (reveal + masquer)
+                ------------------- */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => onToolChange('fog-rect-reveal')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors ${
+                  activeTool === 'fog-rect-reveal' ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                }`}
+              >
+                <Square size={11} /> Rect. Révéler
+              </button>
+              <button
+                onClick={() => onToolChange('fog-rect-erase')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs transition-colors ${
+                  activeTool === 'fog-rect-erase' ? 'bg-red-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                }`}
+              >
+                <Square size={11} /> Rect. Masquer
+              </button>
+            </div>
+
+            {/* -------------------
+                Instructions contextuelles pour le mode rectangle
+                ------------------- */}
+            {(activeTool === 'fog-rect-reveal' || activeTool === 'fog-rect-erase') && (
+              <div className="p-2 rounded-lg bg-gray-800/60 border border-gray-700/40">
+                <p className="text-[10px] text-gray-400 leading-relaxed">
+                  <strong className="text-gray-300">Clic maintenu</strong> pour tracer un rectangle.
+                  Relâchez pour appliquer.
+                </p>
+              </div>
+            )}
+
+            {/* -------------------
+                Slider taille pinceau (affiché uniquement en mode pinceau)
+                ------------------- */}
+            {(activeTool === 'fog-reveal' || activeTool === 'fog-erase') && (
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-400">Rayon du pinceau</span>
@@ -372,6 +420,7 @@ export function VTTLeftToolbar({
                 <span>4px</span><span>200px</span>
               </div>
             </div>
+            )}
 
             <div className="pt-1 border-t border-gray-700/60 space-y-1.5">
               <div className="flex gap-1.5">
