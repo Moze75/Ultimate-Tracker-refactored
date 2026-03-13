@@ -192,6 +192,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
+  // -------------------
+  // Cache du masque inversé du fog (fogInv)
+  // Recalculé uniquement quand fogCanvasRef change, pas à chaque frame.
+  // Évite de créer un canvas mapW×mapH à chaque draw() pendant l'animation torche.
+  // -------------------
+  const fogInvCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fogInvVersionRef = useRef<number>(0);
   const visionCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
   const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
