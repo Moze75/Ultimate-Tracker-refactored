@@ -31,7 +31,10 @@ export interface VTTCanvasProps {
   activeTool: VTTActiveTool;
   fogBrushSize: number;
   onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
-  onRevealFog: (stroke: VTTFogStroke) => void;
+  // -------------------
+  // Accepte un stroke unique OU un batch de strokes pour le painting continu
+  // -------------------
+  onRevealFog: (strokeOrBatch: VTTFogStroke | VTTFogStroke[]) => void;
   selectedTokenId: string | null;
   onSelectToken: (id: string | null) => void;
   selectedTokenIds?: string[];
