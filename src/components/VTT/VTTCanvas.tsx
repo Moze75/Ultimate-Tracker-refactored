@@ -641,6 +641,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
 
     // -------------------
+    // Invalidation du cache fogInv (masque inversé du fog)
+    // Sera recalculé au prochain draw() uniquement
+    // -------------------
+    fogInvCanvasRef.current = null;
+    fogInvVersionRef.current++;
+
+    // -------------------
     // Détection du reset fog (tout masquer)
     // Condition : exploredStrokes passe de > 0 à 0 ET strokes aussi à 0
     // Le prevLen === -1 est ignoré (premier chargement / changement de scène)
