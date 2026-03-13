@@ -570,6 +570,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       calibrationPointsRef,
       fogCanvasRef,
       fogCanvasSizeRef,
+      // -------------------
+      // Refs du cache fogInv (masque inversé du fog pour percement vision)
+      // -------------------
+      fogInvCanvasRef,
+      fogInvVersionRef,
       visionCanvasRef,
       visionCanvasSizeRef,
       dayVisionCanvasRef,
