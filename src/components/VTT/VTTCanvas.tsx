@@ -522,30 +522,55 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   };
 
   // -------------------
-  // Gestion de la peinture du brouillard de guerre
-  // Applique le stroke localement pour un retour visuel instantané,
-  // puis envoie au state partagé. Le useEffect incrémental détectera
-  // que le stroke a déjà été appliqué (prevStrokesLen aura rattrapé).
   // -------------------
+  // Gestion de la peinture du brouillard de guerre
+  // Applique le stroke localement sur le fogCanvas pour un retour visuel
+  // instantané, puis planifie un seul redraw via requestAnimationFrame.
+  // L'envoi au state partagé est différé (batched) pour ne pas provoquer
+  // un re-render React + useEffect + draw() supplémentaire à chaque pixel.
+  // -------------------
+  const fogPaintRafRef = useRef<number | null>(null);
+  const fogPaintBatchRef = useRef<VTTFogStroke[]>([]);
+
   const paintFogAt = (wx: number, wy: number) => {
     const erase = activeToolRef.current === 'fog-erase';
     const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
 
     // -------------------
-    // Application locale immédiate sur le fogCanvas + invalidation du cache fogInv
+    // Application locale immédiate sur le fogCanvas (O(1) : 1 seul arc)
     // -------------------
     applyStrokeToFogCanvas(stroke, fogCanvasRef);
-    fogInvCanvasRef.current = null;
-    draw();
 
     // -------------------
-    // Envoi au state partagé (persistance + broadcast)
-    // Le useEffect incrémental sautera ce stroke car prevStrokesLenRef
-    // sera mis à jour APRÈS le setState, et le fogCanvas contient déjà le stroke.
-    // Pour éviter le doublon, on avance manuellement le compteur.
+    // Invalidation du cache fogInv UNE SEULE FOIS par frame
+    // (pas à chaque mousemove — un seul null suffit)
     // -------------------
+    fogInvCanvasRef.current = null;
+
+    // -------------------
+    // Accumule le stroke dans le batch pour envoi différé
+    // -------------------
+    fogPaintBatchRef.current.push(stroke);
     prevStrokesLenRef.current++;
-    onRevealFogRef.current(stroke);
+
+    // -------------------
+    // Planifie un seul draw + flush par frame d'animation
+    // Si un RAF est déjà en attente, on n'en crée pas un deuxième.
+    // Cela regroupe tous les mousemove d'une même frame en un seul draw().
+    // -------------------
+    if (fogPaintRafRef.current === null) {
+      fogPaintRafRef.current = requestAnimationFrame(() => {
+        fogPaintRafRef.current = null;
+        // Un seul draw() pour tous les strokes accumulés dans cette frame
+        draw();
+        // Flush batch : envoie tous les strokes au state partagé d'un coup
+        const batch = fogPaintBatchRef.current;
+        fogPaintBatchRef.current = [];
+        for (const s of batch) {
+          onRevealFogRef.current(s);
+        }
+      });
+    }
   };
 
  
