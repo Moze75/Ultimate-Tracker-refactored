@@ -774,7 +774,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
     }
 
-    drawRef.current();
+    // -------------------
+    // Redraw seulement si le changement ne vient PAS de paintFogAt
+    // (paintFogAt fait déjà son propre draw via RAF, pas besoin d'un 2e)
+    // Si fogPaintRafRef est non-null, un RAF est en attente → skip le draw
+    // -------------------
+    if (!fogPaintRafRef.current) {
+      drawRef.current();
+    }
   }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, sceneId]);
 
   // Redraw when visual state changes
