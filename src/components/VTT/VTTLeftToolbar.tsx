@@ -3,7 +3,11 @@ import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as G
 import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'measure';
+// -------------------
+// Outils actifs du VTT
+// fog-rect-reveal / fog-rect-erase : sélection rectangulaire pour reveal/masquage
+// -------------------
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'measure';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
