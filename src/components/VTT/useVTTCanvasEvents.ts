@@ -221,8 +221,17 @@ export function useVTTCanvasEvents({
           onSelectTokensRef.current?.([]);
         }
       } else if ((tool === 'fog-reveal' || tool === 'fog-erase') && roleRef.current === 'gm') {
+        // -------------------
+        // Pinceau fog classique
+        // -------------------
         isPaintingFogRef.current = true;
         paintFogAt(wp.x, wp.y);
+      } else if ((tool === 'fog-rect-reveal' || tool === 'fog-rect-erase') && roleRef.current === 'gm') {
+        // -------------------
+        // Début du rectangle de sélection fog
+        // -------------------
+        fogRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
+        drawRef.current();
       } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
         onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
       } else if (tool === 'wall-draw' && roleRef.current === 'gm') {
