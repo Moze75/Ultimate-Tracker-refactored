@@ -615,6 +615,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       measureStartRef,
       measureEndRef,
       selectionRectRef,
+      // -------------------
+      // Rectangle de preview fog (fog-rect-reveal / fog-rect-erase)
+      // -------------------
+      fogRectRef,
       calibrationPointsRef,
       fogCanvasRef,
       fogCanvasSizeRef,
