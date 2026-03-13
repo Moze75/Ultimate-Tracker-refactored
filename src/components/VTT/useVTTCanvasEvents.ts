@@ -489,9 +489,21 @@ export function useVTTCanvasEvents({
           onMoveTokenRef.current(drag.id, snapped);
         }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm') {
+        // -------------------
+        // Pinceau fog : peinture continue
+        // -------------------
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
         paintFogAt(wp.x, wp.y);
+      } else if (fogRectRef.current && (tool === 'fog-rect-reveal' || tool === 'fog-rect-erase')) {
+        // -------------------
+        // Rectangle fog : mise à jour du coin opposé pendant le drag
+        // -------------------
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        fogRectRef.current.x2 = wp.x;
+        fogRectRef.current.y2 = wp.y;
+        drawRef.current();
       }
     };
 
