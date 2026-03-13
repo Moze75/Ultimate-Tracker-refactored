@@ -452,38 +452,10 @@ if (!cfg.fogEnabled) {
       // On ne réutilise PAS visionCanvasRef (déjà utilisé par le fog)
       const nvc = document.createElement('canvas');
       nvc.width = mapW;
-      nvc.height = mapH;
+      nvc.height = mapH; 
       const nCtx = nvc.getContext('2d')!;
       const tod = timeOfDay != null ? getTimeOfDayOverlay(timeOfDay) : { color: 'rgba(0,0,0,ALPHA)', opacity: 0.65, label: '' };
       drawNightVisionOverlay(nCtx, mapW, mapH, playerTokens, currentWalls, CELL, tod.opacity, tod.color);
-
-      // -------------------
-      // Percement des zones fog-reveal dans le masque de vision de nuit
-      // Sans cela, les zones que le MJ a révélées (fog-reveal) restent
-      // couvertes par le noir du masque de nuit si elles sont hors du
-      // rayon de vision du joueur. On utilise le fogCanvas (qui a des
-      // trous là où le fog est levé) pour effacer le noir correspondant.
-      // -------------------
-      if (ctx2d.fogCanvasRef.current && cfg.fogEnabled) {
-        // fogCanvas : noir = fog encore actif, transparent = fog levé
-        // On veut effacer le noir de nvc là où fogCanvas est transparent (= fog levé)
-        // Étape 1 : créer un masque inversé du fog (opaque = fog levé, transparent = fog actif)
-        const fogInv = document.createElement('canvas');
-        fogInv.width = mapW;
-        fogInv.height = mapH;
-        const fogInvCtx = fogInv.getContext('2d')!;
-        fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
-        fogInvCtx.fillRect(0, 0, mapW, mapH);
-        fogInvCtx.globalCompositeOperation = 'destination-out';
-        fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
-        fogInvCtx.globalCompositeOperation = 'source-over';
-        // fogInv est maintenant : opaque là où le fog a été levé, transparent là où le fog est encore actif
-
-        // Étape 2 : effacer le noir du masque de nuit aux endroits révélés par le fog
-        nCtx.globalCompositeOperation = 'destination-out';
-        nCtx.drawImage(fogInv, 0, 0);
-        nCtx.globalCompositeOperation = 'source-over';
-      }
 
       // -------------------
       // Gestion de la mémoire explorée persistée par scène
