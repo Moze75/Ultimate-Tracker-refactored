@@ -540,12 +540,20 @@ if (!cfg.fogEnabled) {
       }
       eCtx.globalCompositeOperation = 'source-over';
 
+      // -------------------
+      // Composition finale du masque de vision de nuit
+      // cvc = copie de nvc (noir partout sauf dans le rayon de vision)
+      // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
       cvc.height = mapH;
       const cCtx = cvc.getContext('2d')!;
       cCtx.drawImage(nvc, 0, 0);
 
+      // -------------------
+      // Atténuation des zones déjà explorées (mémoire)
+      // invCanvas = opaque là où JAMAIS exploré, transparent là où déjà exploré
+      // -------------------
       const invCanvas = document.createElement('canvas');
       invCanvas.width = mapW;
       invCanvas.height = mapH;
@@ -556,11 +564,40 @@ if (!cfg.fogEnabled) {
       invCtx.drawImage(evc, 0, 0);
       invCtx.globalCompositeOperation = 'source-over';
 
+      // -------------------
+      // Atténuation classique : efface 70% du noir sur les zones explorées
+      // → reste 30% de noir = voile semi-transparent sur la mémoire
+      // -------------------
       cCtx.globalCompositeOperation = 'destination-out';
       cCtx.globalAlpha = 0.70;
       cCtx.drawImage(invCanvas, 0, 0);
       cCtx.globalAlpha = 1;
       cCtx.globalCompositeOperation = 'source-over';
+
+      // -------------------
+      // Percement du fog-reveal dans le masque de nuit composé
+      // Là où le MJ a explicitement levé le fog (fog-reveal), le fogCanvas
+      // est transparent. On crée un masque inversé (opaque = fog levé) et on
+      // l'utilise pour effacer le noir résiduel du masque de nuit.
+      // Cela permet au joueur de voir les zones fog-reveal même hors de
+      // son rayon de vision personnel.
+      // -------------------
+      if (ctx2d.fogCanvasRef.current && cfg.fogEnabled) {
+        const fogInv = document.createElement('canvas');
+        fogInv.width = mapW;
+        fogInv.height = mapH;
+        const fogInvCtx = fogInv.getContext('2d')!;
+        fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
+        fogInvCtx.fillRect(0, 0, mapW, mapH);
+        fogInvCtx.globalCompositeOperation = 'destination-out';
+        fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
+        fogInvCtx.globalCompositeOperation = 'source-over';
+        // fogInv = opaque là où le fog a été levé, transparent sinon
+
+        cCtx.globalCompositeOperation = 'destination-out';
+        cCtx.drawImage(fogInv, 0, 0);
+        cCtx.globalCompositeOperation = 'source-over';
+      }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
     } else {
