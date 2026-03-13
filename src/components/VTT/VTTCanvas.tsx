@@ -647,12 +647,31 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const mapH = config.mapHeight || 2000;
 
     // -------------------
-    // Reconstruction forcée du fogCanvas à chaque changement de strokes
-    // Force la recréation pour que reset (0 strokes) et reveal all soient pris en compte
+    // Reconstruction du fogCanvas — incrémentale ou totale
+    // On ne reconstruit depuis zéro QUE si :
+    //   - le fogCanvas n'existe pas (premier render, changement de scène)
+    //   - la taille de la carte a changé
+    //   - un reset fog a eu lieu (strokes vide ou diminué)
+    // Sinon on applique uniquement les nouveaux strokes → O(1) au lieu de O(N)
     // -------------------
-    fogCanvasRef.current = null;
-    fogCanvasSizeRef.current = { w: 0, h: 0 };
-    buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
+    const prevSLen = prevStrokesLenRef.current;
+    const needsFullRebuild =
+      !fogCanvasRef.current ||
+      fogCanvasSizeRef.current.w !== mapW ||
+      fogCanvasSizeRef.current.h !== mapH ||
+      strokes.length < prevSLen ||
+      strokes.length === 0;
+
+    if (needsFullRebuild) {
+      fogCanvasRef.current = null;
+      fogCanvasSizeRef.current = { w: 0, h: 0 };
+      buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
+    } else if (strokes.length > prevSLen) {
+      // Application incrémentale : seuls les nouveaux strokes sont dessinés
+      for (let i = prevSLen; i < strokes.length; i++) {
+        applyStrokeToFogCanvas(strokes[i], fogCanvasRef);
+      }
+    }
 
     // -------------------
     // Invalidation du cache fogInv (masque inversé du fog)
