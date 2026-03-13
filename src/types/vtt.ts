@@ -59,11 +59,19 @@ export interface VTTRoomConfig {
   savedViewport?: { x: number; y: number; scale: number };  // vue enregistrée par le GM
 }
 
+// -------------------
+// Stroke de brouillard de guerre
+// shape = 'circle' (défaut, pinceau) ou 'rect' (outil rectangle)
+// Pour 'rect' : x,y = coin haut-gauche, w,h = dimensions du rectangle, r ignoré
+// -------------------
 export interface VTTFogStroke {
   x: number;
   y: number;
   r: number;
   erase: boolean;
+  shape?: 'circle' | 'rect';
+  w?: number;
+  h?: number;
 }
 
 export interface VTTFogState {
