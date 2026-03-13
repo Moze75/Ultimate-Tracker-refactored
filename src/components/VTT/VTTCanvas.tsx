@@ -472,10 +472,15 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
 
     // -------------------
-  // Gestion du snapshot local du masque exploré
+  // Gestion du snapshot local du masque exploré + nettoyage RAF peinture fog
   // -------------------
   useEffect(() => {
     return () => {
+      // Annule le RAF de peinture fog si en cours
+      if (fogPaintRafRef.current) {
+        cancelAnimationFrame(fogPaintRafRef.current);
+        fogPaintRafRef.current = null;
+      }
       saveExploredMaskSnapshot(sceneIdRef.current);
     };
   }, [saveExploredMaskSnapshot]);
