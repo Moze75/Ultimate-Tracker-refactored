@@ -28,6 +28,10 @@ export interface VTTCanvasRefs {
   lastPanRef: React.MutableRefObject<{ x: number; y: number } | null>;
   isPanningRef: React.MutableRefObject<boolean>;
   selectionRectRef: React.MutableRefObject<{ x1: number; y1: number; x2: number; y2: number } | null>;
+  // -------------------
+  // Rectangle de sélection fog (fog-rect-reveal / fog-rect-erase)
+  // -------------------
+  fogRectRef: React.MutableRefObject<{ x1: number; y1: number; x2: number; y2: number } | null>;
   isDragSelectingRef: React.MutableRefObject<boolean>;
   onSelectTokenRef: React.MutableRefObject<(id: string | null) => void>;
   onSelectTokensRef: React.MutableRefObject<((ids: string[]) => void) | undefined>;
