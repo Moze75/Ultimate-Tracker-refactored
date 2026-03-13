@@ -84,6 +84,7 @@ export function useVTTCanvasEvents({
   lastPanRef,
   isPanningRef,
   selectionRectRef,
+  fogRectRef,
   isDragSelectingRef,
   onSelectTokenRef,
   onSelectTokensRef,
