@@ -523,19 +523,28 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // -------------------
   // Gestion de la peinture du brouillard de guerre
+  // Applique le stroke localement pour un retour visuel instantané,
+  // puis envoie au state partagé. Le useEffect incrémental détectera
+  // que le stroke a déjà été appliqué (prevStrokesLen aura rattrapé).
   // -------------------
   const paintFogAt = (wx: number, wy: number) => {
     const erase = activeToolRef.current === 'fog-erase';
     const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
 
     // -------------------
-    // Application immédiate du stroke sur le fogCanvas local
-    // pour un retour visuel instantané pendant le coup de pinceau
+    // Application locale immédiate sur le fogCanvas + invalidation du cache fogInv
     // -------------------
     applyStrokeToFogCanvas(stroke, fogCanvasRef);
+    fogInvCanvasRef.current = null;
     draw();
 
+    // -------------------
     // Envoi au state partagé (persistance + broadcast)
+    // Le useEffect incrémental sautera ce stroke car prevStrokesLenRef
+    // sera mis à jour APRÈS le setState, et le fogCanvas contient déjà le stroke.
+    // Pour éviter le doublon, on avance manuellement le compteur.
+    // -------------------
+    prevStrokesLenRef.current++;
     onRevealFogRef.current(stroke);
   };
 
