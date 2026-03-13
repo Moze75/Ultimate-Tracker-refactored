@@ -137,7 +137,7 @@ export interface VTTConnectedUser {
 
 export type VTTClientEvent =
   | { type: 'MOVE_TOKEN_REQUEST'; tokenId: string; position: { x: number; y: number } }
-  | { type: 'REVEAL_FOG'; cells: string[]; erase?: boolean; stroke?: VTTFogStroke }
+  | { type: 'REVEAL_FOG'; cells: string[]; erase: boolean; stroke?: VTTFogStroke; batch?: VTTFogStroke[] }
   | { type: 'RESET_FOG' }
   | { type: 'ADD_TOKEN'; token: Omit<VTTToken, 'id'> }
   | { type: 'REMOVE_TOKEN'; tokenId: string }
