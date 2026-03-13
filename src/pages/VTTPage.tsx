@@ -750,27 +750,51 @@ useEffect(() => {
 
 // -------------------
 // Gestion de la levée du brouillard de guerre
+// Accepte un stroke unique ou un batch de strokes (painting continu).
+// Un batch produit UN SEUL setState + UN SEUL broadcast + UNE SEULE RPC Supabase,
+// au lieu de N (un par mousemove). C'est la clé de la performance du pinceau.
 // -------------------
-const handleRevealFog = useCallback((stroke: VTTFogStroke) => {
+const handleRevealFog = useCallback((strokeOrBatch: VTTFogStroke | VTTFogStroke[]) => {
+  const batch = Array.isArray(strokeOrBatch) ? strokeOrBatch : [strokeOrBatch];
+  if (batch.length === 0) return;
+
+  // -------------------
+  // Construction du prochain fogState en ajoutant tout le batch d'un coup
+  // Une seule copie O(N) au lieu de N copies O(N²) cumulées
+  // -------------------
+  const prevStrokes = fogStateRef.current.strokes || [];
+  const prevExplored = fogStateRef.current.exploredStrokes || [];
+  const newStrokes = [...prevStrokes, ...batch];
+  const newExplored = [...prevExplored, ...batch.filter(s => !s.erase)];
+
   const nextFogState: VTTFogState = {
     revealedCells: [...(fogStateRef.current.revealedCells || [])],
-    strokes: [...(fogStateRef.current.strokes || []), stroke],
-
-    // -------------------
-    // Gestion de la mémoire explorée persistée par scène
-    // -------------------
-    exploredStrokes: stroke.erase
-      ? [...(fogStateRef.current.exploredStrokes || [])]
-      : [...(fogStateRef.current.exploredStrokes || []), stroke],
+    strokes: newStrokes,
+    exploredStrokes: newExplored,
   };
 
+  // -------------------
+  // UN SEUL setState React pour tout le batch → un seul re-render
+  // -------------------
   fogStateRef.current = nextFogState;
   setFogState(nextFogState);
 
-  vttService.send({ type: 'REVEAL_FOG', cells: [], erase: stroke.erase, stroke });
+  // -------------------
+  // UN SEUL envoi vttService pour tout le batch → un seul broadcast + une seule RPC
+  // On envoie le dernier stroke du batch (pour compatibilité vttService.send)
+  // mais le state complet est déjà construit avec tous les strokes
+  // -------------------
+  vttService.send({
+    type: 'REVEAL_FOG',
+    cells: [],
+    erase: batch[batch.length - 1].erase,
+    stroke: batch[batch.length - 1],
+    batch,
+  });
 
-  // Pour le GM uniquement : sauvegarde complète de la scène (config + tokens + fog + walls)
-  // Pour les joueurs, c'est vttService._persistNow() via RPC qui gère le fog
+  // -------------------
+  // Sauvegarde scène debounced (inchangé)
+  // -------------------
   if (activeSceneIdRef.current && role === 'gm') {
     if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
     fogSaveTimerRef.current = setTimeout(() => {
