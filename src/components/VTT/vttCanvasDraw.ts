@@ -639,27 +639,15 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Percement du fog-reveal dans le masque de nuit composé
-      // Là où le MJ a explicitement levé le fog (fog-reveal), le fogCanvas
-      // est transparent. On crée un masque inversé (opaque = fog levé) et on
-      // l'utilise pour effacer le noir résiduel du masque de nuit.
-      // Cela permet au joueur de voir les zones fog-reveal même hors de
-      // son rayon de vision personnel.
+      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
       // -------------------
-      if (ctx2d.fogCanvasRef.current && cfg.fogEnabled) {
-        const fogInv = document.createElement('canvas');
-        fogInv.width = mapW;
-        fogInv.height = mapH;
-        const fogInvCtx = fogInv.getContext('2d')!;
-        fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
-        fogInvCtx.fillRect(0, 0, mapW, mapH);
-        fogInvCtx.globalCompositeOperation = 'destination-out';
-        fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
-        fogInvCtx.globalCompositeOperation = 'source-over';
-        // fogInv = opaque là où le fog a été levé, transparent sinon
-
-        cCtx.globalCompositeOperation = 'destination-out';
-        cCtx.drawImage(fogInv, 0, 0);
-        cCtx.globalCompositeOperation = 'source-over';
+      if (cfg.fogEnabled) {
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          cCtx.globalCompositeOperation = 'destination-out';
+          cCtx.drawImage(fogInv, 0, 0);
+          cCtx.globalCompositeOperation = 'source-over';
+        }
       }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
