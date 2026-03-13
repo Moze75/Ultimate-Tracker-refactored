@@ -521,8 +521,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const erase = activeToolRef.current === 'fog-erase';
     const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
 
-    // On laisse le state partagé reconstruire le fog canvas,
-    // pour garantir que l'affichage reflète uniquement l'état persisté/synchronisé.
+    // -------------------
+    // Application immédiate du stroke sur le fogCanvas local
+    // pour un retour visuel instantané pendant le coup de pinceau
+    // -------------------
+    applyStrokeToFogCanvas(stroke, fogCanvasRef);
+    draw();
+
+    // Envoi au state partagé (persistance + broadcast)
     onRevealFogRef.current(stroke);
   };
 
