@@ -36,6 +36,13 @@ export interface VTTDrawContext {
   calibrationPointsRef: React.MutableRefObject<{ x: number; y: number }[] | undefined>;
   fogCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   fogCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
+  // -------------------
+  // Cache du masque inversé du fog (fogInv)
+  // Opaque là où le fog a été levé, transparent là où le fog est actif.
+  // Recalculé uniquement quand fogCanvasRef est invalidé (changement de strokes).
+  // -------------------
+  fogInvCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  fogInvVersionRef: React.MutableRefObject<number>;
   visionCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   visionCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   dayVisionCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
