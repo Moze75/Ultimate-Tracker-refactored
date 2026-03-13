@@ -416,25 +416,49 @@ if (!cfg.fogEnabled) {
       invCtx.drawImage(evc, 0, 0);
       invCtx.globalCompositeOperation = 'source-over';
 
-      // cvc : copie de dvc sur laquelle on applique la transparence des zones explorées
+      // -------------------
+      // Composition finale du masque de vision de jour
+      // cvc = copie de dvc (noir avec trous là où on voit)
+      // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
       cvc.height = mapH;
       const cCtx = cvc.getContext('2d')!;
-      cCtx.drawImage(dvc, 0, 0); // copie de dvc : noir avec trous là où on voit
+      cCtx.drawImage(dvc, 0, 0);
 
-      // De jour : on efface seulement 35% du noir sur les zones explorées
-      // → reste 65% de noir = voile bien visible (zones inexplorées = 100% noir)
+      // -------------------
+      // Atténuation des zones explorées (mémoire)
+      // De jour : efface 35% du noir → reste 65% = voile visible
+      // -------------------
       cCtx.globalCompositeOperation = 'destination-out';
       cCtx.globalAlpha = 0.35;
       cCtx.drawImage(invCanvas, 0, 0);
       cCtx.globalAlpha = 1;
       cCtx.globalCompositeOperation = 'source-over';
 
+      // -------------------
+      // Percement du fog-reveal dans le masque de vision de jour
+      // Même logique que la nuit : les zones révélées par le MJ via le
+      // pinceau fog-reveal doivent rester visibles même hors du polygone
+      // de vision du joueur (bloqué par les murs).
+      // -------------------
+      if (ctx2d.fogCanvasRef.current && cfg.fogEnabled) {
+        const fogInv = document.createElement('canvas');
+        fogInv.width = mapW;
+        fogInv.height = mapH;
+        const fogInvCtx = fogInv.getContext('2d')!;
+        fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
+        fogInvCtx.fillRect(0, 0, mapW, mapH);
+        fogInvCtx.globalCompositeOperation = 'destination-out';
+        fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
+        fogInvCtx.globalCompositeOperation = 'source-over';
+
+        cCtx.globalCompositeOperation = 'destination-out';
+        cCtx.drawImage(fogInv, 0, 0);
+        cCtx.globalCompositeOperation = 'source-over';
+      }
+
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
-    } else {
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-      ctx.fillRect(0, 0, mapW, mapH);
     }
   }
 
