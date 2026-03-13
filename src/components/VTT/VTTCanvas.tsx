@@ -637,18 +637,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // + détection du reset fog (tout masquer) et du reveal all (tout révéler)
   // + application des strokes erase sur le canvas exploré (mémoire)
   // -------------------
-  // -------------------
-  // Compteurs de strokes pour la reconstruction incrémentale du fogCanvas
-  // et la détection du reset fog (exploredStrokes)
-  // Déclarés ici car paintFogAt a besoin de prevStrokesLenRef
-  // -------------------
   const prevExploredStrokesLenRef = useRef<number>(-1);
   const prevStrokesLenRef = useRef<number>(0);
 
-  // -------------------
-  // Gestion de la peinture du brouillard de guerre
-  // ...
-  const paintFogAt = (wx: number, wy: number) => {
+  useEffect(() => { 
     const strokes = fogState.strokes || [];
     const exploredStrokes = fogState.exploredStrokes || [];
     const mapW = config.mapWidth || 2000;
