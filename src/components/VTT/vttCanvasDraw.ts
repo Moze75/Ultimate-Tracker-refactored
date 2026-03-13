@@ -57,6 +57,38 @@ export interface VTTDrawContext {
   drawRef: React.MutableRefObject<() => void>;
 }
 
+// -------------------
+// Construit ou récupère le masque inversé du fog depuis le cache.
+// Le fogInv est recalculé uniquement si fogInvCanvasRef est null
+// (invalidé par VTTCanvas quand les strokes changent).
+// En animation torche (~60fps), cela évite de créer un canvas
+// mapW×mapH + fillRect + drawImage à chaque frame.
+// -------------------
+function getOrBuildFogInv(ctx2d: VTTDrawContext, mapW: number, mapH: number): HTMLCanvasElement | null {
+  if (!ctx2d.fogCanvasRef.current || !mapW || !mapH) return null;
+
+  // Réutiliser le cache s'il existe et correspond à la bonne taille
+  const cached = ctx2d.fogInvCanvasRef.current;
+  if (cached && cached.width === mapW && cached.height === mapH) {
+    return cached;
+  }
+
+  // Reconstruire le masque inversé du fog
+  const fogInv = document.createElement('canvas');
+  fogInv.width = mapW;
+  fogInv.height = mapH;
+  const fogInvCtx = fogInv.getContext('2d')!;
+  fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
+  fogInvCtx.fillRect(0, 0, mapW, mapH);
+  fogInvCtx.globalCompositeOperation = 'destination-out';
+  fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
+  fogInvCtx.globalCompositeOperation = 'source-over';
+
+  // Mettre en cache
+  ctx2d.fogInvCanvasRef.current = fogInv;
+  return fogInv;
+}
+
 export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const canvas = ctx2d.canvasRef.current;
   if (!canvas) return;
