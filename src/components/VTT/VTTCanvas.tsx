@@ -566,13 +566,18 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (fogPaintRafRef.current === null) {
       fogPaintRafRef.current = requestAnimationFrame(() => {
         fogPaintRafRef.current = null;
+        // -------------------
         // Un seul draw() pour tous les strokes accumulés dans cette frame
+        // -------------------
         draw();
-        // Flush batch : envoie tous les strokes au state partagé d'un coup
+        // -------------------
+        // Flush batch : envoie TOUS les strokes en UN SEUL appel
+        // au lieu de N appels onRevealFog (qui chacun fait setState + RPC + broadcast)
+        // -------------------
         const batch = fogPaintBatchRef.current;
         fogPaintBatchRef.current = [];
-        for (const s of batch) {
-          onRevealFogRef.current(s);
+        if (batch.length > 0) {
+          onRevealFogRef.current(batch);
         }
       });
     }
