@@ -477,24 +477,15 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Percement du fog-reveal dans le masque de vision de jour
-      // Même logique que la nuit : les zones révélées par le MJ via le
-      // pinceau fog-reveal doivent rester visibles même hors du polygone
-      // de vision du joueur (bloqué par les murs).
+      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
       // -------------------
-      if (ctx2d.fogCanvasRef.current && cfg.fogEnabled) {
-        const fogInv = document.createElement('canvas');
-        fogInv.width = mapW;
-        fogInv.height = mapH;
-        const fogInvCtx = fogInv.getContext('2d')!;
-        fogInvCtx.fillStyle = 'rgba(0,0,0,1)';
-        fogInvCtx.fillRect(0, 0, mapW, mapH);
-        fogInvCtx.globalCompositeOperation = 'destination-out';
-        fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
-        fogInvCtx.globalCompositeOperation = 'source-over';
-
-        cCtx.globalCompositeOperation = 'destination-out';
-        cCtx.drawImage(fogInv, 0, 0);
-        cCtx.globalCompositeOperation = 'source-over';
+      if (cfg.fogEnabled) {
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          cCtx.globalCompositeOperation = 'destination-out';
+          cCtx.drawImage(fogInv, 0, 0);
+          cCtx.globalCompositeOperation = 'source-over';
+        }
       }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
