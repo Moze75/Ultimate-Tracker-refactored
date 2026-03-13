@@ -492,22 +492,38 @@ if (scenes && scenes.length > 0) {
 
   // -------------------
   // Persistance du brouillard de guerre par scène
+  // Debouncé à 500ms pour éviter de spammer Supabase pendant le painting.
+  // Le dernier state (le plus complet) est toujours celui qui est sauvegardé.
   // -------------------
+  private _fogSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _pendingFogState: VTTFogState | null = null;
+
   private _saveFogToScene(fogState: VTTFogState) {
     if (!this.activeSceneId) return;
-    const sceneId = this.activeSceneId;
 
-    supabase
-      .rpc('update_scene_fog_state', {
-        p_scene_id: sceneId,
-        p_fog_state: fogState,
-      })
-      .then(({ error }) => {
+    // Mémorise le dernier state à sauvegarder
+    this._pendingFogState = fogState;
+
+    // Si un timer est déjà en cours, on laisse le debounce faire son travail
+    if (this._fogSaveTimer) return;
+
+    this._fogSaveTimer = setTimeout(() => {
+      this._fogSaveTimer = null;
+      const stateToSave = this._pendingFogState;
+      this._pendingFogState = null;
+      if (!stateToSave || !this.activeSceneId) return;
+
+      const sceneId = this.activeSceneId;
+      supabase
+        .rpc('update_scene_fog_state', {
+          p_scene_id: sceneId,
+          p_fog_state: stateToSave,
+        })
+        .then(({ error }) => {
           if (error) console.error('[VTT] _saveFogToScene error:', error);
-
-      });
+        });
+    }, 500);
   }
-
   
   onMessage(handler: MessageHandler) {
     this.messageHandlers.push(handler);
