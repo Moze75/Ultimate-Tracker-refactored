@@ -60,6 +60,7 @@ export interface VTTDrawContext {
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectedDoorRef: React.MutableRefObject<string | null>;
+  hoveredDoorRef?: React.MutableRefObject<string | null>;
   seenDoorsRef: React.MutableRefObject<Set<string>>;
   onSeenDoorsUpdate?: (newSeenIds: string[]) => void;
 }
@@ -759,6 +760,7 @@ if (!cfg.fogEnabled) {
   const doors = ctx2d.doorsRef.current;
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
   const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
+  const hoveredDoorId = ctx2d.hoveredDoorRef?.current ?? null;
 
   // Helper : vérifie si un point monde (wx, wy) est visible par le joueur.
   // Teste la géométrie de vision (polygon de visibilité) plutôt que les canvas rendus.
@@ -902,13 +904,28 @@ if (!cfg.fogEnabled) {
         ctx.fill();
       }
 
-      // Icone porte au centre du segment (sans fond ni halo)
-      const iconSize = Math.max(8, Math.min(14, doorSpanLen * 0.12)) / vp.scale;
+      // Icone porte au centre du segment
+      const isHovered = !isMemorized && hoveredDoorId === door.id;
+      const baseIconSize = Math.max(8, Math.min(14, doorSpanLen * 0.12));
+      const iconSize = (isHovered ? baseIconSize * 1.35 : baseIconSize) / vp.scale;
+
+      // Halo de hover
+      if (isHovered) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, iconSize * 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx, cy, iconSize * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fill();
+      }
 
       // Dessin de l'icône porte (cadre + panneau + poignée)
-      ctx.strokeStyle = 'rgba(220,220,220,0.95)';
-      ctx.fillStyle = 'rgba(220,220,220,0.95)';
-      const lw = 1.2 / vp.scale;
+      const iconAlpha = isHovered ? 1 : 0.95;
+      ctx.strokeStyle = `rgba(255,255,255,${iconAlpha})`;
+      ctx.fillStyle = `rgba(255,255,255,${iconAlpha})`;
+      const lw = (isHovered ? 1.6 : 1.2) / vp.scale;
       ctx.lineWidth = lw;
       const hw = iconSize * 0.52;
       const hh = iconSize * 0.68;

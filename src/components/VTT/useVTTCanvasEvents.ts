@@ -50,6 +50,7 @@ export interface VTTCanvasRefs {
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectedDoorRef: React.MutableRefObject<string | null>;
+  hoveredDoorRef: React.MutableRefObject<string | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
@@ -120,6 +121,7 @@ export function useVTTCanvasEvents({
     doorInProgressRef,
     doorPreviewPosRef,
     selectedDoorRef,
+    hoveredDoorRef,
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
@@ -702,6 +704,47 @@ export function useVTTCanvasEvents({
       if (activeToolRef.current === 'door-place' && doorInProgressRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         doorPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      // Détection hover porte (mode select uniquement)
+      if (activeToolRef.current === 'select') {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const currentDoors = doorsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        let foundHoveredDoor: string | null = null;
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const vp0 = viewportRef.current;
+          const ddx = (wp2.x - cx) * vp0.scale;
+          const ddy = (wp2.y - cy) * vp0.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 18) {
+            foundHoveredDoor = door.id;
+            break;
+          }
+        }
+        if (hoveredDoorRef.current !== foundHoveredDoor) {
+          hoveredDoorRef.current = foundHoveredDoor;
+          const canvas = canvasRef.current;
+          if (canvas) canvas.style.cursor = foundHoveredDoor ? 'pointer' : 'default';
+          drawRef.current();
+        }
+      } else if (hoveredDoorRef.current !== null) {
+        hoveredDoorRef.current = null;
+        const canvas = canvasRef.current;
+        if (canvas) canvas.style.cursor = 'default';
         drawRef.current();
       }
       
