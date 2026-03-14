@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import type { VTTToken, VTTFogStroke, VTTWall, VTTDoor } from '../../types/vtt';
+import type { VTTToken, VTTFogStroke, VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
 import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
 import { wallBlocksToken } from './vttCanvasUtils';
 import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
@@ -45,6 +45,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onDoorAdded,
   onDoorToggled,
   onDoorRemoved,
+  windows,
+  onWindowAdded,
+  onWindowRemoved,
   forceViewport: forceViewportProp = null,
   initialViewport = null,
   onViewportChange,
@@ -193,6 +196,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   showWallsRef.current = showWalls;
   const doorsRef = useRef<VTTDoor[]>(doors || []);
   doorsRef.current = doors || [];
+  const windowsRef = useRef<VTTWindow[]>(windows || []);
+  windowsRef.current = windows || [];
   const seenDoorsRef = useRef<Set<string>>(new Set(fogState.seenDoors || []));
   const onSeenDoorsUpdateRef = useRef(onSeenDoorsUpdate);
   onSeenDoorsUpdateRef.current = onSeenDoorsUpdate;
@@ -202,6 +207,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onDoorToggledRef.current = onDoorToggled;
   const onDoorRemovedRef = useRef(onDoorRemoved);
   onDoorRemovedRef.current = onDoorRemoved;
+  const onWindowAddedRef = useRef(onWindowAdded);
+  onWindowAddedRef.current = onWindowAdded;
+  const onWindowRemovedRef = useRef(onWindowRemoved);
+  onWindowRemovedRef.current = onWindowRemoved;
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
@@ -211,6 +220,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const selectedDoorRef = useRef<string | null>(null);
   const hoveredDoorRef = useRef<string | null>(null);
   const selectedDoorEndpointRef = useRef<{ doorId: string; endpoint: 't1' | 't2' } | null>(null);
+  const windowInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
+  const windowPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
+  const hoveredWindowRef = useRef<string | null>(null);
+  const selectedWindowRef = useRef<string | null>(null);
+  const selectedWindowEndpointRef = useRef<{ windowId: string; endpoint: 't1' | 't2' } | null>(null);
   const measureStartRef = useRef<{ x: number; y: number } | null>(null);
   const measureEndRef = useRef<{ x: number; y: number } | null>(null);
   const measureLockedRef = useRef(false);
@@ -653,6 +667,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       tokensRef,
       wallsRef,
       doorsRef,
+      windowsRef,
       activeToolRef,
       showWallsRef,
       wallPointsRef,
@@ -662,6 +677,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       selectedDoorRef,
       hoveredDoorRef,
       selectedDoorEndpointRef,
+      windowInProgressRef,
+      windowPreviewPosRef,
+      hoveredWindowRef,
+      selectedWindowRef,
+      selectedWindowEndpointRef,
       selectedWallPointRef,
       selectedWallPointsRef,
       measureStartRef,
@@ -969,6 +989,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     selectedDoorRef,
     hoveredDoorRef,
     selectedDoorEndpointRef,
+    windowsRef,
+    onWindowAddedRef,
+    onWindowRemovedRef,
+    windowInProgressRef,
+    windowPreviewPosRef,
+    hoveredWindowRef,
+    selectedWindowRef,
+    selectedWindowEndpointRef,
     selectedWallPointRef,
     selectedWallPointsRef,
      onViewportChangeRef,

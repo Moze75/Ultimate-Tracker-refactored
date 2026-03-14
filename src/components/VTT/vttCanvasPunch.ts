@@ -1,4 +1,4 @@
-import type { VTTToken, VTTWall, VTTDoor } from '../../types/vtt';
+import type { VTTToken, VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
 import { getVisionRadii, buildVisibilityPolygon } from './vttVisionEngine';
 import { getEffectiveWallSegments } from './vttCanvasUtils';
 
@@ -10,9 +10,10 @@ export function punchVisionHoles(
   mapW: number,
   mapH: number,
   isDay: boolean = false,
-  doors: VTTDoor[] = []
+  doors: VTTDoor[] = [],
+  windows: VTTWindow[] = []
 ): void {
-  const wallSegs = walls.length > 0 ? getEffectiveWallSegments(walls, doors) : [];
+  const wallSegs = walls.length > 0 ? getEffectiveWallSegments(walls, doors, windows) : [];
 
   fctx.globalCompositeOperation = 'destination-out';
   for (const token of visionTokens) {

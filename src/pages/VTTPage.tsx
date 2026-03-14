@@ -28,6 +28,7 @@ import type {
   VTTProp,
   VTTWall,
   VTTDoor,
+  VTTWindow,
   VTTConnectedUser,
   VTTWeatherEffect,
 } from '../types/vtt';
@@ -92,6 +93,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
     doors: (row.doors as VTTDoor[]) || [],
+    windows: (row.windows as VTTWindow[]) || [],
     props: (row.props as VTTProp[]) || [],
   };
 }
@@ -139,6 +141,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [doors, setDoors] = useState<VTTDoor[]>([]);
   const doorsRef = useRef<VTTDoor[]>([]);
   doorsRef.current = doors;
+  const [windows, setWindows] = useState<VTTWindow[]>([]);
+  const windowsRef = useRef<VTTWindow[]>([]);
+  windowsRef.current = windows;
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -344,6 +349,7 @@ canvasViewportRef.current = canvasViewport;
         setFogState(normalizeFogState(event.fogState));
         setWalls(event.walls);
         setDoors((event as any).doors || []);
+        setWindows((event as any).windows || []);
         setWeatherEffects(event.config.weatherEffects || []);
         // -------------------
         // Propagation du sceneId au joueur distant
@@ -361,6 +367,9 @@ canvasViewportRef.current = canvasViewport;
         break;
       case 'DOORS_UPDATED':
         setDoors(event.doors);
+        break;
+      case 'WINDOWS_UPDATED':
+        setWindows((event as any).windows || []);
         break;
       case 'WEATHER_UPDATED':
         setWeatherEffects(event.effects);
@@ -470,6 +479,7 @@ useEffect(() => {
 
     setWalls(scene.walls || []);
     setDoors(scene.doors || []);
+    setWindows(scene.windows || []);
     setProps(Array.isArray(scene.props) ? scene.props : []);
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
@@ -527,6 +537,7 @@ useEffect(() => {
       fogState: scene.fogState,
       walls: scene.walls || [],
       doors: scene.doors || [],
+      windows: scene.windows || [],
     });
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
@@ -558,7 +569,7 @@ useEffect(() => {
 
             setActiveSceneId(initialScene.id);
             applySceneToLive(initialScene);
-            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || []);
+            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
           }
         } else {
           supabase
@@ -636,6 +647,7 @@ useEffect(() => {
         fogState: scene.fogState,
         walls: scene.walls || [],
         doors: scene.doors || [],
+        windows: scene.windows || [],
       });
 
       setConfig(scene.config);
@@ -648,6 +660,7 @@ useEffect(() => {
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
       setDoors(scene.doors || []);
+      setWindows(scene.windows || []);
       setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
       setActiveSceneId(sceneId);
@@ -1445,6 +1458,40 @@ handleUpdateProp(propId, {
     persistDoors([]);
   }, [persistDoors]);
 
+  const persistWindows = useCallback((nextWindows: VTTWindow[]) => {
+    windowsRef.current = nextWindows;
+    vttService.send({ type: 'UPDATE_WINDOWS', windows: nextWindows } as any);
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ windows: nextWindows, updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] Save windows error:', error); });
+    }
+  }, []);
+
+  const handleWindowAdded = useCallback((win: VTTWindow) => {
+    setWindows(prev => {
+      const next = [...prev, win];
+      persistWindows(next);
+      return next;
+    });
+  }, [persistWindows]);
+
+  const handleWindowRemoved = useCallback((windowId: string) => {
+    setWindows(prev => {
+      const next = prev.filter(w => w.id !== windowId);
+      persistWindows(next);
+      return next;
+    });
+  }, [persistWindows]);
+
+  const handleClearWindows = useCallback(() => {
+    setWindows([]);
+    persistWindows([]);
+  }, [persistWindows]);
+
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
   setBroadcastFrame(frame);
   if (broadcastTimerRef.current) clearTimeout(broadcastTimerRef.current);
@@ -1582,6 +1629,7 @@ useEffect(() => {
     setSelectedPropId(null);
     setWalls([]);
     setDoors([]);
+    setWindows([]);
     setConnectedUsers([]);
   }, [role, saveCurrentSceneState]);
 
@@ -1683,6 +1731,8 @@ useEffect(() => {
   onClearWalls={handleClearWalls}
   doorCount={doors.length}
   onClearDoors={handleClearDoors}
+  windowCount={windows.length}
+  onClearWindows={handleClearWindows}
   showWalls={showWalls}
   onToggleShowWalls={() => setShowWalls(v => !v)}
   roomId={roomId!}
@@ -1839,6 +1889,9 @@ onSelectTokens={ids => {
             onDoorAdded={handleDoorAdded}
             onDoorToggled={handleDoorToggled}
             onDoorRemoved={handleDoorRemoved}
+            windows={windows}
+            onWindowAdded={handleWindowAdded}
+            onWindowRemoved={handleWindowRemoved}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));

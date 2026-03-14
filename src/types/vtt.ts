@@ -105,6 +105,16 @@ export interface VTTDoor {
   open: boolean;
 }
 
+export interface VTTWindow {
+  id: string;
+  wallId: string;
+  segmentIndex: number;
+  t1?: number;
+  t2?: number;
+  t?: number;
+  width?: number;
+}
+
 export interface VTTProp {
   id: string;
   label: string;
@@ -126,6 +136,7 @@ export interface VTTScene {
   tokens: VTTToken[];
   walls: VTTWall[];
   doors?: VTTDoor[];
+  windows?: VTTWindow[];
   props?: VTTProp[];
 }
 
@@ -138,6 +149,7 @@ export interface VTTRoom {
   fogState: VTTFogState;
   walls: VTTWall[];
   doors?: VTTDoor[];
+  windows?: VTTWindow[];
   connectedUsers: string[];
   lastSnapshot: number;
 }
@@ -168,9 +180,10 @@ export type VTTClientEvent =
   | { type: 'ADD_PROP'; prop: Omit<VTTProp, 'id'> }
   | { type: 'REMOVE_PROP'; propId: string }
   | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> }
-  | { type: 'SWITCH_SCENE'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[] }
+  | { type: 'SWITCH_SCENE'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[] }
   | { type: 'UPDATE_WALLS'; walls: VTTWall[] }
   | { type: 'UPDATE_DOORS'; doors: VTTDoor[] }
+  | { type: 'UPDATE_WINDOWS'; windows: VTTWindow[] }
   | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] };
 
 export type VTTServerEvent =
@@ -181,9 +194,10 @@ export type VTTServerEvent =
   | { type: 'TOKEN_UPDATED'; tokenId: string; changes: Partial<VTTToken> }
   | { type: 'FOG_UPDATED'; fogState: VTTFogState }
   | { type: 'MAP_UPDATED'; config: Partial<VTTRoomConfig> }
-  | { type: 'SCENE_SWITCHED'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[] }
+  | { type: 'SCENE_SWITCHED'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[] }
   | { type: 'WALLS_UPDATED'; walls: VTTWall[] }
   | { type: 'DOORS_UPDATED'; doors: VTTDoor[] }
+  | { type: 'WINDOWS_UPDATED'; windows: VTTWindow[] }
   | { type: 'WEATHER_UPDATED'; effects: VTTWeatherEffect[] }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }

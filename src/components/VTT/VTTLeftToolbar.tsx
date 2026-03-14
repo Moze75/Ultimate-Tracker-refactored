@@ -7,7 +7,7 @@ import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 // Outils actifs du VTT
 // fog-rect-reveal / fog-rect-erase : sélection rectangulaire pour reveal/masquage
 // -------------------
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'measure';
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'window-place' | 'measure';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
@@ -31,6 +31,8 @@ interface VTTLeftToolbarProps {
   onToggleShowWalls: () => void;
   doorCount?: number;
   onClearDoors?: () => void;
+  windowCount?: number;
+  onClearWindows?: () => void;
   roomId?: string;
   broadcastFrameEnabled: boolean;
   onToggleBroadcastFrame: () => void;
@@ -67,6 +69,8 @@ export function VTTLeftToolbar({
   onToggleShowWalls,
   doorCount = 0,
   onClearDoors,
+  windowCount = 0,
+  onClearWindows,
   roomId,
   broadcastFrameEnabled,
   onToggleBroadcastFrame,
@@ -157,7 +161,8 @@ export function VTTLeftToolbar({
   const isWallTool = activeTool === 'wall-draw';
   const isWallSelectTool = activeTool === 'wall-select';
   const isDoorTool = activeTool === 'door-place';
-  const isAnyWallTool = isWallTool || isWallSelectTool || isDoorTool;
+  const isWindowTool = activeTool === 'window-place';
+  const isAnyWallTool = isWallTool || isWallSelectTool || isDoorTool || isWindowTool;
   const isMeasureTool = activeTool === 'measure';
 
   return (
@@ -648,6 +653,17 @@ export function VTTLeftToolbar({
               <Square size={12} /> {isDoorTool ? 'Portes — outil actif' : 'Portes'}
             </button>
 
+            <button
+              onClick={() => onToolChange('window-place')}
+              className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-colors border ${
+                isWindowTool
+                  ? 'bg-sky-700/30 border-sky-600/60 text-sky-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-sky-300 hover:border-sky-700/40'
+              }`}
+            >
+              <RectangleHorizontal size={12} /> {isWindowTool ? 'Fenêtres — outil actif' : 'Fenêtres'}
+            </button>
+
             {/* Instructions contextuelles selon le sous-outil actif */}
             {isWallTool && (
               <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-900/40">
@@ -674,6 +690,16 @@ export function VTTLeftToolbar({
                 </p>
               </div>
             )}
+            {isWindowTool && (
+              <div className="p-2.5 rounded-lg bg-sky-950/40 border border-sky-900/40">
+                <p className="text-[11px] text-sky-300/80 leading-relaxed">
+                  <strong className="text-sky-300">Cliquer</strong> sur un segment de mur pour poser une fenêtre.<br />
+                  <strong className="text-sky-300">2 clics</strong> pour définir la largeur.<br />
+                  <strong className="text-sky-300">Clic droit</strong> sur une fenêtre pour la supprimer.<br />
+                  Les fenêtres laissent passer la lumière mais bloquent les tokens.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Murs tracés</span>
@@ -686,6 +712,11 @@ export function VTTLeftToolbar({
             </div>
 
             <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Fenêtres</span>
+              <span className="text-xs font-mono text-sky-400 font-bold">{windowCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Toujours afficher</span>
               <button
                 onClick={onToggleShowWalls}
@@ -695,7 +726,7 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
-            {(wallCount > 0 || doorCount > 0) && (
+            {(wallCount > 0 || doorCount > 0 || windowCount > 0) && (
               <div className="pt-1 border-t border-gray-700/60 flex gap-1">
                 {wallCount > 0 && (
                   <button
@@ -713,6 +744,15 @@ export function VTTLeftToolbar({
                     title="Effacer toutes les portes"
                   >
                     <Trash2 size={12} /> Portes
+                  </button>
+                )}
+                {windowCount > 0 && (
+                  <button
+                    onClick={() => { onClearWindows?.(); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-sky-400 transition-colors"
+                    title="Effacer toutes les fenêtres"
+                  >
+                    <Trash2 size={12} /> Fenêtres
                   </button>
                 )}
               </div>

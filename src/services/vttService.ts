@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTConnectedUser } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTWindow, VTTConnectedUser } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
@@ -57,6 +57,7 @@ interface LocalState {
   fogState: VTTFogState;
   walls: VTTWall[];
   doors: VTTDoor[];
+  windows: VTTWindow[];
 }
 
 class VTTService {
@@ -76,6 +77,7 @@ private localState: LocalState = {
   fogState: { revealedCells: [], strokes: [], exploredStrokes: [] },
   walls: [],
   doors: [],
+  windows: [],
 };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
@@ -125,6 +127,7 @@ private localState: LocalState = {
       config: { ...DEFAULT_CONFIG, ...(stateJson.config || {}) },
       tokens: stateJson.tokens || [],
       fogState: normalizeFogState(stateJson.fogState || { revealedCells: [] }),
+      windows: stateJson.windows || [],
       walls: stateJson.walls || [],
       doors: stateJson.doors || [],
     };
@@ -162,6 +165,10 @@ if (resolvedScenes && resolvedScenes.length > 0) {
 
   if (activeScene?.doors) {
     this.localState.doors = activeScene.doors;
+  if (activeScene?.windows) {
+    this.localState.windows = activeScene.windows;
+  }
+
   }
 
   // -------------------
@@ -190,6 +197,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           config: this.localState.config,
           tokens: this.localState.tokens,
           fogState: this.localState.fogState,
+          windows: this.localState.windows,
           walls: this.localState.walls,
           doors: this.localState.doors,
           connectedUsers: [userId],
@@ -225,6 +233,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
             config: this.localState.config,
             tokens: this.localState.tokens,
             fogState: this.localState.fogState,
+            windows: this.localState.windows,
             walls: this.localState.walls,
             doors: this.localState.doors,
             sceneId: this.activeSceneId,
@@ -267,6 +276,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           this.localState.config = serverEvent.config;
           this.localState.tokens = serverEvent.tokens;
           this.localState.fogState = normalizeFogState(serverEvent.fogState);
+          this.localState.windows = serverEvent.windows || [];
           this.localState.walls = serverEvent.walls;
           this.localState.doors = serverEvent.doors || [];
           if (serverEvent.sceneId) {
@@ -274,6 +284,8 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           }
         } else if (serverEvent.type === 'WALLS_UPDATED') {
           this.localState.walls = serverEvent.walls;
+        } else if (serverEvent.type === 'WINDOWS_UPDATED') {
+          this.localState.windows = serverEvent.windows;
         } else if (serverEvent.type === 'DOORS_UPDATED') {
           this.localState.doors = serverEvent.doors;
         } else if (serverEvent.type === 'WEATHER_UPDATED') {
@@ -449,6 +461,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
         this.localState.config = event.config;
         this.localState.tokens = event.tokens;
         this.localState.fogState = normalizeFogState(event.fogState);
+        this.localState.windows = event.windows || [];
         this.localState.walls = event.walls;
         this.localState.doors = event.doors || [];
         if (event.sceneId) {
@@ -460,6 +473,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           config: event.config,
           tokens: event.tokens,
           fogState: event.fogState,
+          windows: event.windows || [],
           walls: event.walls,
           doors: event.doors || [],
         };
@@ -482,6 +496,12 @@ if (resolvedScenes && resolvedScenes.length > 0) {
       case 'UPDATE_DOORS':
         this.localState.doors = event.doors;
         serverEvent = { type: 'DOORS_UPDATED', doors: event.doors };
+
+      case 'UPDATE_WINDOWS':
+        this.localState.windows = event.windows;
+        serverEvent = { type: 'WINDOWS_UPDATED', windows: event.windows };
+        this._persistNow();
+        break;
         this._persistNow();
         break;
     }
@@ -509,8 +529,8 @@ if (resolvedScenes && resolvedScenes.length > 0) {
 
   private _persistNow() {
     if (!this.roomId) return;
-    // Les murs et portes sont par scène → on ne les persiste PAS dans la room globale
-    const { walls: _walls, doors: _doors, ...stateWithoutWalls } = this.localState;
+    // Les murs, portes et fenêtres sont par scène → on ne les persiste PAS dans la room globale
+    const { walls: _walls, doors: _doors, windows: _windows, ...stateWithoutWalls } = this.localState;
     supabase
       .from('vtt_rooms')
       .update({ state_json: stateWithoutWalls, updated_at: new Date().toISOString() })
@@ -594,8 +614,8 @@ if (resolvedScenes && resolvedScenes.length > 0) {
     };
   }
 
-    updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[], doors: VTTDoor[] = []) {
-    this.localState = { config, tokens, fogState, walls, doors };
+    updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[], doors: VTTDoor[] = [], windows: VTTWindow[] = []) {
+    this.localState = { config, tokens, fogState, walls, doors, windows };
   }
   
 sendBroadcastViewport(viewport: BroadcastViewport) {

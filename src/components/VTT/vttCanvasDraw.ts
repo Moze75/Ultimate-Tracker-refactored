@@ -1,6 +1,6 @@
 import type React from 'react';
-import type { VTTToken, VTTWall, VTTDoor, VTTFogStroke, VTTRoomConfig, VTTFogState } from '../../types/vtt';
-import { getEffectiveWallSegments, getDoorT1T2 } from './vttCanvasUtils';
+import type { VTTToken, VTTWall, VTTDoor, VTTWindow, VTTFogStroke, VTTRoomConfig, VTTFogState } from '../../types/vtt';
+import { getEffectiveWallSegments, getDoorT1T2, getWindowT1T2 } from './vttCanvasUtils';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
 import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
@@ -26,6 +26,7 @@ export interface VTTDrawContext {
   tokensRef: React.MutableRefObject<VTTToken[]>;
   wallsRef: React.MutableRefObject<VTTWall[] | undefined>;
   doorsRef: React.MutableRefObject<VTTDoor[]>;
+  windowsRef: React.MutableRefObject<VTTWindow[]>;
   activeToolRef: React.MutableRefObject<string>;
   showWallsRef: React.MutableRefObject<boolean>;
   wallPointsRef: React.MutableRefObject<{ x: number; y: number }[]>;
@@ -64,6 +65,11 @@ export interface VTTDrawContext {
   selectedDoorEndpointRef?: React.MutableRefObject<{ doorId: string; endpoint: 't1' | 't2' } | null>;
   seenDoorsRef: React.MutableRefObject<Set<string>>;
   onSeenDoorsUpdate?: (newSeenIds: string[]) => void;
+  windowInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
+  windowPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
+  hoveredWindowRef?: React.MutableRefObject<string | null>;
+  selectedWindowRef?: React.MutableRefObject<string | null>;
+  selectedWindowEndpointRef?: React.MutableRefObject<{ windowId: string; endpoint: 't1' | 't2' } | null>;
 }
 
 // -------------------
@@ -200,7 +206,7 @@ const myVisionTokens = isPlayerVisionSpectator
 
  if (curRole === 'player') {
   const wallSegs = currentWalls.length > 0
-    ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
+    ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current)
     : [];
 
   const viewers = isNight
@@ -322,7 +328,7 @@ const fogPunchTokens =
           )));
 
       if (fogPunchTokens.length > 0) {
-        punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current);
+        punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
       }
 
 // -------------------
@@ -549,7 +555,7 @@ if (!cfg.fogEnabled) {
       const eCtx = evc.getContext('2d')!;
 
       const wallSegs = currentWalls.length > 0
-        ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
+        ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current)
         : [];
 
       eCtx.globalCompositeOperation = 'destination-out';
@@ -798,7 +804,7 @@ if (!cfg.fogEnabled) {
     const doorsForVision = doorId
       ? ctx2d.doorsRef.current.map(d => d.id === doorId ? { ...d, open: true } : d)
       : ctx2d.doorsRef.current;
-    const doorWallSegs = getEffectiveWallSegments(currentWalls, doorsForVision);
+    const doorWallSegs = getEffectiveWallSegments(currentWalls, doorsForVision, ctx2d.windowsRef.current);
 
     for (const viewer of myVisionTokens) {
       const radii = getVisionRadii(viewer, CELL);
@@ -1006,6 +1012,185 @@ if (!cfg.fogEnabled) {
       }
 
       ctx.restore();
+    }
+  }
+
+  // --- FENETRES ---
+  const windows = ctx2d.windowsRef.current;
+  const isWindowMode = ctx2d.activeToolRef.current === 'window-place';
+  const hoveredWindowId = ctx2d.hoveredWindowRef?.current ?? null;
+  const selectedWindowId = ctx2d.selectedWindowRef?.current ?? null;
+  const selectedWindowEndpoint = ctx2d.selectedWindowEndpointRef?.current ?? null;
+
+  if (windows.length > 0) {
+    const committedWallsW = ctx2d.wallsRef.current || [];
+    for (const win of windows) {
+      const wall = committedWallsW.find(w => w.id === win.wallId);
+      if (!wall) continue;
+      const pts = wall.points;
+      const si = win.segmentIndex;
+      if (si < 0 || si >= pts.length - 1) continue;
+
+      const p1 = pts[si];
+      const p2 = pts[si + 1];
+      const segDx = p2.x - p1.x;
+      const segDy = p2.y - p1.y;
+      const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+      if (segLen < 1) continue;
+
+      const nx = segDx / segLen;
+      const ny = segDy / segLen;
+
+      const { t1, t2, tCenter } = getWindowT1T2(win, segLen);
+      const ax = p1.x + nx * segLen * t1;
+      const ay = p1.y + ny * segLen * t1;
+      const bx = p1.x + nx * segLen * t2;
+      const by = p1.y + ny * segLen * t2;
+      const cx = p1.x + nx * segLen * tCenter;
+      const cy = p1.y + ny * segLen * tCenter;
+
+      ctx.save();
+      ctx.lineCap = 'round';
+
+      const isHoveredW = hoveredWindowId === win.id;
+
+      ctx.lineWidth = 5 / vp.scale;
+      ctx.strokeStyle = isWindowMode || isHoveredW
+        ? 'rgba(56,189,248,0.95)'
+        : 'rgba(56,189,248,0.75)';
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+
+      ctx.lineWidth = 2 / vp.scale;
+      ctx.strokeStyle = 'rgba(0,30,60,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(ax, ay, 3 / vp.scale, 0, Math.PI * 2);
+      ctx.arc(bx, by, 3 / vp.scale, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56,189,248,0.9)';
+      ctx.fill();
+
+      // Icone fenêtre au centre
+      const baseIconSizeW = Math.max(8, Math.min(14, segLen * (t2 - t1) * 0.12));
+      const iconSizeW = (isHoveredW ? baseIconSizeW * 1.35 : baseIconSizeW) / vp.scale;
+
+      if (isHoveredW) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, iconSizeW * 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56,189,248,0.12)';
+        ctx.fill();
+      }
+
+      const lwW = (isHoveredW ? 1.6 : 1.2) / vp.scale;
+      ctx.lineWidth = lwW;
+      ctx.strokeStyle = isHoveredW ? 'rgba(56,189,248,1)' : 'rgba(56,189,248,0.9)';
+      ctx.fillStyle = isHoveredW ? 'rgba(56,189,248,1)' : 'rgba(56,189,248,0.9)';
+      const hwW = iconSizeW * 0.52;
+      const hhW = iconSizeW * 0.68;
+      ctx.strokeRect(cx - hwW, cy - hhW, hwW * 2, hhW * 2);
+      const midV = hwW * 0.0;
+      ctx.beginPath();
+      ctx.moveTo(cx + midV, cy - hhW);
+      ctx.lineTo(cx + midV, cy + hhW);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - hwW, cy);
+      ctx.lineTo(cx + hwW, cy);
+      ctx.stroke();
+
+      if (selectedWindowId === win.id) {
+        ctx.lineWidth = 2.5 / vp.scale;
+        ctx.strokeStyle = 'rgba(56,189,248,0.9)';
+        ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, iconSizeW * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      if (ctx2d.activeToolRef.current === 'wall-select') {
+        const t1SelW = selectedWindowEndpoint?.windowId === win.id && selectedWindowEndpoint?.endpoint === 't1';
+        const t2SelW = selectedWindowEndpoint?.windowId === win.id && selectedWindowEndpoint?.endpoint === 't2';
+        const hr1 = (t1SelW ? 9 : 6) / vp.scale;
+        ctx.beginPath();
+        ctx.arc(ax, ay, hr1, 0, Math.PI * 2);
+        ctx.fillStyle = t1SelW ? 'rgba(251,191,36,1)' : 'rgba(56,189,248,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = (t1SelW ? 2.5 : 1.5) / vp.scale;
+        ctx.stroke();
+        const hr2 = (t2SelW ? 9 : 6) / vp.scale;
+        ctx.beginPath();
+        ctx.arc(bx, by, hr2, 0, Math.PI * 2);
+        ctx.fillStyle = t2SelW ? 'rgba(251,191,36,1)' : 'rgba(56,189,248,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = (t2SelW ? 2.5 : 1.5) / vp.scale;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // --- FENETRE EN COURS DE PLACEMENT (2 clics) ---
+  const windowInProgress = ctx2d.windowInProgressRef?.current;
+  const windowPreviewPos = ctx2d.windowPreviewPosRef?.current;
+  if (isWindowMode && windowInProgress) {
+    const committedWallsWP = ctx2d.wallsRef.current || [];
+    const wallWP = committedWallsWP.find(w => w.id === windowInProgress.wallId);
+    if (wallWP) {
+      const pts = wallWP.points;
+      const si = windowInProgress.segmentIndex;
+      if (si >= 0 && si < pts.length - 1) {
+        const p1 = pts[si], p2 = pts[si + 1];
+        const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+        const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+        if (segLen >= 1) {
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const fpx = p1.x + nx * segLen * windowInProgress.t;
+          const fpy = p1.y + ny * segLen * windowInProgress.t;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(fpx, fpy, 6 / vp.scale, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56,189,248,1)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineWidth = 2 / vp.scale;
+          ctx.stroke();
+
+          if (windowPreviewPos) {
+            const dxP = p2.x - p1.x, dyP = p2.y - p1.y;
+            const lenSq = dxP * dxP + dyP * dyP;
+            let tPreview = lenSq > 0 ? ((windowPreviewPos.x - p1.x) * dxP + (windowPreviewPos.y - p1.y) * dyP) / lenSq : 0;
+            tPreview = Math.max(0.01, Math.min(0.99, tPreview));
+            const previewT1 = Math.min(windowInProgress.t, tPreview);
+            const previewT2 = Math.max(windowInProgress.t, tPreview);
+            if (previewT2 - previewT1 > 0.01) {
+              const prx = p1.x + nx * segLen * previewT1;
+              const pry = p1.y + ny * segLen * previewT1;
+              const prx2 = p1.x + nx * segLen * previewT2;
+              const pry2 = p1.y + ny * segLen * previewT2;
+              ctx.lineWidth = 4 / vp.scale;
+              ctx.lineCap = 'round';
+              ctx.strokeStyle = 'rgba(56,189,248,0.7)';
+              ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
+              ctx.beginPath();
+              ctx.moveTo(prx, pry);
+              ctx.lineTo(prx2, pry2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+          }
+          ctx.restore();
+        }
+      }
     }
   }
 

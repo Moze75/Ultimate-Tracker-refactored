@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { VTTToken, VTTDoor } from '../../types/vtt';
-import { wallBlocksToken, getDoorT1T2 } from './vttCanvasUtils';
+import type { VTTToken, VTTDoor, VTTWindow } from '../../types/vtt';
+import { wallBlocksToken, getDoorT1T2, getWindowT1T2 } from './vttCanvasUtils';
 import { pointInPolygon } from './vttCanvasUtils';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
@@ -52,6 +52,14 @@ export interface VTTCanvasRefs {
   selectedDoorRef: React.MutableRefObject<string | null>;
   hoveredDoorRef: React.MutableRefObject<string | null>;
   selectedDoorEndpointRef: React.MutableRefObject<{ doorId: string; endpoint: 't1' | 't2' } | null>;
+  windowsRef: React.MutableRefObject<VTTWindow[]>;
+  onWindowAddedRef: React.MutableRefObject<((win: VTTWindow) => void) | undefined>;
+  onWindowRemovedRef: React.MutableRefObject<((windowId: string) => void) | undefined>;
+  windowInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
+  windowPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
+  hoveredWindowRef: React.MutableRefObject<string | null>;
+  selectedWindowRef: React.MutableRefObject<string | null>;
+  selectedWindowEndpointRef: React.MutableRefObject<{ windowId: string; endpoint: 't1' | 't2' } | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
@@ -124,6 +132,14 @@ export function useVTTCanvasEvents({
     selectedDoorRef,
     hoveredDoorRef,
     selectedDoorEndpointRef,
+    windowsRef,
+    onWindowAddedRef,
+    onWindowRemovedRef,
+    windowInProgressRef,
+    windowPreviewPosRef,
+    hoveredWindowRef,
+    selectedWindowRef,
+    selectedWindowEndpointRef,
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
@@ -160,6 +176,20 @@ export function useVTTCanvasEvents({
     segmentIndex: number;
     endpoint: 't1' | 't2';
   } | null>(null);
+
+  // Refs internes pour le drag d'une fenêtre et de ses endpoints en mode wall-select
+  const draggingWindowRef = useRef<{
+    windowId: string;
+    wallId: string;
+    segmentIndex: number;
+  } | null>(null);
+
+  const draggingWindowEndpointRef = useRef<{
+    windowId: string;
+    wallId: string;
+    segmentIndex: number;
+    endpoint: 't1' | 't2';
+  } | null>(null);
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
@@ -178,6 +208,10 @@ export function useVTTCanvasEvents({
     if (activeTool !== 'door-place') {
       doorInProgressRef.current = null;
       doorPreviewPosRef.current = null;
+    }
+    if (activeTool !== 'window-place') {
+      windowInProgressRef.current = null;
+      windowPreviewPosRef.current = null;
     }
     drawRef.current();
   }, [activeTool]);
@@ -439,6 +473,78 @@ export function useVTTCanvasEvents({
 
         if (!doorFound) selectedDoorRef.current = null;
 
+        // Vérifier si on clique sur un endpoint (t1/t2) de fenêtre
+        const currentWindows0 = windowsRef.current || [];
+        let windowEndpointFound = false;
+        for (const win of currentWindows0) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { t1, t2 } = getWindowT1T2(win, segLen);
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const ax = p1.x + nx * segLen * t1;
+          const ay = p1.y + ny * segLen * t1;
+          const bx = p1.x + nx * segLen * t2;
+          const by = p1.y + ny * segLen * t2;
+          const dax = (wp.x - ax) * vp.scale;
+          const day = (wp.y - ay) * vp.scale;
+          const dbx = (wp.x - bx) * vp.scale;
+          const dby = (wp.y - by) * vp.scale;
+          if (Math.sqrt(dax * dax + day * day) < HIT_RADIUS_PX) {
+            draggingWindowEndpointRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex, endpoint: 't1' };
+            selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't1' };
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = null;
+            windowEndpointFound = true;
+            drawRef.current();
+            return;
+          }
+          if (Math.sqrt(dbx * dbx + dby * dby) < HIT_RADIUS_PX) {
+            draggingWindowEndpointRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex, endpoint: 't2' };
+            selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't2' };
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = null;
+            windowEndpointFound = true;
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Vérifier si on clique sur l'icône d'une fenêtre
+        const currentWindows = windowsRef.current || [];
+        let windowFound = false;
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex };
+            windowFound = true;
+            drawRef.current();
+            return;
+          }
+        }
+
+        if (!windowEndpointFound && !windowFound) selectedWindowRef.current = null;
+
         // Chercher un point de mur à cliquer
         let found = false;
         for (const wall of currentWalls) {
@@ -577,6 +683,98 @@ export function useVTTCanvasEvents({
           };
           drawRef.current();
         }
+      } else if (tool === 'window-place') {
+        if (roleRef.current !== 'gm') return;
+
+        const vp = viewportRef.current;
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            drawRef.current();
+            return;
+          }
+        }
+
+        let bestDist = Infinity;
+        let bestWallId = '';
+        let bestSegIdx = -1;
+        let bestT = 0.5;
+        let bestWorldX = wp.x;
+        let bestWorldY = wp.y;
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i], p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0.02, Math.min(0.98, t));
+            const projX = p1.x + t * dx, projY = p1.y + t * dy;
+            const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
+            if (distPx < bestDist) {
+              bestDist = distPx;
+              bestWallId = wall.id;
+              bestSegIdx = i;
+              bestT = t;
+              bestWorldX = projX;
+              bestWorldY = projY;
+            }
+          }
+        }
+
+        if (bestSegIdx < 0 || bestDist >= 20) return;
+
+        const winProgress = windowInProgressRef.current;
+        if (!winProgress) {
+          windowInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        } else if (winProgress.wallId === bestWallId && winProgress.segmentIndex === bestSegIdx) {
+          const t1 = Math.min(winProgress.t, bestT);
+          const t2 = Math.max(winProgress.t, bestT);
+          if (t2 - t1 > 0.02) {
+            const newWindow: VTTWindow = {
+              id: crypto.randomUUID(),
+              wallId: bestWallId,
+              segmentIndex: bestSegIdx,
+              t1,
+              t2,
+            };
+            onWindowAddedRef.current?.(newWindow);
+          }
+          windowInProgressRef.current = null;
+          windowPreviewPosRef.current = null;
+          drawRef.current();
+        } else {
+          windowInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        }
       } else if (tool === 'measure') {
         if (measureLockedRef.current) {
           measureStartRef.current = null;
@@ -634,6 +832,40 @@ export function useVTTCanvasEvents({
         return;
       }
 
+      // En mode window-place : clic droit = annuler placement en cours OU supprimer fenêtre existante
+      if (tool === 'window-place' && roleRef.current === 'gm') {
+        if (windowInProgressRef.current) {
+          windowInProgressRef.current = null;
+          windowPreviewPosRef.current = null;
+          drawRef.current();
+          return;
+        }
+        const vp = viewportRef.current;
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            onWindowRemovedRef.current?.(win.id);
+            return;
+          }
+        }
+        return;
+      }
+
       // En mode wall-select : clic droit sur porte = suppression, sur segment = suppression mur
       if (tool === 'wall-select' && roleRef.current === 'gm') {
         const vp = viewportRef.current;
@@ -659,6 +891,31 @@ export function useVTTCanvasEvents({
           if (Math.sqrt(ddx * ddx + ddy * ddy) < 16) {
             onDoorRemovedRef.current?.(door.id);
             if (selectedDoorRef.current === door.id) selectedDoorRef.current = null;
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Clic droit sur icône fenêtre = supprimer la fenêtre
+        const currentWindows0 = windowsRef.current || [];
+        for (const win of currentWindows0) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 16) {
+            onWindowRemovedRef.current?.(win.id);
+            if (selectedWindowRef.current === win.id) selectedWindowRef.current = null;
             drawRef.current();
             return;
           }
@@ -804,6 +1061,75 @@ export function useVTTCanvasEvents({
         }
       }
 
+      // Déplacement d'un endpoint de fenêtre (t1 ou t2) le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingWindowEndpointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragEpW = draggingWindowEndpointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragEpW.wallId);
+        if (wall) {
+          const si = dragEpW.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentWindows = windowsRef.current || [];
+              const win = currentWindows.find(w => w.id === dragEpW.windowId);
+              if (win) {
+                let updatedWin;
+                if (dragEpW.endpoint === 't1') {
+                  const newT1 = Math.min(tNew, (win.t2 ?? 0.9) - 0.02);
+                  updatedWin = { ...win, t1: newT1 };
+                } else {
+                  const newT2 = Math.max(tNew, (win.t1 ?? 0.1) + 0.02);
+                  updatedWin = { ...win, t2: newT2 };
+                }
+                windowsRef.current = currentWindows.map(w => w.id === dragEpW.windowId ? updatedWin : w);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
+      // Déplacement d'une fenêtre le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingWindowRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragWin = draggingWindowRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragWin.wallId);
+        if (wall) {
+          const si = dragWin.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentWindows = windowsRef.current || [];
+              const win = currentWindows.find(w => w.id === dragWin.windowId);
+              if (win) {
+                const { t1: wt1, t2: wt2 } = getWindowT1T2(win, Math.sqrt(lenSq));
+                const halfWidth = (wt2 - wt1) / 2;
+                const newT1 = Math.max(0.01, tNew - halfWidth);
+                const newT2 = Math.min(0.99, tNew + halfWidth);
+                const updatedWin = { ...win, t1: newT1, t2: newT2 };
+                windowsRef.current = currentWindows.map(w => w.id === dragWin.windowId ? updatedWin : w);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
       if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
@@ -816,7 +1142,13 @@ export function useVTTCanvasEvents({
         drawRef.current();
       }
 
-      // Détection hover porte (mode select uniquement)
+      if (activeToolRef.current === 'window-place' && windowInProgressRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        windowPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      // Détection hover porte et fenêtre (mode select uniquement)
       if (activeToolRef.current === 'select') {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         const wp2 = screenToWorld(sp2.x, sp2.y);
@@ -856,7 +1188,44 @@ export function useVTTCanvasEvents({
         if (canvas) canvas.style.cursor = 'default';
         drawRef.current();
       }
-      
+
+      // Hover pour les fenêtres (mode select et window-place)
+      if (activeToolRef.current === 'select' || activeToolRef.current === 'window-place') {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        let foundHoveredWindow: string | null = null;
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const vp0 = viewportRef.current;
+          const ddx = (wp2.x - cx) * vp0.scale;
+          const ddy = (wp2.y - cy) * vp0.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 18) {
+            foundHoveredWindow = win.id;
+            break;
+          }
+        }
+        if (hoveredWindowRef.current !== foundHoveredWindow) {
+          hoveredWindowRef.current = foundHoveredWindow;
+          drawRef.current();
+        }
+      } else if (hoveredWindowRef.current !== null) {
+        hoveredWindowRef.current = null;
+        drawRef.current();
+      }
+
       if (activeToolRef.current === 'measure' && measureStartRef.current && !measureLockedRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         measureEndRef.current = screenToWorld(sp2.x, sp2.y);
@@ -1059,6 +1428,29 @@ export function useVTTCanvasEvents({
           onDoorAddedRef.current?.(updatedDoor);
         }
         draggingDoorRef.current = null;
+      }
+
+      // Fin du drag d'un endpoint de fenêtre : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingWindowEndpointRef.current) {
+        const dragEpW = draggingWindowEndpointRef.current;
+        const updatedWin = (windowsRef.current || []).find(w => w.id === dragEpW.windowId);
+        if (updatedWin) {
+          onWindowRemovedRef.current?.(updatedWin.id);
+          onWindowAddedRef.current?.(updatedWin);
+        }
+        draggingWindowEndpointRef.current = null;
+        selectedWindowEndpointRef.current = null;
+      }
+
+      // Fin du drag d'une fenêtre : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingWindowRef.current) {
+        const dragWin = draggingWindowRef.current;
+        const updatedWin = (windowsRef.current || []).find(w => w.id === dragWin.windowId);
+        if (updatedWin) {
+          onWindowRemovedRef.current?.(updatedWin.id);
+          onWindowAddedRef.current?.(updatedWin);
+        }
+        draggingWindowRef.current = null;
       }
 
       isDragSelectingRef.current = false;

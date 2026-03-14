@@ -11,6 +11,7 @@ import type {
   VTTServerEvent,
   VTTWall,
   VTTDoor,
+  VTTWindow,
 } from '../types/vtt';
 import { Maximize, Minimize } from 'lucide-react';
 
@@ -38,6 +39,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [walls, setWalls] = useState<VTTWall[]>([]);
   const [doors, setDoors] = useState<VTTDoor[]>([]);
+  const [windows, setWindows] = useState<VTTWindow[]>([]);
   // -------------------
   // Suivi de la scène active reçue du MJ
   // Nécessaire pour déclencher save/restore du fog exploré dans VTTCanvas
@@ -61,6 +63,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setFogState(event.state.room.fogState);
         setWalls(event.state.room.walls || []);
         setDoors(event.state.room.doors || []);
+        setWindows((event.state.room as any).windows || []);
         setWaitingForSync(false);
         break;
       case 'TOKEN_MOVED':
@@ -94,6 +97,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setFogState(event.fogState);
         setWalls(event.walls);
         setDoors(event.doors || []);
+        setWindows((event as any).windows || []);
         if (event.sceneId) setCurrentSceneId(event.sceneId);
         break;
       case 'WALLS_UPDATED':
@@ -101,6 +105,9 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         break;
       case 'DOORS_UPDATED':
         setDoors(event.doors);
+        break;
+      case 'WINDOWS_UPDATED':
+        setWindows((event as any).windows || []);
         break;
       case 'WEATHER_UPDATED':
         setConfig(prev => ({ ...prev, weatherEffects: event.effects }));
@@ -138,6 +145,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         if (s.fogState) setFogState(s.fogState);
         if (s.walls) setWalls(s.walls);
         if (s.doors) setDoors(s.doors);
+        if ((s as any).windows) setWindows((s as any).windows);
         if (s.sceneId) setCurrentSceneId(s.sceneId);
         setWaitingForSync(false);
       })
@@ -269,6 +277,7 @@ const defaultViewport = broadcastViewport ?? undefined;
   onSelectToken={noOp as any}
   walls={walls}
   doors={doors}
+  windows={windows}
   forceViewport={defaultViewport}
 />
 

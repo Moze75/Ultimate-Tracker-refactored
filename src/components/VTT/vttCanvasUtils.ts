@@ -1,4 +1,4 @@
-import type { VTTWall, VTTDoor } from '../../types/vtt';
+import type { VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
 
 export function segmentsIntersect(
   ax: number, ay: number, bx: number, by: number,
@@ -19,6 +19,15 @@ export function getDoorT1T2(door: VTTDoor, segLen: number): { t1: number; t2: nu
   }
   const t = typeof door.t === 'number' ? door.t : 0.5;
   const hw = segLen > 0 ? (typeof door.width === 'number' ? door.width : 60) / 2 / segLen : 0.15;
+  return { t1: Math.max(0.01, t - hw), t2: Math.min(0.99, t + hw), tCenter: t };
+}
+
+export function getWindowT1T2(win: VTTWindow, segLen: number): { t1: number; t2: number; tCenter: number } {
+  if (typeof win.t1 === 'number' && typeof win.t2 === 'number') {
+    return { t1: win.t1, t2: win.t2, tCenter: (win.t1 + win.t2) / 2 };
+  }
+  const t = typeof win.t === 'number' ? win.t : 0.5;
+  const hw = segLen > 0 ? (typeof win.width === 'number' ? win.width : 60) / 2 / segLen : 0.15;
   return { t1: Math.max(0.01, t - hw), t2: Math.min(0.99, t + hw), tCenter: t };
 }
 
@@ -123,7 +132,8 @@ export function wallBlocksToken(
 
 export function getEffectiveWallSegments(
   walls: VTTWall[],
-  doors: VTTDoor[]
+  doors: VTTDoor[],
+  windows: VTTWindow[] = []
 ): { x1: number; y1: number; x2: number; y2: number }[] {
   const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
   for (const wall of walls) {
@@ -133,7 +143,13 @@ export function getEffectiveWallSegments(
       const segLen = Math.sqrt(dx * dx + dy * dy);
       if (segLen < 1) continue;
       const openDoors = doors.filter(d => d.open && d.wallId === wall.id && d.segmentIndex === i);
-      const subSegs = getSubSegmentsExcludingDoors(p1, p2, dx, dy, segLen, openDoors);
+      const winsOnSeg = windows.filter(w => w.wallId === wall.id && w.segmentIndex === i);
+      const gapsAsOpenDoors: VTTDoor[] = winsOnSeg.map(w => {
+        const ext = getWindowT1T2(w, segLen);
+        return { id: w.id, wallId: w.wallId, segmentIndex: w.segmentIndex, t1: ext.t1, t2: ext.t2, open: true };
+      });
+      const allGaps = [...openDoors, ...gapsAsOpenDoors];
+      const subSegs = getSubSegmentsExcludingDoors(p1, p2, dx, dy, segLen, allGaps);
       for (const [x1, y1, x2, y2] of subSegs) {
         segs.push({ x1, y1, x2, y2 });
       }
