@@ -330,10 +330,6 @@ const fogPunchTokens =
 
       if (fogPunchTokens.length > 0) {
         punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
-        // Referme les zones de fog actif sur les trous percés par les tokens :
-        // le fogCanvas noir (fog non-révélé) écrase les trous là où le MJ a masqué.
-        vCtx.globalCompositeOperation = 'source-over';
-        vCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
       }
 
 // -------------------
@@ -453,11 +449,36 @@ if (!cfg.fogEnabled) {
       }
       dvCtx.globalCompositeOperation = 'source-over';
 
-      // --- Composition finale identique à la nuit ---
+      // --- Composition finale du masque de vision de jour ---
       // On NE MODIFIE PAS dvc directement (c'est un ref persistant).
       // On crée un canvas temporaire cvc pour la composition.
 
-      // invCanvas : opaque là où jamais vu, transparent là où exploré
+      // -------------------
+      // visionFogCanvas : intersecte les trous de vision avec les zones révélées
+      // = trous de vision restreints aux zones où le fog a été retiré
+      // Étape 1 : partir de dvc (noir sauf trous de vision)
+      // Étape 2 : destination-in avec fogInv → ne garde que les trous dans les zones révélées
+      // Résultat : transparent seulement là où (vision token ET fog révélé)
+      // -------------------
+      let visionFogCanvas: HTMLCanvasElement | null = null;
+      if (cfg.fogEnabled) {
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          const vfc = document.createElement('canvas');
+          vfc.width = mapW;
+          vfc.height = mapH;
+          const vfCtx = vfc.getContext('2d')!;
+          vfCtx.drawImage(dvc, 0, 0);
+          vfCtx.globalCompositeOperation = 'destination-in';
+          vfCtx.drawImage(fogInv, 0, 0);
+          vfCtx.globalCompositeOperation = 'source-over';
+          visionFogCanvas = vfc;
+        }
+      }
+
+      // -------------------
+      // invCanvas : opaque là où jamais exploré, transparent là où déjà exploré
+      // -------------------
       const invCanvas = document.createElement('canvas');
       invCanvas.width = mapW;
       invCanvas.height = mapH;
@@ -470,13 +491,13 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Composition finale du masque de vision de jour
-      // cvc = copie de dvc (noir avec trous là où on voit)
+      // cvc = dvc OU visionFogCanvas (si fog activé) + atténuation mémoire
       // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
       cvc.height = mapH;
       const cCtx = cvc.getContext('2d')!;
-      cCtx.drawImage(dvc, 0, 0);
+      cCtx.drawImage(visionFogCanvas ?? dvc, 0, 0);
 
       // -------------------
       // Atténuation des zones explorées (mémoire)
@@ -489,22 +510,13 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Percement du fog-reveal dans le masque de vision de jour
-      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
+      // Fermeture finale du fog actif sur les zones de mémoire
+      // Le fogCanvas (noir = fog actif) recouvre tout, y compris la mémoire
+      // dans les zones masquées → le MJ peut masquer une zone déjà explorée
       // -------------------
-      if (cfg.fogEnabled) {
-        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
-        if (fogInv) {
-          cCtx.globalCompositeOperation = 'destination-out';
-          cCtx.drawImage(fogInv, 0, 0);
-          cCtx.globalCompositeOperation = 'source-over';
-        }
-        // Referme les zones de fog actif (non-révélé) pour que le pinceau
-        // fog-erase et le "tout masquer" écrasent aussi les trous percés par tokens
-        if (ctx2d.fogCanvasRef.current) {
-          cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
-        }
+      if (cfg.fogEnabled && ctx2d.fogCanvasRef.current) {
+        cCtx.globalCompositeOperation = 'source-over';
+        cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
       }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
@@ -608,14 +620,34 @@ if (!cfg.fogEnabled) {
       eCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
+      // visionFogCanvas (nuit) : intersecte les trous de vision avec les zones révélées
+      // = trous de vision restreints aux zones où le fog a été retiré
+      // -------------------
+      let visionFogCanvasNight: HTMLCanvasElement | null = null;
+      if (cfg.fogEnabled) {
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          const vfc = document.createElement('canvas');
+          vfc.width = mapW;
+          vfc.height = mapH;
+          const vfCtx = vfc.getContext('2d')!;
+          vfCtx.drawImage(nvc, 0, 0);
+          vfCtx.globalCompositeOperation = 'destination-in';
+          vfCtx.drawImage(fogInv, 0, 0);
+          vfCtx.globalCompositeOperation = 'source-over';
+          visionFogCanvasNight = vfc;
+        }
+      }
+
+      // -------------------
       // Composition finale du masque de vision de nuit
-      // cvc = copie de nvc (noir partout sauf dans le rayon de vision)
+      // cvc = nvc OU visionFogCanvasNight (si fog activé) + atténuation mémoire
       // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
       cvc.height = mapH;
       const cCtx = cvc.getContext('2d')!;
-      cCtx.drawImage(nvc, 0, 0);
+      cCtx.drawImage(visionFogCanvasNight ?? nvc, 0, 0);
 
       // -------------------
       // Atténuation des zones déjà explorées (mémoire)
@@ -642,22 +674,11 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Percement du fog-reveal dans le masque de nuit composé
-      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
+      // Fermeture finale du fog actif sur les zones de mémoire
       // -------------------
-      if (cfg.fogEnabled) {
-        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
-        if (fogInv) {
-          cCtx.globalCompositeOperation = 'destination-out';
-          cCtx.drawImage(fogInv, 0, 0);
-          cCtx.globalCompositeOperation = 'source-over';
-        }
-        // Referme les zones de fog actif (non-révélé) pour que le pinceau
-        // fog-erase et le "tout masquer" écrasent aussi les trous percés par tokens
-        if (ctx2d.fogCanvasRef.current) {
-          cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
-        }
+      if (cfg.fogEnabled && ctx2d.fogCanvasRef.current) {
+        cCtx.globalCompositeOperation = 'source-over';
+        cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
       }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
