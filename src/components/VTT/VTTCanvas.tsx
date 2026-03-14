@@ -199,6 +199,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const windowsRef = useRef<VTTWindow[]>(windows || []);
   windowsRef.current = windows || [];
   const seenDoorsRef = useRef<Set<string>>(new Set(fogState.seenDoors || []));
+  const seenWindowsRef = useRef<Set<string>>(new Set());
   const onSeenDoorsUpdateRef = useRef(onSeenDoorsUpdate);
   onSeenDoorsUpdateRef.current = onSeenDoorsUpdate;
   const onDoorAddedRef = useRef(onDoorAdded);
@@ -518,6 +519,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     // Reset seenDoors for new scene, then load persisted ones
     seenDoorsRef.current = new Set(fogStateRef.current.seenDoors || []);
+    seenWindowsRef.current = new Set();
 
     drawRef.current();
 
@@ -711,6 +713,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
         ? (newIds: string[]) => onSeenDoorsUpdateRef.current?.(newIds)
         : undefined,
+      seenWindowsRef,
     });
   }, []);
 

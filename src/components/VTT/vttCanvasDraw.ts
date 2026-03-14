@@ -65,6 +65,7 @@ export interface VTTDrawContext {
   selectedDoorEndpointRef?: React.MutableRefObject<{ doorId: string; endpoint: 't1' | 't2' } | null>;
   seenDoorsRef: React.MutableRefObject<Set<string>>;
   onSeenDoorsUpdate?: (newSeenIds: string[]) => void;
+  seenWindowsRef: React.MutableRefObject<Set<string>>;
   windowInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   windowPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   hoveredWindowRef?: React.MutableRefObject<string | null>;
@@ -1049,8 +1050,70 @@ if (!cfg.fogEnabled) {
       const cx = p1.x + nx * segLen * tCenter;
       const cy = p1.y + ny * segLen * tCenter;
 
+      let isWindowMemorized = false;
+      if (curRole !== 'gm' && cfg.fogEnabled) {
+        const perpX = -ny;
+        const perpY = nx;
+        const OFFSET = 4;
+        const testPoints = [
+          { x: cx, y: cy },
+          { x: cx + perpX * OFFSET, y: cy + perpY * OFFSET },
+          { x: cx - perpX * OFFSET, y: cy - perpY * OFFSET },
+          { x: ax, y: ay },
+          { x: bx, y: by },
+        ];
+        const wallSegsForWin = getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
+        const currentlyVisibleWin = (() => {
+          if (!cfg.fogEnabled) return true;
+          if (isDay && currentWalls.length === 0 && myVisionTokens.length > 0) return true;
+          const fogCanvas = ctx2d.fogCanvasRef.current;
+          if (fogCanvas) {
+            const fogCtx = fogCanvas.getContext('2d');
+            if (fogCtx) {
+              for (const pt of testPoints) {
+                const fx = Math.round(pt.x);
+                const fy = Math.round(pt.y);
+                if (fx >= 0 && fy >= 0 && fx < fogCanvas.width && fy < fogCanvas.height) {
+                  const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
+                  if (pixel[3] < 128) return true;
+                }
+              }
+            }
+          }
+          if (myVisionTokens.length === 0) return false;
+          if (currentWalls.length === 0) return true;
+          for (const viewer of myVisionTokens) {
+            const radii = getVisionRadii(viewer, CELL);
+            const maxR = Math.max(radii.brightR, radii.dimR);
+            if (maxR <= 0) continue;
+            const anyInRange = testPoints.some(pt => {
+              const dx = pt.x - radii.cx;
+              const dy = pt.y - radii.cy;
+              return dx * dx + dy * dy <= maxR * maxR;
+            });
+            if (!anyInRange) continue;
+            if (wallSegsForWin.length === 0) return true;
+            const poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, wallSegsForWin, mapW, mapH);
+            if (poly.length < 6) continue;
+            if (testPoints.some(pt => pointInPolygon(pt.x, pt.y, poly))) return true;
+          }
+          return false;
+        })();
+        if (currentlyVisibleWin) {
+          ctx2d.seenWindowsRef.current.add(win.id);
+        } else {
+          if (ctx2d.seenWindowsRef.current.has(win.id)) {
+            isWindowMemorized = true;
+          } else {
+            continue;
+          }
+        }
+      }
+
       ctx.save();
       ctx.lineCap = 'round';
+
+      if (isWindowMemorized) ctx.globalAlpha = 0.45;
 
       const isHoveredW = hoveredWindowId === win.id;
 
