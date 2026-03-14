@@ -252,7 +252,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // ------------------- 
   const exploredCanvasRestoringRef = useRef(false);
   const exploredMaskWasResetRef = useRef(false);
-  const tokenPositionsAtResetRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   // -------------------
   // Mémorise la longueur précédente de exploredStrokes
   // pour détecter uniquement un reset fog intentionnel (transition N→0)
@@ -436,23 +435,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   useEffect(() => {
     if (fogResetSignal === 0) return;
-    const mapW = configRef.current.mapWidth || 2000;
-    const mapH = configRef.current.mapHeight || 2000;
-    if (exploredCanvasRef.current) {
-      const eCtx = exploredCanvasRef.current.getContext('2d');
-      if (eCtx) {
-        eCtx.fillStyle = 'rgba(0,0,0,1)';
-        eCtx.fillRect(0, 0, mapW, mapH);
-      }
-    }
     if (sceneIdRef.current) {
       localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
     }
-    const posMap = new Map<string, { x: number; y: number }>();
-    for (const token of tokensRef.current) {
-      posMap.set(token.id, { x: token.position.x, y: token.position.y });
-    }
-    tokenPositionsAtResetRef.current = posMap;
+    exploredCanvasRef.current = null;
+    exploredCanvasSizeRef.current = { w: 0, h: 0 };
     exploredMaskWasResetRef.current = true;
     drawRef.current();
   }, [fogResetSignal]);
@@ -742,8 +729,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       exploredCanvasRef,
       exploredCanvasSizeRef,
       exploredCanvasRestoringRef,
-      exploredMaskWasResetRef,
-      tokenPositionsAtResetRef,
       drawRef,
       seenDoorsRef,
       onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
@@ -848,20 +833,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const isIntentionalReset = (prevLen > 0 && currLen === 0) || (prevStrokesLenRef.current > 0 && strokes.length === 0);
     prevExploredStrokesLenRef.current = currLen;
 
-    if (isIntentionalReset && exploredCanvasRef.current) {
-      const eCtx = exploredCanvasRef.current.getContext('2d');
-      if (eCtx) {
-        eCtx.fillStyle = 'rgba(0,0,0,1)';
-        eCtx.fillRect(0, 0, mapW, mapH);
-      }
+    if (isIntentionalReset) {
       if (sceneId) {
         localStorage.removeItem(getExploredMaskStorageKey(sceneId));
       }
-      const posMap = new Map<string, { x: number; y: number }>();
-      for (const token of tokensRef.current) {
-        posMap.set(token.id, { x: token.position.x, y: token.position.y });
-      }
-      tokenPositionsAtResetRef.current = posMap;
+      exploredCanvasRef.current = null;
+      exploredCanvasSizeRef.current = { w: 0, h: 0 };
       exploredMaskWasResetRef.current = true;
     }
 

@@ -57,8 +57,6 @@ export interface VTTDrawContext {
   // pendant une restauration de snapshot asynchrone
   // -------------------
   exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
-  exploredMaskWasResetRef: React.MutableRefObject<boolean>;
-  tokenPositionsAtResetRef: React.MutableRefObject<Map<string, { x: number; y: number }>>;
   drawRef: React.MutableRefObject<() => void>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -402,42 +400,23 @@ if (!cfg.fogEnabled) {
       if (!evc) return;
       const eCtx = evc.getContext('2d')!;
 
-      // Graver dans exploredCanvas les zones visibles (destination-out = effacer le noir)
-      // Si un reset a eu lieu, ne graver que les tokens qui ont bougé depuis le reset.
-      // Un token gravé invalide le flag reset pour lui, permettant l'accumulation normale.
-      {
-        const wasReset = ctx2d.exploredMaskWasResetRef.current;
-        const posAtReset = ctx2d.tokenPositionsAtResetRef.current;
-        let anyGravure = false;
-        eCtx.globalCompositeOperation = 'destination-out';
-        for (const token of playerTokens) {
-          if (!token.visible) continue;
-          if (wasReset) {
-            const savedPos = posAtReset.get(token.id);
-            if (savedPos && savedPos.x === token.position.x && savedPos.y === token.position.y) {
-              continue;
-            }
-            posAtReset.delete(token.id);
-          }
-          anyGravure = true;
-          const tSize = (token.size || 1) * CELL;
-          const tcx = token.position.x + tSize / 2;
-          const tcy = token.position.y + tSize / 2;
-          const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
-          if (poly.length >= 6) {
-            eCtx.fillStyle = 'rgba(0,0,0,1)';
-            eCtx.beginPath();
-            eCtx.moveTo(poly[0], poly[1]);
-            for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
-            eCtx.closePath();
-            eCtx.fill();
-          }
-        }
-        eCtx.globalCompositeOperation = 'source-over';
-        if (wasReset && anyGravure && posAtReset.size === 0) {
-          ctx2d.exploredMaskWasResetRef.current = false;
+      eCtx.globalCompositeOperation = 'destination-out';
+      for (const token of playerTokens) {
+        if (!token.visible) continue;
+        const tSize = (token.size || 1) * CELL;
+        const tcx = token.position.x + tSize / 2;
+        const tcy = token.position.y + tSize / 2;
+        const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+        if (poly.length >= 6) {
+          eCtx.fillStyle = 'rgba(0,0,0,1)';
+          eCtx.beginPath();
+          eCtx.moveTo(poly[0], poly[1]);
+          for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
+          eCtx.closePath();
+          eCtx.fill();
         }
       }
+      eCtx.globalCompositeOperation = 'source-over';
 
       // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
       let dvc = ctx2d.dayVisionCanvasRef.current;
@@ -579,60 +558,44 @@ if (!cfg.fogEnabled) {
         ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current)
         : [];
 
-      {
-        const wasReset = ctx2d.exploredMaskWasResetRef.current;
-        const posAtReset = ctx2d.tokenPositionsAtResetRef.current;
-        let anyGravure = false;
-        eCtx.globalCompositeOperation = 'destination-out';
-        for (const token of playerTokens) {
-          if (!token.visible) continue;
-          if (wasReset) {
-            const savedPos = posAtReset.get(token.id);
-            if (savedPos && savedPos.x === token.position.x && savedPos.y === token.position.y) {
-              continue;
-            }
-            posAtReset.delete(token.id);
-          }
-          anyGravure = true;
-          const tSize = (token.size || 1) * CELL;
-          const tcx = token.position.x + tSize / 2;
-          const tcy = token.position.y + tSize / 2;
-          const vm = token.visionMode || 'none';
-          const vr = token.visionRange ?? 18;
-          const ls = token.lightSource || 'none';
-          const lr = token.lightRange ?? 6;
-          let maxR = 0;
-          if (vm === 'normal') maxR = metersToPixels(3, CELL);
-          else if (vm === 'darkvision') maxR = metersToPixels(vr, CELL);
-          if (ls !== 'none') {
-            let dimM = lr * 2;
-            if (ls === 'torch') dimM = 12;
-            else if (ls === 'lantern') dimM = 18;
-            maxR = Math.max(maxR, metersToPixels(dimM, CELL));
-          }
-          if (maxR <= 0) continue;
-          if (wallSegs.length > 0) {
-            const poly = buildVisibilityPolygon(tcx, tcy, maxR, wallSegs, mapW, mapH);
-            if (poly.length >= 6) {
-              eCtx.fillStyle = 'rgba(0,0,0,1)';
-              eCtx.beginPath();
-              eCtx.moveTo(poly[0], poly[1]);
-              for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
-              eCtx.closePath();
-              eCtx.fill();
-            }
-          } else {
+      eCtx.globalCompositeOperation = 'destination-out';
+      for (const token of playerTokens) {
+        if (!token.visible) continue;
+        const tSize = (token.size || 1) * CELL;
+        const tcx = token.position.x + tSize / 2;
+        const tcy = token.position.y + tSize / 2;
+        const vm = token.visionMode || 'none';
+        const vr = token.visionRange ?? 18;
+        const ls = token.lightSource || 'none';
+        const lr = token.lightRange ?? 6;
+        let maxR = 0;
+        if (vm === 'normal') maxR = metersToPixels(3, CELL);
+        else if (vm === 'darkvision') maxR = metersToPixels(vr, CELL);
+        if (ls !== 'none') {
+          let dimM = lr * 2;
+          if (ls === 'torch') dimM = 12;
+          else if (ls === 'lantern') dimM = 18;
+          maxR = Math.max(maxR, metersToPixels(dimM, CELL));
+        }
+        if (maxR <= 0) continue;
+        if (wallSegs.length > 0) {
+          const poly = buildVisibilityPolygon(tcx, tcy, maxR, wallSegs, mapW, mapH);
+          if (poly.length >= 6) {
             eCtx.fillStyle = 'rgba(0,0,0,1)';
             eCtx.beginPath();
-            eCtx.arc(tcx, tcy, maxR, 0, Math.PI * 2);
+            eCtx.moveTo(poly[0], poly[1]);
+            for (let pi = 2; pi < poly.length; pi += 2) eCtx.lineTo(poly[pi], poly[pi + 1]);
+            eCtx.closePath();
             eCtx.fill();
           }
-        }
-        eCtx.globalCompositeOperation = 'source-over';
-        if (wasReset && anyGravure && posAtReset.size === 0) {
-          ctx2d.exploredMaskWasResetRef.current = false;
+        } else {
+          eCtx.fillStyle = 'rgba(0,0,0,1)';
+          eCtx.beginPath();
+          eCtx.arc(tcx, tcy, maxR, 0, Math.PI * 2);
+          eCtx.fill();
         }
       }
+      eCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
       // Composition finale du masque de vision de nuit
