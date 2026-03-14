@@ -758,6 +758,20 @@ if (!cfg.fogEnabled) {
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
   const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
 
+  // Helper : vérifie si un point monde (wx, wy) est dans une zone révélée du fog
+  const isFogRevealed = (wx: number, wy: number): boolean => {
+    const fogCanvas = ctx2d.fogCanvasRef.current;
+    if (!fogCanvas) return true; // pas de fog = tout visible
+    const fogCtx = fogCanvas.getContext('2d');
+    if (!fogCtx) return true;
+    const fx = Math.round(wx);
+    const fy = Math.round(wy);
+    if (fx < 0 || fy < 0 || fx >= fogCanvas.width || fy >= fogCanvas.height) return false;
+    const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
+    // Dans le fog canvas : pixel transparent = fog actif (caché), opaque = révélé
+    return pixel[3] > 10;
+  };
+
   if (doors.length > 0) {
     const committedWalls = ctx2d.wallsRef.current || [];
 
@@ -786,6 +800,11 @@ if (!cfg.fogEnabled) {
       const cx = p1.x + nx * segLen * tCenter;
       const cy = p1.y + ny * segLen * tCenter;
       const doorSpanLen = segLen * (t2 - t1);
+
+      // Côté joueur/spectateur : n'afficher la porte que si sa zone est révélée
+      if (curRole !== 'gm' && cfg.fogEnabled) {
+        if (!isFogRevealed(cx, cy)) continue;
+      }
 
       ctx.save();
       ctx.lineCap = 'round';
