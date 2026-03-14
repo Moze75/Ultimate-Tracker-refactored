@@ -764,32 +764,34 @@ if (!cfg.fogEnabled) {
   const hoveredDoorId = ctx2d.hoveredDoorRef?.current ?? null;
   const selectedDoorEndpoint = ctx2d.selectedDoorEndpointRef?.current ?? null;
 
-  // Helper : vérifie si un point monde (wx, wy) est visible par le joueur.
+  // Helper : vérifie si au moins un des points (wx[], wy[]) est visible par le joueur.
   // doorId optionnel : exclut ce segment de porte du calcul (la porte ne bloque pas sa propre visibilité).
-  const isDoorPointVisible = (wx: number, wy: number, doorId?: string): boolean => {
+  // Calcule le polygon de visibilité une seule fois par viewer pour tous les points.
+  const isDoorAnyPointVisible = (points: { x: number; y: number }[], doorId?: string): boolean => {
     if (!cfg.fogEnabled) return true;
 
-    // 1. Fog révélé manuellement à cet endroit → toujours visible
+    // 1. Vision de jour sans murs : tout est visible si le joueur a un token
+    if (isDay && currentWalls.length === 0 && myVisionTokens.length > 0) return true;
+
+    // 2. Fog révélé manuellement pour l'un des points → visible
     const fogCanvas = ctx2d.fogCanvasRef.current;
     if (fogCanvas) {
       const fogCtx = fogCanvas.getContext('2d');
       if (fogCtx) {
-        const fx = Math.round(wx);
-        const fy = Math.round(wy);
-        if (fx >= 0 && fy >= 0 && fx < fogCanvas.width && fy < fogCanvas.height) {
-          const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
-          // fogCanvas : transparent (alpha < 128) = zone révélée manuellement
-          if (pixel[3] < 128) return true;
+        for (const pt of points) {
+          const fx = Math.round(pt.x);
+          const fy = Math.round(pt.y);
+          if (fx >= 0 && fy >= 0 && fx < fogCanvas.width && fy < fogCanvas.height) {
+            const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
+            if (pixel[3] < 128) return true;
+          }
         }
       }
     }
 
-    // 2. Vision de jour sans murs : tout est visible si le joueur a un token
-    if (isDay && currentWalls.length === 0 && myVisionTokens.length > 0) return true;
-
-    // 3. Sinon : tester si le point est dans le polygon de visibilité d'un token
+    // 3. Sinon : tester si un point est dans le polygon de visibilité d'un token
     if (myVisionTokens.length === 0) return false;
-    if (currentWalls.length === 0) return myVisionTokens.length > 0;
+    if (currentWalls.length === 0) return true;
 
     // Pour tester la visibilité d'une porte, on la traite comme ouverte afin que
     // son propre segment ne bloque pas le polygon de vision depuis ce côté.
@@ -802,12 +804,17 @@ if (!cfg.fogEnabled) {
       const radii = getVisionRadii(viewer, CELL);
       const maxR = Math.max(radii.brightR, radii.dimR);
       if (maxR <= 0) continue;
-      const dx = wx - radii.cx;
-      const dy = wy - radii.cy;
-      if (dx * dx + dy * dy > maxR * maxR) continue;
+      // Vérifier si au moins un point est dans le rayon max
+      const anyInRange = points.some(pt => {
+        const dx = pt.x - radii.cx;
+        const dy = pt.y - radii.cy;
+        return dx * dx + dy * dy <= maxR * maxR;
+      });
+      if (!anyInRange) continue;
       if (doorWallSegs.length === 0) return true;
       const poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, doorWallSegs, mapW, mapH);
-      if (poly.length >= 6 && pointInPolygon(wx, wy, poly)) return true;
+      if (poly.length < 6) continue;
+      if (points.some(pt => pointInPolygon(pt.x, pt.y, poly))) return true;
     }
     return false;
   };
@@ -844,7 +851,17 @@ if (!cfg.fogEnabled) {
       // Côté joueur/spectateur : n'afficher la porte que si visible OU mémorisée (vue précédemment)
       let isMemorized = false;
       if (curRole !== 'gm' && cfg.fogEnabled) {
-        const currentlyVisible = isDoorPointVisible(cx, cy, door.id);
+        const perpX = -ny;
+        const perpY = nx;
+        const OFFSET = 4;
+        const testPoints = [
+          { x: cx, y: cy },
+          { x: cx + perpX * OFFSET, y: cy + perpY * OFFSET },
+          { x: cx - perpX * OFFSET, y: cy - perpY * OFFSET },
+          { x: ax, y: ay },
+          { x: bx, y: by },
+        ];
+        const currentlyVisible = isDoorAnyPointVisible(testPoints, door.id);
         if (currentlyVisible) {
           // Mémoriser cette porte si pas déjà mémorisée
           if (!ctx2d.seenDoorsRef.current.has(door.id)) {
