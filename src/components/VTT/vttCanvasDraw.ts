@@ -524,23 +524,40 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ : re-noircit uniquement les zones explorées (mémoire)
-      // qui ont été masquées par le MJ (erase). La vision directe du token prime.
-      // eraseOnMemory = eraseOnly intersecté avec invCanvas (zones mémoire uniquement)
+      // Masquage actif MJ : re-noircit les zones mémoire masquées par le MJ
+      // SAUF là où un token voit directement (vision prime toujours).
+      // visionHoles = zones où les tokens voient (transparent dans dvc = les trous)
+      // eraseFiltered = eraseOnly ∩ mémoire ∩ hors-vision-directe
       // -------------------
       if (cfg.fogEnabled) {
         const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
         if (eraseOnly) {
-          const eraseOnMemory = document.createElement('canvas');
-          eraseOnMemory.width = mapW;
-          eraseOnMemory.height = mapH;
-          const emCtx = eraseOnMemory.getContext('2d')!;
-          emCtx.drawImage(eraseOnly, 0, 0);
-          emCtx.globalCompositeOperation = 'destination-in';
-          emCtx.drawImage(invCanvas, 0, 0);
-          emCtx.globalCompositeOperation = 'source-over';
+          // Canvas des trous de vision (zones vues directement = transparentes dans dvc)
+          const visionHoles = document.createElement('canvas');
+          visionHoles.width = mapW;
+          visionHoles.height = mapH;
+          const vhCtx = visionHoles.getContext('2d')!;
+          vhCtx.fillStyle = 'rgba(0,0,0,1)';
+          vhCtx.fillRect(0, 0, mapW, mapH);
+          vhCtx.globalCompositeOperation = 'destination-out';
+          vhCtx.drawImage(dvc, 0, 0);
+          vhCtx.globalCompositeOperation = 'source-over';
+
+          const eraseFiltered = document.createElement('canvas');
+          eraseFiltered.width = mapW;
+          eraseFiltered.height = mapH;
+          const efCtx = eraseFiltered.getContext('2d')!;
+          efCtx.drawImage(eraseOnly, 0, 0);
+          // Garder seulement les zones mémoire (explorées)
+          efCtx.globalCompositeOperation = 'destination-in';
+          efCtx.drawImage(invCanvas, 0, 0);
+          // Supprimer les zones vues directement par un token
+          efCtx.globalCompositeOperation = 'destination-out';
+          efCtx.drawImage(visionHoles, 0, 0);
+          efCtx.globalCompositeOperation = 'source-over';
+
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseOnMemory, 0, 0);
+          cCtx.drawImage(eraseFiltered, 0, 0);
         }
       }
 
@@ -679,22 +696,37 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ (nuit) : re-noircit uniquement les zones mémoire masquées par le MJ
-      // La vision directe du token prime sur le erase.
+      // Masquage actif MJ (nuit) : re-noircit les zones mémoire masquées par le MJ
+      // SAUF là où un token voit directement (vision prime toujours).
+      // visionHoles = zones vues directement (transparentes dans nvc → opaques ici)
+      // eraseFiltered = eraseOnly ∩ mémoire ∩ hors-vision-directe
       // -------------------
       if (cfg.fogEnabled) {
         const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
         if (eraseOnly) {
-          const eraseOnMemory = document.createElement('canvas');
-          eraseOnMemory.width = mapW;
-          eraseOnMemory.height = mapH;
-          const emCtx = eraseOnMemory.getContext('2d')!;
-          emCtx.drawImage(eraseOnly, 0, 0);
-          emCtx.globalCompositeOperation = 'destination-in';
-          emCtx.drawImage(invCanvas, 0, 0);
-          emCtx.globalCompositeOperation = 'source-over';
+          const visionHoles = document.createElement('canvas');
+          visionHoles.width = mapW;
+          visionHoles.height = mapH;
+          const vhCtx = visionHoles.getContext('2d')!;
+          vhCtx.fillStyle = 'rgba(0,0,0,1)';
+          vhCtx.fillRect(0, 0, mapW, mapH);
+          vhCtx.globalCompositeOperation = 'destination-out';
+          vhCtx.drawImage(nvc, 0, 0);
+          vhCtx.globalCompositeOperation = 'source-over';
+
+          const eraseFiltered = document.createElement('canvas');
+          eraseFiltered.width = mapW;
+          eraseFiltered.height = mapH;
+          const efCtx = eraseFiltered.getContext('2d')!;
+          efCtx.drawImage(eraseOnly, 0, 0);
+          efCtx.globalCompositeOperation = 'destination-in';
+          efCtx.drawImage(invCanvas, 0, 0);
+          efCtx.globalCompositeOperation = 'destination-out';
+          efCtx.drawImage(visionHoles, 0, 0);
+          efCtx.globalCompositeOperation = 'source-over';
+
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseOnMemory, 0, 0);
+          cCtx.drawImage(eraseFiltered, 0, 0);
         }
       }
 
