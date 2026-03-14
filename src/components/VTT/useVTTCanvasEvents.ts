@@ -799,24 +799,24 @@ export function useVTTCanvasEvents({
     canvas.addEventListener('dblclick', onDblClick);
     canvas.addEventListener('contextmenu', onContextMenu);
     canvas.addEventListener('mousemove', onMouseMove);
-    canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mouseleave', onMouseLeave);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('touchstart',  onTouchStart,  { passive: false });
     canvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
     canvas.addEventListener('touchend',    onTouchEnd,    { passive: true  });
+    window.addEventListener('mouseup', onMouseUp);
 
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('dblclick', onDblClick);
       canvas.removeEventListener('contextmenu', onContextMenu);
       canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseup', onMouseUp);
       canvas.removeEventListener('mouseleave', onMouseLeave);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('touchstart',  onTouchStart);
       canvas.removeEventListener('touchmove',   onTouchMove);
       canvas.removeEventListener('touchend',    onTouchEnd);
+      window.removeEventListener('mouseup', onMouseUp);
     };
   }, []);
 
