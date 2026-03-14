@@ -49,6 +49,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   initialViewport = null,
   onViewportChange,
   spectatorMode = 'none',
+  onSeenDoorsUpdate,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -192,6 +193,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   showWallsRef.current = showWalls;
   const doorsRef = useRef<VTTDoor[]>(doors || []);
   doorsRef.current = doors || [];
+  const seenDoorsRef = useRef<Set<string>>(new Set(fogState.seenDoors || []));
+  const onSeenDoorsUpdateRef = useRef(onSeenDoorsUpdate);
+  onSeenDoorsUpdateRef.current = onSeenDoorsUpdate;
   const onDoorAddedRef = useRef(onDoorAdded);
   onDoorAddedRef.current = onDoorAdded;
   const onDoorToggledRef = useRef(onDoorToggled);
@@ -242,6 +246,17 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   // drawRef allows image load callbacks to always call latest draw
   const drawRef = useRef<() => void>(() => {});
+
+  // Sync seenDoorsRef when fogState.seenDoors is updated from server or scene switch
+  useEffect(() => {
+    const incoming = fogState.seenDoors || [];
+    if (incoming.length === 0) {
+      // Empty seenDoors from server = fog was reset, clear local memory
+      seenDoorsRef.current.clear();
+    } else {
+      incoming.forEach(id => seenDoorsRef.current.add(id));
+    }
+  }, [fogState.seenDoors]);
 
   // -------------------
   // Gestion du snapshot local du masque exploré
@@ -485,6 +500,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     sceneIdRef.current = sceneId ?? null;
     prevExploredStrokesLenRef.current = -1;
 
+    // Reset seenDoors for new scene, then load persisted ones
+    seenDoorsRef.current = new Set(fogStateRef.current.seenDoors || []);
+
     drawRef.current();
 
     restoreExploredMaskSnapshot();
@@ -665,6 +683,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       exploredCanvasSizeRef,
       exploredCanvasRestoringRef,
       drawRef,
+      seenDoorsRef,
+      onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
+        ? (newIds: string[]) => onSeenDoorsUpdateRef.current?.(newIds)
+        : undefined,
     });
   }, []);
 

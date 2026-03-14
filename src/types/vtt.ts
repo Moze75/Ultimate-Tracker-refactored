@@ -82,6 +82,11 @@ export interface VTTFogState {
   // Gestion de la mémoire explorée persistée par scène
   // -------------------
   exploredStrokes?: VTTFogStroke[];
+
+  // -------------------
+  // IDs des portes déjà vues par les joueurs (mémoire persistée)
+  // -------------------
+  seenDoors?: string[];
 }
 
 export interface VTTWall {

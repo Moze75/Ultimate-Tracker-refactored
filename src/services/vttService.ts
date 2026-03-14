@@ -47,6 +47,7 @@ function normalizeFogState(fog?: VTTFogState | null): VTTFogState {
     revealedCells: [...(fog?.revealedCells || [])],
     strokes: [...(fog?.strokes || [])],
     exploredStrokes: [...(fog?.exploredStrokes || [])],
+    seenDoors: fog?.seenDoors != null ? [...fog.seenDoors] : undefined,
   };
 }
 
@@ -416,6 +417,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           revealedCells: [...(this.localState.fogState.revealedCells || [])],
           strokes,
           exploredStrokes,
+          seenDoors: this.localState.fogState.seenDoors,
         };
 
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
@@ -429,7 +431,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
       }
 
       case 'RESET_FOG': {
-        const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
+        const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [], seenDoors: [] };
         serverEvent = { type: 'FOG_UPDATED', fogState: newFog };
         this.localState.fogState = newFog;
         this._saveFogToScene(newFog);

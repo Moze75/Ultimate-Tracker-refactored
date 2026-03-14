@@ -784,6 +784,7 @@ const handleRevealFog = useCallback((strokeOrBatch: VTTFogStroke | VTTFogStroke[
     revealedCells: [...(fogStateRef.current.revealedCells || [])],
     strokes: newStrokes,
     exploredStrokes: newExplored,
+    seenDoors: fogStateRef.current.seenDoors,
   };
 
   // -------------------
@@ -815,6 +816,34 @@ const handleRevealFog = useCallback((strokeOrBatch: VTTFogStroke | VTTFogStroke[
     }, 2000);
   }
 }, [saveCurrentSceneState, role]);
+
+const seenDoorsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const handleSeenDoorsUpdate = useCallback((seenIds: string[]) => {
+  const currentSeenDoors = fogStateRef.current.seenDoors || [];
+  const newIds = seenIds.filter(id => !currentSeenDoors.includes(id));
+  if (newIds.length === 0) return;
+
+  const nextFogState: VTTFogState = {
+    ...fogStateRef.current,
+    seenDoors: [...currentSeenDoors, ...newIds],
+  };
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  if (seenDoorsSaveTimerRef.current) clearTimeout(seenDoorsSaveTimerRef.current);
+  seenDoorsSaveTimerRef.current = setTimeout(() => {
+    seenDoorsSaveTimerRef.current = null;
+    const sceneId = activeSceneIdRef.current;
+    if (!sceneId) return;
+    supabase.rpc('update_scene_fog_state', {
+      p_scene_id: sceneId,
+      p_fog_state: fogStateRef.current,
+    }).then(({ error }) => {
+      if (error) console.error('[VTT] handleSeenDoorsUpdate save error:', error);
+    });
+  }, 2000);
+}, []);
 
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
@@ -1842,6 +1871,7 @@ onSelectTokens={ids => {
      forceViewport={role === 'player' && playerForcedViewport ? playerForcedViewport : undefined}
             initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
+            onSeenDoorsUpdate={role === 'player' ? handleSeenDoorsUpdate : undefined}
           />
 
 {props.map(prop => (

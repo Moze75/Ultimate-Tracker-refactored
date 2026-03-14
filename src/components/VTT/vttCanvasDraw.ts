@@ -60,6 +60,8 @@ export interface VTTDrawContext {
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectedDoorRef: React.MutableRefObject<string | null>;
+  seenDoorsRef: React.MutableRefObject<Set<string>>;
+  onSeenDoorsUpdate?: (newSeenIds: string[]) => void;
 }
 
 // -------------------
@@ -829,27 +831,44 @@ if (!cfg.fogEnabled) {
       const cy = p1.y + ny * segLen * tCenter;
       const doorSpanLen = segLen * (t2 - t1);
 
-      // Côté joueur/spectateur : n'afficher la porte que si sa zone est visible
-      // (fog levé manuellement OU dans le rayon de vision du token joueur)
+      // Côté joueur/spectateur : n'afficher la porte que si visible OU mémorisée (vue précédemment)
+      let isMemorized = false;
       if (curRole !== 'gm' && cfg.fogEnabled) {
-        if (!isDoorPointVisible(cx, cy)) continue;
+        const currentlyVisible = isDoorPointVisible(cx, cy);
+        if (currentlyVisible) {
+          // Mémoriser cette porte si pas déjà mémorisée
+          if (!ctx2d.seenDoorsRef.current.has(door.id)) {
+            ctx2d.seenDoorsRef.current.add(door.id);
+            ctx2d.onSeenDoorsUpdate?.([...ctx2d.seenDoorsRef.current]);
+          }
+        } else {
+          // Hors vision : afficher seulement si mémorisée (vue avant)
+          if (ctx2d.seenDoorsRef.current.has(door.id)) {
+            isMemorized = true;
+          } else {
+            continue;
+          }
+        }
       }
 
       ctx.save();
       ctx.lineCap = 'round';
+
+      // Portes mémorisées (hors vision) : affichage atténué en gris
+      if (isMemorized) ctx.globalAlpha = 0.35;
 
       if (door.open) {
         const panelLen = doorSpanLen;
         const px = -ny * panelLen;
         const py = nx * panelLen;
         ctx.lineWidth = 3 / vp.scale;
-        ctx.strokeStyle = 'rgba(34,197,94,0.9)';
+        ctx.strokeStyle = isMemorized ? 'rgba(150,180,150,0.9)' : 'rgba(34,197,94,0.9)';
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(ax + px, ay + py);
         ctx.stroke();
         ctx.setLineDash([4 / vp.scale, 4 / vp.scale]);
-        ctx.strokeStyle = 'rgba(34,197,94,0.35)';
+        ctx.strokeStyle = isMemorized ? 'rgba(150,180,150,0.35)' : 'rgba(34,197,94,0.35)';
         ctx.lineWidth = 2 / vp.scale;
         ctx.beginPath();
         ctx.moveTo(ax, ay);
@@ -858,11 +877,13 @@ if (!cfg.fogEnabled) {
         ctx.setLineDash([]);
         ctx.beginPath();
         ctx.arc(ax, ay, 4 / vp.scale, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(34,197,94,0.9)';
+        ctx.fillStyle = isMemorized ? 'rgba(150,180,150,0.9)' : 'rgba(34,197,94,0.9)';
         ctx.fill();
       } else {
         ctx.lineWidth = 5 / vp.scale;
-        ctx.strokeStyle = isDoorMode ? 'rgba(251,191,36,0.95)' : 'rgba(251,191,36,0.8)';
+        ctx.strokeStyle = isMemorized
+          ? 'rgba(180,170,130,0.8)'
+          : (isDoorMode ? 'rgba(251,191,36,0.95)' : 'rgba(251,191,36,0.8)');
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
@@ -877,15 +898,19 @@ if (!cfg.fogEnabled) {
         ctx.arc(ax, ay, 3 / vp.scale, 0, Math.PI * 2);
         ctx.beginPath();
         ctx.arc(bx, by, 3 / vp.scale, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(251,191,36,0.9)';
+        ctx.fillStyle = isMemorized ? 'rgba(180,170,130,0.9)' : 'rgba(251,191,36,0.9)';
         ctx.fill();
       }
 
       // Icone porte cliquable au centre du segment
       const iconSize = Math.max(8, Math.min(14, doorSpanLen * 0.12)) / vp.scale;
       const isOpen = door.open;
-      const bgColor = isOpen ? 'rgba(34,197,94,0.92)' : 'rgba(251,191,36,0.92)';
-      const bgGlow = isOpen ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)';
+      const bgColor = isMemorized
+        ? (isOpen ? 'rgba(120,150,120,0.85)' : 'rgba(160,150,110,0.85)')
+        : (isOpen ? 'rgba(34,197,94,0.92)' : 'rgba(251,191,36,0.92)');
+      const bgGlow = isMemorized
+        ? 'rgba(120,120,100,0.15)'
+        : (isOpen ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)');
       const strokeColor = 'rgba(255,255,255,0.9)';
 
       // Halo de fond
@@ -932,7 +957,7 @@ if (!cfg.fogEnabled) {
         ctx.fill();
       }
 
-      if (isDoorMode || selectedDoorId === door.id) {
+      if (!isMemorized && (isDoorMode || selectedDoorId === door.id)) {
         ctx.lineWidth = (selectedDoorId === door.id ? 2 : 1) / vp.scale;
         ctx.strokeStyle = selectedDoorId === door.id
           ? 'rgba(255,255,255,0.95)'
@@ -943,7 +968,7 @@ if (!cfg.fogEnabled) {
       }
 
       // Indicateur de sélection : anneau de sélection blanc pulsé
-      if (selectedDoorId === door.id) {
+      if (!isMemorized && selectedDoorId === door.id) {
         ctx.lineWidth = 2.5 / vp.scale;
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);

@@ -60,4 +60,5 @@ export interface VTTCanvasProps {
   initialViewport?: { x: number; y: number; scale: number } | null;
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
   spectatorMode?: 'none' | 'player-vision';
+  onSeenDoorsUpdate?: (seenIds: string[]) => void;
 }
