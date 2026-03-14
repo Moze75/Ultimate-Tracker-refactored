@@ -1056,15 +1056,15 @@ if (!cfg.fogEnabled) {
 
       ctx.lineWidth = 5 / vp.scale;
       ctx.strokeStyle = isWindowMode || isHoveredW
-        ? 'rgba(56,189,248,0.95)'
-        : 'rgba(56,189,248,0.75)';
+        ? 'rgba(200,200,200,0.95)'
+        : 'rgba(180,180,180,0.8)';
       ctx.beginPath();
       ctx.moveTo(ax, ay);
       ctx.lineTo(bx, by);
       ctx.stroke();
 
       ctx.lineWidth = 2 / vp.scale;
-      ctx.strokeStyle = 'rgba(0,30,60,0.4)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
       ctx.beginPath();
       ctx.moveTo(ax, ay);
       ctx.lineTo(bx, by);
@@ -1073,7 +1073,7 @@ if (!cfg.fogEnabled) {
       ctx.beginPath();
       ctx.arc(ax, ay, 3 / vp.scale, 0, Math.PI * 2);
       ctx.arc(bx, by, 3 / vp.scale, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56,189,248,0.9)';
+      ctx.fillStyle = 'rgba(180,180,180,0.9)';
       ctx.fill();
 
       // Icone fenêtre au centre
@@ -1083,14 +1083,14 @@ if (!cfg.fogEnabled) {
       if (isHoveredW) {
         ctx.beginPath();
         ctx.arc(cx, cy, iconSizeW * 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(56,189,248,0.12)';
+        ctx.fillStyle = 'rgba(180,180,180,0.12)';
         ctx.fill();
       }
 
       const lwW = (isHoveredW ? 1.6 : 1.2) / vp.scale;
       ctx.lineWidth = lwW;
-      ctx.strokeStyle = isHoveredW ? 'rgba(56,189,248,1)' : 'rgba(56,189,248,0.9)';
-      ctx.fillStyle = isHoveredW ? 'rgba(56,189,248,1)' : 'rgba(56,189,248,0.9)';
+      ctx.strokeStyle = isHoveredW ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = isHoveredW ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.95)';
       const hwW = iconSizeW * 0.52;
       const hhW = iconSizeW * 0.68;
       ctx.strokeRect(cx - hwW, cy - hhW, hwW * 2, hhW * 2);
@@ -1106,7 +1106,7 @@ if (!cfg.fogEnabled) {
 
       if (selectedWindowId === win.id) {
         ctx.lineWidth = 2.5 / vp.scale;
-        ctx.strokeStyle = 'rgba(56,189,248,0.9)';
+        ctx.strokeStyle = 'rgba(180,180,180,0.9)';
         ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
         ctx.beginPath();
         ctx.arc(cx, cy, iconSizeW * 2, 0, Math.PI * 2);
@@ -1120,7 +1120,7 @@ if (!cfg.fogEnabled) {
         const hr1 = (t1SelW ? 9 : 6) / vp.scale;
         ctx.beginPath();
         ctx.arc(ax, ay, hr1, 0, Math.PI * 2);
-        ctx.fillStyle = t1SelW ? 'rgba(251,191,36,1)' : 'rgba(56,189,248,0.9)';
+        ctx.fillStyle = t1SelW ? 'rgba(251,191,36,1)' : 'rgba(180,180,180,0.9)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.7)';
         ctx.lineWidth = (t1SelW ? 2.5 : 1.5) / vp.scale;
@@ -1128,7 +1128,7 @@ if (!cfg.fogEnabled) {
         const hr2 = (t2SelW ? 9 : 6) / vp.scale;
         ctx.beginPath();
         ctx.arc(bx, by, hr2, 0, Math.PI * 2);
-        ctx.fillStyle = t2SelW ? 'rgba(251,191,36,1)' : 'rgba(56,189,248,0.9)';
+        ctx.fillStyle = t2SelW ? 'rgba(251,191,36,1)' : 'rgba(180,180,180,0.9)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.7)';
         ctx.lineWidth = (t2SelW ? 2.5 : 1.5) / vp.scale;
@@ -1159,7 +1159,7 @@ if (!cfg.fogEnabled) {
           ctx.save();
           ctx.beginPath();
           ctx.arc(fpx, fpy, 6 / vp.scale, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(56,189,248,1)';
+          ctx.fillStyle = 'rgba(200,200,200,1)';
           ctx.fill();
           ctx.strokeStyle = 'rgba(255,255,255,0.9)';
           ctx.lineWidth = 2 / vp.scale;
@@ -1179,7 +1179,7 @@ if (!cfg.fogEnabled) {
               const pry2 = p1.y + ny * segLen * previewT2;
               ctx.lineWidth = 4 / vp.scale;
               ctx.lineCap = 'round';
-              ctx.strokeStyle = 'rgba(56,189,248,0.7)';
+              ctx.strokeStyle = 'rgba(180,180,180,0.7)';
               ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
               ctx.beginPath();
               ctx.moveTo(prx, pry);
