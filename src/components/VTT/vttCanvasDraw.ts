@@ -758,18 +758,23 @@ if (!cfg.fogEnabled) {
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
   const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
 
-  // Helper : vérifie si un point monde (wx, wy) est dans une zone révélée du fog
-  const isFogRevealed = (wx: number, wy: number): boolean => {
-    const fogCanvas = ctx2d.fogCanvasRef.current;
-    if (!fogCanvas) return true; // pas de fog = tout visible
-    const fogCtx = fogCanvas.getContext('2d');
-    if (!fogCtx) return true;
+  // Helper : vérifie si un point monde (wx, wy) est visible (fog levé OU dans rayon de vision)
+  // On échantillonne visionCanvasRef (fog + trous de vision punchés).
+  // Sémantique visionCanvas : opaque = caché par le fog, transparent = visible.
+  const isDoorPointVisible = (wx: number, wy: number): boolean => {
+    // Pas de fog : tout visible
+    if (!cfg.fogEnabled) return true;
+    // Essayer d'abord visionCanvasRef (fog + vision), sinon fogCanvasRef seul
+    const sampleCanvas = ctx2d.visionCanvasRef.current ?? ctx2d.fogCanvasRef.current;
+    if (!sampleCanvas) return true;
+    const sCtx = sampleCanvas.getContext('2d');
+    if (!sCtx) return true;
     const fx = Math.round(wx);
     const fy = Math.round(wy);
-    if (fx < 0 || fy < 0 || fx >= fogCanvas.width || fy >= fogCanvas.height) return false;
-    const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
-    // Dans le fog canvas : pixel transparent = fog actif (caché), opaque = révélé
-    return pixel[3] > 10;
+    if (fx < 0 || fy < 0 || fx >= sampleCanvas.width || fy >= sampleCanvas.height) return false;
+    const pixel = sCtx.getImageData(fx, fy, 1, 1).data;
+    // opaque (alpha élevé) = fog actif = caché ; transparent (alpha bas) = visible
+    return pixel[3] < 200;
   };
 
   if (doors.length > 0) {
@@ -801,9 +806,10 @@ if (!cfg.fogEnabled) {
       const cy = p1.y + ny * segLen * tCenter;
       const doorSpanLen = segLen * (t2 - t1);
 
-      // Côté joueur/spectateur : n'afficher la porte que si sa zone est révélée
+      // Côté joueur/spectateur : n'afficher la porte que si sa zone est visible
+      // (fog levé manuellement OU dans le rayon de vision du token joueur)
       if (curRole !== 'gm' && cfg.fogEnabled) {
-        if (!isFogRevealed(cx, cy)) continue;
+        if (!isDoorPointVisible(cx, cy)) continue;
       }
 
       ctx.save();
