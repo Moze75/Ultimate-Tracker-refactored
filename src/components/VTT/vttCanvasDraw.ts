@@ -589,13 +589,10 @@ if (!cfg.fogEnabled) {
           eraseFiltered.height = mapH;
           const efCtx = eraseFiltered.getContext('2d')!;
           efCtx.drawImage(eraseOnly, 0, 0);
-          // Garder seulement les zones mémoire (explorées)
-          efCtx.globalCompositeOperation = 'destination-in';
-          efCtx.drawImage(invCanvas, 0, 0);
-          // Supprimer les zones vues directement par un token
+          // Supprimer les zones vues directement par un token (vision prime toujours)
           efCtx.globalCompositeOperation = 'destination-out';
           efCtx.drawImage(visionHoles, 0, 0);
-          // Supprimer les zones erase déjà révélées par la vision (persistant)
+          // Supprimer les zones erase déjà révélées une fois (persistant)
           const erc = ctx2d.eraseRevealedCanvasRef.current;
           if (erc && erc.width === mapW && erc.height === mapH) {
             efCtx.drawImage(erc, 0, 0);
@@ -765,11 +762,9 @@ if (!cfg.fogEnabled) {
           eraseFiltered.height = mapH;
           const efCtx = eraseFiltered.getContext('2d')!;
           efCtx.drawImage(eraseOnly, 0, 0);
-          efCtx.globalCompositeOperation = 'destination-in';
-          efCtx.drawImage(invCanvas, 0, 0);
           efCtx.globalCompositeOperation = 'destination-out';
           efCtx.drawImage(visionHoles, 0, 0);
-          // Supprimer les zones erase déjà révélées par la vision (persistant)
+          // Supprimer les zones erase déjà révélées une fois (persistant)
           const ercNight = ctx2d.eraseRevealedCanvasRef.current;
           if (ercNight && ercNight.width === mapW && ercNight.height === mapH) {
             efCtx.drawImage(ercNight, 0, 0);
