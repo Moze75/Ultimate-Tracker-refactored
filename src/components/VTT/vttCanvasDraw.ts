@@ -362,12 +362,6 @@ const fogPunchTokens =
 
       if (fogPunchTokens.length > 0) {
         punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
-        const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
-        if (eraseOnly) {
-          vCtx.globalCompositeOperation = 'source-over';
-          vCtx.drawImage(eraseOnly, 0, 0);
-          vCtx.globalCompositeOperation = 'source-over';
-        }
       }
 
 // -------------------
@@ -511,7 +505,7 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Composition finale du masque de vision de jour
-      // cvc = dvc (trous de vision) + atténuation mémoire + masquage actif MJ
+      // cvc = dvc (trous de vision) + atténuation mémoire + masquage actif MJ sur mémoire seulement
       // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
@@ -530,15 +524,23 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ : referme uniquement les zones où le MJ a peint du erase
-      // Transparent partout sauf là où des strokes erase existent → source-over ferme ces zones
-      // La vision traversait déjà le fog de base, ce qui est correct.
+      // Masquage actif MJ : re-noircit uniquement les zones explorées (mémoire)
+      // qui ont été masquées par le MJ (erase). La vision directe du token prime.
+      // eraseOnMemory = eraseOnly intersecté avec invCanvas (zones mémoire uniquement)
       // -------------------
       if (cfg.fogEnabled) {
         const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
         if (eraseOnly) {
+          const eraseOnMemory = document.createElement('canvas');
+          eraseOnMemory.width = mapW;
+          eraseOnMemory.height = mapH;
+          const emCtx = eraseOnMemory.getContext('2d')!;
+          emCtx.drawImage(eraseOnly, 0, 0);
+          emCtx.globalCompositeOperation = 'destination-in';
+          emCtx.drawImage(invCanvas, 0, 0);
+          emCtx.globalCompositeOperation = 'source-over';
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseOnly, 0, 0);
+          cCtx.drawImage(eraseOnMemory, 0, 0);
         }
       }
 
@@ -677,13 +679,22 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ (nuit) : referme uniquement les zones erase
+      // Masquage actif MJ (nuit) : re-noircit uniquement les zones mémoire masquées par le MJ
+      // La vision directe du token prime sur le erase.
       // -------------------
       if (cfg.fogEnabled) {
         const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
         if (eraseOnly) {
+          const eraseOnMemory = document.createElement('canvas');
+          eraseOnMemory.width = mapW;
+          eraseOnMemory.height = mapH;
+          const emCtx = eraseOnMemory.getContext('2d')!;
+          emCtx.drawImage(eraseOnly, 0, 0);
+          emCtx.globalCompositeOperation = 'destination-in';
+          emCtx.drawImage(invCanvas, 0, 0);
+          emCtx.globalCompositeOperation = 'source-over';
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseOnly, 0, 0);
+          cCtx.drawImage(eraseOnMemory, 0, 0);
         }
       }
 
