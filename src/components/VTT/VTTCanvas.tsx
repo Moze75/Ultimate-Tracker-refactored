@@ -250,6 +250,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // pendant qu'une restauration asynchrone est en cours
   // ------------------- 
   const exploredCanvasRestoringRef = useRef(false);
+  const exploredMaskWasResetRef = useRef(false);
   // -------------------
   // Mémorise la longueur précédente de exploredStrokes
   // pour détecter uniquement un reset fog intentionnel (transition N→0)
@@ -438,7 +439,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // On capture le canvas MAINTENANT, avant tout reset ou redraw
     // On travaille sur une copie gelée pour éviter qu'un draw concurrent l'écrase
     // -------------------
-    if (previousSceneId && previousSceneId !== sceneId) {
+    if (previousSceneId && previousSceneId !== sceneId && !exploredMaskWasResetRef.current) {
       const canvasToSave = exploredCanvasRef.current;
       if (canvasToSave && canvasToSave.width > 0 && canvasToSave.height > 0) {
         // -------------------
@@ -517,6 +518,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     sceneIdRef.current = sceneId ?? null;
     prevExploredStrokesLenRef.current = -1;
     prevStrokesLenRef.current = 0;
+    exploredMaskWasResetRef.current = false;
 
     // Reset seenDoors for new scene, then load persisted ones
     seenDoorsRef.current = new Set(fogStateRef.current.seenDoors || []);
@@ -537,7 +539,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         cancelAnimationFrame(fogPaintRafRef.current);
         fogPaintRafRef.current = null;
       }
-      saveExploredMaskSnapshot(sceneIdRef.current);
+      if (!exploredMaskWasResetRef.current) {
+        saveExploredMaskSnapshot(sceneIdRef.current);
+      }
     };
   }, [saveExploredMaskSnapshot]);
 
@@ -824,6 +828,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       if (sceneId) {
         localStorage.removeItem(getExploredMaskStorageKey(sceneId));
       }
+      // Marque que le fog a été resetté pour empêcher une re-sauvegarde au démontage
+      exploredMaskWasResetRef.current = true;
     }
 
     // -------------------
