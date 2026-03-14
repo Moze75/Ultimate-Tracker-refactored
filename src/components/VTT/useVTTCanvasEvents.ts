@@ -49,7 +49,14 @@ export interface VTTCanvasRefs {
   fogCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   fogBrushRef?: React.MutableRefObject<number>;
   drawRef: React.MutableRefObject<() => void>;
-  paintFogAt: (wx: number, wy: number) => void;
+  // -------------------
+  // paintFogAt : peinture fog, accepte un stroke rectangle optionnel
+  // -------------------
+  paintFogAt: (wx: number, wy: number, rectStroke?: any) => void;
+  // -------------------
+  // flushFogBatch : envoie tous les strokes accumulés au mouseUp
+  // -------------------
+  flushFogBatch: () => void;
   getCanvasXY: (clientX: number, clientY: number) => { x: number; y: number };
   screenToWorld: (sx: number, sy: number) => { x: number; y: number };
   getTokenAt: (wx: number, wy: number) => VTTToken | null;
