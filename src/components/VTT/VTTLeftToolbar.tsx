@@ -7,7 +7,7 @@ import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 // Outils actifs du VTT
 // fog-rect-reveal / fog-rect-erase : sélection rectangulaire pour reveal/masquage
 // -------------------
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'measure';
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'measure';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
@@ -29,6 +29,8 @@ interface VTTLeftToolbarProps {
   onClearWalls?: () => void;
   showWalls: boolean;
   onToggleShowWalls: () => void;
+  doorCount?: number;
+  onClearDoors?: () => void;
   roomId?: string;
   broadcastFrameEnabled: boolean;
   onToggleBroadcastFrame: () => void;
@@ -63,6 +65,8 @@ export function VTTLeftToolbar({
   onClearWalls,
   showWalls,
   onToggleShowWalls,
+  doorCount = 0,
+  onClearDoors,
   roomId,
   broadcastFrameEnabled,
   onToggleBroadcastFrame,
@@ -152,7 +156,8 @@ export function VTTLeftToolbar({
   const isGridTool = activeTool === 'grid-calibrate';
   const isWallTool = activeTool === 'wall-draw';
   const isWallSelectTool = activeTool === 'wall-select';
-  const isAnyWallTool = isWallTool || isWallSelectTool;
+  const isDoorTool = activeTool === 'door-place';
+  const isAnyWallTool = isWallTool || isWallSelectTool || isDoorTool;
   const isMeasureTool = activeTool === 'measure';
 
   return (
@@ -608,7 +613,7 @@ export function VTTLeftToolbar({
 
           <div className="space-y-3">
 
-            {/* Sous-outils : Tracer / Éditer */}
+            {/* Sous-outils : Tracer / Éditer / Porte */}
             <div className="flex gap-1">
               <button
                 onClick={() => onToolChange('wall-draw')}
@@ -632,7 +637,18 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
-            {/* Instructions contextualles selon le sous-outil actif */}
+            <button
+              onClick={() => onToolChange('door-place')}
+              className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-colors border ${
+                isDoorTool
+                  ? 'bg-amber-700/30 border-amber-600/60 text-amber-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-amber-300 hover:border-amber-700/40'
+              }`}
+            >
+              <Square size={12} /> {isDoorTool ? 'Portes — outil actif' : 'Portes'}
+            </button>
+
+            {/* Instructions contextuelles selon le sous-outil actif */}
             {isWallTool && (
               <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-900/40">
                 <p className="text-[11px] text-red-300/80 leading-relaxed">
@@ -649,10 +665,24 @@ export function VTTLeftToolbar({
                 </p>
               </div>
             )}
+            {isDoorTool && (
+              <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-900/40">
+                <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                  <strong className="text-amber-300">Cliquer</strong> sur un segment de mur pour poser une porte.<br />
+                  <strong className="text-amber-300">Cliquer</strong> sur une porte pour l'ouvrir / fermer.<br />
+                  <strong className="text-amber-300">Clic droit</strong> sur une porte pour la supprimer.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Murs tracés</span>
               <span className="text-xs font-mono text-red-400 font-bold">{wallCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Portes</span>
+              <span className="text-xs font-mono text-amber-400 font-bold">{doorCount}</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -665,15 +695,26 @@ export function VTTLeftToolbar({
               </button>
             </div>
 
-            {wallCount > 0 && (
-              <div className="pt-1 border-t border-gray-700/60">
-                <button
-                  onClick={() => { onClearWalls?.(); }}
-                  className="w-full flex items-center justify-center gap-1.5 p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-red-400 transition-colors"
-                  title="Effacer tous les murs"
-                >
-                  <Trash2 size={12} /> Effacer tous les murs
-                </button>
+            {(wallCount > 0 || doorCount > 0) && (
+              <div className="pt-1 border-t border-gray-700/60 flex gap-1">
+                {wallCount > 0 && (
+                  <button
+                    onClick={() => { onClearWalls?.(); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-red-400 transition-colors"
+                    title="Effacer tous les murs"
+                  >
+                    <Trash2 size={12} /> Murs
+                  </button>
+                )}
+                {doorCount > 0 && (
+                  <button
+                    onClick={() => { onClearDoors?.(); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 p-1.5 rounded text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-amber-400 transition-colors"
+                    title="Effacer toutes les portes"
+                  >
+                    <Trash2 size={12} /> Portes
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -1,5 +1,6 @@
 import type React from 'react';
-import type { VTTToken, VTTWall, VTTFogStroke, VTTRoomConfig, VTTFogState } from '../../types/vtt';
+import type { VTTToken, VTTWall, VTTDoor, VTTFogStroke, VTTRoomConfig, VTTFogState } from '../../types/vtt';
+import { getEffectiveWallSegments } from './vttCanvasUtils';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
 import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
@@ -24,6 +25,7 @@ export interface VTTDrawContext {
   selectedTokenIdsRef: React.MutableRefObject<string[]>;
   tokensRef: React.MutableRefObject<VTTToken[]>;
   wallsRef: React.MutableRefObject<VTTWall[] | undefined>;
+  doorsRef: React.MutableRefObject<VTTDoor[]>;
   activeToolRef: React.MutableRefObject<string>;
   showWallsRef: React.MutableRefObject<boolean>;
   wallPointsRef: React.MutableRefObject<{ x: number; y: number }[]>;
@@ -191,13 +193,7 @@ const myVisionTokens = isPlayerVisionSpectator
 
  if (curRole === 'player') {
   const wallSegs = currentWalls.length > 0
-    ? currentWalls.flatMap(w => {
-        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-        for (let i = 0; i < w.points.length - 1; i++) {
-          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-        }
-        return segs;
-      })
+    ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
     : [];
 
   const viewers = isNight
@@ -319,7 +315,7 @@ const fogPunchTokens =
           )));
 
       if (fogPunchTokens.length > 0) {
-        punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay);
+        punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current);
       }
 
 // -------------------
@@ -546,13 +542,7 @@ if (!cfg.fogEnabled) {
       const eCtx = evc.getContext('2d')!;
 
       const wallSegs = currentWalls.length > 0
-        ? currentWalls.flatMap(w => {
-            const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-            for (let i = 0; i < w.points.length - 1; i++) {
-              segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-            }
-            return segs;
-          })
+        ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
         : [];
 
       eCtx.globalCompositeOperation = 'destination-out';
@@ -755,6 +745,96 @@ if (!cfg.fogEnabled) {
         ctx.lineWidth = 1.5 / vp.scale;
         ctx.beginPath();
         ctx.arc(wPts[0].x, wPts[0].y, 8 / vp.scale, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // --- PORTES ---
+  const doors = ctx2d.doorsRef.current;
+  const shouldDrawDoors = curRole === 'gm'
+    ? (shouldDrawWalls || ctx2d.activeToolRef.current === 'door-place')
+    : doors.some(d => d.open === false);
+
+  if (doors.length > 0) {
+    const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
+    const committedWalls = ctx2d.wallsRef.current || [];
+
+    for (const door of doors) {
+      const wall = committedWalls.find(w => w.id === door.wallId);
+      if (!wall) continue;
+      const pts = wall.points;
+      const si = door.segmentIndex;
+      if (si < 0 || si >= pts.length - 1) continue;
+
+      const p1 = pts[si];
+      const p2 = pts[si + 1];
+      const segDx = p2.x - p1.x;
+      const segDy = p2.y - p1.y;
+      const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+      if (segLen < 1) continue;
+
+      const nx = segDx / segLen;
+      const ny = segDy / segLen;
+
+      const cx = p1.x + nx * segLen * door.t;
+      const cy = p1.y + ny * segLen * door.t;
+      const hw = door.width / 2;
+
+      const ax = cx - nx * hw;
+      const ay = cy - ny * hw;
+      const bx = cx + nx * hw;
+      const by = cy + ny * hw;
+
+      if (door.open) {
+        if (!shouldDrawDoors && curRole !== 'gm') continue;
+        ctx.save();
+        ctx.lineWidth = 3 / vp.scale;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(34,197,94,0.9)';
+        const perp = door.width / vp.scale > 8 ? door.width * 0.6 : door.width;
+        const px = -ny * perp;
+        const py = nx * perp;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax + px, ay + py);
+        ctx.stroke();
+        if (isDoorMode || (curRole === 'gm' && (shouldDrawWalls || isDoorMode))) {
+          ctx.setLineDash([3 / vp.scale, 3 / vp.scale]);
+          ctx.strokeStyle = 'rgba(34,197,94,0.35)';
+          ctx.beginPath();
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(bx, by);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      } else {
+        if (!shouldDrawDoors && curRole !== 'gm') continue;
+        ctx.save();
+        ctx.lineWidth = 4 / vp.scale;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = isDoorMode ? 'rgba(251,191,36,0.95)' : 'rgba(251,191,36,0.7)';
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (isDoorMode || (curRole === 'gm' && shouldDrawWalls)) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 5 / vp.scale, 0, Math.PI * 2);
+        ctx.fillStyle = door.open ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 1.5 / vp.scale;
         ctx.stroke();
       }
     }

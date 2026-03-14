@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import type { VTTToken, VTTFogStroke, VTTWall } from '../../types/vtt';
+import type { VTTToken, VTTFogStroke, VTTWall, VTTDoor } from '../../types/vtt';
 import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
 import { wallBlocksToken } from './vttCanvasUtils';
 import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
@@ -41,6 +41,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onWallUpdated,
   onWallRemoved,
   showWalls = false,
+  doors,
+  onDoorAdded,
+  onDoorToggled,
+  onDoorRemoved,
   forceViewport: forceViewportProp = null,
   initialViewport = null,
   onViewportChange,
@@ -186,6 +190,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onWallAddedRef.current = onWallAdded;
   const showWallsRef = useRef(showWalls);
   showWallsRef.current = showWalls;
+  const doorsRef = useRef<VTTDoor[]>(doors || []);
+  doorsRef.current = doors || [];
+  const onDoorAddedRef = useRef(onDoorAdded);
+  onDoorAddedRef.current = onDoorAdded;
+  const onDoorToggledRef = useRef(onDoorToggled);
+  onDoorToggledRef.current = onDoorToggled;
+  const onDoorRemovedRef = useRef(onDoorRemoved);
+  onDoorRemovedRef.current = onDoorRemoved;
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
@@ -617,6 +629,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       selectedTokenIdsRef,
       tokensRef,
       wallsRef,
+      doorsRef,
       activeToolRef,
       showWallsRef,
       wallPointsRef,
@@ -814,7 +827,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, sceneId]);
 
   // Redraw when visual state changes
-  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls]);
+  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls, doors]);
 
   useEffect(() => {
     const hasTorch = tokens.some(t => t.visible && t.lightSource === 'torch');
@@ -915,6 +928,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onWallAddedRef,
     onWallUpdatedRef,
     onWallRemovedRef,
+    doorsRef,
+    onDoorAddedRef,
+    onDoorToggledRef,
+    onDoorRemovedRef,
     selectedWallPointRef,
     selectedWallPointsRef,
      onViewportChangeRef,

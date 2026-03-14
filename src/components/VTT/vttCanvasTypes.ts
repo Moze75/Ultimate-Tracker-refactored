@@ -1,4 +1,4 @@
-import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall } from '../../types/vtt';
+import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall, VTTDoor } from '../../types/vtt';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
@@ -52,6 +52,10 @@ export interface VTTCanvasProps {
   onWallUpdated?: (wall: VTTWall) => void;
   onWallRemoved?: (wallId: string) => void;
   showWalls?: boolean;
+  doors?: VTTDoor[];
+  onDoorAdded?: (door: VTTDoor) => void;
+  onDoorToggled?: (doorId: string, open: boolean) => void;
+  onDoorRemoved?: (doorId: string) => void;
   forceViewport?: { x: number; y: number; width: number; height: number } | null;
   initialViewport?: { x: number; y: number; scale: number } | null;
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;

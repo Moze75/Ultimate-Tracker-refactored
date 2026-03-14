@@ -27,6 +27,7 @@ import type {
   VTTServerEvent,
   VTTProp,
   VTTWall,
+  VTTDoor,
   VTTConnectedUser,
   VTTWeatherEffect,
 } from '../types/vtt';
@@ -92,6 +93,7 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
        fogState: normalizeFogState((row.fog_state as VTTFogState) || DEFAULT_FOG),
     tokens: (row.tokens as VTTToken[]) || [],
     walls: (row.walls as VTTWall[]) || [],
+    doors: (row.doors as VTTDoor[]) || [],
     props: (row.props as VTTProp[]) || [],
   };
 }
@@ -136,6 +138,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [walls, setWalls] = useState<VTTWall[]>([]);
   const wallsRef = useRef<VTTWall[]>([]);
   wallsRef.current = walls;
+  const [doors, setDoors] = useState<VTTDoor[]>([]);
+  const doorsRef = useRef<VTTDoor[]>([]);
+  doorsRef.current = doors;
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -289,6 +294,7 @@ canvasViewportRef.current = canvasViewport;
         setTokens(event.state.room.tokens);
         setFogState(normalizeFogState(event.state.room.fogState));
         setWalls(event.state.room.walls || []);
+        setDoors(event.state.room.doors || []);
         setRole(event.state.yourRole);
         setWeatherEffects(event.state.room.config.weatherEffects || []);
         // -------------------
@@ -339,6 +345,7 @@ canvasViewportRef.current = canvasViewport;
         setTokens(event.tokens);
         setFogState(normalizeFogState(event.fogState));
         setWalls(event.walls);
+        setDoors((event as any).doors || []);
         setWeatherEffects(event.config.weatherEffects || []);
         // -------------------
         // Propagation du sceneId au joueur distant
@@ -353,6 +360,9 @@ canvasViewportRef.current = canvasViewport;
         break;
       case 'WALLS_UPDATED':
         setWalls(event.walls);
+        break;
+      case 'DOORS_UPDATED':
+        setDoors(event.doors);
         break;
       case 'WEATHER_UPDATED':
         setWeatherEffects(event.effects);
@@ -472,6 +482,7 @@ useEffect(() => {
     setFogState(nextFogState);
 
     setWalls(scene.walls || []);
+    setDoors(scene.doors || []);
     setProps(Array.isArray(scene.props) ? scene.props : []);
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
@@ -528,6 +539,7 @@ useEffect(() => {
       tokens: scene.tokens,
       fogState: scene.fogState,
       walls: scene.walls || [],
+      doors: scene.doors || [],
     });
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
@@ -559,8 +571,7 @@ useEffect(() => {
 
             setActiveSceneId(initialScene.id);
             applySceneToLive(initialScene);
-            // Force la mise à jour du localState dans vttService pour les broadcast-request
-            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || []);
+            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || []);
           }
         } else {
           supabase
@@ -637,6 +648,7 @@ useEffect(() => {
         tokens: scene.tokens,
         fogState: scene.fogState,
         walls: scene.walls || [],
+        doors: scene.doors || [],
       });
 
       setConfig(scene.config);
@@ -659,6 +671,7 @@ useEffect(() => {
 
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
+      setDoors(scene.doors || []);
       setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
       setActiveSceneId(sceneId);
@@ -1375,7 +1388,6 @@ handleUpdateProp(propId, {
     pushUndoSnapshot();
     setWalls([]);
     vttService.send({ type: 'UPDATE_WALLS', walls: [] });
-    // Sauvegarder dans la scène active
     const sceneId = activeSceneIdRef.current;
     if (sceneId) {
       supabase
@@ -1385,6 +1397,48 @@ handleUpdateProp(propId, {
         .then(({ error }) => { if (error) console.error('[VTT] Clear walls error:', error); });
     }
   }, [pushUndoSnapshot]);
+
+  const persistDoors = useCallback((nextDoors: VTTDoor[]) => {
+    doorsRef.current = nextDoors;
+    vttService.send({ type: 'UPDATE_DOORS', doors: nextDoors });
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ doors: nextDoors, updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] Save doors error:', error); });
+    }
+  }, []);
+
+  const handleDoorAdded = useCallback((door: VTTDoor) => {
+    setDoors(prev => {
+      const next = [...prev, door];
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleDoorToggled = useCallback((doorId: string, open: boolean) => {
+    setDoors(prev => {
+      const next = prev.map(d => d.id === doorId ? { ...d, open } : d);
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleDoorRemoved = useCallback((doorId: string) => {
+    setDoors(prev => {
+      const next = prev.filter(d => d.id !== doorId);
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleClearDoors = useCallback(() => {
+    setDoors([]);
+    persistDoors([]);
+  }, [persistDoors]);
 
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
   setBroadcastFrame(frame);
@@ -1522,6 +1576,7 @@ useEffect(() => {
     setProps([]);
     setSelectedPropId(null);
     setWalls([]);
+    setDoors([]);
     setConnectedUsers([]);
   }, [role, saveCurrentSceneState]);
 
@@ -1621,6 +1676,8 @@ useEffect(() => {
   onApplyCalibration={handleApplyCalibration}
   wallCount={walls.length}
   onClearWalls={handleClearWalls}
+  doorCount={doors.length}
+  onClearDoors={handleClearDoors}
   showWalls={showWalls}
   onToggleShowWalls={() => setShowWalls(v => !v)}
   roomId={roomId!}
@@ -1773,6 +1830,10 @@ onSelectTokens={ids => {
             onWallUpdated={handleWallUpdated}
             onWallRemoved={handleWallRemoved}
             showWalls={showWalls}
+            doors={doors}
+            onDoorAdded={handleDoorAdded}
+            onDoorToggled={handleDoorToggled}
+            onDoorRemoved={handleDoorRemoved}
             onMapDimensions={(w, h) => {
               if (config.mapWidth !== w || config.mapHeight !== h) {
                 setConfig(prev => ({ ...prev, mapWidth: w, mapHeight: h }));
