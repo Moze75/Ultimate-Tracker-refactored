@@ -83,6 +83,7 @@ const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
 function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
+  console.log('[VTT] dbSceneToVTTScene: id=', row.id, 'doors=', (row.doors as unknown[])?.length ?? 'MISSING', 'windows=', (row.windows as unknown[])?.length ?? 'MISSING', 'raw.windows=', row.windows);
   return {
     id: row.id as string,
     roomId: row.room_id as string,
