@@ -289,6 +289,7 @@ canvasViewportRef.current = canvasViewport;
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const geometrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
@@ -406,6 +407,7 @@ canvasViewportRef.current = canvasViewport;
     vttService.connect(roomId, userId, authToken, userName, requestedRole);
     return () => { unsub(); unsubConn(); unsubPresence(); unsubBroadcastReq(); vttService.disconnect(); };
   }, [phase, roomId, userId, authToken, userName, requestedRole, handleServerEvent]);
+
 
 // ===================================
 // Joueur : abonnements Realtime spécifiques
@@ -608,6 +610,19 @@ useEffect(() => {
       })
       .eq('id', sceneId);
   }, [roomId]);
+
+  useEffect(() => {
+    if (role !== 'gm' || !activeSceneId) return;
+    if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current);
+    geometrySaveTimerRef.current = setTimeout(() => {
+      supabase
+        .from('vtt_scenes')
+        .update({ walls, doors, windows, updated_at: new Date().toISOString() })
+        .eq('id', activeSceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] geometry autosave error:', error); });
+    }, 500);
+    return () => { if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current); };
+  }, [walls, doors, windows, activeSceneId, role]);
 
   const handleSwitchScene = useCallback(async (sceneId: string) => {
     if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
