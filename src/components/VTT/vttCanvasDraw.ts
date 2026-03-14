@@ -758,23 +758,46 @@ if (!cfg.fogEnabled) {
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
   const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
 
-  // Helper : vérifie si un point monde (wx, wy) est visible (fog levé OU dans rayon de vision)
-  // On échantillonne visionCanvasRef (fog + trous de vision punchés).
-  // Sémantique visionCanvas : opaque = caché par le fog, transparent = visible.
+  // Helper : vérifie si un point monde (wx, wy) est visible par le joueur.
+  // Teste la géométrie de vision (polygon de visibilité) plutôt que les canvas rendus.
   const isDoorPointVisible = (wx: number, wy: number): boolean => {
-    // Pas de fog : tout visible
     if (!cfg.fogEnabled) return true;
-    // Essayer d'abord visionCanvasRef (fog + vision), sinon fogCanvasRef seul
-    const sampleCanvas = ctx2d.visionCanvasRef.current ?? ctx2d.fogCanvasRef.current;
-    if (!sampleCanvas) return true;
-    const sCtx = sampleCanvas.getContext('2d');
-    if (!sCtx) return true;
-    const fx = Math.round(wx);
-    const fy = Math.round(wy);
-    if (fx < 0 || fy < 0 || fx >= sampleCanvas.width || fy >= sampleCanvas.height) return false;
-    const pixel = sCtx.getImageData(fx, fy, 1, 1).data;
-    // opaque (alpha élevé) = fog actif = caché ; transparent (alpha bas) = visible
-    return pixel[3] < 200;
+
+    // 1. Fog révélé manuellement à cet endroit → toujours visible
+    const fogCanvas = ctx2d.fogCanvasRef.current;
+    if (fogCanvas) {
+      const fogCtx = fogCanvas.getContext('2d');
+      if (fogCtx) {
+        const fx = Math.round(wx);
+        const fy = Math.round(wy);
+        if (fx >= 0 && fy >= 0 && fx < fogCanvas.width && fy < fogCanvas.height) {
+          const pixel = fogCtx.getImageData(fx, fy, 1, 1).data;
+          // fogCanvas : transparent (alpha < 128) = zone révélée manuellement
+          if (pixel[3] < 128) return true;
+        }
+      }
+    }
+
+    // 2. Vision de jour sans murs : tout est visible si le joueur a un token
+    if (isDay && currentWalls.length === 0 && myVisionTokens.length > 0) return true;
+
+    // 3. Sinon : tester si le point est dans le polygon de visibilité d'un token
+    if (myVisionTokens.length === 0) return false;
+    const doorWallSegs = currentWalls.length > 0
+      ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
+      : [];
+    for (const viewer of myVisionTokens) {
+      const radii = getVisionRadii(viewer, CELL);
+      const maxR = Math.max(radii.brightR, radii.dimR);
+      if (maxR <= 0) continue;
+      const dx = wx - radii.cx;
+      const dy = wy - radii.cy;
+      if (dx * dx + dy * dy > maxR * maxR) continue;
+      if (doorWallSegs.length === 0) return true;
+      const poly = buildVisibilityPolygon(radii.cx, radii.cy, maxR, doorWallSegs, mapW, mapH);
+      if (poly.length >= 6 && pointInPolygon(wx, wy, poly)) return true;
+    }
+    return false;
   };
 
   if (doors.length > 0) {
