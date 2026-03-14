@@ -1,6 +1,6 @@
 import type React from 'react';
 import type { VTTToken, VTTWall, VTTDoor, VTTFogStroke, VTTRoomConfig, VTTFogState } from '../../types/vtt';
-import { getEffectiveWallSegments } from './vttCanvasUtils';
+import { getEffectiveWallSegments, getDoorT1T2 } from './vttCanvasUtils';
 import { getTimeOfDayOverlay } from './VTTLeftToolbar';
 import { drawDayVisionOverlay, drawNightVisionOverlay } from './vttVisionEngine';
 import { getVisionRadii, metersToPixels, buildVisibilityPolygon } from './vttVisionEngine';
@@ -57,6 +57,8 @@ export interface VTTDrawContext {
   // -------------------
   exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
   drawRef: React.MutableRefObject<() => void>;
+  doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
+  doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
 }
 
 // -------------------
@@ -752,12 +754,9 @@ if (!cfg.fogEnabled) {
 
   // --- PORTES ---
   const doors = ctx2d.doorsRef.current;
-  const shouldDrawDoors = curRole === 'gm'
-    ? (shouldDrawWalls || ctx2d.activeToolRef.current === 'door-place')
-    : doors.some(d => d.open === false);
+  const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
 
   if (doors.length > 0) {
-    const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
     const committedWalls = ctx2d.wallsRef.current || [];
 
     for (const door of doors) {
@@ -777,65 +776,137 @@ if (!cfg.fogEnabled) {
       const nx = segDx / segLen;
       const ny = segDy / segLen;
 
-      const cx = p1.x + nx * segLen * door.t;
-      const cy = p1.y + ny * segLen * door.t;
-      const hw = door.width / 2;
+      const { t1, t2, tCenter } = getDoorT1T2(door, segLen);
+      const ax = p1.x + nx * segLen * t1;
+      const ay = p1.y + ny * segLen * t1;
+      const bx = p1.x + nx * segLen * t2;
+      const by = p1.y + ny * segLen * t2;
+      const cx = p1.x + nx * segLen * tCenter;
+      const cy = p1.y + ny * segLen * tCenter;
+      const doorSpanLen = segLen * (t2 - t1);
 
-      const ax = cx - nx * hw;
-      const ay = cy - ny * hw;
-      const bx = cx + nx * hw;
-      const by = cy + ny * hw;
+      ctx.save();
+      ctx.lineCap = 'round';
 
       if (door.open) {
-        if (!shouldDrawDoors && curRole !== 'gm') continue;
-        ctx.save();
+        const panelLen = doorSpanLen;
+        const px = -ny * panelLen;
+        const py = nx * panelLen;
         ctx.lineWidth = 3 / vp.scale;
-        ctx.lineCap = 'round';
         ctx.strokeStyle = 'rgba(34,197,94,0.9)';
-        const perp = door.width / vp.scale > 8 ? door.width * 0.6 : door.width;
-        const px = -ny * perp;
-        const py = nx * perp;
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(ax + px, ay + py);
         ctx.stroke();
-        if (isDoorMode || (curRole === 'gm' && (shouldDrawWalls || isDoorMode))) {
-          ctx.setLineDash([3 / vp.scale, 3 / vp.scale]);
-          ctx.strokeStyle = 'rgba(34,197,94,0.35)';
-          ctx.beginPath();
-          ctx.moveTo(ax, ay);
-          ctx.lineTo(bx, by);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        ctx.restore();
+        ctx.setLineDash([4 / vp.scale, 4 / vp.scale]);
+        ctx.strokeStyle = 'rgba(34,197,94,0.35)';
+        ctx.lineWidth = 2 / vp.scale;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(ax, ay, 4 / vp.scale, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(34,197,94,0.9)';
+        ctx.fill();
       } else {
-        if (!shouldDrawDoors && curRole !== 'gm') continue;
-        ctx.save();
-        ctx.lineWidth = 4 / vp.scale;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = isDoorMode ? 'rgba(251,191,36,0.95)' : 'rgba(251,191,36,0.7)';
+        ctx.lineWidth = 5 / vp.scale;
+        ctx.strokeStyle = isDoorMode ? 'rgba(251,191,36,0.95)' : 'rgba(251,191,36,0.8)';
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
         ctx.stroke();
         ctx.lineWidth = 2 / vp.scale;
-        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
         ctx.stroke();
-        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(ax, ay, 3 / vp.scale, 0, Math.PI * 2);
+        ctx.beginPath();
+        ctx.arc(bx, by, 3 / vp.scale, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251,191,36,0.9)';
+        ctx.fill();
       }
 
-      if (isDoorMode || (curRole === 'gm' && shouldDrawWalls)) {
+      const iconR = Math.max(5, Math.min(10, doorSpanLen * 0.08)) / vp.scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, iconR * 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = door.open ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, iconR, 0, Math.PI * 2);
+      ctx.fillStyle = door.open ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 1.5 / vp.scale;
+      ctx.stroke();
+
+      if (isDoorMode) {
+        ctx.lineWidth = 1 / vp.scale;
+        ctx.strokeStyle = door.open ? 'rgba(34,197,94,0.5)' : 'rgba(251,191,36,0.5)';
         ctx.beginPath();
-        ctx.arc(cx, cy, 5 / vp.scale, 0, Math.PI * 2);
-        ctx.fillStyle = door.open ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-        ctx.lineWidth = 1.5 / vp.scale;
+        ctx.arc(cx, cy, iconR * 1.6, 0, Math.PI * 2);
         ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // --- PORTE EN COURS DE PLACEMENT (2 clics) ---
+  const doorInProgress = ctx2d.doorInProgressRef?.current;
+  const doorPreviewPos = ctx2d.doorPreviewPosRef?.current;
+  if (isDoorMode && doorInProgress) {
+    const committedWalls2 = ctx2d.wallsRef.current || [];
+    const wall = committedWalls2.find(w => w.id === doorInProgress.wallId);
+    if (wall) {
+      const pts = wall.points;
+      const si = doorInProgress.segmentIndex;
+      if (si >= 0 && si < pts.length - 1) {
+        const p1 = pts[si], p2 = pts[si + 1];
+        const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+        const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+        if (segLen >= 1) {
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const fpx = p1.x + nx * segLen * doorInProgress.t;
+          const fpy = p1.y + ny * segLen * doorInProgress.t;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(fpx, fpy, 6 / vp.scale, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(251,191,36,1)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineWidth = 2 / vp.scale;
+          ctx.stroke();
+
+          if (doorPreviewPos) {
+            const dxP = p2.x - p1.x, dyP = p2.y - p1.y;
+            const lenSq = dxP * dxP + dyP * dyP;
+            let tPreview = lenSq > 0 ? ((doorPreviewPos.x - p1.x) * dxP + (doorPreviewPos.y - p1.y) * dyP) / lenSq : 0;
+            tPreview = Math.max(0.01, Math.min(0.99, tPreview));
+            const previewT1 = Math.min(doorInProgress.t, tPreview);
+            const previewT2 = Math.max(doorInProgress.t, tPreview);
+            if (previewT2 - previewT1 > 0.01) {
+              const prx = p1.x + nx * segLen * previewT1;
+              const pry = p1.y + ny * segLen * previewT1;
+              const prx2 = p1.x + nx * segLen * previewT2;
+              const pry2 = p1.y + ny * segLen * previewT2;
+              ctx.lineWidth = 4 / vp.scale;
+              ctx.lineCap = 'round';
+              ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+              ctx.setLineDash([6 / vp.scale, 3 / vp.scale]);
+              ctx.beginPath();
+              ctx.moveTo(prx, pry);
+              ctx.lineTo(prx2, pry2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+          }
+          ctx.restore();
+        }
       }
     }
   }

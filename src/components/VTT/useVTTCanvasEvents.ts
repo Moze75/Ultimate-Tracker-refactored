@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { VTTToken, VTTDoor } from '../../types/vtt';
-import { wallBlocksToken } from './vttCanvasUtils';
+import { wallBlocksToken, getDoorT1T2 } from './vttCanvasUtils';
 import { pointInPolygon } from './vttCanvasUtils';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
@@ -47,6 +47,8 @@ export interface VTTCanvasRefs {
   onDoorAddedRef: React.MutableRefObject<((door: VTTDoor) => void) | undefined>;
   onDoorToggledRef: React.MutableRefObject<((doorId: string, open: boolean) => void) | undefined>;
   onDoorRemovedRef: React.MutableRefObject<((doorId: string) => void) | undefined>;
+  doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
+  doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
@@ -114,6 +116,8 @@ export function useVTTCanvasEvents({
     onDoorAddedRef,
     onDoorToggledRef,
     onDoorRemovedRef,
+    doorInProgressRef,
+    doorPreviewPosRef,
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
@@ -150,6 +154,10 @@ export function useVTTCanvasEvents({
       measureEndRef.current = null;
       measureLockedRef.current = false;
     }
+    if (activeTool !== 'door-place') {
+      doorInProgressRef.current = null;
+      doorPreviewPosRef.current = null;
+    }
     drawRef.current();
   }, [activeTool]);
 
@@ -185,9 +193,9 @@ export function useVTTCanvasEvents({
           const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
           const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
           if (segLen < 1) continue;
-          const nx = segDx / segLen, ny = segDy / segLen;
-          const cx = p1.x + nx * segLen * door.t;
-          const cy = p1.y + ny * segLen * door.t;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
           const ddx = (wp.x - cx) * vp0.scale;
           const ddy = (wp.y - cy) * vp0.scale;
           if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
@@ -344,15 +352,18 @@ export function useVTTCanvasEvents({
       // FIN du bloc wall-select
       } else if (tool === 'door-place') {
         // -------------------
-        // Outil porte : clic sur une porte existante = toggle open/closed
-        //               clic sur un segment de mur = poser une porte
+        // Outil porte (GM seulement) : pose en 2 clics sur un segment de mur
+        //   1er clic = point de départ (t1), stocké dans doorInProgressRef
+        //   2ème clic = point de fin (t2), crée la porte
+        // Clic sur icône porte existante = toggle open/closed
         // -------------------
+        if (roleRef.current !== 'gm') return;
+
         const vp = viewportRef.current;
-        const HIT_PX = 10;
         const currentDoors = doorsRef.current || [];
         const currentWalls = wallsRef.current || [];
 
-        // Vérifier si on clique sur une porte existante (centre de la porte)
+        // Vérifier si on clique sur l'icône d'une porte existante
         for (const door of currentDoors) {
           const wall = currentWalls.find(w => w.id === door.wallId);
           if (!wall) continue;
@@ -363,30 +374,32 @@ export function useVTTCanvasEvents({
           const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
           const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
           if (segLen < 1) continue;
-          const nx = segDx / segLen, ny = segDy / segLen;
-          const cx = p1.x + nx * segLen * door.t;
-          const cy = p1.y + ny * segLen * door.t;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
           const ddx = (wp.x - cx) * vp.scale;
           const ddy = (wp.y - cy) * vp.scale;
-          if (Math.sqrt(ddx * ddx + ddy * ddy) < HIT_PX * 1.5) {
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
             onDoorToggledRef.current?.(door.id, !door.open);
             drawRef.current();
             return;
           }
         }
 
-        // Sinon : chercher le segment de mur le plus proche et y poser une porte
+        // Trouver le segment de mur le plus proche du clic
         let bestDist = Infinity;
         let bestWallId = '';
         let bestSegIdx = -1;
         let bestT = 0.5;
+        let bestWorldX = wp.x;
+        let bestWorldY = wp.y;
         for (const wall of currentWalls) {
           for (let i = 0; i < wall.points.length - 1; i++) {
             const p1 = wall.points[i], p2 = wall.points[i + 1];
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
             const lenSq = dx * dx + dy * dy;
             let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
-            t = Math.max(0.05, Math.min(0.95, t));
+            t = Math.max(0.02, Math.min(0.98, t));
             const projX = p1.x + t * dx, projY = p1.y + t * dy;
             const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
             if (distPx < bestDist) {
@@ -394,20 +407,52 @@ export function useVTTCanvasEvents({
               bestWallId = wall.id;
               bestSegIdx = i;
               bestT = t;
+              bestWorldX = projX;
+              bestWorldY = projY;
             }
           }
         }
-        if (bestSegIdx >= 0 && bestDist < 20) {
-          const gridSize = configRef.current.gridSize || 60;
-          const newDoor: VTTDoor = {
-            id: crypto.randomUUID(),
+
+        if (bestSegIdx < 0 || bestDist >= 20) return;
+
+        const inProgress = doorInProgressRef.current;
+        if (!inProgress) {
+          // 1er clic : stocker le point de départ sur ce segment
+          doorInProgressRef.current = {
             wallId: bestWallId,
             segmentIndex: bestSegIdx,
             t: bestT,
-            width: gridSize,
-            open: false,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
           };
-          onDoorAddedRef.current?.(newDoor);
+          drawRef.current();
+        } else if (inProgress.wallId === bestWallId && inProgress.segmentIndex === bestSegIdx) {
+          // 2ème clic sur le même segment : créer la porte
+          const t1 = Math.min(inProgress.t, bestT);
+          const t2 = Math.max(inProgress.t, bestT);
+          if (t2 - t1 > 0.02) {
+            const newDoor: VTTDoor = {
+              id: crypto.randomUUID(),
+              wallId: bestWallId,
+              segmentIndex: bestSegIdx,
+              t1,
+              t2,
+              open: false,
+            };
+            onDoorAddedRef.current?.(newDoor);
+          }
+          doorInProgressRef.current = null;
+          doorPreviewPosRef.current = null;
+          drawRef.current();
+        } else {
+          // 2ème clic sur un segment différent : annuler et démarrer sur le nouveau segment
+          doorInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
           drawRef.current();
         }
       } else if (tool === 'measure') {
@@ -432,8 +477,15 @@ export function useVTTCanvasEvents({
       const sp = getCanvasXY(e.clientX, e.clientY);
       const wp = screenToWorld(sp.x, sp.y);
 
-      // En mode door-place : clic droit sur une porte = suppression
+      // En mode door-place : clic droit = annuler placement en cours OU supprimer porte existante
       if (tool === 'door-place' && roleRef.current === 'gm') {
+        // Si un placement est en cours, l'annuler
+        if (doorInProgressRef.current) {
+          doorInProgressRef.current = null;
+          doorPreviewPosRef.current = null;
+          drawRef.current();
+          return;
+        }
         const vp = viewportRef.current;
         const currentDoors = doorsRef.current || [];
         const currentWalls = wallsRef.current || [];
@@ -447,9 +499,9 @@ export function useVTTCanvasEvents({
           const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
           const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
           if (segLen < 1) continue;
-          const nx = segDx / segLen, ny = segDy / segLen;
-          const cx = p1.x + nx * segLen * door.t;
-          const cy = p1.y + ny * segLen * door.t;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
           const ddx = (wp.x - cx) * vp.scale;
           const ddy = (wp.y - cy) * vp.scale;
           if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
@@ -541,6 +593,12 @@ export function useVTTCanvasEvents({
       if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      if (activeToolRef.current === 'door-place' && doorInProgressRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        doorPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
         drawRef.current();
       }
       

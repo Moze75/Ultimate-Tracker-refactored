@@ -93,8 +93,10 @@ export interface VTTDoor {
   id: string;
   wallId: string;
   segmentIndex: number;
-  t: number;
-  width: number;
+  t1?: number;
+  t2?: number;
+  t?: number;
+  width?: number;
   open: boolean;
 }
 
