@@ -46,16 +46,28 @@ export function applyStrokeToFogCanvas(
   const fc = fogCanvasRef.current;
   if (!fc) return;
   const fctx = fc.getContext('2d')!;
+  // -------------------
+  // Application incrémentale d'un stroke sur le fogCanvas existant
+  // Supporte 'circle' (pinceau) et 'rect' (outil rectangle)
+  // -------------------
   if (!stroke.erase) {
     fctx.globalCompositeOperation = 'destination-out';
     fctx.beginPath();
-    fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+    if (stroke.shape === 'rect' && stroke.w != null && stroke.h != null) {
+      fctx.rect(stroke.x, stroke.y, stroke.w, stroke.h);
+    } else {
+      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+    }
     fctx.fill();
   } else {
     fctx.globalCompositeOperation = 'source-over';
     fctx.fillStyle = '#000';
     fctx.beginPath();
-    fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+    if (stroke.shape === 'rect' && stroke.w != null && stroke.h != null) {
+      fctx.rect(stroke.x, stroke.y, stroke.w, stroke.h);
+    } else {
+      fctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+    }
     fctx.fill();
   }
   fctx.globalCompositeOperation = 'source-over';
