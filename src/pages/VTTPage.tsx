@@ -345,7 +345,6 @@ canvasViewportRef.current = canvasViewport;
           activeSceneIdRef.current
         ) {
           localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
-          setFogResetSignal(s => s + 1);
         }
         break;
       }

@@ -57,8 +57,6 @@ export interface VTTDrawContext {
   // pendant une restauration de snapshot asynchrone
   // -------------------
   exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
-  eraseRevealedCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
-  eraseRevealedCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   drawRef: React.MutableRefObject<() => void>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -76,56 +74,22 @@ export interface VTTDrawContext {
 }
 
 // -------------------
-// Construit un canvas "erase-only" : transparent partout, noir uniquement
-// là où le MJ a appliqué des strokes erase (masquage actif).
-// Utilisé pour que le masquage actif prime sur la vision des tokens.
-// Recalculé uniquement si fogInvCanvasRef est null (invalidé par VTTCanvas).
+// Construit ou récupère le masque inversé du fog depuis le cache.
+// Le fogInv est recalculé uniquement si fogInvCanvasRef est null
+// (invalidé par VTTCanvas quand les strokes changent).
+// En animation torche (~60fps), cela évite de créer un canvas
+// mapW×mapH + fillRect + drawImage à chaque frame.
 // -------------------
-function getOrBuildEraseOnlyCanvas(
-  ctx2d: VTTDrawContext,
-  mapW: number,
-  mapH: number
-): HTMLCanvasElement | null {
-  if (!mapW || !mapH) return null;
+function getOrBuildFogInv(ctx2d: VTTDrawContext, mapW: number, mapH: number): HTMLCanvasElement | null {
+  if (!ctx2d.fogCanvasRef.current || !mapW || !mapH) return null;
 
+  // Réutiliser le cache s'il existe et correspond à la bonne taille
   const cached = ctx2d.fogInvCanvasRef.current;
   if (cached && cached.width === mapW && cached.height === mapH) {
     return cached;
   }
 
-  const strokes = ctx2d.fogStateRef.current?.strokes ?? [];
-  const eraseStrokes = strokes.filter((s) => s.erase);
-
-  const ec = document.createElement('canvas');
-  ec.width = mapW;
-  ec.height = mapH;
-
-  if (eraseStrokes.length > 0) {
-    const ectx = ec.getContext('2d')!;
-    ectx.clearRect(0, 0, mapW, mapH);
-    ectx.fillStyle = '#000';
-    for (const s of eraseStrokes) {
-      ectx.beginPath();
-      if (s.shape === 'rect' && s.w != null && s.h != null) {
-        ectx.rect(s.x, s.y, s.w, s.h);
-      } else {
-        ectx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      }
-      ectx.fill();
-    }
-  }
-
-  ctx2d.fogInvCanvasRef.current = ec;
-  return ec;
-}
-
-// -------------------
-// Construit ou récupère le masque inversé du fog depuis le cache.
-// Opaque là où le fog a été levé (strokes reveal), transparent ailleurs.
-// -------------------
-function getOrBuildFogInv(ctx2d: VTTDrawContext, mapW: number, mapH: number): HTMLCanvasElement | null {
-  if (!ctx2d.fogCanvasRef.current || !mapW || !mapH) return null;
-
+  // Reconstruire le masque inversé du fog
   const fogInv = document.createElement('canvas');
   fogInv.width = mapW;
   fogInv.height = mapH;
@@ -136,6 +100,8 @@ function getOrBuildFogInv(ctx2d: VTTDrawContext, mapW: number, mapH: number): HT
   fogInvCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
   fogInvCtx.globalCompositeOperation = 'source-over';
 
+  // Mettre en cache
+  ctx2d.fogInvCanvasRef.current = fogInv;
   return fogInv;
 }
 
@@ -434,6 +400,7 @@ if (!cfg.fogEnabled) {
       if (!evc) return;
       const eCtx = evc.getContext('2d')!;
 
+      // Graver dans exploredCanvas les zones visibles actuellement (destination-out = effacer le noir)
       eCtx.globalCompositeOperation = 'destination-out';
       for (const token of playerTokens) {
         if (!token.visible) continue;
@@ -450,46 +417,7 @@ if (!cfg.fogEnabled) {
           eCtx.fill();
         }
       }
-      eCtx.globalCompositeOperation = 'source-over';
-
-      // -------------------
-      // Accumulation des zones erase révélées par vision directe (persistantes)
-      // -------------------
-      const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
-      if (eraseOnly) {
-        let erc = ctx2d.eraseRevealedCanvasRef.current;
-        if (!erc || ctx2d.eraseRevealedCanvasSizeRef.current.w !== mapW || ctx2d.eraseRevealedCanvasSizeRef.current.h !== mapH) {
-          erc = document.createElement('canvas');
-          erc.width = mapW;
-          erc.height = mapH;
-          ctx2d.eraseRevealedCanvasRef.current = erc;
-          ctx2d.eraseRevealedCanvasSizeRef.current = { w: mapW, h: mapH };
-        }
-        const ercCtx = erc.getContext('2d')!;
-        for (const token of playerTokens) {
-          if (!token.visible) continue;
-          const tSize = (token.size || 1) * CELL;
-          const tcx = token.position.x + tSize / 2;
-          const tcy = token.position.y + tSize / 2;
-          const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
-          if (poly.length >= 6) {
-            const visionMask = document.createElement('canvas');
-            visionMask.width = mapW;
-            visionMask.height = mapH;
-            const vmCtx = visionMask.getContext('2d')!;
-            vmCtx.fillStyle = 'rgba(0,0,0,1)';
-            vmCtx.beginPath();
-            vmCtx.moveTo(poly[0], poly[1]);
-            for (let pi = 2; pi < poly.length; pi += 2) vmCtx.lineTo(poly[pi], poly[pi + 1]);
-            vmCtx.closePath();
-            vmCtx.fill();
-            vmCtx.globalCompositeOperation = 'destination-in';
-            vmCtx.drawImage(eraseOnly, 0, 0);
-            ercCtx.globalCompositeOperation = 'source-over';
-            ercCtx.drawImage(visionMask, 0, 0);
-          }
-        }
-      }
+      eCtx.globalCompositeOperation = 'source-over'; 
 
       // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
       let dvc = ctx2d.dayVisionCanvasRef.current;
@@ -522,18 +450,11 @@ if (!cfg.fogEnabled) {
       }
       dvCtx.globalCompositeOperation = 'source-over';
 
-      // --- Composition finale du masque de vision de jour ---
+      // --- Composition finale identique à la nuit ---
       // On NE MODIFIE PAS dvc directement (c'est un ref persistant).
       // On crée un canvas temporaire cvc pour la composition.
 
-      // -------------------
-      // visionFogCanvas : intersecte les trous de vision avec les zones révélées
-      // = trous de vision + fermeture des zones masquées activement par le MJ (strokes erase)
-      // -------------------
-
-      // -------------------
-      // invCanvas : opaque là où jamais exploré, transparent là où déjà exploré
-      // -------------------
+      // invCanvas : opaque là où jamais vu, transparent là où exploré
       const invCanvas = document.createElement('canvas');
       invCanvas.width = mapW;
       invCanvas.height = mapH;
@@ -546,7 +467,7 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Composition finale du masque de vision de jour
-      // cvc = dvc (trous de vision) + atténuation mémoire + masquage actif MJ sur mémoire seulement
+      // cvc = copie de dvc (noir avec trous là où on voit)
       // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
@@ -565,42 +486,15 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ : re-noircit les zones mémoire masquées par le MJ
-      // SAUF là où un token voit directement (vision prime toujours).
-      // visionHoles = zones où les tokens voient (transparent dans dvc = les trous)
-      // eraseFiltered = eraseOnly ∩ mémoire ∩ hors-vision-directe
+      // Percement du fog-reveal dans le masque de vision de jour
+      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
       // -------------------
       if (cfg.fogEnabled) {
-        const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
-        if (eraseOnly) {
-          // Canvas des trous de vision (zones vues directement = transparentes dans dvc)
-          const visionHoles = document.createElement('canvas');
-          visionHoles.width = mapW;
-          visionHoles.height = mapH;
-          const vhCtx = visionHoles.getContext('2d')!;
-          vhCtx.fillStyle = 'rgba(0,0,0,1)';
-          vhCtx.fillRect(0, 0, mapW, mapH);
-          vhCtx.globalCompositeOperation = 'destination-out';
-          vhCtx.drawImage(dvc, 0, 0);
-          vhCtx.globalCompositeOperation = 'source-over';
-
-          const eraseFiltered = document.createElement('canvas');
-          eraseFiltered.width = mapW;
-          eraseFiltered.height = mapH;
-          const efCtx = eraseFiltered.getContext('2d')!;
-          efCtx.drawImage(eraseOnly, 0, 0);
-          // Supprimer les zones vues directement par un token (vision prime toujours)
-          efCtx.globalCompositeOperation = 'destination-out';
-          efCtx.drawImage(visionHoles, 0, 0);
-          // Supprimer les zones erase déjà révélées une fois (persistant)
-          const erc = ctx2d.eraseRevealedCanvasRef.current;
-          if (erc && erc.width === mapW && erc.height === mapH) {
-            efCtx.drawImage(erc, 0, 0);
-          }
-          efCtx.globalCompositeOperation = 'source-over';
-
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          cCtx.globalCompositeOperation = 'destination-out';
+          cCtx.drawImage(fogInv, 0, 0);
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseFiltered, 0, 0);
         }
       }
 
@@ -706,7 +600,7 @@ if (!cfg.fogEnabled) {
 
       // -------------------
       // Composition finale du masque de vision de nuit
-      // cvc = nvc (trous de vision nuit) + atténuation mémoire + masquage actif MJ
+      // cvc = copie de nvc (noir partout sauf dans le rayon de vision)
       // -------------------
       const cvc = document.createElement('canvas');
       cvc.width = mapW;
@@ -739,40 +633,15 @@ if (!cfg.fogEnabled) {
       cCtx.globalCompositeOperation = 'source-over';
 
       // -------------------
-      // Masquage actif MJ (nuit) : re-noircit les zones mémoire masquées par le MJ
-      // SAUF là où un token voit directement (vision prime toujours).
-      // visionHoles = zones vues directement (transparentes dans nvc → opaques ici)
-      // eraseFiltered = eraseOnly ∩ mémoire ∩ hors-vision-directe
+      // Percement du fog-reveal dans le masque de nuit composé
+      // Utilise le cache fogInv pour éviter de recréer un canvas à chaque frame.
       // -------------------
       if (cfg.fogEnabled) {
-        const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
-        if (eraseOnly) {
-          const visionHoles = document.createElement('canvas');
-          visionHoles.width = mapW;
-          visionHoles.height = mapH;
-          const vhCtx = visionHoles.getContext('2d')!;
-          vhCtx.fillStyle = 'rgba(0,0,0,1)';
-          vhCtx.fillRect(0, 0, mapW, mapH);
-          vhCtx.globalCompositeOperation = 'destination-out';
-          vhCtx.drawImage(nvc, 0, 0);
-          vhCtx.globalCompositeOperation = 'source-over';
-
-          const eraseFiltered = document.createElement('canvas');
-          eraseFiltered.width = mapW;
-          eraseFiltered.height = mapH;
-          const efCtx = eraseFiltered.getContext('2d')!;
-          efCtx.drawImage(eraseOnly, 0, 0);
-          efCtx.globalCompositeOperation = 'destination-out';
-          efCtx.drawImage(visionHoles, 0, 0);
-          // Supprimer les zones erase déjà révélées une fois (persistant)
-          const ercNight = ctx2d.eraseRevealedCanvasRef.current;
-          if (ercNight && ercNight.width === mapW && ercNight.height === mapH) {
-            efCtx.drawImage(ercNight, 0, 0);
-          }
-          efCtx.globalCompositeOperation = 'source-over';
-
+        const fogInv = getOrBuildFogInv(ctx2d, mapW, mapH);
+        if (fogInv) {
+          cCtx.globalCompositeOperation = 'destination-out';
+          cCtx.drawImage(fogInv, 0, 0);
           cCtx.globalCompositeOperation = 'source-over';
-          cCtx.drawImage(eraseFiltered, 0, 0);
         }
       }
 
