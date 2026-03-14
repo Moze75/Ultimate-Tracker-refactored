@@ -138,7 +138,7 @@ private localState: LocalState = {
     try {
 const { data: scenes, error: scenesError } = await supabase
   .from('vtt_scenes')
-  .select('id, walls, doors, fog_state')
+  .select('id, walls, doors, windows, fog_state')
   .eq('room_id', roomId)
   .order('order_index', { ascending: true });
 
@@ -165,10 +165,10 @@ if (resolvedScenes && resolvedScenes.length > 0) {
 
   if (activeScene?.doors) {
     this.localState.doors = activeScene.doors;
-  if (activeScene?.windows) {
-    this.localState.windows = activeScene.windows;
   }
 
+  if (activeScene?.windows) {
+    this.localState.windows = activeScene.windows;
   }
 
   // -------------------
