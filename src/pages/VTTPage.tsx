@@ -488,6 +488,7 @@ useEffect(() => {
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
     sceneLoadedRef.current = scene.id;
+    console.log('[VTT] applySceneToLive: doors=', scene.doors?.length ?? 0, 'windows=', scene.windows?.length ?? 0);
 
     // -------------------
     // Synchronisation du viewport React pour les props HTML
@@ -616,8 +617,10 @@ useEffect(() => {
   useEffect(() => {
     if (role !== 'gm' || !activeSceneId) return;
     if (sceneLoadedRef.current !== activeSceneId) return;
+    console.log('[VTT] geometry autosave triggered: walls=', walls.length, 'doors=', doors.length, 'windows=', windows.length);
     if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current);
     geometrySaveTimerRef.current = setTimeout(() => {
+      console.log('[VTT] geometry autosave WRITE: walls=', walls.length, 'doors=', doors.length, 'windows=', windows.length);
       supabase
         .from('vtt_scenes')
         .update({ walls, doors, windows, updated_at: new Date().toISOString() })
@@ -1482,12 +1485,16 @@ handleUpdateProp(propId, {
     windowsRef.current = nextWindows;
     vttService.send({ type: 'UPDATE_WINDOWS', windows: nextWindows } as any);
     const sceneId = activeSceneIdRef.current;
+    console.log('[VTT] persistWindows called, count=', nextWindows.length, 'sceneId=', sceneId);
     if (sceneId) {
       supabase
         .from('vtt_scenes')
         .update({ windows: nextWindows, updated_at: new Date().toISOString() })
         .eq('id', sceneId)
-        .then(({ error }) => { if (error) console.error('[VTT] Save windows error:', error); });
+        .then(({ data, error, status, statusText }) => {
+          console.log('[VTT] persistWindows DB result:', { status, statusText, error, data });
+          if (error) console.error('[VTT] Save windows error:', error);
+        });
     }
   }, []);
 
