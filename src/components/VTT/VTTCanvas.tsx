@@ -443,13 +443,32 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (sceneIdRef.current) {
       localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
     }
+    const mapW = configRef.current.mapWidth || 2000;
+    const mapH = configRef.current.mapHeight || 2000;
+    if (fogCanvasRef.current) {
+      const fc = fogCanvasRef.current;
+      const fctx = fc.getContext('2d');
+      if (fctx) {
+        fctx.globalCompositeOperation = 'source-over';
+        fctx.clearRect(0, 0, fc.width, fc.height);
+        fctx.fillStyle = '#000';
+        fctx.fillRect(0, 0, fc.width, fc.height);
+      }
+    } else {
+      const fc = document.createElement('canvas');
+      fc.width = mapW;
+      fc.height = mapH;
+      const fctx = fc.getContext('2d')!;
+      fctx.fillStyle = '#000';
+      fctx.fillRect(0, 0, mapW, mapH);
+      fogCanvasRef.current = fc;
+      fogCanvasSizeRef.current = { w: mapW, h: mapH };
+    }
+    fogInvCanvasRef.current = null;
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
-    fogCanvasRef.current = null;
-    fogCanvasSizeRef.current = { w: 0, h: 0 };
-    fogInvCanvasRef.current = null;
-    prevStrokesLenRef.current = 0;
     exploredMaskWasResetRef.current = true;
+    prevStrokesLenRef.current = 0;
     drawRef.current();
   }, [fogResetSignal]);
 
