@@ -65,11 +65,8 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
 const DEFAULT_FOG: VTTFogState = {
   revealedCells: [],
   strokes: [],
-
-  // -------------------
-  // Gestion de la mémoire explorée persistée par scène
-  // -------------------
   exploredStrokes: [],
+  seenDoors: [],
 };
 
 // -------------------
@@ -79,6 +76,7 @@ const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
   revealedCells: [...(fog?.revealedCells || [])],
   strokes: [...(fog?.strokes || [])],
   exploredStrokes: [...(fog?.exploredStrokes || [])],
+  seenDoors: [...(fog?.seenDoors || [])],
 });
  
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
@@ -466,18 +464,7 @@ useEffect(() => {
     setTokens(scene.tokens);
 
     // -------------------
-    // Rechargement immédiat du brouillard de guerre de la scène
-    // -------------------
-    const nextFogState = {
-      ...scene.fogState,
-      revealedCells: [...(scene.fogState.revealedCells || [])],
-      strokes: [...(scene.fogState.strokes || [])],
-
-      // -------------------
-      // Gestion de la mémoire explorée persistée par scène
-      // -------------------
-      exploredStrokes: [...(scene.fogState.exploredStrokes || [])],
-    };
+    const nextFogState = normalizeFogState(scene.fogState);
     fogStateRef.current = nextFogState;
     setFogState(nextFogState);
 
@@ -654,18 +641,7 @@ useEffect(() => {
       setConfig(scene.config);
 
       // -------------------
-      // Rechargement immédiat du brouillard de guerre de la scène
-      // -------------------
-    const nextFogState = {
-      ...scene.fogState,
-      revealedCells: [...(scene.fogState.revealedCells || [])],
-      strokes: [...(scene.fogState.strokes || [])],
-
-      // -------------------
-      // Gestion de la mémoire explorée persistée par scène
-      // -------------------
-      exploredStrokes: [...(scene.fogState.exploredStrokes || [])],
-    };
+    const nextFogState = normalizeFogState(scene.fogState);
       fogStateRef.current = nextFogState;
       setFogState(nextFogState);
 
