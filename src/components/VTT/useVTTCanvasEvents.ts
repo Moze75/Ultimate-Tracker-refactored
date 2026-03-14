@@ -930,7 +930,8 @@ export function useVTTCanvasEvents({
               const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
               const mt = tokensRef.current.find(t => t.id === tid);
               const mSize = (mt?.size || 1) * (configRef.current.gridSize || 50);
-              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls, doorsRef.current)) blocked = true;
+              const curPos = mt?.position;
+              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls, doorsRef.current, curPos?.x, curPos?.y)) blocked = true;
             });
             if (blocked) return;
           }
@@ -942,7 +943,8 @@ export function useVTTCanvasEvents({
           const movingToken = tokensRef.current.find(t => t.id === drag.id);
           const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
           const currentWalls = wallsRef.current || [];
-          if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current)) return;
+          const oldPos = movingToken?.position;
+          if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current, oldPos?.x, oldPos?.y)) return;
           onMoveTokenRef.current(drag.id, snapped);
         }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
@@ -1429,7 +1431,7 @@ export function useVTTCanvasEvents({
       const newY = token.position.y + dy;
       const tokenSizePx = (token.size || 1) * c;
       const currentWalls = wallsRef.current || [];
-      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current)) return;
+      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
       onMoveTokenRef.current(selId, { x: newX, y: newY });
     };
     window.addEventListener('keydown', handleKey);

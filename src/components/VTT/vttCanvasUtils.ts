@@ -64,15 +64,21 @@ function getSubSegmentsExcludingDoors(
 }
 
 export function wallBlocksToken(
-  newX: number, newY: number, sizeInPx: number, walls: VTTWall[], doors: VTTDoor[] = []
+  newX: number, newY: number, sizeInPx: number, walls: VTTWall[], doors: VTTDoor[] = [],
+  oldX?: number, oldY?: number
 ): boolean {
-  const rx = newX, ry = newY, rw = sizeInPx, rh = sizeInPx;
-  const boxEdges: [number, number, number, number][] = [
-    [rx, ry, rx + rw, ry],
-    [rx + rw, ry, rx + rw, ry + rh],
-    [rx + rw, ry + rh, rx, ry + rh],
-    [rx, ry + rh, rx, ry],
-  ];
+  const half = sizeInPx / 2;
+  const newCx = newX + half;
+  const newCy = newY + half;
+
+  const hasPrev = oldX !== undefined && oldY !== undefined;
+  const oldCx = hasPrev ? (oldX! + half) : newCx;
+  const oldCy = hasPrev ? (oldY! + half) : newCy;
+
+  const moveDx = newCx - oldCx;
+  const moveDy = newCy - oldCy;
+  const isStationary = Math.abs(moveDx) < 0.5 && Math.abs(moveDy) < 0.5;
+
   for (const wall of walls) {
     for (let i = 0; i < wall.points.length - 1; i++) {
       const p1 = wall.points[i], p2 = wall.points[i + 1];
@@ -81,9 +87,33 @@ export function wallBlocksToken(
       if (segLen < 1) continue;
       const openDoors = doors.filter(d => d.open && d.wallId === wall.id && d.segmentIndex === i);
       const subSegs = getSubSegmentsExcludingDoors(p1, p2, dx, dy, segLen, openDoors);
+
       for (const [sx1, sy1, sx2, sy2] of subSegs) {
-        for (const [ex1, ey1, ex2, ey2] of boxEdges) {
-          if (segmentsIntersect(sx1, sy1, sx2, sy2, ex1, ey1, ex2, ey2)) return true;
+        if (isStationary) {
+          const SAMPLE_OFFSETS: [number, number][] = [
+            [0, 0],
+            [half * 0.7, 0], [-half * 0.7, 0],
+            [0, half * 0.7], [0, -half * 0.7],
+          ];
+          let crossCount = 0;
+          for (const [ox, oy] of SAMPLE_OFFSETS) {
+            const rayEndX = newCx + ox + (sx2 - sx1) * 10000;
+            const rayEndY = newCy + oy + (sy2 - sy1) * 10000;
+            if (segmentsIntersect(sx1, sy1, sx2, sy2, newCx + ox, newCy + oy, rayEndX, rayEndY)) {
+              crossCount++;
+            }
+          }
+          if (crossCount > 0) return true;
+        } else {
+          if (segmentsIntersect(oldCx, oldCy, newCx, newCy, sx1, sy1, sx2, sy2)) return true;
+          const perpLen = half * 0.8;
+          const moveLen = Math.sqrt(moveDx * moveDx + moveDy * moveDy);
+          if (moveLen > 0.5) {
+            const perpX = (-moveDy / moveLen) * perpLen;
+            const perpY = (moveDx / moveLen) * perpLen;
+            if (segmentsIntersect(oldCx + perpX, oldCy + perpY, newCx + perpX, newCy + perpY, sx1, sy1, sx2, sy2)) return true;
+            if (segmentsIntersect(oldCx - perpX, oldCy - perpY, newCx - perpX, newCy - perpY, sx1, sy1, sx2, sy2)) return true;
+          }
         }
       }
     }
