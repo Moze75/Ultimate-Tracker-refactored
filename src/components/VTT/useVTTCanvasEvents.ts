@@ -500,7 +500,7 @@ export function useVTTCanvasEvents({
           if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls)) return;
           onMoveTokenRef.current(drag.id, snapped);
         }
-      } else if (isPaintingFogRef.current && roleRef.current === 'gm') {
+      } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
         // -------------------
         // Pinceau fog : peinture continue
         // -------------------
@@ -795,6 +795,15 @@ export function useVTTCanvasEvents({
     };
 
     const onWindowMouseMove = (e: MouseEvent) => {
+      if (e.buttons === 0) {
+        if (isPaintingFogRef.current) {
+          if (isPaintingFogRef.current) flushFogBatch();
+          isPaintingFogRef.current = false;
+        }
+        isPanningRef.current = false;
+        lastPanRef.current = null;
+        return;
+      }
       if (isPaintingFogRef.current && roleRef.current === 'gm') {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
