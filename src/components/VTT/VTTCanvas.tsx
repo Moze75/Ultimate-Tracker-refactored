@@ -567,22 +567,16 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // Si un RAF est déjà en attente, on n'en crée pas un deuxième.
     // Cela regroupe tous les mousemove d'une même frame en un seul draw().
     // -------------------
+    // -------------------
+    // Planifie UN SEUL draw par frame d'animation pour le retour visuel MJ
+    // Le flush du batch (setState + broadcast + RPC) est DIFFÉRÉ au mouseUp
+    // pour ne pas provoquer 60 re-renders + 60 broadcasts par seconde.
+    // Le MJ voit le résultat immédiatement grâce à applyStrokeToFogCanvas (ci-dessus).
+    // -------------------
     if (fogPaintRafRef.current === null) {
       fogPaintRafRef.current = requestAnimationFrame(() => {
         fogPaintRafRef.current = null;
-        // -------------------
-        // Un seul draw() pour tous les strokes accumulés dans cette frame
-        // -------------------
         draw();
-        // -------------------
-        // Flush batch : envoie TOUS les strokes en UN SEUL appel
-        // au lieu de N appels onRevealFog (qui chacun fait setState + RPC + broadcast)
-        // -------------------
-        const batch = fogPaintBatchRef.current;
-        fogPaintBatchRef.current = [];
-        if (batch.length > 0) {
-          onRevealFogRef.current(batch);
-        }
       });
     }
   };
