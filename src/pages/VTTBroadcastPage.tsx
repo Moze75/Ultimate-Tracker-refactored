@@ -130,15 +130,14 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
           tokens?: VTTToken[];
           fogState?: VTTFogState;
           walls?: VTTWall[];
-          // -------------------
-          // sceneId transmis par le MJ lors de l'init broadcast
-          // -------------------
+          doors?: VTTDoor[];
           sceneId?: string | null;
         };
         if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
         if (s.tokens) setTokens(s.tokens);
         if (s.fogState) setFogState(s.fogState);
         if (s.walls) setWalls(s.walls);
+        if (s.doors) setDoors(s.doors);
         if (s.sceneId) setCurrentSceneId(s.sceneId);
         setWaitingForSync(false);
       })
