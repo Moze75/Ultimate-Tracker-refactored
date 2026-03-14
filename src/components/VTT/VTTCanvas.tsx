@@ -920,6 +920,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onViewportChangeRef,
     drawRef,
     paintFogAt,
+    flushFogBatch,
     getCanvasXY,
     screenToWorld,
     getTokenAt,
