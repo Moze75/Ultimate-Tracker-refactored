@@ -330,6 +330,10 @@ const fogPunchTokens =
 
       if (fogPunchTokens.length > 0) {
         punchVisionHoles(vCtx, fogPunchTokens, CELL, currentWalls, mapW, mapH, isDay, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
+        // Referme les zones de fog actif sur les trous percés par les tokens :
+        // le fogCanvas noir (fog non-révélé) écrase les trous là où le MJ a masqué.
+        vCtx.globalCompositeOperation = 'source-over';
+        vCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
       }
 
 // -------------------
@@ -495,6 +499,12 @@ if (!cfg.fogEnabled) {
           cCtx.drawImage(fogInv, 0, 0);
           cCtx.globalCompositeOperation = 'source-over';
         }
+        // Referme les zones de fog actif (non-révélé) pour que le pinceau
+        // fog-erase et le "tout masquer" écrasent aussi les trous percés par tokens
+        if (ctx2d.fogCanvasRef.current) {
+          cCtx.globalCompositeOperation = 'source-over';
+          cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
+        }
       }
 
       ctx.drawImage(cvc, 0, 0, mapW, mapH);
@@ -641,6 +651,12 @@ if (!cfg.fogEnabled) {
           cCtx.globalCompositeOperation = 'destination-out';
           cCtx.drawImage(fogInv, 0, 0);
           cCtx.globalCompositeOperation = 'source-over';
+        }
+        // Referme les zones de fog actif (non-révélé) pour que le pinceau
+        // fog-erase et le "tout masquer" écrasent aussi les trous percés par tokens
+        if (ctx2d.fogCanvasRef.current) {
+          cCtx.globalCompositeOperation = 'source-over';
+          cCtx.drawImage(ctx2d.fogCanvasRef.current, 0, 0);
         }
       }
 
