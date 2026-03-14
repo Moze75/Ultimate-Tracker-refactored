@@ -61,6 +61,7 @@ export interface VTTDrawContext {
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectedDoorRef: React.MutableRefObject<string | null>;
   hoveredDoorRef?: React.MutableRefObject<string | null>;
+  selectedDoorEndpointRef?: React.MutableRefObject<{ doorId: string; endpoint: 't1' | 't2' } | null>;
   seenDoorsRef: React.MutableRefObject<Set<string>>;
   onSeenDoorsUpdate?: (newSeenIds: string[]) => void;
 }
@@ -761,6 +762,7 @@ if (!cfg.fogEnabled) {
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
   const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
   const hoveredDoorId = ctx2d.hoveredDoorRef?.current ?? null;
+  const selectedDoorEndpoint = ctx2d.selectedDoorEndpointRef?.current ?? null;
 
   // Helper : vérifie si un point monde (wx, wy) est visible par le joueur.
   // Teste la géométrie de vision (polygon de visibilité) plutôt que les canvas rendus.
@@ -956,6 +958,28 @@ if (!cfg.fogEnabled) {
         ctx.arc(cx, cy, iconSize * 2, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
+      }
+
+      // Handles des endpoints t1/t2 en mode wall-select (GM uniquement)
+      if (!isMemorized && isWallSelectMode) {
+        const t1SelHighlight = selectedDoorEndpoint?.doorId === door.id && selectedDoorEndpoint?.endpoint === 't1';
+        const t2SelHighlight = selectedDoorEndpoint?.doorId === door.id && selectedDoorEndpoint?.endpoint === 't2';
+        const handleRadius = (t1SelHighlight ? 9 : 6) / vp.scale;
+        ctx.beginPath();
+        ctx.arc(ax, ay, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = t1SelHighlight ? 'rgba(251,191,36,1)' : 'rgba(96,165,250,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = t1SelHighlight ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = (t1SelHighlight ? 2.5 : 1.5) / vp.scale;
+        ctx.stroke();
+        const handle2Radius = (t2SelHighlight ? 9 : 6) / vp.scale;
+        ctx.beginPath();
+        ctx.arc(bx, by, handle2Radius, 0, Math.PI * 2);
+        ctx.fillStyle = t2SelHighlight ? 'rgba(251,191,36,1)' : 'rgba(96,165,250,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = t2SelHighlight ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = (t2SelHighlight ? 2.5 : 1.5) / vp.scale;
+        ctx.stroke();
       }
 
       ctx.restore();

@@ -51,6 +51,7 @@ export interface VTTCanvasRefs {
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   selectedDoorRef: React.MutableRefObject<string | null>;
   hoveredDoorRef: React.MutableRefObject<string | null>;
+  selectedDoorEndpointRef: React.MutableRefObject<{ doorId: string; endpoint: 't1' | 't2' } | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
@@ -122,6 +123,7 @@ export function useVTTCanvasEvents({
     doorPreviewPosRef,
     selectedDoorRef,
     hoveredDoorRef,
+    selectedDoorEndpointRef,
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
@@ -149,6 +151,14 @@ export function useVTTCanvasEvents({
     doorId: string;
     wallId: string;
     segmentIndex: number;
+  } | null>(null);
+
+  // Ref interne pour le drag d'un endpoint de porte (t1 ou t2) en mode wall-select
+  const draggingDoorEndpointRef = useRef<{
+    doorId: string;
+    wallId: string;
+    segmentIndex: number;
+    endpoint: 't1' | 't2';
   } | null>(null);
   
   // Reset wall/measure state when tool changes
@@ -329,11 +339,72 @@ export function useVTTCanvasEvents({
           return;
         }
 
+        // Si un endpoint de porte est en cours de déplacement : valider
+        if (draggingDoorEndpointRef.current) {
+          const endpointDoor = draggingDoorEndpointRef.current;
+          const currentDoors2 = doorsRef.current || [];
+          const updatedDoor2 = currentDoors2.find(d => d.id === endpointDoor.doorId);
+          if (updatedDoor2) onDoorToggledRef.current?.(updatedDoor2.id, updatedDoor2.open);
+          draggingDoorEndpointRef.current = null;
+          selectedDoorEndpointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
         // Si une porte est en cours de déplacement : valider
         if (draggingDoorRef.current) {
           draggingDoorRef.current = null;
           drawRef.current();
           return;
+        }
+
+        // Vérifier si on clique sur un endpoint (t1/t2) de porte
+        const currentDoors0 = doorsRef.current || [];
+        let endpointFound = false;
+        for (const door of currentDoors0) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { t1, t2 } = getDoorT1T2(door, segLen);
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const ax = p1.x + nx * segLen * t1;
+          const ay = p1.y + ny * segLen * t1;
+          const bx = p1.x + nx * segLen * t2;
+          const by = p1.y + ny * segLen * t2;
+          const dax = (wp.x - ax) * vp.scale;
+          const day = (wp.y - ay) * vp.scale;
+          const dbx = (wp.x - bx) * vp.scale;
+          const dby = (wp.y - by) * vp.scale;
+          if (Math.sqrt(dax * dax + day * day) < HIT_RADIUS_PX) {
+            draggingDoorEndpointRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex, endpoint: 't1' };
+            selectedDoorEndpointRef.current = { doorId: door.id, endpoint: 't1' };
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = null;
+            draggingWallPointRef.current = null;
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            endpointFound = true;
+            drawRef.current();
+            return;
+          }
+          if (Math.sqrt(dbx * dbx + dby * dby) < HIT_RADIUS_PX) {
+            draggingDoorEndpointRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex, endpoint: 't2' };
+            selectedDoorEndpointRef.current = { doorId: door.id, endpoint: 't2' };
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = null;
+            draggingWallPointRef.current = null;
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            endpointFound = true;
+            drawRef.current();
+            return;
+          }
         }
 
         // Vérifier si on clique sur l'icône d'une porte (sélection porte)
@@ -394,6 +465,8 @@ export function useVTTCanvasEvents({
           selectedWallPointRef.current = null;
           selectedWallPointsRef.current = [];
           draggingDoorRef.current = null;
+          draggingDoorEndpointRef.current = null;
+          selectedDoorEndpointRef.current = null;
           isDragSelectingRef.current = true;
           selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
         }
@@ -663,6 +736,42 @@ export function useVTTCanvasEvents({
         }
       }
 
+      // Déplacement d'un endpoint de porte (t1 ou t2) le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragEp = draggingDoorEndpointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragEp.wallId);
+        if (wall) {
+          const si = dragEp.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentDoors = doorsRef.current || [];
+              const door = currentDoors.find(d => d.id === dragEp.doorId);
+              if (door) {
+                let updatedDoor;
+                if (dragEp.endpoint === 't1') {
+                  const newT1 = Math.min(tNew, door.t2 - 0.02);
+                  updatedDoor = { ...door, t1: newT1 };
+                } else {
+                  const newT2 = Math.max(tNew, door.t1 + 0.02);
+                  updatedDoor = { ...door, t2: newT2 };
+                }
+                doorsRef.current = currentDoors.map(d => d.id === dragEp.doorId ? updatedDoor : d);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
       // Déplacement d'une porte le long de son segment de mur
       if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
@@ -927,6 +1036,18 @@ export function useVTTCanvasEvents({
           draggingWallPointRef.current = null;
         }
       }
+      // Fin du drag d'un endpoint de porte : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
+        const dragEp = draggingDoorEndpointRef.current;
+        const updatedDoor = (doorsRef.current || []).find(d => d.id === dragEp.doorId);
+        if (updatedDoor) {
+          onDoorRemovedRef.current?.(updatedDoor.id);
+          onDoorAddedRef.current?.(updatedDoor);
+        }
+        draggingDoorEndpointRef.current = null;
+        selectedDoorEndpointRef.current = null;
+      }
+
       // Fin du drag d'une porte : persister la nouvelle position
       if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
         const dragDoor = draggingDoorRef.current;
@@ -1208,6 +1329,8 @@ export function useVTTCanvasEvents({
         selectedWallPointsRef.current = [];
         draggingWallPointRef.current = null;
         draggingDoorRef.current = null;
+        draggingDoorEndpointRef.current = null;
+        selectedDoorEndpointRef.current = null;
         selectedDoorRef.current = null;
         isDragSelectingRef.current = false;
         selectionRectRef.current = null;
