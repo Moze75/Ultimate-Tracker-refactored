@@ -601,6 +601,8 @@ useEffect(() => {
         fog_state: fogStateRef.current,
         tokens: tokensRef.current,
         walls: wallsRef.current,
+        doors: doorsRef.current,
+        windows: windowsRef.current,
         props: propsRef.current,
         updated_at: new Date().toISOString(),
       })
