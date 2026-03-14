@@ -57,6 +57,8 @@ export interface VTTDrawContext {
   // pendant une restauration de snapshot asynchrone
   // -------------------
   exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
+  eraseRevealedCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  eraseRevealedCanvasSizeRef: React.MutableRefObject<{ w: number; h: number }>;
   drawRef: React.MutableRefObject<() => void>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -450,6 +452,45 @@ if (!cfg.fogEnabled) {
       }
       eCtx.globalCompositeOperation = 'source-over';
 
+      // -------------------
+      // Accumulation des zones erase révélées par vision directe (persistantes)
+      // -------------------
+      const eraseOnly = getOrBuildEraseOnlyCanvas(ctx2d, mapW, mapH);
+      if (eraseOnly) {
+        let erc = ctx2d.eraseRevealedCanvasRef.current;
+        if (!erc || ctx2d.eraseRevealedCanvasSizeRef.current.w !== mapW || ctx2d.eraseRevealedCanvasSizeRef.current.h !== mapH) {
+          erc = document.createElement('canvas');
+          erc.width = mapW;
+          erc.height = mapH;
+          ctx2d.eraseRevealedCanvasRef.current = erc;
+          ctx2d.eraseRevealedCanvasSizeRef.current = { w: mapW, h: mapH };
+        }
+        const ercCtx = erc.getContext('2d')!;
+        for (const token of playerTokens) {
+          if (!token.visible) continue;
+          const tSize = (token.size || 1) * CELL;
+          const tcx = token.position.x + tSize / 2;
+          const tcy = token.position.y + tSize / 2;
+          const poly = buildVisibilityPolygon(tcx, tcy, dayInfiniteR, dayWallSegs, mapW, mapH);
+          if (poly.length >= 6) {
+            const visionMask = document.createElement('canvas');
+            visionMask.width = mapW;
+            visionMask.height = mapH;
+            const vmCtx = visionMask.getContext('2d')!;
+            vmCtx.fillStyle = 'rgba(0,0,0,1)';
+            vmCtx.beginPath();
+            vmCtx.moveTo(poly[0], poly[1]);
+            for (let pi = 2; pi < poly.length; pi += 2) vmCtx.lineTo(poly[pi], poly[pi + 1]);
+            vmCtx.closePath();
+            vmCtx.fill();
+            vmCtx.globalCompositeOperation = 'destination-in';
+            vmCtx.drawImage(eraseOnly, 0, 0);
+            ercCtx.globalCompositeOperation = 'source-over';
+            ercCtx.drawImage(visionMask, 0, 0);
+          }
+        }
+      }
+
       // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
       let dvc = ctx2d.dayVisionCanvasRef.current;
       if (!dvc || ctx2d.dayVisionCanvasSizeRef.current.w !== mapW || ctx2d.dayVisionCanvasSizeRef.current.h !== mapH) {
@@ -554,6 +595,11 @@ if (!cfg.fogEnabled) {
           // Supprimer les zones vues directement par un token
           efCtx.globalCompositeOperation = 'destination-out';
           efCtx.drawImage(visionHoles, 0, 0);
+          // Supprimer les zones erase déjà révélées par la vision (persistant)
+          const erc = ctx2d.eraseRevealedCanvasRef.current;
+          if (erc && erc.width === mapW && erc.height === mapH) {
+            efCtx.drawImage(erc, 0, 0);
+          }
           efCtx.globalCompositeOperation = 'source-over';
 
           cCtx.globalCompositeOperation = 'source-over';
@@ -723,6 +769,11 @@ if (!cfg.fogEnabled) {
           efCtx.drawImage(invCanvas, 0, 0);
           efCtx.globalCompositeOperation = 'destination-out';
           efCtx.drawImage(visionHoles, 0, 0);
+          // Supprimer les zones erase déjà révélées par la vision (persistant)
+          const ercNight = ctx2d.eraseRevealedCanvasRef.current;
+          if (ercNight && ercNight.width === mapW && ercNight.height === mapH) {
+            efCtx.drawImage(ercNight, 0, 0);
+          }
           efCtx.globalCompositeOperation = 'source-over';
 
           cCtx.globalCompositeOperation = 'source-over';

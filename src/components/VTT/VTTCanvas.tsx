@@ -252,6 +252,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // ------------------- 
   const exploredCanvasRestoringRef = useRef(false);
   const exploredMaskWasResetRef = useRef(false);
+  const eraseRevealedCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const eraseRevealedCanvasSizeRef = useRef({ w: 0, h: 0 });
   // -------------------
   // Mémorise la longueur précédente de exploredStrokes
   // pour détecter uniquement un reset fog intentionnel (transition N→0)
@@ -467,6 +469,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     fogInvCanvasRef.current = null;
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
+    eraseRevealedCanvasRef.current = null;
+    eraseRevealedCanvasSizeRef.current = { w: 0, h: 0 };
     exploredMaskWasResetRef.current = true;
     prevStrokesLenRef.current = 0;
     drawRef.current();
@@ -757,6 +761,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       exploredCanvasRef,
       exploredCanvasSizeRef,
       exploredCanvasRestoringRef,
+      eraseRevealedCanvasRef,
+      eraseRevealedCanvasSizeRef,
       drawRef,
       seenDoorsRef,
       onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
@@ -867,6 +873,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
       exploredCanvasRef.current = null;
       exploredCanvasSizeRef.current = { w: 0, h: 0 };
+      eraseRevealedCanvasRef.current = null;
+      eraseRevealedCanvasSizeRef.current = { w: 0, h: 0 };
       exploredMaskWasResetRef.current = true;
     }
 
