@@ -520,6 +520,32 @@ export function useVTTCanvasEvents({
     };
 
     const onMouseUp = () => {
+      // -------------------
+      // Finalisation du rectangle de sélection fog (fog-rect-reveal / fog-rect-erase)
+      // Au mouseUp, on transforme les coordonnées du rectangle en un stroke
+      // rectangulaire et on l'envoie à onRevealFogRef pour persist + broadcast.
+      // On applique aussi le stroke localement sur le fogCanvas pour un retour
+      // visuel immédiat sans attendre le re-render React.
+      // -------------------
+      if (fogRectRef.current) {
+        const rect = fogRectRef.current;
+        const fx1 = Math.min(rect.x1, rect.x2);
+        const fy1 = Math.min(rect.y1, rect.y2);
+        const fx2 = Math.max(rect.x1, rect.x2);
+        const fy2 = Math.max(rect.y1, rect.y2);
+        const fw = fx2 - fx1;
+        const fh = fy2 - fy1;
+        // Ne pas appliquer si le rectangle est trop petit (simple clic sans drag)
+        if (fw > 3 && fh > 3) {
+          const tool = activeToolRef.current;
+          const erase = tool === 'fog-rect-erase';
+          const stroke = { x: fx1, y: fy1, r: 0, erase, shape: 'rect' as const, w: fw, h: fh };
+          // Envoi direct au handler fog (bypass paintFogAt qui est pensé pour le pinceau)
+          onRevealFogRef.current(stroke);
+        }
+        fogRectRef.current = null;
+        drawRef.current();
+      }
       if (isDragSelectingRef.current && selectionRectRef.current) {
         const rect = selectionRectRef.current;
         const x1 = Math.min(rect.x1, rect.x2);
