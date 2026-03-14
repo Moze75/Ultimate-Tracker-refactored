@@ -765,8 +765,8 @@ if (!cfg.fogEnabled) {
   const selectedDoorEndpoint = ctx2d.selectedDoorEndpointRef?.current ?? null;
 
   // Helper : vérifie si un point monde (wx, wy) est visible par le joueur.
-  // Teste la géométrie de vision (polygon de visibilité) plutôt que les canvas rendus.
-  const isDoorPointVisible = (wx: number, wy: number): boolean => {
+  // doorId optionnel : exclut ce segment de porte du calcul (la porte ne bloque pas sa propre visibilité).
+  const isDoorPointVisible = (wx: number, wy: number, doorId?: string): boolean => {
     if (!cfg.fogEnabled) return true;
 
     // 1. Fog révélé manuellement à cet endroit → toujours visible
@@ -789,9 +789,15 @@ if (!cfg.fogEnabled) {
 
     // 3. Sinon : tester si le point est dans le polygon de visibilité d'un token
     if (myVisionTokens.length === 0) return false;
-    const doorWallSegs = currentWalls.length > 0
-      ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current)
-      : [];
+    if (currentWalls.length === 0) return myVisionTokens.length > 0;
+
+    // Pour tester la visibilité d'une porte, on la traite comme ouverte afin que
+    // son propre segment ne bloque pas le polygon de vision depuis ce côté.
+    const doorsForVision = doorId
+      ? ctx2d.doorsRef.current.map(d => d.id === doorId ? { ...d, open: true } : d)
+      : ctx2d.doorsRef.current;
+    const doorWallSegs = getEffectiveWallSegments(currentWalls, doorsForVision);
+
     for (const viewer of myVisionTokens) {
       const radii = getVisionRadii(viewer, CELL);
       const maxR = Math.max(radii.brightR, radii.dimR);
@@ -838,7 +844,7 @@ if (!cfg.fogEnabled) {
       // Côté joueur/spectateur : n'afficher la porte que si visible OU mémorisée (vue précédemment)
       let isMemorized = false;
       if (curRole !== 'gm' && cfg.fogEnabled) {
-        const currentlyVisible = isDoorPointVisible(cx, cy);
+        const currentlyVisible = isDoorPointVisible(cx, cy, door.id);
         if (currentlyVisible) {
           // Mémoriser cette porte si pas déjà mémorisée
           if (!ctx2d.seenDoorsRef.current.has(door.id)) {
