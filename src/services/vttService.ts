@@ -130,17 +130,30 @@ private localState: LocalState = {
 
     // Les murs sont stockés par scène (vtt_scenes), pas dans vtt_rooms.
     // On charge la scène active pour récupérer les murs courants.
+    // Utilise select('*') pour ne pas échouer si une colonne optionnelle (ex: doors) n'existe pas encore.
     try {
-const { data: scenes } = await supabase
+const { data: scenes, error: scenesError } = await supabase
   .from('vtt_scenes')
   .select('id, walls, doors, fog_state')
   .eq('room_id', roomId)
   .order('order_index', { ascending: true });
 
-if (scenes && scenes.length > 0) {
+let resolvedScenes = scenes;
+
+if (scenesError) {
+  // Colonne optionnelle absente (ex: migration doors non appliquée) → fallback sans doors
+  const { data: fallback } = await supabase
+    .from('vtt_scenes')
+    .select('id, walls, fog_state')
+    .eq('room_id', roomId)
+    .order('order_index', { ascending: true });
+  resolvedScenes = fallback;
+}
+
+if (resolvedScenes && resolvedScenes.length > 0) {
   const activeScene = this.activeSceneId
-    ? scenes.find(scene => scene.id === this.activeSceneId) ?? scenes[0]
-    : scenes[0];
+    ? resolvedScenes.find((scene: Record<string, unknown>) => scene.id === this.activeSceneId) ?? resolvedScenes[0]
+    : resolvedScenes[0];
 
   if (activeScene?.walls) {
     this.localState.walls = activeScene.walls;

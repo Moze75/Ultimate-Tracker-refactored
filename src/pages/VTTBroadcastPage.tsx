@@ -10,6 +10,7 @@ import type {
   VTTFogState,
   VTTServerEvent,
   VTTWall,
+  VTTDoor,
 } from '../types/vtt';
 import { Maximize, Minimize } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [walls, setWalls] = useState<VTTWall[]>([]);
+  const [doors, setDoors] = useState<VTTDoor[]>([]);
   // -------------------
   // Suivi de la scène active reçue du MJ
   // Nécessaire pour déclencher save/restore du fog exploré dans VTTCanvas
@@ -58,6 +60,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setTokens(event.state.room.tokens);
         setFogState(event.state.room.fogState);
         setWalls(event.state.room.walls || []);
+        setDoors(event.state.room.doors || []);
         setWaitingForSync(false);
         break;
       case 'TOKEN_MOVED':
@@ -90,13 +93,14 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setTokens(event.tokens);
         setFogState(event.fogState);
         setWalls(event.walls);
-        // -------------------
-        // Mise à jour du sceneId → déclenche le cycle save/restore dans VTTCanvas
-        // -------------------
+        setDoors(event.doors || []);
         if (event.sceneId) setCurrentSceneId(event.sceneId);
         break;
       case 'WALLS_UPDATED':
         setWalls(event.walls);
+        break;
+      case 'DOORS_UPDATED':
+        setDoors(event.doors);
         break;
       case 'WEATHER_UPDATED':
         setConfig(prev => ({ ...prev, weatherEffects: event.effects }));
@@ -265,6 +269,7 @@ const defaultViewport = broadcastViewport ?? undefined;
   selectedTokenId={null}
   onSelectToken={noOp as any}
   walls={walls}
+  doors={doors}
   forceViewport={defaultViewport}
 />
 
