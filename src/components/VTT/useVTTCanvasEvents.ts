@@ -96,6 +96,10 @@ export function useVTTCanvasEvents({
   onSelectTokenRef,
   onSelectTokensRef,
   onMoveTokenRef,
+  // -------------------
+  // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle)
+  // -------------------
+  onRevealFogRef,
   onResizeTokenRef,
   onRightClickTokenRef,
     onCalibrationPointRef,
