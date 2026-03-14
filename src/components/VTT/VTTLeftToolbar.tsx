@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset, Sparkles, Wind, SlidersHorizontal, Square, } from 'lucide-react';
+import { MousePointer2, Eye, EyeOff, UserPlus, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset, Sparkles, Wind, SlidersHorizontal, Square, MapPin } from 'lucide-react';
 import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
@@ -47,6 +47,8 @@ interface VTTLeftToolbarProps {
   onUpdateWeather: (effects: VTTWeatherEffect[]) => void;
   gmFollowEnabled?: boolean;
   onToggleGmFollow?: () => void;
+  onPing?: () => void;
+  isPingActive?: boolean;
 }
 
 export function VTTLeftToolbar({
@@ -85,6 +87,8 @@ export function VTTLeftToolbar({
   onUpdateWeather,
   gmFollowEnabled = false,
   onToggleGmFollow,
+  onPing,
+  isPingActive = false,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
@@ -190,6 +194,13 @@ export function VTTLeftToolbar({
         label="Mesurer la distance"
         active={isMeasureTool}
         onClick={() => { onToolChange(isMeasureTool ? 'select' : 'measure'); setFogPopupOpen(false); setGridPopupOpen(false); setWallPopupOpen(false); }}
+      />
+
+      <ToolBtn
+        icon={<MapPin size={17} />}
+        label="Ping"
+        active={isPingActive}
+        onClick={() => { onPing?.(); }}
       />
 
       {role === 'gm' && (

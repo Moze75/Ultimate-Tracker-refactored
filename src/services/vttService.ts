@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTWindow, VTTConnectedUser } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTWindow, VTTConnectedUser, VTTPing } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
@@ -71,6 +71,7 @@ class VTTService {
   private presenceHandlers: PresenceHandler[] = [];
 private broadcastViewportHandlers: BroadcastViewportHandler[] = [];
 private playerViewportHandlers: PlayerViewportHandler[] = [];
+private pingHandlers: ((ping: VTTPing) => void)[] = [];
 private localState: LocalState = {
   config: DEFAULT_CONFIG,
   tokens: [],
@@ -300,6 +301,11 @@ if (resolvedScenes && resolvedScenes.length > 0) {
 .on('broadcast', { event: 'vtt-player-viewport' }, ({ payload }) => {
   const vp = (payload ?? null) as BroadcastViewport | null;
   this.playerViewportHandlers.forEach(h => h(vp));
+})
+.on('broadcast', { event: 'vtt-ping' }, ({ payload }) => {
+  const ping = payload as VTTPing;
+  this.pingHandlers.forEach(h => h(ping));
+  this.messageHandlers.forEach(handler => handler({ type: 'PING_RECEIVED', ping }));
 })
       .on('presence', { event: 'sync' }, () => {
         this._emitPresence();
@@ -626,6 +632,29 @@ sendBroadcastViewport(viewport: BroadcastViewport) {
 sendPlayerViewport(viewport: BroadcastViewport | null) {
   if (!this.channel) return;
   this.channel.send({ type: 'broadcast', event: 'vtt-player-viewport', payload: viewport }).catch(console.error);
+}
+
+sendPing(x: number, y: number, userName: string, color: string) {
+  if (!this.channel) return;
+  const ping: VTTPing = {
+    id: Math.random().toString(36).slice(2, 10),
+    x,
+    y,
+    userId: this.userId || '',
+    userName,
+    color,
+    createdAt: Date.now(),
+  };
+  this.channel.send({ type: 'broadcast', event: 'vtt-ping', payload: ping }).catch(console.error);
+  this.pingHandlers.forEach(h => h(ping));
+  this.messageHandlers.forEach(handler => handler({ type: 'PING_RECEIVED', ping }));
+}
+
+onPing(handler: (ping: VTTPing) => void) {
+  this.pingHandlers.push(handler);
+  return () => {
+    this.pingHandlers = this.pingHandlers.filter(h => h !== handler);
+  };
 }
 
 onBroadcastViewport(handler: BroadcastViewportHandler) {

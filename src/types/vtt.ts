@@ -166,6 +166,16 @@ export interface VTTConnectedUser {
   role: VTTRole;
 }
 
+export interface VTTPing {
+  id: string;
+  x: number;
+  y: number;
+  userId: string;
+  userName: string;
+  color: string;
+  createdAt: number;
+}
+
 export type VTTClientEvent =
   | { type: 'MOVE_TOKEN_REQUEST'; tokenId: string; position: { x: number; y: number } }
   // -------------------
@@ -184,7 +194,8 @@ export type VTTClientEvent =
   | { type: 'UPDATE_WALLS'; walls: VTTWall[] }
   | { type: 'UPDATE_DOORS'; doors: VTTDoor[] }
   | { type: 'UPDATE_WINDOWS'; windows: VTTWindow[] }
-  | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] };
+  | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] }
+  | { type: 'SEND_PING'; x: number; y: number };
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }
@@ -199,6 +210,7 @@ export type VTTServerEvent =
   | { type: 'DOORS_UPDATED'; doors: VTTDoor[] }
   | { type: 'WINDOWS_UPDATED'; windows: VTTWindow[] }
   | { type: 'WEATHER_UPDATED'; effects: VTTWeatherEffect[] }
+  | { type: 'PING_RECEIVED'; ping: VTTPing }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
   | { type: 'ERROR'; message: string };

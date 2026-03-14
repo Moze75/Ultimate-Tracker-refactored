@@ -31,6 +31,7 @@ import type {
   VTTWindow,
   VTTConnectedUser,
   VTTWeatherEffect,
+  VTTPing,
 } from '../types/vtt';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
@@ -96,6 +97,75 @@ function dbSceneToVTTScene(row: Record<string, unknown>): VTTScene {
     windows: (row.windows as VTTWindow[]) || [],
     props: (row.props as VTTProp[]) || [],
   };
+}
+
+function PingAnimation({ color, userName }: { color: string; userName: string }) {
+  return (
+    <div className="relative flex items-center justify-center">
+      <style>{`
+        @keyframes ping-ring {
+          0% { transform: scale(0.3); opacity: 1; }
+          100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes ping-ring2 {
+          0% { transform: scale(0.3); opacity: 0.8; }
+          100% { transform: scale(2.0); opacity: 0; }
+        }
+        @keyframes ping-dot {
+          0% { transform: scale(0); opacity: 1; }
+          30% { transform: scale(1.2); opacity: 1; }
+          60% { transform: scale(1); opacity: 1; }
+          80% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(0); opacity: 0; }
+        }
+        @keyframes ping-label {
+          0% { opacity: 0; transform: translateY(4px); }
+          15% { opacity: 1; transform: translateY(0); }
+          70% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+      `}</style>
+      <div
+        className="absolute rounded-full border-2"
+        style={{
+          width: 40,
+          height: 40,
+          borderColor: color,
+          animation: 'ping-ring 1.8s ease-out 3 forwards',
+        }}
+      />
+      <div
+        className="absolute rounded-full border-2"
+        style={{
+          width: 40,
+          height: 40,
+          borderColor: color,
+          animation: 'ping-ring2 1.8s ease-out 0.3s 3 forwards',
+        }}
+      />
+      <div
+        className="rounded-full z-10"
+        style={{
+          width: 14,
+          height: 14,
+          backgroundColor: color,
+          boxShadow: `0 0 8px ${color}`,
+          animation: 'ping-dot 3.8s ease-in-out forwards',
+        }}
+      />
+      <div
+        className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold px-2 py-0.5 rounded-full pointer-events-none z-20"
+        style={{
+          backgroundColor: color,
+          color: '#fff',
+          textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+          animation: 'ping-label 3.8s ease-in-out forwards',
+        }}
+      >
+        {userName}
+      </div>
+    </div>
+  );
 }
 
 export function VTTPage({ session, onBack }: VTTPageProps) {
@@ -217,6 +287,11 @@ canvasViewportRef.current = canvasViewport;
   const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
   const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
+
+  const [isPingMode, setIsPingMode] = useState(false);
+  const [activePings, setActivePings] = useState<VTTPing[]>([]);
+  const pingModeRef = useRef(false);
+  pingModeRef.current = isPingMode;
 
   const userId = session.user.id;
   const authToken = session.access_token;
@@ -387,6 +462,14 @@ canvasViewportRef.current = canvasViewport;
       case 'WEATHER_UPDATED':
         setWeatherEffects(event.effects);
         break;
+      case 'PING_RECEIVED': {
+        const ping = event.ping;
+        setActivePings(prev => [...prev, ping]);
+        setTimeout(() => {
+          setActivePings(prev => prev.filter(p => p.id !== ping.id));
+        }, 4000);
+        break;
+      }
       case 'USER_JOINED':
       case 'USER_LEFT':
         break;
@@ -1805,6 +1888,8 @@ onToggleGmFollow={() => {
 }} 
   weatherEffects={weatherEffects}
   onUpdateWeather={handleUpdateWeather}
+  isPingActive={isPingMode}
+  onPing={() => setIsPingMode(v => !v)}
 />
         </div>
 
@@ -1887,6 +1972,26 @@ onMouseDown={e => {
           )}
 
           
+          {isPingMode && (
+            <div
+              className="absolute inset-0 z-10 cursor-crosshair"
+              onClick={e => {
+                const container = canvasContainerRef.current;
+                if (!container) return;
+                const rect = container.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+                const vp = canvasViewportRef.current;
+                const wx = (sx - vp.x) / vp.scale;
+                const wy = (sy - vp.y) / vp.scale;
+                const userColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899'];
+                const color = userColors[Math.abs(userId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % userColors.length];
+                vttService.sendPing(wx, wy, userName, color);
+                setIsPingMode(false);
+              }}
+            />
+          )}
+
           <VTTCanvas
             ref={vttCanvasRef}
             sceneId={activeSceneId}
@@ -1949,6 +2054,21 @@ onSelectTokens={ids => {
             onSeenDoorsUpdate={role === 'player' ? handleSeenDoorsUpdate : undefined}
             fogResetSignal={fogResetSignal}
           />
+
+          {activePings.map(ping => {
+            const vp = canvasViewport;
+            const sx = ping.x * vp.scale + vp.x;
+            const sy = ping.y * vp.scale + vp.y;
+            return (
+              <div
+                key={ping.id}
+                className="absolute pointer-events-none z-20"
+                style={{ left: sx, top: sy, transform: 'translate(-50%, -50%)' }}
+              >
+                <PingAnimation color={ping.color} userName={ping.userName} />
+              </div>
+            );
+          })}
 
 {props.map(prop => (
   <div
