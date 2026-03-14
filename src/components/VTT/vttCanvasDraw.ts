@@ -808,6 +808,31 @@ if (!cfg.fogEnabled) {
     ctx.fillText(label, midX, midY);
   }
 
+  // --- RECTANGLE DE PREVIEW FOG ---
+  const fogRect = ctx2d.fogRectRef?.current;
+  if (fogRect) {
+    const fx = Math.min(fogRect.x1, fogRect.x2);
+    const fy = Math.min(fogRect.y1, fogRect.y2);
+    const fw = Math.abs(fogRect.x2 - fogRect.x1);
+    const fh = Math.abs(fogRect.y2 - fogRect.y1);
+    const isReveal = ctx2d.activeToolRef.current === 'fog-rect-reveal';
+    ctx.fillStyle = isReveal ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)';
+    ctx.fillRect(fx, fy, fw, fh);
+    ctx.strokeStyle = isReveal ? 'rgba(245,158,11,0.8)' : 'rgba(239,68,68,0.8)';
+    ctx.lineWidth = 2 / vp.scale;
+    ctx.setLineDash([6 / vp.scale, 4 / vp.scale]);
+    ctx.strokeRect(fx, fy, fw, fh);
+    ctx.setLineDash([]);
+    // Label dimensions
+    const label = `${Math.round(fw)}×${Math.round(fh)}`;
+    const fontSize = Math.max(11, 13 / vp.scale);
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.fillStyle = isReveal ? 'rgba(245,158,11,0.9)' : 'rgba(239,68,68,0.9)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(label, fx + fw / 2, fy - 4 / vp.scale);
+  }
+
   // --- RECTANGLE DE SÉLECTION ---
   const selRect = ctx2d.selectionRectRef.current;
   if (selRect) {
