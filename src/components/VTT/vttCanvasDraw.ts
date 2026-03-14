@@ -961,7 +961,7 @@ if (!cfg.fogEnabled) {
       }
 
       // Handles des endpoints t1/t2 en mode wall-select (GM uniquement)
-      if (!isMemorized && isWallSelectMode) {
+      if (!isMemorized && ctx2d.activeToolRef.current === 'wall-select') {
         const t1SelHighlight = selectedDoorEndpoint?.doorId === door.id && selectedDoorEndpoint?.endpoint === 't1';
         const t2SelHighlight = selectedDoorEndpoint?.doorId === door.id && selectedDoorEndpoint?.endpoint === 't2';
         const handleRadius = (t1SelHighlight ? 9 : 6) / vp.scale;
