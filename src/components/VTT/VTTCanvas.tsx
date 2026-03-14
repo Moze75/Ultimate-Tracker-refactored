@@ -516,6 +516,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
     sceneIdRef.current = sceneId ?? null;
     prevExploredStrokesLenRef.current = -1;
+    prevStrokesLenRef.current = 0;
 
     // Reset seenDoors for new scene, then load persisted ones
     seenDoorsRef.current = new Set(fogStateRef.current.seenDoors || []);
@@ -804,12 +805,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
  
     // -------------------
     // Détection du reset fog (tout masquer)
-    // Condition : exploredStrokes passe de > 0 à 0 ET strokes aussi à 0
+    // Condition : strokes passe de > 0 à 0 (reset intentionnel)
     // Le prevLen === -1 est ignoré (premier chargement / changement de scène)
     // -------------------
     const prevLen = prevExploredStrokesLenRef.current;
     const currLen = exploredStrokes.length;
-    const isIntentionalReset = prevLen > 0 && currLen === 0;
+    const isIntentionalReset = (prevLen > 0 && currLen === 0) || (prevStrokesLenRef.current > 0 && strokes.length === 0);
     prevExploredStrokesLenRef.current = currLen;
 
     if (isIntentionalReset && exploredCanvasRef.current) {
