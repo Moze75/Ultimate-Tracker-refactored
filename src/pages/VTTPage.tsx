@@ -336,9 +336,18 @@ canvasViewportRef.current = canvasViewport;
           t.id === event.tokenId ? { ...t, ...event.changes } : t
         ));
         break;
-      case 'FOG_UPDATED':
-        setFogState(normalizeFogState(event.fogState));
+      case 'FOG_UPDATED': {
+        const normalized = normalizeFogState(event.fogState);
+        setFogState(normalized);
+        if (
+          normalized.exploredStrokes.length === 0 &&
+          normalized.strokes.length === 0 &&
+          activeSceneIdRef.current
+        ) {
+          localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
+        }
         break;
+      }
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
         break;
