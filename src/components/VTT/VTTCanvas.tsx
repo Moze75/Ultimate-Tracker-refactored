@@ -164,10 +164,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const fogBrushSizeRef = useRef(fogBrushSize);
   fogBrushSizeRef.current = fogBrushSize;
   const onMoveTokenRef = useRef(onMoveToken);
-  onMoveTokenRef.current = (id, pos) => {
-    exploredMaskWasResetRef.current = false;
-    onMoveToken(id, pos);
-  };
+  onMoveTokenRef.current = onMoveToken;
   const onRevealFogRef = useRef(onRevealFog);
   onRevealFogRef.current = onRevealFog;
   const onSelectTokenRef = useRef(onSelectToken);
@@ -255,6 +252,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // ------------------- 
   const exploredCanvasRestoringRef = useRef(false);
   const exploredMaskWasResetRef = useRef(false);
+  const tokenPositionsAtResetRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   // -------------------
   // Mémorise la longueur précédente de exploredStrokes
   // pour détecter uniquement un reset fog intentionnel (transition N→0)
@@ -450,6 +448,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     if (sceneIdRef.current) {
       localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
     }
+    const posMap = new Map<string, { x: number; y: number }>();
+    for (const token of tokensRef.current) {
+      posMap.set(token.id, { x: token.position.x, y: token.position.y });
+    }
+    tokenPositionsAtResetRef.current = posMap;
     exploredMaskWasResetRef.current = true;
     drawRef.current();
   }, [fogResetSignal]);
@@ -740,6 +743,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       exploredCanvasSizeRef,
       exploredCanvasRestoringRef,
       exploredMaskWasResetRef,
+      tokenPositionsAtResetRef,
       drawRef,
       seenDoorsRef,
       onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
@@ -845,17 +849,19 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     prevExploredStrokesLenRef.current = currLen;
 
     if (isIntentionalReset && exploredCanvasRef.current) {
-      // Réinitialise le canvas exploré en noir (tout masqué)
       const eCtx = exploredCanvasRef.current.getContext('2d');
       if (eCtx) {
         eCtx.fillStyle = 'rgba(0,0,0,1)';
         eCtx.fillRect(0, 0, mapW, mapH);
       }
-      // Supprime le snapshot localStorage pour éviter une restauration fantôme
       if (sceneId) {
         localStorage.removeItem(getExploredMaskStorageKey(sceneId));
       }
-      // Marque que le fog a été resetté pour empêcher une re-sauvegarde au démontage
+      const posMap = new Map<string, { x: number; y: number }>();
+      for (const token of tokensRef.current) {
+        posMap.set(token.id, { x: token.position.x, y: token.position.y });
+      }
+      tokenPositionsAtResetRef.current = posMap;
       exploredMaskWasResetRef.current = true;
     }
 

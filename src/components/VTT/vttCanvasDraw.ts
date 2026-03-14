@@ -58,6 +58,7 @@ export interface VTTDrawContext {
   // -------------------
   exploredCanvasRestoringRef: React.MutableRefObject<boolean>;
   exploredMaskWasResetRef: React.MutableRefObject<boolean>;
+  tokenPositionsAtResetRef: React.MutableRefObject<Map<string, { x: number; y: number }>>;
   drawRef: React.MutableRefObject<() => void>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -401,10 +402,24 @@ if (!cfg.fogEnabled) {
       if (!evc) return;
       const eCtx = evc.getContext('2d')!;
 
-      if (!ctx2d.exploredMaskWasResetRef.current) {
+      // Graver dans exploredCanvas les zones visibles (destination-out = effacer le noir)
+      // Si un reset a eu lieu, ne graver que les tokens qui ont bougé depuis le reset.
+      // Un token gravé invalide le flag reset pour lui, permettant l'accumulation normale.
+      {
+        const wasReset = ctx2d.exploredMaskWasResetRef.current;
+        const posAtReset = ctx2d.tokenPositionsAtResetRef.current;
+        let anyGravure = false;
         eCtx.globalCompositeOperation = 'destination-out';
         for (const token of playerTokens) {
           if (!token.visible) continue;
+          if (wasReset) {
+            const savedPos = posAtReset.get(token.id);
+            if (savedPos && savedPos.x === token.position.x && savedPos.y === token.position.y) {
+              continue;
+            }
+            posAtReset.delete(token.id);
+          }
+          anyGravure = true;
           const tSize = (token.size || 1) * CELL;
           const tcx = token.position.x + tSize / 2;
           const tcy = token.position.y + tSize / 2;
@@ -419,6 +434,9 @@ if (!cfg.fogEnabled) {
           }
         }
         eCtx.globalCompositeOperation = 'source-over';
+        if (wasReset && anyGravure && posAtReset.size === 0) {
+          ctx2d.exploredMaskWasResetRef.current = false;
+        }
       }
 
       // --- Canvas de vision COURANTE : noir sauf dans le polygone de vision actuel
@@ -561,10 +579,21 @@ if (!cfg.fogEnabled) {
         ? getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current)
         : [];
 
-      if (!ctx2d.exploredMaskWasResetRef.current) {
+      {
+        const wasReset = ctx2d.exploredMaskWasResetRef.current;
+        const posAtReset = ctx2d.tokenPositionsAtResetRef.current;
+        let anyGravure = false;
         eCtx.globalCompositeOperation = 'destination-out';
         for (const token of playerTokens) {
           if (!token.visible) continue;
+          if (wasReset) {
+            const savedPos = posAtReset.get(token.id);
+            if (savedPos && savedPos.x === token.position.x && savedPos.y === token.position.y) {
+              continue;
+            }
+            posAtReset.delete(token.id);
+          }
+          anyGravure = true;
           const tSize = (token.size || 1) * CELL;
           const tcx = token.position.x + tSize / 2;
           const tcy = token.position.y + tSize / 2;
@@ -600,6 +629,9 @@ if (!cfg.fogEnabled) {
           }
         }
         eCtx.globalCompositeOperation = 'source-over';
+        if (wasReset && anyGravure && posAtReset.size === 0) {
+          ctx2d.exploredMaskWasResetRef.current = false;
+        }
       }
 
       // -------------------
