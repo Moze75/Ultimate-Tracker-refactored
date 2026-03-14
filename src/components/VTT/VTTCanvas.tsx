@@ -924,6 +924,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onRevealFogRef,
     drawRef,
     paintFogAt,
+    // -------------------
+    // Flush batch fog au mouseUp — un seul broadcast/setState pour tout le trait
+    // -------------------
+    flushFogBatch,
     getCanvasXY,
     screenToWorld,
     getTokenAt,
