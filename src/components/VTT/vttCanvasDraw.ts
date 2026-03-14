@@ -831,24 +831,62 @@ if (!cfg.fogEnabled) {
         ctx.fill();
       }
 
-      const iconR = Math.max(5, Math.min(10, doorSpanLen * 0.08)) / vp.scale;
+      // Icone porte cliquable au centre du segment
+      const iconSize = Math.max(8, Math.min(14, doorSpanLen * 0.12)) / vp.scale;
+      const isOpen = door.open;
+      const bgColor = isOpen ? 'rgba(34,197,94,0.92)' : 'rgba(251,191,36,0.92)';
+      const bgGlow = isOpen ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)';
+      const strokeColor = 'rgba(255,255,255,0.9)';
+
+      // Halo de fond
       ctx.beginPath();
-      ctx.arc(cx, cy, iconR * 1.6, 0, Math.PI * 2);
-      ctx.fillStyle = door.open ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)';
+      ctx.arc(cx, cy, iconSize * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = bgGlow;
       ctx.fill();
+
+      // Fond circulaire coloré
       ctx.beginPath();
-      ctx.arc(cx, cy, iconR, 0, Math.PI * 2);
-      ctx.fillStyle = door.open ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
+      ctx.arc(cx, cy, iconSize, 0, Math.PI * 2);
+      ctx.fillStyle = bgColor;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.strokeStyle = strokeColor;
       ctx.lineWidth = 1.5 / vp.scale;
       ctx.stroke();
 
+      // Dessin de l'icône porte (cadre + panneau + poignée) en blanc
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      const lw = 1.2 / vp.scale;
+      ctx.lineWidth = lw;
+      const hw = iconSize * 0.52;
+      const hh = iconSize * 0.68;
+      // Encadrement de la porte
+      ctx.strokeRect(cx - hw, cy - hh, hw * 2, hh * 2);
+      if (isOpen) {
+        // Porte ouverte : panneau en biais
+        ctx.beginPath();
+        ctx.moveTo(cx - hw, cy - hh);
+        ctx.lineTo(cx - hw * 0.1, cy - hh * 0.55);
+        ctx.lineTo(cx - hw * 0.1, cy + hh * 0.65);
+        ctx.lineTo(cx - hw, cy + hh);
+        ctx.stroke();
+      } else {
+        // Porte fermée : panneau vertical plein
+        const pw = hw * 0.72;
+        ctx.beginPath();
+        ctx.rect(cx - pw, cy - hh + lw * 2, pw * 2, hh * 2 - lw * 4);
+        ctx.stroke();
+        // Poignée
+        ctx.beginPath();
+        ctx.arc(cx + hw * 0.3, cy, iconSize * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       if (isDoorMode) {
         ctx.lineWidth = 1 / vp.scale;
-        ctx.strokeStyle = door.open ? 'rgba(34,197,94,0.5)' : 'rgba(251,191,36,0.5)';
+        ctx.strokeStyle = isOpen ? 'rgba(34,197,94,0.6)' : 'rgba(251,191,36,0.6)';
         ctx.beginPath();
-        ctx.arc(cx, cy, iconR * 1.6, 0, Math.PI * 2);
+        ctx.arc(cx, cy, iconSize * 1.5, 0, Math.PI * 2);
         ctx.stroke();
       }
 
