@@ -496,12 +496,12 @@ if (resolvedScenes && resolvedScenes.length > 0) {
       case 'UPDATE_DOORS':
         this.localState.doors = event.doors;
         serverEvent = { type: 'DOORS_UPDATED', doors: event.doors };
+        this._persistNow();
+        break;
 
       case 'UPDATE_WINDOWS':
         this.localState.windows = event.windows;
         serverEvent = { type: 'WINDOWS_UPDATED', windows: event.windows };
-        this._persistNow();
-        break;
         this._persistNow();
         break;
     }
