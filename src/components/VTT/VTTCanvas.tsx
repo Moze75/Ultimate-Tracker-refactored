@@ -581,7 +581,24 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     }
   };
 
- 
+  // -------------------
+  // Flush du batch fog : appelé au mouseUp (fin du painting)
+  // Envoie en UNE SEULE FOIS tous les strokes accumulés pendant le drag.
+  // C'est CE flush qui provoque le setState + broadcast + RPC Supabase,
+  // donc ne se fait qu'une seule fois au lieu de 60/s.
+  // -------------------
+  const flushFogBatch = useCallback(() => {
+    // Annule tout RAF en attente
+    if (fogPaintRafRef.current) {
+      cancelAnimationFrame(fogPaintRafRef.current);
+      fogPaintRafRef.current = null;
+    }
+    const batch = fogPaintBatchRef.current;
+    fogPaintBatchRef.current = [];
+    if (batch.length > 0) {
+      onRevealFogRef.current(batch);
+    }
+  }, []);
 
     const draw = useCallback(() => {
     drawVTTCanvas({
