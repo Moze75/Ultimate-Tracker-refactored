@@ -610,7 +610,6 @@ export function useVTTCanvasEvents({
     };
 
     const onMouseLeave = () => {
-      onMouseUp();
       if (brushOverlayRef.current) brushOverlayRef.current.style.display = 'none';
     };
 
@@ -795,6 +794,22 @@ export function useVTTCanvasEvents({
       }
     };
 
+    const onWindowMouseMove = (e: MouseEvent) => {
+      if (isPaintingFogRef.current && roleRef.current === 'gm') {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        paintFogAt(wp.x, wp.y);
+      }
+      if (isPanningRef.current && lastPanRef.current) {
+        const dx = e.clientX - lastPanRef.current.x;
+        const dy = e.clientY - lastPanRef.current.y;
+        lastPanRef.current = { x: e.clientX, y: e.clientY };
+        viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        onViewportChangeRef.current?.(viewportRef.current);
+        drawRef.current();
+      }
+    };
+
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('dblclick', onDblClick);
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -805,6 +820,7 @@ export function useVTTCanvasEvents({
     canvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
     canvas.addEventListener('touchend',    onTouchEnd,    { passive: true  });
     window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onWindowMouseMove);
 
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown);
@@ -817,6 +833,7 @@ export function useVTTCanvasEvents({
       canvas.removeEventListener('touchmove',   onTouchMove);
       canvas.removeEventListener('touchend',    onTouchEnd);
       window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('mousemove', onWindowMouseMove);
     };
   }, []);
 
