@@ -435,11 +435,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
   useEffect(() => {
     if (fogResetSignal === 0) return;
+    if (fogPaintRafRef.current) {
+      cancelAnimationFrame(fogPaintRafRef.current);
+      fogPaintRafRef.current = null;
+    }
+    fogPaintBatchRef.current = [];
     if (sceneIdRef.current) {
       localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
     }
     exploredCanvasRef.current = null;
     exploredCanvasSizeRef.current = { w: 0, h: 0 };
+    fogCanvasRef.current = null;
+    fogCanvasSizeRef.current = { w: 0, h: 0 };
+    fogInvCanvasRef.current = null;
+    prevStrokesLenRef.current = 0;
     exploredMaskWasResetRef.current = true;
     drawRef.current();
   }, [fogResetSignal]);
