@@ -164,7 +164,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const fogBrushSizeRef = useRef(fogBrushSize);
   fogBrushSizeRef.current = fogBrushSize;
   const onMoveTokenRef = useRef(onMoveToken);
-  onMoveTokenRef.current = onMoveToken;
+  onMoveTokenRef.current = (id, pos) => {
+    exploredMaskWasResetRef.current = false;
+    onMoveToken(id, pos);
+  };
   const onRevealFogRef = useRef(onRevealFog);
   onRevealFogRef.current = onRevealFog;
   const onSelectTokenRef = useRef(onSelectToken);
@@ -736,6 +739,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       exploredCanvasRef,
       exploredCanvasSizeRef,
       exploredCanvasRestoringRef,
+      exploredMaskWasResetRef,
       drawRef,
       seenDoorsRef,
       onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
