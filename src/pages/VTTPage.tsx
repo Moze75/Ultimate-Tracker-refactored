@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { VTTCanvas } from '../components/VTT/VTTCanvas';
+import { VTTCanvas, getExploredMaskStorageKey } from '../components/VTT/VTTCanvas';
 import type { VTTCanvasHandle } from '../components/VTT/VTTCanvas';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
 import type { VTTActiveTool } from '../components/VTT/VTTLeftToolbar';
@@ -108,6 +108,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
+  const [fogResetSignal, setFogResetSignal] = useState(0);
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -961,12 +962,20 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     // -------------------
     fogStateRef.current = newFog;
     setFogState(newFog);
+    setFogResetSignal(s => s + 1);
     // -------------------
-    // 2. Broadcast + persistance via vttService
+    // 2. Suppression immédiate du snapshot localStorage pour toutes les scènes courantes
+    // On ne peut pas attendre le cleanup React (trop tard si refresh immédiat)
+    // -------------------
+    if (activeSceneIdRef.current) {
+      localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
+    }
+    // -------------------
+    // 3. Broadcast + persistance via vttService
     // -------------------
     vttService.send({ type: 'RESET_FOG' });
     // -------------------
-    // 3. Sauvegarde explicite dans la scène Supabase
+    // 4. Sauvegarde explicite dans la scène Supabase
     // -------------------
     if (activeSceneIdRef.current) {
       saveCurrentSceneState(activeSceneIdRef.current);
@@ -1929,6 +1938,7 @@ onSelectTokens={ids => {
             initialViewport={role === 'player' ? playerInitialViewport : savedViewport}
             onViewportChange={handleCanvasViewportChange}
             onSeenDoorsUpdate={role === 'player' ? handleSeenDoorsUpdate : undefined}
+            fogResetSignal={fogResetSignal}
           />
 
 {props.map(prop => (

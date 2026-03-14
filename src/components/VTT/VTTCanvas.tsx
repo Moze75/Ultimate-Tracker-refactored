@@ -11,7 +11,7 @@ import { drawVTTCanvas } from './vttCanvasDraw';
 // -------------------
 // Gestion du snapshot local du masque exploré
 // -------------------
-const getExploredMaskStorageKey = (sceneId: string) => `vtt:explored-mask:${sceneId}`;
+export const getExploredMaskStorageKey = (sceneId: string) => `vtt:explored-mask:${sceneId}`;
 
 export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
   sceneId,
@@ -53,6 +53,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onViewportChange,
   spectatorMode = 'none',
   onSeenDoorsUpdate,
+  fogResetSignal = 0,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -428,6 +429,28 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   }, [sceneId]);
 
   
+  // -------------------
+  // Reset explicite du canvas exploré sur signal "tout masquer"
+  // Contourne la détection par transition de longueur (cas strokes déjà vides)
+  // -------------------
+  useEffect(() => {
+    if (fogResetSignal === 0) return;
+    const mapW = configRef.current.mapWidth || 2000;
+    const mapH = configRef.current.mapHeight || 2000;
+    if (exploredCanvasRef.current) {
+      const eCtx = exploredCanvasRef.current.getContext('2d');
+      if (eCtx) {
+        eCtx.fillStyle = 'rgba(0,0,0,1)';
+        eCtx.fillRect(0, 0, mapW, mapH);
+      }
+    }
+    if (sceneIdRef.current) {
+      localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
+    }
+    exploredMaskWasResetRef.current = true;
+    drawRef.current();
+  }, [fogResetSignal]);
+
   // -------------------
   // Réinitialisation des canvases mémoire au changement de scène
   // -------------------

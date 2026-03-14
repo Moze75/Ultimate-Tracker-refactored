@@ -64,4 +64,5 @@ export interface VTTCanvasProps {
   onViewportChange?: (vp: { x: number; y: number; scale: number }) => void;
   spectatorMode?: 'none' | 'player-vision';
   onSeenDoorsUpdate?: (seenIds: string[]) => void;
+  fogResetSignal?: number;
 }
