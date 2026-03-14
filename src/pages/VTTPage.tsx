@@ -290,6 +290,7 @@ canvasViewportRef.current = canvasViewport;
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const geometrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sceneLoadedRef = useRef<string | null>(null);
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
@@ -486,6 +487,7 @@ useEffect(() => {
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
+    sceneLoadedRef.current = scene.id;
 
     // -------------------
     // Synchronisation du viewport React pour les props HTML
@@ -613,6 +615,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (role !== 'gm' || !activeSceneId) return;
+    if (sceneLoadedRef.current !== activeSceneId) return;
     if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current);
     geometrySaveTimerRef.current = setTimeout(() => {
       supabase
