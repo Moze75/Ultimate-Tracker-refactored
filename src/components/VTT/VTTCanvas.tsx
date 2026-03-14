@@ -917,13 +917,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onWallRemovedRef,
     selectedWallPointRef,
     selectedWallPointsRef,
-    onViewportChangeRef,
+     onViewportChangeRef,
+    // -------------------
+    // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle au mouseUp)
+    // -------------------
+    onRevealFogRef,
     drawRef,
     paintFogAt,
-    // -------------------
-    // Flush batch fog au mouseUp — un seul broadcast/setState pour tout le trait
-    // -------------------
-    flushFogBatch,
     getCanvasXY,
     screenToWorld,
     getTokenAt,
