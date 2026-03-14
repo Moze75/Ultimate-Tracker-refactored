@@ -564,7 +564,15 @@ export function useVTTCanvasEvents({
       selectionRectRef.current = null;
       draggingTokenRef.current = null;
       resizingTokenRef.current = null;
-      isPaintingFogRef.current = false;
+          // -------------------
+      // Fin du painting fog : flush le batch accumulé depuis mouseDown
+      // Un seul setState + broadcast + RPC pour tout le trait de pinceau
+      // -------------------
+      if (isPaintingFogRef.current) {
+        flushFogBatch();
+      }
+           isPaintingFogRef.current = false;
+      fogRectRef.current = null;
       isPanningRef.current = false;
       lastPanRef.current = null;
       drawRef.current();
