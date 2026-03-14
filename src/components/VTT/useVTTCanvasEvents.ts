@@ -107,6 +107,7 @@ export function useVTTCanvasEvents({
     onViewportChangeRef,
     drawRef,
     paintFogAt,
+    flushFogBatch,
     getCanvasXY,
     screenToWorld,
     getTokenAt,
