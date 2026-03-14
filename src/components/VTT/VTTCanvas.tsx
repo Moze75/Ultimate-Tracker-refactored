@@ -204,6 +204,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
   const doorInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
   const doorPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
+  const selectedDoorRef = useRef<string | null>(null);
   const measureStartRef = useRef<{ x: number; y: number } | null>(null);
   const measureEndRef = useRef<{ x: number; y: number } | null>(null);
   const measureLockedRef = useRef(false);
@@ -638,6 +639,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       wallPreviewPosRef,
       doorInProgressRef,
       doorPreviewPosRef,
+      selectedDoorRef,
       selectedWallPointRef,
       selectedWallPointsRef,
       measureStartRef,
@@ -938,6 +940,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     onDoorRemovedRef,
     doorInProgressRef,
     doorPreviewPosRef,
+    selectedDoorRef,
     selectedWallPointRef,
     selectedWallPointsRef,
      onViewportChangeRef,

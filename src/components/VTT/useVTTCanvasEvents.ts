@@ -49,6 +49,7 @@ export interface VTTCanvasRefs {
   onDoorRemovedRef: React.MutableRefObject<((doorId: string) => void) | undefined>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
+  selectedDoorRef: React.MutableRefObject<string | null>;
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
@@ -118,6 +119,7 @@ export function useVTTCanvasEvents({
     onDoorRemovedRef,
     doorInProgressRef,
     doorPreviewPosRef,
+    selectedDoorRef,
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
@@ -136,8 +138,15 @@ export function useVTTCanvasEvents({
   const draggingWallPointRef = useRef<{
     wallId: string;
     pointIndex: number;
-    originalX: number;  // position d'origine pour Escape
+    originalX: number;
     originalY: number;
+  } | null>(null);
+
+  // Ref interne pour le drag d'une porte en mode wall-select
+  const draggingDoorRef = useRef<{
+    doorId: string;
+    wallId: string;
+    segmentIndex: number;
   } | null>(null);
   
   // Reset wall/measure state when tool changes
@@ -300,8 +309,8 @@ export function useVTTCanvasEvents({
         const currentWalls = wallsRef.current || [];
         const current = draggingWallPointRef.current;
 
-        // Si un point est déjà en phase 'selected' ou 'moving' :
-        // un clic n'importe où repose le point à la position cliquée
+        // Si un point de mur est déjà sélectionné/en déplacement :
+        // un clic valide la nouvelle position
         if (current) {
           const wall = currentWalls.find(w => w.id === current.wallId);
           if (wall) {
@@ -312,14 +321,52 @@ export function useVTTCanvasEvents({
             wallsRef.current = currentWalls.map(w => w.id === current.wallId ? updatedWall : w);
             onWallUpdatedRef.current?.(updatedWall);
           }
-                    selectedWallPointRef.current = null;
-         
-          draggingWallPointRef.current = null;  
+          selectedWallPointRef.current = null;
+          draggingWallPointRef.current = null;
           drawRef.current();
-          return; 
+          return;
         }
 
-        // Sinon : chercher un point à cliquer → le passer en 'selected'
+        // Si une porte est en cours de déplacement : valider
+        if (draggingDoorRef.current) {
+          draggingDoorRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // Vérifier si on clique sur l'icône d'une porte (sélection porte)
+        const currentDoors = doorsRef.current || [];
+        let doorFound = false;
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex };
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            draggingWallPointRef.current = null;
+            doorFound = true;
+            drawRef.current();
+            return;
+          }
+        }
+
+        if (!doorFound) selectedDoorRef.current = null;
+
+        // Chercher un point de mur à cliquer
         let found = false;
         for (const wall of currentWalls) {
           for (let pi = 0; pi < wall.points.length; pi++) {
@@ -332,19 +379,19 @@ export function useVTTCanvasEvents({
                 pointIndex: pi,
                 phase: 'selected',
               };
-                            selectedWallPointRef.current = { wallId: wall.id, pointIndex: pi };
+              selectedWallPointRef.current = { wallId: wall.id, pointIndex: pi };
               found = true;
               break;
             }
           }
           if (found) break;
         }
-        // Clic dans le vide = désélectionner tout (sélection simple ET multi)
-        if (!found) {
+        // Clic dans le vide = désélectionner tout
+        if (!found && !doorFound) {
           draggingWallPointRef.current = null;
           selectedWallPointRef.current = null;
           selectedWallPointsRef.current = [];
-          // Démarrer un rectangle de sélection de points
+          draggingDoorRef.current = null;
           isDragSelectingRef.current = true;
           selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
         }
@@ -512,16 +559,42 @@ export function useVTTCanvasEvents({
         return;
       }
 
-      // En mode wall-select : clic droit sur un segment = suppression du mur entier
+      // En mode wall-select : clic droit sur porte = suppression, sur segment = suppression mur
       if (tool === 'wall-select' && roleRef.current === 'gm') {
         const vp = viewportRef.current;
-        const HIT_PX = 8;
         const currentWalls = wallsRef.current || [];
+        const currentDoors = doorsRef.current || [];
+
+        // Clic droit sur icône porte = supprimer la porte
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 16) {
+            onDoorRemovedRef.current?.(door.id);
+            if (selectedDoorRef.current === door.id) selectedDoorRef.current = null;
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Clic droit sur segment = supprimer le mur entier
+        const HIT_PX = 8;
         for (const wall of currentWalls) {
           for (let i = 0; i < wall.points.length - 1; i++) {
             const p1 = wall.points[i];
             const p2 = wall.points[i + 1];
-            // Distance point-segment en pixels écran
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
             const lenSq = dx * dx + dy * dy;
             let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
@@ -534,7 +607,7 @@ export function useVTTCanvasEvents({
             }
           }
         }
-        return; // En mode wall-select, ne pas ouvrir le menu token
+        return;
       }
 
       const cb = onRightClickTokenRef.current;
@@ -575,7 +648,6 @@ export function useVTTCanvasEvents({
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         const wp2 = screenToWorld(sp2.x, sp2.y);
         const drag = draggingWallPointRef.current;
-        // Passer en phase 'moving' dès qu'on bouge avec un point sélectionné
         drag.phase = 'moving';
         const currentWalls = wallsRef.current || [];
         const wall = currentWalls.find(w => w.id === drag.wallId);
@@ -584,9 +656,40 @@ export function useVTTCanvasEvents({
             i === drag.pointIndex ? { x: wp2.x, y: wp2.y } : pt
           );
           const updatedWall = { ...wall, points: newPoints };
-          // Mise à jour locale immédiate pour le rendu fluide (sans sauvegarder)
           wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
           drawRef.current();
+        }
+      }
+
+      // Déplacement d'une porte le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragDoor = draggingDoorRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragDoor.wallId);
+        if (wall) {
+          const si = dragDoor.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentDoors = doorsRef.current || [];
+              const door = currentDoors.find(d => d.id === dragDoor.doorId);
+              if (door) {
+                const halfWidth = door.width ? door.width / 2 / Math.sqrt(lenSq) : 0.1;
+                const newT1 = Math.max(0.01, tNew - halfWidth);
+                const newT2 = Math.min(0.99, tNew + halfWidth);
+                const updatedDoor = { ...door, t1: newT1, t2: newT2 };
+                doorsRef.current = currentDoors.map(d => d.id === dragDoor.doorId ? updatedDoor : d);
+                drawRef.current();
+              }
+            }
+          }
         }
       }
 
@@ -781,6 +884,17 @@ export function useVTTCanvasEvents({
           draggingWallPointRef.current = null;
         }
       }
+      // Fin du drag d'une porte : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
+        const dragDoor = draggingDoorRef.current;
+        const updatedDoor = (doorsRef.current || []).find(d => d.id === dragDoor.doorId);
+        if (updatedDoor) {
+          onDoorRemovedRef.current?.(updatedDoor.id);
+          onDoorAddedRef.current?.(updatedDoor);
+        }
+        draggingDoorRef.current = null;
+      }
+
       isDragSelectingRef.current = false;
       selectionRectRef.current = null;
       draggingTokenRef.current = null;
@@ -1050,6 +1164,8 @@ export function useVTTCanvasEvents({
         selectedWallPointRef.current = null;
         selectedWallPointsRef.current = [];
         draggingWallPointRef.current = null;
+        draggingDoorRef.current = null;
+        selectedDoorRef.current = null;
         isDragSelectingRef.current = false;
         selectionRectRef.current = null;
         drawRef.current();
@@ -1057,6 +1173,17 @@ export function useVTTCanvasEvents({
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && activeToolRef.current === 'wall-select') {
         if (roleRef.current !== 'gm') return;
+
+        // Suppression d'une porte sélectionnée
+        const selDoor = selectedDoorRef.current;
+        if (selDoor) {
+          onDoorRemovedRef.current?.(selDoor);
+          selectedDoorRef.current = null;
+          draggingDoorRef.current = null;
+          drawRef.current();
+          return;
+        }
+
         let currentWalls = wallsRef.current || [];
 
         // --- Sélection MULTIPLE (rectangle) ---

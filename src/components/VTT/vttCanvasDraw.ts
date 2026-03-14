@@ -59,6 +59,7 @@ export interface VTTDrawContext {
   drawRef: React.MutableRefObject<() => void>;
   doorInProgressRef: React.MutableRefObject<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>;
   doorPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
+  selectedDoorRef: React.MutableRefObject<string | null>;
 }
 
 // -------------------
@@ -755,6 +756,7 @@ if (!cfg.fogEnabled) {
   // --- PORTES ---
   const doors = ctx2d.doorsRef.current;
   const isDoorMode = ctx2d.activeToolRef.current === 'door-place';
+  const selectedDoorId = ctx2d.selectedDoorRef?.current ?? null;
 
   if (doors.length > 0) {
     const committedWalls = ctx2d.wallsRef.current || [];
@@ -882,12 +884,25 @@ if (!cfg.fogEnabled) {
         ctx.fill();
       }
 
-      if (isDoorMode) {
-        ctx.lineWidth = 1 / vp.scale;
-        ctx.strokeStyle = isOpen ? 'rgba(34,197,94,0.6)' : 'rgba(251,191,36,0.6)';
+      if (isDoorMode || selectedDoorId === door.id) {
+        ctx.lineWidth = (selectedDoorId === door.id ? 2 : 1) / vp.scale;
+        ctx.strokeStyle = selectedDoorId === door.id
+          ? 'rgba(255,255,255,0.95)'
+          : isOpen ? 'rgba(34,197,94,0.6)' : 'rgba(251,191,36,0.6)';
         ctx.beginPath();
         ctx.arc(cx, cy, iconSize * 1.5, 0, Math.PI * 2);
         ctx.stroke();
+      }
+
+      // Indicateur de sélection : anneau de sélection blanc pulsé
+      if (selectedDoorId === door.id) {
+        ctx.lineWidth = 2.5 / vp.scale;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, iconSize * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
       ctx.restore();
