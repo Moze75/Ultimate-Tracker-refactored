@@ -473,8 +473,13 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
 
           {loading ? (
+          {/* -------------------
+              Liste fusionnée : rooms du MJ + rooms des campagnes abonnées
+              Les subscribedRooms apparaissent directement dans "Mes tables"
+          ------------------- */}
+          {loading ? (
             <div className="text-center py-8 text-gray-500 text-sm">Chargement...</div>
-          ) : rooms.length === 0 ? (
+          ) : (rooms.length === 0 && subscribedRooms.length === 0) ? (
             <div className="text-center py-8 text-gray-500 text-sm">
               Aucune table. Créez-en une pour commencer.
             </div>
