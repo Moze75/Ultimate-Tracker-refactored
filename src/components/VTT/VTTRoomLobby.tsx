@@ -626,13 +626,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                           : 'border-gray-700 bg-gray-800/60 hover:border-gray-500'
                     }`}
                   >
+                    {/* -------------------
+                        Avatar du personnage / joueur
+                        Priorité : avatarUrl (campagne) > imageUrl (token canvas) > initiales
+                    ------------------- */}
                     <div
                       className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden border-2"
                       style={{ borderColor: isSelected ? '#3b82f6' : '#4b5563' }}
                     >
-                      {token.imageUrl ? (
+                      {(token.avatarUrl || token.imageUrl) ? (
                         <img
-                          src={token.imageUrl}
+                          src={(token.avatarUrl || token.imageUrl)!}
                           alt={token.label}
                           className="w-full h-full object-cover"
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
