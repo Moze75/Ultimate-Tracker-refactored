@@ -17,6 +17,7 @@ interface Room {
 interface RoomTokenInfo {
   label: string;
   imageUrl: string | null;
+  avatarUrl: string | null;
   color: string;
   id: string;
   controlledByUserIds?: string[];
