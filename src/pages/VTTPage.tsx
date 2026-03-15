@@ -1950,7 +1950,6 @@ onMouseDown={e => {
                   onRenameScene={handleRenameScene}
                   onDeleteScene={handleDeleteScene}
                         onRightClickScene={handleSceneRightClick}
-                  onSaveView={handleSaveView}
                 />
               </div>
             </div>

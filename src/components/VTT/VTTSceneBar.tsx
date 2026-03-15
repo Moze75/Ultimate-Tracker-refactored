@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Check, X, Bookmark, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import type { VTTScene } from '../../types/vtt';
 
 interface VTTSceneBarProps {
@@ -10,7 +10,6 @@ interface VTTSceneBarProps {
   onRenameScene: (sceneId: string, name: string) => void;
   onDeleteScene: (sceneId: string) => void;
   onRightClickScene?: (sceneId: string, x: number, y: number) => void;
-  onSaveView?: () => void;
 }
 
 export function VTTSceneBar({
@@ -21,7 +20,6 @@ export function VTTSceneBar({
   onRenameScene,
   onDeleteScene,
   onRightClickScene,
-  onSaveView,
 }: VTTSceneBarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -122,15 +120,6 @@ export function VTTSceneBar({
         </button>
       )}
 
-      {onSaveView && (
-        <button
-          onClick={onSaveView}
-          className="flex items-center gap-1 h-8 px-3 rounded-md bg-gray-800/60 text-amber-400 hover:text-amber-200 hover:bg-gray-700/80 transition-colors shrink-0 text-xs backdrop-blur-sm border border-gray-700/40"
-          title="Enregistrer la vue (zoom + position)"
-        >
-          <Bookmark size={12} />
-        </button>
-      )}
     </>
   );
 
