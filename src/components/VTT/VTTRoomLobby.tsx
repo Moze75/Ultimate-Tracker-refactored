@@ -558,50 +558,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
  
         
-        {/* -------------------
-            Tables des campagnes abonnées (côté joueur)
-            -------------------
-            Affiche automatiquement les rooms VTT liées aux campagnes
-            dont le joueur est membre, sans qu'il ait à saisir un code.
-        */}
-        {subscribedRooms.length > 0 && (
-          <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-            <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-              <BookOpen size={14} className="text-blue-400" />
-              Tables de mes campagnes
-            </h2>
-            <div className="space-y-2">
-              {subscribedRooms.map(room => {
-                const campaignName = campaigns.find(c => c.id === room.campaignId)?.name
-                  || room.campaignId || '';
-                return (
-                  <div
-                    key={room.id}
-                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-blue-700/50 transition-colors"
-                  >
-                    <Map size={18} className="text-blue-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{room.name}</p>
-                      {campaignName && (
-                        <p className="text-xs text-blue-400/80 mt-0.5 flex items-center gap-1">
-                          <BookOpen size={10} />
-                          {campaignName}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setPendingJoinRoomId(room.id)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors"
-                    >
-                      <LogIn size={12} />
-                      Rejoindre
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+   
 
         <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
           <p className="text-xs text-blue-300">
