@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, LogIn, Map, RefreshCw, Shield, User, Users } from 'lucide-react';
-import { createVTTRoom, listVTTRooms, deleteVTTRoom } from '../../services/vttService';
+import { Plus, Trash2, LogIn, Map, RefreshCw, Shield, User, Users, BookOpen, Link, Unlink, ChevronDown } from 'lucide-react';
+import { createVTTRoom, listVTTRooms, deleteVTTRoom, updateVTTRoomCampaign } from '../../services/vttService';
+import { campaignService } from '../../services/campaignService';
 import { supabase } from '../../lib/supabase';
 import type { VTTToken } from '../../types/vtt';
+import type { Campaign } from '../../types/campaign';
 
 interface Room {
   id: string;
   name: string;
   gmUserId: string;
   createdAt: string;
+  campaignId: string | null;
 }
 
 interface RoomTokenInfo {
@@ -31,12 +34,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomCampaignId, setNewRoomCampaignId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [joinRoomId, setJoinRoomId] = useState('');
   const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
   const [playerSelectStep, setPlayerSelectStep] = useState<{ roomId: string; tokens: RoomTokenInfo[] } | null>(null);
   const [selectedPlayerTokenIds, setSelectedPlayerTokenIds] = useState<string[]>([]);
   const [loadingTokens, setLoadingTokens] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [linkingRoomId, setLinkingRoomId] = useState<string | null>(null);
+  const [linkCampaignId, setLinkCampaignId] = useState<string>('');
+  const [savingLink, setSavingLink] = useState(false);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -53,6 +61,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
   useEffect(() => {
     fetchRooms();
+    campaignService.getMyCampaigns()
+      .then(setCampaigns)
+      .catch(() => setCampaigns([]));
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -60,8 +71,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     if (!newRoomName.trim()) return;
     setCreating(true);
     try {
-      const { roomId } = await createVTTRoom(newRoomName.trim(), userId, authToken);
+      const { roomId } = await createVTTRoom(
+        newRoomName.trim(),
+        userId,
+        authToken,
+        newRoomCampaignId || undefined
+      );
       setNewRoomName('');
+      setNewRoomCampaignId('');
       await fetchRooms();
       onJoinRoom(roomId, 'gm');
     } catch {
@@ -117,7 +134,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         controlledByUserIds: t.controlledByUserIds,
       }));
 
-setSelectedPlayerTokenIds([]);
+      setSelectedPlayerTokenIds([]);
       setPlayerSelectStep({ roomId, tokens: tokenInfos });
     } catch {
       onJoinRoom(roomId, 'player');
@@ -126,16 +143,16 @@ setSelectedPlayerTokenIds([]);
     }
   };
 
-const handlePlayerConfirm = () => {
-  if (!playerSelectStep) return;
+  const handlePlayerConfirm = () => {
+    if (!playerSelectStep) return;
 
-  const playerSessionId = crypto.randomUUID();
-  sessionStorage.setItem(`vtt:playerSessionId:${playerSelectStep.roomId}`, playerSessionId);
+    const playerSessionId = crypto.randomUUID();
+    sessionStorage.setItem(`vtt:playerSessionId:${playerSelectStep.roomId}`, playerSessionId);
 
-  onJoinRoom(playerSelectStep.roomId, 'player', selectedPlayerTokenIds);
-  setPlayerSelectStep(null);
-  setSelectedPlayerTokenIds([]);
-};
+    onJoinRoom(playerSelectStep.roomId, 'player', selectedPlayerTokenIds);
+    setPlayerSelectStep(null);
+    setSelectedPlayerTokenIds([]);
+  };
 
   const toggleTokenSelection = (tokenId: string) => {
     setSelectedPlayerTokenIds(prev =>
@@ -143,6 +160,32 @@ const handlePlayerConfirm = () => {
         ? prev.filter(id => id !== tokenId)
         : [...prev, tokenId]
     );
+  };
+
+  const openLinkModal = (room: Room) => {
+    setLinkingRoomId(room.id);
+    setLinkCampaignId(room.campaignId ?? '');
+  };
+
+  const handleSaveLink = async () => {
+    if (!linkingRoomId) return;
+    setSavingLink(true);
+    try {
+      await updateVTTRoomCampaign(linkingRoomId, linkCampaignId || null);
+      setRooms(prev => prev.map(r =>
+        r.id === linkingRoomId ? { ...r, campaignId: linkCampaignId || null } : r
+      ));
+      setLinkingRoomId(null);
+    } catch {
+      setError('Erreur lors de la mise à jour du lien de campagne.');
+    } finally {
+      setSavingLink(false);
+    }
+  };
+
+  const getCampaignName = (campaignId: string | null) => {
+    if (!campaignId) return null;
+    return campaigns.find(c => c.id === campaignId)?.name ?? null;
   };
 
   return (
@@ -171,14 +214,32 @@ const handlePlayerConfirm = () => {
 
         <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
-          <form onSubmit={handleCreate} className="flex gap-2">
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={e => setNewRoomName(e.target.value)}
-              placeholder="Nom de la table..."
-              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-            />
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newRoomName}
+                onChange={e => setNewRoomName(e.target.value)}
+                placeholder="Nom de la table..."
+                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+              />
+            </div>
+            {campaigns.length > 0 && (
+              <div className="relative">
+                <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <select
+                  value={newRoomCampaignId}
+                  onChange={e => setNewRoomCampaignId(e.target.value)}
+                  className="w-full pl-8 pr-8 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
+                >
+                  <option value="">Aucune campagne liée</option>
+                  {campaigns.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
+            )}
             <button
               type="submit"
               disabled={creating || !newRoomName.trim()}
@@ -230,35 +291,56 @@ const handlePlayerConfirm = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {rooms.map(room => (
-                <div
-                  key={room.id}
-                  className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-amber-700/50 transition-colors"
-                >
-                  <Map size={18} className="text-amber-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{room.name}</p>
-                    <p className="text-xs text-gray-500 font-mono">{room.id}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    {room.gmUserId === userId && (
+              {rooms.map(room => {
+                const campaignName = getCampaignName(room.campaignId);
+                return (
+                  <div
+                    key={room.id}
+                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-amber-700/50 transition-colors"
+                  >
+                    <Map size={18} className="text-amber-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{room.name}</p>
+                      <p className="text-xs text-gray-500 font-mono">{room.id}</p>
+                      {campaignName && (
+                        <p className="text-xs text-amber-400/80 mt-0.5 flex items-center gap-1">
+                          <BookOpen size={10} />
+                          {campaignName}
+                        </p>
+                      )}
+                      {!campaignName && room.gmUserId === userId && campaigns.length > 0 && (
+                        <p className="text-xs text-gray-600 mt-0.5">Aucune campagne liée</p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      {room.gmUserId === userId && campaigns.length > 0 && (
+                        <button
+                          onClick={() => openLinkModal(room)}
+                          title={room.campaignId ? 'Modifier la campagne liée' : 'Lier une campagne'}
+                          className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-500 hover:text-amber-400"
+                        >
+                          {room.campaignId ? <Link size={14} /> : <Unlink size={14} />}
+                        </button>
+                      )}
+                      {room.gmUserId === userId && (
+                        <button
+                          onClick={() => handleDelete(room.id)}
+                          className="p-1.5 hover:bg-red-900/40 rounded-lg transition-colors text-gray-500 hover:text-red-400"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleDelete(room.id)}
-                        className="p-1.5 hover:bg-red-900/40 rounded-lg transition-colors text-gray-500 hover:text-red-400"
+                        onClick={() => setPendingJoinRoomId(room.id)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
                       >
-                        <Trash2 size={14} />
+                        <LogIn size={12} />
+                        Ouvrir
                       </button>
-                    )}
-                    <button
-                      onClick={() => setPendingJoinRoomId(room.id)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
-                    >
-                      <LogIn size={12} />
-                      Ouvrir
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -395,6 +477,49 @@ const handlePlayerConfirm = () => {
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Confirmer ({selectedPlayerTokenIds.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {linkingRoomId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen size={18} className="text-amber-400" />
+              <h3 className="text-base font-semibold text-white">Lier une campagne</h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-5">
+              La campagne liée active le combat et la liste des membres dans le VTT.
+            </p>
+            <div className="relative mb-4">
+              <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              <select
+                value={linkCampaignId}
+                onChange={e => setLinkCampaignId(e.target.value)}
+                className="w-full pl-8 pr-8 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
+              >
+                <option value="">Aucune campagne</option>
+                {campaigns.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setLinkingRoomId(null)}
+                className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveLink}
+                disabled={savingLink}
+                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {savingLink ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
           </div>

@@ -735,10 +735,10 @@ export async function createVTTRoom(name: string, userId: string, _authToken: st
   return { roomId };
 }
 
-export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string }>> {
+export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string; campaignId: string | null }>> {
   const { data, error } = await supabase
     .from('vtt_rooms')
-    .select('id, name, gm_user_id, created_at')
+    .select('id, name, gm_user_id, created_at, campaign_id')
     .eq('gm_user_id', userId)
     .order('created_at', { ascending: false });
   if (error) return [];
@@ -747,7 +747,16 @@ export async function listVTTRooms(userId: string, _authToken: string): Promise<
     name: r.name,
     gmUserId: r.gm_user_id,
     createdAt: r.created_at,
+    campaignId: (r as Record<string, unknown>).campaign_id as string | null ?? null,
   }));
+}
+
+export async function updateVTTRoomCampaign(roomId: string, campaignId: string | null): Promise<void> {
+  const { error } = await supabase
+    .from('vtt_rooms')
+    .update({ campaign_id: campaignId })
+    .eq('id', roomId);
+  if (error) throw new Error('Erreur mise à jour campagne: ' + error.message);
 }
 
 export async function deleteVTTRoom(roomId: string, _authToken: string): Promise<void> {
