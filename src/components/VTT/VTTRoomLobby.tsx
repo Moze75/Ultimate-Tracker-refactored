@@ -68,9 +68,58 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
   useEffect(() => {
     fetchRooms();
+
+    // -------------------
+    // Chargement des campagnes créées par le MJ (pour le select de liaison)
+    // -------------------
     campaignService.getMyCampaigns()
       .then(setCampaigns)
       .catch(() => setCampaigns([]));
+
+    // -------------------
+    // Chargement des rooms liées aux campagnes auxquelles le joueur est abonné
+    // -------------------
+    // 1. Récupère les campaign_ids où le joueur est membre actif
+    // 2. Récupère les rooms VTT liées à ces campagnes via state_json->_campaignId
+    // 3. Exclut les rooms dont le joueur est déjà le GM (déjà dans "Mes tables")
+    (async () => {
+      try {
+        const { data: memberships } = await supabase
+          .from('campaign_members')
+          .select('campaign_id')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+
+        if (!memberships || memberships.length === 0) return;
+
+        const campaignIds = [...new Set(memberships.map(m => m.campaign_id))];
+
+        // Récupère toutes les rooms VTT et filtre celles liées à ces campagnes
+        const { data: allRooms } = await supabase
+          .from('vtt_rooms')
+          .select('id, name, gm_user_id, created_at, state_json');
+
+        if (!allRooms) return;
+
+        const matchingRooms: Room[] = allRooms
+          .filter(r => {
+            const stateJson = (r.state_json as Record<string, unknown>) ?? {};
+            const roomCampaignId = stateJson._campaignId as string | null;
+            return roomCampaignId && campaignIds.includes(roomCampaignId) && r.gm_user_id !== userId;
+          })
+          .map(r => ({
+            id: r.id,
+            name: r.name,
+            gmUserId: r.gm_user_id,
+            createdAt: r.created_at,
+            campaignId: ((r.state_json as Record<string, unknown>)?._campaignId as string) ?? null,
+          }));
+
+        setSubscribedRooms(matchingRooms);
+      } catch (err) {
+        console.error('Erreur chargement rooms abonnées:', err);
+      }
+    })();
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
