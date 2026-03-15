@@ -26,6 +26,7 @@ interface CombatTabProps {
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
   initialTokens?: VTTToken[];
+  vttMode?: boolean;
 }
 
 interface CombatPreparationEntry {
@@ -58,7 +59,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export function CombatTab({ campaignId, members, onRollDice, initialTokens }: CombatTabProps) {
+export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttMode }: CombatTabProps) {
   const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
   const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
   const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
@@ -776,9 +777,9 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens }: Co
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* LEFT: Search / Bestiary - Desktop only */}
-        <div className="hidden lg:block space-y-4 bestiary-panel bestiary-panel--no-frame bestiary-panel--no-border rounded-xl lg:mx-[30px] lg:mt-[30px] p-4">
+    <div className={vttMode ? 'flex flex-col' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
+      {/* LEFT: Search / Bestiary - Desktop only, hidden in vttMode */}
+        <div className={`${vttMode ? 'hidden' : 'hidden lg:block'} space-y-4 bestiary-panel bestiary-panel--no-frame bestiary-panel--no-border rounded-xl lg:mx-[30px] lg:mt-[30px] p-4`}>
         <div className="flex gap-2 border-b border-gray-700 pb-2">
           {panelView === 'detail' && (
             <button
@@ -873,8 +874,8 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens }: Co
 
        {/* RIGHT: Unified combat panel */}
       <div className="space-y-4 relative">
-        {/* Mobile-only: search toolbar + panel ABOVE combat box */}
-        <div className="lg:hidden space-y-3">
+        {/* Mobile-only: search toolbar + panel ABOVE combat box (also hidden in vttMode) */}
+        <div className={`${vttMode ? 'hidden' : 'lg:hidden'} space-y-3`}>
           <div className="flex flex-wrap gap-1.5">
             {panelView === 'detail' && mobileSearchOpen && (
               <button
@@ -983,8 +984,8 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens }: Co
           )}
         </div>
 
-            <div className="hidden lg:block" style={{ height: '81px' }}></div>
-<div className="combat-panel rounded-xl lg:mx-[30px] lg:mb-[34px]">
+            {!vttMode && <div className="hidden lg:block" style={{ height: '81px' }}></div>}
+<div className={`combat-panel rounded-xl ${vttMode ? '' : 'lg:mx-[30px] lg:mb-[34px]'}`}>
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 space-y-2">
             <div className="flex items-center gap-3">

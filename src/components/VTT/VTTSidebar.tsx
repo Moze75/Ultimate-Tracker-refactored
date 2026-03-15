@@ -455,6 +455,7 @@ const visibleTokens = isGM
                 members={members}
                 onReload={reloadMembers}
                 initialTokens={combatInitTokens}
+                vttMode
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
