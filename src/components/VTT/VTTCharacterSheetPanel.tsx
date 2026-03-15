@@ -7,7 +7,7 @@ import { DiceRollContext } from '../ResponsiveGameLayout';
 import { DesktopView } from '../DesktopView';
 import { loadAbilitySections } from '../../services/classesContent';
 
-const PANEL_WIDTH = 1300;
+const PANEL_WIDTH = 1100;
 const COLLAPSED_WIDTH = 44;
 
 interface VTTCharacterSheetPanelProps {
