@@ -365,9 +365,16 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
+  // -------------------
+  // Résolution du nom de campagne (MJ + abonnées)
+  // -------------------
+  // Cherche d'abord dans les campagnes du MJ, puis dans le cache
+  // des noms de campagnes abonnées (subscribedCampaignNames).
   const getCampaignName = (campaignId: string | null) => {
     if (!campaignId) return null;
-    return campaigns.find(c => c.id === campaignId)?.name ?? null;
+    return campaigns.find(c => c.id === campaignId)?.name
+      ?? subscribedCampaignNames[campaignId]
+      ?? null;
   };
 
   return (
