@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { X, ChevronRight, ChevronLeft, Loader2, User, GripVertical } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Loader2, User, GripVertical, Moon, Sun, Star, Brain, Plus, Minus, Shield as ShieldIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 import type { Player } from '../../types/dnd';
@@ -11,6 +11,9 @@ import { StatsTab } from '../StatsTab';
 import { EquipmentTab } from '../EquipmentTab';
 import { ClassesTabWrapper } from '../ClassesTabWrapper';
 import PlayerProfileProfileTab from '../PlayerProfileProfileTab';
+import { RestSelectionModal } from '../modals/RestSelectionModal';
+import { buildShortRestUpdate, buildLongRestUpdate } from '../../services/restService';
+import toast from 'react-hot-toast';
 
 type TabKey = 'combat' | 'abilities' | 'stats' | 'equipment' | 'class' | 'profile';
 
@@ -45,6 +48,7 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
     x: window.innerWidth - PANEL_WIDTH - 16,
     y: 64,
   }));
+  const [showRestModal, setShowRestModal] = useState(false);
 
   const dragging = useRef(false);
   const dragStart = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
@@ -124,6 +128,64 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
     window.addEventListener('mouseup', onUp);
   }, [pos, collapsed]);
 
+  const handleShortRestConfirm = useCallback(async (hitDiceCount: number, selectedResourceIds: string[]) => {
+    if (!player) return;
+    try {
+      const { updateData, restoredLabels } = buildShortRestUpdate(player, hitDiceCount, selectedResourceIds);
+      const { error } = await supabase.from('players').update(updateData).eq('id', player.id);
+      if (error) throw error;
+      handlePlayerUpdate({ ...player, ...updateData });
+      toast.success(restoredLabels.length > 0 ? `Repos court : ${restoredLabels.join(', ')}` : 'Repos court effectué');
+    } catch {
+      toast.error('Erreur lors du repos');
+    }
+  }, [player, handlePlayerUpdate]);
+
+  const handleLongRest = useCallback(async () => {
+    if (!player) return;
+    try {
+      const { updateData } = buildLongRestUpdate(player);
+      const { error } = await supabase.from('players').update(updateData).eq('id', player.id);
+      if (error) throw error;
+      handlePlayerUpdate({ ...player, ...updateData });
+      toast.success('Repos long effectué');
+    } catch {
+      toast.error('Erreur lors du repos');
+    }
+  }, [player, handlePlayerUpdate]);
+
+  const handleToggleInspiration = useCallback(async (delta: number) => {
+    if (!player) return;
+    const newValue = Math.max(0, Math.min(3, (player.stats?.inspirations || 0) + delta));
+    const newStats = { ...(player.stats || {}), inspirations: newValue } as any;
+    const { error } = await supabase.from('players').update({ stats: newStats }).eq('id', player.id);
+    if (!error) handlePlayerUpdate({ ...player, stats: newStats });
+  }, [player, handlePlayerUpdate]);
+
+  const handleToggleConcentration = useCallback(async () => {
+    if (!player) return;
+    const { error } = await supabase.from('players').update({
+      is_concentrating: !player.is_concentrating,
+      concentration_spell: !player.is_concentrating ? 'Sort actif' : null,
+    }).eq('id', player.id);
+    if (!error) handlePlayerUpdate({ ...player, is_concentrating: !player.is_concentrating, concentration_spell: !player.is_concentrating ? 'Sort actif' : null });
+  }, [player, handlePlayerUpdate]);
+
+  const getQuickStats = (p: Player) => {
+    const stats = p.stats || { armor_class: 10, initiative: 0, speed: 30, proficiency_bonus: 2, inspirations: 0 };
+    const abilities: any = (p as any).abilities;
+    const dexMod = Array.isArray(abilities) ? (() => { const a = abilities.find((x: any) => x?.name === 'Dextérité'); return a?.modifier ?? (a?.score != null ? Math.floor((a.score - 10) / 2) : 0); })() : 0;
+    const armorFormula = (p as any)?.equipment?.armor?.armor_formula || null;
+    const shieldBonus = Number((p as any)?.equipment?.shield?.shield_bonus ?? 0) || 0;
+    const baseAC = armorFormula
+      ? (armorFormula.base || 10) + (armorFormula.addDex ? Math.min(armorFormula.dexCap ?? Infinity, dexMod) : 0)
+      : (Number(stats.armor_class || 0) || (10 + dexMod));
+    const acBonus = Number((stats as any).ac_bonus || 0);
+    const level = p.level || 1;
+    const prof = level >= 17 ? 6 : level >= 13 ? 5 : level >= 9 ? 4 : level >= 5 ? 3 : 2;
+    return { ac: baseAC + shieldBonus + acBonus, speed: stats.speed, initiative: stats.initiative, prof };
+  };
+
   const canOpen = token.characterId && (role === 'gm' || token.ownerUserId === userId || (token.controlledByUserIds ?? []).includes(userId));
   if (!canOpen) return null;
 
@@ -131,6 +193,7 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
   const width = collapsed ? COLLAPSED_WIDTH : PANEL_WIDTH;
 
   return (
+    <>
     <div
       ref={panelRef}
       className="fixed z-50"
@@ -234,6 +297,88 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
               ))}
             </div>
 
+            {/* Quick stats + actions header */}
+            {!loading && !error && player && (() => {
+              const qs = getQuickStats(player);
+              const hp = player.current_hp ?? 0;
+              const maxHp = player.max_hp ?? 1;
+              const tempHp = player.temporary_hp ?? 0;
+              const totalHp = hp + tempHp;
+              const hpPct = Math.max(0, Math.min(100, (totalHp / maxHp) * 100));
+              const hpColor = hpPct > 60 ? '#4ade80' : hpPct > 30 ? '#facc15' : '#f87171';
+              const inspirations = player.stats?.inspirations || 0;
+              return (
+                <div style={{ background: 'rgba(15,10,5,0.6)', borderBottom: '1px solid rgba(212,170,100,0.18)' }} className="shrink-0 px-3 pt-2 pb-2 flex flex-col gap-2">
+                  {/* HP bar */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex flex-col gap-0.5">
+                      <div className="flex justify-between text-xs" style={{ color: '#c9a84c', fontFamily: "'Cinzel', serif" }}>
+                        <span>PV</span>
+                        <span style={{ color: hpColor }}>{totalHp} / {maxHp}{tempHp > 0 ? ` (+${tempHp} temp)` : ''}</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                        <div className="h-full rounded-full transition-all duration-300" style={{ width: `${hpPct}%`, background: hpColor, boxShadow: `0 0 6px ${hpColor}66` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="grid grid-cols-4 gap-1 text-center">
+                    {[
+                      { label: 'CA', value: String(qs.ac) },
+                      { label: 'VIT', value: `${qs.speed}m` },
+                      { label: 'INIT', value: `${qs.initiative >= 0 ? '+' : ''}${qs.initiative}` },
+                      { label: 'MAÎT', value: `+${qs.prof}` },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex flex-col items-center py-1 rounded" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <span className="text-xs font-bold" style={{ color: '#e8c76a', fontFamily: "'Cinzel', serif" }}>{value}</span>
+                        <span className="text-[10px] uppercase tracking-wide" style={{ color: '#6b7280' }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions row */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button
+                      onClick={handleLongRest}
+                      className="flex-1 h-7 rounded flex items-center justify-center gap-1 text-xs transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af', fontFamily: "'Cinzel', serif", fontSize: '10px' }}
+                    >
+                      <Moon size={12} />
+                      Repos long
+                    </button>
+                    <button
+                      onClick={() => setShowRestModal(true)}
+                      className="flex-1 h-7 rounded flex items-center justify-center gap-1 text-xs transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af', fontFamily: "'Cinzel', serif", fontSize: '10px' }}
+                    >
+                      <Sun size={12} />
+                      Repos court
+                    </button>
+                    <button
+                      onClick={handleToggleConcentration}
+                      className="h-7 px-2 rounded flex items-center gap-1 transition-all"
+                      style={{
+                        background: player.is_concentrating ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${player.is_concentrating ? 'rgba(168,85,247,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                        color: player.is_concentrating ? '#c084fc' : '#9ca3af',
+                        fontSize: '10px',
+                        fontFamily: "'Cinzel', serif",
+                      }}
+                    >
+                      <Brain size={12} />
+                    </button>
+                    <div className="h-7 px-2 rounded flex items-center gap-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <button onClick={() => handleToggleInspiration(-1)} disabled={inspirations <= 0} className="disabled:opacity-30" style={{ color: '#eab308' }}><Minus size={10} /></button>
+                      <Star size={10} style={{ color: inspirations > 0 ? '#eab308' : '#6b7280' }} />
+                      <span style={{ color: inspirations > 0 ? '#eab308' : '#6b7280', fontSize: '11px', minWidth: '10px', textAlign: 'center' }}>{inspirations}</span>
+                      <button onClick={() => handleToggleInspiration(1)} disabled={inspirations >= 3} className="disabled:opacity-30" style={{ color: '#eab308' }}><Plus size={10} /></button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
               {loading && (
@@ -303,5 +448,15 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
         )}
       </div>
     </div>
+
+    {player && (
+      <RestSelectionModal
+        open={showRestModal}
+        onClose={() => setShowRestModal(false)}
+        player={player}
+        onConfirm={handleShortRestConfirm}
+      />
+    )}
+    </>
   );
 }
