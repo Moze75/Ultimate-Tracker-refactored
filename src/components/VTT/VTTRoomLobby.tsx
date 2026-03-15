@@ -48,11 +48,19 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   const [savingLink, setSavingLink] = useState(false);
 
   // -------------------
+  // -------------------
   // Rooms accessibles en tant que joueur (via campagnes abonnées)
   // -------------------
   // Contient les rooms liées aux campagnes dont le joueur est membre,
-  // même s'il n'est pas le GM. Apparaissent automatiquement dans le lobby.
+  // même s'il n'est pas le GM. Fusionnées dans "Mes tables".
   const [subscribedRooms, setSubscribedRooms] = useState<Room[]>([]);
+
+  // -------------------
+  // Cache des noms de campagnes abonnées (résolution campaignId → nom)
+  // -------------------
+  // Utilisé pour afficher le nom de la campagne au lieu de l'UUID
+  // dans la liste "Mes tables" pour les rooms abonnées.
+  const [subscribedCampaignNames, setSubscribedCampaignNames] = useState<Record<string, string>>({});
 
   const fetchRooms = async () => {
     setLoading(true);
