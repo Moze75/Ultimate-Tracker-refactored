@@ -110,7 +110,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
         if (!allRooms) return;
 
-        const matchingRooms: Room[] = allRooms
+         const matchingRooms: Room[] = allRooms
           .filter(r => {
             const stateJson = (r.state_json as Record<string, unknown>) ?? {};
             const roomCampaignId = stateJson._campaignId as string | null;
@@ -125,6 +125,25 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           }));
 
         setSubscribedRooms(matchingRooms);
+
+        // -------------------
+        // Résolution des noms de campagnes abonnées
+        // -------------------
+        // Récupère le nom réel de chaque campagne liée aux rooms
+        // pour l'afficher dans "Mes tables" à la place de l'UUID.
+        const uniqueCampaignIds = [...new Set(matchingRooms.map(r => r.campaignId).filter(Boolean))] as string[];
+        if (uniqueCampaignIds.length > 0) {
+          const { data: campaignRows } = await supabase
+            .from('campaigns')
+            .select('id, name')
+            .in('id', uniqueCampaignIds);
+
+          if (campaignRows) {
+            const namesMap: Record<string, string> = {};
+            campaignRows.forEach(c => { namesMap[c.id] = c.name; });
+            setSubscribedCampaignNames(namesMap);
+          }
+        }
       } catch (err) {
         console.error('Erreur chargement rooms abonnées:', err);
       }
