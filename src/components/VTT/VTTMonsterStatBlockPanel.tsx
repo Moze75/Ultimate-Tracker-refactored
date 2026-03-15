@@ -26,24 +26,37 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
   const dragStart = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
 
   useEffect(() => {
-    if (!token.monsterSlug) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setMonster(null);
 
-    monsterService.fetchMonsterDetail(token.monsterSlug)
-      .then((data) => {
+    const load = async () => {
+      try {
+        let slug = token.monsterSlug;
+
+        if (!slug) {
+          const list = await monsterService.fetchMonsterList();
+          const labelLower = token.label.toLowerCase().trim();
+          const match = list.find(m => m.name.toLowerCase().trim() === labelLower);
+          if (!match) {
+            throw new Error(`Monstre "${token.label}" introuvable dans le bestiaire.`);
+          }
+          slug = match.slug;
+        }
+
+        const data = await monsterService.fetchMonsterDetail(slug);
         if (!cancelled) setMonster(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError('Impossible de charger le statblock du monstre.');
-      })
-      .finally(() => {
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Impossible de charger le statblock du monstre.');
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
 
+    load();
     return () => { cancelled = true; };
-  }, [token.monsterSlug]);
+  }, [token.monsterSlug, token.label]);
 
   const onDragMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -70,8 +83,6 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   }, [pos]);
-
-  if (!token.monsterSlug) return null;
 
   return (
     <div
@@ -123,14 +134,14 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
 
           <span
             className="flex-1 text-xs font-semibold truncate"
-            style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', letterSpacing: '0.04em' }}
+            style={{ color: '#EFE6D8', letterSpacing: '0.04em' }}
           >
             {token.label}
           </span>
 
           <button
             onClick={onClose}
-            className="p-1 rounded transition-colors shrink-0"
+            className="p-1 rounded transition-colors shrink-0 hover:text-red-400"
             style={{ color: '#9a4a3a' }}
             title="Fermer"
           >
@@ -143,7 +154,7 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
           {loading && (
             <div className="flex items-center justify-center h-40 gap-3" style={{ color: '#b43c28' }}>
               <Loader2 size={20} className="animate-spin" />
-              <span className="text-sm" style={{ fontFamily: "'Cinzel', serif" }}>Chargement...</span>
+              <span className="text-sm">Chargement...</span>
             </div>
           )}
 
@@ -154,9 +165,7 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
           )}
 
           {!loading && !error && monster && (
-            <div className="p-2">
-              <MonsterStatBlock monster={monster} compact={false} />
-            </div>
+            <MonsterStatBlock monster={monster} compact={false} />
           )}
         </div>
       </div>

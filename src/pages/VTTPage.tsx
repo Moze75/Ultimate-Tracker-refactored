@@ -1043,7 +1043,7 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     const isController = (token.controlledByUserIds ?? []).includes(userId);
     if (!isGm && !isOwner && !isController) return;
 
-    if (token.monsterSlug && isGm) {
+    if (isGm && !token.characterId) {
       setMonsterStatBlockToken(token);
       return;
     }
