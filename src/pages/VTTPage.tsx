@@ -174,6 +174,7 @@ function PingAnimation({ color, userName }: { color: string; userName: string })
 export function VTTPage({ session, onBack }: VTTPageProps) {
   const [phase, setPhase] = useState<'lobby' | 'room'>('lobby');
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [campaignId, setCampaignId] = useState<string | null>(null);
   const [requestedRole, setRequestedRole] = useState<'gm' | 'player'>('player');
   const [playerBoundTokenIds, setPlayerBoundTokenIds] = useState<string[]>([]);
 
@@ -494,6 +495,18 @@ canvasViewportRef.current = canvasViewport;
         break;
     }
   }, []);
+
+  useEffect(() => {
+    if (!roomId) { setCampaignId(null); return; }
+    supabase
+      .from('vtt_rooms')
+      .select('campaign_id')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCampaignId((data as Record<string, unknown> | null)?.campaign_id as string | null ?? null);
+      });
+  }, [roomId]);
 
   useEffect(() => {
     if (phase !== 'room' || !roomId) return;
@@ -2205,6 +2218,7 @@ onSelectTokens={ids => {
             onUpdateProp={handleUpdateProp}
             onSaveScene={role === 'gm' ? handleSaveScene : undefined}
             onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
+            campaignId={campaignId ?? undefined}
           />
         </div>
       </div>

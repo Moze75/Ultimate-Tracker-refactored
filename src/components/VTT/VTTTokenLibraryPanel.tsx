@@ -1,16 +1,15 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  FolderPlus, Folder, FolderOpen, Trash2, Upload,
-  Edit2, Check, X, Link, Image as ImageIcon
-} from 'lucide-react';
+import { FolderPlus, Folder, FolderOpen, Trash2, Upload, CreditCard as Edit2, Check, X, Link, Image as ImageIcon, Skull } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 import {
   tokenLibrary, fetchTokenLibrary, saveTokenLibrary,
   type TokenEntry, type TokenLibrary,
 } from '../../services/tokenLibraryService';
+import { VTTCustomMonsterModal } from './VTTCustomMonsterModal';
 
 interface VTTTokenLibraryPanelProps {
   roomId: string;
+  campaignId?: string;
 }
 
 interface DragGhost {
@@ -21,9 +20,10 @@ interface DragGhost {
   y: number;
 }
 
-export function VTTTokenLibraryPanel({ roomId }: VTTTokenLibraryPanelProps) {
+export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPanelProps) {
   const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get());
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
+  const [showMonsterModal, setShowMonsterModal] = useState(false);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -398,7 +398,16 @@ export function VTTTokenLibraryPanel({ roomId }: VTTTokenLibraryPanelProps) {
           Le titre est deja porte par le bandeau repliable du parent.
           On ne garde ici que l'action de creation de dossier.
       */}
-         <div className="flex items-center justify-end px-2 py-1.5">
+      <div className="flex items-center justify-end gap-1 px-2 py-1.5">
+        {campaignId && (
+          <button
+            onClick={() => setShowMonsterModal(true)}
+            className="flex items-center gap-1 px-1.5 py-0.5 bg-red-900/50 hover:bg-red-800/60 border border-red-700/50 text-red-400 hover:text-red-300 rounded text-[10px] transition-colors"
+            title="Creer un monstre custom"
+          >
+            <Skull size={10} /> Monstre
+          </button>
+        )}
         <button
           onClick={() => { setNewFolderMode(true); setNewFolderName(''); }}
           className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
@@ -493,6 +502,24 @@ export function VTTTokenLibraryPanel({ roomId }: VTTTokenLibraryPanelProps) {
           if (file) handleFileUpload(file, fileTargetFolderRef.current);
         }}
       />
+
+      {showMonsterModal && campaignId && (
+        <VTTCustomMonsterModal
+          campaignId={campaignId}
+          roomId={roomId}
+          onClose={() => setShowMonsterModal(false)}
+          onSaved={() => {
+            fetchTokenLibrary(roomId).then(fetched => {
+              tokenLibrary.setCache(fetched);
+              setLib(fetched);
+              const customFolder = fetched.folders.find(f => f.name === 'Monstres customs');
+              if (customFolder) {
+                setOpenFolders(prev => new Set([...prev, customFolder.id]));
+              }
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

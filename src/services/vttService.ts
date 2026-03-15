@@ -724,11 +724,13 @@ this.localState = {
 
 export const vttService = new VTTService();
 
-export async function createVTTRoom(name: string, userId: string, _authToken: string): Promise<{ roomId: string }> {
+export async function createVTTRoom(name: string, userId: string, _authToken: string, campaignId?: string): Promise<{ roomId: string }> {
   const roomId = generateRoomId();
+  const payload: Record<string, unknown> = { id: roomId, name, gm_user_id: userId, state_json: {} };
+  if (campaignId) payload.campaign_id = campaignId;
   const { error } = await supabase
     .from('vtt_rooms')
-    .insert({ id: roomId, name, gm_user_id: userId, state_json: {} });
+    .insert(payload);
   if (error) throw new Error('Erreur creation room VTT: ' + error.message);
   return { roomId };
 }

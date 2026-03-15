@@ -17,6 +17,7 @@ interface VTTSidebarProps {
   selectedTokenId: string | null;
   userId: string;
   roomId: string;
+  campaignId?: string;
   connected: boolean;
   connectedCount: number;
   connectedUsers: { userId: string; name: string; role: 'gm' | 'player' }[];
@@ -87,6 +88,7 @@ export function VTTSidebar({
   authToken,
   onSaveScene,
   onAddMonsterAsToken,
+  campaignId,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
@@ -366,7 +368,7 @@ const visibleTokens = isGM
 
               {showTokenLibrary && (
                 <div style={{ height: '200px' }}>
-                  <VTTTokenLibraryPanel roomId={roomId} />
+                  <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} />
                 </div>
               )}
             </div>
