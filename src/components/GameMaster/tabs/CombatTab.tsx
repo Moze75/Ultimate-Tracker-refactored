@@ -266,16 +266,20 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     }
   };
 
-  const viewMonsterById = (id?: string) => {
-    if (!id) return;
-    const monster = savedMonsters.find((m) => m.id === id);
+  const viewMonsterById = (id?: string, fallbackName?: string) => {
+    const monster = id ? savedMonsters.find((m) => m.id === id) : undefined;
     if (monster) {
       setPopupMonster({
-        id: monster.id || id,
+        id: monster.id || id || fallbackName || '',
         name: monster.name,
         slug: monster.slug,
         imageUrl: monster.image_url ?? undefined,
         monster,
+      });
+    } else if (fallbackName) {
+      setPopupMonster({
+        id: id || fallbackName,
+        name: fallbackName,
       });
     }
   };
@@ -1512,7 +1516,7 @@ function ActiveParticipantsList({
   onApplyHp: (p: EncounterParticipant, mode: 'damage' | 'heal') => void;
   onToggleCondition: (p: EncounterParticipant, condition: string) => void;
   onRemove: (id: string) => void;
-  onViewMonster: (monsterId?: string) => void;
+  onViewMonster: (monsterId?: string, fallbackName?: string) => void;
   onViewPlayer: (memberId?: string) => void;
   onUpdateInitiative: (id: string, value: number) => void;
   selectedMonster: Monster | null;
@@ -1564,23 +1568,23 @@ function ActiveParticipantsList({
         const isDead = p.current_hp <= 0 && p.max_hp > 0;
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
-        const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
+        const clickable = isMonster || (isPlayer && !!p.player_member_id);
               const useInlineExpand = !isDesktop || vttMode;
         const isExpanded = useInlineExpand && expandedId === p.id && isMonster;
 
              const handleParticipantClick = () => {
           if (!clickable) return;
           if (isMonster) {
-            if (!useInlineExpand) {
-              // En desktop (hors vttMode), afficher dans le panneau de gauche uniquement
-              onViewMonster(p.monster_id);
+            if (vttMode) {
+              onViewMonster(p.monster_id, p.display_name);
+            } else if (!useInlineExpand) {
+              onViewMonster(p.monster_id, p.display_name);
             } else {
-              // En mobile ou vttMode, déplier/replier sous le monstre
               if (expandedId === p.id) {
                 setExpandedId(null);
               } else {
                 setExpandedId(p.id);
-                onViewMonster(p.monster_id);
+                onViewMonster(p.monster_id, p.display_name);
               }
             }
           } else if (isPlayer) {
