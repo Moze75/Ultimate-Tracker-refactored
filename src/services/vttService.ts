@@ -726,11 +726,11 @@ export const vttService = new VTTService();
 
 export async function createVTTRoom(name: string, userId: string, _authToken: string, campaignId?: string): Promise<{ roomId: string }> {
   const roomId = generateRoomId();
-  const payload: Record<string, unknown> = { id: roomId, name, gm_user_id: userId, state_json: {} };
-  if (campaignId) payload.campaign_id = campaignId;
+  const stateJson: Record<string, unknown> = {};
+  if (campaignId) stateJson._campaignId = campaignId;
   const { error } = await supabase
     .from('vtt_rooms')
-    .insert(payload);
+    .insert({ id: roomId, name, gm_user_id: userId, state_json: stateJson });
   if (error) throw new Error('Erreur creation room VTT: ' + error.message);
   return { roomId };
 }
@@ -738,45 +738,41 @@ export async function createVTTRoom(name: string, userId: string, _authToken: st
 export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string; campaignId: string | null }>> {
   const { data, error } = await supabase
     .from('vtt_rooms')
-    .select('id, name, gm_user_id, created_at')
+    .select('id, name, gm_user_id, created_at, state_json')
     .eq('gm_user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw new Error('Erreur chargement rooms VTT: ' + error.message);
 
-  const rows = (data || []).map(r => ({
-    id: r.id,
-    name: r.name,
-    gmUserId: r.gm_user_id,
-    createdAt: r.created_at,
-    campaignId: null as string | null,
-  }));
-
-  if (rows.length === 0) return rows;
-
-  try {
-    const ids = rows.map(r => r.id);
-    const { data: withCampaign } = await supabase
-      .from('vtt_rooms')
-      .select('id, campaign_id')
-      .in('id', ids);
-
-    if (withCampaign) {
-      const campaignMap = new Map<string, string | null>(
-        withCampaign.map((r: Record<string, unknown>) => [r.id as string, (r.campaign_id as string | null) ?? null])
-      );
-      return rows.map(r => ({ ...r, campaignId: campaignMap.get(r.id) ?? null }));
-    }
-  } catch {
-    // campaign_id column may not exist yet — return rooms without it
-  }
-
-  return rows;
+  return (data || []).map(r => {
+    const stateJson = (r.state_json as Record<string, unknown>) ?? {};
+    return {
+      id: r.id,
+      name: r.name,
+      gmUserId: r.gm_user_id,
+      createdAt: r.created_at,
+      campaignId: (stateJson._campaignId as string | null) ?? null,
+    };
+  });
 }
 
 export async function updateVTTRoomCampaign(roomId: string, campaignId: string | null): Promise<void> {
+  const { data: existing, error: fetchError } = await supabase
+    .from('vtt_rooms')
+    .select('state_json')
+    .eq('id', roomId)
+    .maybeSingle();
+  if (fetchError) throw new Error('Erreur lecture room: ' + fetchError.message);
+
+  const stateJson = ((existing?.state_json as Record<string, unknown>) ?? {});
+  if (campaignId) {
+    stateJson._campaignId = campaignId;
+  } else {
+    delete stateJson._campaignId;
+  }
+
   const { error } = await supabase
     .from('vtt_rooms')
-    .update({ campaign_id: campaignId })
+    .update({ state_json: stateJson })
     .eq('id', roomId);
   if (error) throw new Error('Erreur mise à jour campagne: ' + error.message);
 }
