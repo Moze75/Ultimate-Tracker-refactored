@@ -634,26 +634,19 @@ const visibleTokens = isGM
 
           {connectedUsers.length > 0 && (
             <div className="mt-2 space-y-1.5">
-              {connectedUsers.map(user => {
-                // -------------------
-                // Affichage du nom : "MJ" pour le GM, sinon partie avant @ si email
-                // -------------------
-                const displayName = user.role === 'gm'
-                  ? 'MJ'
-                  : (user.name?.includes('@') ? user.name.split('@')[0] : (user.name || 'Inconnu'));
-                return (
+              {connectedUsers.map(user => (
                 <div key={user.userId} className="flex items-center gap-2 min-w-0">
                   <div className="relative shrink-0">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[9px] font-bold text-white">
-                      {displayName.slice(0, 2).toUpperCase()}
+                      {user.name.slice(0, 2).toUpperCase()}
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-gray-900" />
                   </div>
 
                   <span className="text-xs text-white truncate flex-1">
-                    {displayName}
-                  </span>
-
+                    {user.name}
+                  </span> 
+ 
                   {user.role === 'gm' && (
                     <span className="text-[9px] text-amber-400 uppercase tracking-wide shrink-0">
                       MJ
