@@ -269,10 +269,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
       if (assignedTokens.length > 0) {
         console.log('[VTTLobby] Fallback : tokens canvas assignés:', assignedTokens.length);
+        // -------------------
+        // Fallback : tokens canvas assignés (pas d'avatar campagne)
+        // -------------------
         const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
           id: t.id,
           label: t.label,
           imageUrl: t.imageUrl,
+          avatarUrl: null,
           color: t.color,
           controlledByUserIds: t.controlledByUserIds,
         }));
