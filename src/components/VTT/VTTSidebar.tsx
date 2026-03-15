@@ -109,6 +109,10 @@ const setActiveTab = (tab: SidebarTab) => {
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(224);
+  const isResizing = useRef(false);
+  const resizeStartX = useRef(0);
+  const resizeStartWidth = useRef(0);
 
   // -------------------
   // Gestion des sections du panel tokens
@@ -217,6 +221,26 @@ const setActiveTab = (tab: SidebarTab) => {
     );
   }
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    resizeStartX.current = e.clientX;
+    resizeStartWidth.current = sidebarWidth;
+    const onMove = (ev: MouseEvent) => {
+      if (!isResizing.current) return;
+      const delta = resizeStartX.current - ev.clientX;
+      const newWidth = Math.max(200, Math.min(600, resizeStartWidth.current + delta));
+      setSidebarWidth(newWidth);
+    };
+    const onUp = () => {
+      isResizing.current = false;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
 const isGM = role === 'gm';
 
 const visibleTokens = isGM
@@ -228,7 +252,14 @@ const visibleTokens = isGM
     // Gestion de la transparence de la sidebar
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
-<div className="flex flex-col w-56 h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
+<div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl relative" style={{ width: sidebarWidth }}>
+      <div
+        onMouseDown={handleResizeMouseDown}
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-amber-400/40 transition-colors z-10 group"
+        title="Redimensionner"
+      >
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full bg-gray-600 group-hover:bg-amber-400 transition-colors" />
+      </div>
       <div className="flex border-b border-gray-700/60 shrink-0">
    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
