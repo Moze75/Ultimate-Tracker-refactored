@@ -37,7 +37,7 @@ export function VTTContextMenu({
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const canEdit = role === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userId));
-  const multiSelected = selectedTokens && selectedTokens.length > 1;
+  const multiSelected = selectedTokens && selectedTokens.length >= 1;
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -118,7 +118,7 @@ export function VTTContextMenu({
         <div className="border-t border-gray-700/60 mt-1 pt-1">
           <MenuItem
             icon={<Swords size={13} />}
-            label={`Lancer combat (${selectedTokens!.length})`}
+            label={selectedTokens!.length > 1 ? `Lancer combat (${selectedTokens!.length})` : 'Lancer le combat'}
             highlight
             onClick={() => { onLaunchCombat(selectedTokens!); onClose(); }}
           />

@@ -82,8 +82,15 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens }: Co
   const isDesktop = useIsDesktop();
   const isActive = !!encounter;
 
+  const prevInitialTokensRef = useRef<VTTToken[] | undefined>(undefined);
+
   useEffect(() => {
-    if (!initialTokens || initialTokens.length === 0 || initialTokensAppliedRef.current || isActive) return;
+    if (!initialTokens || initialTokens.length === 0) return;
+    if (prevInitialTokensRef.current !== initialTokens) {
+      prevInitialTokensRef.current = initialTokens;
+      initialTokensAppliedRef.current = false;
+    }
+    if (initialTokensAppliedRef.current || isActive) return;
     initialTokensAppliedRef.current = true;
     const tokenEntries: CombatPreparationEntry[] = initialTokens.map((t) => {
       const matchedMember = members.find((m) => m.player_id && t.characterId && m.player_id === t.characterId);

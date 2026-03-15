@@ -502,11 +502,12 @@ canvasViewportRef.current = canvasViewport;
     if (!roomId) { setCampaignId(null); return; }
     supabase
       .from('vtt_rooms')
-      .select('campaign_id')
+      .select('state_json')
       .eq('id', roomId)
       .maybeSingle()
       .then(({ data }) => {
-        setCampaignId((data as Record<string, unknown> | null)?.campaign_id as string | null ?? null);
+        const stateJson = (data as Record<string, unknown> | null)?.state_json as Record<string, unknown> | null ?? {};
+        setCampaignId((stateJson._campaignId as string | null) ?? null);
       });
   }, [roomId]);
 
@@ -2254,7 +2255,14 @@ onSelectTokens={ids => {
           y={contextMenu.y}
           role={role}
           userId={userId}
-          selectedTokens={selectedTokenIds.length > 1 ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id)) : undefined}
+          selectedTokens={(() => {
+            const sel = selectedTokenIds.length > 0
+              ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id))
+              : [];
+            const token = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
+            const hasToken = sel.some(t => t.id === token.id);
+            return sel.length > 0 ? (hasToken ? sel : [token, ...sel]) : [token];
+          })()}
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
