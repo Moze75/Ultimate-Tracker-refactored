@@ -1,28 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import {
-  Swords,
-  Plus,
-  Search,
-  BookOpen,
-  Loader2,
-  ArrowLeft,
-  Users,
-  Skull,
-  Save,
-  Edit3,
-  Trash2,
-  X,
-  Dices,
-  Shield,
-  Heart,
-  User,
-  SkipForward,
-  Square,
-  Minus,
-  Eye,
-  AlertTriangle,
-  Upload,
-} from 'lucide-react';
+import { Swords, Plus, Search, BookOpen, Loader2, ArrowLeft, Users, Skull, Save, CreditCard as Edit3, Trash2, X, Dices, Shield, Heart, User, SkipForward, Square, Minus, Eye, AlertTriangle, Upload } from 'lucide-react';
 import {
   CampaignMember,
   CampaignEncounter,
@@ -32,6 +9,7 @@ import {
   DND_CONDITIONS,
 } from '../../../types/campaign';
 import { monsterService } from '../../../services/monsterService';
+import type { VTTToken } from '../../../types/vtt';
 import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
@@ -47,6 +25,7 @@ interface CombatTabProps {
   members: CampaignMember[];
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
+  initialTokens?: VTTToken[];
 }
 
 interface CombatPreparationEntry {
@@ -79,7 +58,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
+export function CombatTab({ campaignId, members, onRollDice, initialTokens }: CombatTabProps) {
   const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
   const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
   const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
@@ -99,8 +78,29 @@ export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const initialTokensAppliedRef = useRef(false);
   const isDesktop = useIsDesktop();
   const isActive = !!encounter;
+
+  useEffect(() => {
+    if (!initialTokens || initialTokens.length === 0 || initialTokensAppliedRef.current || isActive) return;
+    initialTokensAppliedRef.current = true;
+    const tokenEntries: CombatPreparationEntry[] = initialTokens.map((t) => {
+      const matchedMember = members.find((m) => m.player_id && t.characterId && m.player_id === t.characterId);
+      return {
+        id: `prep-token-${t.id}-${++prepIdCounter}`,
+        type: matchedMember ? 'player' : 'monster',
+        name: t.label || 'Token',
+        memberId: matchedMember?.id,
+        playerId: matchedMember?.player_id,
+        hp: t.hp ?? matchedMember?.current_hp ?? 0,
+        maxHp: t.maxHp ?? matchedMember?.max_hp ?? 0,
+        ac: matchedMember?.armor_class ?? 10,
+        initiative: 0,
+      };
+    });
+    setPrepEntries(tokenEntries);
+  }, [initialTokens, isActive, members]);
 
   // Bloquer le scroll body quand l'overlay mobile bestiaire est ouvert
   useEffect(() => {

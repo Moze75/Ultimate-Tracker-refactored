@@ -225,6 +225,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
+  const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings'>('tokens');
+  const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
   const [walls, setWalls] = useState<VTTWall[]>([]);
   const wallsRef = useRef<VTTWall[]>([]);
@@ -2202,6 +2204,9 @@ onSelectTokens={ids => {
             connected={connected}
             connectedCount={connectedUsers.length || 1}
             connectedUsers={connectedUsers}
+            activeTab={sidebarActiveTab}
+            onChangeTab={setSidebarActiveTab}
+            combatInitTokens={combatInitTokens}
             onSelectToken={setSelectedTokenId}
             onEditToken={setEditingToken}
             onRemoveToken={handleRemoveToken}
@@ -2249,6 +2254,7 @@ onSelectTokens={ids => {
           y={contextMenu.y}
           role={role}
           userId={userId}
+          selectedTokens={selectedTokenIds.length > 1 ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id)) : undefined}
           onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
           onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
           onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
@@ -2272,6 +2278,11 @@ onSelectTokens={ids => {
           onConfigureVision={() => {
             const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
             setVisionToken(freshToken || contextMenu.token);
+            setContextMenu(null);
+          }}
+          onLaunchCombat={(tokens) => {
+            setCombatInitTokens(tokens);
+            setSidebarActiveTab('combat');
             setContextMenu(null);
           }}
           onClose={() => setContextMenu(null)}

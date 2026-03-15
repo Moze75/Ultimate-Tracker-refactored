@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame, Swords } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -8,12 +8,14 @@ interface VTTContextMenuProps {
   y: number;
   role: VTTRole;
   userId: string;
+  selectedTokens?: VTTToken[];
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
   onToggleTorch: () => void;
   onManageBinding: () => void;
   onConfigureVision: () => void;
+  onLaunchCombat?: (tokens: VTTToken[]) => void;
   onClose: () => void;
 }
 
@@ -23,16 +25,19 @@ export function VTTContextMenu({
   y,
   role,
   userId,
+  selectedTokens,
   onEdit,
   onDelete,
   onToggleVisibility,
   onToggleTorch,
   onManageBinding,
   onConfigureVision,
+  onLaunchCombat,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const canEdit = role === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userId));
+  const multiSelected = selectedTokens && selectedTokens.length > 1;
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -66,7 +71,11 @@ export function VTTContextMenu({
       style={menuStyle}
     >
       <div className="px-3 py-1.5 border-b border-gray-700/60 mb-1">
-        <p className="text-xs text-gray-400 truncate font-medium">{token.label}</p>
+        {multiSelected ? (
+          <p className="text-xs text-amber-400 truncate font-medium">{selectedTokens!.length} tokens sélectionnés</p>
+        ) : (
+          <p className="text-xs text-gray-400 truncate font-medium">{token.label}</p>
+        )}
       </div>
 
       <MenuItem
@@ -105,6 +114,17 @@ export function VTTContextMenu({
         />
       )}
 
+      {role === 'gm' && onLaunchCombat && multiSelected && (
+        <div className="border-t border-gray-700/60 mt-1 pt-1">
+          <MenuItem
+            icon={<Swords size={13} />}
+            label={`Lancer combat (${selectedTokens!.length})`}
+            highlight
+            onClick={() => { onLaunchCombat(selectedTokens!); onClose(); }}
+          />
+        </div>
+      )}
+
       {role === 'gm' && (
         <div className="border-t border-gray-700/60 mt-1 pt-1">
           <MenuItem
@@ -120,11 +140,12 @@ export function VTTContextMenu({
 }
 
 function MenuItem({
-  icon, label, danger, onClick,
+  icon, label, danger, highlight, onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   danger?: boolean;
+  highlight?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -133,6 +154,8 @@ function MenuItem({
       className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
         danger
           ? 'text-red-400 hover:bg-red-900/30'
+          : highlight
+          ? 'text-amber-400 hover:bg-amber-900/30'
           : 'text-gray-300 hover:bg-gray-700'
       }`}
     >

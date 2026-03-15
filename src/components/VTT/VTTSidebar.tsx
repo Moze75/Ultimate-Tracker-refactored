@@ -23,6 +23,9 @@ interface VTTSidebarProps {
   connected: boolean;
   connectedCount: number;
   connectedUsers: { userId: string; name: string; role: 'gm' | 'player' }[];
+  activeTab?: SidebarTab;
+  onChangeTab?: (tab: SidebarTab) => void;
+  combatInitTokens?: VTTToken[];
   onSelectToken: (id: string | null) => void;
   onEditToken: (token: VTTToken) => void;
   onRemoveToken: (tokenId: string) => void;
@@ -73,6 +76,9 @@ export function VTTSidebar({
   connected,
   connectedCount,
   connectedUsers,
+  activeTab: activeTabProp,
+  onChangeTab,
+  combatInitTokens,
   onSelectToken,
   onEditToken,
   onRemoveToken,
@@ -94,7 +100,12 @@ export function VTTSidebar({
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
-const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
+const [internalTab, setInternalTab] = useState<SidebarTab>('tokens');
+const activeTab = activeTabProp ?? internalTab;
+const setActiveTab = (tab: SidebarTab) => {
+  setInternalTab(tab);
+  onChangeTab?.(tab);
+};
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -443,6 +454,7 @@ const visibleTokens = isGM
                 campaignId={campaignId}
                 members={members}
                 onReload={reloadMembers}
+                initialTokens={combatInitTokens}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
