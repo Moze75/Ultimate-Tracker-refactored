@@ -1131,6 +1131,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 onRollDice={onRollDice}
                 isDesktop={isDesktop}
                 scrollContainerRef={scrollContainerRef}
+                vttMode={vttMode}
               />
             ) : (
               <PrepParticipantsList
@@ -1482,6 +1483,7 @@ function ActiveParticipantsList({
   onRollDice,
   isDesktop,
   scrollContainerRef,
+  vttMode,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1498,6 +1500,7 @@ function ActiveParticipantsList({
   onRollDice?: (data: DiceRollData) => void;
   isDesktop: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  vttMode?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -1621,10 +1624,32 @@ function ActiveParticipantsList({
                     <Shield size={10} className="text-gray-500" />
                     <span className="text-gray-400">{p.armor_class}</span>
                   </div>
-                  <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} /></div>
+                  {!vttMode && <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} /></div>}
                 </div>
+                {vttMode && (
+                  <div className="flex items-center gap-1 mt-1.5">
+                    <input
+                      type="number"
+                      className="w-12 px-1 py-1 bg-black/30 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="0"
+                      value={hpDelta[p.id] || ''}
+                      onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
+                    />
+                    <button onClick={() => onApplyHp(p, 'damage')} className="p-1 text-red-500 hover:bg-red-900/30 rounded transition-colors" title="Degats">
+                      <Minus size={12} />
+                    </button>
+                    <button onClick={() => onApplyHp(p, 'heal')} className="p-1 text-green-500 hover:bg-green-900/30 rounded transition-colors" title="Soins">
+                      <Plus size={12} />
+                    </button>
+                    <button onClick={() => onRemove(p.id)} className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors" title="Supprimer">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
               </div>
 
+              {!vttMode && (
               <div className="flex items-center gap-1 shrink-0 mt-0.5">
                 <input
                   type="number"
@@ -1644,6 +1669,7 @@ function ActiveParticipantsList({
                   <Trash2 size={12} />
                 </button>
               </div>
+              )}
             </div>
 
             {(p.conditions?.length > 0 || isCurrentTurn) && (
