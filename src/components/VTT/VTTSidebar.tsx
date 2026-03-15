@@ -222,11 +222,9 @@ const visibleTokens = isGM
    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
   <>
+    <TabBtn icon={<Swords size={14} />} title="Combat" active={activeTab === 'combat'} onClick={() => setActiveTab('combat')} />
     <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
     <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
-    {campaignId && (
-      <TabBtn icon={<Swords size={14} />} title="Combat" active={activeTab === 'combat'} onClick={() => setActiveTab('combat')} />
-    )}
   </>
 )}
 <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
@@ -438,13 +436,20 @@ const visibleTokens = isGM
           </div>
         )}
 
-        {activeTab === 'combat' && campaignId && (
+        {activeTab === 'combat' && (
           <div className="flex flex-col h-full overflow-y-auto">
-            <CombatTab
-              campaignId={campaignId}
-              members={members}
-              onReload={reloadMembers}
-            />
+            {campaignId ? (
+              <CombatTab
+                campaignId={campaignId}
+                members={members}
+                onReload={reloadMembers}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
+                <Swords size={32} className="text-gray-600" />
+                <p className="text-xs text-gray-400">Aucune campagne liée à cette salle. Ouvrez le VTT depuis une campagne pour accéder au combat.</p>
+              </div>
+            )}
           </div>
         )}
 
