@@ -1548,16 +1548,17 @@ function ActiveParticipantsList({
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
         const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
-              const isExpanded = !isDesktop && expandedId === p.id && isMonster;
+              const useInlineExpand = !isDesktop || vttMode;
+        const isExpanded = useInlineExpand && expandedId === p.id && isMonster;
 
              const handleParticipantClick = () => {
           if (!clickable) return;
           if (isMonster) {
-            if (isDesktop) {
-              // En desktop, afficher dans le panneau de gauche uniquement
+            if (!useInlineExpand) {
+              // En desktop (hors vttMode), afficher dans le panneau de gauche uniquement
               onViewMonster(p.monster_id);
             } else {
-              // En mobile, déplier/replier sous le monstre
+              // En mobile ou vttMode, déplier/replier sous le monstre
               if (expandedId === p.id) {
                 setExpandedId(null);
               } else {
@@ -1568,7 +1569,7 @@ function ActiveParticipantsList({
           } else if (isPlayer) {
             onViewPlayer(p.player_member_id);
           }
-        }; 
+        };
 
         return (
           <div
