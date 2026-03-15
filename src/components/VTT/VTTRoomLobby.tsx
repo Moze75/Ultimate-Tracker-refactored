@@ -119,14 +119,23 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       }
 
       const stateJson = data.state_json as { tokens?: VTTToken[] };
-      const tokens = stateJson.tokens || [];
+      const allTokens = stateJson.tokens || [];
 
-      if (tokens.length === 0) {
+      // -------------------
+      // Filtrage des tokens par joueur : ne montrer que les tokens
+      // assignés à ce joueur via controlledByUserIds
+      // -------------------
+      const myTokens = allTokens.filter(t =>
+        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
+      );
+
+      if (myTokens.length === 0) {
+        // Aucun token assigné à ce joueur → rejoindre directement
         onJoinRoom(roomId, 'player');
         return;
       }
 
-      const tokenInfos: RoomTokenInfo[] = tokens.map(t => ({
+      const tokenInfos: RoomTokenInfo[] = myTokens.map(t => ({
         id: t.id,
         label: t.label,
         imageUrl: t.imageUrl,
@@ -134,7 +143,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         controlledByUserIds: t.controlledByUserIds,
       }));
 
-      setSelectedPlayerTokenIds([]);
+      // -------------------
+      // Présélection automatique de tous les tokens du joueur
+      // -------------------
+      setSelectedPlayerTokenIds(myTokens.map(t => t.id));
       setPlayerSelectStep({ roomId, tokens: tokenInfos });
     } catch {
       onJoinRoom(roomId, 'player');
