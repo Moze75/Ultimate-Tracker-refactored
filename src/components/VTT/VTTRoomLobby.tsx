@@ -206,8 +206,22 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         try {
           console.log('[VTTLobby] Recherche personnages campagne pour userId=', userId, 'campagne=', roomCampaignId);
 
-                
-
+          // -------------------
+          // Récupération des memberships avec avatar_url du joueur
+          // -------------------
+          const { data: myMemberships, error: memberError } = await supabase
+            .from('campaign_members')
+            .select(`
+              id,
+              campaign_id,
+              user_id,
+              player_id,
+              player_email,
+              player:players(id, name, adventurer_name, avatar_url)
+            `)
+            .eq('campaign_id', roomCampaignId)
+            .eq('user_id', userId)
+            .eq('is_active', true);
 
           console.log('[VTTLobby] Résultat memberships:', { myMemberships, memberError });
 
