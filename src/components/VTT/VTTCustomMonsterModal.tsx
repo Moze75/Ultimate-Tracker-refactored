@@ -6,7 +6,7 @@ import { monsterService } from '../../services/monsterService';
 import { tokenLibrary, fetchTokenLibrary, saveTokenLibrary } from '../../services/tokenLibraryService';
 
 interface VTTCustomMonsterModalProps {
-  campaignId: string;
+  campaignId: string | null;
   roomId: string;
   onClose: () => void;
   onSaved: () => void;
@@ -200,10 +200,13 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
         image_url: imageUrl.trim() || undefined,
       };
 
-      const saved = await monsterService.saveToCampaign(campaignId, monster);
+      let savedMonster = monster;
+      if (campaignId) {
+        savedMonster = await monsterService.saveToCampaign(campaignId, monster);
+      }
 
       const folderId = await ensureCustomMonstersFolder();
-      await addTokenToLibrary(saved, folderId);
+      await addTokenToLibrary(savedMonster, folderId);
 
       onSaved();
       onClose();
@@ -249,7 +252,11 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
           <div>
             <h3 className="text-lg font-semibold text-white">Nouveau monstre custom</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Sera sauvegarde dans la campagne et dans le dossier "Monstres customs"</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {campaignId
+                ? 'Sauvegarde dans la campagne + dossier "Monstres customs" de la bibliotheque'
+                : 'Ajoute dans le dossier "Monstres customs" de la bibliotheque de tokens'}
+            </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-200 p-2 rounded hover:bg-gray-800">
             <X size={20} />

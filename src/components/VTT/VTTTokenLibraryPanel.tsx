@@ -399,15 +399,13 @@ export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPane
           On ne garde ici que l'action de creation de dossier.
       */}
       <div className="flex items-center justify-end gap-1 px-2 py-1.5">
-        {campaignId && (
-          <button
-            onClick={() => setShowMonsterModal(true)}
-            className="flex items-center gap-1 px-1.5 py-0.5 bg-red-900/50 hover:bg-red-800/60 border border-red-700/50 text-red-400 hover:text-red-300 rounded text-[10px] transition-colors"
-            title="Creer un monstre custom"
-          >
-            <Skull size={10} /> Monstre
-          </button>
-        )}
+        <button
+          onClick={() => setShowMonsterModal(true)}
+          className="flex items-center gap-1 px-2 py-1 bg-red-900/50 hover:bg-red-800/70 border border-red-700/60 text-red-400 hover:text-red-200 rounded text-[10px] font-medium transition-colors"
+          title="Creer un monstre custom et l'ajouter a la bibliotheque"
+        >
+          <Skull size={10} /> + Monstre custom
+        </button>
         <button
           onClick={() => { setNewFolderMode(true); setNewFolderName(''); }}
           className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
@@ -503,9 +501,9 @@ export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPane
         }}
       />
 
-      {showMonsterModal && campaignId && (
+      {showMonsterModal && (
         <VTTCustomMonsterModal
-          campaignId={campaignId}
+          campaignId={campaignId ?? null}
           roomId={roomId}
           onClose={() => setShowMonsterModal(false)}
           onSaved={() => {
