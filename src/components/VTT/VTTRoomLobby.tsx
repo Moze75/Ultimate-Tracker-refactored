@@ -154,7 +154,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-  const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+   const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -163,6 +163,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
     setLoadingTokens(true);
     try {
+      // -------------------
+      // Récupération de la room et de sa campagne liée
+      // -------------------
       const { data } = await supabase
         .from('vtt_rooms')
         .select('state_json')
@@ -174,36 +177,64 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         return;
       }
 
-      const stateJson = data.state_json as { tokens?: VTTToken[] };
+      const stateJson = data.state_json as { tokens?: VTTToken[]; _campaignId?: string };
       const allTokens = stateJson.tokens || [];
+      const roomCampaignId = stateJson._campaignId;
 
       // -------------------
-      // Filtrage des tokens par joueur : ne montrer que les tokens
-      // assignés à ce joueur via controlledByUserIds
+      // Stratégie 1 : tokens déjà assignés via controlledByUserIds
       // -------------------
-      const myTokens = allTokens.filter(t =>
+      // Si des tokens sur le canvas sont explicitement assignés au joueur,
+      // on les propose directement (cas où le MJ a déjà assigné).
+      const assignedTokens = allTokens.filter(t =>
         t.controlledByUserIds && t.controlledByUserIds.includes(userId)
       );
 
-      if (myTokens.length === 0) {
-        // Aucun token assigné à ce joueur → rejoindre directement
-        onJoinRoom(roomId, 'player');
+      if (assignedTokens.length > 0) {
+        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
+          id: t.id,
+          label: t.label,
+          imageUrl: t.imageUrl,
+          color: t.color,
+          controlledByUserIds: t.controlledByUserIds,
+        }));
+        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
+        setPlayerSelectStep({ roomId, tokens: tokenInfos });
         return;
       }
 
-      const tokenInfos: RoomTokenInfo[] = myTokens.map(t => ({
-        id: t.id,
-        label: t.label,
-        imageUrl: t.imageUrl,
-        color: t.color,
-        controlledByUserIds: t.controlledByUserIds,
-      }));
+      // -------------------
+      // Stratégie 2 : aucun token assigné → chercher les personnages
+      // du joueur dans la campagne liée via campaign_members
+      // -------------------
+      // On récupère les personnages du joueur dans cette campagne
+      // pour qu'il puisse choisir lequel incarner.
+      if (roomCampaignId) {
+        try {
+          const members: CampaignMember[] = await campaignService.getCampaignMembers(roomCampaignId);
+          const myMembers = members.filter(m => m.user_id === userId);
+
+          if (myMembers.length > 0) {
+            const tokenInfos: RoomTokenInfo[] = myMembers.map(m => ({
+              id: m.player_id,
+              label: m.player_name || m.email || 'Personnage',
+              imageUrl: null,
+              color: '#3b82f6',
+              controlledByUserIds: [userId],
+            }));
+            setSelectedPlayerTokenIds(myMembers.map(m => m.player_id));
+            setPlayerSelectStep({ roomId, tokens: tokenInfos });
+            return;
+          }
+        } catch (err) {
+          console.error('Erreur chargement membres campagne:', err);
+        }
+      }
 
       // -------------------
-      // Présélection automatique de tous les tokens du joueur
+      // Aucun token ni personnage trouvé → rejoindre directement
       // -------------------
-      setSelectedPlayerTokenIds(myTokens.map(t => t.id));
-      setPlayerSelectStep({ roomId, tokens: tokenInfos });
+      onJoinRoom(roomId, 'player');
     } catch {
       onJoinRoom(roomId, 'player');
     } finally {
