@@ -4,7 +4,7 @@ import { createVTTRoom, listVTTRooms, deleteVTTRoom, updateVTTRoomCampaign } fro
 import { campaignService } from '../../services/campaignService';
 import { supabase } from '../../lib/supabase';
 import type { VTTToken } from '../../types/vtt';
-import type { Campaign } from '../../types/campaign';
+import type { Campaign, CampaignMember } from '../../types/campaign';
 
 interface Room {
   id: string;
