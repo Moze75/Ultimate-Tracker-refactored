@@ -284,6 +284,25 @@ export function VTTLeftToolbar({
         </>
       )}
 
+      {/* -------------------
+          Bouton "Mes tokens" visible côté joueur
+          -------------------
+          Permet au joueur d'ouvrir l'onglet tokens dans la sidebar
+          pour voir ses tokens assignés.
+      */}
+      {role === 'player' && (
+        <>
+          <div className="w-6 h-px bg-gray-700/70 my-0.5" />
+
+          <ToolBtn
+            icon={<Users size={17} />}
+            label="Mes tokens"
+            active={false}
+            onClick={onAddToken}
+          />
+        </>
+      )}
+
       {role === 'gm' && (
         <>
           <div className="w-6 h-px bg-gray-700/70 my-0.5" />
