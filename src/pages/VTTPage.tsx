@@ -904,6 +904,21 @@ useEffect(() => {
   }, [saveCurrentSceneState]);
 
 
+  // -------------------
+  // Handler drag & drop d'un joueur connecté sur le canvas
+  // Crée un token à la position de drop avec les infos du joueur
+  // -------------------
+  const handleDropPlayerOnCanvas = useCallback((userId: string, worldPos: { x: number; y: number }) => {
+    const userToken = tokens.find(t => t.controlledByUserIds?.includes(userId));
+    if (!userToken) return;
+    // Déplace le token existant du joueur à la position de drop
+    vttService.send({
+      type: 'MOVE_TOKEN_REQUEST',
+      tokenId: userToken.id,
+      position: worldPos,
+    });
+  }, [tokens]);
+  
 // -------------------
 // Gestion de la levée du brouillard de guerre
 // Accepte un stroke unique ou un batch de strokes (painting continu).
