@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { DiceRollContext } from '../components/ResponsiveGameLayout';
+import { DiceBox3D } from '../components/DiceBox3D';
 import { VTTCanvas, getExploredMaskStorageKey } from '../components/VTT/VTTCanvas';
 import type { VTTCanvasHandle } from '../components/VTT/VTTCanvas';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
@@ -204,6 +206,21 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [characterSheetToken, setCharacterSheetToken] = useState<VTTToken | null>(null);
+  const [diceRollData, setDiceRollData] = useState<{
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  } | null>(null);
+
+  const rollDice = useCallback((data: {
+    type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
+    attackName: string;
+    diceFormula: string;
+    modifier: number;
+  }) => {
+    setDiceRollData(data);
+  }, []);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
@@ -1848,6 +1865,7 @@ useEffect(() => {
   }
 
   return (
+    <DiceRollContext.Provider value={{ rollDice }}>
     <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
       <div className="flex flex-1 overflow-hidden relative">
         <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-auto">
@@ -2333,6 +2351,13 @@ onSelectTokens={ids => {
           onClose={() => setCharacterSheetToken(null)}
         />
       )}
+
+      <DiceBox3D
+        isOpen={!!diceRollData}
+        onClose={() => setDiceRollData(null)}
+        rollData={diceRollData}
+      />
     </div>
+    </DiceRollContext.Provider>
   );
 } 

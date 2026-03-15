@@ -3,11 +3,11 @@ import { X, ChevronRight, ChevronLeft, Loader2, User, GripVertical } from 'lucid
 import { supabase } from '../../lib/supabase';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 import type { Player } from '../../types/dnd';
-import { DiceRollContext } from '../ResponsiveGameLayout';
 import { DesktopView } from '../DesktopView';
 import { loadAbilitySections } from '../../services/classesContent';
 
 const PANEL_WIDTH = 1100;
+const COLLAPSED_WIDTH = 320;
 
 interface VTTCharacterSheetPanelProps {
   token: VTTToken;
@@ -99,8 +99,6 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
   const handleInventoryUpdate = useCallback((updated: any[]) => {
     setInventory(updated);
   }, []);
-
-  const noop = useCallback((_data: { type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage'; attackName: string; diceFormula: string; modifier: number }) => {}, []);
 
   const hasDragged = useRef(false);
 
@@ -240,17 +238,15 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
             )}
 
             {!loading && !error && player && (
-              <DiceRollContext.Provider value={{ rollDice: noop }}>
-                <DesktopView
-                  player={player}
-                  inventory={inventory}
-                  onPlayerUpdate={handlePlayerUpdate}
-                  onInventoryUpdate={handleInventoryUpdate}
-                  classSections={classSections}
-                  session={null}
-                  embedded={true}
-                />
-              </DiceRollContext.Provider>
+              <DesktopView
+                player={player}
+                inventory={inventory}
+                onPlayerUpdate={handlePlayerUpdate}
+                onInventoryUpdate={handleInventoryUpdate}
+                classSections={classSections}
+                session={null}
+                embedded={true}
+              />
             )}
           </div>
         )}
