@@ -172,7 +172,7 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
       // Gestion de la transparence de la sidebar repliee
       // -------------------
       // Le panneau replie reste lui aussi en surimpression.
-      <div className="flex flex-col items-center w-8 h-full bg-slate-950/45 backdrop-blur-xl border-l border-white/10 shadow-2xl">
+      <div className="flex flex-col items-center w-8 h-full bg-gray-900 border-l border-gray-700/60 shadow-2xl">
         <button
           onClick={() => setCollapsed(false)}
           className="mt-2 p-1 text-gray-500 hover:text-amber-400 hover:bg-gray-800 rounded transition-colors"
@@ -195,7 +195,7 @@ const visibleTokens = isGM
     // Gestion de la transparence de la sidebar
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
-<div className="flex flex-col w-56 h-full bg-slate-900/10 backdrop-blur-sm border-l border-white/10 overflow-hidden shadow-2xl">
+<div className="flex flex-col w-56 h-full bg-gray-900 border-l border-gray-700/60 overflow-hidden shadow-2xl">
       <div className="flex border-b border-gray-700/60 shrink-0">
    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
@@ -205,6 +205,7 @@ const visibleTokens = isGM
   </>
 )}
 <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+
         <button
           onClick={() => setCollapsed(true)}
           className="px-1.5 flex items-center justify-center text-gray-500 hover:text-amber-400 hover:bg-gray-800/50 transition-colors border-b-2 border-transparent"
@@ -228,7 +229,7 @@ const visibleTokens = isGM
                 onClick={() => setShowCanvasTokens(prev => !prev)}
                 className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors"
               >
-                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                <span className="text-[10px] text-gray-200 font-medium uppercase tracking-wide">
                   Tokens sur la carte
                 </span>
                 {showCanvasTokens ? (
@@ -241,7 +242,7 @@ const visibleTokens = isGM
               {showCanvasTokens && (
                 <div ref={tokenListRef} className="p-2 space-y-1 max-h-64 overflow-y-auto">
                   {visibleTokens.length === 0 && (
-                    <p className="text-xs text-gray-500 text-center py-4">Aucun token sur la carte</p>
+                    <p className="text-xs text-gray-400 text-center py-4">Aucun token sur la carte</p>
                   )}
 
                   {visibleTokens.map(token => {
@@ -276,7 +277,7 @@ const visibleTokens = isGM
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-gray-300'}`}>
+                          <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-white'}`}>
                             {token.label}
                           </p>
 
@@ -348,7 +349,7 @@ const visibleTokens = isGM
                 onClick={() => setShowTokenLibrary(prev => !prev)}
                 className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors border-b border-gray-700/60"
               >
-                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                <span className="text-[10px] text-gray-200 font-medium uppercase tracking-wide">
                   Bibliothèque de tokens
                 </span>
                 {showTokenLibrary ? (
@@ -379,7 +380,7 @@ const visibleTokens = isGM
                   onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
                 <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-[10px] text-gray-300 truncate">
+                  <p className="text-[10px] text-white truncate">
                     {config.mapImageUrl.startsWith('data:') ? 'Fichier local' : config.mapImageUrl}
                   </p>
                 </div>
@@ -412,7 +413,7 @@ const visibleTokens = isGM
             {/* URL manuelle (repli) */}
             <div className="p-3 space-y-2 shrink-0">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs text-gray-300 mb-1">
                   <span className="flex items-center gap-1"><RefreshCw size={10} /> URL directe</span>
                 </label>
                 <div className="flex gap-1">
@@ -453,7 +454,7 @@ const visibleTokens = isGM
           <div className="p-3 space-y-4">
             {onSaveScene && (
               <div>
-                <p className="text-xs text-gray-500 mb-2 font-medium">Scène</p>
+                <p className="text-xs text-gray-200 mb-2 font-medium">Scène</p>
                 <button
                   onClick={async () => {
                     setSaving(true);
@@ -480,8 +481,8 @@ const visibleTokens = isGM
               </div>
             )}
             <div>
-              <p className="text-xs text-gray-500 mb-1 font-medium">ID Room</p>
-              <p className="font-mono text-gray-400 text-xs break-all bg-gray-800/60 rounded px-2 py-1.5 border border-gray-700/50">{roomId}</p>
+              <p className="text-xs text-gray-200 mb-1 font-medium">ID Room</p>
+              <p className="font-mono text-gray-300 text-xs break-all bg-gray-800 rounded px-2 py-1.5 border border-gray-700">{roomId}</p>
             </div>
           </div>
         )}
@@ -495,8 +496,8 @@ const visibleTokens = isGM
             Fusion de l'indicateur de connexion de la sidebar
             avec l'ancienne liste flottante du canvas.
         */}
-               <div className="px-3 py-2 border-b border-gray-700/50 bg-gray-900/20">
-          <div className={`flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
+               <div className="px-3 py-2 border-b border-gray-700/50">
+          <div className={`flex items-center gap-1.5 text-xs font-medium ${connected ? 'text-emerald-300' : 'text-red-400'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
             {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
           </div>
@@ -512,7 +513,7 @@ const visibleTokens = isGM
                     <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-gray-900" />
                   </div>
 
-                  <span className="text-xs text-gray-300 truncate flex-1">
+                  <span className="text-xs text-white truncate flex-1">
                     {user.name}
                   </span>
 
@@ -530,7 +531,7 @@ const visibleTokens = isGM
         <div className="flex">
           <button
             onClick={onHome}
-            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-[11px]"
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-[11px]"
             title="Retour a l'accueil"
           >
             <LogOut size={12} />
@@ -539,7 +540,7 @@ const visibleTokens = isGM
           <div className="w-px bg-gray-700/60" />
           <button
             onClick={onBack}
-            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-500 hover:text-red-400 hover:bg-red-950/30 transition-colors text-[11px]"
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-300 hover:text-red-400 hover:bg-red-950/30 transition-colors text-[11px]"
             title="Quitter la salle"
           >
             <DoorOpen size={12} />
@@ -559,7 +560,7 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
       className={`relative group flex-1 flex items-center justify-center py-2.5 transition-colors border-b-2 ${
         active
           ? 'text-amber-400 border-amber-500 bg-amber-500/10'
-          : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/30'
+          : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800/60'
       }`}
     >
       {icon}
