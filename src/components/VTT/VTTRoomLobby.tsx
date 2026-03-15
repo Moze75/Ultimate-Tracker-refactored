@@ -486,10 +486,16 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               ------------------- */}
               {[...rooms, ...subscribedRooms].map(room => {
                 const campaignName = getCampaignName(room.campaignId);
+                // -------------------
+                // Détection room abonnée (joueur) vs room du MJ
+                // -------------------
+                const isSubscribedRoom = room.gmUserId !== userId;
                 return (
                   <div
                     key={room.id}
-                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-amber-700/50 transition-colors"
+                    className={`flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 transition-colors ${
+                      isSubscribedRoom ? 'hover:border-blue-700/50' : 'hover:border-amber-700/50'
+                    }`}
                   >
                     <Map size={18} className="text-amber-500 shrink-0" />
                     <div className="flex-1 min-w-0">
