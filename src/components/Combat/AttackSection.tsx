@@ -154,7 +154,7 @@ export function AttackSection({
                 console.log('🎯 [AttackSection] Clic Attaque:', attack.name);
                 onRollAttack(attack);
               }}
-                      className="btn-texture-gray text-white px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
+                      className="btn-texture-gray text-white text-xs px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
             >
               Attaque : 1d20+{getAttackBonus(attack)}
             </button>
@@ -175,7 +175,7 @@ export function AttackSection({
           <div className="flex-1 flex flex-col">
             {/* Si c'est une attaque virtuelle ET que ce n'est pas un Moine, on affiche un div statique au lieu d'un bouton */}
             {isVirtual && !isMonk ? (
-               <div className="btn-texture-orange text-orange-200/70 px-3 py-2 rounded-md flex items-center justify-center cursor-default opacity-60">
+               <div className="btn-texture-orange text-orange-200/70 text-xs px-3 py-2 rounded-md flex items-center justify-center cursor-default opacity-60">
                  Dégâts fixes : {fixedDamageValue}
                </div>
             ) : (
@@ -184,7 +184,7 @@ export function AttackSection({
                   console.log('🎯 [AttackSection] Clic Dégâts:', attack.name);
                   onRollDamage(attack);
                 }}
-                              className="btn-texture-orange text-white px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
+                              className="btn-texture-orange text-white text-xs px-3 py-2 rounded-md transition-all flex items-center justify-center font-medium"
               >
                 Dégâts : {dmgLabel}
               </button>

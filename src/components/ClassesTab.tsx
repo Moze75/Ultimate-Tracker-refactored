@@ -404,7 +404,7 @@ function ClassesTab({
     <div className="p-1 space-y-1 pb-0">{/* Suppression du padding-bottom */}
       <div className="flex items-center gap-1 mt-1">
         <Sparkles className="w-5 h-5 text-yellow-400" />
-        <span className="text-base font-semibold text-gray-200">
+        <span className="text-sm font-semibold text-gray-200">
           Ressources de classe
         </span> 
       </div>
@@ -427,7 +427,7 @@ function ClassesTab({
               <div className="p-3 space-y-5">{/* --- spacing tweak */}
                 <div className="flex items-center gap-2">
                   <ListChecks className="w-5 h-5 text-sky-500" />
-                  <span className="text-base font-semibold text-gray-200">
+                  <span className="text-sm font-semibold text-gray-200">
                     Compétences de classe et sous-classe
                   </span>
                 </div>
