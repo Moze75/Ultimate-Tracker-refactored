@@ -2204,6 +2204,7 @@ onSelectTokens={ids => {
             onRemoveProp={handleRemoveProp}
             onUpdateProp={handleUpdateProp}
             onSaveScene={role === 'gm' ? handleSaveScene : undefined}
+            onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
           />
         </div>
       </div>

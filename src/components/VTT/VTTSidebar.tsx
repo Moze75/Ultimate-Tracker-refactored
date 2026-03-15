@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 import { VTTMapLibrary } from './VTTMapLibrary';
 import { VTTTokenLibraryPanel } from './VTTTokenLibraryPanel';
+import { VTTMonsterBestiary } from './VTTMonsterBestiary';
+import type { MonsterListItem, Monster } from '../../types/campaign';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
 
@@ -32,6 +34,7 @@ interface VTTSidebarProps {
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
   onSaveScene?: () => Promise<void>;
+  onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -83,6 +86,7 @@ export function VTTSidebar({
   onHome,
   authToken,
   onSaveScene,
+  onAddMonsterAsToken,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
@@ -98,6 +102,7 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   // ainsi que la bibliotheque de tokens.
   const [showCanvasTokens, setShowCanvasTokens] = useState(true);
   const [showTokenLibrary, setShowTokenLibrary] = useState(true);
+  const [showBestiary, setShowBestiary] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
 
@@ -362,6 +367,51 @@ const visibleTokens = isGM
               {showTokenLibrary && (
                 <div className="flex-1 min-h-0">
                   <VTTTokenLibraryPanel roomId={roomId} />
+                </div>
+              )}
+            </div>
+
+            {/* Bestiaire */}
+            <div className={`shrink-0 flex flex-col border-t border-gray-700/60 ${showBestiary ? 'flex-1 min-h-0' : ''}`}>
+              <button
+                type="button"
+                onClick={() => setShowBestiary(prev => !prev)}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors"
+              >
+                <span className="flex items-center gap-1.5 text-[10px] text-gray-200 font-medium uppercase tracking-wide">
+                  <Skull size={10} className="text-red-400" />
+                  Bestiaire
+                </span>
+                {showBestiary ? (
+                  <ChevronDown size={12} className="text-gray-500" />
+                ) : (
+                  <ChevronRight size={12} className="text-gray-500" />
+                )}
+              </button>
+
+              {showBestiary && (
+                <div className="flex-1 min-h-0 flex flex-col" style={{ maxHeight: '50vh' }}>
+                  <VTTMonsterBestiary
+                    onAddAsToken={onAddMonsterAsToken ? (m: MonsterListItem, detail: Monster | null) => {
+                      const hp = typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10;
+                      onAddMonsterAsToken({
+                        characterId: null,
+                        ownerUserId: '',
+                        label: m.name,
+                        imageUrl: null,
+                        position: { x: 200, y: 200 },
+                        size: 1,
+                        rotation: 0,
+                        visible: true,
+                        color: '#ef4444',
+                        hp,
+                        maxHp: hp,
+                        showLabel: true,
+                        visionMode: 'none',
+                        lightSource: 'none',
+                      });
+                    } : undefined}
+                  />
                 </div>
               )}
             </div>
