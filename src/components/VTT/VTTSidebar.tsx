@@ -646,7 +646,7 @@ const visibleTokens = isGM
                   <span className="text-xs text-white truncate flex-1">
                     {user.name}
                   </span> 
- 
+  
                   {user.role === 'gm' && (
                     <span className="text-[9px] text-amber-400 uppercase tracking-wide shrink-0">
                       MJ
