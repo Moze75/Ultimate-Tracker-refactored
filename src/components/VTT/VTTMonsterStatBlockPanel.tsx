@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { X, GripVertical, Loader2, Skull } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 import type { Monster } from '../../types/campaign';
 import { monsterService } from '../../services/monsterService';
-import { MonsterStatBlock } from '../Combat/MonsterStatBlock';
+import { MonsterStatBlock, DiceRollData } from '../Combat/MonsterStatBlock';
+import { DiceRollContext } from '../ResponsiveGameLayout';
 
 const PANEL_WIDTH = 480;
 
@@ -13,6 +14,7 @@ interface VTTMonsterStatBlockPanelProps {
 }
 
 export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlockPanelProps) {
+  const { rollDice } = useContext(DiceRollContext);
   const [monster, setMonster] = useState<Monster | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,7 +167,11 @@ export function VTTMonsterStatBlockPanel({ token, onClose }: VTTMonsterStatBlock
           )}
 
           {!loading && !error && monster && (
-            <MonsterStatBlock monster={monster} compact={false} />
+            <MonsterStatBlock
+              monster={monster}
+              compact={false}
+              onRollDice={(data: DiceRollData) => rollDice(data)}
+            />
           )}
         </div>
       </div>
