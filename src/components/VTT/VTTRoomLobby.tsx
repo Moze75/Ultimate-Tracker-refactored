@@ -52,8 +52,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     try {
       const list = await listVTTRooms(userId, authToken);
       setRooms(list);
-    } catch {
-      setError('Impossible de contacter le serveur VTT. Vérifiez que le backend est démarré.');
+    } catch (err) {
+      setError('Erreur lors du chargement des tables : ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setLoading(false);
     }

@@ -738,17 +738,39 @@ export async function createVTTRoom(name: string, userId: string, _authToken: st
 export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string; campaignId: string | null }>> {
   const { data, error } = await supabase
     .from('vtt_rooms')
-    .select('id, name, gm_user_id, created_at, campaign_id')
+    .select('id, name, gm_user_id, created_at')
     .eq('gm_user_id', userId)
     .order('created_at', { ascending: false });
-  if (error) return [];
-  return (data || []).map(r => ({
+  if (error) throw new Error('Erreur chargement rooms VTT: ' + error.message);
+
+  const rows = (data || []).map(r => ({
     id: r.id,
     name: r.name,
     gmUserId: r.gm_user_id,
     createdAt: r.created_at,
-    campaignId: (r as Record<string, unknown>).campaign_id as string | null ?? null,
+    campaignId: null as string | null,
   }));
+
+  if (rows.length === 0) return rows;
+
+  try {
+    const ids = rows.map(r => r.id);
+    const { data: withCampaign } = await supabase
+      .from('vtt_rooms')
+      .select('id, campaign_id')
+      .in('id', ids);
+
+    if (withCampaign) {
+      const campaignMap = new Map<string, string | null>(
+        withCampaign.map((r: Record<string, unknown>) => [r.id as string, (r.campaign_id as string | null) ?? null])
+      );
+      return rows.map(r => ({ ...r, campaignId: campaignMap.get(r.id) ?? null }));
+    }
+  } catch {
+    // campaign_id column may not exist yet — return rooms without it
+  }
+
+  return rows;
 }
 
 export async function updateVTTRoomCampaign(roomId: string, campaignId: string | null): Promise<void> {
