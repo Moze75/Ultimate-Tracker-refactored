@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { X, Eye, EyeOff, ScanEye } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
+import { VTTTokenImagePreview } from './VTTTokenImagePreview';
 
 interface VTTTokenEditModalProps {
   token: VTTToken;
@@ -10,72 +11,16 @@ interface VTTTokenEditModalProps {
   onClose: () => void;
 }
 
-function PreviewImage({ src, offsetX, offsetY, zoom, containerSize }: { src: string; offsetX: number; offsetY: number; zoom: number; containerSize: number }) {
-  const [aspect, setAspect] = React.useState(1);
-  const ZOOM = zoom;
-  const side = containerSize * ZOOM;
-  const excess = side - containerSize;
-  const dw = aspect >= 1 ? side : side * aspect;
-  const dh = aspect >= 1 ? side / aspect : side;
-  const left = -(excess / 2) - offsetX * (excess / 2) + (side - dw) / 2;
-  const top = -(excess / 2) - offsetY * (excess / 2) + (side - dh) / 2;
-  return (
-    <img
-      src={src}
-      alt=""
-      className="absolute pointer-events-none"
-      style={{ width: dw, height: dh, left, top }}
-      draggable={false}
-      onLoad={e => { const img = e.target as HTMLImageElement; setAspect(img.naturalWidth / img.naturalHeight); }}
-      onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
-    />
-  );
-}
-
-
-
 export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VTTTokenEditModalProps) {
   const [label, setLabel] = useState(token.label);
   const [imageUrl, setImageUrl] = useState(token.imageUrl || '');
-
   const [visible, setVisible] = useState(token.visible);
-    const [showLabel, setShowLabel] = useState(token.showLabel ?? false);
+  const [showLabel, setShowLabel] = useState(token.showLabel ?? false);
   const [hp, setHp] = useState(token.hp != null ? String(token.hp) : '');
   const [maxHp, setMaxHp] = useState(token.maxHp != null ? String(token.maxHp) : '');
   const [imageOffsetX, setImageOffsetX] = useState(token.imageOffsetX ?? 0);
   const [imageOffsetY, setImageOffsetY] = useState(token.imageOffsetY ?? 0);
   const [imageZoom, setImageZoom] = useState(token.imageZoom ?? 1.8);
-  const isDraggingPreview = useRef(false);
-  const previewRef = useRef<HTMLDivElement>(null);
-
-  const handlePreviewWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setImageZoom(prev => Math.max(1.0, Math.min(4.0, parseFloat((prev + delta).toFixed(2)))));
-  }, []);
-
-  const handlePreviewMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isDraggingPreview.current = true;
-    let lastX = e.clientX;
-    let lastY = e.clientY;
-    const onMove = (me: MouseEvent) => {
-      if (!isDraggingPreview.current) return;
-      const dx = me.clientX - lastX;
-      const dy = me.clientY - lastY;
-      lastX = me.clientX;
-      lastY = me.clientY;
-      setImageOffsetX(prev => Math.max(-1, Math.min(1, prev - dx / 40)));
-      setImageOffsetY(prev => Math.max(-1, Math.min(1, prev - dy / 40)));
-    };
-    const onUp = () => {
-      isDraggingPreview.current = false;
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, []);
 
   const handleSave = () => {
     onSave({
@@ -136,80 +81,16 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
           </div>
 
           {imageUrl && (
-            <div>
-              <label className="block text-xs text-gray-400 mb-2">Position de l'image <span className="text-gray-600">(glisser pour ajuster)</span></label>
-              <div className="flex gap-4 items-start">
-                <div
-                  ref={previewRef}
-                  className="w-32 h-32 rounded-full overflow-hidden bg-gray-700 shrink-0 border-2 border-gray-600 relative cursor-grab active:cursor-grabbing select-none"
-                  onMouseDown={handlePreviewMouseDown}
-                  onWheel={handlePreviewWheel}
-                  title="Glisser pour repositionner · Molette pour zoomer"
-                >
-                  <PreviewImage
-                    src={imageUrl}
-                    offsetX={imageOffsetX}
-                    offsetY={imageOffsetY}
-                    zoom={imageZoom}
-                    containerSize={128}
-                  />
-                  <div className="absolute inset-0 rounded-full ring-1 ring-white/10 pointer-events-none" />
-                </div>
-                <div className="flex-1 space-y-2 pt-1">
-                  <div>
-                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
-                      <span>Horizontal</span>
-                      <span className="text-gray-400">{imageOffsetX > 0 ? '+' : ''}{Math.round(imageOffsetX * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={-1}
-                      max={1}
-                      step={0.05}
-                      value={imageOffsetX}
-                      onChange={e => setImageOffsetX(Number(e.target.value))}
-                      className="w-full accent-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
-                      <span>Vertical</span>
-                      <span className="text-gray-400">{imageOffsetY > 0 ? '+' : ''}{Math.round(imageOffsetY * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={-1}
-                      max={1}
-                      step={0.05}
-                      value={imageOffsetY}
-                      onChange={e => setImageOffsetY(Number(e.target.value))}
-                      className="w-full accent-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
-                      <span>Zoom</span>
-                      <span className="text-gray-400">{imageZoom.toFixed(1)}x</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1.0}
-                      max={4.0}
-                      step={0.1}
-                      value={imageZoom}
-                      onChange={e => setImageZoom(Number(e.target.value))}
-                      className="w-full accent-amber-500"
-                    />
-                  </div>
-                  <button
-                    onClick={() => { setImageOffsetX(0); setImageOffsetY(0); setImageZoom(1.8); }}
-                    className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors underline"
-                  >
-                    Réinitialiser
-                  </button>
-                </div>
-              </div>
-            </div>
+            <VTTTokenImagePreview
+              imageUrl={imageUrl}
+              offsetX={imageOffsetX}
+              offsetY={imageOffsetY}
+              zoom={imageZoom}
+              onOffsetXChange={setImageOffsetX}
+              onOffsetYChange={setImageOffsetY}
+              onZoomChange={setImageZoom}
+              onReset={() => { setImageOffsetX(0); setImageOffsetY(0); setImageZoom(1.8); }}
+            />
           )}
 
           <div className="flex gap-3">
@@ -262,7 +143,7 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                 }`}
               >
                 {visible ? <Eye size={13} /> : <EyeOff size={13} />}
-                {visible ? 'Visible' : 'Cache'}
+                {visible ? 'Visible' : 'Caché'}
               </button>
             </div>
           )}
@@ -274,12 +155,13 @@ export function VTTTokenEditModal({ token, role, onSave, onRemove, onClose }: VT
                 <ScanEye size={13} />
                 {token.visionMode === 'darkvision' ? 'Nyctalopie' : token.visionMode === 'normal' ? 'Normale' : 'Aucune'}
                 {token.lightSource && token.lightSource !== 'none' && (
-                  <span className="text-orange-400 ml-1">+ {token.lightSource === 'torch' ? 'Torche' : token.lightSource === 'lantern' ? 'Lanterne' : 'Lumiere'}</span>
+                  <span className="text-orange-400 ml-1">
+                    + {token.lightSource === 'torch' ? 'Torche' : token.lightSource === 'lantern' ? 'Lanterne' : 'Lumiere'}
+                  </span>
                 )}
               </div>
             </div>
           )}
-
         </div>
 
         <div className="flex gap-2 px-4 pb-4">
