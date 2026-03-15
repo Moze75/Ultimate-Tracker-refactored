@@ -500,9 +500,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                               <Map size={18} className={isSubscribedRoom ? 'text-blue-400 shrink-0' : 'text-amber-500 shrink-0'} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{room.name}</p>
-                      <p className="text-xs text-gray-500 font-mono">{room.id}</p>
+                      {/* -------------------
+                          ID de la room (masqué pour les rooms abonnées)
+                      ------------------- */}
+                      {!isSubscribedRoom && (
+                        <p className="text-xs text-gray-500 font-mono">{room.id}</p>
+                      )}
+                      {/* -------------------
+                          Nom de la campagne liée (au lieu de l'UUID)
+                      ------------------- */}
                       {campaignName && (
-                        <p className="text-xs text-amber-400/80 mt-0.5 flex items-center gap-1">
+                        <p className={`text-xs mt-0.5 flex items-center gap-1 ${isSubscribedRoom ? 'text-blue-400/80' : 'text-amber-400/80'}`}>
                           <BookOpen size={10} />
                           {campaignName}
                         </p>
