@@ -6,6 +6,7 @@ export type VTTLightSource = 'none' | 'torch' | 'lantern' | 'custom';
 export interface VTTToken {
   id: string;
   characterId: string | null;
+  monsterSlug?: string;
   ownerUserId: string;
   controlledByUserIds?: string[];
   label: string;

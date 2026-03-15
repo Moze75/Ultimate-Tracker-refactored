@@ -456,9 +456,10 @@ const visibleTokens = isGM
                       const hp = typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10;
                       onAddMonsterAsToken({
                         characterId: null,
+                        monsterSlug: m.slug || undefined,
                         ownerUserId: '',
                         label: m.name,
-                        imageUrl: null,
+                        imageUrl: detail?.image_url || null,
                         position: { x: 200, y: 200 },
                         size: 1,
                         rotation: 0,

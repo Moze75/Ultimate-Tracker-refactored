@@ -38,6 +38,7 @@ import type {
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
+import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 
 type VTTUndoSnapshot = {
   tokens: VTTToken[];
@@ -207,6 +208,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [characterSheetToken, setCharacterSheetToken] = useState<VTTToken | null>(null);
+  const [monsterStatBlockToken, setMonsterStatBlockToken] = useState<VTTToken | null>(null);
   const [diceRollData, setDiceRollData] = useState<{
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
@@ -1036,11 +1038,17 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   }, [tokens, role]);
 
   const handleTokenDoubleClick = useCallback((token: VTTToken) => {
-    if (!token.characterId) return;
     const isGm = role === 'gm';
     const isOwner = token.ownerUserId === userId;
     const isController = (token.controlledByUserIds ?? []).includes(userId);
     if (!isGm && !isOwner && !isController) return;
+
+    if (token.monsterSlug && isGm) {
+      setMonsterStatBlockToken(token);
+      return;
+    }
+
+    if (!token.characterId) return;
     setCharacterSheetToken(token);
   }, [role, userId]);
 
@@ -2383,6 +2391,13 @@ onSelectTokens={ids => {
           role={role}
           userId={userId}
           onClose={() => setCharacterSheetToken(null)}
+        />
+      )}
+
+      {monsterStatBlockToken && (
+        <VTTMonsterStatBlockPanel
+          token={monsterStatBlockToken}
+          onClose={() => setMonsterStatBlockToken(null)}
         />
       )}
 
