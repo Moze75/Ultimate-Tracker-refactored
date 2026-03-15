@@ -777,7 +777,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className={vttMode ? 'flex flex-col' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
+    <div className={vttMode ? 'flex flex-col flex-1 min-h-0' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
       {/* LEFT: Search / Bestiary - Desktop only, hidden in vttMode */}
         <div className={`${vttMode ? 'hidden' : 'hidden lg:block'} space-y-4 bestiary-panel bestiary-panel--no-frame bestiary-panel--no-border rounded-xl lg:mx-[30px] lg:mt-[30px] p-4`}>
         <div className="flex gap-2 border-b border-gray-700 pb-2">
@@ -873,7 +873,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
       </div>
 
        {/* RIGHT: Unified combat panel */}
-      <div className="space-y-4 relative">
+      <div className={vttMode ? 'flex flex-col flex-1 min-h-0 relative' : 'space-y-4 relative'}>
         {/* Mobile-only: search toolbar + panel ABOVE combat box (also hidden in vttMode) */}
         <div className={`${vttMode ? 'hidden' : 'lg:hidden'} space-y-3`}>
           <div className="flex flex-wrap gap-1.5">
@@ -985,7 +985,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
         </div>
 
             {!vttMode && <div className="hidden lg:block" style={{ height: '81px' }}></div>}
-<div className={`combat-panel rounded-xl ${vttMode ? '' : 'lg:mx-[30px] lg:mb-[34px]'}`}>
+<div className={`combat-panel rounded-xl ${vttMode ? 'flex flex-col flex-1 min-h-0' : 'lg:mx-[30px] lg:mb-[34px]'}`}>
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 space-y-2">
             <div className="flex items-center gap-3">
@@ -1113,7 +1113,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
           )}
 
           {/* Participants list */}
-          <div className="max-h-[70vh] overflow-y-auto" ref={scrollContainerRef}>
+          <div className={vttMode ? 'flex-1 overflow-y-auto min-h-0' : 'max-h-[70vh] overflow-y-auto'} ref={scrollContainerRef}>
             {isActive ? (
               <ActiveParticipantsList
                 encounter={encounter}

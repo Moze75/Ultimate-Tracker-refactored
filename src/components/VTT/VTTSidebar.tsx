@@ -479,7 +479,7 @@ const visibleTokens = isGM
         )}
 
         {activeTab === 'combat' && (
-          <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex flex-col h-full overflow-hidden">
             {campaignId ? (
               <CombatTab
                 campaignId={campaignId}
