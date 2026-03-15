@@ -35,6 +35,7 @@ import type {
 } from '../types/vtt';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
+import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 
 type VTTUndoSnapshot = {
   tokens: VTTToken[];
@@ -202,6 +203,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     const [sceneContextMenu, setSceneContextMenu] = useState<{ sceneId: string; sceneName: string; config: VTTRoomConfig; x: number; y: number } | null>(null);
   
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
+  const [characterSheetToken, setCharacterSheetToken] = useState<VTTToken | null>(null);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
@@ -999,6 +1001,15 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     if (!token) return;
     vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes: { visible: !token.visible } });
   }, [tokens, role]);
+
+  const handleTokenDoubleClick = useCallback((token: VTTToken) => {
+    if (!token.characterId) return;
+    const isGm = role === 'gm';
+    const isOwner = token.ownerUserId === userId;
+    const isController = (token.controlledByUserIds ?? []).includes(userId);
+    if (!isGm && !isOwner && !isController) return;
+    setCharacterSheetToken(token);
+  }, [role, userId]);
 
   const handleEditTokenSave = useCallback((changes: Partial<VTTToken>) => {
     if (!editingToken) return;
@@ -2025,6 +2036,7 @@ onSelectTokens={ids => {
   }
 }}
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
+            onTokenDoubleClick={handleTokenDoubleClick}
             onDropToken={handleDropToken}
             onAddTokenAtPos={handleAddTokenAtPos}
             onResizeToken={handleResizeToken}
@@ -2312,6 +2324,15 @@ onSelectTokens={ids => {
           onClose={() => setSceneConfigEdit(null)}
         />
       )}
-    </div>   
-  ); 
+
+      {characterSheetToken && (
+        <VTTCharacterSheetPanel
+          token={characterSheetToken}
+          role={role}
+          userId={userId}
+          onClose={() => setCharacterSheetToken(null)}
+        />
+      )}
+    </div>
+  );
 } 

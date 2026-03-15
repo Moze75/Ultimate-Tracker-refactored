@@ -63,6 +63,7 @@ export interface VTTCanvasRefs {
     selectedWallPointRef: React.MutableRefObject<{ wallId: string; pointIndex: number } | null>;
   selectedWallPointsRef: React.MutableRefObject<{ wallId: string; pointIndex: number }[]>;
   onViewportChangeRef: React.MutableRefObject<((vp: { x: number; y: number; scale: number }) => void) | undefined>;
+  onTokenDoubleClickRef: React.MutableRefObject<((token: VTTToken) => void) | undefined>;
   fogCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   fogBrushRef?: React.MutableRefObject<number>;
   drawRef: React.MutableRefObject<() => void>;
@@ -143,6 +144,7 @@ export function useVTTCanvasEvents({
     selectedWallPointRef,
     selectedWallPointsRef,
     onViewportChangeRef,
+    onTokenDoubleClickRef,
     drawRef,
     paintFogAt,
     flushFogBatch,
@@ -1501,6 +1503,19 @@ export function useVTTCanvasEvents({
     };
  
     const onDblClick = (e: MouseEvent) => {
+      if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
+        // handled below
+      } else if (activeToolRef.current === 'wall-select' && roleRef.current === 'gm') {
+        // handled below
+      } else {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const token = getTokenAt(wp.x, wp.y);
+        if (token) {
+          onTokenDoubleClickRef.current?.(token);
+          return;
+        }
+      }
       if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
         const pts = wallPointsRef.current;
         if (pts.length >= 2) {

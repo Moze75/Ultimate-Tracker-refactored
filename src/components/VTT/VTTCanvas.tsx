@@ -54,6 +54,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   spectatorMode = 'none',
   onSeenDoorsUpdate,
   fogResetSignal = 0,
+  onTokenDoubleClick,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -215,6 +216,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onWindowRemovedRef.current = onWindowRemoved;
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
+  const onTokenDoubleClickRef = useRef(onTokenDoubleClick);
+  onTokenDoubleClickRef.current = onTokenDoubleClick;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
   const doorInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
@@ -1033,6 +1036,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     selectedWallPointRef,
     selectedWallPointsRef,
      onViewportChangeRef,
+    onTokenDoubleClickRef,
     // -------------------
     // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle au mouseUp)
     // -------------------

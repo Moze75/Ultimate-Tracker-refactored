@@ -65,4 +65,5 @@ export interface VTTCanvasProps {
   spectatorMode?: 'none' | 'player-vision';
   onSeenDoorsUpdate?: (seenIds: string[]) => void;
   fogResetSignal?: number;
+  onTokenDoubleClick?: (token: VTTToken) => void;
 }
