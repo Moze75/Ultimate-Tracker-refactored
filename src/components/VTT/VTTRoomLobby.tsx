@@ -227,19 +227,18 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
           if (!memberError && myMemberships && myMemberships.length > 0) {
             // -------------------
-            // Construction de la liste de personnages sélectionnables
+            // Construction de la liste de personnages avec avatar
             // -------------------
-            // Filtre les memberships sans player_id.
-            // Utilise adventurer_name en priorité, puis name, puis email.
             const tokenInfos: RoomTokenInfo[] = myMemberships
               .filter(m => m.player_id)
               .map(m => {
-                const playerData = m.player as { id: string; name: string; adventurer_name?: string } | null;
+                const playerData = m.player as { id: string; name: string; adventurer_name?: string; avatar_url?: string } | null;
                 const label = playerData?.adventurer_name || playerData?.name || m.player_email || 'Personnage';
                 return {
                   id: m.player_id!,
                   label,
                   imageUrl: null,
+                  avatarUrl: playerData?.avatar_url || null,
                   color: '#3b82f6',
                   controlledByUserIds: [userId],
                 };
