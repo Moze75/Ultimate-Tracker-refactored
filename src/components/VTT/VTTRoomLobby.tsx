@@ -154,7 +154,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-    const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+     const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -166,21 +166,32 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // -------------------
       // Récupération de la room et de sa campagne liée
       // -------------------
+      // On récupère state_json en best-effort. Si la RLS bloque
+      // la lecture pour un joueur non-GM, data sera null → on passe
+      // directement à la Stratégie 2 via le campaignId des subscribedRooms.
       const { data } = await supabase
         .from('vtt_rooms')
         .select('state_json')
         .eq('id', roomId)
         .maybeSingle();
 
-      // -------------------
-      // Extraction du campaignId et des tokens existants
-      // -------------------
-      // On extrait _campaignId même si state_json ne contient pas de tokens.
-      // Un state_json = { _campaignId: "xxx" } est valide et signifie
-      // qu'il y a une campagne liée mais aucun token encore posé.
       const stateJson = (data?.state_json as Record<string, unknown>) ?? {};
       const allTokens = ((stateJson as { tokens?: VTTToken[] }).tokens) || [];
-      const roomCampaignId = stateJson._campaignId as string | undefined;
+      const roomCampaignId = (stateJson._campaignId as string | undefined)
+        // -------------------
+        // Fallback : si state_json est inaccessible (RLS), on cherche
+        // le campaignId dans les subscribedRooms déjà chargées
+        // -------------------
+        || subscribedRooms.find(r => r.id === roomId)?.campaignId
+        || undefined;
+
+      console.log('[VTTLobby] handleRoleSelect:', {
+        roomId,
+        stateJsonKeys: Object.keys(stateJson),
+        allTokensCount: allTokens.length,
+        roomCampaignId,
+        userId,
+      });
 
       // -------------------
       // Stratégie 1 : tokens déjà assignés via controlledByUserIds
@@ -192,6 +203,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       );
 
       if (assignedTokens.length > 0) {
+        console.log('[VTTLobby] Stratégie 1 : tokens assignés trouvés:', assignedTokens.length);
         const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
           id: t.id,
           label: t.label,
@@ -208,19 +220,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // Stratégie 2 : aucun token assigné → chercher les personnages
       // du joueur dans la campagne liée via campaign_members
       // -------------------
-      // On récupère les personnages du joueur dans cette campagne
-      // pour qu'il puisse choisir lequel incarner.
-      // On utilise une requête directe à Supabase plutôt que
-      // campaignService.getCampaignMembers() car celle-ci peut
-      // être bloquée par les RLS pour un joueur non-GM.
+      // On fait une requête directe à Supabase (pas via campaignService)
+      // pour contourner d'éventuels problèmes de RLS sur getCampaignMembers.
+      // On filtre directement par user_id pour ne récupérer que les
+      // personnages du joueur connecté.
       if (roomCampaignId) {
         try {
           console.log('[VTTLobby] Stratégie 2 : recherche personnages pour userId=', userId, 'dans campagne=', roomCampaignId);
 
-          // -------------------
-          // Requête directe : récupère les memberships du joueur
-          // avec jointure sur la table players pour avoir le nom
-          // -------------------
           const { data: myMemberships, error: memberError } = await supabase
             .from('campaign_members')
             .select(`
@@ -241,14 +248,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             // -------------------
             // Construction de la liste de personnages sélectionnables
             // -------------------
-            // Utilise player.adventurer_name en priorité, puis player.name,
-            // puis player_email comme fallback.
-            // L'id utilisé est le player_id (id du personnage dans la table players).
+            // Filtre les memberships sans player_id (cas où le champ
+            // est null/undefined dans la base).
+            // Utilise adventurer_name en priorité, puis name, puis email.
             const tokenInfos: RoomTokenInfo[] = myMemberships
-              .filter(m => m.player_id) // on ignore les memberships sans player_id
+              .filter(m => m.player_id)
               .map(m => {
-                const player = m.player as { id: string; name: string; adventurer_name?: string } | null;
-                const label = player?.adventurer_name || player?.name || m.player_email || 'Personnage';
+                const playerData = m.player as { id: string; name: string; adventurer_name?: string } | null;
+                const label = playerData?.adventurer_name || playerData?.name || m.player_email || 'Personnage';
                 return {
                   id: m.player_id!,
                   label,
@@ -257,6 +264,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                   controlledByUserIds: [userId],
                 };
               });
+
+            console.log('[VTTLobby] Personnages trouvés:', tokenInfos.map(t => ({ id: t.id, label: t.label })));
 
             if (tokenInfos.length > 0) {
               setSelectedPlayerTokenIds(tokenInfos.map(t => t.id));
@@ -274,7 +283,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // -------------------
       console.log('[VTTLobby] Aucun personnage trouvé, connexion directe');
       onJoinRoom(roomId, 'player');
-    } catch {
+    } catch (err) {
+      console.error('[VTTLobby] Erreur handleRoleSelect:', err);
       onJoinRoom(roomId, 'player');
     } finally {
       setLoadingTokens(false);
