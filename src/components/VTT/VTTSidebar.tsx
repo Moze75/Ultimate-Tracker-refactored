@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull, Swords } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp } from '../../types/vtt';
 import { VTTPropsPanel } from './VTTPropsPanel';
 import { VTTMapLibrary } from './VTTMapLibrary';
 import { VTTTokenLibraryPanel } from './VTTTokenLibraryPanel';
 import { VTTMonsterBestiary } from './VTTMonsterBestiary';
-import type { MonsterListItem, Monster } from '../../types/campaign';
+import type { MonsterListItem, Monster, CampaignMember } from '../../types/campaign';
+import { campaignService } from '../../services/campaignService';
+import { CombatTab } from '../GameMaster/tabs/CombatTab';
 
-type SidebarTab = 'tokens' | 'map' | 'props' | 'settings';
+type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings';
 
 interface VTTSidebarProps {
     authToken?: string;
@@ -105,8 +107,21 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
   const [showCanvasTokens, setShowCanvasTokens] = useState(true);
   const [showTokenLibrary, setShowTokenLibrary] = useState(true);
   const [showBestiary, setShowBestiary] = useState(false);
+  const [members, setMembers] = useState<CampaignMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
+
+  const reloadMembers = useCallback(() => {
+    if (campaignId) {
+      campaignService.getCampaignMembers(campaignId).then(setMembers).catch(console.error);
+    }
+  }, [campaignId]);
+
+  useEffect(() => {
+    if (activeTab === 'combat' && campaignId) {
+      reloadMembers();
+    }
+  }, [activeTab, campaignId, reloadMembers]);
 
   useEffect(() => {
     if (!selectedTokenId || !tokenListRef.current) return;
@@ -209,6 +224,9 @@ const visibleTokens = isGM
   <>
     <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
     <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
+    {campaignId && (
+      <TabBtn icon={<Swords size={14} />} title="Combat" active={activeTab === 'combat'} onClick={() => setActiveTab('combat')} />
+    )}
   </>
 )}
 <TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
@@ -417,6 +435,16 @@ const visibleTokens = isGM
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'combat' && campaignId && (
+          <div className="flex flex-col h-full overflow-y-auto">
+            <CombatTab
+              campaignId={campaignId}
+              members={members}
+              onReload={reloadMembers}
+            />
           </div>
         )}
 
