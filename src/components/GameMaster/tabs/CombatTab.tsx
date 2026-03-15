@@ -1023,21 +1023,24 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                   </button>
                   <button
                     onClick={handleNextTurn}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                    title="Tour suivant"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
                   >
-                    <SkipForward size={12} className="shrink-0" /> Tour suivant
+                    <SkipForward size={12} className="shrink-0" /> {!vttMode && 'Tour suivant'}
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                    title="Sauvegarder"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
                   >
-                    <Save size={12} className="shrink-0" /> Sauvegarder
+                    <Save size={12} className="shrink-0" /> {!vttMode && 'Sauvegarder'}
                   </button>
                   <button
                     onClick={handleEndCombat}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                    title="Fin du combat"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
                   >
-                    <Square size={12} className="shrink-0" /> Fin
+                    <Square size={12} className="shrink-0" /> {!vttMode && 'Fin'}
                   </button>
                 </div>
               ) : (
