@@ -8,7 +8,6 @@ import { DesktopView } from '../DesktopView';
 import { loadAbilitySections } from '../../services/classesContent';
 
 const PANEL_WIDTH = 1100;
-const COLLAPSED_WIDTH = 44;
 
 interface VTTCharacterSheetPanelProps {
   token: VTTToken;
@@ -103,16 +102,20 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
 
   const noop = useCallback((_data: { type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage'; attackName: string; diceFormula: string; modifier: number }) => {}, []);
 
+  const hasDragged = useRef(false);
+
   const onDragMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     dragging.current = true;
+    hasDragged.current = false;
     dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
 
     const onMove = (ev: MouseEvent) => {
       if (!dragging.current || !dragStart.current) return;
       const dx = ev.clientX - dragStart.current.mx;
       const dy = ev.clientY - dragStart.current.my;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDragged.current = true;
       const width = collapsed ? COLLAPSED_WIDTH : PANEL_WIDTH;
       const newX = Math.max(0, Math.min(window.innerWidth - width, dragStart.current.px + dx));
       const newY = Math.max(0, Math.min(window.innerHeight - 60, dragStart.current.py + dy));
@@ -130,11 +133,15 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
     window.addEventListener('mouseup', onUp);
   }, [pos, collapsed]);
 
+  const onHeaderDoubleClick = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setCollapsed(c => !c);
+  }, []);
+
   const canOpen = token.characterId && (role === 'gm' || token.ownerUserId === userId || (token.controlledByUserIds ?? []).includes(userId));
   if (!canOpen) return null;
 
   const avatarUrl = token.imageUrl || player?.avatar_url;
-  const width = collapsed ? COLLAPSED_WIDTH : PANEL_WIDTH;
   const maxHeight = 'calc(100vh - 60px)';
 
   return (
@@ -144,9 +151,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
       style={{
         left: pos.x,
         top: pos.y,
-        width,
+        width: PANEL_WIDTH,
         maxHeight,
-        transition: 'width 0.2s ease',
         userSelect: dragging.current ? 'none' : undefined,
       }}
     >
@@ -163,38 +169,38 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
         {/* Drag handle / header */}
         <div
           onMouseDown={onDragMouseDown}
+          onDoubleClick={onHeaderDoubleClick}
           className="flex items-center gap-2 px-3 py-2 shrink-0 cursor-grab active:cursor-grabbing select-none"
           style={{
             background: 'rgba(20,14,8,0.9)',
-            borderBottom: '1px solid rgba(212,170,100,0.25)',
+            borderBottom: collapsed ? 'none' : '1px solid rgba(212,170,100,0.25)',
           }}
+          title="Double-clic pour replier / déplier"
         >
           <GripVertical size={14} className="text-amber-600/60 shrink-0" />
 
-          {!collapsed && avatarUrl ? (
+          {avatarUrl ? (
             <img
               src={avatarUrl}
               alt={token.label}
               className="w-6 h-6 rounded-full object-cover shrink-0"
               style={{ border: '1px solid rgba(212,170,100,0.5)' }}
             />
-          ) : !collapsed ? (
+          ) : (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
               style={{ background: 'rgba(212,170,100,0.15)', border: '1px solid rgba(212,170,100,0.35)' }}
             >
               <User size={12} style={{ color: '#c9a84c' }} />
             </div>
-          ) : null}
-
-          {!collapsed && (
-            <span
-              className="flex-1 text-xs font-semibold truncate"
-              style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', letterSpacing: '0.04em' }}
-            >
-              {token.label || player?.name || 'Personnage'}
-            </span>
           )}
+
+          <span
+            className="flex-1 text-xs font-semibold truncate"
+            style={{ fontFamily: "'Cinzel', serif", color: '#EFE6D8', letterSpacing: '0.04em' }}
+          >
+            {token.label || player?.name || 'Personnage'}
+          </span>
 
           <button
             onClick={() => setCollapsed(c => !c)}
@@ -205,16 +211,14 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTChar
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
 
-          {!collapsed && (
-            <button
-              onClick={onClose}
-              className="p-1 rounded transition-colors shrink-0"
-              style={{ color: '#9a7a4a' }}
-              title="Fermer"
-            >
-              <X size={14} />
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="p-1 rounded transition-colors shrink-0"
+            style={{ color: '#9a7a4a' }}
+            title="Fermer"
+          >
+            <X size={14} />
+          </button>
         </div>
 
         {!collapsed && (
