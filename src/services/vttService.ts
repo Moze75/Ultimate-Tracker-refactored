@@ -528,21 +528,43 @@ if (resolvedScenes && resolvedScenes.length > 0) {
     this.messageHandlers.forEach(h => h(event));
   }
 
-  private _schedulePersist() {
-    if (this.persistDebounce) clearTimeout(this.persistDebounce);
-    this.persistDebounce = setTimeout(() => this._persistNow(), 500);
-  }
-
+  // -------------------
+  // Persistance de l'état de la room dans Supabase
+  // -------------------
+  // Préserve _campaignId qui est stocké dans state_json
+  // mais qui ne fait pas partie de LocalState.
+  // Sans cette préservation, le lien campagne ↔ room se perdait
+  // à chaque sauvegarde automatique.
   private _persistNow() {
     if (!this.roomId) return;
+    const roomId = this.roomId;
     // Les murs, portes et fenêtres sont par scène → on ne les persiste PAS dans la room globale
     const { walls: _walls, doors: _doors, windows: _windows, ...stateWithoutWalls } = this.localState;
+
+    // -------------------
+    // Lecture préalable du state_json existant pour conserver _campaignId
+    // -------------------
     supabase
       .from('vtt_rooms')
-      .update({ state_json: stateWithoutWalls, updated_at: new Date().toISOString() })
-      .eq('id', this.roomId)
-      .then(({ error }) => {
-        if (error) console.error('[VTT] Persist error:', error);
+      .select('state_json')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data: existing }) => {
+        const oldStateJson = (existing?.state_json as Record<string, unknown>) ?? {};
+        const campaignId = oldStateJson._campaignId;
+
+        const newStateJson: Record<string, unknown> = { ...stateWithoutWalls };
+        if (campaignId) {
+          newStateJson._campaignId = campaignId;
+        }
+
+        return supabase
+          .from('vtt_rooms')
+          .update({ state_json: newStateJson, updated_at: new Date().toISOString() })
+          .eq('id', roomId);
+      })
+      .then((res) => {
+        if (res?.error) console.error('[VTT] Persist error:', res.error);
       });
     // Le fog est sauvegardé exclusivement via _saveFogToScene() dans le case REVEAL_FOG
   }
@@ -735,13 +757,24 @@ export async function createVTTRoom(name: string, userId: string, _authToken: st
   return { roomId };
 }
 
-export async function listVTTRooms(userId: string, _authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string; campaignId: string | null }>> {
-  const { data, error } = await supabase
-    .from('vtt_rooms')
-    .select('id, name, gm_user_id, created_at, state_json')
-    .eq('gm_user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) throw new Error('Erreur chargement rooms VTT: ' + error.message);
+export async function listVTTRooms(userId: string, authToken: string): Promise<Array<{ id: string; name: string; gmUserId: string; createdAt: string; campaignId: string | null }>> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/vtt_rooms?select=id,name,gm_user_id,created_at,state_json&gm_user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`,
+    {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw new Error('Erreur chargement rooms VTT: ' + text);
+  }
+  const data: Array<{ id: string; name: string; gm_user_id: string; created_at: string; state_json: unknown }> = await response.json();
 
   return (data || []).map(r => {
     const stateJson = (r.state_json as Record<string, unknown>) ?? {};
