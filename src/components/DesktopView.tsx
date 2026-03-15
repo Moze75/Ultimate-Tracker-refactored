@@ -3,7 +3,7 @@ import { LogOut } from 'lucide-react';
 import { Player, Ability } from '../types/dnd';
 import { PlayerProfileSettingsModal } from './PlayerProfileSettingsModal';
 import { CampaignPlayerModal } from './CampaignPlayerModal';
-import { DiceSettingsModal } from './DiceSettingsModal'; 
+import { DiceSettingsModal } from './DiceSettingsModal';
 import { DesktopHeader } from './PlayerProfile/DesktopHeader';
 import { HPManagerConnected } from './Combat/HPManagerConnected';
 import { HorizontalAbilityScores } from './HorizontalAbilityScores';
@@ -34,6 +34,7 @@ interface DesktopViewProps {
   campaignId?: string | null;
   campaignMembers?: CampaignMember[];
   currentUserId?: string;
+  embedded?: boolean;
 }
 
 export function DesktopView({
@@ -47,18 +48,18 @@ export function DesktopView({
   campaignId,
   campaignMembers,
   currentUserId,
+  embedded = false,
 }: DesktopViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [showDiceSettings, setShowDiceSettings] = useState(false);
-    const [showFamiliarModal, setShowFamiliarModal] = useState(false);
+  const [showFamiliarModal, setShowFamiliarModal] = useState(false);
   const [familiar, setFamiliar] = useState<FamiliarData | null>((player as any).familiar || null);
 
   const [activeTooltip, setActiveTooltip] = useState<'ac' | 'speed' | null>(null);
   const [showConcentrationCheck, setShowConcentrationCheck] = useState(false);
   const [concentrationDC, setConcentrationDC] = useState(10);
-  
-  // État pour gérer le fond d'écran avec valeur par défaut depuis localStorage
+
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
   });
@@ -71,9 +72,8 @@ export function DesktopView({
     ? player.abilities
     : [];
 
-  // 🔍 DEBUG: Vérifier si les abilities sont chargées
   console.log('🔍 [DesktopView] abilities:', {
-    playerAbilities: player. abilities,
+    playerAbilities: player.abilities,
     abilitiesLength: abilities.length,
     abilities: abilities.map(a => a.name)
   });
@@ -108,193 +108,111 @@ export function DesktopView({
     });
   };
 
-  // Fonction pour changer et sauvegarder le fond d'écran
   const handleBackgroundChange = (url: string) => {
     setBackgroundImage(url);
     localStorage.setItem('desktop-background', url);
   };
 
-  return ( 
-    <>
-      {/* 🔥 IMAGE DE BACKGROUND FIXE - NE BOUGE JAMAIS */} 
-      {deviceType === 'desktop' && (
-        <div 
-          className="fixed inset-0 pointer-events-none transition-opacity duration-200"
-          style={{
-            zIndex: 0,
-            overflow: 'hidden',
-          }}
-        >
-          {backgroundImage.startsWith('color:') ? (
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                background: backgroundImage.replace('color:', ''),
-                pointerEvents: 'none',
-                userSelect: 'none',
+  const contentGrid = (
+    <div className="space-y-4" style={{ minWidth: 0 }}>
+      {/* Header */}
+      <div className="frame-card--light frame-card--tex2 p-4 h-full min-h-[180px]">
+        <DesktopHeader
+          player={player}
+          inventory={inventory}
+          onUpdate={onPlayerUpdate}
+          onEdit={() => setSettingsOpen(true)}
+          onOpenCampaigns={() => setShowCampaignModal(true)}
+          onOpenDiceSettings={() => setShowDiceSettings(true)}
+          onOpenFamiliar={() => setShowFamiliarModal(true)}
+          activeTooltip={activeTooltip}
+          setActiveTooltip={setActiveTooltip}
+        />
+      </div>
+
+      {/* Grille HP + Abilities */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-4">
+          <div className="frame-card--light frame-card--tex2 p-4 h-full">
+            <HPManagerConnected
+              player={player}
+              onUpdate={onPlayerUpdate}
+              onConcentrationCheck={(dc) => {
+                setConcentrationDC(dc);
+                setShowConcentrationCheck(true);
               }}
             />
-          ) : backgroundImage.startsWith('gradient:') ? (
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                background: backgroundImage.replace('gradient:', ''),
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-            />
-          ) : (
-            <img
-              src={backgroundImage}
-              alt="background"
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%', 
-                objectFit: 'cover',
-                objectPosition: 'center top',
-                pointerEvents: 'none', 
-                userSelect: 'none',
-                filter: 'brightness(0.95)',
-              }}
-            />
-          )}
-        </div>
-      )}
-
-      {/* 🔥 CONTENEUR PRINCIPAL - OCCUPE TOUT L'ÉCRAN */}
-      <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
-        
-        {/* 🔥 ZONE SCROLLABLE - CONTIENT TOUT LE CONTENU */}
-       <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
-          style={{
-            scrollbarGutter: 'stable',
-            minHeight: 0,
-          }}
-        >
-          <div
-            className="max-w-[1280px] mx-auto space-y-4"
-            style={{
-              minWidth: 0,
-            }}
-          > 
-
-            {/* Header */}
-               <div className="frame-card--light frame-card--tex2 p-4 h-full min-h-[180px]">
-              <DesktopHeader
-                player={player}
-                inventory={inventory}
-                onUpdate={onPlayerUpdate}
-                onEdit={() => setSettingsOpen(true)}
-                onOpenCampaigns={() => setShowCampaignModal(true)}
-                onOpenDiceSettings={() => setShowDiceSettings(true)}
-                onOpenFamiliar={() => setShowFamiliarModal(true)}
-                activeTooltip={activeTooltip}
-                setActiveTooltip={setActiveTooltip}
-              />
-            </div>
-            
-            {/* Grille HP + Abilities */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <div className="frame-card--light frame-card--tex2 p-4 h-full">
-                  <HPManagerConnected 
-                    player={player}
-                    onUpdate={onPlayerUpdate}
-                    onConcentrationCheck={(dc) => {
-                      setConcentrationDC(dc);
-                      setShowConcentrationCheck(true);
-                    }}
-                  />
-                </div>
-              </div>
-
- 
- 
-              
-<div className="col-span-8">
-  <div className="frame-card--light frame-card--tex2 p-4 h-full min-h-[180px]">
-    {abilities.length > 0 ? (
-      <HorizontalAbilityScores
-        abilities={abilities}
-        inventory={inventory}
-        onAbilityClick={handleAbilityClick}
-        onSavingThrowClick={handleSavingThrowClick}
-        player={player}
-        onUpdate={onPlayerUpdate}
-      />
-    ) : (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-sm">
-          Aucune caractéristique configurée.  
-          <br />
-          <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
-        </p>
-      </div> 
-    )}
-  </div>  
-</div>
-            </div> 
-
-            {/* Grille Skills + TabbedPanel */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4 flex">
-                <div className="frame-card--light frame-card--tex2 p-4 w-full max-h-[880px]">
-                  <StandaloneSkillsSection
-                    player={player}
-                    onSkillClick={handleSkillClick}
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-8 flex">
-                <div className="frame-card--light frame-card--tex2 p-4 w-full flex flex-col max-h-[880px]">
-                  <TabbedPanel
-                    player={player}
-                    inventory={inventory}
-                    onPlayerUpdate={onPlayerUpdate}
-                    onInventoryUpdate={onInventoryUpdate}
-                    classSections={classSections}
-                    hiddenTabs={['bag']}
-                    campaignId={campaignId}
-                    campaignMembers={campaignMembers}
-                    currentUserId={currentUserId}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Bouton Retour aux personnages - À LA FIN DE LA ZONE SCROLLABLE */}
-            {onBackToSelection && (
-              <div className="w-full mt-6 pb-6">
-<button
-  onClick={onBackToSelection}
-  className="w-full btn-transparent-cinzel rounded-lg flex items-center justify-center gap-2 px-4 py-2"
->
-  <LogOut size={20} />
-  Retour aux personnages
-</button>
-              </div>
-            )}
-
           </div>
         </div>
 
+        <div className="col-span-8">
+          <div className="frame-card--light frame-card--tex2 p-4 h-full min-h-[180px]">
+            {abilities.length > 0 ? (
+              <HorizontalAbilityScores
+                abilities={abilities}
+                inventory={inventory}
+                onAbilityClick={handleAbilityClick}
+                onSavingThrowClick={handleSavingThrowClick}
+                player={player}
+                onUpdate={onPlayerUpdate}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500 text-sm">
+                  Aucune caractéristique configurée.
+                  <br />
+                  <span className="text-xs">Allez dans l'onglet "Stats" pour les configurer.</span>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* 🔥 MODALS EN OVERLAY */}
+      {/* Grille Skills + TabbedPanel */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-4 flex">
+          <div className="frame-card--light frame-card--tex2 p-4 w-full max-h-[880px]">
+            <StandaloneSkillsSection
+              player={player}
+              onSkillClick={handleSkillClick}
+            />
+          </div>
+        </div>
 
+        <div className="col-span-8 flex">
+          <div className="frame-card--light frame-card--tex2 p-4 w-full flex flex-col max-h-[880px]">
+            <TabbedPanel
+              player={player}
+              inventory={inventory}
+              onPlayerUpdate={onPlayerUpdate}
+              onInventoryUpdate={onInventoryUpdate}
+              classSections={classSections}
+              hiddenTabs={['bag']}
+              campaignId={campaignId}
+              campaignMembers={campaignMembers}
+              currentUserId={currentUserId}
+            />
+          </div>
+        </div>
+      </div>
+
+      {onBackToSelection && (
+        <div className="w-full mt-6 pb-6">
+          <button
+            onClick={onBackToSelection}
+            className="w-full btn-transparent-cinzel rounded-lg flex items-center justify-center gap-2 px-4 py-2"
+          >
+            <LogOut size={20} />
+            Retour aux personnages
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const modals = (
+    <>
       <PlayerProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -311,7 +229,7 @@ export function DesktopView({
         onInventoryAdd={(item) => {
           console.log('New item added:', item);
         }}
-      /> 
+      />
 
       <DiceSettingsModal
         open={showDiceSettings}
@@ -331,7 +249,7 @@ export function DesktopView({
           onSave={(fam) => setFamiliar(fam)}
         />
       )}
-      
+
       {showConcentrationCheck && (
         <ConcentrationCheckModal
           player={player}
@@ -340,6 +258,72 @@ export function DesktopView({
           onClose={() => setShowConcentrationCheck(false)}
         />
       )}
-    </> 
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        <div className="p-4 lg:p-6">
+          {contentGrid}
+        </div>
+        {modals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* IMAGE DE BACKGROUND FIXE */}
+      {deviceType === 'desktop' && (
+        <div
+          className="fixed inset-0 pointer-events-none transition-opacity duration-200"
+          style={{ zIndex: 0, overflow: 'hidden' }}
+        >
+          {backgroundImage.startsWith('color:') ? (
+            <div
+              style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                background: backgroundImage.replace('color:', ''),
+                pointerEvents: 'none', userSelect: 'none',
+              }}
+            />
+          ) : backgroundImage.startsWith('gradient:') ? (
+            <div
+              style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                background: backgroundImage.replace('gradient:', ''),
+                pointerEvents: 'none', userSelect: 'none',
+              }}
+            />
+          ) : (
+            <img
+              src={backgroundImage}
+              alt="background"
+              style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                objectFit: 'cover', objectPosition: 'center top',
+                pointerEvents: 'none', userSelect: 'none',
+                filter: 'brightness(0.95)',
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* CONTENEUR PRINCIPAL */}
+      <div className="fixed inset-0 flex flex-col" style={{ zIndex: 1 }}>
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6"
+          style={{ scrollbarGutter: 'stable', minHeight: 0 }}
+        >
+          <div className="max-w-[1280px] mx-auto" style={{ minWidth: 0 }}>
+            {contentGrid}
+          </div>
+        </div>
+      </div>
+
+      {modals}
+    </>
   );
 }
