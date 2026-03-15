@@ -2138,6 +2138,16 @@ onSelectTokens={ids => {
             );
           })}
 
+          {/* -------------------
+              Liste des joueurs connectés (overlay bottom-left)
+              Inclut le drag & drop pour déplacer un token joueur
+              ------------------- */}
+          <VTTPlayerList
+            users={connectedUsers}
+            tokens={tokens}
+            onDropPlayerToken={handleDropPlayerOnCanvas}
+          />
+          
 {props.map(prop => (
   <div
     key={prop.id}
