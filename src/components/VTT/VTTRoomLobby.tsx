@@ -480,7 +480,11 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             </div>
           ) : (
             <div className="space-y-2">
-              {rooms.map(room => {
+              {/* -------------------
+                  Boucle sur les rooms du MJ + rooms des campagnes abonnées
+                  Les subscribedRooms sont ajoutées à la fin de la liste
+              ------------------- */}
+              {[...rooms, ...subscribedRooms].map(room => {
                 const campaignName = getCampaignName(room.campaignId);
                 return (
                   <div
