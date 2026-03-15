@@ -154,7 +154,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-   const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+    const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -172,14 +172,15 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         .eq('id', roomId)
         .maybeSingle();
 
-      if (!data?.state_json) {
-        onJoinRoom(roomId, 'player');
-        return;
-      }
-
-      const stateJson = data.state_json as { tokens?: VTTToken[]; _campaignId?: string };
-      const allTokens = stateJson.tokens || [];
-      const roomCampaignId = stateJson._campaignId;
+      // -------------------
+      // Extraction du campaignId et des tokens existants
+      // -------------------
+      // On extrait _campaignId même si state_json ne contient pas de tokens.
+      // Un state_json = { _campaignId: "xxx" } est valide et signifie
+      // qu'il y a une campagne liée mais aucun token encore posé.
+      const stateJson = (data?.state_json as Record<string, unknown>) ?? {};
+      const allTokens = ((stateJson as { tokens?: VTTToken[] }).tokens) || [];
+      const roomCampaignId = stateJson._campaignId as string | undefined;
 
       // -------------------
       // Stratégie 1 : tokens déjà assignés via controlledByUserIds
@@ -209,31 +210,69 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // -------------------
       // On récupère les personnages du joueur dans cette campagne
       // pour qu'il puisse choisir lequel incarner.
+      // On utilise une requête directe à Supabase plutôt que
+      // campaignService.getCampaignMembers() car celle-ci peut
+      // être bloquée par les RLS pour un joueur non-GM.
       if (roomCampaignId) {
         try {
-          const members: CampaignMember[] = await campaignService.getCampaignMembers(roomCampaignId);
-          const myMembers = members.filter(m => m.user_id === userId);
+          console.log('[VTTLobby] Stratégie 2 : recherche personnages pour userId=', userId, 'dans campagne=', roomCampaignId);
 
-          if (myMembers.length > 0) {
-            const tokenInfos: RoomTokenInfo[] = myMembers.map(m => ({
-              id: m.player_id,
-              label: m.player_name || m.email || 'Personnage',
-              imageUrl: null,
-              color: '#3b82f6',
-              controlledByUserIds: [userId],
-            }));
-            setSelectedPlayerTokenIds(myMembers.map(m => m.player_id));
-            setPlayerSelectStep({ roomId, tokens: tokenInfos });
-            return;
+          // -------------------
+          // Requête directe : récupère les memberships du joueur
+          // avec jointure sur la table players pour avoir le nom
+          // -------------------
+          const { data: myMemberships, error: memberError } = await supabase
+            .from('campaign_members')
+            .select(`
+              id,
+              campaign_id,
+              user_id,
+              player_id,
+              player_email,
+              player:players(id, name, adventurer_name)
+            `)
+            .eq('campaign_id', roomCampaignId)
+            .eq('user_id', userId)
+            .eq('is_active', true);
+
+          console.log('[VTTLobby] Résultat memberships:', { myMemberships, memberError });
+
+          if (!memberError && myMemberships && myMemberships.length > 0) {
+            // -------------------
+            // Construction de la liste de personnages sélectionnables
+            // -------------------
+            // Utilise player.adventurer_name en priorité, puis player.name,
+            // puis player_email comme fallback.
+            // L'id utilisé est le player_id (id du personnage dans la table players).
+            const tokenInfos: RoomTokenInfo[] = myMemberships
+              .filter(m => m.player_id) // on ignore les memberships sans player_id
+              .map(m => {
+                const player = m.player as { id: string; name: string; adventurer_name?: string } | null;
+                const label = player?.adventurer_name || player?.name || m.player_email || 'Personnage';
+                return {
+                  id: m.player_id!,
+                  label,
+                  imageUrl: null,
+                  color: '#3b82f6',
+                  controlledByUserIds: [userId],
+                };
+              });
+
+            if (tokenInfos.length > 0) {
+              setSelectedPlayerTokenIds(tokenInfos.map(t => t.id));
+              setPlayerSelectStep({ roomId, tokens: tokenInfos });
+              return;
+            }
           }
         } catch (err) {
-          console.error('Erreur chargement membres campagne:', err);
+          console.error('[VTTLobby] Erreur chargement personnages campagne:', err);
         }
       }
 
       // -------------------
       // Aucun token ni personnage trouvé → rejoindre directement
       // -------------------
+      console.log('[VTTLobby] Aucun personnage trouvé, connexion directe');
       onJoinRoom(roomId, 'player');
     } catch {
       onJoinRoom(roomId, 'player');
