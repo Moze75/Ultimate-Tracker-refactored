@@ -154,7 +154,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-     const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+   const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -168,7 +168,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // -------------------
       // On récupère state_json en best-effort. Si la RLS bloque
       // la lecture pour un joueur non-GM, data sera null → on passe
-      // directement à la Stratégie 2 via le campaignId des subscribedRooms.
+      // directement à la recherche via campaign_members.
       const { data } = await supabase
         .from('vtt_rooms')
         .select('state_json')
@@ -177,56 +177,33 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
       const stateJson = (data?.state_json as Record<string, unknown>) ?? {};
       const allTokens = ((stateJson as { tokens?: VTTToken[] }).tokens) || [];
+      // -------------------
+      // Extraction du campaignId avec fallback sur subscribedRooms
+      // -------------------
+      // Si state_json est inaccessible (RLS), on retrouve le campaignId
+      // via les rooms déjà chargées dans le lobby du joueur.
       const roomCampaignId = (stateJson._campaignId as string | undefined)
-        // -------------------
-        // Fallback : si state_json est inaccessible (RLS), on cherche
-        // le campaignId dans les subscribedRooms déjà chargées
-        // -------------------
         || subscribedRooms.find(r => r.id === roomId)?.campaignId
         || undefined;
 
       console.log('[VTTLobby] handleRoleSelect:', {
         roomId,
-        stateJsonKeys: Object.keys(stateJson),
         allTokensCount: allTokens.length,
         roomCampaignId,
         userId,
       });
 
       // -------------------
-      // Stratégie 1 : tokens déjà assignés via controlledByUserIds
+      // Stratégie PRIORITAIRE : personnages de campagne du joueur
       // -------------------
-      // Si des tokens sur le canvas sont explicitement assignés au joueur,
-      // on les propose directement (cas où le MJ a déjà assigné).
-      const assignedTokens = allTokens.filter(t =>
-        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
-      );
-
-      if (assignedTokens.length > 0) {
-        console.log('[VTTLobby] Stratégie 1 : tokens assignés trouvés:', assignedTokens.length);
-        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
-          id: t.id,
-          label: t.label,
-          imageUrl: t.imageUrl,
-          color: t.color,
-          controlledByUserIds: t.controlledByUserIds,
-        }));
-        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
-        setPlayerSelectStep({ roomId, tokens: tokenInfos });
-        return;
-      }
-
-      // -------------------
-      // Stratégie 2 : aucun token assigné → chercher les personnages
-      // du joueur dans la campagne liée via campaign_members
-      // -------------------
-      // On fait une requête directe à Supabase (pas via campaignService)
-      // pour contourner d'éventuels problèmes de RLS sur getCampaignMembers.
-      // On filtre directement par user_id pour ne récupérer que les
-      // personnages du joueur connecté.
+      // Si la room est liée à une campagne, on cherche d'abord les
+      // personnages du joueur dans cette campagne. C'est la source
+      // de vérité pour "quels persos appartiennent à ce joueur".
+      // Les tokens assignés sur le canvas (controlledByUserIds) sont
+      // un mécanisme de contrôle en jeu, pas de sélection au lobby.
       if (roomCampaignId) {
         try {
-          console.log('[VTTLobby] Stratégie 2 : recherche personnages pour userId=', userId, 'dans campagne=', roomCampaignId);
+          console.log('[VTTLobby] Recherche personnages campagne pour userId=', userId, 'campagne=', roomCampaignId);
 
           const { data: myMemberships, error: memberError } = await supabase
             .from('campaign_members')
@@ -248,8 +225,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             // -------------------
             // Construction de la liste de personnages sélectionnables
             // -------------------
-            // Filtre les memberships sans player_id (cas où le champ
-            // est null/undefined dans la base).
+            // Filtre les memberships sans player_id.
             // Utilise adventurer_name en priorité, puis name, puis email.
             const tokenInfos: RoomTokenInfo[] = myMemberships
               .filter(m => m.player_id)
@@ -276,6 +252,30 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         } catch (err) {
           console.error('[VTTLobby] Erreur chargement personnages campagne:', err);
         }
+      }
+
+      // -------------------
+      // Stratégie FALLBACK : tokens assignés sur le canvas
+      // -------------------
+      // Si aucune campagne n'est liée ou si le joueur n'a pas de
+      // personnage dans la campagne, on propose les tokens du canvas
+      // qui lui sont explicitement assignés via controlledByUserIds.
+      const assignedTokens = allTokens.filter(t =>
+        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
+      );
+
+      if (assignedTokens.length > 0) {
+        console.log('[VTTLobby] Fallback : tokens canvas assignés:', assignedTokens.length);
+        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
+          id: t.id,
+          label: t.label,
+          imageUrl: t.imageUrl,
+          color: t.color,
+          controlledByUserIds: t.controlledByUserIds,
+        }));
+        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
+        setPlayerSelectStep({ roomId, tokens: tokenInfos });
+        return;
       }
 
       // -------------------
