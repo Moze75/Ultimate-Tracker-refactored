@@ -172,7 +172,7 @@ const [activeTab, setActiveTab] = useState<SidebarTab>('tokens');
       // Gestion de la transparence de la sidebar repliee
       // -------------------
       // Le panneau replie reste lui aussi en surimpression.
-      <div className="flex flex-col items-center w-8 h-full bg-gray-900 border-l border-gray-700/60 shadow-2xl">
+      <div className="flex flex-col items-center w-8 h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 shadow-2xl">
         <button
           onClick={() => setCollapsed(false)}
           className="mt-2 p-1 text-gray-500 hover:text-amber-400 hover:bg-gray-800 rounded transition-colors"
@@ -195,7 +195,7 @@ const visibleTokens = isGM
     // Gestion de la transparence de la sidebar
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
-<div className="flex flex-col w-56 h-full bg-gray-900 border-l border-gray-700/60 overflow-hidden shadow-2xl">
+<div className="flex flex-col w-56 h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
       <div className="flex border-b border-gray-700/60 shrink-0">
    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
