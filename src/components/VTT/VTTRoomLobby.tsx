@@ -539,10 +539,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                       )}
                       <button
                         onClick={() => setPendingJoinRoomId(room.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
+                        className={`flex items-center gap-1 px-3 py-1.5 text-white rounded-lg text-xs font-medium transition-colors ${
+                          isSubscribedRoom
+                            ? 'bg-blue-600 hover:bg-blue-500'
+                            : 'bg-amber-600 hover:bg-amber-500'
+                        }`}
                       >
                         <LogIn size={12} />
-                        Ouvrir
+                        {isSubscribedRoom ? 'Rejoindre' : 'Ouvrir'}
                       </button>
                     </div>
                   </div>
