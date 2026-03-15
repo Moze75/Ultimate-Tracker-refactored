@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Shield, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 import type { VTTConnectedUser, VTTToken } from '../../types/vtt';
 
+// -------------------
+// Palette de couleurs pour les avatars des joueurs
+// -------------------
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
 
 // -------------------
-// Génération d'une couleur unique par userId
+// Génération d'une couleur unique par userId (hash simple)
 // -------------------
 function getColor(userId: string): string {
   let hash = 0;
@@ -14,9 +17,10 @@ function getColor(userId: string): string {
 }
 
 // -------------------
-// Extraction du nom d'affichage depuis le champ name
-// Si c'est un email (contient @), on prend la partie avant le @
-// Si c'est le MJ, on affiche "MJ"
+// Extraction du nom d'affichage
+// - Si c'est le MJ → "MJ"
+// - Si le name est un email (contient @) → partie avant le @
+// - Sinon → le name tel quel
 // -------------------
 function getDisplayName(user: VTTConnectedUser): string {
   if (user.role === 'gm') return 'MJ';
@@ -28,21 +32,20 @@ function getDisplayName(user: VTTConnectedUser): string {
 interface VTTPlayerListProps {
   users: VTTConnectedUser[];
   tokens?: VTTToken[];
-  onDropPlayerToken?: (userId: string, worldPos: { x: number; y: number }) => void;
 }
 
-export function VTTPlayerList({ users, tokens = [], onDropPlayerToken }: VTTPlayerListProps) { 
+export function VTTPlayerList({ users, tokens = [] }: VTTPlayerListProps) {
   // -------------------
   // État replié/déplié de la liste des joueurs connectés
-  // Repliée par défaut
+  // Repliée par défaut (false)
   // -------------------
   const [expanded, setExpanded] = useState(false);
 
-  if (users.length === 0) return null; 
+  if (users.length === 0) return null;
 
   // -------------------
-  // Début du drag & drop d'un joueur connecté sur le canvas
-  // On stocke le userId et l'imageUrl du premier token contrôlé
+  // Handler drag & drop : permet de glisser un joueur connecté
+  // sur le canvas pour y déplacer son token associé
   // -------------------
   const handleDragStart = (e: React.DragEvent, user: VTTConnectedUser) => {
     const userToken = tokens.find(t =>
@@ -74,7 +77,7 @@ export function VTTPlayerList({ users, tokens = [], onDropPlayerToken }: VTTPlay
 
         {/* -------------------
             Liste des joueurs connectés (visible uniquement si déplié)
-            Chaque entrée est draggable pour drop sur le canvas
+            Chaque entrée est draggable si le joueur a un token assigné
             ------------------- */}
         {expanded && (
           <div className="space-y-1 mt-1.5">
@@ -84,12 +87,12 @@ export function VTTPlayerList({ users, tokens = [], onDropPlayerToken }: VTTPlay
               return (
                 <div
                   key={u.userId}
-                  className={`flex items-center gap-2 ${hasToken ? 'cursor-grab' : ''}`}
+                  className={`flex items-center gap-2 ${hasToken ? 'cursor-grab active:cursor-grabbing' : ''}`}
                   draggable={hasToken}
                   onDragStart={hasToken ? (e) => handleDragStart(e, u) : undefined}
                 >
                   {/* -------------------
-                      Indicateur drag & drop si le joueur a un token
+                      Indicateur de drag si le joueur a un token
                       ------------------- */}
                   {hasToken && (
                     <GripVertical size={10} className="text-gray-600 shrink-0" />
