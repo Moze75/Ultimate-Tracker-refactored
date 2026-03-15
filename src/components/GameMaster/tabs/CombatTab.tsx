@@ -13,6 +13,7 @@ import type { VTTToken } from '../../../types/vtt';
 import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
+import { MonsterStatBlockPopup } from '../../Combat/MonsterStatBlockPopup';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
@@ -77,6 +78,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
+  const [popupMonster, setPopupMonster] = useState<{ id: string; name: string; slug?: string; imageUrl?: string; monster?: Monster } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialTokensAppliedRef = useRef(false);
@@ -268,10 +270,13 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     if (!id) return;
     const monster = savedMonsters.find((m) => m.id === id);
     if (monster) {
-      if (isDesktop) {
-        setMobileSearchOpen(true);
-      }
-      refreshMonsterFromSource(monster);
+      setPopupMonster({
+        id: monster.id || id,
+        name: monster.name,
+        slug: monster.slug,
+        imageUrl: monster.image_url ?? undefined,
+        monster,
+      });
     }
   };
 
@@ -1213,6 +1218,18 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
               setParticipants(parts);
             }
           }}
+        />
+      )}
+
+      {popupMonster && (
+        <MonsterStatBlockPopup
+          monsterId={popupMonster.id}
+          monsterName={popupMonster.name}
+          monsterSlug={popupMonster.slug}
+          monsterImageUrl={popupMonster.imageUrl}
+          savedMonster={popupMonster.monster}
+          onClose={() => setPopupMonster(null)}
+          onRollDice={onRollDice}
         />
       )}
     </div>
