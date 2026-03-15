@@ -497,7 +497,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                       isSubscribedRoom ? 'hover:border-blue-700/50' : 'hover:border-amber-700/50'
                     }`}
                   >
-                    <Map size={18} className="text-amber-500 shrink-0" />
+                              <Map size={18} className={isSubscribedRoom ? 'text-blue-400 shrink-0' : 'text-amber-500 shrink-0'} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{room.name}</p>
                       <p className="text-xs text-gray-500 font-mono">{room.id}</p>
