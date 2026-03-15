@@ -222,7 +222,7 @@ const visibleTokens = isGM
 
       <div className="flex-1 overflow-y-auto">
              {activeTab === 'tokens' && (
-          <div className="flex flex-col h-full min-h-0">
+          <div className="flex flex-col">
             {/* -------------------
                 Gestion des tokens presents sur la carte
                 -------------------
@@ -245,7 +245,7 @@ const visibleTokens = isGM
               </button>
 
               {showCanvasTokens && (
-                <div ref={tokenListRef} className="p-2 space-y-1 max-h-64 overflow-y-auto">
+                <div ref={tokenListRef} className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: '220px' }}>
                   {visibleTokens.length === 0 && (
                     <p className="text-xs text-gray-400 text-center py-4">Aucun token sur la carte</p>
                   )}
@@ -348,7 +348,7 @@ const visibleTokens = isGM
                 Cette section contient les tokens importes et ranges
                 dans des dossiers, avec drag and drop vers le canvas.
             */}
-            <div className="flex-1 min-h-0 flex flex-col">
+            <div className="flex flex-col border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowTokenLibrary(prev => !prev)}
@@ -365,14 +365,14 @@ const visibleTokens = isGM
               </button>
 
               {showTokenLibrary && (
-                <div className="flex-1 min-h-0">
+                <div style={{ height: '200px' }}>
                   <VTTTokenLibraryPanel roomId={roomId} />
                 </div>
               )}
             </div>
 
             {/* Bestiaire */}
-            <div className={`shrink-0 flex flex-col border-t border-gray-700/60 ${showBestiary ? 'flex-1 min-h-0' : ''}`}>
+            <div className="flex flex-col border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowBestiary(prev => !prev)}
@@ -390,7 +390,7 @@ const visibleTokens = isGM
               </button>
 
               {showBestiary && (
-                <div className="flex-1 min-h-0 flex flex-col" style={{ maxHeight: '50vh' }}>
+                <div style={{ height: '400px' }}>
                   <VTTMonsterBestiary
                     onAddAsToken={onAddMonsterAsToken ? (m: MonsterListItem, detail: Monster | null) => {
                       const hp = typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10;

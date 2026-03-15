@@ -107,7 +107,7 @@ export function VTTMonsterBestiary({ onAddAsToken }: VTTMonsterBestiaryProps) {
   const hasActiveFilters = crFilter || typeFilter || query;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="px-2 pt-2 pb-1 space-y-1.5 shrink-0">
         <div className="flex gap-1">
           <div className="relative flex-1">
