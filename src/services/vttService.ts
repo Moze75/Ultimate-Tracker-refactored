@@ -533,16 +533,43 @@ if (resolvedScenes && resolvedScenes.length > 0) {
     this.persistDebounce = setTimeout(() => this._persistNow(), 500);
   }
 
+  // -------------------
+  // Persistance de l'état de la room dans Supabase
+  // -------------------
+  // Préserve _campaignId qui est stocké dans state_json
+  // mais qui ne fait pas partie de LocalState.
+  // Sans cette préservation, le lien campagne ↔ room se perdait
+  // à chaque sauvegarde automatique.
   private _persistNow() {
     if (!this.roomId) return;
+    const roomId = this.roomId;
     // Les murs, portes et fenêtres sont par scène → on ne les persiste PAS dans la room globale
     const { walls: _walls, doors: _doors, windows: _windows, ...stateWithoutWalls } = this.localState;
+
+    // -------------------
+    // Lecture préalable du state_json existant pour conserver _campaignId
+    // -------------------
     supabase
       .from('vtt_rooms')
-      .update({ state_json: stateWithoutWalls, updated_at: new Date().toISOString() })
-      .eq('id', this.roomId)
-      .then(({ error }) => {
-        if (error) console.error('[VTT] Persist error:', error);
+      .select('state_json')
+      .eq('id', roomId)
+      .maybeSingle()
+      .then(({ data: existing }) => {
+        const oldStateJson = (existing?.state_json as Record<string, unknown>) ?? {};
+        const campaignId = oldStateJson._campaignId;
+
+        const newStateJson: Record<string, unknown> = { ...stateWithoutWalls };
+        if (campaignId) {
+          newStateJson._campaignId = campaignId;
+        }
+
+        return supabase
+          .from('vtt_rooms')
+          .update({ state_json: newStateJson, updated_at: new Date().toISOString() })
+          .eq('id', roomId);
+      })
+      .then((res) => {
+        if (res?.error) console.error('[VTT] Persist error:', res.error);
       });
     // Le fog est sauvegardé exclusivement via _saveFogToScene() dans le case REVEAL_FOG
   }
