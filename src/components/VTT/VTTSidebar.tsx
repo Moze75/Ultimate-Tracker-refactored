@@ -100,7 +100,12 @@ export function VTTSidebar({
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
-const [internalTab, setInternalTab] = useState<SidebarTab>('tokens');
+  // -------------------
+  // Onglet par défaut selon le rôle
+  // -------------------
+  // Le MJ arrive sur "tokens", le joueur sur "settings"
+  // car l'onglet "tokens" est masqué pour les joueurs.
+  const [internalTab, setInternalTab] = useState<SidebarTab>(role === 'gm' ? 'tokens' : 'settings');
 const activeTab = activeTabProp ?? internalTab;
 const setActiveTab = (tab: SidebarTab) => {
   setInternalTab(tab);
