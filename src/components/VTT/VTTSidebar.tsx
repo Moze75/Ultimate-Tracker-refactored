@@ -498,12 +498,19 @@ const visibleTokens = isGM
         {activeTab === 'combat' && (
           <div className="flex flex-col h-full overflow-hidden">
             {campaignId ? (
+              {/* -------------------
+                  Onglet Combat — passage du rôle
+                  -------------------
+                  Le rôle est transmis pour masquer les contrôles de combat
+                  (initiative, tour suivant, sauvegarder, fin) côté joueur.
+              */}
               <CombatTab
                 campaignId={campaignId}
                 members={members}
                 onReload={reloadMembers}
                 initialTokens={combatInitTokens}
                 vttMode
+                role={role}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
