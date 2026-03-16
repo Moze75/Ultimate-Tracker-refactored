@@ -1117,15 +1117,33 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
             </div>
           )}
 
-          {/* -------------------
-              Contrôles du combat mobile (MJ uniquement)
-              ------------------- */}
-          {isActive && isGM && (
+          {isActive && (
 <div className="sm:hidden px-4 py-2 border-b border-gray-800 flex gap-1.5">
+              <button
+                onClick={handleRollMonsterInitiativeActive}
+                className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                title="Relancer l'initiative des monstres"
+              >
+                <Dices size={12} />
+              </button>
+              <button
+                onClick={handleNextTurn}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+              >
+                <SkipForward size={12} className="shrink-0" /> Suivant
+              </button>
+              <button
+                onClick={handleSaveEncounter}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+              >
+                <Save size={12} className="shrink-0" /> Sauver 
+              </button> 
+              <button 
+                onClick={handleEndCombat} 
                 className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
               >
                 <Square size={12} className="shrink-0" /> Fin
-              
+              </button>
             </div>
           )}
 
