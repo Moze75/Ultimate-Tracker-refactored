@@ -40,11 +40,7 @@ import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 
-type VTTUndoSnapshot = {
-  tokens: VTTToken[];
-  walls: VTTWall[];
-  props: VTTProp[];
-};
+// (type VTTUndoSnapshot déplacé dans src/hooks/useVTTUndoRedo.ts)
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -1006,18 +1002,35 @@ const handleSeenDoorsUpdate = useCallback((seenIds: string[]) => {
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
   const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
-  vttService.send({
-    type: 'ADD_TOKEN',
-    token: {
-      ...token,
-      position: center,
-      visible: token.visible ?? true,
-      showLabel: token.showLabel ?? true,
-      visionMode: token.visionMode ?? 'none',
-      lightSource: token.lightSource ?? 'none',
-    },
-  });
-}, [pushUndoSnapshot]);
+
+  // -------------------
+  // Construction du token de base avec les propriétés par défaut
+  // -------------------
+  const baseToken = {
+    ...token,
+    position: center,
+    visible: token.visible ?? true,
+    showLabel: token.showLabel ?? true,
+    visionMode: token.visionMode ?? 'none',
+    lightSource: token.lightSource ?? 'none',
+  };
+
+  // -------------------
+  // Auto-assignation du token au joueur connecté
+  // -------------------
+  // Si le rôle est 'player', on assigne automatiquement le token
+  // au joueur qui l'ajoute via controlledByUserIds.
+  // Cela permet au joueur de contrôler immédiatement son token
+  // sans intervention du MJ. L'info est persistée dans state_json.
+  const tokenToAdd = {
+    ...baseToken,
+    controlledByUserIds: role === 'player'
+      ? [userId]
+      : baseToken.controlledByUserIds || [],
+  };
+
+  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
+}, [pushUndoSnapshot, role, userId]);
   const canControlToken = useCallback((token: VTTToken): boolean => {
     if (role === 'gm') return true;
     if (token.controlledByUserIds && token.controlledByUserIds.includes(userId)) return true;
@@ -1094,18 +1107,35 @@ const handleResizeToken = useCallback((tokenId: string, size: number) => {
 
 const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
   pushUndoSnapshot();
-  vttService.send({
-    type: 'ADD_TOKEN',
-    token: {
-      ...tokenData,
-      position: worldPos,
-      visible: tokenData.visible ?? true,
-      showLabel: tokenData.showLabel ?? true,
-      visionMode: tokenData.visionMode ?? 'none',
-      lightSource: tokenData.lightSource ?? 'none',
-    },
-  });
-}, [pushUndoSnapshot]);
+
+  // -------------------
+  // Construction du token de base avec position et propriétés par défaut
+  // -------------------
+  const baseToken = {
+    ...tokenData,
+    position: worldPos,
+    visible: tokenData.visible ?? true,
+    showLabel: tokenData.showLabel ?? true,
+    visionMode: tokenData.visionMode ?? 'none',
+    lightSource: tokenData.lightSource ?? 'none',
+  };
+
+  // -------------------
+  // Auto-assignation du token au joueur connecté (drag & drop)
+  // -------------------
+  // Si le rôle est 'player', on assigne automatiquement le token
+  // au joueur qui le dépose via controlledByUserIds.
+  // Cela garantit que le token droppé depuis la modale ou la bibliothèque
+  // est immédiatement contrôlable par le joueur, sans action du MJ.
+  const tokenToAdd = {
+    ...baseToken,
+    controlledByUserIds: role === 'player'
+      ? [userId]
+      : baseToken.controlledByUserIds || [],
+  };
+
+  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
+}, [pushUndoSnapshot, role, userId]);
 
   // ===================================
   // Tout masquer — remet le fog en noir complet
