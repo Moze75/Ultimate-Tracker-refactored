@@ -244,7 +244,7 @@ export function useVTTFog({
     // -------------------
     fogState,
     setFogState,
-    fogStateRef,
+    // fogStateRef n'est pas retourné car il est déjà déclaré dans VTTPage
     fogResetSignal,
     setFogResetSignal,
     fogSaveTimerRef,
