@@ -306,23 +306,60 @@ canvasViewportRef.current = canvasViewport;
   weatherEffectsRef.current = weatherEffects;
 
 
-  // ===================================
-  // Undo / Redo (hook externalisé)
-  // ===================================
-  const {
-    pushUndoSnapshot,
-    handleUndo,
-    handleRedo,
-  } = useVTTUndoRedo({
-    role,
-    tokensRef,
-    wallsRef,
-    propsRef,
-    activeSceneIdRef,
-    setTokens,
-    setWalls,
-    setProps,
-  });
+  const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
+ 
+  const [isPingMode, setIsPingMode] = useState(false);
+  const [activePings, setActivePings] = useState<VTTPing[]>([]);
+  const pingModeRef = useRef(false);
+  pingModeRef.current = isPingMode;
+
+  const userId = session.user.id;
+  const authToken = session.access_token;
+  const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
+
+  const vttCanvasRef = useRef<VTTCanvasHandle>(null);
+
+  const makeSnapshot = useCallback((): VTTUndoSnapshot => ({
+    tokens: structuredClone(tokensRef.current),
+    walls: structuredClone(wallsRef.current),
+    props: structuredClone(propsRef.current),
+  }), []);
+
+  const pushUndoSnapshot = useCallback(() => {
+    if (role !== 'gm') return;
+    setUndoStack(prev => [...prev.slice(-9), makeSnapshot()]);
+    setRedoStack([]);
+  }, [role, makeSnapshot]);
+
+  const applySnapshot = useCallback((snapshot: VTTUndoSnapshot) => {
+    setTokens(snapshot.tokens);
+    tokensRef.current = snapshot.tokens;
+
+    setWalls(snapshot.walls);
+    wallsRef.current = snapshot.walls;
+
+    setProps(snapshot.props);
+    propsRef.current = snapshot.props;
+
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({
+          tokens: snapshot.tokens,
+          walls: snapshot.walls,
+          props: snapshot.props,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sceneId)
+        .then(({ error }) => {
+          if (error) console.error('[VTT] Undo/redo persist error:', error);
+        });
+    }
+
+    vttService.send({ type: 'UPDATE_WALLS', walls: snapshot.walls });
+  }, []); 
+
   const handleUndo = useCallback(() => {
     if (role !== 'gm') return;
     setUndoStack(prevUndo => {
