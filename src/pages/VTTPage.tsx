@@ -721,6 +721,7 @@ useEffect(() => {
     configRef,
     activeSceneIdRef,
     saveCurrentSceneState,
+    fogStateRef,
   });
 
   useEffect(() => {
