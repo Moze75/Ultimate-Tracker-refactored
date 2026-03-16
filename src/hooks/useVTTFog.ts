@@ -40,23 +40,16 @@ export const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
   seenDoors: [...(fog?.seenDoors || [])],
 });
 
-// -------------------
-// Paramètres d'entrée du hook
-// -------------------
 interface UseVTTFogParams {
   role: VTTRole;
-  // -------------------
-  // Refs vers les données live (mutées en dehors du hook)
-  // Nécessaires car les handlers fog doivent lire l'état courant
-  // au moment de l'appel, pas celui du dernier rendu React
-  // -------------------
   configRef: React.MutableRefObject<VTTRoomConfig>;
   activeSceneIdRef: React.MutableRefObject<string | null>;
-  // -------------------
-  // Fonction de sauvegarde de la scène courante (déjà existante dans VTTPage)
-  // Appelée après chaque modification du fog pour persister dans Supabase
-  // -------------------
   saveCurrentSceneState: (sceneId: string) => Promise<void>;
+  // -------------------
+  // Ref fog fournie par VTTPage (déclarée avant saveCurrentSceneState)
+  // Le hook la met à jour mais ne la crée pas
+  // -------------------
+  fogStateRef: React.MutableRefObject<VTTFogState>;
 }
 
 export function useVTTFog({
