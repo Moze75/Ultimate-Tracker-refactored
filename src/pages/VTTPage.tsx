@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useVTTUndoRedo } from '../hooks/useVTTUndoRedo';
+import { useVTTFog, normalizeFogState } from '../hooks/useVTTFog';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
