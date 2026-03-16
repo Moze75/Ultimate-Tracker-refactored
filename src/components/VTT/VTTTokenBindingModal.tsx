@@ -12,7 +12,13 @@ interface VTTTokenBindingModalProps {
 export function VTTTokenBindingModal({ token, connectedUsers, onSave, onClose }: VTTTokenBindingModalProps) {
   const [selected, setSelected] = useState<string[]>(token.controlledByUserIds || []);
 
-  const players = connectedUsers.filter(u => u.role === 'player');
+// -------------------
+// Liste des utilisateurs assignables (joueurs + MJ)
+// -------------------
+// Le MJ doit pouvoir s'assigner un token pour tester la vision
+// en mode broadcast local ou pour débugger le brouillard de guerre.
+// On affiche tous les utilisateurs connectés, pas seulement les joueurs.
+const players = connectedUsers;
 
   const toggleUser = (uid: string) => {
     setSelected(prev =>
