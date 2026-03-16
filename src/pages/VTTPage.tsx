@@ -707,7 +707,6 @@ useEffect(() => {
   const {
     fogState,
     setFogState,
-    fogStateRef,
     fogResetSignal,
     setFogResetSignal,
     fogSaveTimerRef,
