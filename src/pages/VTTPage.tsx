@@ -708,7 +708,7 @@ useEffect(() => {
     fogState,
     setFogState,
     fogResetSignal,
-    setFogResetSignal,
+    setFogResetSignal, 
     fogSaveTimerRef,
     handleRevealFog,
     handleSeenDoorsUpdate,
