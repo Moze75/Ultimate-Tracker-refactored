@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useVTTUndoRedo } from '../hooks/useVTTUndoRedo'; 
+import { useVTTUndoRedo } from '../hooks/useVTTUndoRedo';
+import { useVTTFog, normalizeFogState } from '../hooks/useVTTFog';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
@@ -65,22 +66,7 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-const DEFAULT_FOG: VTTFogState = {
-  revealedCells: [],
-  strokes: [],
-  exploredStrokes: [],
-  seenDoors: [],
-};
-
-// -------------------
-// Normalisation du brouillard de guerre persisté
-// -------------------
-const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
-  revealedCells: [...(fog?.revealedCells || [])],
-  strokes: [...(fog?.strokes || [])],
-  exploredStrokes: [...(fog?.exploredStrokes || [])],
-  seenDoors: [...(fog?.seenDoors || [])],
-});
+// (DEFAULT_FOG et normalizeFogState déplacés dans src/hooks/useVTTFog.ts)
  
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
@@ -179,8 +165,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [role, setRole] = useState<VTTRole>('player');
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
-  const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
-  const [fogResetSignal, setFogResetSignal] = useState(0);
+
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -243,8 +228,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const configRef = useRef(config);
   configRef.current = config;
-  const fogStateRef = useRef(fogState);
-  fogStateRef.current = fogState;
+
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
@@ -345,11 +329,34 @@ canvasViewportRef.current = canvasViewport;
     setTokens,
     setWalls,
     setProps,
+   });
+
+  // ===================================
+  // Fog of War (hook externalisé)
+  // ===================================
+  // Gère le state fog, les handlers reveal/mask/revealAll/reset
+  // et la sauvegarde debounced dans Supabase.
+  const {
+    fogState,
+    setFogState,
+    fogStateRef,
+    fogResetSignal,
+    setFogResetSignal,
+    fogSaveTimerRef,
+    handleRevealFog,
+    handleSeenDoorsUpdate,
+    handleMaskAll,
+    handleRevealAll,
+    handleResetFog,
+  } = useVTTFog({
+    role,
+    configRef,
+    activeSceneIdRef,
+    saveCurrentSceneState,
   });
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const geometrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sceneLoadedRef = useRef<string | null>(null);
 
