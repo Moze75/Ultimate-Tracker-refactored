@@ -363,14 +363,14 @@ canvasViewportRef.current = canvasViewport;
 
   const handleUndo = useCallback(() => {
     if (role !== 'gm') return;
-    setUndoStack(prevUndo => { 
+    setUndoStack(prevUndo => {
       if (prevUndo.length === 0) return prevUndo;
       const previous = prevUndo[prevUndo.length - 1];
       setRedoStack(prevRedo => [...prevRedo, makeSnapshot()]);
       applySnapshot(previous);
       return prevUndo.slice(0, -1);
     });
-  }, [role, makeSnapshot, applySnapshot]); 
+  }, [role, makeSnapshot, applySnapshot]);
 
   const handleRedo = useCallback(() => {
     if (role !== 'gm') return;
