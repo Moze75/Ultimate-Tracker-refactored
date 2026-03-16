@@ -746,4 +746,4 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       )}
     </div>
   );
-}
+} 
