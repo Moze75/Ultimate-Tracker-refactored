@@ -1085,7 +1085,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                   </button>
                 )}
               </div>
-            )}
+           
             )}
           </div>
 
