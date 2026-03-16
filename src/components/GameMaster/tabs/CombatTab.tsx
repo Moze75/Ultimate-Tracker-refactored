@@ -21,6 +21,11 @@ import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import { useCombatPlayersRealtimeSync } from '../hooks/useCombatPlayersRealtimeSync';
 import toast from 'react-hot-toast';
 
+// -------------------
+// Props du composant Combat
+// -------------------
+// role : détermine si l'utilisateur est MJ ou joueur.
+// Les joueurs voient le tracker en lecture seule (pas de contrôle du combat).
 interface CombatTabProps {
   campaignId: string;
   members: CampaignMember[];
@@ -28,6 +33,7 @@ interface CombatTabProps {
   onRollDice?: (data: DiceRollData) => void;
   initialTokens?: VTTToken[];
   vttMode?: boolean;
+  role?: 'gm' | 'player';
 }
 
 interface CombatPreparationEntry {
