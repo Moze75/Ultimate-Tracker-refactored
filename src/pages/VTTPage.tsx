@@ -66,7 +66,16 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-// (DEFAULT_FOG et normalizeFogState déplacés dans src/hooks/useVTTFog.ts)
+// (normalizeFogState déplacé dans src/hooks/useVTTFog.ts)
+// -------------------
+// DEFAULT_FOG gardé ici car utilisé par dbSceneToVTTScene (ligne 80)
+// -------------------
+const DEFAULT_FOG: VTTFogState = {
+  revealedCells: [],
+  strokes: [],
+  exploredStrokes: [],
+  seenDoors: [],
+};
  
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
