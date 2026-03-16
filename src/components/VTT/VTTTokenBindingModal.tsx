@@ -101,10 +101,18 @@ const players = connectedUsers;
                     <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
                       {user.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{user.name}</p>
-                      <p className="text-[10px] text-gray-500 font-mono truncate">{user.userId.slice(0, 8)}...</p>
-                    </div>
+{/* -------------------
+    Nom + rôle de l'utilisateur dans la liste d'assignation
+    ------------------- */}
+<div className="flex-1 min-w-0">
+  <p className="text-sm text-white truncate">
+    {user.name}
+    {user.role === 'gm' && (
+      <span className="ml-1.5 text-[10px] text-amber-400 font-medium">(MJ)</span>
+    )}
+  </p>
+  <p className="text-[10px] text-gray-500 font-mono truncate">{user.userId.slice(0, 8)}...</p>
+</div>
                     {isAssigned ? (
                       <UserMinus size={14} className="text-blue-400 shrink-0" />
                     ) : (
