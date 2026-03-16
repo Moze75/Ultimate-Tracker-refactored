@@ -1030,6 +1030,13 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 </p>
               </div>
             </div>
+                        {/* -------------------
+                Contrôles du combat (MJ uniquement)
+                -------------------
+                Initiative, tour suivant, sauvegarder, fin de combat.
+                Les joueurs ne voient que le tracker en lecture seule.
+            */}
+            {isGM && (
             <div className="flex gap-1.5 w-full">
               {isActive ? (
                 <div className="hidden sm:flex gap-1.5 w-full">
@@ -1071,6 +1078,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 </button>
               )}
             </div>
+            )}
           </div>
 
           {/* Encounter name (prep only) */}
