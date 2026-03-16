@@ -82,7 +82,10 @@ const players = connectedUsers;
   </div>
           ) : (
             <div className="space-y-1.5">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Joueurs connectes</p>
+            {/* -------------------
+    Titre de la liste des utilisateurs assignables
+    ------------------- */}
+<p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Utilisateurs connectés</p>
               {players.map(user => {
                 const isAssigned = selected.includes(user.userId);
                 return (
