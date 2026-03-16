@@ -621,18 +621,30 @@ const visibleTokens = isGM
 
       <div className="border-t border-gray-700/60 shrink-0">
         {/* -------------------
-            Gestion des joueurs connectes
+            Gestion des joueurs connectes (repliable)
             -------------------
-            Fusion de l'indicateur de connexion de la sidebar
-            avec l'ancienne liste flottante du canvas.
+            L'indicateur de connexion est toujours visible.
+            La liste détaillée des joueurs est masquée par défaut
+            et se déplie au clic sur l'indicateur.
         */}
                <div className="px-3 py-2 border-b border-gray-700/50">
-          <div className={`flex items-center gap-1.5 text-xs font-medium ${connected ? 'text-emerald-300' : 'text-red-400'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-            {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowConnectedUsers(prev => !prev)}
+            className="w-full flex items-center justify-between"
+          >
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${connected ? 'text-emerald-300' : 'text-red-400'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+              {connected ? `${connectedCount} connecté${connectedCount > 1 ? 's' : ''}` : 'Déconnecté'}
+            </div>
+            {connectedUsers.length > 0 && (
+              showConnectedUsers
+                ? <ChevronDown size={12} className="text-gray-500" />
+                : <ChevronRight size={12} className="text-gray-500" />
+            )}
+          </button>
 
-                {connectedUsers.length > 0 && (
+                {connectedUsers.length > 0 && showConnectedUsers && (
             <div className="mt-2 space-y-1.5">
               {connectedUsers.map(user => {
                 // -------------------
