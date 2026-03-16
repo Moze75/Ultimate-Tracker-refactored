@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useVTTUndoRedo } from '../hooks/useVTTUndoRedo';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
@@ -41,7 +40,11 @@ import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 
-// (type VTTUndoSnapshot déplacé dans src/hooks/useVTTUndoRedo.ts)
+type VTTUndoSnapshot = {
+  tokens: VTTToken[];
+  walls: VTTWall[];
+  props: VTTProp[];
+};
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -305,7 +308,8 @@ canvasViewportRef.current = canvasViewport;
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
 
-
+  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
   const [isPingMode, setIsPingMode] = useState(false);
@@ -366,7 +370,7 @@ canvasViewportRef.current = canvasViewport;
       if (prevUndo.length === 0) return prevUndo;
       const previous = prevUndo[prevUndo.length - 1];
       setRedoStack(prevRedo => [...prevRedo, makeSnapshot()]);
-      applySnapshot(previous); 
+      applySnapshot(previous);
       return prevUndo.slice(0, -1);
     });
   }, [role, makeSnapshot, applySnapshot]);
