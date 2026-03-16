@@ -331,29 +331,7 @@ canvasViewportRef.current = canvasViewport;
     setProps,
    });
 
-  // ===================================
-  // Fog of War (hook externalisé)
-  // ===================================
-  // Gère le state fog, les handlers reveal/mask/revealAll/reset
-  // et la sauvegarde debounced dans Supabase.
-  const {
-    fogState,
-    setFogState,
-    fogStateRef,
-    fogResetSignal,
-    setFogResetSignal,
-    fogSaveTimerRef,
-    handleRevealFog,
-    handleSeenDoorsUpdate,
-    handleMaskAll,
-    handleRevealAll,
-    handleResetFog,
-  } = useVTTFog({
-    role,
-    configRef,
-    activeSceneIdRef,
-    saveCurrentSceneState,
-  });
+
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -695,7 +673,7 @@ useEffect(() => {
 
   
 
-  const saveCurrentSceneState = useCallback(async (sceneId: string) => {
+   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
 
     await supabase
@@ -712,6 +690,32 @@ useEffect(() => {
       })
       .eq('id', sceneId);
   }, [roomId]);
+
+  // ===================================
+  // Fog of War (hook externalisé)
+  // ===================================
+  // Gère le state fog, les handlers reveal/mask/revealAll/reset
+  // et la sauvegarde debounced dans Supabase.
+  // IMPORTANT : doit être placé APRÈS saveCurrentSceneState
+  // car le hook en dépend pour la persistance.
+  const {
+    fogState,
+    setFogState,
+    fogStateRef,
+    fogResetSignal,
+    setFogResetSignal,
+    fogSaveTimerRef,
+    handleRevealFog,
+    handleSeenDoorsUpdate,
+    handleMaskAll,
+    handleRevealAll,
+    handleResetFog,
+  } = useVTTFog({
+    role,
+    configRef,
+    activeSceneIdRef,
+    saveCurrentSceneState,
+  });
 
   useEffect(() => {
     if (role !== 'gm' || !activeSceneId) return;
