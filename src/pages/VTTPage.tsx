@@ -1871,33 +1871,70 @@ useEffect(() => {
     setPhase('room');
   }, []);
 
+   // -------------------
+  // Assignation automatique des tokens au joueur à la reconnexion
+  // -------------------
+  // Les playerBoundTokenIds peuvent contenir soit des token.id (canvas),
+  // soit des player_id (personnages de campagne). On résout les deux cas
+  // en cherchant d'abord par token.id, puis par token.characterId.
+  // Cela garantit que la reconnexion via le lobby (stratégie campagne)
+  // retrouve bien le token existant sur le canvas.
   useEffect(() => {
     if (phase !== 'room' || !roomId || role !== 'player' || playerBoundTokenIds.length === 0) return;
     if (tokens.length === 0) return;
 
-    // Assigner userId aux tokens sélectionnés
-    playerBoundTokenIds.forEach(tid => {
-      const token = tokens.find(t => t.id === tid);
+    // -------------------
+    // Résolution des IDs : player_id (campagne) → token.id (canvas)
+    // -------------------
+    // Pour chaque ID sélectionné dans le lobby, on cherche le token correspondant :
+    // 1. D'abord par token.id direct (fallback canvas classique)
+    // 2. Sinon par token.characterId (personnage de campagne lié au token)
+    const resolvedTokenIds: string[] = [];
+    playerBoundTokenIds.forEach(boundId => {
+      // Recherche directe par token.id
+      const directMatch = tokens.find(t => t.id === boundId);
+      if (directMatch) {
+        resolvedTokenIds.push(directMatch.id);
+        return;
+      }
+      // Recherche par characterId (player_id de campagne → token canvas)
+      const charMatch = tokens.find(t => t.characterId === boundId);
+      if (charMatch) {
+        resolvedTokenIds.push(charMatch.id);
+        return;
+      }
+    });
+
+    // -------------------
+    // Assignation du userId aux tokens résolus
+    // -------------------
+    resolvedTokenIds.forEach(tokenId => {
+      const token = tokens.find(t => t.id === tokenId);
       if (!token) return;
       vttService.send({
         type: 'UPDATE_TOKEN',
-        tokenId: tid,
+        tokenId,
         changes: { controlledByUserIds: [userId] },
       });
     });
 
-    // Retirer userId de tous les tokens NON sélectionnés (exclusivité)
-    tokens.forEach(token => {
-      if (playerBoundTokenIds.includes(token.id)) return;
-      if (!token.controlledByUserIds?.includes(userId)) return;
-      // Ce token avait userId mais n'est pas dans la sélection actuelle → on retire userId
-      const newControlled = token.controlledByUserIds.filter(id => id !== userId);
-      vttService.send({
-        type: 'UPDATE_TOKEN',
-        tokenId: token.id,
-        changes: { controlledByUserIds: newControlled },
+    // -------------------
+    // Nettoyage : retirer le userId des tokens NON sélectionnés (exclusivité)
+    // -------------------
+    // On ne retire que si on a effectivement résolu au moins un token,
+    // sinon on risque de désassigner sans avoir rien réassigné.
+    if (resolvedTokenIds.length > 0) {
+      tokens.forEach(token => {
+        if (resolvedTokenIds.includes(token.id)) return;
+        if (!token.controlledByUserIds?.includes(userId)) return;
+        const newControlled = token.controlledByUserIds.filter(id => id !== userId);
+        vttService.send({
+          type: 'UPDATE_TOKEN',
+          tokenId: token.id,
+          changes: { controlledByUserIds: newControlled },
+        });
       });
-    });
+    }
 
     setPlayerBoundTokenIds([]);
   }, [phase, roomId, role, playerBoundTokenIds, tokens, userId]);
