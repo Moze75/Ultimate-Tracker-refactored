@@ -66,7 +66,11 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttMode }: CombatTabProps) {
+export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttMode, role = 'gm' }: CombatTabProps) {
+  // -------------------
+  // Détection du rôle MJ pour conditionner les contrôles de combat
+  // -------------------
+  const isGM = role === 'gm';
   const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
   const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
   const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
