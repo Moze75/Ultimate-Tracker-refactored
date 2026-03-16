@@ -122,6 +122,10 @@ const setActiveTab = (tab: SidebarTab) => {
   const [showCanvasTokens, setShowCanvasTokens] = useState(true);
   const [showTokenLibrary, setShowTokenLibrary] = useState(true);
   const [showBestiary, setShowBestiary] = useState(false);
+  // -------------------
+  // État de la section joueurs connectés (repliée par défaut)
+  // -------------------
+  const [showConnectedUsers, setShowConnectedUsers] = useState(false);
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tokenListRef = useRef<HTMLDivElement>(null);
