@@ -269,10 +269,17 @@ const visibleTokens = isGM
       >
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full bg-gray-600 group-hover:bg-amber-400 transition-colors" />
       </div>
+      {/* -------------------
+          Onglets de la sidebar
+          -------------------
+          L'onglet Tokens (liste canvas + bibliothèque + bestiaire) est réservé au MJ.
+          Les joueurs n'y ont pas accès car ils ne doivent pas voir
+          la liste complète des tokens ni le bestiaire.
+      */}
       <div className="flex border-b border-gray-700/60 shrink-0">
-   <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
 {isGM && (
   <>
+    <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
     <TabBtn icon={<Swords size={14} />} title="Combat" active={activeTab === 'combat'} onClick={() => setActiveTab('combat')} />
     <TabBtn icon={<Map size={14} />} title="Carte" active={activeTab === 'map'} onClick={() => setActiveTab('map')} />
     <TabBtn icon={<Package size={14} />} title="Props" active={activeTab === 'props'} onClick={() => setActiveTab('props')} />
