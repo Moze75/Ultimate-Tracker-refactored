@@ -1006,18 +1006,35 @@ const handleSeenDoorsUpdate = useCallback((seenIds: string[]) => {
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
   const center = vttCanvasRef.current?.getViewportCenter() ?? { x: 200, y: 200 };
-  vttService.send({
-    type: 'ADD_TOKEN',
-    token: {
-      ...token,
-      position: center,
-      visible: token.visible ?? true,
-      showLabel: token.showLabel ?? true,
-      visionMode: token.visionMode ?? 'none',
-      lightSource: token.lightSource ?? 'none',
-    },
-  });
-}, [pushUndoSnapshot]);
+
+  // -------------------
+  // Construction du token de base avec les propriétés par défaut
+  // -------------------
+  const baseToken = {
+    ...token,
+    position: center,
+    visible: token.visible ?? true,
+    showLabel: token.showLabel ?? true,
+    visionMode: token.visionMode ?? 'none',
+    lightSource: token.lightSource ?? 'none',
+  };
+
+  // -------------------
+  // Auto-assignation du token au joueur connecté
+  // -------------------
+  // Si le rôle est 'player', on assigne automatiquement le token
+  // au joueur qui l'ajoute via controlledByUserIds.
+  // Cela permet au joueur de contrôler immédiatement son token
+  // sans intervention du MJ. L'info est persistée dans state_json.
+  const tokenToAdd = {
+    ...baseToken,
+    controlledByUserIds: role === 'player'
+      ? [userId]
+      : baseToken.controlledByUserIds || [],
+  };
+
+  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
+}, [pushUndoSnapshot, role, userId]);
   const canControlToken = useCallback((token: VTTToken): boolean => {
     if (role === 'gm') return true;
     if (token.controlledByUserIds && token.controlledByUserIds.includes(userId)) return true;
