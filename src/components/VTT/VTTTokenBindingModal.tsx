@@ -73,10 +73,13 @@ const players = connectedUsers;
             </div>
           </div>
 
-          {players.length === 0 ? (
-            <div className="text-center py-6 text-gray-500 text-xs">
-              Aucun joueur connecte. Les joueurs doivent rejoindre la table pour apparaitre ici.
-            </div>
+{/* -------------------
+    Message si aucun utilisateur connecté
+    ------------------- */}
+{players.length === 0 ? (
+  <div className="text-center py-6 text-gray-500 text-xs">
+    Aucun utilisateur connecté. Les joueurs doivent rejoindre la table pour apparaître ici.
+  </div>
           ) : (
             <div className="space-y-1.5">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-2">Joueurs connectes</p>
