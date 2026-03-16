@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useVTTUndoRedo } from '../hooks/useVTTUndoRedo';
-import { useVTTFog, normalizeFogState } from '../hooks/useVTTFog';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
@@ -66,16 +64,22 @@ const DEFAULT_CONFIG: VTTRoomConfig = {
   mapHeight: 2000,
 };
 
-// (normalizeFogState déplacé dans src/hooks/useVTTFog.ts)
-// -------------------
-// DEFAULT_FOG gardé ici car utilisé par dbSceneToVTTScene (ligne 80)
-// -------------------
 const DEFAULT_FOG: VTTFogState = {
   revealedCells: [],
   strokes: [],
   exploredStrokes: [],
   seenDoors: [],
 };
+
+// -------------------
+// Normalisation du brouillard de guerre persisté
+// -------------------
+const normalizeFogState = (fog?: VTTFogState | null): VTTFogState => ({
+  revealedCells: [...(fog?.revealedCells || [])],
+  strokes: [...(fog?.strokes || [])],
+  exploredStrokes: [...(fog?.exploredStrokes || [])],
+  seenDoors: [...(fog?.seenDoors || [])],
+});
  
 const getLastSceneStorageKey = (roomId: string) => `vtt:last-scene:${roomId}`;
 
@@ -174,7 +178,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [role, setRole] = useState<VTTRole>('player');
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
-
+  const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
+  const [fogResetSignal, setFogResetSignal] = useState(0);
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -237,13 +242,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const configRef = useRef(config);
   configRef.current = config;
-
-  // -------------------
-  // Ref fog déclarée ici (avant saveCurrentSceneState qui en dépend)
-  // Le hook useVTTFog reçoit cette ref et la met à jour
-  // -------------------
-  const fogStateRef = useRef<VTTFogState>({ revealedCells: [], strokes: [], exploredStrokes: [], seenDoors: [] });
-
+  const fogStateRef = useRef(fogState);
+  fogStateRef.current = fogState;
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
@@ -304,52 +304,87 @@ canvasViewportRef.current = canvasViewport;
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
 
-   // -------------------
-  // Copier / coller buffer
-  // -------------------
+  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
-  // -------------------
-  // Ping interactif (signalement sur la carte)
-  // -------------------
   const [isPingMode, setIsPingMode] = useState(false);
   const [activePings, setActivePings] = useState<VTTPing[]>([]);
   const pingModeRef = useRef(false);
   pingModeRef.current = isPingMode;
 
-  // -------------------
-  // Identité de l'utilisateur connecté
-  // -------------------
   const userId = session.user.id;
   const authToken = session.access_token;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
   const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
-  // ===================================
-  // Undo / Redo (hook externalisé)
-  // ===================================
-  // Gère les piles undo/redo, les snapshots et la persistance Supabase.
-  // Retourne pushUndoSnapshot, handleUndo, handleRedo prêts à l'emploi.
-  const {
-    pushUndoSnapshot,
-    handleUndo,
-    handleRedo,
-  } = useVTTUndoRedo({
-    role,
-    tokensRef,
-    wallsRef,
-    propsRef,
-    activeSceneIdRef,
-    setTokens,
-    setWalls,
-    setProps,
-   });
+  const makeSnapshot = useCallback((): VTTUndoSnapshot => ({
+    tokens: structuredClone(tokensRef.current),
+    walls: structuredClone(wallsRef.current),
+    props: structuredClone(propsRef.current),
+  }), []);
 
+  const pushUndoSnapshot = useCallback(() => {
+    if (role !== 'gm') return;
+    setUndoStack(prev => [...prev.slice(-9), makeSnapshot()]);
+    setRedoStack([]);
+  }, [role, makeSnapshot]);
 
+  const applySnapshot = useCallback((snapshot: VTTUndoSnapshot) => {
+    setTokens(snapshot.tokens);
+    tokensRef.current = snapshot.tokens;
+
+    setWalls(snapshot.walls);
+    wallsRef.current = snapshot.walls;
+
+    setProps(snapshot.props);
+    propsRef.current = snapshot.props;
+
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({
+          tokens: snapshot.tokens,
+          walls: snapshot.walls,
+          props: snapshot.props,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sceneId)
+        .then(({ error }) => {
+          if (error) console.error('[VTT] Undo/redo persist error:', error);
+        });
+    }
+
+    vttService.send({ type: 'UPDATE_WALLS', walls: snapshot.walls });
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (role !== 'gm') return;
+    setUndoStack(prevUndo => {
+      if (prevUndo.length === 0) return prevUndo;
+      const previous = prevUndo[prevUndo.length - 1];
+      setRedoStack(prevRedo => [...prevRedo, makeSnapshot()]);
+      applySnapshot(previous);
+      return prevUndo.slice(0, -1);
+    });
+  }, [role, makeSnapshot, applySnapshot]);
+
+  const handleRedo = useCallback(() => {
+    if (role !== 'gm') return;
+    setRedoStack(prevRedo => {
+      if (prevRedo.length === 0) return prevRedo;
+      const next = prevRedo[prevRedo.length - 1];
+      setUndoStack(prevUndo => [...prevUndo.slice(-9), makeSnapshot()]);
+      applySnapshot(next);
+      return prevRedo.slice(0, -1);
+    });
+  }, [role, makeSnapshot, applySnapshot]);
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const geometrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sceneLoadedRef = useRef<string | null>(null);
 
@@ -688,7 +723,7 @@ useEffect(() => {
 
   
 
-   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
+  const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
 
     await supabase
@@ -705,32 +740,6 @@ useEffect(() => {
       })
       .eq('id', sceneId);
   }, [roomId]);
-
-  // ===================================
-  // Fog of War (hook externalisé)
-  // ===================================
-  // Gère le state fog, les handlers reveal/mask/revealAll/reset
-  // et la sauvegarde debounced dans Supabase.
-  // IMPORTANT : doit être placé APRÈS saveCurrentSceneState
-  // car le hook en dépend pour la persistance.
-  const {
-    fogState,
-    setFogState,
-    fogResetSignal,
-    setFogResetSignal, 
-    fogSaveTimerRef,
-    handleRevealFog,
-    handleSeenDoorsUpdate,
-    handleMaskAll,
-    handleRevealAll,
-    handleResetFog,
-  } = useVTTFog({
-    role,
-    configRef,
-    activeSceneIdRef,
-    saveCurrentSceneState,
-    fogStateRef,
-  });
 
   useEffect(() => {
     if (role !== 'gm' || !activeSceneId) return;
@@ -905,8 +914,90 @@ useEffect(() => {
       position: worldPos,
     });
   }, [tokens]);
+  
+// -------------------
+// Gestion de la levée du brouillard de guerre
+// Accepte un stroke unique ou un batch de strokes (painting continu).
+// Un batch produit UN SEUL setState + UN SEUL broadcast + UNE SEULE RPC Supabase,
+// au lieu de N (un par mousemove). C'est la clé de la performance du pinceau.
+// -------------------
+const handleRevealFog = useCallback((strokeOrBatch: VTTFogStroke | VTTFogStroke[]) => {
+  const batch = Array.isArray(strokeOrBatch) ? strokeOrBatch : [strokeOrBatch];
+  if (batch.length === 0) return;
 
-  // (handleSeenDoorsUpdate et seenDoorsSaveTimerRef déplacés dans useVTTFog)
+  // -------------------
+  // Construction du prochain fogState en ajoutant tout le batch d'un coup
+  // Une seule copie O(N) au lieu de N copies O(N²) cumulées
+  // -------------------
+  const prevStrokes = fogStateRef.current.strokes || [];
+  const prevExplored = fogStateRef.current.exploredStrokes || [];
+  const newStrokes = [...prevStrokes, ...batch];
+  const newExplored = [...prevExplored, ...batch.filter(s => !s.erase)];
+
+  const nextFogState: VTTFogState = {
+    revealedCells: [...(fogStateRef.current.revealedCells || [])],
+    strokes: newStrokes,
+    exploredStrokes: newExplored,
+    seenDoors: fogStateRef.current.seenDoors,
+  };
+
+  // -------------------
+  // UN SEUL setState React pour tout le batch → un seul re-render
+  // -------------------
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  // -------------------
+  // UN SEUL envoi vttService pour tout le batch → un seul broadcast + une seule RPC
+  // On envoie le dernier stroke du batch (pour compatibilité vttService.send)
+  // mais le state complet est déjà construit avec tous les strokes
+  // -------------------
+  vttService.send({
+    type: 'REVEAL_FOG',
+    cells: [],
+    erase: batch[batch.length - 1].erase,
+    stroke: batch[batch.length - 1],
+    batch,
+  });
+
+  // -------------------
+  // Sauvegarde scène debounced (inchangé)
+  // -------------------
+  if (activeSceneIdRef.current && role === 'gm') {
+    if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
+    fogSaveTimerRef.current = setTimeout(() => {
+      saveCurrentSceneState(activeSceneIdRef.current!);
+    }, 2000);
+  }
+}, [saveCurrentSceneState, role]);
+
+const seenDoorsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const handleSeenDoorsUpdate = useCallback((seenIds: string[]) => {
+  const currentSeenDoors = fogStateRef.current.seenDoors || [];
+  const newIds = seenIds.filter(id => !currentSeenDoors.includes(id));
+  if (newIds.length === 0) return;
+
+  const nextFogState: VTTFogState = {
+    ...fogStateRef.current,
+    seenDoors: [...currentSeenDoors, ...newIds],
+  };
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  if (seenDoorsSaveTimerRef.current) clearTimeout(seenDoorsSaveTimerRef.current);
+  seenDoorsSaveTimerRef.current = setTimeout(() => {
+    seenDoorsSaveTimerRef.current = null;
+    const sceneId = activeSceneIdRef.current;
+    if (!sceneId) return;
+    supabase.rpc('update_scene_fog_state', {
+      p_scene_id: sceneId,
+      p_fog_state: fogStateRef.current,
+    }).then(({ error }) => {
+      if (error) console.error('[VTT] handleSeenDoorsUpdate save error:', error);
+    });
+  }, 2000);
+}, []);
 
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
@@ -1046,7 +1137,82 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
   vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
 }, [pushUndoSnapshot, role, userId]);
 
+  // ===================================
+  // Tout masquer — remet le fog en noir complet
+  // ===================================
+  // Réinitialise strokes + exploredStrokes à vide.
+  // Un seul envoi atomique RESET_FOG (évite les doubles broadcasts).
+  // Aussi utilisé comme "Réinitialiser le brouillard" (même effet).
+  const handleMaskAll = useCallback(() => {
+    if (role !== 'gm') return;
+    const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
+    setFogState(newFog);
+    setFogResetSignal(s => s + 1);
+    // -------------------
+    // 2. Suppression immédiate du snapshot localStorage pour toutes les scènes courantes
+    // On ne peut pas attendre le cleanup React (trop tard si refresh immédiat)
+    // -------------------
+    if (activeSceneIdRef.current) {
+      localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
+    }
+    // -------------------
+    // 3. Broadcast + persistance via vttService
+    // -------------------
+    vttService.send({ type: 'RESET_FOG' });
+    // -------------------
+    // 4. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
 
+  // ===================================
+  // Tout révéler — lève le fog sur toute la carte d'un coup
+  // ===================================
+  // Crée un unique stroke géant (rayon = diagonale de la carte)
+  // qui couvre toute la surface. Un seul envoi REVEAL_FOG (pas de RESET d'abord).
+  const handleRevealAll = useCallback(() => {
+    if (role !== 'gm') return;
+    const mapW = configRef.current.mapWidth || 3000;
+    const mapH = configRef.current.mapHeight || 2000;
+    // -------------------
+    // Le rayon couvre la diagonale entière de la carte
+    // -------------------
+    const r = Math.sqrt(mapW * mapW + mapH * mapH);
+    const stroke: VTTFogStroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
+    const newFog: VTTFogState = {
+      revealedCells: [],
+      strokes: [stroke],
+      exploredStrokes: [stroke],
+    };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
+    setFogState(newFog);
+    // -------------------
+    // 2. Reset d'abord pour vider l'ancien state dans vttService,
+    //    puis envoi du stroke géant
+    // -------------------
+    vttService.send({ type: 'RESET_FOG' });
+    vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
+    // -------------------
+    // 3. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
+
+  // ===================================
+  // Réinitialiser le fog — alias de "Tout masquer" (même comportement)
+  // ===================================
+  const handleResetFog = handleMaskAll;
 
   const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
     setConfig(prev => ({ ...prev, ...changes }));
