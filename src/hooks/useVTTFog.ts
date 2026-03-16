@@ -57,6 +57,7 @@ export function useVTTFog({
   configRef,
   activeSceneIdRef,
   saveCurrentSceneState,
+  fogStateRef,
 }: UseVTTFogParams) {
 
   // ===================================
@@ -64,7 +65,7 @@ export function useVTTFog({
   // ===================================
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [fogResetSignal, setFogResetSignal] = useState(0);
-  const fogStateRef = useRef<VTTFogState>(fogState);
+  // fogStateRef est fourni par VTTPage, on le synchronise ici
   fogStateRef.current = fogState;
 
   // -------------------
