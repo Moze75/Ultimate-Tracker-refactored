@@ -40,11 +40,7 @@ import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 
-type VTTUndoSnapshot = {
-  tokens: VTTToken[];
-  walls: VTTWall[];
-  props: VTTProp[];
-};
+
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
