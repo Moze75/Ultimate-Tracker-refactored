@@ -1095,7 +1095,10 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
             </div>
           )}
 
-          {isActive && (
+          {/* -------------------
+              Ajouter joueurs / Trier par initiative (MJ uniquement)
+              ------------------- */}
+          {isActive && isGM && (
             <div className="px-4 py-2 border-b border-gray-800 space-y-2">
               <div className="flex gap-2">
                 <button
