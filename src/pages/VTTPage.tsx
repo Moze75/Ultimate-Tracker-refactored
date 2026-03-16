@@ -229,6 +229,12 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const configRef = useRef(config);
   configRef.current = config;
 
+  // -------------------
+  // Ref fog déclarée ici (avant saveCurrentSceneState qui en dépend)
+  // Le hook useVTTFog reçoit cette ref et la met à jour
+  // -------------------
+  const fogStateRef = useRef<VTTFogState>({ revealedCells: [], strokes: [], exploredStrokes: [], seenDoors: [] });
+
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
