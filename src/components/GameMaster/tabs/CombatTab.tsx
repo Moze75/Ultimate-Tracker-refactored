@@ -1087,7 +1087,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
               </div>
             )}
             
-          </div>
+          
 
           {/* -------------------
               Nom du combat en préparation (MJ uniquement)
