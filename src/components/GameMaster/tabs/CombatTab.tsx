@@ -1005,7 +1005,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
 
             {!vttMode && <div className="hidden lg:block" style={{ height: '81px' }}></div>}
 <div className={`combat-panel rounded-xl ${vttMode ? 'flex flex-col flex-1 min-h-0' : 'lg:mx-[30px] lg:mb-[34px]'}`}>
-          {/* Header */}
+              {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 space-y-2">
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
@@ -1030,7 +1030,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 </p>
               </div>
             </div>
-                        {/* -------------------
+            {/* -------------------
                 Contrôles du combat (MJ uniquement)
                 -------------------
                 Initiative, tour suivant, sauvegarder, fin de combat.
