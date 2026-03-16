@@ -4,7 +4,7 @@ import { createVTTRoom, listVTTRooms, deleteVTTRoom, updateVTTRoomCampaign } fro
 import { campaignService } from '../../services/campaignService';
 import { supabase } from '../../lib/supabase';
 import type { VTTToken } from '../../types/vtt';
-import type { Campaign, CampaignMember } from '../../types/campaign';
+import type { Campaign } from '../../types/campaign';
 
 interface Room {
   id: string;
@@ -46,13 +46,6 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   const [linkCampaignId, setLinkCampaignId] = useState<string>('');
   const [savingLink, setSavingLink] = useState(false);
 
-  // -------------------
-  // Rooms accessibles en tant que joueur (via campagnes abonnées)
-  // -------------------
-  // Contient les rooms liées aux campagnes dont le joueur est membre,
-  // même s'il n'est pas le GM. Apparaissent automatiquement dans le lobby.
-  const [subscribedRooms, setSubscribedRooms] = useState<Room[]>([]);
-
   const fetchRooms = async () => {
     setLoading(true);
     setError(null);
@@ -68,58 +61,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
   useEffect(() => {
     fetchRooms();
-
-    // -------------------
-    // Chargement des campagnes créées par le MJ (pour le select de liaison)
-    // -------------------
     campaignService.getMyCampaigns()
       .then(setCampaigns)
       .catch(() => setCampaigns([]));
-
-    // -------------------
-    // Chargement des rooms liées aux campagnes auxquelles le joueur est abonné
-    // -------------------
-    // 1. Récupère les campaign_ids où le joueur est membre actif
-    // 2. Récupère les rooms VTT liées à ces campagnes via state_json->_campaignId
-    // 3. Exclut les rooms dont le joueur est déjà le GM (déjà dans "Mes tables")
-    (async () => {
-      try {
-        const { data: memberships } = await supabase
-          .from('campaign_members')
-          .select('campaign_id')
-          .eq('user_id', userId)
-          .eq('is_active', true);
-
-        if (!memberships || memberships.length === 0) return;
-
-        const campaignIds = [...new Set(memberships.map(m => m.campaign_id))];
-
-        // Récupère toutes les rooms VTT et filtre celles liées à ces campagnes
-        const { data: allRooms } = await supabase
-          .from('vtt_rooms')
-          .select('id, name, gm_user_id, created_at, state_json');
-
-        if (!allRooms) return;
-
-        const matchingRooms: Room[] = allRooms
-          .filter(r => {
-            const stateJson = (r.state_json as Record<string, unknown>) ?? {};
-            const roomCampaignId = stateJson._campaignId as string | null;
-            return roomCampaignId && campaignIds.includes(roomCampaignId) && r.gm_user_id !== userId;
-          })
-          .map(r => ({
-            id: r.id,
-            name: r.name,
-            gmUserId: r.gm_user_id,
-            createdAt: r.created_at,
-            campaignId: ((r.state_json as Record<string, unknown>)?._campaignId as string) ?? null,
-          }));
-
-        setSubscribedRooms(matchingRooms);
-      } catch (err) {
-        console.error('Erreur chargement rooms abonnées:', err);
-      }
-    })();
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -154,7 +98,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-    const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+  const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -163,117 +107,47 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
     setLoadingTokens(true);
     try {
-      // -------------------
-      // Récupération de la room et de sa campagne liée
-      // -------------------
       const { data } = await supabase
         .from('vtt_rooms')
         .select('state_json')
         .eq('id', roomId)
         .maybeSingle();
 
-      // -------------------
-      // Extraction du campaignId et des tokens existants
-      // -------------------
-      // On extrait _campaignId même si state_json ne contient pas de tokens.
-      // Un state_json = { _campaignId: "xxx" } est valide et signifie
-      // qu'il y a une campagne liée mais aucun token encore posé.
-      const stateJson = (data?.state_json as Record<string, unknown>) ?? {};
-      const allTokens = ((stateJson as { tokens?: VTTToken[] }).tokens) || [];
-      const roomCampaignId = stateJson._campaignId as string | undefined;
-
-      // -------------------
-      // Stratégie 1 : tokens déjà assignés via controlledByUserIds
-      // -------------------
-      // Si des tokens sur le canvas sont explicitement assignés au joueur,
-      // on les propose directement (cas où le MJ a déjà assigné).
-      const assignedTokens = allTokens.filter(t =>
-        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
-      );
-
-      if (assignedTokens.length > 0) {
-        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
-          id: t.id,
-          label: t.label,
-          imageUrl: t.imageUrl,
-          color: t.color,
-          controlledByUserIds: t.controlledByUserIds,
-        }));
-        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
-        setPlayerSelectStep({ roomId, tokens: tokenInfos });
+      if (!data?.state_json) {
+        onJoinRoom(roomId, 'player');
         return;
       }
 
+      const stateJson = data.state_json as { tokens?: VTTToken[] };
+      const allTokens = stateJson.tokens || [];
+
       // -------------------
-      // Stratégie 2 : aucun token assigné → chercher les personnages
-      // du joueur dans la campagne liée via campaign_members
+      // Filtrage des tokens par joueur : ne montrer que les tokens
+      // assignés à ce joueur via controlledByUserIds
       // -------------------
-      // On récupère les personnages du joueur dans cette campagne
-      // pour qu'il puisse choisir lequel incarner.
-      // On utilise une requête directe à Supabase plutôt que
-      // campaignService.getCampaignMembers() car celle-ci peut
-      // être bloquée par les RLS pour un joueur non-GM.
-      if (roomCampaignId) {
-        try {
-          console.log('[VTTLobby] Stratégie 2 : recherche personnages pour userId=', userId, 'dans campagne=', roomCampaignId);
+      const myTokens = allTokens.filter(t =>
+        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
+      );
 
-          // -------------------
-          // Requête directe : récupère les memberships du joueur
-          // avec jointure sur la table players pour avoir le nom
-          // -------------------
-          const { data: myMemberships, error: memberError } = await supabase
-            .from('campaign_members')
-            .select(`
-              id,
-              campaign_id,
-              user_id,
-              player_id,
-              player_email,
-              player:players(id, name, adventurer_name)
-            `)
-            .eq('campaign_id', roomCampaignId)
-            .eq('user_id', userId)
-            .eq('is_active', true);
-
-          console.log('[VTTLobby] Résultat memberships:', { myMemberships, memberError });
-
-          if (!memberError && myMemberships && myMemberships.length > 0) {
-            // -------------------
-            // Construction de la liste de personnages sélectionnables
-            // -------------------
-            // Utilise player.adventurer_name en priorité, puis player.name,
-            // puis player_email comme fallback.
-            // L'id utilisé est le player_id (id du personnage dans la table players).
-            const tokenInfos: RoomTokenInfo[] = myMemberships
-              .filter(m => m.player_id) // on ignore les memberships sans player_id
-              .map(m => {
-                const player = m.player as { id: string; name: string; adventurer_name?: string } | null;
-                const label = player?.adventurer_name || player?.name || m.player_email || 'Personnage';
-                return {
-                  id: m.player_id!,
-                  label,
-                  imageUrl: null,
-                  color: '#3b82f6',
-                  controlledByUserIds: [userId],
-                };
-              });
-
-            if (tokenInfos.length > 0) {
-              setSelectedPlayerTokenIds(tokenInfos.map(t => t.id));
-              setPlayerSelectStep({ roomId, tokens: tokenInfos });
-              return;
-            }
-          }
-        } catch (err) {
-          console.error('[VTTLobby] Erreur chargement personnages campagne:', err);
-        }
+      if (myTokens.length === 0) {
+        // Aucun token assigné à ce joueur → rejoindre directement
+        onJoinRoom(roomId, 'player');
+        return;
       }
 
+      const tokenInfos: RoomTokenInfo[] = myTokens.map(t => ({
+        id: t.id,
+        label: t.label,
+        imageUrl: t.imageUrl,
+        color: t.color,
+        controlledByUserIds: t.controlledByUserIds,
+      }));
+
       // -------------------
-      // Aucun token ni personnage trouvé → rejoindre directement
+      // Présélection automatique de tous les tokens du joueur
       // -------------------
-      console.log('[VTTLobby] Aucun personnage trouvé, connexion directe');
-      onJoinRoom(roomId, 'player');
+      setSelectedPlayerTokenIds(myTokens.map(t => t.id));
+      setPlayerSelectStep({ roomId, tokens: tokenInfos });
     } catch {
       onJoinRoom(roomId, 'player');
     } finally {
@@ -481,54 +355,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               })}
             </div>
           )}
-        </div> 
-
- 
-        
-        {/* -------------------
-            Tables des campagnes abonnées (côté joueur)
-            -------------------
-            Affiche automatiquement les rooms VTT liées aux campagnes
-            dont le joueur est membre, sans qu'il ait à saisir un code.
-        */}
-        {subscribedRooms.length > 0 && (
-          <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-            <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-              <BookOpen size={14} className="text-blue-400" />
-              Tables de mes campagnes
-            </h2>
-            <div className="space-y-2">
-              {subscribedRooms.map(room => {
-                const campaignName = campaigns.find(c => c.id === room.campaignId)?.name
-                  || room.campaignId || '';
-                return (
-                  <div
-                    key={room.id}
-                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-blue-700/50 transition-colors"
-                  >
-                    <Map size={18} className="text-blue-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{room.name}</p>
-                      {campaignName && (
-                        <p className="text-xs text-blue-400/80 mt-0.5 flex items-center gap-1">
-                          <BookOpen size={10} />
-                          {campaignName}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setPendingJoinRoomId(room.id)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors"
-                    >
-                      <LogIn size={12} />
-                      Rejoindre
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        </div>
 
         <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
           <p className="text-xs text-blue-300">

@@ -632,33 +632,18 @@ const visibleTokens = isGM
             {connected ? `${connectedCount} connecte${connectedCount > 1 ? 's' : ''}` : 'Deconnecte'}
           </div>
 
-           {connectedUsers.length > 0 && (
+             {connectedUsers.length > 0 && (
             <div className="mt-2 space-y-1.5">
               {connectedUsers.map(user => {
                 // -------------------
-                // Résolution du nom d'affichage d'un joueur connecté
+                // Affichage du nom d'un joueur connecté
+                // - "MJ" pour le Game Master
+                // - Partie avant le @ si le name est un email
+                // - Le name brut sinon
                 // -------------------
-                // Priorité :
-                // 1. Si MJ → "MJ"
-                // 2. Si un token est assigné à ce joueur (controlledByUserIds)
-                //    → on affiche le label du token (= nom du personnage)
-                // 3. Sinon, si le name ressemble à un email → partie avant @
-                // 4. Sinon → name brut
-                let displayName: string;
-                if (user.role === 'gm') {
-                  displayName = 'MJ';
-                } else {
-                  const playerToken = tokens.find(t =>
-                    t.controlledByUserIds?.includes(user.userId)
-                  );
-                  if (playerToken) {
-                    displayName = playerToken.label;
-                  } else if (user.name?.includes('@')) {
-                    displayName = user.name.split('@')[0];
-                  } else {
-                    displayName = user.name || 'Inconnu';
-                  }
-                }
+                const displayName = user.role === 'gm'
+                  ? 'MJ'
+                  : (user.name?.includes('@') ? user.name.split('@')[0] : (user.name || 'Inconnu'));
                 return (
                   <div key={user.userId} className="flex items-center gap-2 min-w-0">
                     <div className="relative shrink-0">
