@@ -1183,8 +1183,10 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
             )}
           </div>
 
-          {/* Footer: Launch / empty state */}
-          {!isActive && (
+          {/* -------------------
+              Footer : Lancer / Sauvegarder le combat (MJ uniquement)
+              ------------------- */}
+          {!isActive && isGM && (
             <div className="px-4 py-3 border-t border-gray-800 space-y-2">
               <button
                 onClick={handleLaunchCombat}
