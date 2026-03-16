@@ -1037,55 +1037,47 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 Les joueurs ne voient que le tracker en lecture seule.
             */}
             {isGM && (
-              {/* -------------------
-                Contrôles du combat (MJ uniquement)
-                -------------------
-                Initiative, tour suivant, sauvegarder, fin de combat.
-                Les joueurs ne voient que le tracker en lecture seule.
-            */}
-            {isGM && (
-              <div className="flex gap-1.5 w-full">
-                {isActive ? (
-                  <div className="hidden sm:flex gap-1.5 w-full">
-                    <button
-                      onClick={handleRollMonsterInitiativeActive}
-                      className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
-                      title="Relancer l'initiative des monstres"
-                    >
-                      <Dices size={12} />
-                    </button>
-                    <button
-                      onClick={handleNextTurn}
-                      title="Tour suivant"
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
-                    >
-                      <SkipForward size={12} className="shrink-0" /> {!vttMode && 'Tour suivant'}
-                    </button>
-                    <button
-                      onClick={handleSaveEncounter}
-                      title="Sauvegarder"
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
-                    >
-                      <Save size={12} className="shrink-0" /> {!vttMode && 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleEndCombat}
-                      title="Fin du combat"
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
-                    >
-                      <Square size={12} className="shrink-0" /> {!vttMode && 'Fin'}
-                    </button>
-                  </div>
-                ) : (
+            <div className="flex gap-1.5 w-full">
+              {isActive ? (
+                <div className="hidden sm:flex gap-1.5 w-full">
                   <button
-                    onClick={handleRollAllInitiative}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
+                    onClick={handleRollMonsterInitiativeActive}
+                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                    title="Relancer l'initiative des monstres"
                   >
-                    <Dices size={12} /> Initiatives
+                    <Dices size={12} />
                   </button>
-                )}
-              </div>
-            )}
+                  <button
+                    onClick={handleNextTurn}
+                    title="Tour suivant"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                  >
+                    <SkipForward size={12} className="shrink-0" /> {!vttMode && 'Tour suivant'}
+                  </button>
+                  <button
+                    onClick={handleSaveEncounter}
+                    title="Sauvegarder"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                  >
+                    <Save size={12} className="shrink-0" /> {!vttMode && 'Sauvegarder'}
+                  </button>
+                  <button
+                    onClick={handleEndCombat}
+                    title="Fin du combat"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                  >
+                    <Square size={12} className="shrink-0" /> {!vttMode && 'Fin'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleRollAllInitiative}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
+                >
+                  <Dices size={12} /> Initiatives
+                </button>
+              )} 
+            </div>
             )}
           </div>
 
