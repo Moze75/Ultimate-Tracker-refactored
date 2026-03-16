@@ -1112,18 +1112,35 @@ const handleResizeToken = useCallback((tokenId: string, size: number) => {
 
 const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
   pushUndoSnapshot();
-  vttService.send({
-    type: 'ADD_TOKEN',
-    token: {
-      ...tokenData,
-      position: worldPos,
-      visible: tokenData.visible ?? true,
-      showLabel: tokenData.showLabel ?? true,
-      visionMode: tokenData.visionMode ?? 'none',
-      lightSource: tokenData.lightSource ?? 'none',
-    },
-  });
-}, [pushUndoSnapshot]);
+
+  // -------------------
+  // Construction du token de base avec position et propriétés par défaut
+  // -------------------
+  const baseToken = {
+    ...tokenData,
+    position: worldPos,
+    visible: tokenData.visible ?? true,
+    showLabel: tokenData.showLabel ?? true,
+    visionMode: tokenData.visionMode ?? 'none',
+    lightSource: tokenData.lightSource ?? 'none',
+  };
+
+  // -------------------
+  // Auto-assignation du token au joueur connecté (drag & drop)
+  // -------------------
+  // Si le rôle est 'player', on assigne automatiquement le token
+  // au joueur qui le dépose via controlledByUserIds.
+  // Cela garantit que le token droppé depuis la modale ou la bibliothèque
+  // est immédiatement contrôlable par le joueur, sans action du MJ.
+  const tokenToAdd = {
+    ...baseToken,
+    controlledByUserIds: role === 'player'
+      ? [userId]
+      : baseToken.controlledByUserIds || [],
+  };
+
+  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
+}, [pushUndoSnapshot, role, userId]);
 
   // ===================================
   // Tout masquer — remet le fog en noir complet
