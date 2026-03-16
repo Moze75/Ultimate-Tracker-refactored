@@ -17,7 +17,6 @@ interface Room {
 interface RoomTokenInfo {
   label: string;
   imageUrl: string | null;
-  avatarUrl: string | null;
   color: string;
   id: string;
   controlledByUserIds?: string[];
@@ -48,19 +47,11 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   const [savingLink, setSavingLink] = useState(false);
 
   // -------------------
-  // -------------------
   // Rooms accessibles en tant que joueur (via campagnes abonnées)
   // -------------------
   // Contient les rooms liées aux campagnes dont le joueur est membre,
-  // même s'il n'est pas le GM. Fusionnées dans "Mes tables".
+  // même s'il n'est pas le GM. Apparaissent automatiquement dans le lobby.
   const [subscribedRooms, setSubscribedRooms] = useState<Room[]>([]);
-
-  // -------------------
-  // Cache des noms de campagnes abonnées (résolution campaignId → nom)
-  // -------------------
-  // Utilisé pour afficher le nom de la campagne au lieu de l'UUID
-  // dans la liste "Mes tables" pour les rooms abonnées.
-  const [subscribedCampaignNames, setSubscribedCampaignNames] = useState<Record<string, string>>({});
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -110,7 +101,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
         if (!allRooms) return;
 
-         const matchingRooms: Room[] = allRooms
+        const matchingRooms: Room[] = allRooms
           .filter(r => {
             const stateJson = (r.state_json as Record<string, unknown>) ?? {};
             const roomCampaignId = stateJson._campaignId as string | null;
@@ -125,25 +116,6 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           }));
 
         setSubscribedRooms(matchingRooms);
-
-        // -------------------
-        // Résolution des noms de campagnes abonnées
-        // -------------------
-        // Récupère le nom réel de chaque campagne liée aux rooms
-        // pour l'afficher dans "Mes tables" à la place de l'UUID.
-        const uniqueCampaignIds = [...new Set(matchingRooms.map(r => r.campaignId).filter(Boolean))] as string[];
-        if (uniqueCampaignIds.length > 0) {
-          const { data: campaignRows } = await supabase
-            .from('campaigns')
-            .select('id, name')
-            .in('id', uniqueCampaignIds);
-
-          if (campaignRows) {
-            const namesMap: Record<string, string> = {};
-            campaignRows.forEach(c => { namesMap[c.id] = c.name; });
-            setSubscribedCampaignNames(namesMap);
-          }
-        }
       } catch (err) {
         console.error('Erreur chargement rooms abonnées:', err);
       }
@@ -182,7 +154,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-   const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
+     const handleRoleSelect = async (roomId: string, role: 'gm' | 'player') => {
     setPendingJoinRoomId(null);
     if (role === 'gm') {
       onJoinRoom(roomId, 'gm');
@@ -196,7 +168,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
       // -------------------
       // On récupère state_json en best-effort. Si la RLS bloque
       // la lecture pour un joueur non-GM, data sera null → on passe
-      // directement à la recherche via campaign_members.
+      // directement à la Stratégie 2 via le campaignId des subscribedRooms.
       const { data } = await supabase
         .from('vtt_rooms')
         .select('state_json')
@@ -205,37 +177,57 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
       const stateJson = (data?.state_json as Record<string, unknown>) ?? {};
       const allTokens = ((stateJson as { tokens?: VTTToken[] }).tokens) || [];
-      // -------------------
-      // Extraction du campaignId avec fallback sur subscribedRooms
-      // -------------------
-      // Si state_json est inaccessible (RLS), on retrouve le campaignId
-      // via les rooms déjà chargées dans le lobby du joueur.
       const roomCampaignId = (stateJson._campaignId as string | undefined)
+        // -------------------
+        // Fallback : si state_json est inaccessible (RLS), on cherche
+        // le campaignId dans les subscribedRooms déjà chargées
+        // -------------------
         || subscribedRooms.find(r => r.id === roomId)?.campaignId
         || undefined;
 
       console.log('[VTTLobby] handleRoleSelect:', {
         roomId,
+        stateJsonKeys: Object.keys(stateJson),
         allTokensCount: allTokens.length,
         roomCampaignId,
         userId,
       });
 
       // -------------------
-      // Stratégie PRIORITAIRE : personnages de campagne du joueur
+      // Stratégie 1 : tokens déjà assignés via controlledByUserIds
       // -------------------
-      // Si la room est liée à une campagne, on cherche d'abord les
-      // personnages du joueur dans cette campagne. C'est la source
-      // de vérité pour "quels persos appartiennent à ce joueur".
-      // Les tokens assignés sur le canvas (controlledByUserIds) sont
-      // un mécanisme de contrôle en jeu, pas de sélection au lobby.
+      // Si des tokens sur le canvas sont explicitement assignés au joueur,
+      // on les propose directement (cas où le MJ a déjà assigné).
+      const assignedTokens = allTokens.filter(t =>
+        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
+      );
+
+      if (assignedTokens.length > 0) {
+        console.log('[VTTLobby] Stratégie 1 : tokens assignés trouvés:', assignedTokens.length);
+        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
+          id: t.id,
+          label: t.label,
+          imageUrl: t.imageUrl,
+          color: t.color,
+          controlledByUserIds: t.controlledByUserIds,
+        }));
+        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
+        setPlayerSelectStep({ roomId, tokens: tokenInfos });
+        return;
+      }
+
+      // -------------------
+      // Stratégie 2 : aucun token assigné → chercher les personnages
+      // du joueur dans la campagne liée via campaign_members
+      // -------------------
+      // On fait une requête directe à Supabase (pas via campaignService)
+      // pour contourner d'éventuels problèmes de RLS sur getCampaignMembers.
+      // On filtre directement par user_id pour ne récupérer que les
+      // personnages du joueur connecté.
       if (roomCampaignId) {
         try {
-          console.log('[VTTLobby] Recherche personnages campagne pour userId=', userId, 'campagne=', roomCampaignId);
+          console.log('[VTTLobby] Stratégie 2 : recherche personnages pour userId=', userId, 'dans campagne=', roomCampaignId);
 
-          // -------------------
-          // Récupération des memberships avec avatar_url du joueur
-          // -------------------
           const { data: myMemberships, error: memberError } = await supabase
             .from('campaign_members')
             .select(`
@@ -244,7 +236,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               user_id,
               player_id,
               player_email,
-              player:players(id, name, adventurer_name, avatar_url)
+              player:players(id, name, adventurer_name)
             `)
             .eq('campaign_id', roomCampaignId)
             .eq('user_id', userId)
@@ -254,18 +246,20 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
           if (!memberError && myMemberships && myMemberships.length > 0) {
             // -------------------
-            // Construction de la liste de personnages avec avatar
+            // Construction de la liste de personnages sélectionnables
             // -------------------
+            // Filtre les memberships sans player_id (cas où le champ
+            // est null/undefined dans la base).
+            // Utilise adventurer_name en priorité, puis name, puis email.
             const tokenInfos: RoomTokenInfo[] = myMemberships
               .filter(m => m.player_id)
               .map(m => {
-                const playerData = m.player as { id: string; name: string; adventurer_name?: string; avatar_url?: string } | null;
+                const playerData = m.player as { id: string; name: string; adventurer_name?: string } | null;
                 const label = playerData?.adventurer_name || playerData?.name || m.player_email || 'Personnage';
                 return {
                   id: m.player_id!,
                   label,
                   imageUrl: null,
-                  avatarUrl: playerData?.avatar_url || null,
                   color: '#3b82f6',
                   controlledByUserIds: [userId],
                 };
@@ -282,34 +276,6 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         } catch (err) {
           console.error('[VTTLobby] Erreur chargement personnages campagne:', err);
         }
-      }
-
-      // -------------------
-      // Stratégie FALLBACK : tokens assignés sur le canvas
-      // -------------------
-      // Si aucune campagne n'est liée ou si le joueur n'a pas de
-      // personnage dans la campagne, on propose les tokens du canvas
-      // qui lui sont explicitement assignés via controlledByUserIds.
-      const assignedTokens = allTokens.filter(t =>
-        t.controlledByUserIds && t.controlledByUserIds.includes(userId)
-      );
-
-      if (assignedTokens.length > 0) {
-        console.log('[VTTLobby] Fallback : tokens canvas assignés:', assignedTokens.length);
-        // -------------------
-        // Fallback : tokens canvas assignés (pas d'avatar campagne)
-        // -------------------
-        const tokenInfos: RoomTokenInfo[] = assignedTokens.map(t => ({
-          id: t.id,
-          label: t.label,
-          imageUrl: t.imageUrl,
-          avatarUrl: null,
-          color: t.color,
-          controlledByUserIds: t.controlledByUserIds,
-        }));
-        setSelectedPlayerTokenIds(assignedTokens.map(t => t.id));
-        setPlayerSelectStep({ roomId, tokens: tokenInfos });
-        return;
       }
 
       // -------------------
@@ -365,16 +331,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     }
   };
 
-  // -------------------
-  // Résolution du nom de campagne (MJ + abonnées)
-  // -------------------
-  // Cherche d'abord dans les campagnes du MJ, puis dans le cache
-  // des noms de campagnes abonnées (subscribedCampaignNames).
   const getCampaignName = (campaignId: string | null) => {
     if (!campaignId) return null;
-    return campaigns.find(c => c.id === campaignId)?.name
-      ?? subscribedCampaignNames[campaignId]
-      ?? null;
+    return campaigns.find(c => c.id === campaignId)?.name ?? null;
   };
 
   return (
@@ -474,43 +433,25 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
           {loading ? (
             <div className="text-center py-8 text-gray-500 text-sm">Chargement...</div>
-          ) : (rooms.length === 0 && subscribedRooms.length === 0) ? (
+          ) : rooms.length === 0 ? (
             <div className="text-center py-8 text-gray-500 text-sm">
               Aucune table. Créez-en une pour commencer.
             </div>
           ) : (
             <div className="space-y-2">
-              {/* -------------------
-                  Boucle sur les rooms du MJ + rooms des campagnes abonnées
-                  Les subscribedRooms sont ajoutées à la fin de la liste
-              ------------------- */}
-              {[...rooms, ...subscribedRooms].map(room => {
+              {rooms.map(room => {
                 const campaignName = getCampaignName(room.campaignId);
-                // -------------------
-                // Détection room abonnée (joueur) vs room du MJ
-                // -------------------
-                const isSubscribedRoom = room.gmUserId !== userId;
                 return (
                   <div
                     key={room.id}
-                    className={`flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 transition-colors ${
-                      isSubscribedRoom ? 'hover:border-blue-700/50' : 'hover:border-amber-700/50'
-                    }`}
+                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-amber-700/50 transition-colors"
                   >
-                              <Map size={18} className={isSubscribedRoom ? 'text-blue-400 shrink-0' : 'text-amber-500 shrink-0'} />
+                    <Map size={18} className="text-amber-500 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{room.name}</p>
-                      {/* -------------------
-                          ID de la room (masqué pour les rooms abonnées)
-                      ------------------- */}
-                      {!isSubscribedRoom && (
-                        <p className="text-xs text-gray-500 font-mono">{room.id}</p>
-                      )}
-                      {/* -------------------
-                          Nom de la campagne liée (au lieu de l'UUID)
-                      ------------------- */}
+                      <p className="text-xs text-gray-500 font-mono">{room.id}</p>
                       {campaignName && (
-                        <p className={`text-xs mt-0.5 flex items-center gap-1 ${isSubscribedRoom ? 'text-blue-400/80' : 'text-amber-400/80'}`}>
+                        <p className="text-xs text-amber-400/80 mt-0.5 flex items-center gap-1">
                           <BookOpen size={10} />
                           {campaignName}
                         </p>
@@ -539,14 +480,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                       )}
                       <button
                         onClick={() => setPendingJoinRoomId(room.id)}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-white rounded-lg text-xs font-medium transition-colors ${
-                          isSubscribedRoom
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-amber-600 hover:bg-amber-500'
-                        }`}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition-colors"
                       >
                         <LogIn size={12} />
-                        {isSubscribedRoom ? 'Rejoindre' : 'Ouvrir'}
+                        Ouvrir
                       </button>
                     </div>
                   </div>
@@ -558,7 +495,50 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
  
         
-   
+        {/* -------------------
+            Tables des campagnes abonnées (côté joueur)
+            -------------------
+            Affiche automatiquement les rooms VTT liées aux campagnes
+            dont le joueur est membre, sans qu'il ait à saisir un code.
+        */}
+        {subscribedRooms.length > 0 && (
+          <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+            <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+              <BookOpen size={14} className="text-blue-400" />
+              Tables de mes campagnes
+            </h2>
+            <div className="space-y-2">
+              {subscribedRooms.map(room => {
+                const campaignName = campaigns.find(c => c.id === room.campaignId)?.name
+                  || room.campaignId || '';
+                return (
+                  <div
+                    key={room.id}
+                    className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 hover:border-blue-700/50 transition-colors"
+                  >
+                    <Map size={18} className="text-blue-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{room.name}</p>
+                      {campaignName && (
+                        <p className="text-xs text-blue-400/80 mt-0.5 flex items-center gap-1">
+                          <BookOpen size={10} />
+                          {campaignName}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setPendingJoinRoomId(room.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      <LogIn size={12} />
+                      Rejoindre
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
           <p className="text-xs text-blue-300">
@@ -639,17 +619,13 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                           : 'border-gray-700 bg-gray-800/60 hover:border-gray-500'
                     }`}
                   >
-                    {/* -------------------
-                        Avatar du personnage / joueur
-                        Priorité : avatarUrl (campagne) > imageUrl (token canvas) > initiales
-                    ------------------- */}
                     <div
                       className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden border-2"
                       style={{ borderColor: isSelected ? '#3b82f6' : '#4b5563' }}
                     >
-                      {(token.avatarUrl || token.imageUrl) ? (
+                      {token.imageUrl ? (
                         <img
-                          src={(token.avatarUrl || token.imageUrl)!}
+                          src={token.imageUrl}
                           alt={token.label}
                           className="w-full h-full object-cover"
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
