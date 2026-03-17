@@ -1222,10 +1222,12 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
 
           {/* Participants list */}
           <div className={vttMode ? 'flex-1 overflow-y-auto min-h-0' : 'max-h-[70vh] overflow-y-auto'} ref={scrollContainerRef}>
-            {isActive ? (
-              <ActiveParticipantsList
-                encounter={encounter}
-                participants={participants}
+        {isActive && (
+          <ActiveParticipantsList
+            participants={participants}
+            encounter={encounter!}
+            members={members}
+            role={role}
                 hpDelta={hpDelta}
                 setHpDelta={setHpDelta}
                 onApplyHp={applyHp}
