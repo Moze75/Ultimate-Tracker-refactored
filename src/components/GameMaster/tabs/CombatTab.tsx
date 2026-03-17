@@ -19,6 +19,7 @@ import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import { useCombatPlayersRealtimeSync } from '../hooks/useCombatPlayersRealtimeSync';
+import { useCombatEncounterRealtimeSync } from '../hooks/useCombatEncounterRealtimeSync';
 import toast from 'react-hot-toast';
 
 // -------------------
