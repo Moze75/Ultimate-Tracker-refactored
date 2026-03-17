@@ -500,25 +500,35 @@ const visibleTokens = isGM
           </div>
         )}
 
-        {activeTab === 'combat' && (
-          <div className="flex flex-col h-full overflow-hidden">
-            {campaignId ? (
-              <CombatTab
-                campaignId={campaignId}
-                members={members}
-                onReload={reloadMembers}
-                initialTokens={combatInitTokens}
-                vttMode
-                role={role}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
-                <Swords size={32} className="text-gray-600" />
-                <p className="text-xs text-gray-400">Aucune campagne liée à cette salle. Ouvrez le VTT depuis une campagne pour accéder au combat.</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* -------------------
+            Onglet Combat — toujours monté, jamais démonté
+            -------------------
+            On utilise display:none au lieu du rendu conditionnel &&
+            pour que le CombatTab reste monté en permanence.
+            Cela maintient l'abonnement Supabase Realtime actif
+            même quand le joueur est sur un autre onglet,
+            ce qui garantit la synchro des tours en temps réel.
+        */}
+        <div
+          className="flex flex-col h-full overflow-hidden"
+          style={{ display: activeTab === 'combat' ? 'flex' : 'none' }}
+        >
+          {campaignId ? (
+            <CombatTab
+              campaignId={campaignId}
+              members={members}
+              onReload={reloadMembers}
+              initialTokens={combatInitTokens}
+              vttMode
+              role={role}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
+              <Swords size={32} className="text-gray-600" />
+              <p className="text-xs text-gray-400">Aucune campagne liée à cette salle. Ouvrez le VTT depuis une campagne pour accéder au combat.</p>
+            </div>
+          )}
+        </div>
 
         {activeTab === 'map' && (
           <div className="flex flex-col h-full">
