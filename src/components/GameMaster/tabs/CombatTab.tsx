@@ -572,7 +572,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     }
   };
 
-  const handleNextTurn = async () => {
+    const handleNextTurn = async () => {
     if (!encounter || participants.length === 0) return;
     let nextIdx = encounter.current_turn_index + 1;
     let newRound = encounter.round_number;
@@ -586,6 +586,22 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
         round_number: newRound,
       });
       setEncounter(updated);
+
+      // -------------------
+      // Broadcast instantané du changement de tour (< 100ms)
+      // -------------------
+      // Envoie le nouveau tour via Supabase Broadcast sur le même channel
+      // que useCombatEncounterRealtimeSync. Les joueurs le reçoivent
+      // immédiatement, sans attendre le délai WAL de postgres_changes (1-3s).
+      supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+        type: 'broadcast',
+        event: 'turn-changed',
+        payload: {
+          current_turn_index: nextIdx,
+          round_number: newRound,
+          status: updated.status,
+        },
+      });
     } catch (err) {
       console.error(err);
       toast.error('Erreur tour suivant');
