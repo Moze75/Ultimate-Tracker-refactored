@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import type { CampaignEncounter } from '../../../types/campaign';
 
