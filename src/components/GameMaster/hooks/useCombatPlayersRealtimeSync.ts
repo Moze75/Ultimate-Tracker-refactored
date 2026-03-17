@@ -57,10 +57,16 @@ export function useCombatPlayersRealtimeSync({
     .sort()
     .join(',');
 
-  const markLocalUpdate = (playerId: string) => {
-    recentLocalUpdatesRef.current.add(playerId);
+  // -------------------
+  // Marquage d'une mise à jour locale (anti-écho)
+  // -------------------
+  // Accepte un playerId (UUID table players) OU un participantId (UUID encounter_participants).
+  // Les deux sont stockés dans le même Set pour filtrer aussi bien
+  // l'écho postgres_changes (clé = playerId) que l'écho Broadcast (clé = participantId).
+  const markLocalUpdate = (id: string) => {
+    recentLocalUpdatesRef.current.add(id);
     setTimeout(() => {
-      recentLocalUpdatesRef.current.delete(playerId);
+      recentLocalUpdatesRef.current.delete(id);
     }, 2000);
   };
 
