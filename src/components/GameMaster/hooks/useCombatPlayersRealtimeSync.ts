@@ -71,15 +71,37 @@ export function useCombatPlayersRealtimeSync({
   // si la composition de l'équipe change, pas à chaque re-render.
   // Les données fraîches (members, participants, callback) sont lues
   // depuis les refs au moment de l'événement.
-  useEffect(() => {
+   useEffect(() => {
     const playerIds = membersRef.current
       .filter((m) => m.player_id)
       .map((m) => m.player_id as string);
 
     if (playerIds.length === 0) return;
 
+    // -------------------
+    // Channel combiné : Broadcast (instantané) + postgres_changes (filet)
+    // -------------------
+    // Le Broadcast 'hp-changed' est émis par le MJ dans applyHp.
+    // Il arrive en < 100ms, sans passer par Postgres WAL.
+    // Le postgres_changes sur 'players' reste en filet de secours
+    // pour les mises à jour de HP hors-combat (fiche joueur, etc.).
     const channel = supabase
       .channel(`combat-players-hp-sync-${playerIds.join('-')}`)
+      // -------------------
+      // Écoute Broadcast : PV changé (quasi-instantané)
+      // -------------------
+      .on('broadcast', { event: 'hp-changed' }, (payload) => {
+        const data = payload.payload as HpChangedBroadcast;
+        // On ignore si c'est une mise à jour locale récente (émise par ce même client)
+        if (recentLocalUpdatesRef.current.has(data.participantId)) return;
+        callbackRef.current(data.participantId, {
+          current_hp: data.current_hp,
+          temporary_hp: data.temporary_hp,
+        });
+      })
+      // -------------------
+      // Écoute postgres_changes : HP joueur via table players (filet de secours)
+      // -------------------
       .on(
         'postgres_changes',
         {
@@ -90,12 +112,8 @@ export function useCombatPlayersRealtimeSync({
         },
         (payload) => {
           const newData = payload.new as PlayerHPUpdate;
+          if (recentLocalUpdatesRef.current.has(newData.id)) return;
 
-          if (recentLocalUpdatesRef.current.has(newData.id)) {
-            return;
-          }
-
-          // Lecture depuis les refs → données toujours fraîches
           const member = membersRef.current.find((m) => m.player_id === newData.id);
           if (!member) return;
 
@@ -110,12 +128,14 @@ export function useCombatPlayersRealtimeSync({
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`[RealtimeSync] channel combat-players-hp-sync status:`, status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [playerIdsKey]); // ← liste des joueurs uniquement, pas les objets
+  }, [playerIdsKey]);
 
   return { markLocalUpdate };
 }
