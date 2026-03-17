@@ -61,12 +61,45 @@ export function VTTTokenImagePreview({
 }: VTTTokenImagePreviewProps) {
   const isDragging = useRef(false);
 
+  // -------------------
+  // Stabilisation des valeurs courantes via refs
+  // -------------------
+  // offsetX / offsetY changent à chaque mouvement de souris (re-render du parent).
+  // Sans refs, useCallback se recrée à chaque render → plusieurs closures
+  // onMove s'accumulent sur window → vibration et résistance au drag.
+  // Les refs permettent à onMove de toujours lire la dernière valeur
+  // sans jamais se recréer.
+  const offsetXRef = useRef(offsetX);
+  const offsetYRef = useRef(offsetY);
+  const onOffsetXChangeRef = useRef(onOffsetXChange);
+  const onOffsetYChangeRef = useRef(onOffsetYChange);
+  const zoomRef = useRef(zoom);
+  const onZoomChangeRef = useRef(onZoomChange);
+
+  // Mise à jour des refs à chaque render (sans déclencher de re-render)
+  offsetXRef.current = offsetX;
+  offsetYRef.current = offsetY;
+  onOffsetXChangeRef.current = onOffsetXChange;
+  onOffsetYChangeRef.current = onOffsetYChange;
+  zoomRef.current = zoom;
+  onZoomChangeRef.current = onZoomChange;
+
+  // -------------------
+  // Gestion de la molette (zoom)
+  // -------------------
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    onZoomChange(Math.max(1.0, Math.min(4.0, parseFloat((zoom + delta).toFixed(2)))));
-  }, [zoom, onZoomChange]);
+    onZoomChangeRef.current(
+      Math.max(1.0, Math.min(4.0, parseFloat((zoomRef.current + delta).toFixed(2))))
+    );
+  }, []); // stable — lit zoom via ref
 
+  // -------------------
+  // Gestion du drag (repositionnement de l'image)
+  // -------------------
+  // useCallback sans dépendances → handler stable, jamais recréé.
+  // onMove lit offsetX/Y via refs → toujours à jour, sans re-abonnement.
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     isDragging.current = true;
@@ -78,8 +111,9 @@ export function VTTTokenImagePreview({
       const dy = me.clientY - lastY;
       lastX = me.clientX;
       lastY = me.clientY;
-      onOffsetXChange(Math.max(-1, Math.min(1, offsetX - dx / 40)));
-      onOffsetYChange(Math.max(-1, Math.min(1, offsetY - dy / 40)));
+      // Lecture via refs → valeur toujours fraîche, pas de closure stale
+      onOffsetXChangeRef.current(Math.max(-1, Math.min(1, offsetXRef.current - dx / 40)));
+      onOffsetYChangeRef.current(Math.max(-1, Math.min(1, offsetYRef.current - dy / 40)));
     };
     const onUp = () => {
       isDragging.current = false;
@@ -88,7 +122,7 @@ export function VTTTokenImagePreview({
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-  }, [offsetX, offsetY, onOffsetXChange, onOffsetYChange]);
+  }, []); // stable — lit offsetX/Y via refs
 
   return (
     <div>
