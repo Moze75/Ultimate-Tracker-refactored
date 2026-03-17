@@ -1228,6 +1228,8 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
             encounter={encounter!}
             members={members}
             role={role}
+                encounter={encounter} 
+                participants={participants}
                 hpDelta={hpDelta}
                 setHpDelta={setHpDelta}
                 onApplyHp={applyHp}
