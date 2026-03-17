@@ -22,10 +22,23 @@ export function useCombatEncounterRealtimeSync({
 }: UseCombatEncounterRealtimeSyncParams) {
 
   // -------------------
-  // Abonnement Supabase Realtime
+  // Stabilisation du callback via ref
+  // -------------------
+  // On stocke onEncounterUpdated dans une ref pour que le useEffect
+  // ne se ré-abonne PAS à chaque re-render du parent.
+  // Le channel Supabase reste stable tant que encounterId ne change pas.
+  const callbackRef = useRef(onEncounterUpdated);
+  useEffect(() => {
+    callbackRef.current = onEncounterUpdated;
+  });
+
+  // -------------------
+  // Abonnement Supabase Realtime sur l'encounter actif
   // -------------------
   // Écoute les UPDATE sur campaign_encounters pour l'encounter courant.
   // Déclenché à chaque changement de tour, de round, ou de statut.
+  // Dépendance : encounterId UNIQUEMENT → le channel ne se recrée
+  // pas à chaque re-render, ce qui évite les pertes d'événements.
   useEffect(() => {
     if (!encounterId) return;
 
@@ -43,10 +56,10 @@ export function useCombatEncounterRealtimeSync({
           const updated = payload.new as Partial<CampaignEncounter>;
 
           // -------------------
-          // Propagation de la mise à jour
+          // Propagation des champs de tour uniquement
           // -------------------
-          // On ne transmet que les champs pertinents pour le tracker :
-          // current_turn_index, round_number, status.
+          // On ne transmet que current_turn_index, round_number, status
+          // pour éviter d'écraser des données locales non pertinentes.
           const relevantUpdates: Partial<CampaignEncounter> = {};
 
           if (updated.current_turn_index !== undefined) {
@@ -60,7 +73,8 @@ export function useCombatEncounterRealtimeSync({
           }
 
           if (Object.keys(relevantUpdates).length > 0) {
-            onEncounterUpdated(relevantUpdates);
+            // Appel via ref → toujours la version fraîche du callback
+            callbackRef.current(relevantUpdates);
           }
         }
       )
@@ -69,5 +83,5 @@ export function useCombatEncounterRealtimeSync({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [encounterId, onEncounterUpdated]);
+  }, [encounterId]); // ← encounterId SEULEMENT, pas le callback
 }
