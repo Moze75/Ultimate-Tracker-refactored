@@ -1110,61 +1110,36 @@ const handleResizeToken = useCallback((tokenId: string, size: number) => {
   handleUpdateToken(tokenId, { size });
 }, [handleUpdateToken, role]);
 
-const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { needsImageResolve?: boolean }, worldPos: { x: number; y: number }) => {
+const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldPos: { x: number; y: number }) => {
   pushUndoSnapshot();
 
   // -------------------
   // Construction du token de base avec position et propriétés par défaut
   // -------------------
-  const { needsImageResolve, ...cleanTokenData } = tokenData;
   const baseToken = {
-    ...cleanTokenData,
+    ...tokenData,
     position: worldPos,
-    visible: cleanTokenData.visible ?? true,
-    showLabel: cleanTokenData.showLabel ?? true,
-    visionMode: cleanTokenData.visionMode ?? 'none',
-    lightSource: cleanTokenData.lightSource ?? 'none',
+    visible: tokenData.visible ?? true,
+    showLabel: tokenData.showLabel ?? true,
+    visionMode: tokenData.visionMode ?? 'none',
+    lightSource: tokenData.lightSource ?? 'none',
   };
 
   // -------------------
   // Auto-assignation du token au joueur connecté (drag & drop)
   // -------------------
-  const newTokenId = crypto.randomUUID();
+  // Si le rôle est 'player', on assigne automatiquement le token
+  // au joueur qui le dépose via controlledByUserIds.
   const tokenToAdd = {
     ...baseToken,
-    id: newTokenId,
     controlledByUserIds: role === 'player'
       ? [userId]
       : baseToken.controlledByUserIds || [],
   };
 
   vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
-
-  // -------------------
-  // Résolution asynchrone de l'image du monstre
-  // -------------------
-  // Si le token vient du bestiaire sans image (drag sans expand),
-  // on charge le détail en arrière-plan via le monsterSlug.
-  // Une fois l'image disponible, on met à jour le token via
-  // vttService UPDATE_TOKEN pour que tous les clients reçoivent l'image.
-  if (needsImageResolve && baseToken.monsterSlug) {
-    const slugToResolve = baseToken.monsterSlug;
-    import('../../services/monsterService').then(({ monsterService }) => {
-      monsterService.fetchMonsterDetail(slugToResolve).then((detail) => {
-        if (detail?.image_url) {
-          vttService.send({
-            type: 'UPDATE_TOKEN',
-            tokenId: newTokenId,
-            changes: { imageUrl: detail.image_url },
-          });
-        }
-      }).catch(() => {
-        // Pas d'image disponible → on garde le fallback couleur
-      });
-    });
-  }
-}, [pushUndoSnapshot, role, userId]);
-
+}, [pushUndoSnapshot, role, userId]); 
+ 
   // ===================================
   // Tout masquer — remet le fog en noir complet
   // ===================================
