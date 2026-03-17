@@ -190,8 +190,14 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
   // met à jour campaign_encounters en base. Ce callback est appelé par le hook
   // dès que Supabase Realtime reçoit cet UPDATE, ce qui synchronise
   // l'affichage du tour courant pour tous les clients (joueurs inclus).
+  // -------------------
+  // Callback de mise à jour de l'encounter via Realtime
+  // -------------------
+  // Reçoit les champs current_turn_index / round_number / status
+  // depuis le hook useCombatEncounterRealtimeSync et fusionne
+  // avec l'état local, sans provoquer de re-souscription du channel.
   const handleEncounterUpdatedFromRealtime = useCallback(
-    (updates: Partial<import('../../../types/campaign').CampaignEncounter>) => {
+    (updates: Partial<CampaignEncounter>) => {
       setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
     },
     []
