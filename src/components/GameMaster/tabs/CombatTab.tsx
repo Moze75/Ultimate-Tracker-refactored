@@ -177,7 +177,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     []
   );
 
-  const { markLocalUpdate } = useCombatPlayersRealtimeSync({
+  const { markLocalUpdate, sendHpBroadcast } = useCombatPlayersRealtimeSync({
     members,
     participants,
     onParticipantHPUpdate: handlePlayerHPUpdateFromRealtime,
