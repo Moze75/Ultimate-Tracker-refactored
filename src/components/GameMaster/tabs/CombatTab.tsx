@@ -1220,9 +1220,20 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
             </div>
           )}
 
-          {/* Participants list */}
+          {/* -------------------
+              Liste des participants
+              -------------------
+              - Combat actif : ActiveParticipantsList (lecture seule pour les joueurs)
+              - Pas de combat actif + joueur : message d'attente
+              - Pas de combat actif + MJ : PrepParticipantsList
+          */}
           <div className={vttMode ? 'flex-1 overflow-y-auto min-h-0' : 'max-h-[70vh] overflow-y-auto'} ref={scrollContainerRef}>
-            {isActive ? ( 
+            {isActive ? (
+              // -------------------
+              // Vue combat actif : visible par tous
+              // -------------------
+              // Le prop role est passé pour que ActiveParticipantsList
+              // masque les actions MJ (supprimer, modifier initiative) côté joueur.
               <ActiveParticipantsList
                 encounter={encounter}
                 participants={participants}
@@ -1240,8 +1251,23 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
                 isDesktop={isDesktop}
                 scrollContainerRef={scrollContainerRef}
                 vttMode={vttMode}
+                role={role}
               />
+            ) : !isGM ? (
+              // -------------------
+              // Vue joueur : pas de combat actif
+              // -------------------
+              // On affiche un écran d'attente sobre pour ne pas laisser
+              // le joueur face à un panneau vide ou une liste de préparation MJ.
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
+                <Swords size={28} className="text-gray-600" />
+                <p className="text-sm text-gray-400">Aucun combat en cours.</p>
+                <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
+              </div>
             ) : (
+              // -------------------
+              // Vue MJ : préparation du combat
+              // -------------------
               <PrepParticipantsList
                 playerEntries={playerPrep}
                 monsterEntries={monsterPrep}
