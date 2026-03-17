@@ -10,6 +10,22 @@ import type { CampaignEncounter } from '../../../types/campaign';
 // les colonnes current_turn_index et round_number sont mises à jour
 // en base → ce hook propage ces changements à tous les clients connectés
 // (joueurs comme MJ).
+//
+// Architecture :
+//   1. Broadcast 'turn-changed' → quasi-instantané (< 100ms), émis par le MJ
+//   2. postgres_changes → filet de secours WAL (1-3s)
+//   3. Polling toutes les 5s → dernier recours si WS instable
+
+// -------------------
+// Type du message Broadcast pour le changement de tour
+// -------------------
+// Émis par le MJ via handleNextTurn → reçu instantanément par tous
+// les clients du même channel Broadcast (< 100ms).
+export interface TurnChangedBroadcast {
+  current_turn_index: number;
+  round_number: number;
+  status?: string;
+}
 
 interface UseCombatEncounterRealtimeSyncParams {
   encounterId: string | null | undefined;
@@ -40,21 +56,58 @@ export function useCombatEncounterRealtimeSync({
   const lastKnownRef = useRef<{ turn: number; round: number } | null>(null);
 
   // -------------------
-  // Abonnement Supabase Realtime sur l'encounter actif
+  // Pré-chargement de la valeur initiale au montage
   // -------------------
-  // Écoute les UPDATE sur campaign_encounters pour l'encounter courant.
-  // Déclenché à chaque changement de tour, de round, ou de statut.
-  // Dépendance : encounterId UNIQUEMENT → le channel ne se recrée
-  // pas à chaque re-render, ce qui évite les pertes d'événements.
+  // On charge la valeur actuelle en base DÈS le montage, pour que
+  // lastKnownRef soit initialisée avant le premier tick de polling.
+  // Cela évite un callback inutile à la première it��ration (last === null).
+  useEffect(() => {
+    if (!encounterId) return;
+    supabase
+      .from('campaign_encounters')
+      .select('current_turn_index, round_number')
+      .eq('id', encounterId)
+      .single()
+      .then(({ data }) => {
+        if (data && lastKnownRef.current === null) {
+          lastKnownRef.current = {
+            turn: data.current_turn_index,
+            round: data.round_number,
+          };
+        }
+      });
+  }, [encounterId]);
+
+  // -------------------
+  // Channel combiné : Broadcast (instantané) + postgres_changes (filet de secours)
+  // -------------------
+  // Le Broadcast est émis par le MJ dans handleNextTurn via
+  // supabase.channel(`combat-encounter-sync-${id}`).send(...).
+  // Il arrive en < 100ms. Le postgres_changes rattrape les cas
+  // où le Broadcast n'aurait pas été émis (reconnexion, update direct, etc.).
   useEffect(() => {
     if (!encounterId) return;
 
-    // Réinitialise la référence de dernière valeur connue à chaque
-    // nouvel encounter (nouveau combat lancé).
     lastKnownRef.current = null;
 
     const channel = supabase
       .channel(`combat-encounter-sync-${encounterId}`)
+      // -------------------
+      // Écoute Broadcast : changement de tour (quasi-instantané)
+      // -------------------
+      .on('broadcast', { event: 'turn-changed' }, (payload) => {
+        const data = payload.payload as TurnChangedBroadcast;
+        console.log('[RealtimeSync] Broadcast turn-changed reçu:', data);
+        lastKnownRef.current = { turn: data.current_turn_index, round: data.round_number };
+        callbackRef.current({
+          current_turn_index: data.current_turn_index,
+          round_number: data.round_number,
+          ...(data.status ? { status: data.status } : {}),
+        });
+      })
+      // -------------------
+      // Écoute postgres_changes : filet de secours WAL (1-3s)
+      // -------------------
       .on(
         'postgres_changes',
         {
@@ -66,43 +119,33 @@ export function useCombatEncounterRealtimeSync({
         (payload) => {
           const updated = payload.new as Partial<CampaignEncounter>;
 
-          console.log('[RealtimeSync] UPDATE reçu campaign_encounters:', updated);
+          // -------------------
+          // Dédoublonnage Broadcast / postgres_changes
+          // -------------------
+          // Si le Broadcast a déjà mis à jour lastKnownRef avec les mêmes
+          // valeurs, on ignore cet événement postgres_changes redondant.
+          if (
+            lastKnownRef.current &&
+            updated.current_turn_index === lastKnownRef.current.turn &&
+            updated.round_number === lastKnownRef.current.round
+          ) {
+            return;
+          }
 
-          // -------------------
-          // Propagation des champs de tour uniquement
-          // -------------------
-          // On ne transmet que current_turn_index, round_number, status
-          // pour éviter d'écraser des données locales non pertinentes.
           const relevantUpdates: Partial<CampaignEncounter> = {};
-
-          if (updated.current_turn_index !== undefined) {
-            relevantUpdates.current_turn_index = updated.current_turn_index;
-          }
-          if (updated.round_number !== undefined) {
-            relevantUpdates.round_number = updated.round_number;
-          }
-          if (updated.status !== undefined) {
-            relevantUpdates.status = updated.status;
-          }
+          if (updated.current_turn_index !== undefined) relevantUpdates.current_turn_index = updated.current_turn_index;
+          if (updated.round_number !== undefined) relevantUpdates.round_number = updated.round_number;
+          if (updated.status !== undefined) relevantUpdates.status = updated.status;
 
           if (Object.keys(relevantUpdates).length > 0) {
-            // Mise à jour de la ref de dernière valeur connue
-            if (
-              updated.current_turn_index !== undefined &&
-              updated.round_number !== undefined
-            ) {
-              lastKnownRef.current = {
-                turn: updated.current_turn_index,
-                round: updated.round_number,
-              };
+            if (updated.current_turn_index !== undefined && updated.round_number !== undefined) {
+              lastKnownRef.current = { turn: updated.current_turn_index, round: updated.round_number };
             }
-            // Appel via ref → toujours la version fraîche du callback
             callbackRef.current(relevantUpdates);
           }
         }
       )
       .subscribe((status) => {
-        // Log du statut d'abonnement pour diagnostic
         console.log(`[RealtimeSync] channel combat-encounter-sync-${encounterId} status:`, status);
       });
 
@@ -112,14 +155,11 @@ export function useCombatEncounterRealtimeSync({
   }, [encounterId]); // ← encounterId SEULEMENT, pas le callback
 
   // -------------------
-  // Polling de secours (toutes les 3s)
+  // Polling de secours (toutes les 5s)
   // -------------------
-  // Supabase Realtime peut rater des événements si la table n'est pas
-  // correctement configurée dans la publication, ou si la connexion WS
-  // est instable. Ce polling garantit que les tours se synchronisent
-  // même dans ce cas, en interrogeant directement la base.
-  // Il ne déclenche le callback QUE si la valeur a changé par rapport
-  // à la dernière connue → pas de boucle infinie.
+  // Dernier recours si Realtime WS est instable ou table non publiée.
+  // N'émet le callback QUE si la valeur a changé → pas de re-render parasite.
+  // Intervalle à 5s (au lieu de 3s) pour ne pas perturber les canaux HP.
   useEffect(() => {
     if (!encounterId) return;
 
@@ -134,7 +174,16 @@ export function useCombatEncounterRealtimeSync({
         if (error || !data) return;
 
         const last = lastKnownRef.current;
-        const turnChanged = last === null || data.current_turn_index !== last.turn || data.round_number !== last.round;
+
+        // Si lastKnownRef non encore initialisé : initialiser sans callback
+        if (last === null) {
+          lastKnownRef.current = { turn: data.current_turn_index, round: data.round_number };
+          return;
+        }
+
+        const turnChanged =
+          data.current_turn_index !== last.turn ||
+          data.round_number !== last.round;
 
         if (turnChanged) {
           console.log('[RealtimeSync] Polling détecte un changement de tour:', data);
@@ -149,8 +198,8 @@ export function useCombatEncounterRealtimeSync({
         // Polling silencieux : on ignore les erreurs réseau transitoires
         console.warn('[RealtimeSync] Polling erreur:', err);
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [encounterId]);
-}  
+}
