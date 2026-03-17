@@ -1130,45 +1130,49 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
   // -------------------
   // Auto-assignation du token au joueur connecté (drag & drop)
   // -------------------
-  const newTokenId = crypto.randomUUID();
   const tokenToAdd = {
     ...baseToken,
-    id: newTokenId,
     controlledByUserIds: role === 'player'
       ? [userId]
       : baseToken.controlledByUserIds || [],
   };
 
-  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
-
   // -------------------
   // Résolution asynchrone de l'image du monstre
   // -------------------
-  // Si le token vient du bestiaire sans image (drag sans expand),
-  // on charge le détail en arrière-plan via le monsterSlug.
-  // Une fois l'image disponible, on met à jour le token via
-  // vttService UPDATE_TOKEN pour que tous les clients reçoivent l'image.
-  // -------------------
-  // Résolution asynchrone de l'image du monstre
-  // -------------------
-  // Si le token vient du bestiaire sans image (drag sans expand),
-  // on charge le détail en arrière-plan via le monsterSlug.
-  // Une fois l'image disponible, on met à jour le token via
-  // vttService UPDATE_TOKEN pour que tous les clients reçoivent l'image.
+  // vttService génère lui-même l'id final du token dans send(ADD_TOKEN).
+  // On installe un listener one-shot sur TOKEN_ADDED pour récupérer
+  // l'id réel, puis on envoie UPDATE_TOKEN avec l'image une fois
+  // le détail chargé depuis l'API aidedd.
   if (needsImageResolve && baseToken.monsterSlug) {
     const slugToResolve = baseToken.monsterSlug;
-    monsterService.fetchMonsterDetail(slugToResolve).then((detail) => {
-      if (detail?.image_url) {
-        vttService.send({
-          type: 'UPDATE_TOKEN',
-          tokenId: newTokenId,
-          changes: { imageUrl: detail.image_url },
+    const label = baseToken.label;
+
+    // Listener one-shot : attend le prochain TOKEN_ADDED correspondant au nom
+    const unsubscribe = vttService.onMessage((msg) => {
+      if (msg.type === 'TOKEN_ADDED' && msg.token.label === label) {
+        unsubscribe();
+        const realTokenId = msg.token.id;
+        monsterService.fetchMonsterDetail(slugToResolve).then((detail) => {
+          console.log('[VTT] image résolue pour', slugToResolve, '→', detail?.image_url);
+          if (detail?.image_url) {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: realTokenId,
+              changes: { imageUrl: detail.image_url },
+            });
+          }
+        }).catch(() => {
+          // Pas d'image disponible → fallback couleur conservé
         });
       }
-    }).catch(() => {
-      // Pas d'image disponible → on garde le fallback couleur
     });
+
+    // Sécurité : nettoyage du listener après 10s si TOKEN_ADDED jamais reçu
+    setTimeout(unsubscribe, 10000);
   }
+
+  vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
 }, [pushUndoSnapshot, role, userId]);
   
   // ===================================
