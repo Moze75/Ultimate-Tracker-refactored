@@ -844,9 +844,23 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-gray-400">
-        <Loader2 size={24} className="animate-spin mr-3" />
-        Chargement...
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin text-amber-400" size={24} />
+      </div>
+    );
+  }
+
+  // -------------------
+  // Vue joueur : pas de combat actif
+  // -------------------
+  // Si le joueur arrive sur l'onglet combat sans combat en cours,
+  // on affiche un message d'attente au lieu d'un écran vide.
+  if (!isGM && !isActive) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
+        <Swords size={32} className="text-gray-600" />
+        <p className="text-sm text-gray-400">Aucun combat en cours.</p>
+        <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
       </div>
     );
   }
