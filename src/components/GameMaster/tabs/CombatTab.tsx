@@ -183,6 +183,25 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     onParticipantHPUpdate: handlePlayerHPUpdateFromRealtime,
   });
 
+  // -------------------
+  // Synchronisation temps réel des tours (MJ → Joueurs)
+  // -------------------
+  // Quand le MJ clique sur "Tour suivant", monsterService.updateEncounter()
+  // met à jour campaign_encounters en base. Ce callback est appelé par le hook
+  // dès que Supabase Realtime reçoit cet UPDATE, ce qui synchronise
+  // l'affichage du tour courant pour tous les clients (joueurs inclus).
+  const handleEncounterUpdatedFromRealtime = useCallback(
+    (updates: Partial<import('../../../types/campaign').CampaignEncounter>) => {
+      setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
+    },
+    []
+  );
+
+  useCombatEncounterRealtimeSync({
+    encounterId: encounter?.id,
+    onEncounterUpdated: handleEncounterUpdatedFromRealtime,
+  });
+
   const handleLoadEncounter = async (encounterId: string) => {
     try {
       setShowLoadEncounterModal(false);
