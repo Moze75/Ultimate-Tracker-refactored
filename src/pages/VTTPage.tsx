@@ -1125,15 +1125,11 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     lightSource: tokenData.lightSource ?? 'none',
   };
 
-
-
   // -------------------
   // Auto-assignation du token au joueur connecté (drag & drop)
   // -------------------
   // Si le rôle est 'player', on assigne automatiquement le token
   // au joueur qui le dépose via controlledByUserIds.
-  // Cela garantit que le token droppé depuis la modale ou la bibliothèque
-  // est immédiatement contrôlable par le joueur, sans action du MJ.
   const tokenToAdd = {
     ...baseToken,
     controlledByUserIds: role === 'player'
