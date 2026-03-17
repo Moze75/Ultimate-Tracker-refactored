@@ -111,15 +111,44 @@ export function useCombatEncounterRealtimeSync({
     };
   }, [encounterId]); // ← encounterId SEULEMENT, pas le callback
 
+   // -------------------
+  // Initialisation de la référence de tour au montage
   // -------------------
-  // Polling de secours (toutes les 3s)
+  // On charge la valeur actuelle de current_turn_index / round_number
+  // en base DÈS le montage, pour que lastKnownRef soit initialisée
+  // avant le premier tick de polling.
+  // Cela évite que le polling déclenche un callback inutile
+  // à la première itération (condition `last === null`) et provoque
+  // un re-render parasite qui perturbe les canaux HP Realtime.
+  useEffect(() => {
+    if (!encounterId) return;
+
+    supabase
+      .from('campaign_encounters')
+      .select('current_turn_index, round_number')
+      .eq('id', encounterId)
+      .single()
+      .then(({ data }) => {
+        if (data && lastKnownRef.current === null) {
+          lastKnownRef.current = {
+            turn: data.current_turn_index,
+            round: data.round_number,
+          };
+        }
+      });
+  }, [encounterId]);
+
+  // -------------------
+  // Polling de secours (toutes les 5s)
   // -------------------
   // Supabase Realtime peut rater des événements si la table n'est pas
   // correctement configurée dans la publication, ou si la connexion WS
   // est instable. Ce polling garantit que les tours se synchronisent
   // même dans ce cas, en interrogeant directement la base.
   // Il ne déclenche le callback QUE si la valeur a changé par rapport
-  // à la dernière connue → pas de boucle infinie.
+  // à la dernière connue → pas de boucle infinie, pas de re-render parasite.
+  // Intervalle porté à 5s pour réduire la charge et limiter les
+  // perturbations sur les canaux HP Realtime.
   useEffect(() => {
     if (!encounterId) return;
 
@@ -134,7 +163,21 @@ export function useCombatEncounterRealtimeSync({
         if (error || !data) return;
 
         const last = lastKnownRef.current;
-        const turnChanged = last === null || data.current_turn_index !== last.turn || data.round_number !== last.round;
+
+        // -------------------
+        // Guard : ne déclenche le callback que si la valeur a changé
+        // -------------------
+        // Si lastKnownRef est encore null (initialisation pas encore terminée),
+        // on se contente d'initialiser sans déclencher le callback.
+        // Cela évite le re-render parasite au premier tick.
+        if (last === null) {
+          lastKnownRef.current = { turn: data.current_turn_index, round: data.round_number };
+          return;
+        }
+
+        const turnChanged =
+          data.current_turn_index !== last.turn ||
+          data.round_number !== last.round;
 
         if (turnChanged) {
           console.log('[RealtimeSync] Polling détecte un changement de tour:', data);
@@ -149,8 +192,7 @@ export function useCombatEncounterRealtimeSync({
         // Polling silencieux : on ignore les erreurs réseau transitoires
         console.warn('[RealtimeSync] Polling erreur:', err);
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [encounterId]);
-} 
