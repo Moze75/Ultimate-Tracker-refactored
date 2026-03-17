@@ -92,9 +92,21 @@ export function VTTMonsterBestiary({ onAddAsToken }: VTTMonsterBestiaryProps) {
   };
 
   const handleDragStart = (e: React.DragEvent, m: MonsterListItem) => {
+    // -------------------
+    // Construction du token au drag
+    // -------------------
+    // Si le detail du monstre est déjà chargé (monstre expand),
+    // on récupère l'image du statblock. Sinon null → le canvas
+    // affichera la couleur de fallback jusqu'à ce que l'image
+    // soit disponible.
+    const imageUrl = (expandedSlug === m.slug && expandedMonster?.image_url)
+      ? expandedMonster.image_url
+      : null;
+
     const tokenData = {
       label: m.name,
-      imageUrl: null,
+      monsterSlug: m.slug || undefined,
+      imageUrl,
       color: '#ef4444',
       hp: typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10,
       maxHp: typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10,
