@@ -21,57 +21,23 @@ export function useCombatPlayersRealtimeSync({
 }: UseCombatPlayersRealtimeSyncParams) {
   const recentLocalUpdatesRef = useRef<Set<string>>(new Set());
 
-  const markLocalUpdate = (playerId: string) => {
-    recentLocalUpdatesRef.current.add(playerId);
-    setTimeout(() => {
-      recentLocalUpdatesRef.current.delete(playerId);
-    }, 2000);
-  };
-
+  // -------------------
+  // Stabilisation des données via refs
+  // -------------------
+  // members et participants changent de référence à chaque re-render du parent.
+  // On les stocke dans des refs pour que le useEffect ne se ré-abonne pas
+  // inutilement → le channel Supabase reste stable.
+  const membersRef = useRef(members);
+  const participantsRef = useRef(participants);
+  const callbackRef = useRef(onParticipantHPUpdate);
   useEffect(() => {
-    const playerIds = members
-      .filter((m) => m.player_id)
-      .map((m) => m.player_id as string);
+    membersRef.current = members;
+    participantsRef.current = participants;
+    callbackRef.current = onParticipantHPUpdate;
+  });
 
-    if (playerIds.length === 0) return;
-
-    const channel = supabase
-      .channel('combat-players-hp-sync')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'players',
-          filter: `id=in.(${playerIds.join(',')})`,
-        },
-        (payload) => {
-          const newData = payload.new as PlayerHPUpdate;
-
-          if (recentLocalUpdatesRef.current.has(newData.id)) {
-            return;
-          }
-
-          const member = members.find((m) => m.player_id === newData.id);
-          if (!member) return;
-
-          const participant = participants.find(
-            (p) => p.participant_type === 'player' && p.player_member_id === member.id
-          );
-          if (!participant) return;
-
-          onParticipantHPUpdate(participant.id, {
-            current_hp: newData.current_hp,
-            temporary_hp: newData.temporary_hp,
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [members, participants, onParticipantHPUpdate]);
-
-  return { markLocalUpdate };
-}
+  // -------------------
+  // Calcul stable des playerIds pour la souscription
+  // -------------------
+  // On ne recrée le channel que si
+
