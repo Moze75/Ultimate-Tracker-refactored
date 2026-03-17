@@ -208,6 +208,35 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     onEncounterUpdated: handleEncounterUpdatedFromRealtime,
   });
 
+  // -------------------
+  // Polling joueur : détection du démarrage d'un combat
+  // -------------------
+  // Quand un joueur est déjà sur l'onglet combat (pas de combat actif)
+  // et que le MJ lance un combat, le joueur ne reçoit pas l'événement
+  // car useCombatEncounterRealtimeSync n'a pas d'encounterId à écouter.
+  // Ce polling interroge la base toutes les 4s pour détecter
+  // l'apparition d'un encounter actif et recharge le composant.
+  useEffect(() => {
+    if (isGM) return;           // le MJ n'en a pas besoin
+    if (isActive) return;       // déjà un combat actif, rien à faire
+
+    const interval = setInterval(async () => {
+      try {
+        const enc = await monsterService.getActiveEncounter(campaignId);
+        if (enc) {
+          // Un combat vient de démarrer : on recharge tout
+          setEncounter(enc);
+          const parts = await monsterService.getEncounterParticipants(enc.id);
+          setParticipants(parts);
+        }
+      } catch {
+        // Polling silencieux
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isGM, isActive, campaignId]);
+
   const handleLoadEncounter = async (encounterId: string) => {
     try {
       setShowLoadEncounterModal(false);
