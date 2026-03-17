@@ -9,6 +9,13 @@ export interface VTTToken {
   monsterSlug?: string;
   ownerUserId: string;
   controlledByUserIds?: string[];
+  // -------------------
+  // Ciblage : liste des userId qui ciblent ce token
+  // -------------------
+  // Un joueur peut cibler n'importe quel token via clic droit.
+  // Le tableau peut contenir plusieurs userId simultanément.
+  // Propagé via TOKEN_UPDATED broadcast à tous les clients.
+  targetedByUserIds?: string[];
   label: string;
   imageUrl: string | null;
   position: { x: number; y: number };
