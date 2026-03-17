@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { monsterService } from '../services/monsterService';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
 import { DiceBox3D } from '../components/DiceBox3D';
 import { VTTCanvas, getExploredMaskStorageKey } from '../components/VTT/VTTCanvas';
