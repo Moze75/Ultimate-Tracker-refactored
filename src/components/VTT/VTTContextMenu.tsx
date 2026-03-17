@@ -73,7 +73,11 @@ export function VTTContextMenu({
     transform: x > window.innerWidth - 180 ? 'translateX(-100%)' : undefined,
   };
 
-  if (!canEdit) return null;
+   // -------------------
+  // Le menu est visible pour tous (pour le ciblage),
+  // même si le joueur ne contrôle pas le token.
+  // -------------------
+  // (on retire le early return canEdit)
 
   const boundCount = token.controlledByUserIds?.length || 0;
 
