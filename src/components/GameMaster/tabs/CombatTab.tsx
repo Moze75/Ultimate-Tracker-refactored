@@ -853,9 +853,12 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
   // -------------------
   // Vue joueur : pas de combat actif
   // -------------------
-  // Si le joueur arrive sur l'onglet combat sans combat en cours,
-  // on affiche un message d'attente au lieu d'un écran vide.
-  if (!isGM && !isActive) {
+  // IMPORTANT : ce guard est placé APRÈS le loading.
+  // On n'affiche le message d'attente que si le fetch est terminé
+  // ET qu'aucun encounter actif n'existe réellement en base.
+  // Cela évite le cas où encounter=null pendant le chargement
+  // ferait croire qu'il n'y a pas de combat alors qu'il est en cours.
+  if (!loading && !isGM && !isActive) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
         <Swords size={32} className="text-gray-600" />
