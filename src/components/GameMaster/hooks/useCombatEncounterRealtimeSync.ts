@@ -24,13 +24,20 @@ export function useCombatEncounterRealtimeSync({
   // -------------------
   // Stabilisation du callback via ref
   // -------------------
-  // On stocke onEncounterUpdated dans une ref pour que le useEffect
-  // ne se ré-abonne PAS à chaque re-render du parent.
+  // On stocke onEncounterUpdated dans une ref pour que les useEffect
+  // ne se ré-abonnent PAS à chaque re-render du parent.
   // Le channel Supabase reste stable tant que encounterId ne change pas.
   const callbackRef = useRef(onEncounterUpdated);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
   });
+
+  // -------------------
+  // Suivi de la dernière valeur connue pour le polling de secours
+  // -------------------
+  // Stocke le dernier current_turn_index + round_number reçu
+  // afin de ne déclencher le callback que si la valeur a réellement changé.
+  const lastKnownRef = useRef<{ turn: number; round: number } | null>(null);
 
   // -------------------
   // Abonnement Supabase Realtime sur l'encounter actif
@@ -41,6 +48,10 @@ export function useCombatEncounterRealtimeSync({
   // pas à chaque re-render, ce qui évite les pertes d'événements.
   useEffect(() => {
     if (!encounterId) return;
+
+    // Réinitialise la référence de dernière valeur connue à chaque
+    // nouvel encounter (nouveau combat lancé).
+    lastKnownRef.current = null;
 
     const channel = supabase
       .channel(`combat-encounter-sync-${encounterId}`)
@@ -54,6 +65,8 @@ export function useCombatEncounterRealtimeSync({
         },
         (payload) => {
           const updated = payload.new as Partial<CampaignEncounter>;
+
+          console.log('[RealtimeSync] UPDATE reçu campaign_encounters:', updated);
 
           // -------------------
           // Propagation des champs de tour uniquement
@@ -73,15 +86,71 @@ export function useCombatEncounterRealtimeSync({
           }
 
           if (Object.keys(relevantUpdates).length > 0) {
+            // Mise à jour de la ref de dernière valeur connue
+            if (
+              updated.current_turn_index !== undefined &&
+              updated.round_number !== undefined
+            ) {
+              lastKnownRef.current = {
+                turn: updated.current_turn_index,
+                round: updated.round_number,
+              };
+            }
             // Appel via ref → toujours la version fraîche du callback
             callbackRef.current(relevantUpdates);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Log du statut d'abonnement pour diagnostic
+        console.log(`[RealtimeSync] channel combat-encounter-sync-${encounterId} status:`, status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [encounterId]); // ← encounterId SEULEMENT, pas le callback
+
+  // -------------------
+  // Polling de secours (toutes les 3s)
+  // -------------------
+  // Supabase Realtime peut rater des événements si la table n'est pas
+  // correctement configurée dans la publication, ou si la connexion WS
+  // est instable. Ce polling garantit que les tours se synchronisent
+  // même dans ce cas, en interrogeant directement la base.
+  // Il ne déclenche le callback QUE si la valeur a changé par rapport
+  // à la dernière connue → pas de boucle infinie.
+  useEffect(() => {
+    if (!encounterId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('campaign_encounters')
+          .select('current_turn_index, round_number, status')
+          .eq('id', encounterId)
+          .single();
+
+        if (error || !data) return;
+
+        const last = lastKnownRef.current;
+        const turnChanged = last === null || data.current_turn_index !== last.turn || data.round_number !== last.round;
+
+        if (turnChanged) {
+          console.log('[RealtimeSync] Polling détecte un changement de tour:', data);
+          lastKnownRef.current = { turn: data.current_turn_index, round: data.round_number };
+          callbackRef.current({
+            current_turn_index: data.current_turn_index,
+            round_number: data.round_number,
+            status: data.status,
+          });
+        }
+      } catch (err) {
+        // Polling silencieux : on ignore les erreurs réseau transitoires
+        console.warn('[RealtimeSync] Polling erreur:', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [encounterId]);
 }
