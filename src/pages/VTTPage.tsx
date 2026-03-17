@@ -1125,28 +1125,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'>, worldP
     lightSource: tokenData.lightSource ?? 'none',
   };
 
-  // -------------------
-  // Résolution de l'image du monstre si absente (drag sans expand)
-  // -------------------
-  // Si le token vient du bestiaire sans image (monsterSlug présent mais
-  // imageUrl null), on charge le detail en arrière-plan et on met à jour
-  // le token dès que l'image est disponible. Pas de blocage du drop.
-  if (!baseToken.imageUrl && baseToken.monsterSlug) {
-    const slugToResolve = baseToken.monsterSlug;
-    monsterService.fetchMonsterDetail(slugToResolve).then((detail) => {
-      if (detail?.image_url) {
-        setTokens(prev =>
-          prev.map(t =>
-            t.monsterSlug === slugToResolve && !t.imageUrl
-              ? { ...t, imageUrl: detail.image_url! }
-              : t
-          )
-        );
-      }
-    }).catch(() => {
-      // Pas d'image disponible → on garde le fallback couleur
-    });
-  }
+
 
   // -------------------
   // Auto-assignation du token au joueur connecté (drag & drop)
