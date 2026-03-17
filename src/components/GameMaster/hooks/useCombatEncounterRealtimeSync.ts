@@ -3,6 +3,17 @@ import { supabase } from '../../../lib/supabase';
 import type { CampaignEncounter } from '../../../types/campaign';
 
 // -------------------
+// Type du message Broadcast pour le changement de tour
+// -------------------
+// Émis par le MJ via handleNextTurn → reçu instantanément par tous
+// les clients du même channel Broadcast (< 100ms).
+export interface TurnChangedBroadcast {
+  current_turn_index: number;
+  round_number: number;
+  status?: string;
+}
+
+// -------------------
 // Hook de synchronisation temps réel de l'encounter
 // -------------------
 // S'abonne aux changements de la table campaign_encounters
