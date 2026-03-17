@@ -789,10 +789,37 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     handleUpdateParticipant(p.id, { current_hp: newHp });
     setHpDelta((prev) => ({ ...prev, [p.id]: '' }));
 
+    // -------------------
+    // Broadcast instantané du changement de PV (< 100ms)
+    // -------------------
+    // Envoie le nouveau HP via Supabase Broadcast sur le channel HP.
+    // Les joueurs le reçoivent immédiatement via useCombatPlayersRealtimeSync.
+    // On marque p.id (participantId) comme "local" pour filtrer l'écho
+    // Broadcast sur ce même client (le MJ ne doit pas traiter son propre broadcast).
+    const playerIds = members
+      .filter((m) => m.player_id)
+      .map((m) => m.player_id as string)
+      .sort();
+    const hpChannelName = `combat-players-hp-sync-${playerIds.join('-')}`;
+
+    markLocalUpdate(p.id); // filtre l'écho Broadcast (clé = participantId)
+    supabase.channel(hpChannelName).send({
+      type: 'broadcast',
+      event: 'hp-changed',
+      payload: {
+        participantId: p.id,
+        current_hp: newHp,
+        temporary_hp: p.temporary_hp ?? 0,
+      },
+    });
+
     if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
       if (member?.player_id) {
-        markLocalUpdate(member.player_id);
+        // -------------------
+        // Sync HP joueur dans la table players (pour la fiche perso)
+        // -------------------
+        markLocalUpdate(member.player_id); // filtre l'écho postgres_changes (clé = playerId)
         supabase
           .from('players')
           .update({ current_hp: newHp })
