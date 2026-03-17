@@ -105,7 +105,12 @@ export function VTTSidebar({
   // -------------------
   // Le MJ arrive sur "tokens", le joueur sur "settings"
   // car l'onglet "tokens" est masqué pour les joueurs.
-const [internalTab, setInternalTab] = useState<SidebarTab>(role === 'gm' ? 'tokens' : 'settings');
+// -------------------
+// Onglet par défaut selon le rôle
+// -------------------
+// Le MJ arrive sur "tokens", le joueur directement sur "combat"
+// pour voir immédiatement le tracker de combat.
+const [internalTab, setInternalTab] = useState<SidebarTab>(role === 'gm' ? 'tokens' : 'combat');
 const activeTab = activeTabProp ?? internalTab;
 const setActiveTab = (tab: SidebarTab) => {
   setInternalTab(tab);
