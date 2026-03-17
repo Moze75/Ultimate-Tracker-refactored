@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from 'react';
-import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame, Swords } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame, Swords, Crosshair } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
 interface VTTContextMenuProps {
@@ -16,6 +15,12 @@ interface VTTContextMenuProps {
   onManageBinding: () => void;
   onConfigureVision: () => void;
   onLaunchCombat?: (tokens: VTTToken[]) => void;
+  // -------------------
+  // Ciblage d'un token
+  // -------------------
+  // Accessible à tous les rôles (joueur et MJ).
+  // Toggle : cibler / décibler.
+  onToggleTarget?: () => void;
   onClose: () => void;
 }
 
@@ -33,10 +38,18 @@ export function VTTContextMenu({
   onManageBinding,
   onConfigureVision,
   onLaunchCombat,
+  onToggleTarget,
   onClose,
 }: VTTContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  // -------------------
+  // Accès au menu contextuel
+  // -------------------
+  // Le MJ voit toujours le menu.
+  // Un joueur voit le menu sur n'importe quel token (pour cibler),
+  // mais les actions d'édition/suppression restent restreintes.
   const canEdit = role === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userId));
+  const isTargeted = token.targetedByUserIds?.includes(userId) ?? false;
   const multiSelected = selectedTokens && selectedTokens.length >= 1;
 
   useEffect(() => {
