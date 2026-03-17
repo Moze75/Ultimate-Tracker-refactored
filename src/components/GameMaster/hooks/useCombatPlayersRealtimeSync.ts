@@ -8,6 +8,16 @@ interface PlayerHPUpdate {
   temporary_hp: number;
 }
 
+// -------------------
+// Type du message Broadcast pour les PV d'un participant
+// -------------------
+// Émis par le MJ via applyHp → reçu instantanément par tous les clients.
+export interface HpChangedBroadcast {
+  participantId: string;
+  current_hp: number;
+  temporary_hp: number;
+}
+
 interface UseCombatPlayersRealtimeSyncParams {
   members: CampaignMember[];
   participants: EncounterParticipant[];
