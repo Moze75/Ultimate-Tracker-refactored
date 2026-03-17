@@ -47,6 +47,14 @@ export function useCombatPlayersRealtimeSync({
   });
 
   // -------------------
+  // Ref vers le channel souscrit — utilisée pour émettre les Broadcasts
+  // -------------------
+  // On stocke ici le channel Supabase actif pour que applyHp (dans CombatTab)
+  // puisse envoyer le Broadcast hp-changed sur le channel DÉJÀ abonné,
+  // et non sur un nouveau channel éphémère qui ne reçoit rien.
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // -------------------
   // Calcul stable des playerIds pour la souscription
   // -------------------
   // On ne recrée le channel que si la liste des IDs joueurs change réellement
@@ -71,13 +79,29 @@ export function useCombatPlayersRealtimeSync({
   };
 
   // -------------------
+  // Émission d'un Broadcast HP sur le channel souscrit
+  // -------------------
+  // À appeler depuis applyHp dans CombatTab à la place de
+  // supabase.channel(name).send(...) qui crée un channel éphémère.
+  // Le channel est déjà souscrit → le message est bien distribué
+  // à tous les clients (joueurs inclus) en < 100ms.
+  const sendHpBroadcast = (payload: HpChangedBroadcast) => {
+    if (!channelRef.current) return;
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'hp-changed',
+      payload,
+    });
+  };
+
+  // -------------------
   // Abonnement Supabase Realtime sur les HP joueurs
   // -------------------
   // Dépendance : playerIdsKey uniquement → le channel se recrée seulement
   // si la composition de l'équipe change, pas à chaque re-render.
   // Les données fraîches (members, participants, callback) sont lues
   // depuis les refs au moment de l'événement.
-   useEffect(() => {
+  useEffect(() => {
     const playerIds = membersRef.current
       .filter((m) => m.player_id)
       .map((m) => m.player_id as string);
@@ -87,7 +111,7 @@ export function useCombatPlayersRealtimeSync({
     // -------------------
     // Channel combiné : Broadcast (instantané) + postgres_changes (filet)
     // -------------------
-    // Le Broadcast 'hp-changed' est émis par le MJ dans applyHp.
+    // Le Broadcast 'hp-changed' est émis par sendHpBroadcast (appelé dans applyHp).
     // Il arrive en < 100ms, sans passer par Postgres WAL.
     // Le postgres_changes sur 'players' reste en filet de secours
     // pour les mises à jour de HP hors-combat (fiche joueur, etc.).
@@ -138,10 +162,16 @@ export function useCombatPlayersRealtimeSync({
         console.log(`[RealtimeSync] channel combat-players-hp-sync status:`, status);
       });
 
+    // -------------------
+    // Stockage du channel dans la ref pour l'émission des Broadcasts
+    // -------------------
+    channelRef.current = channel;
+
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(channel);
     };
   }, [playerIdsKey]);
 
-  return { markLocalUpdate };
+  return { markLocalUpdate, sendHpBroadcast };
 }
