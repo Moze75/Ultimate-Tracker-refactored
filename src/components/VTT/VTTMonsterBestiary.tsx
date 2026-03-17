@@ -95,10 +95,11 @@ export function VTTMonsterBestiary({ onAddAsToken }: VTTMonsterBestiaryProps) {
     // -------------------
     // Construction du token au drag
     // -------------------
-    // Si le detail du monstre est déjà chargé (monstre expand),
-    // on récupère l'image du statblock. Sinon null → le canvas
-    // affichera la couleur de fallback jusqu'à ce que l'image
-    // soit disponible.
+    // On transmet toujours le monsterSlug dans le dataTransfer.
+    // Si le detail est déjà chargé (monstre expand), on inclut
+    // directement l'image_url. Sinon, VTTPage.tsx résoudra
+    // l'image en arrière-plan via le monsterSlug après le drop,
+    // et mettra à jour le token via vttService UPDATE_TOKEN.
     const imageUrl = (expandedSlug === m.slug && expandedMonster?.image_url)
       ? expandedMonster.image_url
       : null;
@@ -107,6 +108,12 @@ export function VTTMonsterBestiary({ onAddAsToken }: VTTMonsterBestiaryProps) {
       label: m.name,
       monsterSlug: m.slug || undefined,
       imageUrl,
+      // -------------------
+      // Résolution async demandée si image absente
+      // -------------------
+      // Ce flag signale à VTTPage qu'il doit résoudre l'image
+      // depuis l'API si imageUrl est null.
+      needsImageResolve: !imageUrl && !!m.slug,
       color: '#ef4444',
       hp: typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10,
       maxHp: typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10,
