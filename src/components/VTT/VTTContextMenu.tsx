@@ -117,7 +117,7 @@ export function VTTContextMenu({
           label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
           onClick={() => { onToggleTorch(); onClose(); }}
         />
-      )}
+      )} 
 
       {role === 'gm' && (
         <MenuItem
