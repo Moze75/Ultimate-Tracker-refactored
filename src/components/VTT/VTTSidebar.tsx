@@ -120,27 +120,6 @@ const setActiveTab = (tab: SidebarTab) => {
   const isResizing = useRef(false);
   const resizeStartX = useRef(0);
   const resizeStartWidth = useRef(0);
-  // -------------------
-  // Ref sur la pastille de la poignée — positionnement vertical en JS
-  // car top:50% CSS ne fonctionne pas quand un parent a overflow-hidden
-  // -------------------
-  const handlePillRef = useRef<HTMLDivElement>(null);
-  const handleTrackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const pill = handlePillRef.current;
-    const track = handleTrackRef.current;
-    if (!pill || !track) return;
-    const updatePillPosition = () => {
-      const trackHeight = track.getBoundingClientRect().height;
-      pill.style.top = `${trackHeight / 2}px`;
-      pill.style.transform = 'translate(-50%, -50%)';
-    };
-    updatePillPosition();
-    const ro = new ResizeObserver(updatePillPosition);
-    ro.observe(track);
-    return () => ro.disconnect();
-  }, [collapsed]);
 
   // -------------------
   // Gestion des sections du panel tokens
