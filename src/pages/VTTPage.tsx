@@ -2456,23 +2456,7 @@ onSelectTokens={ids => {
           // Toggle : ajoute ou retire userId de targetedByUserIds.
           // Accessible à tous les rôles (joueur et MJ).
           // Propagé via UPDATE_TOKEN broadcast à tous les clients.
-          onToggleTarget={() => {
-            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
-            const current = freshToken.targetedByUserIds ?? [];
-            const isTargeted = current.includes(userId);
-            const next = isTargeted
-              ? current.filter(id => id !== userId)
-              : [...current, userId];
-            vttService.send({
-              type: 'UPDATE_TOKEN',
-              tokenId: freshToken.id,
-              changes: { targetedByUserIds: next },
-            });
-            setContextMenu(null);
-          }}
-          onClose={() => setContextMenu(null)}
-        />
-      )} 
+onst freshToken = tokensRef.current.find(t => t.id === c
 
       {bindingToken && (
         <VTTTokenBindingModal
