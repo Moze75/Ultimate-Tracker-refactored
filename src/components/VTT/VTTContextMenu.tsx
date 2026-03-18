@@ -118,14 +118,24 @@ export function VTTContextMenu({
       )}
 
       {canEdit && (
+ {onToggleTarget && (
+        <MenuItem
+          icon={<Crosshair size={13} />}
+          label={isTargeted ? 'Décibler' : 'Cibler'}
+          highlight={isTargeted}
+          onClick={() => { onToggleTarget(); onClose(); }}
+        />
+      )}
+
+      {canEdit && (
         <MenuItem
           icon={<Flame size={13} />}
           label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
           onClick={() => { onToggleTorch(); onClose(); }}
         />
       )}
- 
-      {role === 'gm' && ( 
+
+      {role === 'gm' && (
         <MenuItem
           icon={token.visible ? <EyeOff size={13} /> : <Eye size={13} />}
           label={token.visible ? 'Masquer' : 'Rendre visible'}
