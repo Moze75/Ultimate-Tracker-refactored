@@ -264,12 +264,22 @@ const visibleTokens = isGM
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
 <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl relative" style={{ width: sidebarWidth }}>
-      <div 
+      <div
         onMouseDown={handleResizeMouseDown}
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-amber-400/40 transition-colors z-10 group"
+        className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-10 group"
         title="Redimensionner"
       >
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full bg-gray-600 group-hover:bg-amber-400 transition-colors" />
+        {/* Ligne de fond */}
+        <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
+        {/* Pastille 3 points — centrée verticalement via style inline */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-[3px] px-0.5 py-2 rounded-full bg-gray-700/80 group-hover:bg-amber-500/90 transition-colors shadow-md"
+          style={{ top: '50%', transform: 'translateX(-50%) translateY(-50%)' }}
+        >
+          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+        </div>
       </div>
 
       {/* -------------------
