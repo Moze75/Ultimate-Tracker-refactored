@@ -104,11 +104,11 @@ export function VTTTargetingRing({
       {/* Anneau interne — symboles ésotériques — sens anti-horaire */}
       <g className={`vtt-ring-ccw-${idSuffix}`}>
         <text
-          fontSize={fontSizeInner}
-          fill={colorInner}
-          fontFamily="Georgia, serif"
-          opacity="0.88"
-          letterSpacing="0.3"
+  fontSize={fontSizeInner}
+  fill="#ffffff"
+  fontFamily="Georgia, serif"
+  opacity="0.88"
+  letterSpacing="0.3"
         >
           <textPath href={`#inner-${idSuffix}`}>{esotericText}</textPath>
         </text>
