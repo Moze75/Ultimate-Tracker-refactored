@@ -2439,25 +2439,21 @@ onSelectTokens={ids => {
           // Propagé via UPDATE_TOKEN broadcast à tous les clients.
           onToggleTarget={() => {
             const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
-            const isTargeted = (freshToken.targetedByUserIds ?? []).includes(userId);
-
-            const sel = selectedTokenIds.length > 1
-              ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id))
-              : [freshToken];
-
-            sel.forEach(t => {
-              const current = t.targetedByUserIds ?? [];
-              const next = isTargeted
-                ? current.filter(id => id !== userId)
-                : current.includes(userId) ? current : [...current, userId];
-              vttService.send({
-                type: 'UPDATE_TOKEN',
-                tokenId: t.id,
-                changes: { targetedByUserIds: next },
-              });
+            const current = freshToken.targetedByUserIds ?? [];
+            const isTargeted = current.includes(userId);
+            const next = isTargeted
+              ? current.filter(id => id !== userId)
+              : [...current, userId];
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: freshToken.id,
+              changes: { targetedByUserIds: next },
             });
             setContextMenu(null);
           }}
+          onClose={() => setContextMenu(null)}
+        />
+      )} 
 
       {bindingToken && (
         <VTTTokenBindingModal
