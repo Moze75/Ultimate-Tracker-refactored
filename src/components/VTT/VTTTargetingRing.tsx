@@ -3,9 +3,9 @@ import React from 'react';
 interface VTTTargetingRingProps {
   /** Taille du token en pixels (= gridSize de ta config) */
   size: number;
-  /** Couleur de l'anneau (optionnel, défaut rouge) */
+  /** Couleur de l'anneau externe (optionnel, défaut blanc) */
   color?: string;
-  /** Couleur du second anneau (optionnel, défaut violet) */
+  /** Couleur de l'anneau interne (optionnel, défaut rouge) */
   colorInner?: string;
 }
 
@@ -23,8 +23,8 @@ interface VTTTargetingRingProps {
  */
 export function VTTTargetingRing({
   size,
-  color = '#e24b4a',
-  colorInner = '#c090c8',
+  color = '#ffffff',
+  colorInner = '#e24b4a',
 }: VTTTargetingRingProps) {
   const half = size / 2;
 
@@ -73,10 +73,6 @@ export function VTTTargetingRing({
             animation: vtt-spin-ccw 6s linear infinite;
             transform-origin: ${cx}px ${cy}px;
           }
-          .vtt-brackets-${idSuffix} {
-            animation: vtt-spin-cw 2.5s linear infinite;
-            transform-origin: ${cx}px ${cy}px;
-          }
           .vtt-blink-${idSuffix}  { animation: vtt-blink 0.9s ease-in-out infinite; }
           .vtt-pulse-${idSuffix}  { animation: vtt-pulse 2s ease-in-out infinite; }
         `}</style>
@@ -117,28 +113,6 @@ export function VTTTargetingRing({
           <textPath href={`#inner-${idSuffix}`}>{esotericText}</textPath>
         </text>
       </g>
-
-      {/* Crochets de coin tournants */}
-      {(() => {
-        const b = half * 0.72; // distance depuis le centre
-        const arm = size * 0.09;
-        return (
-          <g
-            className={`vtt-brackets-${idSuffix}`}
-            stroke={color} strokeWidth={Math.max(1, size * 0.03)}
-            fill="none" strokeLinecap="round"
-          >
-            {/* haut-gauche */}
-            <path d={`M ${cx - b} ${cy - b + arm} L ${cx - b} ${cy - b} L ${cx - b + arm} ${cy - b}`}/>
-            {/* haut-droit */}
-            <path d={`M ${cx + b - arm} ${cy - b} L ${cx + b} ${cy - b} L ${cx + b} ${cy - b + arm}`}/>
-            {/* bas-gauche */}
-            <path d={`M ${cx - b} ${cy + b - arm} L ${cx - b} ${cy + b} L ${cx - b + arm} ${cy + b}`}/>
-            {/* bas-droit */}
-            <path d={`M ${cx + b - arm} ${cy + b} L ${cx + b} ${cy + b} L ${cx + b} ${cy + b - arm}`}/>
-          </g>
-        );
-      })()}
 
       {/* Point central clignotant */}
       <circle
