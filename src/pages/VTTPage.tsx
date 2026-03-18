@@ -1451,26 +1451,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
-
-      // -------------------
-      // Échap — décibler tous les tokens (tous rôles)
-      // -------------------
-      // Retire userId de targetedByUserIds sur tous les tokens
-      // où il apparaît, quelle que soit la sélection courante.
-      if (e.key === 'Escape') {
-        tokensRef.current
-          .filter(t => t.targetedByUserIds?.includes(userId))
-          .forEach(t => {
-            vttService.send({
-              type: 'UPDATE_TOKEN',
-              tokenId: t.id,
-              changes: { targetedByUserIds: t.targetedByUserIds!.filter(id => id !== userId) },
-            });
-          });
-        return;
-      }
-
-      if (role !== 'gm') return;
+      if (role !== 'gm') return; 
 
       const key = e.key.toLowerCase();
 
@@ -2456,7 +2437,23 @@ onSelectTokens={ids => {
           // Toggle : ajoute ou retire userId de targetedByUserIds.
           // Accessible à tous les rôles (joueur et MJ).
           // Propagé via UPDATE_TOKEN broadcast à tous les clients.
-onst freshToken = tokensRef.current.find(t => t.id === c
+          onToggleTarget={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
+            const current = freshToken.targetedByUserIds ?? [];
+            const isTargeted = current.includes(userId);
+            const next = isTargeted
+              ? current.filter(id => id !== userId)
+              : [...current, userId];
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: freshToken.id,
+              changes: { targetedByUserIds: next },
+            });
+            setContextMenu(null);
+          }}
+          onClose={() => setContextMenu(null)}
+        />
+      )} 
 
       {bindingToken && (
         <VTTTokenBindingModal
