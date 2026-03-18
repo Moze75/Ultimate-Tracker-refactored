@@ -116,7 +116,7 @@ const setActiveTab = (tab: SidebarTab) => {
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(250);
+  const [sidebarWidth, setSidebarWidth] = useState(290);
   const isResizing = useRef(false);
   const resizeStartX = useRef(0);
   const resizeStartWidth = useRef(0);
