@@ -776,9 +776,9 @@ const visibleTokens = isGM
             <DoorOpen size={12} />
             Quitter
           </button>
-        </div>        {/* fin de div border-t shrink-0 (footer) */}
-      </div>          {/* fin de div flex flex-col h-full bg-gray-900/70 overflow-hidden */}
-    </div>            {/* fin du wrapper externe relative h-full flex-shrink-0 */}
+        </div>       
+      </div>         
+    </div>           
   );
 }
 
