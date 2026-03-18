@@ -38,6 +38,7 @@ import type {
 } from '../types/vtt';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
+import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 
