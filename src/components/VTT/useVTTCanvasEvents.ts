@@ -229,6 +229,22 @@ export function useVTTCanvasEvents({
         isPanningRef.current = true;
         return;
       }
+      // -------------------
+      // Gestion du clic droit (ciblage — tous rôles)
+      // -------------------
+      // Le clic droit sur un token ouvre le menu contextuel via onRightClickTokenRef.
+      // Accessible à tous les rôles y compris les joueurs (pour cibler).
+      if (e.button === 2) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const token2 = getTokenAt(wp2.x, wp2.y);
+        if (token2) {
+          e.preventDefault();
+          onRightClickTokenRef.current?.(token2, e.clientX, e.clientY);
+        }
+        return;
+      }
+
       if (e.button !== 0) return;
 
       const sp = getCanvasXY(e.clientX, e.clientY);
