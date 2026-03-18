@@ -96,11 +96,18 @@ export function VTTContextMenu({
         )}
       </div>
 
-      <MenuItem
-        icon={<Pencil size={13} />}
-        label="Editer"
-        onClick={() => { onEdit(); onClose(); }}
-      />
+      {/* -------------------
+          Edition — restreint au propriétaire ou MJ
+          -------------------
+          Un joueur ne peut éditer que les tokens qu'il contrôle.
+      */}
+      {canEdit && (
+        <MenuItem
+          icon={<Pencil size={13} />}
+          label="Editer"
+          onClick={() => { onEdit(); onClose(); }}
+        />
+      )}
 
       {/* -------------------
           Ciblage — visible par tous les rôles
