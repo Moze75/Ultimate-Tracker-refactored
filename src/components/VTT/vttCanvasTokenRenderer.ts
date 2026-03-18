@@ -10,6 +10,12 @@ export interface DrawTokenOptions {
   curUserId: string;
   tokenImageCache: Map<string, HTMLImageElement>;
   onImageLoad: () => void;
+  // -------------------
+  // Timestamp animé pour le ciblage pulsant
+  // -------------------
+  // Passé depuis la boucle de rendu du canvas (requestAnimationFrame)
+  // pour animer l'anneau de ciblage sans état React.
+  animTime?: number;
 }
 
 export function drawToken({
@@ -22,6 +28,7 @@ export function drawToken({
   curUserId,
   tokenImageCache,
   onImageLoad,
+  animTime = 0,
 }: DrawTokenOptions): void {
   const px = token.position.x;
   const py = token.position.y;
