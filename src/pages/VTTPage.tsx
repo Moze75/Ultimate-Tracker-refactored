@@ -2426,7 +2426,7 @@ onSelectTokens={ids => {
             setVisionToken(freshToken || contextMenu.token);
             setContextMenu(null);
           }}
-          onLaunchCombat={(tokens) => {
+           onLaunchCombat={(tokens) => {
             setCombatInitTokens(tokens);
             setSidebarActiveTab('combat');
             setContextMenu(null);
@@ -2435,6 +2435,7 @@ onSelectTokens={ids => {
           // Ciblage d'un token via clic droit
           // -------------------
           // Toggle : ajoute ou retire userId de targetedByUserIds.
+          // Accessible à tous les rôles (joueur et MJ).
           // Propagé via UPDATE_TOKEN broadcast à tous les clients.
           onToggleTarget={() => {
             const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
