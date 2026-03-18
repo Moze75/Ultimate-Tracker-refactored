@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from 'react';
 import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame, Swords, Crosshair } from 'lucide-react';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 
@@ -101,12 +102,45 @@ export function VTTContextMenu({
         onClick={() => { onEdit(); onClose(); }}
       />
 
-      <MenuItem
-        icon={<Flame size={13} />}
-        label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
-        onClick={() => { onToggleTorch(); onClose(); }}
-      />
- 
+      {/* -------------------
+          Ciblage — visible par tous les rôles
+          -------------------
+          Permet à un joueur de cibler n'importe quel token,
+          y compris le sien. Toggle ciblé / non ciblé.
+      */}
+      {onToggleTarget && (
+        <MenuItem
+          icon={<Crosshair size={13} />}
+          label={isTargeted ? 'Décibler' : 'Cibler'}
+          highlight={isTargeted}
+          onClick={() => { onToggleTarget(); onClose(); }}
+        />
+      )}
+
+      {canEdit && (
+      {/* -------------------
+          Ciblage — visible par tous les rôles
+          -------------------
+          Accessible au MJ et aux joueurs sur n'importe quel token.
+          Toggle : cibler / décibler.
+      */}
+      {onToggleTarget && (
+        <MenuItem
+          icon={<Crosshair size={13} />}
+          label={isTargeted ? 'Décibler' : 'Cibler'}
+          highlight={isTargeted}
+          onClick={() => { onToggleTarget(); onClose(); }}
+        />
+      )}
+
+      {canEdit && (
+        <MenuItem
+          icon={<Flame size={13} />}
+          label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
+          onClick={() => { onToggleTorch(); onClose(); }}
+        />
+      )}
+
       {role === 'gm' && (
         <MenuItem
           icon={token.visible ? <EyeOff size={13} /> : <Eye size={13} />}
