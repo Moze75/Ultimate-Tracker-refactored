@@ -283,7 +283,7 @@ const visibleTokens = isGM
         <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
         <div
           onMouseDown={handleResizeMouseDown}
-          className="fixed flex flex-col items-center justify-center gap-[3px] px-1.5 py-3 rounded-full bg-gray-700/80 hover:bg-amber-500/90 transition-colors shadow-md cursor-col-resize z-50"
+          className="fixed flex flex-col items-center justify-center gap-[3px] px-[3px] py-2 rounded-full bg-gray-700/80 hover:bg-amber-500/90 transition-colors shadow-md cursor-col-resize z-50"
           style={{ top: '50vh', left: 'auto', transform: 'translateY(-50%)' }}
         >
           <span className="block w-[3px] h-[3px] rounded-full bg-gray-400" />
