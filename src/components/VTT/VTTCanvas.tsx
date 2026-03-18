@@ -964,13 +964,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // Applique la vue initiale sauvegardée (one-shot, ne se ré-applique pas si les coordonnées changent après)
   const initialViewportAppliedRef = useRef(false);
   const lastAppliedInitialViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
-  // -------------------
-  // Application du viewport initial (savedViewport GM ou playerInitialViewport)
-  // On notifie onViewportChange après application pour que VTTPage
-  // mette à jour canvasViewport immédiatement — sans attendre le premier pan/zoom.
-  // Cela garantit que les rings de ciblage et les props HTML sont bien
-  // positionnés dès la première connexion.
-  // -------------------
   useEffect(() => {
     if (!initialViewport) return;
     const prev = lastAppliedInitialViewportRef.current;
@@ -982,16 +975,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       Math.abs(prev.y - initialViewport.y) < 0.01 &&
       Math.abs(prev.scale - initialViewport.scale) < 0.0001
     ) return;
-    lastAppliedInitialViewportRef.current = { ...initialViewport };
-    viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
-    draw();
-    // -------------------
-    // Notifie VTTPage du viewport réel appliqué
-    // (sans cela, canvasViewport reste à {x:0,y:0,scale:1} jusqu'au 1er mouvement)
-    // -------------------
-    onViewportChangeRef.current?.({ x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
+    lastAppliedInitialViewportRef.current = { ...initialViewport }; 
+    viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale }; 
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
