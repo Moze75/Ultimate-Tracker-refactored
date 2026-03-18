@@ -315,8 +315,12 @@ export function useVTTCanvasEvents({
         const token = getTokenAt(wp.x, wp.y);
         if (token) {
           const canControl = roleRef.current === 'gm' || (token.controlledByUserIds?.includes(userIdRef.current) ?? false);
-          if (roleRef.current === 'player' && !canControl) return;
 
+          // -------------------
+          // Déplacement (drag) — réservé au propriétaire ou MJ
+          // -------------------
+          // Un joueur peut sélectionner n'importe quel token pour le ciblage,
+          // mais seul le MJ ou le propriétaire peut le déplacer.
           if (canControl) {
             const multiSel = selectedTokenIdsRef.current;
             if (multiSel.length > 1 && multiSel.includes(token.id)) {
@@ -339,6 +343,11 @@ export function useVTTCanvasEvents({
             }
           }
 
+          // -------------------
+          // Sélection — accessible à tous les rôles
+          // -------------------
+          // Permet au joueur de sélectionner plusieurs tokens
+          // pour un ciblage groupé via clic droit.
           onSelectTokenRef.current(token.id);
           if (selectedTokenIdsRef.current.length <= 1 || !selectedTokenIdsRef.current.includes(token.id)) {
             onSelectTokensRef.current?.([token.id]);
