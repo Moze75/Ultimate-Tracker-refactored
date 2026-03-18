@@ -2248,6 +2248,42 @@ onSelectTokens={ids => {
             fogResetSignal={fogResetSignal}
           />
 
+          {/* -------------------
+              Anneaux de ciblage — couche HTML par-dessus le canvas
+              -------------------
+              Pour chaque token ciblé, on calcule la position écran
+              à partir des coordonnées monde + viewport courant,
+              puis on superpose le composant VTTTargetingRing.
+              Utilise canvasViewport (mis à jour via onViewportChange)
+              pour rester synchronisé avec le pan/zoom du canvas.
+          */}
+          {tokens
+            .filter(t => (t.targetedByUserIds ?? []).length > 0 && t.visible)
+            .map(t => {
+              const vp = canvasViewport;
+              const CELL = config.gridSize;
+              const tokenSize = (t.size || 1) * CELL;
+              const sx = t.position.x * vp.scale + vp.x;
+              const sy = t.position.y * vp.scale + vp.y;
+              const displaySize = tokenSize * vp.scale;
+              return (
+                <div
+                  key={`targeting-${t.id}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: sx,
+                    top: sy,
+                    width: displaySize,
+                    height: displaySize,
+                    zIndex: 15,
+                  }}
+                >
+                  <VTTTargetingRing size={displaySize} />
+                </div>
+              );
+            })
+          }
+
           {activePings.map(ping => {
             const vp = canvasViewport;
             const sx = ping.x * vp.scale + vp.x;
