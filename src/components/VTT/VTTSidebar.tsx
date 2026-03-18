@@ -751,6 +751,7 @@ const visibleTokens = isGM
                       </span>
                     )}
                   </div>
+                  </div>
                 );
               })}
             </div>
