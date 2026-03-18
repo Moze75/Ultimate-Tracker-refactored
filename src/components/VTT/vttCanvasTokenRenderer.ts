@@ -144,7 +144,6 @@ export function drawToken({
     ctx.font = `bold ${FONT_SZ}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    // Ombre portée pour lisibilité sans fond
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = CELL * 0.08;
     ctx.fillStyle = 'white';
@@ -153,7 +152,50 @@ export function drawToken({
     ctx.shadowBlur = 0;
   }
 
+  // -------------------
+  // Anneau de ciblage pulsant
+  // -------------------
+  // Dessiné À L'EXTÉRIEUR du token (r + offset) pour ne jamais
+  // couvrir l'image. L'animation est pilotée par animTime (ms depuis
+  // le début de la session) — pas d'état React, rendu pur canvas.
+  // L'anneau est rouge vif avec une opacité oscillante.
+  // Un icône viseur (petit cercle + croix) est affiché au-dessus.
+  if (token.targetedByUserIds && token.targetedByUserIds.length > 0) {
+    const targetCount = token.targetedByUserIds.length;
+    // Pulsation : opacity entre 0.5 et 1.0 à ~1Hz
+    const pulse = 0.5 + 0.5 * Math.sin(animTime / 500);
+    const ringR = r + 6 / scale;
+    const ringWidth = 2.5 / scale;
 
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(239, 68, 68, ${0.6 + 0.4 * pulse})`; // rouge-500 pulsant
+    ctx.lineWidth = ringWidth;
+    // Tirets pour distinguer de la bordure de contrôle
+    ctx.setLineDash([6 / scale, 4 / scale]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // -------------------
+    // Badge nombre de ciblants (si > 1)
+    // -------------------
+    // Affiché en haut à droite du token pour indiquer
+    // combien de joueurs ciblent ce token simultanément.
+    if (targetCount > 1) {
+      const badgeR = CELL * 0.12;
+      const badgeX = ringR * 0.7;
+      const badgeY = -ringR * 0.7;
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(239,68,68,0.95)';
+      ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${badgeR * 1.2}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(targetCount), badgeX, badgeY);
+    }
+  }
 
   ctx.restore();
-} 
+}
