@@ -108,14 +108,7 @@ export function VTTContextMenu({
           Permet à un joueur de cibler n'importe quel token,
           y compris le sien. Toggle ciblé / non ciblé.
       */}
-      {onToggleTarget && (
-        <MenuItem
-          icon={<Crosshair size={13} />}
-          label={isTargeted ? 'Décibler' : 'Cibler'}
-          highlight={isTargeted}
-          onClick={() => { onToggleTarget(); onClose(); }}
-        />
-      )}
+
 
       {canEdit && (
  {onToggleTarget && (
