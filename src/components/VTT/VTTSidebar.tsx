@@ -758,7 +758,7 @@ const visibleTokens = isGM
           )}
         </div>
 
-        <div className="flex">
+             <div className="flex">
           <button
             onClick={onHome}
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-[11px]"
@@ -776,9 +776,10 @@ const visibleTokens = isGM
             <DoorOpen size={12} />
             Quitter
           </button>
-        </div>       
-      </div>         
-    </div>           
+        </div>      {/* fin div flex — boutons Accueil/Quitter */}
+      </div>        {/* fin div border-t border-gray-700/60 shrink-0 — footer */}
+    </div>          {/* fin div flex flex-col h-full bg-gray-900/70 overflow-hidden — contenu sidebar */}
+  </div>            {/* fin div wrapper externe relative h-full flex-shrink-0 */}
   );
 }
 
