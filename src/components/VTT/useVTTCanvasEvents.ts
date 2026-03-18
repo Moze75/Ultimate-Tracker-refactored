@@ -1405,8 +1405,13 @@ export function useVTTCanvasEvents({
         if (x2 - x1 > minSize || y2 - y1 > minSize) {
           const CELL2 = configRef.current.gridSize || 50;
           const found = tokensRef.current.filter(t => {
+            // -------------------
+            // Sélection rectangulaire — filtrage des tokens invisibles
+            // -------------------
+            // Un joueur ne voit pas les tokens masqués (visible=false).
+            // En revanche, il peut sélectionner n'importe quel token visible,
+            // même ceux qu'il ne contrôle pas, pour le ciblage groupé.
             if (roleRef.current === 'player' && !t.visible) return false;
-            if (roleRef.current === 'player' && !(t.controlledByUserIds?.includes(userIdRef.current) ?? false)) return false;
             const ts = (t.size || 1) * CELL2;
             return t.position.x < x2 && t.position.x + ts > x1 &&
                    t.position.y < y2 && t.position.y + ts > y1;
