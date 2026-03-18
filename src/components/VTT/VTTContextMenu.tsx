@@ -109,27 +109,20 @@ export function VTTContextMenu({
           y compris le sien. Toggle ciblé / non ciblé.
       */}
       {onToggleTarget && (
-      {/* -------------------
-          Edition / Torche — restreint au propriétaire ou MJ
-          -------------------
-          Un joueur ne peut éditer ou allumer la torche
-          que sur les tokens qu'il contrôle.
-      */}
-      {canEdit && (
         <MenuItem
-          icon={<Pencil size={13} />}
-          label="Editer"
-          onClick={() => { onEdit(); onClose(); }}
+          icon={<Crosshair size={13} />}
+          label={isTargeted ? 'Décibler' : 'Cibler'}
+          highlight={isTargeted}
+          onClick={() => { onToggleTarget(); onClose(); }}
         />
       )}
-
+ 
       {canEdit && (
         <MenuItem
           icon={<Flame size={13} />}
           label={token.lightSource === 'torch' ? 'Éteindre la torche' : 'Allumer la torche'}
           onClick={() => { onToggleTorch(); onClose(); }}
         />
-      )}
       )}
 
       {role === 'gm' && (
