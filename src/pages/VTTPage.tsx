@@ -1451,6 +1451,25 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+
+      // -------------------
+      // Échap — décibler tous les tokens (tous rôles)
+      // -------------------
+      // Retire userId de targetedByUserIds sur tous les tokens
+      // où il apparaît, quelle que soit la sélection courante.
+      if (e.key === 'Escape') {
+        tokensRef.current
+          .filter(t => t.targetedByUserIds?.includes(userId))
+          .forEach(t => {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: t.id,
+              changes: { targetedByUserIds: t.targetedByUserIds!.filter(id => id !== userId) },
+            });
+          });
+        return;
+      }
+
       if (role !== 'gm') return;
 
       const key = e.key.toLowerCase();
