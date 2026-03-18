@@ -960,12 +960,18 @@ export function useVTTCanvasEvents({
         return;
       }
 
+      // -------------------
+      // Menu contextuel (clic droit) — accessible à tous les rôles
+      // -------------------
+      // Un joueur peut ouvrir le menu sur n'importe quel token visible
+      // pour accéder au ciblage (onToggleTarget).
+      // Les actions sensibles (édition, suppression) restent filtrées
+      // dans le composant VTTContextMenu selon canEdit.
       const cb = onRightClickTokenRef.current;
       if (!cb) return;
       const token = getTokenAt(wp.x, wp.y);
       if (token) {
-        const canEdit = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
-        if (canEdit) cb(token, e.clientX, e.clientY);
+        cb(token, e.clientX, e.clientY);
       }
     };
 
