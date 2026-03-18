@@ -263,24 +263,28 @@ const visibleTokens = isGM
     // Gestion de la transparence de la sidebar
     // -------------------
     // La sidebar devient un panneau en surimpression au-dessus du canvas.
-<div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl relative" style={{ width: sidebarWidth }}>
-      <div
-        onMouseDown={handleResizeMouseDown}
-        className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-10 group"
-        title="Redimensionner"
-      >
-        {/* Ligne de fond */}
-        <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
-        {/* Pastille 3 points — centrée verticalement via style inline */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-[3px] px-0.5 py-2 rounded-full bg-gray-700/80 group-hover:bg-amber-500/90 transition-colors shadow-md"
-          style={{ top: '50%', transform: 'translateX(-50%) translateY(-50%)' }}
-        >
-          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
-          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
-          <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
-        </div>
-      </div> 
+<div className="relative h-full flex-shrink-0" style={{ width: sidebarWidth }}>
+  {/* Poignée de redimensionnement — centrée sur toute la hauteur */}
+  <div
+    onMouseDown={handleResizeMouseDown}
+    className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-40 group"
+    title="Redimensionner"
+  >
+    {/* Ligne de fond */}
+    <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
+    {/* Pastille 3 points — centrée grâce au top:50% dans un parent non-overflow-hidden */}
+    <div
+      className="absolute flex flex-col items-center justify-center gap-[3px] px-0.5 py-2 rounded-full bg-gray-700/80 group-hover:bg-amber-500/90 transition-colors shadow-md"
+      style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+    >
+      <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+      <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+      <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
+    </div>
+  </div>
+
+  {/* Contenu de la sidebar — overflow-hidden confiné ici */}
+  <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
 
       {/* -------------------
           Onglets de la sidebar
