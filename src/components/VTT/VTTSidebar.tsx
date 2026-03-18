@@ -275,17 +275,15 @@ const visibleTokens = isGM
           au milieu de la hauteur visible de la sidebar,
           indépendamment du scroll ou du overflow interne.
       */}
-   <div 
-        ref={handleTrackRef}
+      <div
         onMouseDown={handleResizeMouseDown}
         className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-40 group"
         title="Redimensionner"
       >
         <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
         <div
-          ref={handlePillRef}
-          className="absolute left-1/2 flex flex-col items-center justify-center gap-[3px] px-0.5 py-2 rounded-full bg-gray-700/80 group-hover:bg-amber-500/90 transition-colors shadow-md"
-          style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)' }}
+          className="fixed flex flex-col items-center justify-center gap-[3px] px-0.5 py-2 rounded-full bg-gray-700/80 group-hover:bg-amber-500/90 transition-colors shadow-md pointer-events-none"
+          style={{ top: '50vh', left: 'auto', transform: 'translateY(-50%)' }}
         >
           <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
           <span className="block w-[3px] h-[3px] rounded-full bg-gray-400 group-hover:bg-white transition-colors" />
