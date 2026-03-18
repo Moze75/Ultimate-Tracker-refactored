@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Pencil, Trash2, Eye, EyeOff, UserCheck, ScanEye, Flame, Swords, Crosshair } from 'lucide-react';
-import type { VTTToken, VTTRole } from '../../types/vtt';
+import type { VTTToken, VTTRole } from '../../types/vtt'; 
 
 interface VTTContextMenuProps {
   token: VTTToken;
@@ -96,7 +96,11 @@ export function VTTContextMenu({
         )}
       </div>
 
-
+      <MenuItem
+        icon={<Pencil size={13} />}
+        label="Editer"
+        onClick={() => { onEdit(); onClose(); }}
+      />
 
       {/* -------------------
           Ciblage — visible par tous les rôles
