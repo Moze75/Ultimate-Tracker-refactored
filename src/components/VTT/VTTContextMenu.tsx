@@ -96,11 +96,7 @@ export function VTTContextMenu({
         )}
       </div>
 
-      <MenuItem
-        icon={<Pencil size={13} />}
-        label="Editer"
-        onClick={() => { onEdit(); onClose(); }}
-      />
+
 
       {/* -------------------
           Ciblage — visible par tous les rôles
@@ -116,7 +112,7 @@ export function VTTContextMenu({
           onClick={() => { onToggleTarget(); onClose(); }}
         />
       )}
- 
+
       {canEdit && (
         <MenuItem
           icon={<Flame size={13} />}
