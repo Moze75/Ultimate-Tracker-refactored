@@ -316,14 +316,7 @@ const visibleTokens = isGM
       */}
       <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
 
-      {/* -------------------
-          Onglets de la sidebar
-          -------------------
-          L'onglet Tokens (liste canvas + bibliothèque + bestiaire) est réservé au MJ.
-          Les joueurs n'y ont pas accès car ils ne doivent pas voir
-          la liste complète des tokens ni le bestiaire.
-          L'onglet Combat est visible par tous (joueurs en lecture seule).
-      */}
+
       <div className="flex border-b border-gray-700/60 shrink-0">
 {isGM && (
   <>
