@@ -203,7 +203,11 @@ export type VTTClientEvent =
   | { type: 'UPDATE_DOORS'; doors: VTTDoor[] }
   | { type: 'UPDATE_WINDOWS'; windows: VTTWindow[] }
   | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] }
-  | { type: 'SEND_PING'; x: number; y: number };
+  | { type: 'SEND_PING'; x: number; y: number }
+  // -------------------
+  // Chat live VTT
+  // -------------------
+  | { type: 'SEND_CHAT'; message: VTTChatMessage };
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }
