@@ -72,6 +72,10 @@ class VTTService {
 private broadcastViewportHandlers: BroadcastViewportHandler[] = [];
 private playerViewportHandlers: PlayerViewportHandler[] = [];
 private pingHandlers: ((ping: VTTPing) => void)[] = [];
+// -------------------
+// Gestion du chat live VTT
+// -------------------
+private chatHandlers: ((msg: VTTChatMessage) => void)[] = [];
 private localState: LocalState = {
   config: DEFAULT_CONFIG,
   tokens: [],
