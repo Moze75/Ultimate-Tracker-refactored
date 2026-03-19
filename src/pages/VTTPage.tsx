@@ -232,7 +232,14 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
   const [visionToken, setVisionToken] = useState<VTTToken | null>(null);
   const [contextMenu, setContextMenu] = useState<{ token: VTTToken; x: number; y: number } | null>(null);
- const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings'>(role === 'player' ? 'combat' : 'tokens');
+  // -------------------
+  // Gestion du chat live VTT
+  // -------------------
+  // pendingChatRoll : message de jet de dés en attente de publication dans le chat.
+  // Construit ici (VTTPage a accès aux tokens pour résoudre l'avatar),
+  // injecté dans VTTChatPanel via la prop externalMessage.
+  const [pendingChatRoll, setPendingChatRoll] = useState<VTTChatMessage | null>(null);
+  const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat'>(role === 'player' ? 'chat' : 'tokens');
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
   const [walls, setWalls] = useState<VTTWall[]>([]);
