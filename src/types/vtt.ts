@@ -203,11 +203,36 @@ export type VTTClientEvent =
   | { type: 'UPDATE_DOORS'; doors: VTTDoor[] }
   | { type: 'UPDATE_WINDOWS'; windows: VTTWindow[] }
   | { type: 'UPDATE_WEATHER'; effects: VTTWeatherEffect[] }
-  | { type: 'SEND_PING'; x: number; y: number }
-  // -------------------
-  // Chat live VTT
-  // -------------------
-  | { type: 'SEND_CHAT'; message: VTTChatMessage };
+| { type: 'SEND_PING'; x: number; y: number }
+| { type: 'SEND_CHAT'; message: VTTChatMessage };
+
+// -------------------
+// Type VTTChatMessage — message du chat live VTT
+// -------------------
+// kind='text'  → message libre tapé dans le champ chat
+// kind='roll'  → jet de dés auto-publié depuis DiceBox3D
+// L'avatar (tokenImageUrl / tokenColor) est résolu à l'envoi
+// et embarqué dans le message pour éviter une re-résolution côté client.
+export type VTTChatMessage = {
+  id: string;
+  userId: string;
+  userName: string;
+  tokenLabel?: string;
+  tokenImageUrl?: string | null;
+  tokenColor?: string;
+  role: 'gm' | 'player';
+  timestamp: number;
+  kind: 'text' | 'roll';
+  // kind='text'
+  text?: string;
+  // kind='roll'
+  attackName?: string;
+  diceFormula?: string;
+  modifier?: number;
+  rolls?: number[];
+  diceTotal?: number;
+  total?: number;
+};
 
 export type VTTServerEvent =
   | { type: 'STATE_SYNC'; state: VTTServerState }
