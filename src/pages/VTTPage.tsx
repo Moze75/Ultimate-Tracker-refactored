@@ -1895,6 +1895,48 @@ useEffect(() => {
   }, [role]);
 
   
+  // -------------------
+  // Réception d'un résultat de jet de dés depuis DiceBox3D
+  // -------------------
+  // Construit un VTTChatMessage de kind='roll' avec l'avatar du joueur résolu
+  // depuis la liste des tokens (controlledByUserIds → imageUrl / color / label).
+  // Le message est ensuite injecté dans VTTChatPanel via pendingChatRoll.
+  const handleRollResult = useCallback((result: DiceRollResult) => {
+    // Résolution de l'avatar
+    let tokenLabel = role === 'gm' ? 'MJ' : userName;
+    let tokenImageUrl: string | null = null;
+    let tokenColor = role === 'gm' ? '#f59e0b' : '#6b7280';
+
+    if (role !== 'gm') {
+      const myToken = tokensRef.current.find(t => t.controlledByUserIds?.includes(userId));
+      if (myToken) {
+        tokenLabel = myToken.label;
+        tokenImageUrl = myToken.imageUrl ?? null;
+        tokenColor = myToken.color;
+      }
+    }
+
+    const msg: VTTChatMessage = {
+      id: crypto.randomUUID(),
+      userId,
+      userName,
+      role,
+      timestamp: Date.now(),
+      kind: 'roll',
+      tokenLabel,
+      tokenImageUrl,
+      tokenColor,
+      attackName: result.attackName,
+      diceFormula: result.diceFormula,
+      modifier: result.modifier,
+      rolls: result.rolls,
+      diceTotal: result.diceTotal,
+      total: result.total,
+    };
+
+    setPendingChatRoll(msg);
+  }, [role, userId, userName]);
+
   const leaveRoom = useCallback(async () => {
     if (fogSaveTimerRef.current) {
       clearTimeout(fogSaveTimerRef.current);
