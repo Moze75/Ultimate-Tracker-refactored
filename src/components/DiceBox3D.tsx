@@ -567,6 +567,17 @@ export function DiceBox3D({ isOpen, onClose, rollData, onRollResult }: DiceBox3D
           rolls: randomResult.rolls,
           diceTotal: randomResult.diceTotal,
         });
+        // -------------------
+        // Click forcé : publication chat (résultat généré aléatoirement)
+        // -------------------
+        onRollResult?.({
+          attackName: rollDataRef.current.attackName,
+          diceFormula: rollDataRef.current.diceFormula,
+          modifier: rollDataRef.current.modifier,
+          total: randomResult.total,
+          rolls: randomResult.rolls,
+          diceTotal: randomResult.diceTotal,
+        });
         
         playResultSound();
         
