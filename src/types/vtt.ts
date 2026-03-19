@@ -225,4 +225,44 @@ export type VTTServerEvent =
   | { type: 'PING_RECEIVED'; ping: VTTPing }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
-  | { type: 'ERROR'; message: string };
+  | { type: 'ERROR'; message: string }
+  // -------------------
+  // Chat live VTT
+  // -------------------
+  | { type: 'CHAT_RECEIVED'; message: VTTChatMessage };
+
+// ===================================
+// Chat live VTT
+// ===================================
+// Message unique transporté par Supabase Realtime (event vtt-chat).
+// Pas de persistance DB — 100% in-memory côté client, limité à 20 messages.
+// kind='text' : message libre
+// kind='roll'  : jet de dés auto-publié depuis DiceBox3D
+export type VTTChatMessage = {
+  id: string;
+  userId: string;
+  userName: string;
+  // -------------------
+  // Résolution de l'avatar du joueur à l'envoi
+  // embed dans le message pour éviter la re-résolution côté client
+  // -------------------
+  tokenLabel?: string;
+  tokenImageUrl?: string | null;
+  tokenColor?: string;
+  role: 'gm' | 'player';
+  timestamp: number;
+  kind: 'text' | 'roll';
+  // -------------------
+  // Champs pour kind='text'
+  // -------------------
+  text?: string;
+  // -------------------
+  // Champs pour kind='roll'
+  // -------------------
+  attackName?: string;
+  diceFormula?: string;
+  modifier?: number;
+  rolls?: number[];
+  diceTotal?: number;
+  total?: number;
+};
