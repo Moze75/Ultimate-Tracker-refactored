@@ -41,6 +41,9 @@ import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
 import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
+import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
+import type { DiceRollResult } from '../components/DiceBox3D';
+import type { VTTChatMessage } from '../types/vtt';
 
 type VTTUndoSnapshot = {
   tokens: VTTToken[];
