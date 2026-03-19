@@ -283,14 +283,8 @@ const visibleTokens = isGM
     // et top:50% ne se calcule que sur la zone visible, pas toute la hauteur.
     <div className="relative h-full flex-shrink-0" style={{ width: sidebarWidth }}>
 
-      {/* -------------------
-          Poignée de redimensionnement
-          -------------------
-          Placée dans le wrapper sans overflow-hidden.
-          La pastille utilise position:fixed pour s'ancrer
-          au milieu de la hauteur visible de la sidebar,
-          indépendamment du scroll ou du overflow interne.
-      */}
+// Poignée de redimensionnement
+      
       <div
         onMouseDown={handleResizeMouseDown}
         className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-40 group"
