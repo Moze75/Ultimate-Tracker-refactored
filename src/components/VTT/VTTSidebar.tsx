@@ -308,12 +308,8 @@ const visibleTokens = isGM
         </div>
       </div>
 
-      {/* -------------------
-          Gestion de la transparence de la sidebar
-          -------------------
-          La sidebar devient un panneau en surimpression au-dessus du canvas.
-          overflow-hidden confiné ici, séparé de la poignée.
-      */}
+    // Gestion de la transparence
+      
       <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
 
 
