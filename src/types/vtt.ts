@@ -250,7 +250,8 @@ export type VTTServerEvent =
   | { type: 'PING_RECEIVED'; ping: VTTPing }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
-  | { type: 'ERROR'; message: string }
+  | { type: 'CHAT_RECEIVED'; message: VTTChatMessage }
+  | { type: 'ERROR'; message: string };
   // -------------------
   // Chat live VTT
   // -------------------
