@@ -265,4 +265,4 @@ export type VTTChatMessage = {
   rolls?: number[];
   diceTotal?: number;
   total?: number;
-};
+}; 
