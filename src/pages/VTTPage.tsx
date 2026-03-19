@@ -2471,6 +2471,9 @@ onSelectTokens={ids => {
             onSaveScene={role === 'gm' ? handleSaveScene : undefined}
             onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
             campaignId={campaignId ?? undefined}
+            userName={userName}
+            pendingChatRoll={pendingChatRoll}
+            onChatRollConsumed={() => setPendingChatRoll(null)}
           />
         </div>
       </div>
