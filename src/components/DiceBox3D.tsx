@@ -11,6 +11,19 @@ import { createPortal } from 'react-dom';
 import { useDiceHistoryContext } from '../hooks/useDiceHistoryContext';
 import { audioManager } from '../utils/audioManager';
 
+// -------------------
+// Résultat d'un jet de dés remontés vers le parent (VTTPage)
+// pour publication dans le chat live
+// -------------------
+export interface DiceRollResult {
+  attackName: string;
+  diceFormula: string;
+  modifier: number;
+  rolls: number[];
+  diceTotal: number;
+  total: number;
+}
+
 interface DiceBox3DProps {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +33,11 @@ interface DiceBox3DProps {
     diceFormula: string;
     modifier: number;
   } | null;
+  // -------------------
+  // Callback optionnel appelé à chaque résultat de jet
+  // Utilisé par VTTPage pour publier le résultat dans le chat live
+  // -------------------
+  onRollResult?: (result: DiceRollResult) => void;
 }
 
 // Mapping des textures par colorset
