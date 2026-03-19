@@ -311,6 +311,15 @@ if (resolvedScenes && resolvedScenes.length > 0) {
   this.pingHandlers.forEach(h => h(ping));
   this.messageHandlers.forEach(handler => handler({ type: 'PING_RECEIVED', ping }));
 })
+// -------------------
+// Réception d'un message de chat (texte ou jet de dés)
+// Propagé aux chatHandlers et au pipeline messageHandlers standard
+// -------------------
+.on('broadcast', { event: 'vtt-chat' }, ({ payload }) => {
+  const msg = payload as VTTChatMessage;
+  this.chatHandlers.forEach(h => h(msg));
+  this.messageHandlers.forEach(handler => handler({ type: 'CHAT_RECEIVED', message: msg }));
+})
       .on('presence', { event: 'sync' }, () => {
         this._emitPresence();
       })
@@ -685,6 +694,28 @@ onPing(handler: (ping: VTTPing) => void) {
   this.pingHandlers.push(handler);
   return () => {
     this.pingHandlers = this.pingHandlers.filter(h => h !== handler);
+  };
+}
+
+// -------------------
+// Envoi d'un message de chat au canal Realtime
+// Le message est diffusé à tous les clients connectés via broadcast Supabase.
+// Pas de persistance DB : in-memory uniquement, limite 20 messages côté client.
+// -------------------
+sendChat(message: VTTChatMessage): void {
+  if (!this.channel) return;
+  this.channel
+    .send({ type: 'broadcast', event: 'vtt-chat', payload: message })
+    .catch((e: unknown) => console.warn('[VTT] sendChat error', e));
+}
+
+// -------------------
+// Abonnement aux messages de chat entrants
+// -------------------
+onChat(handler: (msg: VTTChatMessage) => void): () => void {
+  this.chatHandlers.push(handler);
+  return () => {
+    this.chatHandlers = this.chatHandlers.filter(h => h !== handler);
   };
 }
 
