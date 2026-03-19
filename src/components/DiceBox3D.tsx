@@ -225,6 +225,18 @@ export function DiceBox3D({ isOpen, onClose, rollData, onRollResult }: DiceBox3D
               rolls: finalResult.rolls,
               diceTotal: finalResult.diceTotal,
             });
+            // -------------------
+            // Publication dans le chat live VTT
+            // onRollResult est fourni par VTTPage qui construit le VTTChatMessage
+            // -------------------
+            onRollResult?.({
+              attackName: rollDataRef.current.attackName,
+              diceFormula: rollDataRef.current.diceFormula,
+              modifier: rollDataRef.current.modifier,
+              total: finalResult.total,
+              rolls: finalResult.rolls,
+              diceTotal: finalResult.diceTotal,
+            });
           }
         };
         onRollCompleteRef.current = handleRollComplete;
