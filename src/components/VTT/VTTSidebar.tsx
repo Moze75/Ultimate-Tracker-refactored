@@ -307,7 +307,32 @@ const visibleTokens = isGM
       <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
 
 
+      {/* -------------------
+          Barre d'onglets de la sidebar
+          -------------------
+          Ordre pour les joueurs : Chat en premier (premier onglet visible),
+          puis Combat. Le MJ a accès à tous les onglets avec Chat après Combat.
+      */}
       <div className="flex border-b border-gray-700/60 shrink-0">
+
+        {/* Onglet Chat — premier pour les joueurs, visible par tous */}
+        <TabBtn
+          icon={
+            <div className="relative">
+              <MessageSquare size={14} />
+              {/* Badge non-lus */}
+              {unreadChat > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-[3px] bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {unreadChat > 9 ? '9+' : unreadChat}
+                </span>
+              )}
+            </div>
+          }
+          title="Chat"
+          active={activeTab === 'chat'}
+          onClick={() => setActiveTab('chat')}
+        />
+
 {isGM && (
   <>
     <TabBtn icon={<Users size={14} />} title="Tokens" active={activeTab === 'tokens'} onClick={() => setActiveTab('tokens')} />
@@ -319,7 +344,7 @@ const visibleTokens = isGM
 {!isGM && (
   <TabBtn icon={<Swords size={14} />} title="Combat" active={activeTab === 'combat'} onClick={() => setActiveTab('combat')} />
 )}
-<TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />  
+<TabBtn icon={<Settings size={14} />} title="Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
 
         <button
           onClick={() => setCollapsed(true)}
