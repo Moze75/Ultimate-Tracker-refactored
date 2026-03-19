@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull, Swords, MessageSquare } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp, VTTChatMessage } from '../../types/vtt';
-import { VTTChatPanel } from './VTTChatPanel';
+import { VTTChatPanel } from './VTTChatPanel'; 
 import { VTTPropsPanel } from './VTTPropsPanel';
 import { VTTMapLibrary } from './VTTMapLibrary';
 import { VTTTokenLibraryPanel } from './VTTTokenLibraryPanel';
@@ -10,7 +10,7 @@ import type { MonsterListItem, Monster, CampaignMember } from '../../types/campa
 import { campaignService } from '../../services/campaignService';
 import { CombatTab } from '../GameMaster/tabs/CombatTab';
 
-type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings';
+type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat';
 
 interface VTTSidebarProps {
     authToken?: string;
