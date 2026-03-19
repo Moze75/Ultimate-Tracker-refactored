@@ -2673,6 +2673,7 @@ onSelectTokens={ids => {
         isOpen={!!diceRollData}
         onClose={() => setDiceRollData(null)}
         rollData={diceRollData}
+        onRollResult={handleRollResult}
       />
     </div>
     </DiceRollContext.Provider>
