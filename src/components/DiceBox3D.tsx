@@ -490,11 +490,22 @@ export function DiceBox3D({ isOpen, onClose, rollData, onRollResult }: DiceBox3D
               rolls: randomResult.rolls,
               diceTotal: randomResult.diceTotal,
             });
+            // -------------------
+            // Fallback : publication chat même si la lib 3D est indisponible
+            // -------------------
+            onRollResult?.({
+              attackName: rollDataRef.current.attackName,
+              diceFormula: rollDataRef.current.diceFormula,
+              modifier: rollDataRef.current.modifier,
+              total: randomResult.total,
+              rolls: randomResult.rolls,
+              diceTotal: randomResult.diceTotal,
+            });
           }
         }
       }
     });
-  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings, generateRandomResult, addRoll]);
+  }, [rollData, isInitialized, playDiceDropSound, isOpen, effectiveSettings, generateRandomResult, addRoll, onRollResult]);
 
   // ✅ Reset à la fermeture (mais pas démontage)
   useEffect(() => {
