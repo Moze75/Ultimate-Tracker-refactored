@@ -555,6 +555,31 @@ const visibleTokens = isGM
         )}
 
         {/* -------------------
+            Onglet Chat — toujours monté, jamais démonté
+            -------------------
+            Même pattern que CombatTab : display:none pour conserver
+            l'abonnement vttService.onChat() actif en permanence,
+            les messages s'accumulent même si l'onglet n'est pas visible.
+            Le badge non-lus est mis à jour via onUnreadChange.
+        */}
+        <div
+          className="flex flex-col h-full overflow-hidden"
+          style={{ display: activeTab === 'chat' ? 'flex' : 'none' }}
+        >
+          <VTTChatPanel
+            roomId={roomId}
+            userId={userId}
+            userName={userName}
+            role={role}
+            tokens={tokens}
+            externalMessage={pendingChatRoll}
+            onConsumed={onChatRollConsumed}
+            onUnreadChange={setUnreadChat}
+            isActive={activeTab === 'chat'}
+          />
+        </div>
+
+        {/* -------------------
             Onglet Combat — toujours monté, jamais démonté
             -------------------
             On utilise display:none au lieu du rendu conditionnel &&
