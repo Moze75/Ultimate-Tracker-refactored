@@ -42,6 +42,12 @@ interface VTTSidebarProps {
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
   onSaveScene?: () => Promise<void>;
   onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
+  // -------------------
+  // Props du chat live
+  // -------------------
+  userName?: string;
+  pendingChatRoll?: VTTChatMessage | null;
+  onChatRollConsumed?: () => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -98,22 +104,31 @@ export function VTTSidebar({
   onSaveScene,
   onAddMonsterAsToken,
   campaignId,
+  userName = 'Joueur',
+  pendingChatRoll,
+  onChatRollConsumed,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
   // -------------------
   // Onglet par défaut selon le rôle
   // -------------------
-  // Le MJ arrive sur "tokens", le joueur directement sur "combat"
-  // pour voir immédiatement le tracker de combat.
+  // Le MJ arrive sur "tokens", le joueur directement sur "chat"
+  // pour voir immédiatement le fil de chat/dés dès la connexion.
   // Note : activeTabProp (transmis depuis VTTPage) prend la priorité
   // sur internalTab — voir const activeTab = activeTabProp ?? internalTab.
-  const [internalTab, setInternalTab] = useState<SidebarTab>(role === 'gm' ? 'tokens' : 'combat');
-const activeTab = activeTabProp ?? internalTab;
-const setActiveTab = (tab: SidebarTab) => {
-  setInternalTab(tab);
-  onChangeTab?.(tab);
-};
+  const [internalTab, setInternalTab] = useState<SidebarTab>(role === 'gm' ? 'tokens' : 'chat');
+  const activeTab = activeTabProp ?? internalTab;
+  const setActiveTab = (tab: SidebarTab) => {
+    setInternalTab(tab);
+    onChangeTab?.(tab);
+  };
+  // -------------------
+  // Badge de messages non lus sur l'onglet Chat
+  // -------------------
+  // Incrémenté par VTTChatPanel quand un message arrive hors onglet actif,
+  // remis à zéro dès que l'utilisateur ouvre l'onglet chat.
+  const [unreadChat, setUnreadChat] = useState(0);
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl);
   const [compressing, setCompressing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
