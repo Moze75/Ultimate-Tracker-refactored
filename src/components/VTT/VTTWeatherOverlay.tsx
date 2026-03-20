@@ -2,9 +2,12 @@
  * VTTWeatherOverlay
  * Canvas overlay — effets Nuages, Corbeaux, Braises & Brume.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
- * Implémentation Canvas 2D pure, indépendante de PIXI/Foundry.
+ *
+ * Effets clouds / crows / embers : Canvas 2D pure, indépendante de PIXI/Foundry.
+ * Effet fog : WebGL — port exact du FogShader de Foundry VTT (fog.mjs),
+ *             adaptatif selon les performances détectées (mode 0/1/2).
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { VTTWeatherEffect } from '../../types/vtt';
 
 // ─── Assets FXMaster (crédits : gambit07/fxmaster) ───────────────────────────
@@ -262,92 +265,6 @@ function interpList(t: number, list: { time: number; value: number }[]): number 
   return list[list.length - 1]?.value ?? 0;
 }
 
-// ─── FOG — simulation par gradients radiaux (inspiré fog.frag FXMaster/gambit07) ─
-// Rendu GPU-friendly : radialGradient Canvas 2D, zéro getImageData/putImageData.
-
-interface FogBlob {
-  x: number; y: number;   // position normalisée [0–1]
-  vx: number; vy: number; // vitesse normalisée
-  r: number;              // rayon normalisé [0–1]
-  phase: number;          // déphasage ondulation
-  alphaBase: number;      // opacité de base [0–1]
-}
-
-// Particule cloud brume : traverse l'écran lentement en rotation douce
-// Inspiré de FogParticleEffect : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s,
-// lifetime 10-25s, alpha 0→0.1→0.3→0.1→0, scale 1.5→1.0
-interface FogCloudParticle {
-  x: number; y: number;
-  vx: number; vy: number;
-  angle: number;
-  rotSpeed: number;
-  size: number;
-  life: number;
-  lifetime: number;
-  imgIdx: number;
-  phase: number;   // déphasage unique → déformation différente par particule
-}
-
-function makeFogCloud(w: number, h: number, speedFactor: number, fromBorder: boolean): FogCloudParticle {
-  // Spawn depuis un bord aléatoire (comme DefaultRectangleSpawnMixin)
-  const border = Math.floor(Math.random() * 4);
-  let x: number, y: number;
-  if      (border === 0) { x = Math.random() * w; y = -150; }
-  else if (border === 1) { x = Math.random() * w; y = h + 150; }
-  else if (border === 2) { x = -150;              y = Math.random() * h; }
-  else                   { x = w + 150;            y = Math.random() * h; }
-
-  // Direction vers le centre avec dérive (moveSpeed 10–15 px/s, minMult 0.2)
-  const mult     = 0.2 + Math.random() * 0.8;
-  const speed    = (10 + Math.random() * 5) * mult * speedFactor;
-  const towardCX = (w / 2 - x);
-  const towardCY = (h / 2 - y);
-  const dist     = Math.sqrt(towardCX * towardCX + towardCY * towardCY) || 1;
-  // Légère dérive aléatoire autour de la direction centrale
-  const driftAngle = Math.atan2(towardCY, towardCX) + (Math.random() - 0.5) * Math.PI;
-  const vx = Math.cos(driftAngle) * speed;
-  const vy = Math.sin(driftAngle) * speed;
-
-  const lifetime = fromBorder
-    ? (10 + Math.random() * 15) / speedFactor
-    : (Math.random() * (25 / speedFactor)); // stagger initial
-
-  return {
-    x: fromBorder ? x : Math.random() * w,
-    y: fromBorder ? y : Math.random() * h,
-    vx, vy,
-    angle: Math.random() * Math.PI * 2,
-    rotSpeed: (0.15 + Math.random() * 0.20) * (Math.random() > 0.5 ? 1 : -1),
-    size: (200 + Math.random() * 160),   // scale 1.5→1.0 géré à l'affichage
-    life: fromBorder ? 0 : Math.random() * lifetime,
-    lifetime,
-    imgIdx: Math.floor(Math.random() * 4),
-    phase:  Math.random() * Math.PI * 2,
-  };
-}
-
-
-function makeFogBlobs(count: number): FogBlob[] {
-  return Array.from({ length: count }, () => ({
-    x: Math.random(),
-    y: Math.random(),
-    vx: (Math.random() - 0.5) * 0.00008,
-    vy: (Math.random() - 0.5) * 0.00003,
-    r: 0.15 + Math.random() * 0.25,
-    phase: Math.random() * Math.PI * 2,
-    alphaBase: 0.06 + Math.random() * 0.10,
-  }));
-}
-
-function fogHexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace('#', '');
-  return [
-    parseInt(h.substring(0, 2), 16),
-    parseInt(h.substring(2, 4), 16),
-    parseInt(h.substring(4, 6), 16),
-  ];
-}
-
 // ─── Builder de layer ────────────────────────────────────────────────────────
 
 function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLayer {
@@ -379,25 +296,420 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
   return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
 }
 
-// ─── Composant React ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── WebGL Fog — port exact du FogShader Foundry VTT ─────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Source originale : fog.mjs / FogShader extends AbstractWeatherShader (Foundry)
+// Adaptation : remplacement des uniforms PIXI (vUvs, mask, tint…) par des
+// équivalents WebGL vanilla. La logique GLSL est identique à l'original.
+//
+// Modes de performance (miroir de FogShader.OCTAVES / FogShader.FOG) :
+//   mode 0 → 2 octaves, 1 passe  (appareils faibles / mobiles)
+//   mode 1 → 3 octaves, 2 passes (appareils moyens)
+//   mode 2 → 4 octaves, 2 passes (appareils puissants)
+
+/**
+ * Détecte le mode de performance à utiliser pour le fog shader.
+ * Reproduit la logique de canvas.performance.mode de Foundry sans dépendre de PIXI.
+ */
+function detectPerformanceMode(): 0 | 1 | 2 {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const cores    = navigator.hardwareConcurrency ?? 4;
+  if (isMobile || cores <= 2) return 0;
+  if (cores <= 4)             return 1;
+  return 2;
+}
+
+// Vertex shader minimal — quad plein écran en clip space
+const FOG_VERT_SRC = `
+  attribute vec2 a_position;
+  void main() {
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+
+/**
+ * Construit le fragment shader GLSL en fonction du mode de performance.
+ * Reproduction fidèle de FogShader.fragmentShader(mode) de Foundry VTT.
+ */
+function buildFogFragSrc(mode: 0 | 1 | 2): string {
+  const octaves = mode + 2;
+
+  // fogGLSL : domain warp statique depuis uvW (= uvBase * warpFreq).
+  // Les fbm() du warp reçoivent uvW → la forme change avec warpFreq (c'est voulu).
+  // MAIS fbm() interne utilise un uvAnim séparé qui ne contient PAS warpFreq
+  // → speed n'interagit plus avec scale.
+  const fogGLSL = mode === 0
+    ? `vec2 uvW = uvBase * warpFreq;
+       vec2 mv = vec2(
+         fbm(uvW + vec2(seedX,       1.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(5.2 + seedX, seedY      )) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv);`
+    : `vec2 uvW = uvBase * warpFreq;
+       vec2 mv0 = vec2(
+         fbm(uvW + vec2(seedX,         1.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(5.2 + seedX,   seedY      )) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv0) * 0.5;
+       vec2 mv1 = vec2(
+         fbm(uvW + vec2(seedX + 250.0, 251.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(255.2 + seedX, 250.0 + seedY)) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv1) * 0.5;`;
+
+  return `
+    precision mediump float;
+
+    uniform float time;
+    uniform float speed;
+    uniform float intensity;
+    uniform float slope;
+    uniform float warpFreq;
+    uniform float seedX;
+    uniform float seedY;
+    uniform float rotation;
+    uniform vec3  tint;
+    uniform vec2  uResolution;
+
+    float random(in vec2 p) {
+      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
+    mat2 rot(float a) {
+      float c = cos(a), s = sin(a);
+      return mat2(c, -s, s, c);
+    }
+    float perceivedBrightness(vec3 col) {
+      return sqrt(0.299*col.r*col.r + 0.587*col.g*col.g + 0.114*col.b*col.b);
+    }
+    float fnoise(in vec2 coords) {
+      vec2 i  = floor(coords);
+      vec2 f  = fract(coords);
+      float a = random(i);
+      float b = random(i + vec2(1.0, 0.0));
+      float c = random(i + vec2(0.0, 1.0));
+      float d = random(i + vec2(1.0, 1.0));
+      vec2 cb = f * f * (3.0 - 2.0 * f);
+      return mix(a,b,cb.x) + (c-a)*cb.y*(1.0-cb.x) + (d-b)*cb.x*cb.y;
+    }
+
+    // FBM : phase/freq dérivés de uvNorm (= uvBase normalisé, SANS warpFreq)
+    // → les vortex locaux sont indépendants de la taille → speed n'affecte pas la densité.
+    float fbm(in vec2 uvSpatial) {
+      // uvNorm : basse fréquence fixe pour le champ de phase/vitesse
+      // On divise par warpFreq pour revenir à l'espace [-1,1] de base
+      vec2 uvNorm = uvSpatial / warpFreq;
+      float phase = fnoise(uvNorm * 0.6 + vec2(seedX * 0.01, seedY * 0.01)) * 6.28318;
+      float freq  = (0.035 + fnoise(uvNorm * 0.4 + vec2(seedX * 0.01 + 3.7, seedY * 0.01 + 1.9)) * 0.055) * speed;
+
+      float r = 0.0, sc = 1.0;
+      vec2 uv = uvSpatial * 2.0;
+      for (int i = 0; i < ${octaves}; i++) {
+        float fi = float(i);
+        vec2 disp = vec2(
+          sin(time * freq + phase + fi * 2.399) * 0.45,
+          cos(time * freq * 1.29  + phase + fi * 1.618) * 0.45
+        );
+        r  += fnoise(uv + disp) * sc;
+        uv *= 3.0;
+        sc *= 0.3;
+      }
+      return r;
+    }
+
+    vec3 mistColor(in vec2 uvBase) {
+      float mist = 0.0;
+      ${fogGLSL}
+      return vec3(1.0, 0.98, 0.95) * mist;
+    }
+
+    void main() {
+      vec2 vUvs = gl_FragCoord.xy / uResolution;
+      vUvs.y = 1.0 - vUvs.y;
+      vec2 ruv = vUvs;
+      if (rotation != 0.0) {
+        ruv  = vUvs - 0.5;
+        ruv  = rot(rotation) * ruv;
+        ruv += 0.5;
+      }
+
+      vec2 uvBase = ruv * 2.0 - 1.0;
+      vec3 col = mistColor(uvBase) * 1.8;
+
+      float pb = perceivedBrightness(col);
+      // slope [0.05 → 2.5] : seuil du smoothstep.
+      // Haut = seules les crêtes passent (fog épars). Bas = tout passe (nappe dense).
+      // Plage de smoothstep élargie : transition douce entre zones denses et creuses.
+      // Avant : slope+0.001 → quasi binaire (0 ou 1).
+      // Maintenant : slope*1.5 → large dégradé → opacité variable, aspect organique.
+      pb = smoothstep(slope * 0.3, slope * 1.5, pb);
+
+      // Fond noir + mixBlendMode:screen côté CSS :
+      //   screen(rgb_canvas, rgb_fond=0) = rgb_canvas
+      // → zones noires (rgb=0) = invisibles, zones claires = lumineuses.
+      // C'est le RGB qui porte l'intensité — alpha=1 partout (canvas opaque).
+      // Deux couches screen superposées : screen(A,B) = 1-(1-A)(1-B)
+      // → là où les deux couches ont des crêtes → très lumineux (hétérogénéité !)
+      vec3 fogColor = tint * pb * intensity;
+      gl_FragColor  = vec4(fogColor, 1.0);
+    }
+  `;
+}
+
+
+// ─── Types internes WebGL ─────────────────────────────────────────────────────
+
+interface FogGLState {
+  gl:       WebGLRenderingContext;
+  program:  WebGLProgram;
+  uniforms: {
+    time:        WebGLUniformLocation | null;
+    speed:       WebGLUniformLocation | null;
+    intensity:   WebGLUniformLocation | null;
+    slope:       WebGLUniformLocation | null;
+    warpFreq:    WebGLUniformLocation | null;
+    seedX:       WebGLUniformLocation | null;
+    seedY:       WebGLUniformLocation | null;
+    rotation:    WebGLUniformLocation | null;
+    tint:        WebGLUniformLocation | null;
+    uResolution: WebGLUniformLocation | null;
+  };
+}
+
+/**
+ * Hook React qui initialise un contexte WebGL sur le canvas fog et expose
+ * une fonction render() à appeler depuis la boucle RAF principale.
+ *
+ * Drop-in replacement de la section fog Canvas 2D de VTTWeatherOverlay.
+ */
+interface FogLayerConfig {
+  seedX: number;      // décalage seed — donne un pattern unique à chaque couche
+  seedY: number;
+  warpScale?: number; // multiplicateur d'échelle (couche B = 0.6 → plus grande) 
+  slopeOffset?: number; // décalage du seuil de densité (couche B légèrement différente)
+}
+
+function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLayerConfig) {
+  const glStateRef  = useRef<FogGLState | null>(null);
+  const fogTimeRef  = useRef<number>(0);
+  const modeRef     = useRef<0 | 1 | 2>(detectPerformanceMode());
+
+  // ── Initialisation WebGL (une seule fois au montage) ──────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const gl = canvas.getContext('webgl', {
+      alpha:              true,   // canvas transparent pour composition CSS
+      premultipliedAlpha: false,  // canvas RGB pur — alpha=1 partout, screen CSS fait le blend
+      antialias:          false,  // inutile pour un shader procédural plein écran
+    });
+
+    if (!gl) {
+      console.warn('[VTTFog] WebGL non disponible — effet fog désactivé.');
+      return;
+    }
+
+    const mode = modeRef.current;
+
+    // Compilation des shaders
+    const compileShader = (type: number, src: string): WebGLShader | null => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, src);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('[VTTFog] Erreur compilation shader:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+
+    const vert = compileShader(gl.VERTEX_SHADER,   FOG_VERT_SRC);
+    const frag = compileShader(gl.FRAGMENT_SHADER, buildFogFragSrc(mode));
+    if (!vert || !frag) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vert);
+    gl.attachShader(program, frag);
+    gl.linkProgram(program);
+
+    // Les shaders compilés peuvent être supprimés après link
+    gl.deleteShader(vert);
+    gl.deleteShader(frag);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('[VTTFog] Erreur link program:', gl.getProgramInfoLog(program));
+      return;
+    }
+
+    // Quad plein écran : 2 triangles couvrant le clip space [-1,1]
+    // Triangle strip : BL → BR → TL → TR
+    const quadBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1,  1, -1,  -1, 1,  1, 1]),
+      gl.STATIC_DRAW
+    );
+
+    gl.useProgram(program);
+    const posLoc = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // Blending alpha standard (le canvas lui-même est composité en CSS via mixBlendMode)
+    gl.enable(gl.BLEND);
+    // Sur fond noir + screen CSS : le canvas est opaque (alpha=1), le RGB porte l'intensité
+    gl.disable(gl.BLEND); // pas de blend interne — un seul quad opaque plein écran
+
+    glStateRef.current = {
+      gl,
+      program,
+      uniforms: {
+        time:        gl.getUniformLocation(program, 'time'),
+        speed:       gl.getUniformLocation(program, 'speed'),
+        intensity:   gl.getUniformLocation(program, 'intensity'),
+        slope:       gl.getUniformLocation(program, 'slope'),
+        warpFreq:    gl.getUniformLocation(program, 'warpFreq'),
+        seedX:       gl.getUniformLocation(program, 'seedX'),
+        seedY:       gl.getUniformLocation(program, 'seedY'),
+        rotation:    gl.getUniformLocation(program, 'rotation'),
+        tint:        gl.getUniformLocation(program, 'tint'),
+        uResolution: gl.getUniformLocation(program, 'uResolution'),
+      },
+    };
+
+    console.debug(`[VTTFog] WebGL initialisé — mode performance ${mode} (${mode + 2} octaves)`);
+
+    return () => {
+      gl.deleteProgram(program);
+      gl.deleteBuffer(quadBuf);
+      glStateRef.current = null;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── render() : appelé chaque frame depuis la boucle RAF ───────────────────
+  /**
+   * Effectue un rendu WebGL du fog pour la frame courante.
+   * @param dt      Delta time en secondes
+   * @param fe      Paramètres de l'effet fog (speed, alpha, color, density…)
+   * @param width   Largeur du canvas en pixels
+   * @param height  Hauteur du canvas en pixels
+   */
+  const render = useCallback((
+    dt:     number,
+    fe:     VTTWeatherEffect,
+    width:  number,
+    height: number,
+  ) => {
+    const state = glStateRef.current;
+    if (!state) return;
+    const { gl, program, uniforms } = state;
+
+    // time passé via uniform directement dans render
+
+    // Parse couleur hex → vec3 normalisé
+    const hex = (fe.color ?? '#ffffff').replace('#', '');
+    const tr  = parseInt(hex.slice(0, 2), 16) / 255;
+    const tg  = parseInt(hex.slice(2, 4), 16) / 255;
+    const tb  = parseInt(hex.slice(4, 6), 16) / 255;
+
+    // Rendu
+    gl.viewport(0, 0, width, height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(program);
+
+    const opacity  = Math.min(1,   Math.max(0,   fe.alpha   ?? 1));
+    const density  = Math.min(2,   Math.max(0,   fe.density ?? 1));
+    const scale    = Math.min(4,   Math.max(0.5, (fe as any).scale ?? 1));
+    const speedVal = Math.min(3.0, Math.max(0.1, fe.speed   ?? 1));
+
+    // warpFreq : contrôle la taille des nappes de brume.
+    // Slider taille : 0 → 3x.
+    // IMPORTANT : jamais en dessous de 3.0 — en dessous ça donne un effet "eau/marbre"
+    //   scale=0.5 → warpFreq=9.0  (filaments fins)
+    //   scale=1.0 → warpFreq=5.9  (nappes moyennes)
+    //   scale=2.0 → warpFreq=3.85 (grandes nappes)
+    //   scale=3.0 → warpFreq=3.0  (max taille, encore du fog pas de l'eau)
+    // Formule : 5.884 * scale^(-0.613), clamp [3.0, 9.0]
+    const warpScale = cfg.warpScale ?? 1.0;
+    const warpFreq = Math.min(9.0, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
+
+    // slope : density=0 → 2.5 (quasi vide), density=1 → 0.68, density=2 → 0.05
+    // Monotone décroissant sur tout [0,2] → jamais de pic puis disparition
+    // slopeOffset décale le seuil de densité de la couche B :
+    // couche A = zones de brume "principales", couche B = nappes plus légères
+    // → là où A est dense, B peut être creuse et vice versa → vraie hétérogénéité
+    const slopeOff = cfg.slopeOffset ?? 0;
+    const slope = Math.max(0.05, 2.5 - density * 1.225 + slopeOff);
+
+    // intensity : pas de ×0.55 — on laisse le shader gérer via col directement
+    // Deux couches screen : screen(a,a) = 1-(1-a)² → à opacity=0.7 par couche
+    // screen résultat ≈ 0.91, suffisamment opaque
+    gl.uniform1f(uniforms.time,        performance.now() / 1000);
+    gl.uniform1f(uniforms.speed,       speedVal);
+    gl.uniform1f(uniforms.intensity,   opacity);
+    gl.uniform1f(uniforms.slope,       slope);
+    gl.uniform1f(uniforms.warpFreq,    warpFreq);
+    gl.uniform1f(uniforms.seedX,       cfg.seedX);
+    gl.uniform1f(uniforms.seedY,       cfg.seedY);
+    gl.uniform1f(uniforms.rotation,    (fe as any).rotation ?? 0.0);
+    gl.uniform3f(uniforms.tint,        tr, tg, tb);
+    gl.uniform2f(uniforms.uResolution, width, height);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }, []);
+
+  /**
+   * Efface le canvas WebGL (utilisé quand l'effet fog est désactivé).
+   */
+  const clear = useCallback((width: number, height: number) => {
+    const state = glStateRef.current;
+    if (!state) return;
+    const { gl } = state;
+    gl.viewport(0, 0, width, height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }, []);
+
+  return { render, clear };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Composant React ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
   const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen
   const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
   const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen
-  const canvasFogRef    = useRef<HTMLCanvasElement>(null); // fog    → normal
-  const fogBlobsRef     = useRef<FogBlob[]>(makeFogBlobs(22));
-  const fogTimeRef      = useRef<number>(0);
-  const fogCloudsRef    = useRef<FogCloudParticle[]>([]);
-  const effectsRef      = useRef<VTTWeatherEffect[]>(effects);
-  const layersRef       = useRef<WeatherLayer[]>([]);
-  const rafRef          = useRef<number>(0);
-  const lastTimeRef     = useRef<number>(0);
+  const canvasFogARef   = useRef<HTMLCanvasElement>(null); // fog couche A
+  const canvasFogBRef   = useRef<HTMLCanvasElement>(null); // fog couche B
+
+  // Deux couches fog indépendantes superposées en screen blend.
+  // Couche A : drift vers droite-bas (driftX+, driftY+)
+  // Couche B : drift vers gauche-haut (driftX-, driftY-) + seed décalé
+  // → les deux couches se croisent → mouvement organique sans direction dominante.
+  // Deux couches avec seeds très différents → vortex locaux complètement indépendants
+  const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  warpScale: 1.0,  slopeOffset: 0.0  });
+  // Couche B : échelle 60% plus grande + seuil de densité décalé de +0.35
+  // → les nappes denses de B ne coïncident PAS avec celles de A → vraie hétérogénéité
+  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.35 });
+
+  const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
+  const layersRef   = useRef<WeatherLayer[]>([]);
+  const rafRef      = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
 
   // Garde effectsRef synchronisé sans déclencher de re-render dans la boucle RAF
   effectsRef.current = effects;
 
-  // ── Sync layers ──────────────────────────────────────────────────────────
+  // ── Sync layers (clouds / crows / embers) ────────────────────────────────
   useEffect(() => {
     const activeTypes = effects.map(e => e.type);
     layersRef.current = layersRef.current.filter(l => activeTypes.includes(l.effect.type));
@@ -441,7 +753,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     }
   }, [effects, width, height]);
 
-  // ── Boucle d'animation ───────────────────────────────────────────────────
+  // ── Boucle d'animation ────────────────────────────────────────────────────
   useEffect(() => {
     const animate = (time: number) => {
       const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
@@ -456,6 +768,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       ctxNormal?.clearRect(0, 0, width, height);
       ctxAdd?.clearRect(0, 0, width, height);
 
+      // ── Layers particles (clouds / crows / embers) — Canvas 2D inchangé ──
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
 
@@ -483,7 +796,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             continue;
           }
 
-          // ── Cloud ──────────────────────────────────────────────────────
+          // ── Cloud ────────────────────────────────────────────────────────
           if (p.type === 'cloud') {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
@@ -496,7 +809,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, p.x - drawSize, p.y - drawSize, drawSize * 2, drawSize * 2);
             ctx.restore();
 
-          // ── Crow ───────────────────────────────────────────────────────
+          // ── Crow ─────────────────────────────────────────────────────────
           } else if (p.type === 'crow') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
@@ -517,7 +830,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
             ctx.restore();
 
-          // ── Embers ─────────────────────────────────────────────────────
+          // ── Embers ───────────────────────────────────────────────────────
           } else if (p.type === 'embers') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
@@ -545,284 +858,47 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         }
       }
 
-      // ── FOG — triple domain-warp + sprites cloud tournants (FXMaster/gambit07) ─
-      // Reproduit : fog.frag (triple FBM warp, contrast=3, HDR highlight vec3(1.5))
-      //           + FogParticleEffect (cloud sprites, alpha 0→0.3→0, rotation)
-      const ctxFog = canvasFogRef.current?.getContext('2d') ?? null;
-      if (ctxFog) {
-        const fe = effectsRef.current.find(e => e.type === 'fog');
-        if (fe) {
-          fogTimeRef.current += dt * fe.speed * 0.3;
-          const t = fogTimeRef.current;
-          ctxFog.clearRect(0, 0, width, height);
-
-          const [cr, cg, cb] = fogHexToRgb(fe.color ?? '#b0c8e0');
-          // Surbrillance : simule vec3(1.5) du shader — on éclaircit la couleur de 50%
-          const hr = Math.min(255, Math.round(cr + (255 - cr) * 0.5));
-          const hg = Math.min(255, Math.round(cg + (255 - cg) * 0.5));
-          const hb = Math.min(255, Math.round(cb + (255 - cb) * 0.5));
-
-          const density  = Math.min(2, Math.max(0.1, fe.density));
-          const alphaMax = Math.min(1, Math.max(0, fe.alpha));
-          const scl      = fe.scale ?? 1;
-
-          // ── Couche 1 : nappe de fond large (octave basse fréquence) ────────
-          // Simule le f de base du fbm, avec contrast=3 → peaks lumineux
-          for (let layer = 0; layer < 3; layer++) {
-            const phase = layer * 2.094; // 2π/3
-            const bx = 0.5 + 0.35 * Math.sin(t * 0.06 + phase)
-                          + 0.15 * Math.cos(t * 0.11 + phase * 1.7);
-            const by = 0.5 + 0.3  * Math.cos(t * 0.05 + phase * 1.3)
-                          + 0.12 * Math.sin(t * 0.09 + phase * 0.8);
-            const r  = Math.max(width, height) * (0.55 + 0.15 * Math.sin(t * 0.04 + phase)) * scl;
-            const cx = bx * width;
-            const cy = by * height;
-            // Courbe non-linéaire f³+0.6f²+0.5f → alpha élevé au centre, chute rapide
-            const fVal  = 0.5 + 0.5 * Math.sin(t * 0.08 + phase * 2.1);
-            const shape = fVal * fVal * fVal + 0.6 * fVal * fVal + 0.5 * fVal;
-            const a     = Math.min(1, shape * 0.22 * density * alphaMax);
-
-            const g = ctxFog.createRadialGradient(cx, cy, 0, cx, cy, r);
-            // Cœur : couleur surbrillante (vec3(1.5))
-            g.addColorStop(0,    `rgba(${hr},${hg},${hb},${a.toFixed(3)})`);
-            // Milieu : couleur de base
-            g.addColorStop(0.35, `rgba(${cr},${cg},${cb},${(a * 0.55).toFixed(3)})`);
-            // Bord : transparence
-            g.addColorStop(0.75, `rgba(${cr},${cg},${cb},${(a * 0.1).toFixed(3)})`);
-            g.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`);
-            ctxFog.beginPath();
-            ctxFog.arc(cx, cy, r, 0, Math.PI * 2);
-            ctxFog.fillStyle = g;
-            ctxFog.fill();
-          }
-
-          // ── Couche 2 : blobs domain-warpés (simule triple FBM warp) ────────
-          // q = fbm(p), r = fbm(p*q + offset + t), f = fbm(p*0.2 + r*3.102)
-          const blobs = fogBlobsRef.current;
-          for (let i = 0; i < blobs.length; i++) {
-            const blob = blobs[i];
-
-            // Triple warp : q → r → f (3 niveaux de perturbation imbriqués)
-            const qx = Math.sin(t * 0.13 + blob.phase) * 0.5
-                     + Math.sin(t * 0.07 + blob.phase * 2.3 + 1.0) * 0.25;
-            const qy = Math.cos(t * 0.11 + blob.phase * 1.4) * 0.5
-                     + Math.cos(t * 0.09 + blob.phase * 0.7 + 2.0) * 0.25;
-            // r warp (second niveau, utilise q)
-            const rx2 = Math.sin(blob.x * qx * 4 + 1.7 + 0.15 * t) * 0.4
-                      + Math.sin(t * 0.19 + blob.phase * 1.9) * 0.2;
-            const ry2 = Math.cos(blob.y * qy * 4 + 9.3 + 0.35 * t) * 0.4
-                      + Math.cos(t * 0.17 + blob.phase * 1.1) * 0.2;
-            // Déplacement final avec triple warp
-            blob.x += blob.vx * fe.speed * (1 + Math.abs(rx2) * 0.5)
-                    + rx2 * 0.0004 * fe.speed;
-            blob.y += blob.vy * fe.speed * (1 + Math.abs(ry2) * 0.5)
-                    + ry2 * 0.0003 * fe.speed;
-
-            if (blob.x < -blob.r) blob.x = 1 + blob.r;
-            if (blob.x > 1 + blob.r) blob.x = -blob.r;
-            if (blob.y < -blob.r) blob.y = 1 + blob.r;
-            if (blob.y > 1 + blob.r) blob.y = -blob.r;
-
-            // Déformation elliptique non-uniforme (pas de cercles)
-            const deformT = t * 0.35 + blob.phase;
-            const ellRx = blob.r * width  * scl * (1.2 + 0.7 * Math.sin(deformT))
-                        * (1 + 0.3 * Math.cos(deformT * 2.1 + ry2));
-            const ellRy = blob.r * height * scl * (1.2 + 0.7 * Math.cos(deformT * 1.3))
-                        * (1 + 0.3 * Math.sin(deformT * 1.7 + rx2));
-            if (ellRx <= 2 || ellRy <= 2) continue;
-
-            const cx = blob.x * width;
-            const cy = blob.y * height;
-
-            // Courbe shape = f³+0.6f²+0.5f appliquée à pulsation
-            const fv    = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.25 + blob.phase * 2.1 + rx2));
-            const shape = fv * fv * fv + 0.6 * fv * fv + 0.5 * fv;
-            const a     = Math.min(1, blob.alphaBase * 0.55 * density * alphaMax * shape);
-
-            const rMax = Math.max(ellRx, ellRy);
-            const midStop = 0.3 + 0.25 * Math.sin(blob.phase * 3.7 + t * 0.2);
-
-            ctxFog.save();
-            ctxFog.transform(ellRx / rMax, 0, 0, ellRy / rMax, 0, 0);
-            const scx = cx * (rMax / ellRx);
-            const scy = cy * (rMax / ellRy);
-            const grad = ctxFog.createRadialGradient(scx, scy, 0, scx, scy, rMax);
-            grad.addColorStop(0,        `rgba(${hr},${hg},${hb},${a.toFixed(3)})`);
-            grad.addColorStop(midStop,  `rgba(${cr},${cg},${cb},${(a * 0.45).toFixed(3)})`);
-            grad.addColorStop(0.85,     `rgba(${cr},${cg},${cb},${(a * 0.08).toFixed(3)})`);
-            grad.addColorStop(1,        `rgba(${cr},${cg},${cb},0)`);
-            ctxFog.beginPath();
-            ctxFog.arc(scx, scy, rMax, 0, Math.PI * 2);
-            ctxFog.fillStyle = grad;
-            ctxFog.fill();
-            ctxFog.restore();
-
-            // ── Franges de bord irrégulières (simule les filaments FBM) ───
-            // 4 mini-blobs au bord de chaque blob principal = contour organique
-            for (let fi = 0; fi < 4; fi++) {
-              const fAngle  = blob.phase + fi * 1.5708 + t * 0.08; // π/2 spacing
-              const fDist   = rMax * (0.75 + 0.2 * Math.sin(t * 0.3 + blob.phase + fi));
-              const fScaleX = ellRx / rMax;
-              const fScaleY = ellRy / rMax;
-              const fx      = cx + Math.cos(fAngle) * fDist * fScaleX;
-              const fy      = cy + Math.sin(fAngle) * fDist * fScaleY;
-              const fr      = rMax * (0.25 + 0.15 * Math.abs(Math.sin(t * 0.5 + fi * 2.3 + blob.phase)));
-              const fa      = a * (0.3 + 0.2 * Math.sin(t * 0.4 + fi + blob.phase));
-              if (fr <= 0 || fa <= 0) continue;
-              const fg = ctxFog.createRadialGradient(fx, fy, 0, fx, fy, fr);
-              fg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(1, fa).toFixed(3)})`);
-              fg.addColorStop(0.6, `rgba(${cr},${cg},${cb},${Math.min(1, fa * 0.2).toFixed(3)})`);
-              fg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
-              ctxFog.beginPath();
-              ctxFog.arc(fx, fy, fr, 0, Math.PI * 2);
-              ctxFog.fillStyle = fg;
-              ctxFog.fill();
-            }
-          } 
-
-                  // ── Couche 3 : particules cloud qui TRAVERSENT l'écran (FogParticleEffect) ─
-          // FXMaster : moveSpeed 10-15px/s, rotation 0.15-0.35 rad/s, lifetime 10-25s
-          // Les particules bougent EN TRANSLATION — pas de rotation sur place visible
-
-          // Init au premier passage
-          if (fogCloudsRef.current.length === 0) {
-            const count = Math.max(4, Math.round(density * 10));
-            for (let i = 0; i < count; i++) {
-              fogCloudsRef.current.push(makeFogCloud(width, height, fe.speed, false));
-            }
-          }
-
-          const targetCount = Math.max(4, Math.round(density * 10));
-          const fogClouds   = fogCloudsRef.current;
-
-          for (let i = fogClouds.length - 1; i >= 0; i--) {
-            const p = fogClouds[i];
-
-            // Avancer dans le temps — resynchronise la vitesse si fe.speed a changé
-            p.life  += dt * fe.speed;
-            p.x     += p.vx * dt;
-            p.y     += p.vy * dt;
-            p.angle += p.rotSpeed * fe.speed * dt;
-            // Mise à jour dynamique de la vitesse (vx/vy normalisés × speed courant)
-            const currentSpeed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-            if (currentSpeed > 0) {
-              const targetSpeed = (10 + (p.size - 200) / 160 * 5) * fe.speed
-                                * (0.2 + 0.8 * Math.abs(p.rotSpeed) / 0.35);
-              const ratio = targetSpeed / currentSpeed;
-              p.vx *= ratio;
-              p.vy *= ratio;
-            }
-
-            // Mort → respawn depuis un bord
-            if (p.life >= p.lifetime) {
-              fogClouds[i] = makeFogCloud(width, height, fe.speed, true);
-              continue;
-            }
-
-            const img = loadImg(CLOUD_SRCS[p.imgIdx]);
-            if (!img.complete || img.naturalWidth === 0) continue;
-
-            // Courbe alpha FXMaster : 0 → 0.1 → 0.3 → 0.1 → 0
-            const lifeT = p.life / p.lifetime;
-            let cloudAlpha: number;
-            if      (lifeT < 0.1)  cloudAlpha = (lifeT / 0.1) * 0.1;
-            else if (lifeT < 0.5)  cloudAlpha = 0.1 + ((lifeT - 0.1) / 0.4) * 0.2;
-            else if (lifeT < 0.9)  cloudAlpha = 0.3 - ((lifeT - 0.5) / 0.4) * 0.2;
-            else                   cloudAlpha = 0.1 - ((lifeT - 0.9) / 0.1) * 0.1;
-            cloudAlpha *= density * alphaMax;
-
-            if (cloudAlpha <= 0.003) continue;
-
-            // Scale FXMaster : 1.5 → 1.0 (minMult 0.5 → taille min = 0.75)
-            const cloudScale = (1.5 - 0.5 * lifeT) * scl;
-            const sz         = p.size * cloudScale;
-
-            // ── Déformation organique du sprite ─────────────────────────────
-            // On dessine le sprite 2 fois avec des transformations qui évoluent
-            // dans le temps → donne l'illusion que la forme du nuage "respire".
-            //
-            // Principe :
-            //  - Passe A : sprite principal avec étirement/cisaillement lent
-            //  - Passe B : même sprite, léger décalage + déformation inverse
-            //    → la superposition des 2 passes crée un contour mouvant irrégulier
-            //    sans jamais révéler que c'est le même rectangle
-
-            const deformT  = t + p.phase;   // phase propre à chaque particule
-            // Étirement non-uniforme : sx oscille indépendamment de sy
-            const sxA =  1.0 + 0.18 * Math.sin(deformT * 0.4 + 0.0);
-            const syA =  1.0 + 0.14 * Math.cos(deformT * 0.31 + 1.1);
-            // Cisaillement doux (simule le vent qui tire un côté)
-            const shA =  0.08 * Math.sin(deformT * 0.27 + 2.3);
-
-            // Passe B : déformation légèrement différente + décalage subpixel
-            const sxB =  1.0 + 0.14 * Math.sin(deformT * 0.35 + 1.6);
-            const syB =  1.0 + 0.20 * Math.cos(deformT * 0.28 + 0.4);
-            const shB = -0.06 * Math.cos(deformT * 0.33 + 3.1);
-            // Décalage relatif de la passe B (quelques % de la taille)
-            const offBx = sz * 0.08 * Math.sin(deformT * 0.19 + 1.0);
-            const offBy = sz * 0.06 * Math.cos(deformT * 0.23 + 2.5);
-
-            ctxFog.globalCompositeOperation = 'screen';
-
-            // — Passe A ──────────────────────────────────────────────────────
-            ctxFog.save();
-            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha * 0.75));
-            ctxFog.translate(p.x, p.y);
-            ctxFog.rotate(p.angle);
-            // transform(scaleX, skewY, skewX, scaleY, 0, 0)
-            ctxFog.transform(sxA, shA, shA, syA, 0, 0);
-            ctxFog.filter = `brightness(0.88) saturate(0) sepia(0.1)`;
-            ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
-            ctxFog.filter = 'none';
-            ctxFog.restore();
-
-            // — Passe B : même sprite, déformation complémentaire ────────────
-            ctxFog.save();
-            ctxFog.globalAlpha = Math.max(0, Math.min(1, cloudAlpha * 0.55));
-            ctxFog.translate(p.x + offBx, p.y + offBy);
-            ctxFog.rotate(p.angle + 0.04 * Math.sin(deformT * 0.15));
-            ctxFog.transform(sxB, shB, shB, syB, 0, 0);
-            ctxFog.filter = `brightness(0.92) saturate(0) sepia(0.08)`;
-            ctxFog.drawImage(img, -sz, -sz, sz * 2, sz * 2);
-            ctxFog.filter = 'none';
-            ctxFog.restore();
-
-            ctxFog.globalCompositeOperation = 'source-over';
-          }
-
-          // Ajuster le nombre de particules si density a changé
-          while (fogClouds.length < targetCount) {
-            fogClouds.push(makeFogCloud(width, height, fe.speed, true));
-          }
-          if (fogClouds.length > targetCount) {
-            fogClouds.splice(targetCount);
-          }
-
-        } else {
-          ctxFog.clearRect(0, 0, width, height);
-        }
-      } 
+      // ── FOG — rendu WebGL (FogShader Foundry VTT) ────────────────────────
+      // Remplace intégralement l'ancienne implémentation Canvas 2D
+      // (gradients radiaux, FogBlobs, FogCloudParticles).
+      const fe = effectsRef.current.find(e => e.type === 'fog');
+      if (fe) {
+        fogGLA.render(dt, fe, width, height);
+        fogGLB.render(dt, fe, width, height);
+      } else {
+        fogGLA.clear(width, height);
+        fogGLB.clear(width, height);
+      }
 
       rafRef.current = requestAnimationFrame(animate);
     };
 
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [width, height]);
+  }, [width, height, fogGLA, fogGLB]);
 
   if (effects.length === 0) return null;
 
   return (
     <>
-      {/* Fog : simulation FBM multi-octave — screen blend = accumulation lumineuse */}
+      {/* Fog couche A + B — screen blend sur fond noir : zones noires disparaissent */}
       {effects.some(e => e.type === 'fog') && (
-        <canvas
-          ref={canvasFogRef}
-          width={width}
-          height={height}
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{ mixBlendMode: 'screen' }}
-        />
+        <>
+          <canvas
+            ref={canvasFogARef}
+            width={width}
+            height={height}
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{ mixBlendMode: 'screen' }}
+          />
+          <canvas
+            ref={canvasFogBRef}
+            width={width}
+            height={height}
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        </>
       )}
       {/* Clouds : mode screen (sprites blancs) */}
       {effects.some(e => e.type === 'clouds') && (
@@ -856,4 +932,4 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       )}
     </>
   );
-}
+} 
