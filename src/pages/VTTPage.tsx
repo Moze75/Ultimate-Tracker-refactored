@@ -2468,8 +2468,10 @@ onSelectTokens={ids => {
             onAddProp={handleAddProp}
             onRemoveProp={handleRemoveProp}
             onUpdateProp={handleUpdateProp}
-            onSaveScene={role === 'gm' ? handleSaveScene : undefined}
-            onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
+onSaveScene={role === 'gm' ? handleSaveScene : undefined}
+onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
+// Synchronisation des PV depuis le combat vers le token VTT
+onUpdateToken={handleUpdateToken}
             campaignId={campaignId ?? undefined}
             userName={userName}
             pendingChatRoll={pendingChatRoll}
