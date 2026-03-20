@@ -33,8 +33,10 @@ interface CombatTabProps {
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
   initialTokens?: VTTToken[];
-  vttMode?: boolean;
-  role?: 'gm' | 'player';
+vttMode?: boolean;
+role?: 'gm' | 'player';
+// Synchronisation HP du token VTT depuis la fenêtre de combat
+onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
 }
 
 interface CombatPreparationEntry {
