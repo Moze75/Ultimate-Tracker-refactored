@@ -1103,13 +1103,25 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     vttService.send({ type: 'UPDATE_TOKEN', tokenId: editingToken.id, changes });
   }, [editingToken, canControlToken]);
 
-  const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
-    const token = tokensRef.current.find(t => t.id === tokenId);
-    if (!token) return;
-    if (!canControlToken(token)) return;
-    pushUndoSnapshot();
-    vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
-  }, [canControlToken, pushUndoSnapshot]);
+const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
+  const token = tokensRef.current.find(t => t.id === tokenId);
+  if (!token) return;
+  if (!canControlToken(token)) return;
+  pushUndoSnapshot();
+
+  // -------------------
+  // Mise à jour locale immédiate du token (ex: hp depuis combat)
+  // Sans cela, le canvas ne se redessine pas tant que le serveur
+  // ne renvoie pas TOKEN_UPDATED (latence réseau ou rejet si joueur)
+  // -------------------
+  setTokens(prev => {
+    const next = prev.map(t => t.id === tokenId ? { ...t, ...changes } : t);
+    tokensRef.current = next;
+    return next;
+  });
+
+  vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
+}, [canControlToken, pushUndoSnapshot]);
 
 // -------------------
 // Gestion du resize des tokens
