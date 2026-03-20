@@ -29,6 +29,7 @@ import { UserSubscription } from '../types/subscription';
 import { CharacterExportPayload } from '../types/characterCreator';
 import { createCharacterFromCreatorPayload } from '../services/characterCreationIntegration';
 import CharacterCreationWizard from '../features/character-creator/components/characterCreationWizard';
+import { stopWizardMusic } from '../features/character-creator/components/ui/musicControl';
 
 interface CharacterSelectionPageProps {
   session: any;
