@@ -40,8 +40,10 @@ interface VTTSidebarProps {
   onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
-  onSaveScene?: () => Promise<void>;
-  onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
+onSaveScene?: () => Promise<void>;
+onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
+// Callback pour synchroniser les PV du token VTT depuis le combat ou la fiche perso
+onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
   // -------------------
   // Props du chat live
   // -------------------
