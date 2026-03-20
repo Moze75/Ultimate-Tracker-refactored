@@ -827,14 +827,30 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
     // sur le channel DÉJÀ souscrit — pas un nouveau channel éphémère.
     // supabase.channel(name).send() crée un channel distinct non abonné
     // et le message ne serait pas reçu par les joueurs.
-    markLocalUpdate(p.id); // filtre l'écho Broadcast côté MJ (clé = participantId)
-    sendHpBroadcast({
-      participantId: p.id,
-      current_hp: newHp,
-      temporary_hp: p.temporary_hp ?? 0,
-    });
+markLocalUpdate(p.id);
+sendHpBroadcast({
+  participantId: p.id,
+  current_hp: newHp,
+  temporary_hp: p.temporary_hp ?? 0,
+});
 
-    if (p.participant_type === 'player' && p.player_member_id) {
+// -------------------
+// Sync HP → token VTT sur le canvas
+// -------------------
+// Cherche le token VTT correspondant au participant (via characterId ou label)
+// et propage le changement de PV pour que la barre de vie du token soit à jour.
+if (onUpdateToken && initialTokens) {
+  const matchingToken = initialTokens.find(t =>
+    (p.participant_type === 'player' && t.characterId && p.player_member_id &&
+      members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
+    || t.label === p.display_name
+  );
+  if (matchingToken) {
+    onUpdateToken(matchingToken.id, { hp: newHp });
+  }
+}
+
+if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
       if (member?.player_id) {
         // -------------------
