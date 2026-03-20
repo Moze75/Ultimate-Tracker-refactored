@@ -1005,16 +1005,18 @@ className={`w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-all dur
 
       <CreatorModal
         open={showCreator}
-        onClose={() => {
-          console.log('[CharacterSelection] 🚪 Fermeture du wizard');
-          import('../features/character-creator/components/ui/musicControl').then(({ stopWizardMusic }) => {
-            stopWizardMusic();
-          });
-          
-          setShowCreator(false);
-          appContextService.clearWizardSnapshot();
-          appContextService.setContext('selection');
-        }}
+onClose={() => {
+  console.log('[CharacterSelection] 🚪 Fermeture du wizard');
+  try {
+    stopWizardMusic();
+  } catch (e) {
+    console.warn('[CharacterSelection] Erreur arrêt musique:', e);
+  }
+  
+  setShowCreator(false);
+  appContextService.clearWizardSnapshot();
+  appContextService.setContext('selection');
+}}
         onComplete={handleCreatorComplete}
         initialSnapshot={appContextService.getWizardSnapshot()}
       />
