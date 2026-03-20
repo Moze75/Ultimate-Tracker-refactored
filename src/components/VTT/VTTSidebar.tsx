@@ -105,6 +105,7 @@ export function VTTSidebar({
   authToken,
   onSaveScene,
   onAddMonsterAsToken,
+   onUpdateToken,
   campaignId,
   userName = 'Joueur',
   pendingChatRoll,
