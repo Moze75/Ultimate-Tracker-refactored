@@ -603,6 +603,7 @@ const visibleTokens = isGM
               initialTokens={combatInitTokens}
               vttMode
               role={role}
+              onUpdateToken={onUpdateToken}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
