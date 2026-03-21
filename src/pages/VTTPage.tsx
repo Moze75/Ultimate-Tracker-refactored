@@ -323,11 +323,22 @@ canvasViewportRef.current = canvasViewport;
   const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
 
-     const {
-  pushUndoSnapshot,
-  handleUndo,
-  handleRedo,
-} = useVTTUndo({
+const {
+  walls, doors, windows,
+  setWalls, setDoors, setWindows,
+  wallsRef, doorsRef, windowsRef,
+  handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
+  handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
+  handleWindowAdded, handleWindowRemoved, handleClearWindows,
+} = useVTTGeometry({
+  role,
+  activeSceneId,
+  activeSceneIdRef,
+  sceneLoadedRef,
+  pushUndoSnapshot: () => {}, // temporaire, sera remplacé juste après
+});
+
+  const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
   role,
   tokensRef,
   wallsRef,
@@ -337,7 +348,6 @@ canvasViewportRef.current = canvasViewport;
   setWalls,
   setProps,
 });
-  
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
