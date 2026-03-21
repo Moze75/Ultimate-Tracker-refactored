@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { vttService } from '../services/vttService';
 import type { VTTToken, VTTProp, VTTWall, VTTRole } from '../types/vtt';
+import { useVTTUndo } from '../hooks/useVTTUndo';
 
 // ---------------------------------------------------------------------------
 // Types
