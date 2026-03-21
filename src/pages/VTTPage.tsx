@@ -691,7 +691,8 @@ useEffect(() => {
             });
         }
       });
-  }, [phase, roomId, role, applySceneToLive]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [phase, roomId, role]);
 
   
 
