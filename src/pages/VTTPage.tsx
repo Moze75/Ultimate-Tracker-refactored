@@ -649,52 +649,51 @@ useEffect(() => {
   }, []);
 
 useEffect(() => {
-  console.log('[SCENES] useEffect fired:', { phase, roomId, role });
-  if (phase !== 'room') { console.log('[SCENES] skip: phase'); return; }
-  if (!roomId) { console.log('[SCENES] skip: no roomId'); return; }
-  if (role !== 'gm') { console.log('[SCENES] skip: role=', role); return; }
-  console.log('[SCENES] querying supabase...');
-    supabase
-      .from('vtt_scenes')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('order_index')
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const parsed = data.map(dbSceneToVTTScene);
-          setScenes(parsed);
+  if (phase !== 'room' || !roomId || role !== 'gm') return;
+  let cancelled = false;
 
-         if (!activeSceneIdRef.current) {
-            const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
-            const restoredScene = lastSceneId
-              ? parsed.find(scene => scene.id === lastSceneId)
-              : null;
-
-            const initialScene = restoredScene ?? {
-              ...parsed[0],
-              props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
-            };
-
-            setActiveSceneId(initialScene.id);
-            applySceneToLive(initialScene);
-            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
-          }
-        } else {
-          supabase
-            .from('vtt_scenes')
-            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
-            .select()
-            .maybeSingle()
-            .then(({ data: s }) => {
-              if (s) {
-                const scene = dbSceneToVTTScene(s);
-                setScenes([scene]);
-                setActiveSceneId(scene.id);
-                applySceneToLive(scene);
-              }
-            });
+  supabase
+    .from('vtt_scenes')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('order_index')
+    .then(({ data }) => {
+      if (cancelled) return;
+      if (data && data.length > 0) {
+        const parsed = data.map(dbSceneToVTTScene);
+        setScenes(parsed);
+        if (!activeSceneIdRef.current) {
+          const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
+          const restoredScene = lastSceneId
+            ? parsed.find(scene => scene.id === lastSceneId)
+            : null;
+          const initialScene = restoredScene ?? {
+            ...parsed[0],
+            props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
+          };
+          setActiveSceneId(initialScene.id);
+          applySceneToLive(initialScene);
+          vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
         }
-      });
+      } else {
+        supabase
+          .from('vtt_scenes')
+          .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
+          .select()
+          .maybeSingle()
+          .then(({ data: s }) => {
+            if (cancelled) return;
+            if (s) {
+              const scene = dbSceneToVTTScene(s);
+              setScenes([scene]);
+              setActiveSceneId(scene.id);
+              applySceneToLive(scene);
+            }
+          });
+      }
+    });
+
+  return () => { cancelled = true; };
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [phase, roomId, role]);
 
