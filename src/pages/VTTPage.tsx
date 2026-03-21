@@ -660,7 +660,7 @@ useEffect(() => {
           const parsed = data.map(dbSceneToVTTScene);
           setScenes(parsed);
 
-          if (!activeSceneId) {
+         if (!activeSceneIdRef.current) {
             const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
             const restoredScene = lastSceneId
               ? parsed.find(scene => scene.id === lastSceneId)
