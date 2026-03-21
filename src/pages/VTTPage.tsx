@@ -47,14 +47,10 @@ import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
 
-
-
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
   | { kind: 'prop'; data: VTTProp }
   | null;
-
-
 
 interface VTTPageProps {
   session: Session;
