@@ -321,7 +321,8 @@ canvasViewportRef.current = canvasViewport;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
-
+const sceneLoadedRef = useRef<string | null>(null);
+  
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
 
@@ -357,7 +358,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sceneLoadedRef = useRef<string | null>(null);
+
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
