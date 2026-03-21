@@ -45,11 +45,7 @@ import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
 import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 
-type VTTUndoSnapshot = {
-  tokens: VTTToken[];
-  walls: VTTWall[];
-  props: VTTProp[];
-};
+
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -320,8 +316,7 @@ canvasViewportRef.current = canvasViewport;
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
 
-  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
-  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
+
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
   const [isPingMode, setIsPingMode] = useState(false);
@@ -335,68 +330,9 @@ canvasViewportRef.current = canvasViewport;
 
   const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
-  const makeSnapshot = useCallback((): VTTUndoSnapshot => ({
-    tokens: structuredClone(tokensRef.current),
-    walls: structuredClone(wallsRef.current),
-    props: structuredClone(propsRef.current),
-  }), []);
 
-  const pushUndoSnapshot = useCallback(() => {
-    if (role !== 'gm') return;
-    setUndoStack(prev => [...prev.slice(-9), makeSnapshot()]);
-    setRedoStack([]);
-  }, [role, makeSnapshot]);
 
-  const applySnapshot = useCallback((snapshot: VTTUndoSnapshot) => {
-    setTokens(snapshot.tokens);
-    tokensRef.current = snapshot.tokens;
-
-    setWalls(snapshot.walls);
-    wallsRef.current = snapshot.walls;
-
-    setProps(snapshot.props);
-    propsRef.current = snapshot.props;
-
-    const sceneId = activeSceneIdRef.current;
-    if (sceneId) {
-      supabase
-        .from('vtt_scenes')
-        .update({
-          tokens: snapshot.tokens,
-          walls: snapshot.walls,
-          props: snapshot.props,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', sceneId)
-        .then(({ error }) => {
-          if (error) console.error('[VTT] Undo/redo persist error:', error);
-        });const userId = session.user.id;
-    }
-
-    vttService.send({ type: 'UPDATE_WALLS', walls: snapshot.walls });
-  }, []);
-
-  const handleUndo = useCallback(() => {
-    if (role !== 'gm') return;
-    setUndoStack(prevUndo => {
-      if (prevUndo.length === 0) return prevUndo;
-      const previous = prevUndo[prevUndo.length - 1];
-      setRedoStack(prevRedo => [...prevRedo, makeSnapshot()]);
-      applySnapshot(previous);
-      return prevUndo.slice(0, -1);
-    });
-  }, [role, makeSnapshot, applySnapshot]);
-
-  const handleRedo = useCallback(() => {
-    if (role !== 'gm') return;
-    setRedoStack(prevRedo => {
-      if (prevRedo.length === 0) return prevRedo;
-      const next = prevRedo[prevRedo.length - 1];
-      setUndoStack(prevUndo => [...prevUndo.slice(-9), makeSnapshot()]);
-      applySnapshot(next);
-      return prevRedo.slice(0, -1);
-    }); 
-  }, [role, makeSnapshot, applySnapshot]);
+  
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
