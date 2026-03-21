@@ -338,16 +338,7 @@ const {
   pushUndoSnapshot: () => {}, // temporaire, sera remplacé juste après
 });
 
-  const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
-  role,
-  tokensRef,
-  wallsRef,
-  propsRef,
-  activeSceneIdRef,
-  setTokens,
-  setWalls,
-  setProps,
-});
+   
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
