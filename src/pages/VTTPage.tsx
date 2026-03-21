@@ -331,28 +331,10 @@ canvasViewportRef.current = canvasViewport;
   const authToken = session.access_token;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
-const vttCanvasRef = useRef<VTTCanvasHandle>(null);
-
-// ← AJOUTE ICI
-const {
-  pushUndoSnapshot,
-  handleUndo,
-  handleRedo,
-} = useVTTUndo({
-  role,
-  tokensRef,
-  wallsRef,
-  propsRef,
-  activeSceneIdRef,
-  setTokens,
-  setWalls,
-  setProps,
-});
-
-const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
 
-  
+   
   
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
