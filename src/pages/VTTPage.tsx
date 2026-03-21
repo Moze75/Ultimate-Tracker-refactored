@@ -44,6 +44,7 @@ import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockP
 import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
 import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
+import { useVTTUndo } from '../hooks/useVTTUndo';
 
 
 
