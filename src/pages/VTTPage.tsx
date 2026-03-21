@@ -334,7 +334,20 @@ canvasViewportRef.current = canvasViewport;
   const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
 
-   
+   const {
+  pushUndoSnapshot,
+  handleUndo,
+  handleRedo,
+} = useVTTUndo({
+  role,
+  tokensRef,
+  wallsRef,
+  propsRef,
+  activeSceneIdRef,
+  setTokens,
+  setWalls,
+  setProps,
+});
   
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
