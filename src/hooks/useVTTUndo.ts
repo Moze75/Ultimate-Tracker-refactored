@@ -50,8 +50,16 @@ export function useVTTUndo({
   setWalls,
   setProps,
 }: UseVTTUndoParams) {
-  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
-  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
+const { undoStack, redoStack, pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
+  role,
+  tokensRef,
+  wallsRef,
+  propsRef,
+  activeSceneIdRef,
+  setTokens,
+  setWalls,
+  setProps,
+});
 
   // -------------------
   // Capture de l'état courant dans un snapshot immuable
