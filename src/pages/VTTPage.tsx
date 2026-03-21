@@ -320,22 +320,7 @@ canvasViewportRef.current = canvasViewport;
 
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
-const {
-  undoStack,
-  redoStack,
-  pushUndoSnapshot,
-  handleUndo,
-  handleRedo,
-} = useVTTUndo({
-  role,
-  tokensRef,
-  wallsRef,
-  propsRef,
-  activeSceneIdRef,
-  setTokens,
-  setWalls,
-  setProps,
-});
+ 
   
   const [isPingMode, setIsPingMode] = useState(false);
   const [activePings, setActivePings] = useState<VTTPing[]>([]);
