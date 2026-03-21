@@ -332,7 +332,7 @@ const {
   handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
   handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
   handleWindowAdded, handleWindowRemoved, handleClearWindows,
-
+} = useVTTGeometry({
   role,
   activeSceneId,
   activeSceneIdRef,
@@ -1587,13 +1587,7 @@ const {
   handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
   handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
   handleWindowAdded, handleWindowRemoved, handleClearWindows,
-} = useVTTGeometry({
-  role,
-  activeSceneId,
-  activeSceneIdRef,
-  sceneLoadedRef,
-  pushUndoSnapshot,
-});
+
 
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
   setBroadcastFrame(frame);
