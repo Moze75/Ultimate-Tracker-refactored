@@ -332,7 +332,7 @@ const {
   handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
   handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
   handleWindowAdded, handleWindowRemoved, handleClearWindows,
-} = useVTTGeometry({
+
   role,
   activeSceneId,
   activeSceneIdRef,
