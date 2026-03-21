@@ -320,8 +320,10 @@ canvasViewportRef.current = canvasViewport;
   const authToken = session.access_token;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
-  const vttCanvasRef = useRef<VTTCanvasHandle>(null);
+const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
+// Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
+const pushUndoSnapshotRef = useRef<() => void>(() => {});
 
 const {
   walls, doors, windows,
@@ -335,10 +337,22 @@ const {
   activeSceneId,
   activeSceneIdRef,
   sceneLoadedRef,
-  pushUndoSnapshot: () => {}, // temporaire, sera remplacé juste après
+  pushUndoSnapshot: () => pushUndoSnapshotRef.current(),
 });
 
-   
+const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
+  role,
+  tokensRef,
+  wallsRef,
+  propsRef,
+  activeSceneIdRef,
+  setTokens,
+  setWalls,
+  setProps,
+});
+
+// On met à jour la ref après que useVTTUndo l'a créée
+pushUndoSnapshotRef.current = pushUndoSnapshot;
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
