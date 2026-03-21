@@ -370,7 +370,7 @@ canvasViewportRef.current = canvasViewport;
         .eq('id', sceneId)
         .then(({ error }) => {
           if (error) console.error('[VTT] Undo/redo persist error:', error);
-        });
+        });const userId = session.user.id;
     }
 
     vttService.send({ type: 'UPDATE_WALLS', walls: snapshot.walls });
