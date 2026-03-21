@@ -648,8 +648,12 @@ useEffect(() => {
     //  lignes 402-426 avec le double rAF + setTimeout)
   }, []);
 
-   useEffect(() => {
-    if (phase !== 'room' || !roomId || role !== 'gm') return;
+useEffect(() => {
+  console.log('[SCENES] useEffect fired:', { phase, roomId, role });
+  if (phase !== 'room') { console.log('[SCENES] skip: phase'); return; }
+  if (!roomId) { console.log('[SCENES] skip: no roomId'); return; }
+  if (role !== 'gm') { console.log('[SCENES] skip: role=', role); return; }
+  console.log('[SCENES] querying supabase...');
     supabase
       .from('vtt_scenes')
       .select('*')
