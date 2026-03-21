@@ -1580,13 +1580,6 @@ handleUpdateProp(propId, {
     };
   }, [handleUpdateProp]);
 
-const {
-  walls, doors, windows,
-  setWalls, setDoors, setWindows,
-  wallsRef, doorsRef, windowsRef,
-  handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
-  handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
-  handleWindowAdded, handleWindowRemoved, handleClearWindows,
 
 
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
