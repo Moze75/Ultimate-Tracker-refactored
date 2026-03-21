@@ -284,7 +284,7 @@ const visibleTokens = isGM
     // La poignée doit être ici, HORS du overflow-hidden,
     // sinon le navigateur coupe le positionnement absolu
     // et top:50% ne se calcule que sur la zone visible, pas toute la hauteur.
-    <div className="relative h-full flex-shrink-0" style={{ width: sidebarWidth }}>
+ <div className="relative h-full flex-shrink-0 z-20" style={{ width: sidebarWidth }}>
 
 // Poignée de redimensionnement
       
