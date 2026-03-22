@@ -358,6 +358,18 @@ const {
 const canvasViewportForScenesRef = useRef(canvasViewport);
 canvasViewportForScenesRef.current = canvasViewport;
 
+const setConfigRef = useRef<React.Dispatch<React.SetStateAction<VTTRoomConfig>>>(() => {});
+const setTokensRef = useRef<React.Dispatch<React.SetStateAction<VTTToken[]>>>(() => {});
+const setWallsRef = useRef<React.Dispatch<React.SetStateAction<VTTWall[]>>>(() => {});
+const setDoorsRef = useRef<React.Dispatch<React.SetStateAction<VTTDoor[]>>>(() => {});
+const setWindowsRef = useRef<React.Dispatch<React.SetStateAction<VTTWindow[]>>>(() => {});
+const setPropsRef = useRef<React.Dispatch<React.SetStateAction<VTTProp[]>>>(() => {});
+const setSelectedPropIdRef = useRef<React.Dispatch<React.SetStateAction<string | null>>>(() => {});
+const setWeatherEffectsRef = useRef<React.Dispatch<React.SetStateAction<VTTWeatherEffect[]>>>(() => {});
+const setSavedViewportRef = useRef<React.Dispatch<React.SetStateAction<{ x: number; y: number; scale: number } | null>>>(() => {});
+const setCanvasViewportRef = useRef<React.Dispatch<React.SetStateAction<{ x: number; y: number; scale: number }>>>(() => {});
+const applyFogStateRef = useRef<(fog: VTTFogState) => void>(() => {});
+  
 const {
   scenes,
   activeSceneId,
