@@ -44,13 +44,19 @@ import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockP
 import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
 import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
-import { useVTTUndo } from '../hooks/useVTTUndo';
-import { useVTTGeometry } from '../hooks/useVTTGeometry';
+
+type VTTUndoSnapshot = {
+  tokens: VTTToken[];
+  walls: VTTWall[];
+  props: VTTProp[];
+};
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
   | { kind: 'prop'; data: VTTProp }
   | null;
+
+
 
 interface VTTPageProps {
   session: Session;
@@ -236,7 +242,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat'>(role === 'player' ? 'chat' : 'tokens');
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
-
+  const [walls, setWalls] = useState<VTTWall[]>([]);
+  const wallsRef = useRef<VTTWall[]>([]);
+  wallsRef.current = walls;
+  const [doors, setDoors] = useState<VTTDoor[]>([]);
+  const doorsRef = useRef<VTTDoor[]>([]);
+  doorsRef.current = doors;
+  const [windows, setWindows] = useState<VTTWindow[]>([]);
+  const windowsRef = useRef<VTTWindow[]>([]);
+  windowsRef.current = windows;
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -306,11 +320,10 @@ canvasViewportRef.current = canvasViewport;
   const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
   weatherEffectsRef.current = weatherEffects;
 
-
+  const [undoStack, setUndoStack] = useState<VTTUndoSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<VTTUndoSnapshot[]>([]);
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
- 
-  
   const [isPingMode, setIsPingMode] = useState(false);
   const [activePings, setActivePings] = useState<VTTPing[]>([]);
   const pingModeRef = useRef(false);
@@ -320,45 +333,76 @@ canvasViewportRef.current = canvasViewport;
   const authToken = session.access_token;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
-const vttCanvasRef = useRef<VTTCanvasHandle>(null);
-const sceneLoadedRef = useRef<string | null>(null);
-  
-// Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
-const pushUndoSnapshotRef = useRef<() => void>(() => {});
+  const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 
-const {
-  walls, doors, windows,
-  setWalls, setDoors, setWindows,
-  wallsRef, doorsRef, windowsRef,
-  handleWallAdded, handleWallUpdated, handleWallRemoved, handleClearWalls,
-  handleDoorAdded, handleDoorToggled, handleDoorRemoved, handleClearDoors,
-  handleWindowAdded, handleWindowRemoved, handleClearWindows,
-} = useVTTGeometry({
-  role,
-  activeSceneId,
-  activeSceneIdRef,
-  sceneLoadedRef,
-  pushUndoSnapshot: () => pushUndoSnapshotRef.current(),
-});
+  const makeSnapshot = useCallback((): VTTUndoSnapshot => ({
+    tokens: structuredClone(tokensRef.current),
+    walls: structuredClone(wallsRef.current),
+    props: structuredClone(propsRef.current),
+  }), []);
 
-const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
-  role,
-  tokensRef,
-  wallsRef,
-  propsRef,
-  activeSceneIdRef,
-  setTokens,
-  setWalls,
-  setProps,
-});
+  const pushUndoSnapshot = useCallback(() => {
+    if (role !== 'gm') return;
+    setUndoStack(prev => [...prev.slice(-9), makeSnapshot()]);
+    setRedoStack([]);
+  }, [role, makeSnapshot]);
 
-// On met à jour la ref après que useVTTUndo l'a créée
-pushUndoSnapshotRef.current = pushUndoSnapshot;
+  const applySnapshot = useCallback((snapshot: VTTUndoSnapshot) => {
+    setTokens(snapshot.tokens);
+    tokensRef.current = snapshot.tokens;
+
+    setWalls(snapshot.walls);
+    wallsRef.current = snapshot.walls;
+
+    setProps(snapshot.props);
+    propsRef.current = snapshot.props;
+
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({
+          tokens: snapshot.tokens,
+          walls: snapshot.walls,
+          props: snapshot.props,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sceneId)
+        .then(({ error }) => {
+          if (error) console.error('[VTT] Undo/redo persist error:', error);
+        });
+    }
+
+    vttService.send({ type: 'UPDATE_WALLS', walls: snapshot.walls });
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (role !== 'gm') return;
+    setUndoStack(prevUndo => {
+      if (prevUndo.length === 0) return prevUndo;
+      const previous = prevUndo[prevUndo.length - 1];
+      setRedoStack(prevRedo => [...prevRedo, makeSnapshot()]);
+      applySnapshot(previous);
+      return prevUndo.slice(0, -1);
+    });
+  }, [role, makeSnapshot, applySnapshot]);
+
+  const handleRedo = useCallback(() => {
+    if (role !== 'gm') return;
+    setRedoStack(prevRedo => {
+      if (prevRedo.length === 0) return prevRedo;
+      const next = prevRedo[prevRedo.length - 1];
+      setUndoStack(prevUndo => [...prevUndo.slice(-9), makeSnapshot()]);
+      applySnapshot(next);
+      return prevRedo.slice(0, -1);
+    });
+  }, [role, makeSnapshot, applySnapshot]);
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const geometrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sceneLoadedRef = useRef<string | null>(null);
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
@@ -648,54 +692,50 @@ useEffect(() => {
     //  lignes 402-426 avec le double rAF + setTimeout)
   }, []);
 
-useEffect(() => {
-  if (phase !== 'room' || !roomId || role !== 'gm') return;
-  let cancelled = false;
+   useEffect(() => {
+    if (phase !== 'room' || !roomId || role !== 'gm') return;
+    supabase
+      .from('vtt_scenes')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('order_index')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const parsed = data.map(dbSceneToVTTScene);
+          setScenes(parsed);
 
-  supabase
-    .from('vtt_scenes')
-    .select('*')
-    .eq('room_id', roomId)
-    .order('order_index')
-    .then(({ data }) => {
-      if (cancelled) return;
-      if (data && data.length > 0) {
-        const parsed = data.map(dbSceneToVTTScene);
-        setScenes(parsed);
-        if (!activeSceneIdRef.current) {
-          const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
-          const restoredScene = lastSceneId
-            ? parsed.find(scene => scene.id === lastSceneId)
-            : null;
-          const initialScene = restoredScene ?? {
-            ...parsed[0],
-            props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
-          };
-          setActiveSceneId(initialScene.id);
-          applySceneToLive(initialScene);
-          vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
+          if (!activeSceneId) {
+            const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
+            const restoredScene = lastSceneId
+              ? parsed.find(scene => scene.id === lastSceneId)
+              : null;
+
+            const initialScene = restoredScene ?? {
+              ...parsed[0],
+              props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
+            };
+
+            setActiveSceneId(initialScene.id);
+            applySceneToLive(initialScene);
+            vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
+          }
+        } else {
+          supabase
+            .from('vtt_scenes')
+            .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
+            .select()
+            .maybeSingle()
+            .then(({ data: s }) => {
+              if (s) {
+                const scene = dbSceneToVTTScene(s);
+                setScenes([scene]);
+                setActiveSceneId(scene.id);
+                applySceneToLive(scene);
+              }
+            });
         }
-      } else {
-        supabase
-          .from('vtt_scenes')
-          .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
-          .select()
-          .maybeSingle()
-          .then(({ data: s }) => {
-            if (cancelled) return;
-            if (s) {
-              const scene = dbSceneToVTTScene(s);
-              setScenes([scene]);
-              setActiveSceneId(scene.id);
-              applySceneToLive(scene);
-            }
-          });
-      }
-    });
-
-  return () => { cancelled = true; };
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [phase, roomId, role]);
+      });
+  }, [phase, roomId, role, applySceneToLive]);
 
   
 
@@ -717,6 +757,21 @@ useEffect(() => {
       .eq('id', sceneId);
   }, [roomId]);
 
+  useEffect(() => {
+    if (role !== 'gm' || !activeSceneId) return;
+    if (sceneLoadedRef.current !== activeSceneId) return;
+    console.log('[VTT] geometry autosave triggered: walls=', walls.length, 'doors=', doors.length, 'windows=', windows.length);
+    if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current);
+    geometrySaveTimerRef.current = setTimeout(() => {
+      console.log('[VTT] geometry autosave WRITE: walls=', walls.length, 'doors=', doors.length, 'windows=', windows.length);
+      supabase
+        .from('vtt_scenes')
+        .update({ walls, doors, windows, updated_at: new Date().toISOString() })
+        .eq('id', activeSceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] geometry autosave error:', error); });
+    }, 500);
+    return () => { if (geometrySaveTimerRef.current) clearTimeout(geometrySaveTimerRef.current); };
+  }, [walls, doors, windows, activeSceneId, role]);
 
   const handleSwitchScene = useCallback(async (sceneId: string) => {
     if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
@@ -1585,7 +1640,151 @@ handleUpdateProp(propId, {
     };
   }, [handleUpdateProp]);
 
+  const handleWallAdded = useCallback((wall: VTTWall) => {
+    pushUndoSnapshot();
+    setWalls(prev => {
+      const next = [...prev, wall];
+      // Sauvegarder immédiatement dans la scène active
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Save walls error:', error); });
+      }
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
+  }, [pushUndoSnapshot]);
 
+  const handleWallUpdated = useCallback((wall: VTTWall) => {
+    pushUndoSnapshot();
+    setWalls(prev => {
+      const next = prev.map(w => w.id === wall.id ? wall : w);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Update wall error:', error); });
+      }
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
+  }, [pushUndoSnapshot]);
+
+  const handleWallRemoved = useCallback((wallId: string) => {
+    pushUndoSnapshot();
+    setWalls(prev => {
+      const next = prev.filter(w => w.id !== wallId);
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        supabase
+          .from('vtt_scenes')
+          .update({ walls: next, updated_at: new Date().toISOString() })
+          .eq('id', sceneId)
+          .then(({ error }) => { if (error) console.error('[VTT] Remove wall error:', error); });
+      }
+      vttService.send({ type: 'UPDATE_WALLS', walls: next });
+      return next;
+    });
+  }, [pushUndoSnapshot]);
+  
+  const handleClearWalls = useCallback(() => {
+    pushUndoSnapshot();
+    setWalls([]);
+    vttService.send({ type: 'UPDATE_WALLS', walls: [] });
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ walls: [], updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] Clear walls error:', error); });
+    }
+  }, [pushUndoSnapshot]);
+
+  const persistDoors = useCallback((nextDoors: VTTDoor[]) => {
+    doorsRef.current = nextDoors;
+    vttService.send({ type: 'UPDATE_DOORS', doors: nextDoors });
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ doors: nextDoors, updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] Save doors error:', error); });
+    }
+  }, []);
+
+  const handleDoorAdded = useCallback((door: VTTDoor) => {
+    setDoors(prev => {
+      const next = [...prev, door];
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleDoorToggled = useCallback((doorId: string, open: boolean) => {
+    setDoors(prev => {
+      const next = prev.map(d => d.id === doorId ? { ...d, open } : d);
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleDoorRemoved = useCallback((doorId: string) => {
+    setDoors(prev => {
+      const next = prev.filter(d => d.id !== doorId);
+      persistDoors(next);
+      return next;
+    });
+  }, [persistDoors]);
+
+  const handleClearDoors = useCallback(() => {
+    setDoors([]);
+    persistDoors([]);
+  }, [persistDoors]);
+
+  const persistWindows = useCallback((nextWindows: VTTWindow[]) => {
+    windowsRef.current = nextWindows;
+    vttService.send({ type: 'UPDATE_WINDOWS', windows: nextWindows } as any);
+    const sceneId = activeSceneIdRef.current;
+    console.log('[VTT] persistWindows called, count=', nextWindows.length, 'sceneId=', sceneId);
+    if (sceneId) {
+      supabase
+        .from('vtt_scenes')
+        .update({ windows: nextWindows, updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ data, error, status, statusText }) => {
+          console.log('[VTT] persistWindows DB result:', { status, statusText, error, data });
+          if (error) console.error('[VTT] Save windows error:', error);
+        });
+    }
+  }, []);
+
+  const handleWindowAdded = useCallback((win: VTTWindow) => {
+    setWindows(prev => {
+      const next = [...prev, win];
+      persistWindows(next);
+      return next;
+    });
+  }, [persistWindows]);
+
+  const handleWindowRemoved = useCallback((windowId: string) => {
+    setWindows(prev => {
+      const next = prev.filter(w => w.id !== windowId);
+      persistWindows(next);
+      return next;
+    });
+  }, [persistWindows]);
+
+  const handleClearWindows = useCallback(() => {
+    setWindows([]);
+    persistWindows([]);
+  }, [persistWindows]);
 
 const handleBroadcastFrameChange = useCallback((frame: { x: number; y: number; width: number; height: number }) => {
   setBroadcastFrame(frame);
@@ -2481,4 +2680,4 @@ onUpdateToken={handleUpdateToken}
     </div>
     </DiceRollContext.Provider>
   );
-}  
+} 
