@@ -135,7 +135,7 @@ export function useVTTFog({
 
   const handleRevealAll = useCallback(() => {
     if (role !== 'gm') return;
-configRef: React.MutableRefObject<VTTRoomConfig>;
+ 
 const mapW = configRef.current.mapWidth || 3000;
 const mapH = configRef.current.mapHeight || 2000;
 
