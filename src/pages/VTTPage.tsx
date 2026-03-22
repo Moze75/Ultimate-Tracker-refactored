@@ -360,6 +360,7 @@ const {
   fogState,
   fogResetSignal,
   fogStateRef,
+  fogSaveTimerRef,
   handleRevealFog,
   handleMaskAll,
   handleRevealAll,
