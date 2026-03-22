@@ -362,7 +362,7 @@ const {
   savedViewport,
   weatherEffects,
   weatherEffectsRef,
-  sceneLoadedRef,
+
   sceneContextMenu,
   setSceneContextMenu,
   sceneConfigEdit,
