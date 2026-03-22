@@ -422,8 +422,7 @@ applyFogState(normalizeFogState(event.state.room.fogState));
         break;
 case 'FOG_UPDATED': {
   const normalized = normalizeFogState(event.fogState);
-  fogStateRef.current = normalized; 
-  setFogState(normalized);
+  applyFogState(normalized);
         if (
           normalized.exploredStrokes.length === 0 &&
           normalized.strokes.length === 0 &&
