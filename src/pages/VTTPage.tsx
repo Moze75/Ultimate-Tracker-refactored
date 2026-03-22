@@ -589,6 +589,10 @@ useEffect(() => {
     setCanvasViewport(nextViewport);
     canvasViewportRef.current = nextViewport;
 
+// Ref pour useVTTScenes (canvasViewport est un state, pas une ref)
+const canvasViewportForScenesRef = useRef(canvasViewport);
+canvasViewportForScenesRef.current = canvasViewport;
+    
     setActiveSceneId(scene.id);
 
     if (scene.roomId) {
