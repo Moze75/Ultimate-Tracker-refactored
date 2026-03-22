@@ -592,9 +592,7 @@ useEffect(() => {
     setTokens(scene.tokens);
 
     // -------------------
-    const nextFogState = normalizeFogState(scene.fogState);
-    fogStateRef.current = nextFogState;
-    setFogState(nextFogState);
+applyFogState(normalizeFogState(scene.fogState));
 
     setWalls(scene.walls || []);
     setDoors(scene.doors || []);
