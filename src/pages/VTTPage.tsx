@@ -46,6 +46,7 @@ import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
+import { useVTTFog, DEFAULT_FOG } from '../hooks/useVTTFog';
 import { useVTTScenes, DEFAULT_CONFIG } from '../hooks/useVTTScenes';
  
 
@@ -1062,8 +1063,6 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
   vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
 }, [pushUndoSnapshot, role, userId]);
   
-
- 
 
   const handleSceneRightClick = useCallback((sceneId: string, x: number, y: number) => {
     const scene = scenes.find(s => s.id === sceneId);
