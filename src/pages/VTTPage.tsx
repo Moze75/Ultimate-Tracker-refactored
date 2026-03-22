@@ -353,6 +353,22 @@ const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
 // On met à jour la ref après que useVTTUndo l'a créée
 pushUndoSnapshotRef.current = pushUndoSnapshot;
 
+const {
+  fogState,
+  fogResetSignal,
+  fogStateRef,
+  handleRevealFog,
+  handleMaskAll,
+  handleRevealAll,
+  handleResetFog,
+  handleSeenDoorsUpdate,
+  applyFogState,
+} = useVTTFog({
+  role,
+  activeSceneIdRef,
+  saveCurrentSceneState,
+});
+  
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
