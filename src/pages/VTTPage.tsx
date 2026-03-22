@@ -350,7 +350,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const saveCurrentSceneStateRef = useRef<(sceneId: string) => Promise<void>>(async () => {});
 
