@@ -353,6 +353,10 @@ const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
 // On met à jour la ref après que useVTTUndo l'a créée
 pushUndoSnapshotRef.current = pushUndoSnapshot;
 
+const saveCurrentSceneStateRef = useRef<(sceneId: string) => Promise<void>>(async () => {});
+// Branche la vraie fonction dans la ref
+saveCurrentSceneStateRef.current = saveCurrentSceneState;
+  
 const {
   fogState,
   fogResetSignal,
@@ -366,7 +370,7 @@ const {
 } = useVTTFog({
   role,
   activeSceneIdRef,
-  saveCurrentSceneState,
+  saveCurrentSceneState: (sceneId) => saveCurrentSceneStateRef.current(sceneId),
 });
   
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
