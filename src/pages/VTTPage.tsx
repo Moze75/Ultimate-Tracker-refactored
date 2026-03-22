@@ -443,9 +443,7 @@ case 'FOG_UPDATED': {
       case 'SCENE_SWITCHED':
         setConfig(event.config);
         setTokens(event.tokens);
-const fogSwitched = normalizeFogState(event.fogState);
-fogStateRef.current = fogSwitched;
-setFogState(fogSwitched);
+applyFogState(normalizeFogState(event.fogState));
         setWalls(event.walls);
         setDoors((event as any).doors || []);
         setWindows((event as any).windows || []);
