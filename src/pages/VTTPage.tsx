@@ -354,8 +354,7 @@ const { pushUndoSnapshot, handleUndo, handleRedo } = useVTTUndo({
 pushUndoSnapshotRef.current = pushUndoSnapshot;
 
 const saveCurrentSceneStateRef = useRef<(sceneId: string) => Promise<void>>(async () => {});
-// Branche la vraie fonction dans la ref
-saveCurrentSceneStateRef.current = saveCurrentSceneState;
+
   
 const {
   fogState,
@@ -719,6 +718,8 @@ useEffect(() => {
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
 
+saveCurrentSceneStateRef.current = saveCurrentSceneState;
+    
     await supabase
       .from('vtt_scenes')
       .update({
