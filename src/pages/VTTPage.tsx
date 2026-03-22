@@ -783,9 +783,7 @@ saveCurrentSceneStateRef.current = saveCurrentSceneState;
       setConfig(scene.config);
 
       // -------------------
-    const nextFogState = normalizeFogState(scene.fogState);
-      fogStateRef.current = nextFogState;
-      setFogState(nextFogState);
+applyFogState(normalizeFogState(scene.fogState));
 
       setTokens(scene.tokens);
       setWalls(scene.walls || []);
