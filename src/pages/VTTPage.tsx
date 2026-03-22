@@ -1619,7 +1619,7 @@ useEffect(() => {
     setPhase('lobby');
     setRoomId(null);
     setTokens([]);
-    setFogState(DEFAULT_FOG);
+applyFogState(DEFAULT_FOG);
     setSelectedTokenId(null);
     setScenes([]);
     setActiveSceneId(null);
