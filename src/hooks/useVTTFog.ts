@@ -136,8 +136,8 @@ export function useVTTFog({
   const handleRevealAll = useCallback(() => {
     if (role !== 'gm') return;
 
-    const mapW = 3000; // fallback — configRef n'est pas disponible ici,
-    const mapH = 2000; // passer configRef en param si tu veux les vraies dimensions
+const mapW = configRef.current.mapWidth || 3000;
+const mapH = configRef.current.mapHeight || 2000;
 
     // ⚠️ Si tu veux les dimensions réelles de la carte, passe configRef en paramètre
     // et remplace les deux lignes ci-dessus par :
