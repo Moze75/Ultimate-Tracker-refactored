@@ -382,7 +382,9 @@ const {
       case 'STATE_SYNC':
         setConfig(event.state.room.config);
         setTokens(event.state.room.tokens);
-        setFogState(normalizeFogState(event.state.room.fogState));
+const fogSync = normalizeFogState(event.state.room.fogState);
+fogStateRef.current = fogSync;
+setFogState(fogSync);
         setWalls(event.state.room.walls || []);
         setDoors(event.state.room.doors || []);
         setWindows((event.state.room as any).windows || []);
