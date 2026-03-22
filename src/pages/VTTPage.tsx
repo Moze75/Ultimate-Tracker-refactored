@@ -301,6 +301,7 @@ const pushUndoSnapshotRef = useRef<() => void>(() => {});
 const configRef = useRef<VTTRoomConfig>(DEFAULT_CONFIG);
 
 const activeSceneIdRef = useRef<string | null>(null);
+  const sceneLoadedRef = useRef<string | null>(null);
   
 const {
   walls, doors, windows,
