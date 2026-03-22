@@ -363,6 +363,74 @@ const {
   saveCurrentSceneState: (sceneId) => saveCurrentSceneStateRef.current(sceneId),
 });
 
+const canvasViewportForScenesRef = useRef(canvasViewport);
+canvasViewportForScenesRef.current = canvasViewport;
+
+const {
+  scenes,
+  activeSceneId,
+  config,
+  savedViewport,
+  weatherEffects,
+  weatherEffectsRef,
+  sceneLoadedRef,
+  sceneContextMenu,
+  setSceneContextMenu,
+  sceneConfigEdit,
+  setSceneConfigEdit,
+  setScenes,
+  setActiveSceneId,
+  setConfig,
+  setSavedViewport,
+  setWeatherEffects,
+  saveCurrentSceneState,
+  applySceneToLive,
+  handleSwitchScene,
+  handleCreateScene,
+  handleRenameScene,
+  handleDeleteScene,
+  handleUpdateMap,
+  handleSceneRightClick,
+  handleSaveSceneConfig,
+  handleSaveScene,
+  handleSaveView,
+  handleUpdateWeather,
+} = useVTTScenes({
+  role,
+  roomId,
+  phase,
+  activeSceneIdRef,
+  fogStateRef,
+  tokensRef,
+  wallsRef,
+  doorsRef,
+  windowsRef,
+  propsRef,
+  configRef,
+  fogSaveTimerRef: fogSaveTimerFromHook,
+  canvasViewport,
+  callbacks: {
+    setConfig,
+    setTokens,
+    setWalls,
+    setDoors,
+    setWindows,
+    setProps,
+    setSelectedPropId,
+    setWeatherEffects,
+    setSavedViewport,
+    setCanvasViewport,
+    applyFogState,
+    fogStateRef,
+    canvasViewportRef,
+    configRef,
+    vttCanvasRef,
+  },
+});
+
+saveCurrentSceneStateRef.current = saveCurrentSceneState;
+
+  
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
