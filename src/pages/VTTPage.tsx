@@ -311,7 +311,7 @@ const {
   handleWindowAdded, handleWindowRemoved, handleClearWindows,
 } = useVTTGeometry({
   role,
-  activeSceneId,
+  activeSceneId: activeSceneIdRef.current,  // ← utilise la ref
   activeSceneIdRef,
   sceneLoadedRef,
   pushUndoSnapshot: () => pushUndoSnapshotRef.current(),
