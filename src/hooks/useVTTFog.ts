@@ -213,16 +213,12 @@ const mapH = configRef.current.mapHeight || 2000;
   // ---------------------------------------------------------------------------
   // API publique
   // ---------------------------------------------------------------------------
-  return {
-    // State
-    fogState,
-    fogResetSignal,
-
-    // Ref (à passer à saveCurrentSceneState et aux composants qui en ont besoin)
-    fogStateRef,
-
-    // Handlers
-    handleRevealFog,
+return {
+  fogState,
+  fogResetSignal,
+  fogStateRef,
+  fogSaveTimerRef,
+  handleRevealFog,
     handleMaskAll,
     handleRevealAll,
     handleResetFog,
