@@ -434,6 +434,18 @@ callbacks: {
 
 saveCurrentSceneStateRef.current = saveCurrentSceneState;
 
+  // Branchement des setters après que les hooks les ont créés
+setConfigRef.current = setConfig;
+setTokensRef.current = setTokens;
+setWallsRef.current = setWalls;
+setDoorsRef.current = setDoors;
+setWindowsRef.current = setWindows;
+setPropsRef.current = setProps;
+setSelectedPropIdRef.current = setSelectedPropId;
+setWeatherEffectsRef.current = setWeatherEffects;
+setSavedViewportRef.current = setSavedViewport;
+setCanvasViewportRef.current = setCanvasViewport;
+applyFogStateRef.current = applyFogState;
   
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
