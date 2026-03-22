@@ -293,7 +293,7 @@ canvasViewportRef.current = canvasViewport;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
-const sceneLoadedRef = useRef<string | null>(null);
+
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
