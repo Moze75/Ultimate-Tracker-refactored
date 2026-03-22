@@ -58,15 +58,7 @@ interface VTTPageProps {
   onBack: () => void;
 }
 
-const DEFAULT_CONFIG: VTTRoomConfig = {
-  mapImageUrl: '',
-  gridSize: 60,
-  snapToGrid: true,
-  fogEnabled: true,
-  fogPersistent: false,
-  mapWidth: 3000,
-  mapHeight: 2000,
-};
+
 
 const DEFAULT_FOG: VTTFogState = {
   revealedCells: [],
