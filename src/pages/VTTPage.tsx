@@ -46,6 +46,7 @@ import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
+import { useVTTScenes, DEFAULT_CONFIG } from '../hooks/useVTTScenes';
  
 
 type VTTCopyBuffer =
