@@ -352,6 +352,24 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const saveCurrentSceneStateRef = useRef<(sceneId: string) => Promise<void>>(async () => {});
+
+const {
+  fogState,
+  fogResetSignal,
+  fogStateRef,
+  fogSaveTimerRef: fogSaveTimerFromHook,
+  handleRevealFog,
+  handleMaskAll,
+  handleRevealAll,
+  handleResetFog,
+  handleSeenDoorsUpdate,
+  applyFogState,
+} = useVTTFog({
+  role,
+  activeSceneIdRef,
+  saveCurrentSceneState: (sceneId) => saveCurrentSceneStateRef.current(sceneId),
+});
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
