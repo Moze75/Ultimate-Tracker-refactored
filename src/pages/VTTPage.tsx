@@ -175,8 +175,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [role, setRole] = useState<VTTRole>('player');
   const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
-  const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
-  const [fogResetSignal, setFogResetSignal] = useState(0);
+
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -238,7 +237,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
 
   const configRef = useRef(config);
   configRef.current = config;
-  const fogStateRef = useRef(fogState);
+
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
   const activeSceneIdRef = useRef(activeSceneId);
