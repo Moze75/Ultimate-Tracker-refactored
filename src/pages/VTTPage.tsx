@@ -61,14 +61,6 @@ interface VTTPageProps {
 }
 
 
-
-const DEFAULT_FOG: VTTFogState = {
-  revealedCells: [],
-  strokes: [],
-  exploredStrokes: [],
-  seenDoors: [],
-};
-
 // -------------------
 // Normalisation du brouillard de guerre persisté
 // -------------------
