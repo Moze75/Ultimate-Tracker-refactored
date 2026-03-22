@@ -46,9 +46,6 @@ import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
-import { useVTTFog, DEFAULT_FOG } from '../hooks/useVTTFog';
-import { useVTTScenes, DEFAULT_CONFIG } from '../hooks/useVTTScenes';
- 
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -60,6 +57,22 @@ interface VTTPageProps {
   onBack: () => void;
 }
 
+const DEFAULT_CONFIG: VTTRoomConfig = {
+  mapImageUrl: '',
+  gridSize: 60,
+  snapToGrid: true,
+  fogEnabled: true,
+  fogPersistent: false,
+  mapWidth: 3000,
+  mapHeight: 2000,
+};
+
+const DEFAULT_FOG: VTTFogState = {
+  revealedCells: [],
+  strokes: [],
+  exploredStrokes: [],
+  seenDoors: [],
+};
 
 // -------------------
 // Normalisation du brouillard de guerre persisté
@@ -166,9 +179,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [playerBoundTokenIds, setPlayerBoundTokenIds] = useState<string[]>([]);
 
   const [role, setRole] = useState<VTTRole>('player');
-
+  const [config, setConfig] = useState<VTTRoomConfig>(DEFAULT_CONFIG);
   const [tokens, setTokens] = useState<VTTToken[]>([]);
-
+  const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
+  const [fogResetSignal, setFogResetSignal] = useState(0);
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -188,8 +202,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [showAddToken, setShowAddToken] = useState(false);
-
-
+  const [sceneConfigEdit, setSceneConfigEdit] = useState<{ sceneId: string; config: VTTRoomConfig } | null>(null);
+    const [sceneContextMenu, setSceneContextMenu] = useState<{ sceneId: string; sceneName: string; config: VTTRoomConfig; x: number; y: number } | null>(null);
   
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [characterSheetToken, setCharacterSheetToken] = useState<VTTToken | null>(null);
@@ -224,8 +238,17 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [showWalls, setShowWalls] = useState(true);
 
 
+  const [scenes, setScenes] = useState<VTTScene[]>([]);
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const switchingSceneRef = useRef(false);
+
+  const configRef = useRef(config);
+  configRef.current = config;
+  const fogStateRef = useRef(fogState);
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
+  const activeSceneIdRef = useRef(activeSceneId);
+  activeSceneIdRef.current = activeSceneId;
 
   const [props, setProps] = useState<VTTProp[]>([]);
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
@@ -275,9 +298,13 @@ const handleBroadcastModeChange = useCallback((mode: 'frame' | 'follow') => {
 const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
 const canvasViewportRef = useRef(canvasViewport);
 canvasViewportRef.current = canvasViewport;
-
+  const [savedViewport, setSavedViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [playerInitialViewport, setPlayerInitialViewport] = useState<{ x: number; y: number; scale: number } | null>(null);
   const playerInitialViewportSetRef = useRef(false);
+  const [weatherEffects, setWeatherEffects] = useState<VTTWeatherEffect[]>([]);
+  const weatherEffectsRef = useRef<VTTWeatherEffect[]>([]);
+  weatherEffectsRef.current = weatherEffects;
+
 
   const [copyBuffer, setCopyBuffer] = useState<VTTCopyBuffer>(null);
 
@@ -293,16 +320,11 @@ canvasViewportRef.current = canvasViewport;
   const userName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Joueur';
 
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
-
+const sceneLoadedRef = useRef<string | null>(null);
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
 
-const configRef = useRef<VTTRoomConfig>(DEFAULT_CONFIG);
-
-const activeSceneIdRef = useRef<string | null>(null);
-  const sceneLoadedRef = useRef<string | null>(null);
-  
 const {
   walls, doors, windows,
   setWalls, setDoors, setWindows,
@@ -312,7 +334,7 @@ const {
   handleWindowAdded, handleWindowRemoved, handleClearWindows,
 } = useVTTGeometry({
   role,
-  activeSceneId: activeSceneIdRef.current,  // ← utilise la ref
+  activeSceneId,
   activeSceneIdRef,
   sceneLoadedRef,
   pushUndoSnapshot: () => pushUndoSnapshotRef.current(),
@@ -334,119 +356,9 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
-  const saveCurrentSceneStateRef = useRef<(sceneId: string) => Promise<void>>(async () => {});
-
-const {
-  fogState,
-  fogResetSignal,
-  fogStateRef,
-  fogSaveTimerRef: fogSaveTimerFromHook,
-  handleRevealFog,
-  handleMaskAll,
-  handleRevealAll,
-  handleResetFog,
-  handleSeenDoorsUpdate,
-  applyFogState,
-} = useVTTFog({
-  role,
-  activeSceneIdRef,
-  saveCurrentSceneState: (sceneId) => saveCurrentSceneStateRef.current(sceneId),
-});
-
-const canvasViewportForScenesRef = useRef(canvasViewport);
-canvasViewportForScenesRef.current = canvasViewport;
-
-const setConfigRef = useRef<React.Dispatch<React.SetStateAction<VTTRoomConfig>>>(() => {});
-const setTokensRef = useRef<React.Dispatch<React.SetStateAction<VTTToken[]>>>(() => {});
-const setWallsRef = useRef<React.Dispatch<React.SetStateAction<VTTWall[]>>>(() => {});
-const setDoorsRef = useRef<React.Dispatch<React.SetStateAction<VTTDoor[]>>>(() => {});
-const setWindowsRef = useRef<React.Dispatch<React.SetStateAction<VTTWindow[]>>>(() => {});
-const setPropsRef = useRef<React.Dispatch<React.SetStateAction<VTTProp[]>>>(() => {});
-const setSelectedPropIdRef = useRef<React.Dispatch<React.SetStateAction<string | null>>>(() => {});
-const setWeatherEffectsRef = useRef<React.Dispatch<React.SetStateAction<VTTWeatherEffect[]>>>(() => {});
-const setSavedViewportRef = useRef<React.Dispatch<React.SetStateAction<{ x: number; y: number; scale: number } | null>>>(() => {});
-const setCanvasViewportRef = useRef<React.Dispatch<React.SetStateAction<{ x: number; y: number; scale: number }>>>(() => {});
-const applyFogStateRef = useRef<(fog: VTTFogState) => void>(() => {});
-  
-const {
-  scenes,
-  activeSceneId,
-  config,
-  savedViewport,
-  weatherEffects,
-  weatherEffectsRef,
-
-  sceneContextMenu,
-  setSceneContextMenu,
-  sceneConfigEdit,
-  setSceneConfigEdit,
-  setScenes,
-  setActiveSceneId,
-  setConfig,
-  setSavedViewport,
-  setWeatherEffects,
-  saveCurrentSceneState,
-  applySceneToLive,
-  handleSwitchScene,
-  handleCreateScene,
-  handleRenameScene,
-  handleDeleteScene,
-  handleUpdateMap,
-  handleSceneRightClick,
-  handleSaveSceneConfig,
-  handleSaveScene,
-  handleSaveView,
-  handleUpdateWeather,
-} = useVTTScenes({
-  role,
-  roomId,
-  phase,
-  activeSceneIdRef,
-  fogStateRef,
-  tokensRef,
-  wallsRef,
-  doorsRef,
-  windowsRef,
-  propsRef,
-  configRef,
-  fogSaveTimerRef: fogSaveTimerFromHook,
-  canvasViewport,
-callbacks: {
-  setConfig: (v) => setConfigRef.current(v),
-  setTokens: (v) => setTokensRef.current(v),
-  setWalls: (v) => setWallsRef.current(v),
-  setDoors: (v) => setDoorsRef.current(v),
-  setWindows: (v) => setWindowsRef.current(v),
-  setProps: (v) => setPropsRef.current(v),
-  setSelectedPropId: (v) => setSelectedPropIdRef.current(v),
-  setWeatherEffects: (v) => setWeatherEffectsRef.current(v),
-  setSavedViewport: (v) => setSavedViewportRef.current(v),
-  setCanvasViewport: (v) => setCanvasViewportRef.current(v),
-  applyFogState: (v) => applyFogStateRef.current(v),
-  fogStateRef,
-  canvasViewportRef,
-  configRef,
-  vttCanvasRef,
-},
-});
-
-saveCurrentSceneStateRef.current = saveCurrentSceneState;
-
-  // Branchement des setters après que les hooks les ont créés
-setConfigRef.current = setConfig;
-setTokensRef.current = setTokens;
-setWallsRef.current = setWalls;
-setDoorsRef.current = setDoors;
-setWindowsRef.current = setWindows;
-setPropsRef.current = setProps;
-setSelectedPropIdRef.current = setSelectedPropId;
-setWeatherEffectsRef.current = setWeatherEffects;
-setSavedViewportRef.current = setSavedViewport;
-setCanvasViewportRef.current = setCanvasViewport;
-applyFogStateRef.current = applyFogState;
-  
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
@@ -656,7 +568,268 @@ useEffect(() => {
 }, [phase, roomId, role]);
 
  
+  
+  const applySceneToLive = useCallback((scene: VTTScene) => {
+    setConfig(scene.config);
+    setTokens(scene.tokens);
 
+    // -------------------
+    const nextFogState = normalizeFogState(scene.fogState);
+    fogStateRef.current = nextFogState;
+    setFogState(nextFogState);
+
+    setWalls(scene.walls || []);
+    setDoors(scene.doors || []);
+    setWindows(scene.windows || []);
+    setProps(Array.isArray(scene.props) ? scene.props : []);
+    setSelectedPropId(null);
+    setWeatherEffects(scene.config.weatherEffects || []);
+    setSavedViewport(scene.config.savedViewport ?? null);
+    sceneLoadedRef.current = scene.id;
+    console.log('[VTT] applySceneToLive: doors=', scene.doors?.length ?? 0, 'windows=', scene.windows?.length ?? 0);
+
+    // -------------------
+    // Synchronisation du viewport React pour les props HTML
+    // -------------------
+    const nextViewport = scene.config.savedViewport ?? { x: 0, y: 0, scale: 1 };
+    setCanvasViewport(nextViewport);
+    canvasViewportRef.current = nextViewport;
+
+    setActiveSceneId(scene.id);
+
+    if (scene.roomId) {
+      localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
+    }
+
+    // -------------------
+    // Broadcast du masque exploré aux clients distants après changement de scène
+    // requestAnimationFrame laisse le temps à VTTCanvas de restaurer son
+    // exploredCanvasRef depuis localStorage avant d'encoder le snapshot
+    // -------------------
+     if (scene.id) {
+      // ===================================
+      // Broadcast du masque exploré (fog de vision)
+      // ===================================
+      // IMPORTANT : 2 rAF sont nécessaires.
+      // Le 1er rAF laisse VTTCanvas déclencher son useEffect[sceneId] (reset + pré-création canvas).
+      // Le 2ème rAF laisse restoreExploredMaskSnapshot() finir de charger l'image en async.
+      // Sans le 2ème rAF, getExploredMaskDataUrl() encode un canvas encore noir.
+      const sceneIdToSend = scene.id;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Petit délai supplémentaire pour la restauration async de l'image
+          setTimeout(() => {
+            const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+            // -------------------
+            // Envoi du masque exploré aux clients distants
+            // -------------------
+            if (maskData?.dataUrl) {
+              vttService.broadcastExploredMask(sceneIdToSend, maskData);
+            }
+          }, 300);
+        });
+      });
+    }
+
+    vttService.setActiveSceneId(scene.id);
+    vttService.send({
+      type: 'SWITCH_SCENE',
+      sceneId: scene.id,
+      config: scene.config,
+      tokens: scene.tokens,
+      fogState: scene.fogState,
+      walls: scene.walls || [],
+      doors: scene.doors || [],
+      windows: scene.windows || [],
+    });
+
+    // (Le broadcast du masque exploré est déjà géré par le bloc précédent
+    //  lignes 402-426 avec le double rAF + setTimeout)
+  }, []);
+
+useEffect(() => {
+  if (phase !== 'room' || !roomId || role !== 'gm') return;
+  let cancelled = false;
+
+  supabase
+    .from('vtt_scenes')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('order_index')
+    .then(({ data }) => {
+      if (cancelled) return;
+      if (data && data.length > 0) {
+        const parsed = data.map(dbSceneToVTTScene);
+        setScenes(parsed);
+        if (!activeSceneIdRef.current) {
+          const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
+          const restoredScene = lastSceneId
+            ? parsed.find(scene => scene.id === lastSceneId)
+            : null;
+          const initialScene = restoredScene ?? {
+            ...parsed[0],
+            props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
+          };
+          setActiveSceneId(initialScene.id);
+          applySceneToLive(initialScene);
+          vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
+        }
+      } else {
+        supabase
+          .from('vtt_scenes')
+          .insert({ room_id: roomId, name: 'Scene 1', order_index: 0, config: DEFAULT_CONFIG, fog_state: DEFAULT_FOG, tokens: [], props: [] })
+          .select()
+          .maybeSingle()
+          .then(({ data: s }) => {
+            if (cancelled) return;
+            if (s) {
+              const scene = dbSceneToVTTScene(s);
+              setScenes([scene]);
+              setActiveSceneId(scene.id);
+              applySceneToLive(scene);
+            }
+          });
+      }
+    });
+
+  return () => { cancelled = true; };
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [phase, roomId, role]);
+
+  
+
+  const saveCurrentSceneState = useCallback(async (sceneId: string) => {
+    if (!sceneId || !roomId) return;
+
+    await supabase
+      .from('vtt_scenes')
+      .update({
+        config: configRef.current,
+        fog_state: fogStateRef.current,
+        tokens: tokensRef.current,
+        walls: wallsRef.current,
+        doors: doorsRef.current,
+        windows: windowsRef.current,
+        props: propsRef.current,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sceneId);
+  }, [roomId]);
+
+
+  const handleSwitchScene = useCallback(async (sceneId: string) => {
+    if (sceneId === activeSceneIdRef.current || switchingSceneRef.current) return;
+    switchingSceneRef.current = true;
+    try {
+      // -------------------
+      // Sauvegarde immédiate du brouillard de guerre avant changement de scène
+      // -------------------
+      if (fogSaveTimerRef.current) {
+        clearTimeout(fogSaveTimerRef.current);
+        fogSaveTimerRef.current = null;
+      }
+
+      if (activeSceneIdRef.current) {
+        await supabase
+          .from('vtt_scenes')
+          .update({
+            fog_state: fogStateRef.current,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', activeSceneIdRef.current);
+
+        await saveCurrentSceneState(activeSceneIdRef.current);
+      }
+
+      const { data } = await supabase
+        .from('vtt_scenes')
+        .select('*')
+        .eq('id', sceneId)
+        .maybeSingle();
+      if (!data) return;
+      const scene = dbSceneToVTTScene(data);
+
+      vttService.send({
+        type: 'SWITCH_SCENE',
+        sceneId: scene.id,
+        config: scene.config,
+        tokens: scene.tokens,
+        fogState: scene.fogState,
+        walls: scene.walls || [],
+        doors: scene.doors || [],
+        windows: scene.windows || [],
+      });
+
+      setConfig(scene.config);
+
+      // -------------------
+    const nextFogState = normalizeFogState(scene.fogState);
+      fogStateRef.current = nextFogState;
+      setFogState(nextFogState);
+
+      setTokens(scene.tokens);
+      setWalls(scene.walls || []);
+      setDoors(scene.doors || []);
+      setWindows(scene.windows || []);
+      setProps(Array.isArray(scene.props) ? scene.props : []);
+      setSelectedPropId(null);
+      setActiveSceneId(sceneId);
+
+      localStorage.setItem(getLastSceneStorageKey(roomId!), sceneId);
+
+      vttService.setActiveSceneId(sceneId);
+      setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
+      setSavedViewport(scene.config.savedViewport ?? null);
+
+      // -------------------
+      // Synchronisation du viewport React pour les props HTML
+      // -------------------
+      if (scene.config.savedViewport) {
+        setCanvasViewport(scene.config.savedViewport);
+        canvasViewportRef.current = scene.config.savedViewport;
+      }
+    } finally {
+      switchingSceneRef.current = false;
+    }
+  }, [saveCurrentSceneState]);
+
+  const handleCreateScene = useCallback(async (name: string) => {
+    if (!roomId) return;
+    const orderIndex = scenes.length;
+    const { data } = await supabase
+      .from('vtt_scenes')
+      .insert({
+        room_id: roomId,
+        name,
+        order_index: orderIndex,
+        config: DEFAULT_CONFIG,
+        fog_state: DEFAULT_FOG,
+        tokens: [],
+        props: [],
+      })
+      .select()
+      .maybeSingle();
+    if (data) {
+      const scene = dbSceneToVTTScene(data);
+      setScenes(prev => [...prev, scene]);
+    }
+  }, [roomId, scenes.length]);
+
+  const handleRenameScene = useCallback(async (sceneId: string, name: string) => {
+    await supabase.from('vtt_scenes').update({ name }).eq('id', sceneId);
+    setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, name } : s));
+  }, []);
+
+  const handleDeleteScene = useCallback(async (sceneId: string) => {
+    await supabase.from('vtt_scenes').delete().eq('id', sceneId);
+    setScenes(prev => {
+      const next = prev.filter(s => s.id !== sceneId);
+      if (activeSceneIdRef.current === sceneId && next.length > 0) {
+        handleSwitchScene(next[0].id);
+      }
+      return next;
+    });
+  }, [handleSwitchScene]);
 
   const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
     setTokens(prev => {
@@ -702,6 +875,89 @@ useEffect(() => {
     });
   }, [tokens]);
   
+// -------------------
+// Gestion de la levée du brouillard de guerre
+// Accepte un stroke unique ou un batch de strokes (painting continu).
+// Un batch produit UN SEUL setState + UN SEUL broadcast + UNE SEULE RPC Supabase,
+// au lieu de N (un par mousemove). C'est la clé de la performance du pinceau.
+// -------------------
+const handleRevealFog = useCallback((strokeOrBatch: VTTFogStroke | VTTFogStroke[]) => {
+  const batch = Array.isArray(strokeOrBatch) ? strokeOrBatch : [strokeOrBatch];
+  if (batch.length === 0) return;
+
+  // -------------------
+  // Construction du prochain fogState en ajoutant tout le batch d'un coup
+  // Une seule copie O(N) au lieu de N copies O(N²) cumulées
+  // -------------------
+  const prevStrokes = fogStateRef.current.strokes || [];
+  const prevExplored = fogStateRef.current.exploredStrokes || [];
+  const newStrokes = [...prevStrokes, ...batch];
+  const newExplored = [...prevExplored, ...batch.filter(s => !s.erase)];
+
+  const nextFogState: VTTFogState = {
+    revealedCells: [...(fogStateRef.current.revealedCells || [])],
+    strokes: newStrokes,
+    exploredStrokes: newExplored,
+    seenDoors: fogStateRef.current.seenDoors,
+  };
+
+  // -------------------
+  // UN SEUL setState React pour tout le batch → un seul re-render
+  // -------------------
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  // -------------------
+  // UN SEUL envoi vttService pour tout le batch → un seul broadcast + une seule RPC
+  // On envoie le dernier stroke du batch (pour compatibilité vttService.send)
+  // mais le state complet est déjà construit avec tous les strokes
+  // -------------------
+  vttService.send({
+    type: 'REVEAL_FOG',
+    cells: [],
+    erase: batch[batch.length - 1].erase,
+    stroke: batch[batch.length - 1],
+    batch,
+  });
+
+  // -------------------
+  // Sauvegarde scène debounced (inchangé)
+  // -------------------
+  if (activeSceneIdRef.current && role === 'gm') {
+    if (fogSaveTimerRef.current) clearTimeout(fogSaveTimerRef.current);
+    fogSaveTimerRef.current = setTimeout(() => {
+      saveCurrentSceneState(activeSceneIdRef.current!);
+    }, 2000);
+  }
+}, [saveCurrentSceneState, role]);
+
+const seenDoorsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const handleSeenDoorsUpdate = useCallback((seenIds: string[]) => {
+  const currentSeenDoors = fogStateRef.current.seenDoors || [];
+  const newIds = seenIds.filter(id => !currentSeenDoors.includes(id));
+  if (newIds.length === 0) return;
+
+  const nextFogState: VTTFogState = {
+    ...fogStateRef.current,
+    seenDoors: [...currentSeenDoors, ...newIds],
+  };
+  fogStateRef.current = nextFogState;
+  setFogState(nextFogState);
+
+  if (seenDoorsSaveTimerRef.current) clearTimeout(seenDoorsSaveTimerRef.current);
+  seenDoorsSaveTimerRef.current = setTimeout(() => {
+    seenDoorsSaveTimerRef.current = null;
+    const sceneId = activeSceneIdRef.current;
+    if (!sceneId) return;
+    supabase.rpc('update_scene_fog_state', {
+      p_scene_id: sceneId,
+      p_fog_state: fogStateRef.current,
+    }).then(({ error }) => {
+      if (error) console.error('[VTT] handleSeenDoorsUpdate save error:', error);
+    });
+  }, 2000);
+}, []);
 
 const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   pushUndoSnapshot();
@@ -874,8 +1130,118 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
   vttService.send({ type: 'ADD_TOKEN', token: tokenToAdd });
 }, [pushUndoSnapshot, role, userId]);
   
+  // ===================================
+  // Tout masquer — remet le fog en noir complet
+  // ===================================
+  // Réinitialise strokes + exploredStrokes à vide.
+  // Un seul envoi atomique RESET_FOG (évite les doubles broadcasts).
+  // Aussi utilisé comme "Réinitialiser le brouillard" (même effet).
+  const handleMaskAll = useCallback(() => {
+    if (role !== 'gm') return;
+    const newFog: VTTFogState = { revealedCells: [], strokes: [], exploredStrokes: [] };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
+    setFogState(newFog);
+    setFogResetSignal(s => s + 1);
+    // -------------------
+    // 2. Suppression immédiate du snapshot localStorage pour toutes les scènes courantes
+    // On ne peut pas attendre le cleanup React (trop tard si refresh immédiat)
+    // -------------------
+    if (activeSceneIdRef.current) {
+      localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
+    }
+    // -------------------
+    // 3. Broadcast + persistance via vttService
+    // -------------------
+    vttService.send({ type: 'RESET_FOG' });
+    // -------------------
+    // 4. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
 
-  
+  // ===================================
+  // Tout révéler — lève le fog sur toute la carte d'un coup
+  // ===================================
+  // Crée un unique stroke géant (rayon = diagonale de la carte)
+  // qui couvre toute la surface. Un seul envoi REVEAL_FOG (pas de RESET d'abord).
+  const handleRevealAll = useCallback(() => {
+    if (role !== 'gm') return;
+    const mapW = configRef.current.mapWidth || 3000;
+    const mapH = configRef.current.mapHeight || 2000;
+    // -------------------
+    // Le rayon couvre la diagonale entière de la carte
+    // -------------------
+    const r = Math.sqrt(mapW * mapW + mapH * mapH);
+    const stroke: VTTFogStroke = { x: mapW / 2, y: mapH / 2, r, erase: false };
+    const newFog: VTTFogState = {
+      revealedCells: [],
+      strokes: [stroke],
+      exploredStrokes: [stroke],
+    };
+    // -------------------
+    // 1. Mise à jour du state React local (affichage immédiat)
+    // -------------------
+    fogStateRef.current = newFog;
+    setFogState(newFog);
+    // -------------------
+    // 2. Reset d'abord pour vider l'ancien state dans vttService,
+    //    puis envoi du stroke géant
+    // -------------------
+    vttService.send({ type: 'RESET_FOG' });
+    vttService.send({ type: 'REVEAL_FOG', cells: [], erase: false, stroke });
+    // -------------------
+    // 3. Sauvegarde explicite dans la scène Supabase
+    // -------------------
+    if (activeSceneIdRef.current) {
+      saveCurrentSceneState(activeSceneIdRef.current);
+    }
+  }, [role, saveCurrentSceneState]);
+
+  // ===================================
+  // Réinitialiser le fog — alias de "Tout masquer" (même comportement)
+  // ===================================
+  const handleResetFog = handleMaskAll;
+
+  const handleUpdateMap = useCallback((changes: Partial<VTTRoomConfig>) => {
+    setConfig(prev => ({ ...prev, ...changes }));
+    vttService.send({ type: 'UPDATE_MAP', config: changes });
+    if (activeSceneIdRef.current) {
+      setScenes(prev => prev.map(s => {
+        if (s.id !== activeSceneIdRef.current) return s;
+        return { ...s, config: { ...s.config, ...changes } };
+      }));
+      supabase
+        .from('vtt_scenes')
+        .update({ config: { ...configRef.current, ...changes } })
+        .eq('id', activeSceneIdRef.current)
+        .then(() => {});
+    }
+  }, []);
+
+  const handleSceneRightClick = useCallback((sceneId: string, x: number, y: number) => {
+    const scene = scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    setSceneContextMenu({ sceneId, sceneName: scene.name, config: scene.config, x, y });
+  }, [scenes]);
+
+  const handleSaveSceneConfig = useCallback(async (sceneId: string, changes: Partial<VTTRoomConfig>) => {
+    setScenes(prev => {
+      const scene = prev.find(s => s.id === sceneId);
+      if (!scene) return prev;
+      const newConfig = { ...scene.config, ...changes };
+      supabase.from('vtt_scenes').update({ config: newConfig }).eq('id', sceneId).then(() => {});
+      return prev.map(s => s.id === sceneId ? { ...s, config: newConfig } : s);
+    });
+    if (sceneId === activeSceneIdRef.current) {
+      setConfig(prev => ({ ...prev, ...changes }));
+      vttService.send({ type: 'UPDATE_MAP', config: changes });
+    }
+  }, []);
 
   const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
     setCalibrationPoints(prev => {
@@ -1286,6 +1652,47 @@ useEffect(() => {
 
   vttService.sendBroadcastViewport(broadcastFrame);
 }, [role, broadcastFrameEnabled, broadcastMode, broadcastFrame]);
+
+
+
+  const handleSaveScene = useCallback(async () => {
+    if (!activeSceneIdRef.current || role !== 'gm') return;
+    await saveCurrentSceneState(activeSceneIdRef.current);
+  }, [role, saveCurrentSceneState]);
+
+  const handleSaveView = useCallback(async () => {
+    if (!activeSceneIdRef.current || role !== 'gm') return;
+    const vp = canvasViewport;
+    const savedViewport = { x: vp.x, y: vp.y, scale: vp.scale };
+    // 1. Propager aux joueurs connectés via UPDATE_MAP (sans toucher au state config local)
+    vttService.send({ type: 'UPDATE_MAP', config: { savedViewport } });
+    // 2. Persister en base
+    const newConfig = { ...configRef.current, savedViewport };
+    await supabase
+      .from('vtt_scenes')
+      .update({ config: newConfig })
+      .eq('id', activeSceneIdRef.current);
+    // 3. Mettre à jour le tableau de scènes local
+    setScenes(prev =>
+      prev.map(s =>
+        s.id === activeSceneIdRef.current
+          ? { ...s, config: newConfig }
+          : s
+      )
+    );
+  }, [role, canvasViewport]);
+  
+    const handleUpdateWeather = useCallback((effects: VTTWeatherEffect[]) => {
+    if (role !== 'gm') return;
+    setWeatherEffects(effects);
+    weatherEffectsRef.current = effects;
+    // Propager aux joueurs via UPDATE_MAP (réutilise la config)
+    vttService.send({ type: 'UPDATE_WEATHER', effects });
+    // Persister dans la scène
+    if (activeSceneIdRef.current) {
+      setConfig(prev => ({ ...prev, weatherEffects: effects }));
+    }
+  }, [role]);
 
   
   // -------------------
