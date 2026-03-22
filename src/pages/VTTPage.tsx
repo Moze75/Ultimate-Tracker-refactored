@@ -424,7 +424,7 @@ setFogState(fogSync);
         break;
 case 'FOG_UPDATED': {
   const normalized = normalizeFogState(event.fogState);
-  fogStateRef.current = normalized;
+  fogStateRef.current = normalized; 
   setFogState(normalized);
         if (
           normalized.exploredStrokes.length === 0 &&
