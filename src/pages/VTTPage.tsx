@@ -2370,6 +2370,7 @@ onUpdateToken={handleUpdateToken}
 
   characterSheetToken={characterSheetToken}
   onCloseCharacterSheet={() => setCharacterSheetToken(null)}
+  onSyncTokenHpFromCharacter={handleSyncTokenHpFromCharacter}
 
   monsterStatBlockToken={monsterStatBlockToken}
   onCloseMonsterStatBlock={() => setMonsterStatBlockToken(null)}
