@@ -96,6 +96,15 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttM
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialTokensAppliedRef = useRef(false);
   const isDesktop = useIsDesktop();
+
+  // -------------------
+  // Ref live des tokens pour le matching HP → token VTT
+  // -------------------
+  // initialTokens peut être un snapshot figé du moment du lancement du combat.
+  // Cette ref est mise à jour à chaque rendu pour que applyHp()
+  // cherche toujours dans la liste la plus récente des tokens.
+  const liveTokensRef = useRef(initialTokens);
+  liveTokensRef.current = initialTokens;
   const isActive = !!encounter;
 
   const prevInitialTokensRef = useRef<VTTToken[] | undefined>(undefined);
