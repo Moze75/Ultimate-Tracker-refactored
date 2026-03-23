@@ -76,7 +76,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export function CombatTab({ campaignId, members, onRollDice, initialTokens, vttMode, role = 'gm', onUpdateToken }: CombatTabProps) {
+export function CombatTab({ campaignId, members, onRollDice, initialTokens, liveTokens, vttMode, role = 'gm', onUpdateToken }: CombatTabProps) {
   // -------------------
   // Détection du rôle MJ pour conditionner les contrôles de combat
   // -------------------
