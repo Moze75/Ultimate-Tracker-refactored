@@ -1049,16 +1049,36 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
   }, [editingToken, canControlToken]);
 
 // -------------------
+// -------------------
 // Gestion des mises à jour des tokens
 // -------------------
 // handleUpdateToken : applique une mise à jour générique sur un token VTT.
-// Utilisé par le canvas, la fenêtre de combat, l’édition de token et
-// toutes les actions qui doivent rester synchronisées avec l’état réseau.
+// Utilisé par le canvas, la fenêtre de combat, l'édition de token et
+// toutes les actions qui doivent rester synchronisées avec l'état réseau.
+// La mise à jour optimiste (setTokens) garantit un rendu instantané
+// sans attendre le retour du broadcast Supabase Realtime.
 const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
   const token = tokensRef.current.find(t => t.id === tokenId);
   if (!token) return;
   if (!canControlToken(token)) return;
   pushUndoSnapshot();
+
+  // -------------------
+  // Mise à jour optimiste locale
+  // -------------------
+  // Met à jour l'état React immédiatement pour que le canvas
+  // (barre de vie), la sidebar "tokens sur la carte" et toutes
+  // les vues reflètent les changements sans attendre le broadcast.
+  setTokens(prev => prev.map(t =>
+    t.id === tokenId ? { ...t, ...changes } : t
+  ));
+
+  // -------------------
+  // Envoi au serveur via vttService
+  // -------------------
+  // Le broadcast TOKEN_UPDATED sera reçu par les autres clients.
+  // Le setTokens dans handleServerEvent sera un quasi no-op car
+  // les valeurs locales seront déjà identiques.
   vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
 }, [canControlToken, pushUndoSnapshot]);
 
