@@ -844,20 +844,45 @@ sendHpBroadcast({
 });
 
 // -------------------
-// Sync HP → token VTT sur le canvas
+// Sync HP combat → token VTT sur le canvas
 // -------------------
-// Cherche le token VTT correspondant au participant (via characterId ou label)
+// Cherche le token VTT correspondant au participant (via characterId, label, ou monsterSlug)
 // et propage le changement de PV pour que la barre de vie du token soit à jour.
-// On utilise liveTokensRef.current (toujours à jour) au lieu de initialTokens
-// (qui peut être un snapshot figé au moment du lancement du combat).
+// On utilise liveTokensRef.current (toujours à jour) au lieu de initialTokens.
 if (onUpdateToken && liveTokensRef.current) {
   const matchingToken = liveTokensRef.current.find(t =>
+    // -------------------
+    // Matching par characterId (joueurs liés à une fiche)
+    // -------------------
     (p.participant_type === 'player' && t.characterId && p.player_member_id &&
       members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
+    // -------------------
+    // Fallback : matching par nom exact (monstres ou joueurs sans fiche)
+    // -------------------
     || t.label === p.display_name
   );
+
   if (matchingToken) {
-    onUpdateToken(matchingToken.id, { hp: newHp });
+    console.log('[CombatTab] Sync HP → token VTT', {
+      tokenId: matchingToken.id,
+      tokenLabel: matchingToken.label,
+      oldHp: matchingToken.hp,
+      newHp,
+      maxHp: p.max_hp,
+    });
+    // -------------------
+    // Envoi HP + maxHp pour que la barre de vie
+    // s'affiche correctement même si maxHp a changé
+    // -------------------
+    onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
+  } else {
+    console.warn('[CombatTab] ⚠️ Aucun token VTT trouvé pour le participant', {
+      displayName: p.display_name,
+      participantType: p.participant_type,
+      playerMemberId: p.player_member_id,
+      tokensCount: liveTokensRef.current.length,
+      tokenLabels: liveTokensRef.current.map(t => t.label),
+    });
   }
 }
 
