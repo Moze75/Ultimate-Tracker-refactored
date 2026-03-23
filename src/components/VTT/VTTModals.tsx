@@ -100,6 +100,7 @@ export interface VTTModalsProps {
   // State modales personnages
   characterSheetToken: VTTToken | null;
   onCloseCharacterSheet: () => void;
+  onSyncTokenHpFromCharacter: (tokenId: string, hp: number | null, maxHp: number | null) => void;
 
   monsterStatBlockToken: VTTToken | null;
   onCloseMonsterStatBlock: () => void;
