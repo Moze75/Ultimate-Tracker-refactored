@@ -88,14 +88,32 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     return () => { cancelled = true; };
   }, [player?.id, player?.class, (player as any)?.subclass, player?.level]);
 
+  // -------------------
+  // Gestion des mises à jour de la feuille de personnage
+  // -------------------
+  // handlePlayerUpdate : persiste les changements du personnage puis
+  // synchronise immédiatement les PV vers le token VTT lié.
+  // Cela garantit que la barre de vie du canvas, l’onglet
+  // "tokens sur la carte" et les autres vues basées sur token.hp/maxHp
+  // restent alignées avec la feuille de personnage.
   const handlePlayerUpdate = useCallback((updated: Player) => {
     setPlayer(updated);
+
+    // -------------------
+    // Synchronisation des PV personnage -> token
+    // -------------------
+    onSyncTokenHp(
+      token.id,
+      typeof updated.currentHp === 'number' ? updated.currentHp : null,
+      typeof updated.maxHp === 'number' ? updated.maxHp : null,
+    );
+
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       const { id, created_at, ...rest } = updated as any;
       await supabase.from('players').update(rest).eq('id', id);
     }, 800);
-  }, []);
+  }, [onSyncTokenHp, token.id]);
 
   const handleInventoryUpdate = useCallback((updated: any[]) => {
     setInventory(updated);
