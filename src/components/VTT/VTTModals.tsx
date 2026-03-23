@@ -162,6 +162,7 @@ export function VTTModals({
 
   characterSheetToken,
   onCloseCharacterSheet,
+  onSyncTokenHpFromCharacter,
 
   monsterStatBlockToken,
   onCloseMonsterStatBlock,
