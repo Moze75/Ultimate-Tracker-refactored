@@ -46,7 +46,6 @@ import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
-import { VTTModals } from '../components/VTT/VTTModals';
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -2281,74 +2280,204 @@ onUpdateToken={handleUpdateToken}
         </div>
       </div>
 
-<VTTModals
-  role={role}
-  userId={userId}
-  tokensRef={tokensRef}
+      {showAddToken && (
+        <AddTokenModal
+          userId={userId}
+          onConfirm={handleAddToken}
+          onClose={() => setShowAddToken(false)}
+          onCharDragStart={() => setShowAddToken(false)}
+        />
+      )}
 
-  showAddToken={showAddToken}
-  onCloseAddToken={() => setShowAddToken(false)}
-  onConfirmAddToken={handleAddToken}
+      {editingToken && (
+        <VTTTokenEditModal
+          token={editingToken}
+          role={role}
+          onSave={handleEditTokenSave}
+          onRemove={() => handleRemoveToken(editingToken.id)}
+          onClose={() => setEditingToken(null)}
+        />
+      )}
 
-  editingToken={editingToken}
-  onCloseEditToken={() => setEditingToken(null)}
-  onSaveEditToken={handleEditTokenSave}
-  onRemoveEditToken={handleRemoveToken}
+      {contextMenu && (
+        <VTTContextMenu
+          token={contextMenu.token}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          role={role}
+          userId={userId}
+          selectedTokens={(() => {
+            const sel = selectedTokenIds.length > 0
+              ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id))
+              : [];
+            const token = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
+            const hasToken = sel.some(t => t.id === token.id);
+            return sel.length > 0 ? (hasToken ? sel : [token, ...sel]) : [token];
+          })()}
+          onEdit={() => { setEditingToken(contextMenu.token); setContextMenu(null); }}
+          onDelete={() => { handleRemoveToken(contextMenu.token.id); setContextMenu(null); }}
+          onToggleVisibility={() => { handleToggleVisibility(contextMenu.token.id); setContextMenu(null); }}
+          onToggleTorch={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            const token = freshToken || contextMenu.token;
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: token.id,
+              changes: {
+                lightSource: token.lightSource === 'torch' ? 'none' : 'torch',
+              },
+            });
+            setContextMenu(null);
+          }}
+          onManageBinding={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            setBindingToken(freshToken || contextMenu.token);
+            setContextMenu(null);
+          }}
+          onConfigureVision={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id);
+            setVisionToken(freshToken || contextMenu.token);
+            setContextMenu(null);
+          }}
+           onLaunchCombat={(tokens) => {
+            setCombatInitTokens(tokens);
+            setSidebarActiveTab('combat');
+            setContextMenu(null);
+          }}
+          // -------------------
+          // Ciblage d'un token via clic droit
+          // -------------------
+          // Toggle : ajoute ou retire userId de targetedByUserIds.
+          // Accessible à tous les rôles (joueur et MJ).
+          // Propagé via UPDATE_TOKEN broadcast à tous les clients.
+          onToggleTarget={() => {
+            const freshToken = tokensRef.current.find(t => t.id === contextMenu.token.id) || contextMenu.token;
+            const isTargeted = (freshToken.targetedByUserIds ?? []).includes(userId);
 
-  contextMenu={contextMenu}
-  onCloseContextMenu={() => setContextMenu(null)}
-  selectedTokenIds={selectedTokenIds}
-  onEditFromContext={setEditingToken}
-  onDeleteFromContext={handleRemoveToken}
-  onToggleVisibility={handleToggleVisibility}
-  onToggleTorch={(token) => {
-    const fresh = tokensRef.current.find(t => t.id === token.id) || token;
-    vttService.send({ type: 'UPDATE_TOKEN', tokenId: fresh.id, changes: { lightSource: fresh.lightSource === 'torch' ? 'none' : 'torch' } });
-  }}
-  onManageBinding={(token) => { const fresh = tokensRef.current.find(t => t.id === token.id); setBindingToken(fresh || token); }}
-  onConfigureVision={(token) => { const fresh = tokensRef.current.find(t => t.id === token.id); setVisionToken(fresh || token); }}
-  onLaunchCombat={(tokens) => { setCombatInitTokens(tokens); setSidebarActiveTab('combat'); }}
-  onToggleTarget={(token) => {
-    const fresh = tokensRef.current.find(t => t.id === token.id) || token;
-    const isTargeted = (fresh.targetedByUserIds ?? []).includes(userId);
-    const sel = selectedTokenIds.length > 1 ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id)) : [fresh];
-    sel.forEach(t => {
-      const current = t.targetedByUserIds ?? [];
-      const next = isTargeted ? current.filter(id => id !== userId) : current.includes(userId) ? current : [...current, userId];
-      vttService.send({ type: 'UPDATE_TOKEN', tokenId: t.id, changes: { targetedByUserIds: next } });
-    });
-  }}
+            const sel = selectedTokenIds.length > 1
+              ? tokensRef.current.filter(t => selectedTokenIds.includes(t.id))
+              : [freshToken];
 
-  bindingToken={bindingToken}
-  connectedUsers={connectedUsers}
-  onCloseBinding={() => setBindingToken(null)}
-  onSaveBinding={(controlledByUserIds) => vttService.send({ type: 'UPDATE_TOKEN', tokenId: bindingToken!.id, changes: { controlledByUserIds } })}
+            sel.forEach(t => {
+              const current = t.targetedByUserIds ?? [];
+              const next = isTargeted
+                ? current.filter(id => id !== userId)
+                : current.includes(userId) ? current : [...current, userId];
+              vttService.send({
+                type: 'UPDATE_TOKEN',
+                tokenId: t.id,
+                changes: { targetedByUserIds: next },
+              });
+            });
+            setContextMenu(null);
+          }}
+          onClose={() => setContextMenu(null)}
+        />
+      )} 
 
-  visionToken={visionToken}
-  onCloseVision={() => setVisionToken(null)}
-  onSaveVision={(changes) => vttService.send({ type: 'UPDATE_TOKEN', tokenId: visionToken!.id, changes })}
+      {bindingToken && (
+        <VTTTokenBindingModal
+          token={bindingToken}
+          connectedUsers={connectedUsers}
+          onSave={(controlledByUserIds) => {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: bindingToken.id,
+              changes: { controlledByUserIds },
+            });
+          }}
+          onClose={() => setBindingToken(null)}
+        />
+      )}
 
-  sceneContextMenu={sceneContextMenu}
-  onCloseSceneContextMenu={() => setSceneContextMenu(null)}
-  scenes={scenes}
-  onDeleteScene={handleDeleteScene}
-  onOpenSceneConfig={setSceneConfigEdit}
+      {visionToken && (
+        <VTTVisionConfigModal
+          token={visionToken}
+          onSave={(changes) => {
+            vttService.send({
+              type: 'UPDATE_TOKEN',
+              tokenId: visionToken.id,
+              changes,
+            });
+          }}
+          onClose={() => setVisionToken(null)}
+        />
+      )}
 
-  sceneConfigEdit={sceneConfigEdit}
-  onCloseSceneConfig={() => setSceneConfigEdit(null)}
-  onSaveSceneConfig={handleSaveSceneConfig}
-
-  characterSheetToken={characterSheetToken}
-  onCloseCharacterSheet={() => setCharacterSheetToken(null)}
-
-  monsterStatBlockToken={monsterStatBlockToken}
-  onCloseMonsterStatBlock={() => setMonsterStatBlockToken(null)}
-
-  diceRollData={diceRollData}
-  onCloseDiceRoll={() => setDiceRollData(null)}
-  onDiceRollResult={handleRollResult}
-/>
+        {sceneContextMenu && (
+          <div
+            className="fixed z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[160px]"
+            style={{ top: sceneContextMenu.y, left: sceneContextMenu.x }}
+            onMouseLeave={() => setSceneContextMenu(null)}
+          >
+            <button
+              className="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                // Déclenche le renommage inline via l'état de VTTSceneBar
+                // On simule en passant par un prop dédié ou en passant un ref
+                // Ici on ferme juste le menu — le double-clic gère le renommage
+                setSceneContextMenu(null);
+              }}
+            >
+              ✏️ Renommer (double-clic)
+            </button>
+            {scenes.length > 1 && (
+              <button
+                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700"
+                onClick={() => {
+                  if (window.confirm(`Supprimer "${sceneContextMenu.sceneName}" ?`)) {
+                    handleDeleteScene(sceneContextMenu.sceneId);
+                  }
+                  setSceneContextMenu(null);
+                }}
+              >
+                🗑️ Supprimer
+              </button>
+            )}
+            <button
+              className="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                setSceneConfigEdit({ sceneId: sceneContextMenu.sceneId, config: sceneContextMenu.config });
+                setSceneContextMenu(null);
+              }}
+            >
+              ⚙️ Configurer la scène
+            </button>
           </div>
+        )}
+      
+      {sceneConfigEdit && (
+        <VTTSceneConfigModal
+          sceneName={scenes.find(s => s.id === sceneConfigEdit.sceneId)?.name ?? ''}
+          config={sceneConfigEdit.config}
+          onSave={changes => handleSaveSceneConfig(sceneConfigEdit.sceneId, changes)}
+          onClose={() => setSceneConfigEdit(null)}
+        />
+      )}
+
+      {characterSheetToken && (
+        <VTTCharacterSheetPanel
+          token={characterSheetToken}
+          role={role}
+          userId={userId}
+          onClose={() => setCharacterSheetToken(null)}
+        />
+      )}
+
+      {monsterStatBlockToken && (
+        <VTTMonsterStatBlockPanel
+          token={monsterStatBlockToken}
+          onClose={() => setMonsterStatBlockToken(null)}
+        />
+      )}
+
+      <DiceBox3D
+        isOpen={!!diceRollData}
+        onClose={() => setDiceRollData(null)}
+        rollData={diceRollData}
+        onRollResult={handleRollResult}
+      />
+    </div>
     </DiceRollContext.Provider>
   );
-}
+}  
