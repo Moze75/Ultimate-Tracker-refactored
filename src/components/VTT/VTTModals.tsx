@@ -312,6 +312,7 @@ export function VTTModals({
           role={role}
           userId={userId}
           onClose={onCloseCharacterSheet}
+          onSyncTokenHp={onSyncTokenHpFromCharacter}
         />
       )}
 
