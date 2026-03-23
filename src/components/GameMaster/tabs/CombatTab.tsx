@@ -33,10 +33,17 @@ interface CombatTabProps {
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
   initialTokens?: VTTToken[];
-vttMode?: boolean;
-role?: 'gm' | 'player';
-// Synchronisation HP du token VTT depuis la fenêtre de combat
-onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
+  // -------------------
+  // Liste live des tokens VTT (mise à jour à chaque changement)
+  // Utilisée pour le matching HP combat → token canvas.
+  // initialTokens est un snapshot figé au lancement du combat,
+  // liveTokens suit l'état courant des tokens sur le canvas.
+  // -------------------
+  liveTokens?: VTTToken[];
+  vttMode?: boolean;
+  role?: 'gm' | 'player';
+  // Synchronisation HP du token VTT depuis la fenêtre de combat
+  onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
 }
 
 interface CombatPreparationEntry {
