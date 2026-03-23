@@ -599,7 +599,7 @@ const visibleTokens = isGM
               campaignId={campaignId}
               members={members}
               onReload={reloadMembers}
-              initialTokens={combatInitTokens}
+              initialTokens={combatInitTokens ?? tokens}
               vttMode
               role={role}
               onUpdateToken={onUpdateToken}
