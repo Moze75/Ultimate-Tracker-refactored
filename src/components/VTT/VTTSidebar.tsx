@@ -600,6 +600,7 @@ const visibleTokens = isGM
               members={members}
               onReload={reloadMembers}
               initialTokens={combatInitTokens ?? tokens}
+              liveTokens={tokens}
               vttMode
               role={role}
               onUpdateToken={onUpdateToken}
