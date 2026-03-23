@@ -2281,4 +2281,8 @@ onUpdateToken={handleUpdateToken}
         </div>
       </div>
 
- 
+       />
+    </div>
+    </DiceRollContext.Provider>
+  );
+}
