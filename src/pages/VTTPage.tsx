@@ -1068,6 +1068,14 @@ const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToke
 // handleSyncTokenHpFromCharacter : répercute les PV modifiés depuis la feuille
 // de personnage vers le token affiché sur le canvas, dans l’onglet
 // "tokens sur la carte" et dans toutes les vues basées sur token.hp/maxHp.
+// -------------------
+// Synchronisation des PV personnage -> token
+// -------------------
+// handleSyncTokenHpFromCharacter : répercute les PV modifiés depuis la feuille
+// de personnage vers le token affiché sur le canvas, dans l'onglet
+// "tokens sur la carte" et dans toutes les vues basées sur token.hp/maxHp.
+// La mise à jour optimiste (setTokens) garantit un rendu instantané
+// sans attendre le retour du broadcast Supabase Realtime.
 const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number | null, maxHp: number | null) => {
   const token = tokensRef.current.find(t => t.id === tokenId);
   if (!token) return;
@@ -1076,6 +1084,27 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
   const normalizedHp = typeof hp === 'number' && Number.isFinite(hp) ? Math.max(0, hp) : null;
   const normalizedMaxHp = typeof maxHp === 'number' && Number.isFinite(maxHp) ? Math.max(0, maxHp) : null;
 
+  const changes: Partial<VTTToken> = {
+    hp: normalizedHp ?? undefined,
+    maxHp: normalizedMaxHp ?? undefined,
+  };
+
+  // -------------------
+  // Mise à jour optimiste locale
+  // -------------------
+  // Met à jour l'état React immédiatement pour que le canvas,
+  // la sidebar et toutes les vues reflètent les nouveaux PV
+  // sans attendre le broadcast serveur.
+  setTokens(prev => prev.map(t =>
+    t.id === tokenId ? { ...t, ...changes } : t
+  ));
+
+  // -------------------
+  // Envoi au serveur via vttService
+  // -------------------
+  // Le broadcast TOKEN_UPDATED sera reçu par les autres clients.
+  // Le setTokens dans handleServerEvent sera un no-op ici car
+  // les valeurs seront déjà identiques.
   vttService.send({
     type: 'UPDATE_TOKEN',
     tokenId,
