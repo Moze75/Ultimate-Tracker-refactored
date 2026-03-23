@@ -848,8 +848,10 @@ sendHpBroadcast({
 // -------------------
 // Cherche le token VTT correspondant au participant (via characterId ou label)
 // et propage le changement de PV pour que la barre de vie du token soit à jour.
-if (onUpdateToken && initialTokens) {
-  const matchingToken = initialTokens.find(t =>
+// On utilise liveTokensRef.current (toujours à jour) au lieu de initialTokens
+// (qui peut être un snapshot figé au moment du lancement du combat).
+if (onUpdateToken && liveTokensRef.current) {
+  const matchingToken = liveTokensRef.current.find(t =>
     (p.participant_type === 'player' && t.characterId && p.player_member_id &&
       members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
     || t.label === p.display_name
