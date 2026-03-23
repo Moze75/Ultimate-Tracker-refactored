@@ -1096,7 +1096,18 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
     t.id === tokenId ? { ...t, hp: normalizedHp, maxHp: normalizedMaxHp } : t
   ));
 
-
+  // -------------------
+  // Envoi au serveur via vttService
+  // -------------------
+  vttService.send({
+    type: 'UPDATE_TOKEN',
+    tokenId,
+    changes: {
+      hp: normalizedHp,
+      maxHp: normalizedMaxHp,
+    },
+  });
+}, [canControlToken]); 
 
 // -------------------
 // Gestion du resize des tokens
