@@ -17,7 +17,7 @@ interface VTTCharacterSheetPanelProps {
   onSyncTokenHp: (tokenId: string, hp: number | null, maxHp: number | null) => void;
 }
 
-export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTCharacterSheetPanelProps) {
+export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTokenHp }: VTTCharacterSheetPanelProps) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [inventory, setInventory] = useState<any[]>([]);
   const [classSections, setClassSections] = useState<any[] | null>(null);
