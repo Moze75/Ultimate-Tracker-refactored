@@ -14,6 +14,7 @@ interface VTTCharacterSheetPanelProps {
   role: VTTRole;
   userId: string;
   onClose: () => void;
+  onSyncTokenHp: (tokenId: string, hp: number | null, maxHp: number | null) => void;
 }
 
 export function VTTCharacterSheetPanel({ token, role, userId, onClose }: VTTCharacterSheetPanelProps) {
