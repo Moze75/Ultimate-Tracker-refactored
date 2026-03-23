@@ -1048,13 +1048,43 @@ const handleAddToken = useCallback((token: Omit<VTTToken, 'id'>) => {
     vttService.send({ type: 'UPDATE_TOKEN', tokenId: editingToken.id, changes });
   }, [editingToken, canControlToken]);
 
-  const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
-    const token = tokensRef.current.find(t => t.id === tokenId);
-    if (!token) return;
-    if (!canControlToken(token)) return;
-    pushUndoSnapshot();
-    vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
-  }, [canControlToken, pushUndoSnapshot]); 
+// -------------------
+// Gestion des mises à jour des tokens
+// -------------------
+// handleUpdateToken : applique une mise à jour générique sur un token VTT.
+// Utilisé par le canvas, la fenêtre de combat, l’édition de token et
+// toutes les actions qui doivent rester synchronisées avec l’état réseau.
+const handleUpdateToken = useCallback((tokenId: string, changes: Partial<VTTToken>) => {
+  const token = tokensRef.current.find(t => t.id === tokenId);
+  if (!token) return;
+  if (!canControlToken(token)) return;
+  pushUndoSnapshot();
+  vttService.send({ type: 'UPDATE_TOKEN', tokenId, changes });
+}, [canControlToken, pushUndoSnapshot]);
+
+// -------------------
+// Synchronisation des PV personnage -> token
+// -------------------
+// handleSyncTokenHpFromCharacter : répercute les PV modifiés depuis la feuille
+// de personnage vers le token affiché sur le canvas, dans l’onglet
+// "tokens sur la carte" et dans toutes les vues basées sur token.hp/maxHp.
+const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number | null, maxHp: number | null) => {
+  const token = tokensRef.current.find(t => t.id === tokenId);
+  if (!token) return;
+  if (!canControlToken(token)) return;
+
+  const normalizedHp = typeof hp === 'number' && Number.isFinite(hp) ? Math.max(0, hp) : null;
+  const normalizedMaxHp = typeof maxHp === 'number' && Number.isFinite(maxHp) ? Math.max(0, maxHp) : null;
+
+  vttService.send({
+    type: 'UPDATE_TOKEN',
+    tokenId,
+    changes: {
+      hp: normalizedHp,
+      maxHp: normalizedMaxHp,
+    },
+  });
+}, [canControlToken]);
 
 // -------------------
 // Gestion du resize des tokens
