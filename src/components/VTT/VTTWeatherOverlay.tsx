@@ -719,9 +719,10 @@ while (existing.particles.length < existing.maxParticles) {
       lastTimeRef.current = time;
       const dt = Math.min(dtMs / 1000, 0.1);
 
-      ctxScreen?.clearRect(0, 0, width, height);
-      ctxNormal?.clearRect(0, 0, width, height);
-      ctxAdd?.clearRect(0, 0, width, height);
+ctxScreen?.clearRect(0, 0, width, height);
+ctxNormal?.clearRect(0, 0, width, height);
+ctxAdd?.clearRect(0, 0, width, height);
+ctxRain?.clearRect(0, 0, width, height);
 
       // -------------------
       // gestion du rendu particules 2D
