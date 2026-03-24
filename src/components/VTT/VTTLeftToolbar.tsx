@@ -1032,6 +1032,14 @@ const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] =
 ];
 
 const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
+  density: 1.0,
+  speed: 1.0,
+  alpha: 0.8,
+  scale: 1.0,
+  color: '#b0c8e0'
+};
+
+const DEFAULT_FOG_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
   density: 0.2,
   speed: 0.8,
   alpha: 1.0,
