@@ -706,7 +706,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  warpScale: 1.0,  slopeOffset: 0.0  });
   // Couche B : échelle 60% plus grande + seuil de densité décalé de +0.35
   // → les nappes denses de B ne coïncident PAS avec celles de A → vraie hétérogénéité
-  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.35 });
+ const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.55 });
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
   const layersRef   = useRef<WeatherLayer[]>([]);
