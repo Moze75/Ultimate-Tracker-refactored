@@ -831,7 +831,7 @@ else                               ctx = ctxNormal;
             ctx.lineTo(p.x + dx, p.y + dy);
             ctx.stroke();
             ctx.restore();
-          }
+          
             
           }
         }
