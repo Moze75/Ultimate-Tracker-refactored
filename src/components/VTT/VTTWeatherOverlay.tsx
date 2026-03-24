@@ -321,18 +321,21 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
   let maxParticles: number;
   let frequency: number;
 
-  if (effect.type === 'clouds') {
-    maxParticles = Math.max(2, Math.round(densityFactor * 8));
-    const avgSpeed = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
-    const diagonal = Math.sqrt(w * w + h * h);
-    frequency = (diagonal / avgSpeed) / maxParticles;
-  } else if (effect.type === 'embers') {
-    maxParticles = Math.max(4, Math.round(densityFactor * 40));
-    frequency = (5 / speedFactor) / maxParticles;
-  } else {
-    maxParticles = Math.max(2, Math.round(densityFactor * 6));
-    frequency = (30 / speedFactor) / maxParticles;
-  }
+if (effect.type === 'clouds') {
+  maxParticles = Math.max(2, Math.round(densityFactor * 8));
+  const avgSpeed = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+  const diagonal = Math.sqrt(w * w + h * h);
+  frequency = (diagonal / avgSpeed) / maxParticles;
+} else if (effect.type === 'embers') {
+  maxParticles = Math.max(4, Math.round(densityFactor * 40));
+  frequency = (5 / speedFactor) / maxParticles;
+} else if (effect.type === 'rain') {
+  maxParticles = Math.max(80, Math.round(densityFactor * 260));
+  frequency = (0.35 / Math.max(0.2, speedFactor)) / maxParticles;
+} else {
+  maxParticles = Math.max(2, Math.round(densityFactor * 6));
+  frequency = (30 / speedFactor) / maxParticles;
+}
 
 const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
   if (effect.type === 'clouds') return { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() };
