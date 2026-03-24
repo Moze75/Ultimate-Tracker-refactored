@@ -403,18 +403,29 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
 
       float f = fbm(p*0.2 + r*3.102);
 
-vec3 baseFog = mix(color, vec3(0.95), clamp(abs(r.x), 0.35, 0.85));
-float shape  = f*f*f + 0.45*f*f + 0.35*f;
-vec3 fogRGB  = applyContrast(baseFog * shape, 1.45);
+// -------------------
+// gestion des trous / poches d'air dans la brume
+// -------------------
+float holes = smoothstep(0.28, 0.62, f);   // zones vides
+float wisps = smoothstep(0.45, 0.90, f);   // filaments
+float mask  = clamp(wisps - holes * 0.85, 0.0, 1.0);
 
-// // gestion d'une réponse plus progressive du slider densité
+// micro-découpe supplémentaire (évite l'effet "couverture uniforme")
+float breakup = noise(p * 6.0 + vec2(time * 0.05, -time * 0.03));
+mask *= smoothstep(0.22, 0.78, breakup);
+
+vec3 baseFog = mix(color, vec3(0.92), clamp(abs(r.x), 0.25, 0.75));
+vec3 fogRGB  = applyContrast(baseFog * (0.55 + 0.75 * wisps), 1.35);
+
+// slider densité plus progressif
 float d = clamp(density, 0.0, 1.0);
-d = d * d; // courbe gamma: réduit fortement la montée avant 0.6
+d = d * d;
 
-float k = d * clamp(strength, 0.0, 1.0);
+// alpha final piloté par le masque de trous
+float k = d * clamp(strength, 0.0, 1.0) * mask;
 
-// alpha pilotée par k pour éviter le "blanc plein écran" en screen
-gl_FragColor = vec4(fogRGB, k * 0.75);
+// rendu final : fog color + alpha non uniforme
+gl_FragColor = vec4(fogRGB, k * 0.85);
     }
   `;
 }
