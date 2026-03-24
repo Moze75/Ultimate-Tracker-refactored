@@ -3,14 +3,16 @@
  * Canvas overlay — effets Nuages, Corbeaux, Braises & Brume.
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  *
- * Effets clouds / crows / embers : Canvas 2D pure, indépendante de PIXI/Foundry.
- * Effet fog : WebGL — port exact du FogShader de Foundry VTT (fog.mjs),
- *             adaptatif selon les performances détectées (mode 0/1/2).
+ * Effets clouds / crows / embers : Canvas 2D pur, indépendant de PIXI/Foundry.
+ * Effet fog : WebGL (approche Foundry-like), adaptatif selon les performances.
  */
-import { useEffect, useRef, useCallback } from 'react';
+
+import React, { useEffect, useRef, useCallback } from 'react';
 import type { VTTWeatherEffect } from '../../types/vtt';
 
-// ─── Assets FXMaster (crédits : gambit07/fxmaster) ───────────────────────────
+// -------------------
+// Gestion des assets FXMaster
+// -------------------
 const FXMASTER_BASE =
   'https://raw.githubusercontent.com/gambit07/fxmaster/main/assets/particle-effects/effects';
 
@@ -30,23 +32,26 @@ function loadImg(src: string): HTMLImageElement {
 }
 [...CLOUD_SRCS, ...CROW_SRCS, EMBER_SRC].forEach(loadImg);
 
-// ─── Séquence animation corbeaux [1×20, 2×3, 3×2, 4×2, 3×2, 2×3] à 15fps ───
+// -------------------
+// Gestion de l'animation corbeaux
+// -------------------
 const CROW_ANIM_SEQUENCE: number[] = [];
 for (const { tex, count } of [
   { tex: 0, count: 20 },
-  { tex: 1, count: 3  },
-  { tex: 2, count: 2  },
-  { tex: 3, count: 2  },
-  { tex: 2, count: 2  },
-  { tex: 1, count: 3  },
+  { tex: 1, count: 3 },
+  { tex: 2, count: 2 },
+  { tex: 3, count: 2 },
+  { tex: 2, count: 2 },
+  { tex: 1, count: 3 },
 ]) {
   for (let i = 0; i < count; i++) CROW_ANIM_SEQUENCE.push(tex);
 }
-const CROW_ANIM_TOTAL = CROW_ANIM_SEQUENCE.length; // 32 frames
+const CROW_ANIM_TOTAL = CROW_ANIM_SEQUENCE.length;
 const CROW_FRAMERATE  = 15;
 
-// ─── Interfaces particules ────────────────────────────────────────────────────
-
+// -------------------
+// Gestion des types particules
+// -------------------
 interface CloudParticle {
   type: 'cloud';
   x: number; y: number;
@@ -108,7 +113,9 @@ interface VTTWeatherOverlayProps {
   height: number;
 }
 
-// ─── CLOUDS ──────────────────────────────────────────────────────────────────
+// -------------------
+// Gestion des constantes clouds
+// -------------------
 const CLOUD_SPEED_MIN   = 30;
 const CLOUD_SPEED_MAX   = 100;
 const CLOUD_SCALE_MIN   = 0.08;
@@ -117,10 +124,10 @@ const CLOUD_SPRITE_BASE = 600;
 const CLOUD_ALPHA_MAX   = 0.5;
 
 const CLOUD_ALPHA_LIST = [
-  { time: 0,    value: 0              },
+  { time: 0,    value: 0 },
   { time: 0.05, value: CLOUD_ALPHA_MAX },
   { time: 0.95, value: CLOUD_ALPHA_MAX },
-  { time: 1,    value: 0              },
+  { time: 1,    value: 0 },
 ];
 
 function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
@@ -142,7 +149,9 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
   };
 }
 
-// ─── CROWS ───────────────────────────────────────────────────────────────────
+// -------------------
+// Gestion des constantes corbeaux
+// -------------------
 const CROW_SPEED_MIN   = 54;
 const CROW_SPEED_MAX   = 100;
 const CROW_SPRITE_BASE = 180;
@@ -158,8 +167,8 @@ const CROW_ALPHA_LIST = [
 
 const CROW_SCALE_LIST = [
   { time: 0,   value: CROW_SCALE_EDGE },
-  { time: 0.1, value: CROW_SCALE_MID  },
-  { time: 0.9, value: CROW_SCALE_MID  },
+  { time: 0.1, value: CROW_SCALE_MID },
+  { time: 0.9, value: CROW_SCALE_MID },
   { time: 1,   value: CROW_SCALE_EDGE },
 ];
 
@@ -173,8 +182,9 @@ function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
   const border = Math.floor(Math.random() * 4);
   if      (border === 0) { x = Math.random() * w; y = -50; }
   else if (border === 1) { x = Math.random() * w; y = h + 50; }
-  else if (border === 2) { x = -50;               y = Math.random() * h; }
-  else                   { x = w + 50;             y = Math.random() * h; }
+  else if (border === 2) { x = -50; y = Math.random() * h; }
+  else                   { x = w + 50; y = Math.random() * h; }
+
   return {
     type: 'crow',
     x, y,
@@ -191,20 +201,22 @@ function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
     wobbleAmp: 0,
     wobblePeriod: 5 + Math.random() * 5,
     perpX: -dirY,
-    perpY:  dirX,
+    perpY: dirX,
   };
 }
 
-// ─── EMBERS ──────────────────────────────────────────────────────────────────
+// -------------------
+// Gestion des constantes braises
+// -------------------
 const EMBER_SPEED_MIN   = 24;
 const EMBER_SPEED_MAX   = 40;
 const EMBER_SPRITE_BASE = 120;
 
 const EMBER_ALPHA_LIST = [
-  { time: 0,    value: 0   },
+  { time: 0,    value: 0 },
   { time: 0.3,  value: 0.9 },
   { time: 0.95, value: 0.9 },
-  { time: 1,    value: 0   },
+  { time: 1,    value: 0 },
 ];
 
 const EMBER_SCALE_LIST = [
@@ -221,6 +233,7 @@ function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
   const dirX            = rawDirX / mag;
   const dirY            = rawDirY / mag;
   const baseLifetimeSec = 4 + Math.random() * 2;
+
   return {
     type: 'embers',
     x: Math.random() * w,
@@ -239,8 +252,9 @@ function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
   };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
+// -------------------
+// Gestion des helpers interpolation
+// -------------------
 function fxAlpha(t: number, alphaFactor: number, list: { time: number; value: number }[]): number {
   const clamped = Math.min(1, Math.max(0, t));
   for (let i = 0; i < list.length - 1; i++) {
@@ -265,8 +279,9 @@ function interpList(t: number, list: { time: number; value: number }[]): number 
   return list[list.length - 1]?.value ?? 0;
 }
 
-// ─── Builder de layer ────────────────────────────────────────────────────────
-
+// -------------------
+// Gestion du build des layers particules
+// -------------------
 function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLayer {
   const speedFactor   = effect.speed;
   const densityFactor = effect.density;
@@ -275,14 +290,13 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
 
   if (effect.type === 'clouds') {
     maxParticles = Math.max(2, Math.round(densityFactor * 8));
-    const avgSpeed    = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
-    const diagonal    = Math.sqrt(w * w + h * h);
+    const avgSpeed = ((CLOUD_SPEED_MIN + CLOUD_SPEED_MAX) / 2) * speedFactor;
+    const diagonal = Math.sqrt(w * w + h * h);
     frequency = (diagonal / avgSpeed) / maxParticles;
   } else if (effect.type === 'embers') {
     maxParticles = Math.max(4, Math.round(densityFactor * 40));
     frequency = (5 / speedFactor) / maxParticles;
   } else {
-    // crows
     maxParticles = Math.max(2, Math.round(densityFactor * 6));
     frequency = (30 / speedFactor) / maxParticles;
   }
@@ -296,32 +310,20 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
   return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ─── WebGL Fog — port exact du FogShader Foundry VTT ─────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
-//
-// Source originale : fog.mjs / FogShader extends AbstractWeatherShader (Foundry)
-// Adaptation : remplacement des uniforms PIXI (vUvs, mask, tint…) par des
-// équivalents WebGL vanilla. La logique GLSL est identique à l'original.
-//
-// Modes de performance (miroir de FogShader.OCTAVES / FogShader.FOG) :
-//   mode 0 → 2 octaves, 1 passe  (appareils faibles / mobiles)
-//   mode 1 → 3 octaves, 2 passes (appareils moyens)
-//   mode 2 → 4 octaves, 2 passes (appareils puissants)
-
-/**
- * Détecte le mode de performance à utiliser pour le fog shader.
- * Reproduit la logique de canvas.performance.mode de Foundry sans dépendre de PIXI.
- */
+// -------------------
+// Gestion du mode performance fog
+// -------------------
 function detectPerformanceMode(): 0 | 1 | 2 {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const cores    = navigator.hardwareConcurrency ?? 4;
   if (isMobile || cores <= 2) return 0;
-  if (cores <= 4)             return 1;
+  if (cores <= 4) return 1;
   return 2;
 }
 
-// Vertex shader minimal — quad plein écran en clip space
+// -------------------
+// Gestion du vertex shader fog
+// -------------------
 const FOG_VERT_SRC = `
   attribute vec2 a_position;
   void main() {
@@ -329,13 +331,9 @@ const FOG_VERT_SRC = `
   }
 `;
 
-/**
- * // gestion du shader fog Foundry-like
- * Construit un fragment shader proche de Foundry FogShader :
- * - fbm temporel
- * - une ou deux passes suivant le mode
- * - smoothstep de contraste identique
- */
+// -------------------
+// Gestion du fragment shader fog (Foundry-like)
+// -------------------
 function buildFogFragSrc(mode: 0 | 1 | 2): string {
   const octaves = mode + 2;
 
@@ -443,10 +441,9 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     }
   `;
 }
-
-
-// ─── Types internes WebGL ─────────────────────────────────────────────────────
-
+// -------------------
+// Gestion des types internes fog WebGL
+// -------------------
 interface FogGLState {
   gl:       WebGLRenderingContext;
   program:  WebGLProgram;
@@ -455,7 +452,6 @@ interface FogGLState {
     speed:       WebGLUniformLocation | null;
     intensity:   WebGLUniformLocation | null;
     slope:       WebGLUniformLocation | null;
-    warpFreq:    WebGLUniformLocation | null;
     seedX:       WebGLUniformLocation | null;
     seedY:       WebGLUniformLocation | null;
     rotation:    WebGLUniformLocation | null;
@@ -464,33 +460,27 @@ interface FogGLState {
   };
 }
 
-/**
- * Hook React qui initialise un contexte WebGL sur le canvas fog et expose
- * une fonction render() à appeler depuis la boucle RAF principale.
- *
- * Drop-in replacement de la section fog Canvas 2D de VTTWeatherOverlay.
- */
 interface FogLayerConfig {
-  seedX: number;      // décalage seed — donne un pattern unique à chaque couche
+  seedX: number;
   seedY: number;
-  warpScale?: number; // multiplicateur d'échelle (couche B = 0.6 → plus grande) 
-  slopeOffset?: number; // décalage du seuil de densité (couche B légèrement différente)
+  slopeOffset?: number;
 }
 
+// -------------------
+// Gestion du hook fog WebGL
+// -------------------
 function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLayerConfig) {
   const glStateRef  = useRef<FogGLState | null>(null);
-  const fogTimeRef  = useRef<number>(0);
   const modeRef     = useRef<0 | 1 | 2>(detectPerformanceMode());
 
-  // ── Initialisation WebGL (une seule fois au montage) ──────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const gl = canvas.getContext('webgl', {
-      alpha:              true,   // canvas transparent pour composition CSS
-      premultipliedAlpha: false,  // canvas RGB pur — alpha=1 partout, screen CSS fait le blend
-      antialias:          false,  // inutile pour un shader procédural plein écran
+      alpha:              true,
+      premultipliedAlpha: false,
+      antialias:          false,
     });
 
     if (!gl) {
@@ -500,7 +490,9 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
 
     const mode = modeRef.current;
 
-    // Compilation des shaders
+    // -------------------
+    // gestion compilation shaders
+    // -------------------
     const compileShader = (type: number, src: string): WebGLShader | null => {
       const shader = gl.createShader(type);
       if (!shader) return null;
@@ -514,17 +506,17 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
       return shader;
     };
 
-    const vert = compileShader(gl.VERTEX_SHADER,   FOG_VERT_SRC);
+    const vert = compileShader(gl.VERTEX_SHADER, FOG_VERT_SRC);
     const frag = compileShader(gl.FRAGMENT_SHADER, buildFogFragSrc(mode));
     if (!vert || !frag) return;
 
     const program = gl.createProgram();
     if (!program) return;
+
     gl.attachShader(program, vert);
     gl.attachShader(program, frag);
     gl.linkProgram(program);
 
-    // Les shaders compilés peuvent être supprimés après link
     gl.deleteShader(vert);
     gl.deleteShader(frag);
 
@@ -533,8 +525,6 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
       return;
     }
 
-    // Quad plein écran : 2 triangles couvrant le clip space [-1,1]
-    // Triangle strip : BL → BR → TL → TR
     const quadBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
     gl.bufferData(
@@ -548,10 +538,7 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Blending alpha standard (le canvas lui-même est composité en CSS via mixBlendMode)
-    gl.enable(gl.BLEND);
-    // Sur fond noir + screen CSS : le canvas est opaque (alpha=1), le RGB porte l'intensité
-    gl.disable(gl.BLEND); // pas de blend interne — un seul quad opaque plein écran
+    gl.disable(gl.BLEND);
 
     glStateRef.current = {
       gl,
@@ -561,7 +548,6 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
         speed:       gl.getUniformLocation(program, 'speed'),
         intensity:   gl.getUniformLocation(program, 'intensity'),
         slope:       gl.getUniformLocation(program, 'slope'),
-        warpFreq:    gl.getUniformLocation(program, 'warpFreq'),
         seedX:       gl.getUniformLocation(program, 'seedX'),
         seedY:       gl.getUniformLocation(program, 'seedY'),
         rotation:    gl.getUniformLocation(program, 'rotation'),
@@ -577,18 +563,13 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
       gl.deleteBuffer(quadBuf);
       glStateRef.current = null;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── render() : appelé chaque frame depuis la boucle RAF ───────────────────
-  /**
-   * Effectue un rendu WebGL du fog pour la frame courante.
-   * @param dt      Delta time en secondes
-   * @param fe      Paramètres de l'effet fog (speed, alpha, color, density…)
-   * @param width   Largeur du canvas en pixels
-   * @param height  Hauteur du canvas en pixels
-   */
+  // -------------------
+  // gestion du rendu fog
+  // -------------------
   const render = useCallback((
-    dt:     number,
+    _dt:    number,
     fe:     VTTWeatherEffect,
     width:  number,
     height: number,
@@ -597,64 +578,38 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     if (!state) return;
     const { gl, program, uniforms } = state;
 
-    // time passé via uniform directement dans render
-
-    // Parse couleur hex → vec3 normalisé
     const hex = (fe.color ?? '#ffffff').replace('#', '');
     const tr  = parseInt(hex.slice(0, 2), 16) / 255;
     const tg  = parseInt(hex.slice(2, 4), 16) / 255;
     const tb  = parseInt(hex.slice(4, 6), 16) / 255;
 
-    // Rendu
     gl.viewport(0, 0, width, height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
 
-    const opacity  = Math.min(1,   Math.max(0,   fe.alpha   ?? 1));
-    const density  = Math.min(2,   Math.max(0,   fe.density ?? 1));
-    const scale    = Math.min(4,   Math.max(0.5, (fe as any).scale ?? 1));
-    const speedVal = Math.min(3.0, Math.max(0.1, fe.speed   ?? 1));
+    // -------------------
+    // gestion des paramètres d'effet
+    // -------------------
+    const speedVal  = Math.min(3.0, Math.max(-60.0, fe.speed ?? 1));
+    const opacity   = Math.min(1, Math.max(0, (fe as any).intensity ?? fe.alpha ?? 1));
+    const density   = Math.min(2.5, Math.max(0.05, fe.density ?? 1));
+    const slope     = Math.max(0.05, Math.min(2.5, (fe as any).slope ?? (2.5 - density * 1.0 + (cfg.slopeOffset ?? 0))));
+    const rotation  = (fe as any).rotation ?? 0.0;
 
-    // warpFreq : contrôle la taille des nappes de brume.
-    // Slider taille : 0 → 3x.
-    // IMPORTANT : jamais en dessous de 3.0 — en dessous ça donne un effet "eau/marbre"
-    //   scale=0.5 → warpFreq=9.0  (filaments fins)
-    //   scale=1.0 → warpFreq=5.9  (nappes moyennes)
-    //   scale=2.0 → warpFreq=3.85 (grandes nappes)
-    //   scale=3.0 → warpFreq=3.0  (max taille, encore du fog pas de l'eau)
-    // Formule : 5.884 * scale^(-0.613), clamp [3.0, 9.0]
-    const warpScale = cfg.warpScale ?? 1.0;
-    const warpFreq = Math.min(9.0, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
-
-    // slope : density=0 → 2.5 (quasi vide), density=1 → 0.68, density=2 → 0.05
-    // Monotone décroissant sur tout [0,2] → jamais de pic puis disparition
-    // slopeOffset décale le seuil de densité de la couche B :
-    // couche A = zones de brume "principales", couche B = nappes plus légères
-    // → là où A est dense, B peut être creuse et vice versa → vraie hétérogénéité
-    const slopeOff = cfg.slopeOffset ?? 0;
-    const slope = Math.max(0.05, 2.5 - density * 1.225 + slopeOff);
-
-    // intensity : pas de ×0.55 — on laisse le shader gérer via col directement
-    // Deux couches screen : screen(a,a) = 1-(1-a)² → à opacity=0.7 par couche
-    // screen résultat ≈ 0.91, suffisamment opaque
     gl.uniform1f(uniforms.time,        performance.now() / 1000);
     gl.uniform1f(uniforms.speed,       speedVal);
     gl.uniform1f(uniforms.intensity,   opacity);
     gl.uniform1f(uniforms.slope,       slope);
-    gl.uniform1f(uniforms.warpFreq,    warpFreq);
     gl.uniform1f(uniforms.seedX,       cfg.seedX);
     gl.uniform1f(uniforms.seedY,       cfg.seedY);
-    gl.uniform1f(uniforms.rotation,    (fe as any).rotation ?? 0.0);
+    gl.uniform1f(uniforms.rotation,    rotation);
     gl.uniform3f(uniforms.tint,        tr, tg, tb);
     gl.uniform2f(uniforms.uResolution, width, height);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  }, []);
+  }, [cfg.seedX, cfg.seedY, cfg.slopeOffset]);
 
-  /**
-   * Efface le canvas WebGL (utilisé quand l'effet fog est désactivé).
-   */
   const clear = useCallback((width: number, height: number) => {
     const state = glStateRef.current;
     if (!state) return;
@@ -667,36 +622,32 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
   return { render, clear };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ─── Composant React ──────────────────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
-
+// -------------------
+// Gestion du composant principal
+// -------------------
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen
-  const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
-  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen
-  const canvasFogARef   = useRef<HTMLCanvasElement>(null); // fog couche A
-  const canvasFogBRef   = useRef<HTMLCanvasElement>(null); // fog couche B
+  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds
+  const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows
+  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers
+  const canvasFogARef   = useRef<HTMLCanvasElement>(null); // fog A
+  const canvasFogBRef   = useRef<HTMLCanvasElement>(null); // fog B (optionnel, style maison)
 
-  // Deux couches fog indépendantes superposées en screen blend.
-  // Couche A : drift vers droite-bas (driftX+, driftY+)
-  // Couche B : drift vers gauche-haut (driftX-, driftY-) + seed décalé
-  // → les deux couches se croisent → mouvement organique sans direction dominante.
-  // Deux couches avec seeds très différents → vortex locaux complètement indépendants
-  const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  warpScale: 1.0,  slopeOffset: 0.0  });
-  // Couche B : échelle 60% plus grande + seuil de densité décalé de +0.35
-  // → les nappes denses de B ne coïncident PAS avec celles de A → vraie hétérogénéité
-  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.35 });
+  // -------------------
+  // gestion des 2 couches fog
+  // -------------------
+  const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  slopeOffset: 0.0 });
+  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, slopeOffset: 0.35 });
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
   const layersRef   = useRef<WeatherLayer[]>([]);
   const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // Garde effectsRef synchronisé sans déclencher de re-render dans la boucle RAF
   effectsRef.current = effects;
 
-  // ── Sync layers (clouds / crows / embers) ────────────────────────────────
+  // -------------------
+  // gestion de la synchro des layers particules
+  // -------------------
   useEffect(() => {
     const activeTypes = effects.map(e => e.type);
     layersRef.current = layersRef.current.filter(l => activeTypes.includes(l.effect.type));
@@ -740,12 +691,14 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
     }
   }, [effects, width, height]);
 
-  // ── Boucle d'animation ────────────────────────────────────────────────────
+  // -------------------
+  // gestion de la boucle d'animation
+  // -------------------
   useEffect(() => {
     const animate = (time: number) => {
       const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
       const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
-      const ctxAdd    = canvasAddRef.current?.getContext('2d')    ?? null;
+      const ctxAdd    = canvasAddRef.current?.getContext('2d') ?? null;
 
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
@@ -755,7 +708,9 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       ctxNormal?.clearRect(0, 0, width, height);
       ctxAdd?.clearRect(0, 0, width, height);
 
-      // ── Layers particles (clouds / crows / embers) — Canvas 2D inchangé ──
+      // -------------------
+      // gestion du rendu particules 2D
+      // -------------------
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
 
@@ -783,7 +738,6 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             continue;
           }
 
-          // ── Cloud ────────────────────────────────────────────────────────
           if (p.type === 'cloud') {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
@@ -796,7 +750,6 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, p.x - drawSize, p.y - drawSize, drawSize * 2, drawSize * 2);
             ctx.restore();
 
-          // ── Crow ─────────────────────────────────────────────────────────
           } else if (p.type === 'crow') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
@@ -817,15 +770,14 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
             ctx.restore();
 
-          // ── Embers ───────────────────────────────────────────────────────
           } else if (p.type === 'embers') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
             p.lifeInc = effect.speed / p.baseLifetimeSec;
-            p.x        += p.vx * dt;
-            p.y        += p.vy * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
             p.rotation += p.rotSpeed * dt;
-            p.alpha     = fxAlpha(p.lifeNorm, effect.alpha, EMBER_ALPHA_LIST);
+            p.alpha = fxAlpha(p.lifeNorm, effect.alpha, EMBER_ALPHA_LIST);
             const scaleFactor = interpList(p.lifeNorm, EMBER_SCALE_LIST);
             const eSize       = scaleFactor * EMBER_SPRITE_BASE * (effect.scale ?? 1);
             const tc = Math.min(1, Math.max(0, p.lifeNorm));
@@ -845,9 +797,9 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         }
       }
 
-      // ── FOG — rendu WebGL (FogShader Foundry VTT) ────────────────────────
-      // Remplace intégralement l'ancienne implémentation Canvas 2D
-      // (gradients radiaux, FogBlobs, FogCloudParticles).
+      // -------------------
+      // gestion du rendu fog WebGL
+      // -------------------
       const fe = effectsRef.current.find(e => e.type === 'fog');
       if (fe) {
         fogGLA.render(dt, fe, width, height);
@@ -868,7 +820,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
   return (
     <>
-      {/* Fog couche A + B — screen blend sur fond noir : zones noires disparaissent */}
+      {/* Fog couche A + B */}
       {effects.some(e => e.type === 'fog') && (
         <>
           <canvas
@@ -887,7 +839,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           />
         </>
       )}
-      {/* Clouds : mode screen (sprites blancs) */}
+
+      {/* Clouds : screen */}
       {effects.some(e => e.type === 'clouds') && (
         <canvas
           ref={canvasScreenRef}
@@ -897,7 +850,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           style={{ mixBlendMode: 'screen' }}
         />
       )}
-      {/* Crows : mode normal (sprites sombres) */}
+
+      {/* Crows : normal */}
       {effects.some(e => e.type === 'crows') && (
         <canvas
           ref={canvasNormalRef}
@@ -907,7 +861,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
           style={{ mixBlendMode: 'normal' }}
         />
       )}
-      {/* Embers : mode screen (sprites lumineux) */}
+
+      {/* Embers : screen */}
       {effects.some(e => e.type === 'embers') && (
         <canvas
           ref={canvasAddRef}
@@ -919,4 +874,4 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       )}
     </>
   );
-} 
+}
