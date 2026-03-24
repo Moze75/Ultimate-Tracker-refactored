@@ -157,22 +157,7 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
     alpha: 0,
     imgSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
   };
-function makeRain(w: number, h: number, speedFactor: number): RainParticle {
-  const ang = (75 * Math.PI) / 180; // FXMaster rain angle ~75°
-  const speed = (2800 + Math.random() * 700) * 0.12 * speedFactor; // adaptation canvas
-  const vx = Math.cos(ang) * speed;
-  const vy = Math.sin(ang) * speed;
-  return {
-    type: 'rain',
-    x: Math.random() * (w * 1.2) - w * 0.1,
-    y: -Math.random() * h * 0.3,
-    vx, vy,
-    len: 8 + Math.random() * 14,
-    alpha: 0.55,
-    lifeNorm: 0,
-    lifeInc: 0.8 + Math.random() * 0.8
-  };
-}
+} 
 
 // -------------------
 // Gestion des constantes corbeaux
