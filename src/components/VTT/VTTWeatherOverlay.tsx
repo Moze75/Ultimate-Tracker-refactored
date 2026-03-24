@@ -829,11 +829,16 @@ if (p.type !== 'rain') {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
 
-            // reset quand sort écran
-            if (p.y > height + 20 || p.x > width + 40) {
-              p.x = -20 + Math.random() * (width * 0.4);
-              p.y = -20 - Math.random() * 120;
-            }
+// reset quand sort écran (bas ou trop à gauche/droite)
+if (p.y > height + 24 || p.x < -80 || p.x > width + 80) {
+  const drift = (Math.random() * 0.16 - 0.08);
+  const fallY = (900 + Math.random() * 500) * effect.speed;
+  p.vy = fallY;
+  p.vx = fallY * drift;
+
+  p.x = Math.random() * (width + 120) - 60;
+  p.y = -20 - Math.random() * 140;
+}
 
             const a = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
             const dropLen = p.len * (effect.scale ?? 1);
