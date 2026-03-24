@@ -423,13 +423,9 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       ${fogGLSL}
 
       // Masque basse fréquence : grandes zones vides vs zones de brume
-      vec2 maskUv = (uvBase + vec2(seedX * 0.01, seedY * 0.01)) * 0.25;
-      float presA = fnoise(maskUv);
-      float presB = fnoise(maskUv + vec2(3.7, 1.3));
-      float presence = (presA + presB) * 0.5;
-      presence = smoothstep(0.3, 0.7, presence);
-      mist *= presence;
-
+    vec3 mistColor(in vec2 uvBase) {
+      float mist = 0.0;
+      ${fogGLSL}
       return vec3(1.0, 0.98, 0.95) * mist;
     }
 
