@@ -431,16 +431,7 @@ uniforms: {
 };
 }
 
-interface FogLayerConfig {
-  seedX: number;
-  seedY: number;
-  slopeOffset?: number;
-}
-
-// -------------------
-// Gestion du hook fog WebGL
-// -------------------
-function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLayerConfig) {
+ifunction useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
   const glStateRef  = useRef<FogGLState | null>(null);
   const modeRef     = useRef<0 | 1 | 2>(detectPerformanceMode());
 
