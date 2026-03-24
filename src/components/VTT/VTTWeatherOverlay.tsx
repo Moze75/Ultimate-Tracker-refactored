@@ -617,9 +617,10 @@ const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
 // Gestion du composant principal
 // -------------------
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
-  const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds
-  const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows
-  const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers
+const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds
+const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows
+const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers
+const canvasRainRef   = useRef<HTMLCanvasElement>(null); // rain
   const canvasFogARef   = useRef<HTMLCanvasElement>(null); // fog A
   const canvasFogBRef   = useRef<HTMLCanvasElement>(null); // fog B (optionnel, style maison)
 
