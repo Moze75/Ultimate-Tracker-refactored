@@ -164,23 +164,21 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
 
 function makeRain(w: number, h: number, speedFactor: number): RainParticle {
   // -------------------
-  // gestion de la direction pluie : ciel -> sol (verticale avec légère dérive)
+  // gestion pluie top-down : impacts répartis sur toute la carte
   // -------------------
-  const drift = (Math.random() * 0.16 - 0.08); // petite inclinaison gauche/droite
-  const fallY = (900 + Math.random() * 500) * speedFactor;
-  const fallX = fallY * drift;
-
   return {
     type: 'rain',
-    // spawn sur toute la largeur + marge pour inclinaison
-    x: Math.random() * (w + 120) - 60,
-    y: -Math.random() * (h * 0.35) - 20,
-    vx: fallX,
-    vy: fallY,
-    len: 10 + Math.random() * 18,
-    alpha: 0.55,
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: 0,
+    vy: 0,
+    len: 0,
+    alpha: 0.45,
     lifeNorm: 0,
-    lifeInc: 0
+    lifeInc: 0,
+    phase: Math.random(), // désynchronise les impacts
+    phaseInc: (0.7 + Math.random() * 1.1) * speedFactor,
+    radius: 1.5 + Math.random() * 2.5,
   };
 }
 
