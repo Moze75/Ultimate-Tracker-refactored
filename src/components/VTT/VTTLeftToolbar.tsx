@@ -1071,7 +1071,10 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
       onChange(effects.filter(e => e.type !== type));
       if (editingType === type) setEditingType(null);
     } else {
-const defaults = type === 'fog' ? DEFAULT_FOG_WEATHER : DEFAULT_WEATHER;
+let defaults: Omit<VTTWeatherEffect, 'type'> = DEFAULT_WEATHER;
+if (type === 'fog') defaults = DEFAULT_FOG_WEATHER;
+if (type === 'embers') defaults = DEFAULT_EMBERS_WEATHER;
+
 onChange([...effects, { type, ...defaults }]);
       // Ne pas ouvrir les réglages automatiquement
     }
