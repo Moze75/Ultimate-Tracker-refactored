@@ -605,7 +605,7 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     // couche A = zones de brume "principales", couche B = nappes plus légères
     // → là où A est dense, B peut être creuse et vice versa → vraie hétérogénéité
     const slopeOff = cfg.slopeOffset ?? 0;
-    const slope = Math.max(0.05, 2.5 - density * 1.225 + slopeOff);
+const slope = Math.max(0.05, 0.25 + (1.0 - density) * 0.8);
 
     // intensity : pas de ×0.55 — on laisse le shader gérer via col directement
     // Deux couches screen : screen(a,a) = 1-(1-a)² → à opacity=0.7 par couche
