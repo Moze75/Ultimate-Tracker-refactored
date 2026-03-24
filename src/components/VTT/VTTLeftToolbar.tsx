@@ -1055,6 +1055,15 @@ const DEFAULT_EMBERS_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
   scale: 0.5,
   color: '#f77300'
 };
+
+// réglages de base pluie (inspiré FXMaster rain)
+const DEFAULT_RAIN_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
+  density: 0.8,
+  speed: 1.2,
+  alpha: 0.7,
+  scale: 1.0,
+  color: '#9ec5ff'
+};
   
 const WeatherPopup = React.forwardRef<HTMLDivElement, {
   effects: VTTWeatherEffect[];
