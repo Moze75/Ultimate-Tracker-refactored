@@ -328,11 +328,12 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
     frequency = (30 / speedFactor) / maxParticles;
   }
 
-  const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
-    if (effect.type === 'clouds') return { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() };
-    if (effect.type === 'embers') return makeEmber(w, h, speedFactor);
-    return { ...makeCrow(w, h, speedFactor), lifeNorm: Math.random() };
-  });
+const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
+  if (effect.type === 'clouds') return { ...makeCloud(w, h, speedFactor, false), lifeNorm: Math.random() };
+  if (effect.type === 'embers') return makeEmber(w, h, speedFactor);
+  if (effect.type === 'rain')   return makeRain(w, h, speedFactor);
+  return { ...makeCrow(w, h, speedFactor), lifeNorm: Math.random() };
+});
 
   return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
 }
