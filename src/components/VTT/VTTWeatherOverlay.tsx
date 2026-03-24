@@ -19,6 +19,7 @@ const FXMASTER_BASE =
 const CLOUD_SRCS = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/clouds/cloud${n}.webp`);
 const CROW_SRCS  = [1, 2, 3, 4].map(n => `${FXMASTER_BASE}/crows/crow${n}.webp`);
 const EMBER_SRC  = `${FXMASTER_BASE}/embers/ember.webp`;
+const RAIN_SPRITE_SRC = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Assets-props/rain.webp';
 
 const _imgCache = new Map<string, HTMLImageElement>();
 function loadImg(src: string): HTMLImageElement {
