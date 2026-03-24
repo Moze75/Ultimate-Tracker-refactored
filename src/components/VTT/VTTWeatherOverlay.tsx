@@ -710,7 +710,8 @@ while (existing.particles.length < existing.maxParticles) {
   // gestion de la boucle d'animation
   // -------------------
   useEffect(() => {
-    const animate = (time: number) => {
+const animate = (time: number) => {
+  try {
 const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
 const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
 const ctxAdd    = canvasAddRef.current?.getContext('2d') ?? null;
