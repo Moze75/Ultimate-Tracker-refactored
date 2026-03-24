@@ -105,6 +105,9 @@ interface RainParticle {
   alpha: number;
   lifeNorm: number;
   lifeInc: number;
+  phase: number;     // cycle impact
+  phaseInc: number;  // vitesse cycle
+  radius: number;    // taille ripple
 }
 
 type AnyParticle = CloudParticle | CrowParticle | EmberParticle | RainParticle;
