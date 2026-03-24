@@ -160,19 +160,24 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
 } 
 
 function makeRain(w: number, h: number, speedFactor: number): RainParticle {
-  const ang = (75 * Math.PI) / 180; // FXMaster rain angle ~75°
-  const speed = (2800 + Math.random() * 700) * 0.12 * speedFactor; // adaptation canvas
-  const vx = Math.cos(ang) * speed;
-  const vy = Math.sin(ang) * speed;
+  // -------------------
+  // gestion de la direction pluie : ciel -> sol (verticale avec légère dérive)
+  // -------------------
+  const drift = (Math.random() * 0.16 - 0.08); // petite inclinaison gauche/droite
+  const fallY = (900 + Math.random() * 500) * speedFactor;
+  const fallX = fallY * drift;
+
   return {
     type: 'rain',
-    x: Math.random() * (w * 1.2) - w * 0.1,
-    y: -Math.random() * h * 0.3,
-    vx, vy,
-    len: 8 + Math.random() * 14,
+    // spawn sur toute la largeur + marge pour inclinaison
+    x: Math.random() * (w + 120) - 60,
+    y: -Math.random() * (h * 0.35) - 20,
+    vx: fallX,
+    vy: fallY,
+    len: 10 + Math.random() * 18,
     alpha: 0.55,
     lifeNorm: 0,
-    lifeInc: 0.8 + Math.random() * 0.8
+    lifeInc: 0
   };
 }
 
