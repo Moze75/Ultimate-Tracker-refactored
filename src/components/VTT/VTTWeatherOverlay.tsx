@@ -4,9 +4,8 @@
  * Inspiré de FXMaster (gambit07) — https://github.com/gambit07/fxmaster
  *
  * Effets clouds / crows / embers : Canvas 2D pure, indépendante de PIXI/Foundry.
- * Effet fog : WebGL — port fidèle du FogShader de Foundry VTT (fog.mjs).
- *             GLSL identique à Foundry : fbm + domain warp à uv*4.5,
- *             mix() vers fond sombre dans le shader (pas de screen blend CSS).
+ * Effet fog : WebGL — port exact du FogShader de Foundry VTT (fog.mjs),
+ *             adaptatif selon les performances détectées (mode 0/1/2).
  */
 import { useEffect, useRef, useCallback } from 'react';
 import type { VTTWeatherEffect } from '../../types/vtt';
@@ -298,22 +297,22 @@ function buildLayer(effect: VTTWeatherEffect, w: number, h: number): WeatherLaye
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── WebGL Fog — port fidèle du FogShader Foundry VTT ────────────────────────
+// ─── WebGL Fog — port exact du FogShader Foundry VTT ─────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 //
-// GLSL identique à Foundry :
-//   - fbm() : uv += time*0.03, uv *= 2.0, puis boucle octaves avec uv*=3.0 / scale*=0.3
-//   - FOG()  : domain warp à uv*4.5 avec time*0.115 et time*0.0275
-//   - main() : mix(fond_sombre, col*clamp(slope,1,2), pb) — pas de screen blend CSS
+// Source originale : fog.mjs / FogShader extends AbstractWeatherShader (Foundry)
+// Adaptation : remplacement des uniforms PIXI (vUvs, mask, tint…) par des
+// équivalents WebGL vanilla. La logique GLSL est identique à l'original.
 //
-// Différence vs Foundry : on gère nous-mêmes vUvs via gl_FragCoord (pas de PIXI).
-// Le canvas fog est en mixBlendMode:normal (opaque), le shader gère le fond.
-//
-// Modes de performance :
-//   mode 0 → 2 octaves, 1 passe  (mobiles)
-//   mode 1 → 3 octaves, 2 passes (moyen)
-//   mode 2 → 4 octaves, 2 passes (puissant)
+// Modes de performance (miroir de FogShader.OCTAVES / FogShader.FOG) :
+//   mode 0 → 2 octaves, 1 passe  (appareils faibles / mobiles)
+//   mode 1 → 3 octaves, 2 passes (appareils moyens)
+//   mode 2 → 4 octaves, 2 passes (appareils puissants)
 
+/**
+ * Détecte le mode de performance à utiliser pour le fog shader.
+ * Reproduit la logique de canvas.performance.mode de Foundry sans dépendre de PIXI.
+ */
 function detectPerformanceMode(): 0 | 1 | 2 {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const cores    = navigator.hardwareConcurrency ?? 4;
@@ -331,27 +330,45 @@ const FOG_VERT_SRC = `
 `;
 
 /**
- * Construit le fragment shader GLSL — port fidèle de FogShader.fragmentShader(mode).
- * Le GLSL FOG et FBM sont identiques à Foundry VTT.
+ * Construit le fragment shader GLSL en fonction du mode de performance.
+ * Reproduction fidèle de FogShader.fragmentShader(mode) de Foundry VTT.
  */
 function buildFogFragSrc(mode: 0 | 1 | 2): string {
   const octaves = mode + 2;
 
-  // FOG GLSL — identique à Foundry FogShader.FOG(mode)
+  // fogGLSL : domain warp statique depuis uvW (= uvBase * warpFreq).
+  // Les fbm() du warp reçoivent uvW → la forme change avec warpFreq (c'est voulu).
+  // MAIS fbm() interne utilise un uvAnim séparé qui ne contient PAS warpFreq
+  // → speed n'interagit plus avec scale.
   const fogGLSL = mode === 0
-    ? `vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115)) * (1.0 + r * 0.25);
-       mist += fbm(uv * 4.5 + mv - time * 0.0275) * (1.0 + r * 0.25);`
-    : `for (int i = 0; i < 2; i++) {
-         vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115 + vec2(float(i) * 250.0))) * (0.50 + r * 0.25);
-         mist += fbm(uv * 4.5 + mv - time * 0.0275) * (0.50 + r * 0.25);
-       }`;
+    ? `vec2 uvW = uvBase * warpFreq;
+       vec2 mv = vec2(
+         fbm(uvW + vec2(seedX,       1.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(5.2 + seedX, seedY      )) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv);`
+    : `vec2 uvW = uvBase * warpFreq;
+       vec2 mv0 = vec2(
+         fbm(uvW + vec2(seedX,         1.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(5.2 + seedX,   seedY      )) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv0) * 0.5;
+       vec2 mv1 = vec2(
+         fbm(uvW + vec2(seedX + 250.0, 251.7 + seedY)) - 0.5,
+         fbm(uvW + vec2(255.2 + seedX, 250.0 + seedY)) - 0.5
+       ) * 1.6;
+       mist += fbm(uvW + mv1) * 0.5;`;
 
   return `
     precision mediump float;
 
     uniform float time;
+    uniform float speed;
     uniform float intensity;
     uniform float slope;
+    uniform float warpFreq;
+    uniform float seedX;
+    uniform float seedY;
     uniform float rotation;
     uniform vec3  tint;
     uniform vec2  uResolution;
@@ -377,32 +394,39 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       return mix(a,b,cb.x) + (c-a)*cb.y*(1.0-cb.x) + (d-b)*cb.x*cb.y;
     }
 
-    // FBM — identique à Foundry FogShader.fbm()
-    float fbm(in vec2 uv) {
-      float r = 0.0;
-      float scale = 1.0;
-      uv += time * 0.03;
-      uv *= 2.0;
+    // FBM : phase/freq dérivés de uvNorm (= uvBase normalisé, SANS warpFreq)
+    // → les vortex locaux sont indépendants de la taille → speed n'affecte pas la densité.
+    float fbm(in vec2 uvSpatial) {
+      // uvNorm : basse fréquence fixe pour le champ de phase/vitesse
+      // On divise par warpFreq pour revenir à l'espace [-1,1] de base
+      vec2 uvNorm = uvSpatial / warpFreq;
+      float phase = fnoise(uvNorm * 0.6 + vec2(seedX * 0.01, seedY * 0.01)) * 6.28318;
+      float freq  = (0.035 + fnoise(uvNorm * 0.4 + vec2(seedX * 0.01 + 3.7, seedY * 0.01 + 1.9)) * 0.055) * speed;
+
+      float r = 0.0, sc = 1.0;
+      vec2 uv = uvSpatial * 2.0;
       for (int i = 0; i < ${octaves}; i++) {
-        r += fnoise(uv + time * 0.03) * scale;
+        float fi = float(i);
+        vec2 disp = vec2(
+          sin(time * freq + phase + fi * 2.399) * 0.45,
+          cos(time * freq * 1.29  + phase + fi * 1.618) * 0.45
+        );
+        r  += fnoise(uv + disp) * sc;
         uv *= 3.0;
-        scale *= 0.3;
+        sc *= 0.3;
       }
       return r;
     }
 
-    // mist() — identique à Foundry FogShader.mist()
-    vec3 mistColor(in vec2 uv, in float r) {
+    vec3 mistColor(in vec2 uvBase) {
       float mist = 0.0;
       ${fogGLSL}
-      return vec3(0.9, 0.85, 1.0) * mist;
+      return vec3(1.0, 0.98, 0.95) * mist;
     }
 
     void main() {
-      // vUvs : [0,1] comme PIXI — reconstruit depuis gl_FragCoord
       vec2 vUvs = gl_FragCoord.xy / uResolution;
       vUvs.y = 1.0 - vUvs.y;
-
       vec2 ruv = vUvs;
       if (rotation != 0.0) {
         ruv  = vUvs - 0.5;
@@ -410,19 +434,29 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
         ruv += 0.5;
       }
 
-      // Identique à Foundry : mist(ruv * 2.0 - 1.0, 0.0) * 1.33
-      vec3 col = mistColor(ruv * 2.0 - 1.0, 0.0) * 1.33;
+      vec2 uvBase = ruv * 2.0 - 1.0;
+      vec3 col = mistColor(uvBase) * 1.8;
+
       float pb = perceivedBrightness(col);
+      // slope [0.05 → 2.5] : seuil du smoothstep.
+      // Haut = seules les crêtes passent (fog épars). Bas = tout passe (nappe dense).
+      // Plage de smoothstep élargie : transition douce entre zones denses et creuses.
+      // Avant : slope+0.001 → quasi binaire (0 ou 1).
+      // Maintenant : slope*1.5 → large dégradé → opacité variable, aspect organique.
+      pb = smoothstep(slope * 0.3, slope * 1.5, pb);
 
-      // Identique à Foundry : smoothstep(slope*0.5, slope+0.001, pb)
-      pb = smoothstep(slope * 0.5, slope + 0.001, pb);
-
-      // Identique à Foundry : mix(fond_sombre, col*clamp(slope,1,2), pb) * tint * intensity
-      vec3 fogColor = mix(vec3(0.05, 0.05, 0.08), col * clamp(slope, 1.0, 2.0), pb);
-      gl_FragColor  = vec4(fogColor * tint * intensity, 1.0);
+      // Fond noir + mixBlendMode:screen côté CSS :
+      //   screen(rgb_canvas, rgb_fond=0) = rgb_canvas
+      // → zones noires (rgb=0) = invisibles, zones claires = lumineuses.
+      // C'est le RGB qui porte l'intensité — alpha=1 partout (canvas opaque).
+      // Deux couches screen superposées : screen(A,B) = 1-(1-A)(1-B)
+      // → là où les deux couches ont des crêtes → très lumineux (hétérogénéité !)
+      vec3 fogColor = tint * pb * intensity;
+      gl_FragColor  = vec4(fogColor, 1.0);
     }
   `;
 }
+
 
 // ─── Types internes WebGL ─────────────────────────────────────────────────────
 
@@ -431,8 +465,12 @@ interface FogGLState {
   program:  WebGLProgram;
   uniforms: {
     time:        WebGLUniformLocation | null;
+    speed:       WebGLUniformLocation | null;
     intensity:   WebGLUniformLocation | null;
     slope:       WebGLUniformLocation | null;
+    warpFreq:    WebGLUniformLocation | null;
+    seedX:       WebGLUniformLocation | null;
+    seedY:       WebGLUniformLocation | null;
     rotation:    WebGLUniformLocation | null;
     tint:        WebGLUniformLocation | null;
     uResolution: WebGLUniformLocation | null;
@@ -440,21 +478,32 @@ interface FogGLState {
 }
 
 /**
- * Hook React — initialise WebGL sur le canvas fog et expose render() / clear().
- * Une seule couche suffit désormais (le shader gère son propre fond sombre).
+ * Hook React qui initialise un contexte WebGL sur le canvas fog et expose
+ * une fonction render() à appeler depuis la boucle RAF principale.
+ *
+ * Drop-in replacement de la section fog Canvas 2D de VTTWeatherOverlay.
  */
-function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
-  const glStateRef = useRef<FogGLState | null>(null);
-  const modeRef    = useRef<0 | 1 | 2>(detectPerformanceMode());
+interface FogLayerConfig {
+  seedX: number;      // décalage seed — donne un pattern unique à chaque couche
+  seedY: number;
+  warpScale?: number; // multiplicateur d'échelle (couche B = 0.6 → plus grande) 
+  slopeOffset?: number; // décalage du seuil de densité (couche B légèrement différente)
+}
 
+function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLayerConfig) {
+  const glStateRef  = useRef<FogGLState | null>(null);
+  const fogTimeRef  = useRef<number>(0);
+  const modeRef     = useRef<0 | 1 | 2>(detectPerformanceMode());
+
+  // ── Initialisation WebGL (une seule fois au montage) ──────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const gl = canvas.getContext('webgl', {
-      alpha:              false,  // canvas opaque — le shader gère son propre fond
-      premultipliedAlpha: false,
-      antialias:          false,
+      alpha:              true,   // canvas transparent pour composition CSS
+      premultipliedAlpha: false,  // canvas RGB pur — alpha=1 partout, screen CSS fait le blend
+      antialias:          false,  // inutile pour un shader procédural plein écran
     });
 
     if (!gl) {
@@ -464,6 +513,7 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
     const mode = modeRef.current;
 
+    // Compilation des shaders
     const compileShader = (type: number, src: string): WebGLShader | null => {
       const shader = gl.createShader(type);
       if (!shader) return null;
@@ -486,6 +536,8 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     gl.attachShader(program, vert);
     gl.attachShader(program, frag);
     gl.linkProgram(program);
+
+    // Les shaders compilés peuvent être supprimés après link
     gl.deleteShader(vert);
     gl.deleteShader(frag);
 
@@ -494,7 +546,8 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
       return;
     }
 
-    // Quad plein écran
+    // Quad plein écran : 2 triangles couvrant le clip space [-1,1]
+    // Triangle strip : BL → BR → TL → TR
     const quadBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
     gl.bufferData(
@@ -508,22 +561,29 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    gl.disable(gl.BLEND); // canvas opaque, pas de blend WebGL interne
+    // Blending alpha standard (le canvas lui-même est composité en CSS via mixBlendMode)
+    gl.enable(gl.BLEND);
+    // Sur fond noir + screen CSS : le canvas est opaque (alpha=1), le RGB porte l'intensité
+    gl.disable(gl.BLEND); // pas de blend interne — un seul quad opaque plein écran
 
     glStateRef.current = {
       gl,
       program,
       uniforms: {
         time:        gl.getUniformLocation(program, 'time'),
+        speed:       gl.getUniformLocation(program, 'speed'),
         intensity:   gl.getUniformLocation(program, 'intensity'),
         slope:       gl.getUniformLocation(program, 'slope'),
+        warpFreq:    gl.getUniformLocation(program, 'warpFreq'),
+        seedX:       gl.getUniformLocation(program, 'seedX'),
+        seedY:       gl.getUniformLocation(program, 'seedY'),
         rotation:    gl.getUniformLocation(program, 'rotation'),
         tint:        gl.getUniformLocation(program, 'tint'),
         uResolution: gl.getUniformLocation(program, 'uResolution'),
       },
     };
 
-    console.debug(`[VTTFog] WebGL initialisé — mode ${mode} (${mode + 2} octaves)`);
+    console.debug(`[VTTFog] WebGL initialisé — mode performance ${mode} (${mode + 2} octaves)`);
 
     return () => {
       gl.deleteProgram(program);
@@ -532,6 +592,14 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── render() : appelé chaque frame depuis la boucle RAF ───────────────────
+  /**
+   * Effectue un rendu WebGL du fog pour la frame courante.
+   * @param dt      Delta time en secondes
+   * @param fe      Paramètres de l'effet fog (speed, alpha, color, density…)
+   * @param width   Largeur du canvas en pixels
+   * @param height  Hauteur du canvas en pixels
+   */
   const render = useCallback((
     dt:     number,
     fe:     VTTWeatherEffect,
@@ -542,29 +610,54 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     if (!state) return;
     const { gl, program, uniforms } = state;
 
-    // Couleur hex → vec3
-    const hex = (fe.color ?? '#b0c8e0').replace('#', '');
+    // time passé via uniform directement dans render
+
+    // Parse couleur hex → vec3 normalisé
+    const hex = (fe.color ?? '#ffffff').replace('#', '');
     const tr  = parseInt(hex.slice(0, 2), 16) / 255;
     const tg  = parseInt(hex.slice(2, 4), 16) / 255;
     const tb  = parseInt(hex.slice(4, 6), 16) / 255;
 
+    // Rendu
     gl.viewport(0, 0, width, height);
-    gl.clearColor(0.05, 0.05, 0.08, 1.0); // fond sombre cohérent avec le shader
+    gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
 
-    const opacity = Math.min(1,   Math.max(0,   fe.alpha   ?? 1));
-    const density = Math.min(2,   Math.max(0,   fe.density ?? 1));
+    const opacity  = Math.min(1,   Math.max(0,   fe.alpha   ?? 1));
+    const density  = Math.min(2,   Math.max(0,   fe.density ?? 1));
+    const scale    = Math.min(4,   Math.max(0.5, (fe as any).scale ?? 1));
+    const speedVal = Math.min(3.0, Math.max(0.1, fe.speed   ?? 1));
 
-    // slope : reproduit Foundry defaultUniforms.slope = 0.25
-    // density=1 (défaut) → slope=0.25 (nappe dense, identique à Foundry)
-    // density=0.1        → slope≈0.70 (fog épars, zones vides)
-    // density=2          → slope=0.05 (fog très dense / voile)
-    const slope = Math.max(0.05, 0.25 + (1.0 - density) * 0.50);
+    // warpFreq : contrôle la taille des nappes de brume.
+    // Slider taille : 0 → 3x.
+    // IMPORTANT : jamais en dessous de 3.0 — en dessous ça donne un effet "eau/marbre"
+    //   scale=0.5 → warpFreq=9.0  (filaments fins)
+    //   scale=1.0 → warpFreq=5.9  (nappes moyennes)
+    //   scale=2.0 → warpFreq=3.85 (grandes nappes)
+    //   scale=3.0 → warpFreq=3.0  (max taille, encore du fog pas de l'eau)
+    // Formule : 5.884 * scale^(-0.613), clamp [3.0, 9.0]
+    const warpScale = cfg.warpScale ?? 1.0;
+    const warpFreq = Math.min(9.0, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
 
+    // slope : density=0 → 2.5 (quasi vide), density=1 → 0.68, density=2 → 0.05
+    // Monotone décroissant sur tout [0,2] → jamais de pic puis disparition
+    // slopeOffset décale le seuil de densité de la couche B :
+    // couche A = zones de brume "principales", couche B = nappes plus légères
+    // → là où A est dense, B peut être creuse et vice versa → vraie hétérogénéité
+    const slopeOff = cfg.slopeOffset ?? 0;
+    const slope = Math.max(0.05, 2.5 - density * 1.225 + slopeOff);
+
+    // intensity : pas de ×0.55 — on laisse le shader gérer via col directement
+    // Deux couches screen : screen(a,a) = 1-(1-a)² → à opacity=0.7 par couche
+    // screen résultat ≈ 0.91, suffisamment opaque
     gl.uniform1f(uniforms.time,        performance.now() / 1000);
+    gl.uniform1f(uniforms.speed,       speedVal);
     gl.uniform1f(uniforms.intensity,   opacity);
     gl.uniform1f(uniforms.slope,       slope);
+    gl.uniform1f(uniforms.warpFreq,    warpFreq);
+    gl.uniform1f(uniforms.seedX,       cfg.seedX);
+    gl.uniform1f(uniforms.seedY,       cfg.seedY);
     gl.uniform1f(uniforms.rotation,    (fe as any).rotation ?? 0.0);
     gl.uniform3f(uniforms.tint,        tr, tg, tb);
     gl.uniform2f(uniforms.uResolution, width, height);
@@ -572,6 +665,9 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }, []);
 
+  /**
+   * Efface le canvas WebGL (utilisé quand l'effet fog est désactivé).
+   */
   const clear = useCallback((width: number, height: number) => {
     const state = glStateRef.current;
     if (!state) return;
@@ -585,23 +681,32 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── Composant React ──────────────────────────────────────────════════════════
+// ─── Composant React ──────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
   const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds → screen
   const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows  → normal
   const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers → screen
-  const canvasFogRef    = useRef<HTMLCanvasElement>(null); // fog — une seule couche
+  const canvasFogARef   = useRef<HTMLCanvasElement>(null); // fog couche A
+  const canvasFogBRef   = useRef<HTMLCanvasElement>(null); // fog couche B
 
-  // Une seule couche fog : le shader Foundry gère son propre fond sombre + volutes
-  const fogGL = useFogWebGL(canvasFogRef);
+  // Deux couches fog indépendantes superposées en screen blend.
+  // Couche A : drift vers droite-bas (driftX+, driftY+)
+  // Couche B : drift vers gauche-haut (driftX-, driftY-) + seed décalé
+  // → les deux couches se croisent → mouvement organique sans direction dominante.
+  // Deux couches avec seeds très différents → vortex locaux complètement indépendants
+  const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  warpScale: 1.0,  slopeOffset: 0.0  });
+  // Couche B : échelle 60% plus grande + seuil de densité décalé de +0.35
+  // → les nappes denses de B ne coïncident PAS avec celles de A → vraie hétérogénéité
+  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.35 });
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
   const layersRef   = useRef<WeatherLayer[]>([]);
   const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
+  // Garde effectsRef synchronisé sans déclencher de re-render dans la boucle RAF
   effectsRef.current = effects;
 
   // ── Sync layers (clouds / crows / embers) ────────────────────────────────
@@ -613,7 +718,6 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embers') continue;
 
       const existing = layersRef.current.find(l => l.effect.type === effect.type);
-
       if (existing) {
         const speedFactor   = effect.speed;
         const densityFactor = effect.density;
@@ -664,7 +768,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       ctxNormal?.clearRect(0, 0, width, height);
       ctxAdd?.clearRect(0, 0, width, height);
 
-      // ── Layers particles (clouds / crows / embers) ────────────────────────
+      // ── Layers particles (clouds / crows / embers) — Canvas 2D inchangé ──
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
 
@@ -692,7 +796,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             continue;
           }
 
-          // ── Cloud ──────────────────────────────────────────────────────────
+          // ── Cloud ────────────────────────────────────────────────────────
           if (p.type === 'cloud') {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
@@ -705,7 +809,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, p.x - drawSize, p.y - drawSize, drawSize * 2, drawSize * 2);
             ctx.restore();
 
-          // ── Crow ───────────────────────────────────────────────────────────
+          // ── Crow ─────────────────────────────────────────────────────────
           } else if (p.type === 'crow') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
@@ -726,7 +830,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
             ctx.drawImage(img, -scaledSize, -scaledSize, scaledSize * 2, scaledSize * 2);
             ctx.restore();
 
-          // ── Embers ─────────────────────────────────────────────────────────
+          // ── Embers ───────────────────────────────────────────────────────
           } else if (p.type === 'embers') {
             p.vx      = p.dirX * p.baseSpeed * effect.speed;
             p.vy      = p.dirY * p.baseSpeed * effect.speed;
@@ -754,12 +858,16 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
         }
       }
 
-      // ── FOG — rendu WebGL Foundry ─────────────────────────────────────────
+      // ── FOG — rendu WebGL (FogShader Foundry VTT) ────────────────────────
+      // Remplace intégralement l'ancienne implémentation Canvas 2D
+      // (gradients radiaux, FogBlobs, FogCloudParticles).
       const fe = effectsRef.current.find(e => e.type === 'fog');
       if (fe) {
-        fogGL.render(dt, fe, width, height);
+        fogGLA.render(dt, fe, width, height);
+        fogGLB.render(dt, fe, width, height);
       } else {
-        fogGL.clear(width, height);
+        fogGLA.clear(width, height);
+        fogGLB.clear(width, height);
       }
 
       rafRef.current = requestAnimationFrame(animate);
@@ -767,21 +875,30 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
 
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [width, height, fogGL]);
+  }, [width, height, fogGLA, fogGLB]);
 
   if (effects.length === 0) return null;
 
   return (
     <>
-      {/* Fog — canvas opaque en normal blend, le shader gère le fond sombre */}
+      {/* Fog couche A + B — screen blend sur fond noir : zones noires disparaissent */}
       {effects.some(e => e.type === 'fog') && (
-        <canvas
-          ref={canvasFogRef}
-          width={width}
-          height={height}
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{ mixBlendMode: 'normal' }}
-        />
+        <>
+          <canvas
+            ref={canvasFogARef}
+            width={width}
+            height={height}
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{ mixBlendMode: 'screen' }}
+          />
+          <canvas
+            ref={canvasFogBRef}
+            width={width}
+            height={height}
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        </>
       )}
       {/* Clouds : mode screen (sprites blancs) */}
       {effects.some(e => e.type === 'clouds') && (
@@ -815,4 +932,4 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
       )}
     </>
   );
-}
+} 
