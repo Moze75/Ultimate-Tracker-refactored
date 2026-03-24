@@ -638,7 +638,7 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     //   scale=3.0 → warpFreq=3.0  (max taille, encore du fog pas de l'eau)
     // Formule : 5.884 * scale^(-0.613), clamp [3.0, 9.0]
     const warpScale = cfg.warpScale ?? 1.0;
-    const warpFreq = Math.min(9.0, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
+ const warpFreq = Math.min(5.5, Math.max(3.2, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
 
     // slope : density=0 → 2.5 (quasi vide), density=1 → 0.68, density=2 → 0.05
     // Monotone décroissant sur tout [0,2] → jamais de pic puis disparition
