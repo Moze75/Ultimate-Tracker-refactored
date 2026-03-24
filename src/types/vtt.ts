@@ -40,8 +40,8 @@ export interface VTTToken {
 }
 
 // Inspiré de FXMaster (gambit07/fxmaster) — https://github.com/gambit07/fxmaster
-export type VTTWeatherType = 'clouds' | 'crows' | 'embers' | 'fog' | 'rain';
-
+export type VTTWeatherType = 'clouds' | 'crows'; 
+ 
 export interface VTTWeatherEffect {
   type: VTTWeatherType;
   density: number;   // 0.1 → 3.0
@@ -252,7 +252,10 @@ export type VTTServerEvent =
   | { type: 'USER_LEFT'; userId: string }
   | { type: 'CHAT_RECEIVED'; message: VTTChatMessage }
   | { type: 'ERROR'; message: string };
-
+  // -------------------
+  // Chat live VTT
+  // -------------------
+  | { type: 'CHAT_RECEIVED'; message: VTTChatMessage };
 
 // ===================================
 // Chat live VTT
