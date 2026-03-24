@@ -862,7 +862,7 @@ if (p.type !== 'rain') {
 
 } else if (p.type === 'rain') {
   // -------------------
-  // Gestion pluie top-down : flux radial vers le centre (FXMaster-like)
+  // Gestion pluie top-down : flux radial stable vers le centre
   // -------------------
   const cx = width / 2;
   const cy = height / 2;
@@ -880,24 +880,24 @@ if (p.type !== 'rain') {
 
   const ux = dx / dist;
   const uy = dy / dist;
+
   p.vx = ux * p.speed;
   p.vy = uy * p.speed;
-
   p.x += p.vx * dt;
   p.y += p.vy * dt;
 
-  // cycle d'impact/ripple
   p.phase += p.phaseInc * dt;
 
-  // respawn en anneau quand la goutte arrive près du centre
-  if (dist < p.minRadius || p.phase >= 1) {
+  // -------------------
+  // Gestion du respawn : uniquement proche du centre (évite boucle cassée)
+  // -------------------
+  const centerKillRadius = Math.max(18, Math.min(width, height) * 0.04);
+
+  if (dist <= centerKillRadius) {
     p.phase = 0;
     p.angle = Math.random() * Math.PI * 2;
     p.rNorm = Math.random();
 
-    // -------------------
-    // Gestion des bornes torus recalculées (resize-safe)
-    // -------------------
     const sceneRadius = Math.sqrt(width * width + height * height) / 2;
     p.minRadius = sceneRadius * 0.95;
     p.maxRadius = sceneRadius * 2.2;
@@ -940,30 +940,19 @@ if (p.type !== 'rain') {
   }
 
   // -------------------
-  // Gestion impact + ripple
+  // Gestion impact + ripple (léger, sans casser le flux)
   // -------------------
-  const hit = 1.0 - p.phase;
-  ctx.save();
-  ctx.globalAlpha = aBase * 0.30 * hit;
-  ctx.fillStyle = col;
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, Math.max(0.7, p.radius * 0.3), 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  const rr = p.radius + p.phase * (6 + scale * 8);
-  const ringAlpha = aBase * 0.24 * (1.0 - p.phase);
-
-  ctx.save();
-  ctx.globalAlpha = ringAlpha;
-  ctx.strokeStyle = col;
-  ctx.lineWidth = Math.max(0.6, 1.0 * scale);
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, rr, rr * 0.55, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
+  const hit = Math.max(0, 1.0 - p.phase);
+  if (hit > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = aBase * 0.20 * hit;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(0.5, p.radius * 0.22), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
-        }
       }
 
       // -------------------
