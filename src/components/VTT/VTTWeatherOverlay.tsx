@@ -412,8 +412,8 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
           cos(time * freq * 1.29  + phase + fi * 1.618) * 0.45
         );
         r  += fnoise(uv + disp) * sc;
-        uv *= 3.0;
-        sc *= 0.3;
+        uv *= 2.5;
+        sc *= 0.45;
       }
       return r;
     }
