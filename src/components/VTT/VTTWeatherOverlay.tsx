@@ -556,7 +556,7 @@ uniforms: {
     // gestion des paramètres d'effet (FXMaster-like fog)
     // -------------------
     const speedVal    = Math.max(0, fe.speed ?? 0.5);
-    const densityVal  = Math.min(1, Math.max(0, fe.density ?? 0.5));
+const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
     const strengthVal = Math.min(1, Math.max(0, (fe as any).intensity ?? fe.alpha ?? 1));
     const scaleVal    = Math.max(0.05, (fe as any).scale ?? 1.0);
     const rotation    = (fe as any).rotation ?? 0.0;
