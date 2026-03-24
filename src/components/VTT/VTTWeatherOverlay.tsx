@@ -711,9 +711,10 @@ while (existing.particles.length < existing.maxParticles) {
   // -------------------
   useEffect(() => {
     const animate = (time: number) => {
-      const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
-      const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
-      const ctxAdd    = canvasAddRef.current?.getContext('2d') ?? null;
+const ctxScreen = canvasScreenRef.current?.getContext('2d') ?? null;
+const ctxNormal = canvasNormalRef.current?.getContext('2d') ?? null;
+const ctxAdd    = canvasAddRef.current?.getContext('2d') ?? null;
+const ctxRain   = canvasRainRef.current?.getContext('2d') ?? null;
 
       const dtMs = time - (lastTimeRef.current || time);
       lastTimeRef.current = time;
