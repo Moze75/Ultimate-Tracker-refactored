@@ -514,17 +514,15 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     glStateRef.current = {
       gl,
       program,
-      uniforms: {
-        time:        gl.getUniformLocation(program, 'time'),
-        speed:       gl.getUniformLocation(program, 'speed'),
-        intensity:   gl.getUniformLocation(program, 'intensity'),
-        slope:       gl.getUniformLocation(program, 'slope'),
-        seedX:       gl.getUniformLocation(program, 'seedX'),
-        seedY:       gl.getUniformLocation(program, 'seedY'),
-        rotation:    gl.getUniformLocation(program, 'rotation'),
-        tint:        gl.getUniformLocation(program, 'tint'),
-        uResolution: gl.getUniformLocation(program, 'uResolution'),
-      },
+uniforms: {
+  time:        gl.getUniformLocation(program, 'time'),
+  density:     gl.getUniformLocation(program, 'density'),
+  strength:    gl.getUniformLocation(program, 'strength'),
+  dimensions:  gl.getUniformLocation(program, 'dimensions'),
+  color:       gl.getUniformLocation(program, 'color'),
+  rotation:    gl.getUniformLocation(program, 'rotation'),
+  uResolution: gl.getUniformLocation(program, 'uResolution'),
+},
     };
 
     console.debug(`[VTTFog] WebGL initialisé — mode performance ${mode} (${mode + 2} octaves)`);
