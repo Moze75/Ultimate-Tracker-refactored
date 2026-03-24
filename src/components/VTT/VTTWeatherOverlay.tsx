@@ -842,8 +842,9 @@ if (p.y > height + 24 || p.x < -80 || p.x > width + 80) {
 
             const a = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
             const dropLen = p.len * (effect.scale ?? 1);
-            const dx = (p.vx / Math.max(1, Math.abs(p.vy))) * dropLen;
-            const dy = dropLen;
+const inv = 1 / Math.max(1, Math.abs(p.vy));
+const dx = p.vx * inv * dropLen;
+const dy = p.vy * inv * dropLen; // respecte la direction réelle de chute
 
             ctx.save();
             ctx.globalAlpha = a;
