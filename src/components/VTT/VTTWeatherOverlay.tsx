@@ -443,10 +443,7 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       // Plage de smoothstep élargie : transition douce entre zones denses et creuses.
       // Avant : slope+0.001 → quasi binaire (0 ou 1).
       // Maintenant : slope*1.5 → large dégradé → opacité variable, aspect organique.
-      float spatial = fnoise(uvBase * 0.4 + vec2(seedX * 0.07, seedY * 0.07));
-      float slopeLo = slope * (0.2 + spatial * 0.4);
-      float slopeHi = slope * (0.9 + spatial * 0.8);
-      pb = smoothstep(slopeLo, slopeHi, pb);
+      pb = smoothstep(slope * 0.6, slope * 1.1, pb);
 
       // Fond noir + mixBlendMode:screen côté CSS :
       //   screen(rgb_canvas, rgb_fond=0) = rgb_canvas
