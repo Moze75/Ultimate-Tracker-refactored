@@ -826,38 +826,47 @@ if (p.type !== 'rain') {
             ctx.filter = 'none';
             ctx.restore();
 
-          } else if (p.type === 'rain') {
-            p.x += p.vx * dt;
-            p.y += p.vy * dt;
+              } else if (p.type === 'rain') {
+            // -------------------
+            // gestion pluie top-down : impact + ripple
+            // -------------------
+            p.phase += p.phaseInc * dt;
 
-// reset quand sort écran (bas ou trop à gauche/droite)
-if (p.y > height + 24 || p.x < -80 || p.x > width + 80) {
-  const drift = (Math.random() * 0.16 - 0.08);
-  const fallY = (900 + Math.random() * 500) * effect.speed;
-  p.vy = fallY;
-  p.vx = fallY * drift;
+            // nouveau point d'impact quand le cycle se termine
+            if (p.phase >= 1) {
+              p.phase -= 1;
+              p.x = Math.random() * width;
+              p.y = Math.random() * height;
+              p.radius = (1.2 + Math.random() * 2.8) * (effect.scale ?? 1);
+              p.phaseInc = (0.7 + Math.random() * 1.1) * Math.max(0.2, effect.speed);
+            }
 
-  p.x = Math.random() * (width + 120) - 60;
-  p.y = -20 - Math.random() * 140;
-}
+            const aBase = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
+            const col = effect.color ?? '#9ec5ff';
 
-            const a = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
-            const dropLen = p.len * (effect.scale ?? 1);
-const inv = 1 / Math.max(1, Math.abs(p.vy));
-const dx = p.vx * inv * dropLen;
-const dy = p.vy * inv * dropLen; // respecte la direction réelle de chute
+            // 1) micro impact (point brillant court)
+            const hit = 1.0 - p.phase; // fort au début du cycle
+            ctx.save();
+            ctx.globalAlpha = aBase * 0.35 * hit;
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(0.8, p.radius * 0.35), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 2) anneau d'onde (ripple)
+            const rr = p.radius + p.phase * (6 + (effect.scale ?? 1) * 8);
+            const ringAlpha = aBase * 0.28 * (1.0 - p.phase);
 
             ctx.save();
-            ctx.globalAlpha = a;
-            ctx.strokeStyle = effect.color ?? '#9ec5ff';
-            ctx.lineWidth = Math.max(1, 1.1 * (effect.scale ?? 1));
+            ctx.globalAlpha = ringAlpha;
+            ctx.strokeStyle = col;
+            ctx.lineWidth = Math.max(0.6, 1.0 * (effect.scale ?? 1));
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x + dx, p.y + dy);
+            // ellipse légèrement aplatie = sensation "sol"
+            ctx.ellipse(p.x, p.y, rr, rr * 0.55, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
-          
-            
           }
         }
       }
