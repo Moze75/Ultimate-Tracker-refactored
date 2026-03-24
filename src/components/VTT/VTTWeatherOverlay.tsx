@@ -829,13 +829,12 @@ if (p.type !== 'rain') {
             ctx.filter = 'none';
             ctx.restore();
 
-              } else if (p.type === 'rain') {
+          } else if (p.type === 'rain') {
             // -------------------
-            // gestion pluie top-down : impact + ripple
+            // gestion pluie top-down : streak sprite + impact + ripple
             // -------------------
             p.phase += p.phaseInc * dt;
 
-            // nouveau point d'impact quand le cycle se termine
             if (p.phase >= 1) {
               p.phase -= 1;
               p.x = Math.random() * width;
@@ -847,16 +846,23 @@ if (p.type !== 'rain') {
             const aBase = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
             const col = effect.color ?? '#9ec5ff';
 
-                       // 0) trait de chute court (sensation "vient du dessus")
-            // visible surtout en début de phase, puis disparaît à l'impact
-            const fall = Math.max(0, 1.0 - p.phase * 2.2);
-            const streakLen = (3.5 + (effect.scale ?? 1) * 3.0) * fall;
-
+            // 0) streak top-down (sprite-like, court, orienté vertical)
+            const fall = Math.max(0, 1.0 - p.phase * 1.8);
             if (fall > 0.02) {
+              const streakLen = (8 + (effect.scale ?? 1) * 6) * fall;
+              const streakW = Math.max(0.8, 1.2 * (effect.scale ?? 1));
+
               ctx.save();
-              ctx.globalAlpha = aBase * 0.22 * fall;
-              ctx.strokeStyle = col;
-              ctx.lineWidth = Math.max(0.7, 0.9 * (effect.scale ?? 1));
+              ctx.globalAlpha = aBase * 0.35 * fall;
+
+              // dégradé type "rain.webp" : tête plus lumineuse, queue plus faible
+              const grad = ctx.createLinearGradient(p.x, p.y - streakLen, p.x, p.y);
+              grad.addColorStop(0, 'rgba(255,255,255,0.0)');
+              grad.addColorStop(0.35, col);
+              grad.addColorStop(1, 'rgba(255,255,255,0.95)');
+
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = streakW;
               ctx.beginPath();
               ctx.moveTo(p.x, p.y - streakLen);
               ctx.lineTo(p.x, p.y);
@@ -864,19 +870,19 @@ if (p.type !== 'rain') {
               ctx.restore();
             }
 
-            // 1) micro impact (point brillant court)
+            // 1) impact
             const hit = 1.0 - p.phase;
             ctx.save();
-            ctx.globalAlpha = aBase * 0.38 * hit;
+            ctx.globalAlpha = aBase * 0.30 * hit;
             ctx.fillStyle = col;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(0.8, p.radius * 0.35), 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, Math.max(0.7, p.radius * 0.3), 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
 
-            // 2) anneau d'onde (ripple)
+            // 2) ripple
             const rr = p.radius + p.phase * (6 + (effect.scale ?? 1) * 8);
-            const ringAlpha = aBase * 0.30 * (1.0 - p.phase);
+            const ringAlpha = aBase * 0.24 * (1.0 - p.phase);
 
             ctx.save();
             ctx.globalAlpha = ringAlpha;
