@@ -593,8 +593,8 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   // -------------------
   // gestion des 2 couches fog
   // -------------------
-  const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  slopeOffset: 0.0 });
-  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, slopeOffset: 0.35 });
+const fogGLA = useFogWebGL(canvasFogARef);
+const fogGLB = useFogWebGL(canvasFogBRef);
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
   const layersRef   = useRef<WeatherLayer[]>([]);
