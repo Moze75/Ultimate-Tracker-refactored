@@ -806,6 +806,33 @@ else                               ctx = ctxNormal;
             ctx.drawImage(img, -eSize, -eSize, eSize * 2, eSize * 2);
             ctx.filter = 'none';
             ctx.restore();
+
+          } else if (p.type === 'rain') {
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+
+            // reset quand sort écran
+            if (p.y > height + 20 || p.x > width + 40) {
+              p.x = -20 + Math.random() * (width * 0.4);
+              p.y = -20 - Math.random() * 120;
+            }
+
+            const a = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
+            const dropLen = p.len * (effect.scale ?? 1);
+            const dx = (p.vx / Math.max(1, Math.abs(p.vy))) * dropLen;
+            const dy = dropLen;
+
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.strokeStyle = effect.color ?? '#9ec5ff';
+            ctx.lineWidth = Math.max(1, 1.1 * (effect.scale ?? 1));
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + dx, p.y + dy);
+            ctx.stroke();
+            ctx.restore();
+          }
+            
           }
         }
       }
