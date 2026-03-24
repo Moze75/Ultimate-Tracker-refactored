@@ -335,109 +335,82 @@ const FOG_VERT_SRC = `
 // Gestion du fragment shader fog (Foundry-like)
 // -------------------
 function buildFogFragSrc(mode: 0 | 1 | 2): string {
-  const octaves = mode + 2;
-
-  const fogGLSL = mode === 0
-    ? `
-      vec2 uv = uvBase;
-      vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115 + vec2(seedX, seedY))) * 1.0;
-      mist += fbm(uv * 4.5 + mv - time * 0.0275) * 1.0;
-    `
-    : `
-      vec2 uv = uvBase;
-      for (int i = 0; i < 2; i++) {
-        float fi = float(i);
-        vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115 + vec2(fi * 250.0 + seedX, fi * 250.0 + seedY))) * 0.5;
-        mist += fbm(uv * 4.5 + mv - time * 0.0275) * 0.5;
-      }
-    `;
+  const octaves = mode === 0 ? 6 : mode === 1 ? 8 : 10; // proche rendu FXMaster, modulé perf
 
   return `
     precision mediump float;
 
     uniform float time;
-    uniform float speed;
-    uniform float intensity;
-    uniform float slope;
-    uniform float seedX;
-    uniform float seedY;
+    uniform float density;
+    uniform float strength;
+    uniform vec2  dimensions;
+    uniform vec3  color;
     uniform float rotation;
-    uniform vec3  tint;
     uniform vec2  uResolution;
 
-    float random(in vec2 p) {
-      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
+    float rand(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453123); }
+
+    float noise(vec2 p){
+      vec2 i = floor(p), f = fract(p);
+      float a = rand(i + vec2(0.0,0.0));
+      float b = rand(i + vec2(1.0,0.0));
+      float c = rand(i + vec2(0.0,1.0));
+      float d = rand(i + vec2(1.0,1.0));
+      vec2 u = f*f*(3.0-2.0*f);
+      return mix(a,b,u.x) + (c-a)*u.y*(1.0-u.x) + (d-b)*u.x*u.y;
     }
 
-    mat2 rot(float a) {
+    float fbm(vec2 p){
+      float v=0.0, a=0.5;
+      vec2 shift=vec2(100.0);
+      mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+      for(int i=0;i<10;i++){
+        if (i >= ${octaves}) break;
+        v = (sin(v*1.07)) + (a*noise(p));
+        p = rot*p*1.9 + shift;
+        a *= 0.5;
+      }
+      return v;
+    }
+
+    vec3 applyContrast(vec3 c, float contrast){
+      float t=(1.0-contrast)*0.5;
+      return c*contrast + vec3(t);
+    }
+
+    mat2 rot2(float a) {
       float c = cos(a), s = sin(a);
       return mat2(c, -s, s, c);
     }
 
-    float perceivedBrightness(vec3 col) {
-      return sqrt(0.299 * col.r * col.r + 0.587 * col.g * col.g + 0.114 * col.b * col.b);
-    }
+    void main(void){
+      vec2 uv = gl_FragCoord.xy / uResolution; // 0..1 écran
+      uv.y = 1.0 - uv.y;
 
-    // -------------------
-    // gestion du bruit de base
-    // -------------------
-    float fnoise(in vec2 coords) {
-      vec2 i = floor(coords);
-      vec2 f = fract(coords);
-      float a = random(i);
-      float b = random(i + vec2(1.0, 0.0));
-      float c = random(i + vec2(0.0, 1.0));
-      float d = random(i + vec2(1.0, 1.0));
-      vec2 cb = f * f * (3.0 - 2.0 * f);
-      return mix(a, b, cb.x) + (c - a) * cb.y * (1.0 - cb.x) + (d - b) * cb.x * cb.y;
-    }
+      // // gestion de l'ancrage "world-like"
+      vec2 p = (uv * 8.0 - uv) * dimensions * 0.25;
+      if (rotation != 0.0) p = rot2(rotation) * (p - 0.5) + 0.5;
 
-    // -------------------
-    // gestion du fbm animé
-    // -------------------
-    float fbm(in vec2 uv) {
-      float r = 0.0;
-      float scale = 1.0;
-      uv += time * 0.03 * speed;
-      uv *= 2.0;
-      for (int i = 0; i < ${octaves}; i++) {
-        r += fnoise(uv + time * 0.03 * speed) * scale;
-        uv *= 3.0;
-        scale *= 0.3;
-      }
-      return r;
-    }
+      float t = time * 0.25;
 
-    vec3 mistColor(in vec2 uvBase) {
-      float mist = 0.0;
-      ${fogGLSL}
-      return vec3(0.9, 0.85, 1.0) * mist;
-    }
+      vec2 q;
+      q.x = fbm(p);
+      q.y = fbm(p);
 
-    void main() {
-      vec2 vUvs = gl_FragCoord.xy / uResolution;
-      vUvs.y = 1.0 - vUvs.y;
+      vec2 r;
+      r.x = fbm(p*q + vec2(1.7, 9.2) + 0.15*t);
+      r.y = fbm(p*q + vec2(9.3, 2.8) + 0.35*t);
 
-      vec2 ruv = vUvs;
-      if (rotation != 0.0) {
-        ruv = vUvs - 0.5;
-        ruv = rot(rotation) * ruv;
-        ruv += 0.5;
-      }
+      float f = fbm(p*0.2 + r*3.102);
 
-      vec3 col = mistColor(ruv * 2.0 - 1.0) * 1.33;
+      vec3 baseFog = mix(color, vec3(1.5), clamp(abs(r.x), 0.4, 1.0));
+      float shape  = f*f*f + 0.6*f*f + 0.5*f;
+      vec3 fogRGB  = applyContrast(baseFog * shape, 3.0);
 
-      // -------------------
-      // gestion du contraste fog
-      // -------------------
-      float pb = perceivedBrightness(col);
-      pb = smoothstep(slope * 0.5, slope + 0.001, pb);
+      float k = clamp(density, 0.0, 1.0) * clamp(strength, 0.0, 1.0);
 
-      // -------------------
-      // gestion de la couleur finale
-      // -------------------
-      vec3 fogColor = mix(vec3(0.05, 0.05, 0.08), col * clamp(slope, 1.0, 2.0), pb) * tint * intensity;
-      gl_FragColor = vec4(fogColor, 1.0);
+      // On sort directement la brume; le canvas est en mix-blend-mode: screen
+      gl_FragColor = vec4(fogRGB * k, 1.0);
     }
   `;
 }
