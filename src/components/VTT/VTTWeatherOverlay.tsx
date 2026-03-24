@@ -627,16 +627,7 @@ const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
     gl.clear(gl.COLOR_BUFFER_BIT);
   }, []);
 
-  const clear = useCallback((width: number, height: number) => {
-    const state = glStateRef.current;
-    if (!state) return;
-    const { gl } = state;
-    gl.viewport(0, 0, width, height);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-  }, []);
-
-  return { render, clear };
+  return { render, clear }; 
 }
 
 // -------------------
