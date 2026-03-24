@@ -577,6 +577,15 @@ uniforms: {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }, []);
 
+  const clear = useCallback((width: number, height: number) => {
+    const state = glStateRef.current;
+    if (!state) return;
+    const { gl } = state;
+    gl.viewport(0, 0, width, height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }, []);
+
   return { render, clear };
 }
 
