@@ -663,6 +663,9 @@ const fogGLB = useFogWebGL(canvasFogBRef);
           const newMax = Math.max(4, Math.round(densityFactor * 40));
           existing.maxParticles = newMax;
           existing.frequency    = (5 / speedFactor) / newMax;
+          } else if (effect.type === 'rain') {
+  maxParticles = Math.max(40, Math.round(densityFactor * 220));
+  frequency = (0.5 / Math.max(0.2, speedFactor)) / maxParticles;
         } else {
           const newMax = Math.max(2, Math.round(densityFactor * 6));
           existing.maxParticles = newMax;
