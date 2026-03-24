@@ -97,7 +97,17 @@ interface EmberParticle {
   color: string;
 }
 
-type AnyParticle = CloudParticle | CrowParticle | EmberParticle;
+interface RainParticle {
+  type: 'rain';
+  x: number; y: number;
+  vx: number; vy: number;
+  len: number;
+  alpha: number;
+  lifeNorm: number;
+  lifeInc: number;
+}
+
+type AnyParticle = CloudParticle | CrowParticle | EmberParticle | RainParticle;
 
 interface WeatherLayer {
   effect: VTTWeatherEffect;
