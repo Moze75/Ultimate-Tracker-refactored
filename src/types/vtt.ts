@@ -253,10 +253,6 @@ export type VTTServerEvent =
   | { type: 'USER_LEFT'; userId: string }
   | { type: 'CHAT_RECEIVED'; message: VTTChatMessage }
   | { type: 'ERROR'; message: string };
-  // -------------------
-  // Chat live VTT
-  // -------------------
-  | { type: 'CHAT_RECEIVED'; message: VTTChatMessage };
 
 // ===================================
 // Chat live VTT
