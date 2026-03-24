@@ -776,8 +776,8 @@ const fogGLB = useFogWebGL(canvasFogBRef);
       // -------------------
       const fe = effectsRef.current.find(e => e.type === 'fog');
       if (fe) {
-        fogGLA.render(dt, fe, width, height);
-        fogGLB.render(dt, fe, width, height);
+fogGLA.render(dt, fe, width, height);
+// fogGLB.render(dt, fe, width, height);
       } else {
         fogGLA.clear(width, height);
         fogGLB.clear(width, height);
