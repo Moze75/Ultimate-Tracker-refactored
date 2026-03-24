@@ -1038,7 +1038,7 @@ const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
   scale: 1.4,
   color: '#b0c8e0'
 };
-
+ 
 const WeatherPopup = React.forwardRef<HTMLDivElement, {
   effects: VTTWeatherEffect[];
   onChange: (effects: VTTWeatherEffect[]) => void;
