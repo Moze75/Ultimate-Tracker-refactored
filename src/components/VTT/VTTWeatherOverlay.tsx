@@ -746,13 +746,19 @@ else                               ctx = ctxNormal;
         if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
 
         for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.lifeNorm += p.lifeInc * dt;
+const p = particles[i];
 
-          if (p.lifeNorm >= 1) {
-            particles.splice(i, 1);
-            continue;
-          }
+// -------------------
+// gestion du cycle de vie : rain en flux continu (pas de lifetime remove)
+// -------------------
+if (p.type !== 'rain') {
+  p.lifeNorm += p.lifeInc * dt;
+
+  if (p.lifeNorm >= 1) {
+    particles.splice(i, 1);
+    continue;
+  }
+}
 
           if (p.type === 'cloud') {
             p.x += p.vx * dt;
