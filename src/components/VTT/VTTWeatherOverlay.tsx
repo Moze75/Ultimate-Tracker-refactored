@@ -166,21 +166,18 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
   };
 }  
 
+// -------------------
+// Fabrique une particule de pluie : position aléatoire + phase désynchronisée
+// -------------------
 function makeRain(w: number, h: number, speedFactor: number): RainParticle {
-  // -------------------
-  // gestion pluie top-down : impacts répartis sur toute la carte
-  // -------------------
   return {
     type: 'rain',
     x: Math.random() * w,
     y: Math.random() * h,
-    vx: 0,
-    vy: 0,
-    len: 0,
     alpha: 0.45,
     lifeNorm: 0,
     lifeInc: 0,
-    phase: Math.random(), // désynchronise les impacts
+    phase: Math.random(),  // désynchronise les impacts entre particules
     phaseInc: (0.7 + Math.random() * 1.1) * speedFactor,
     radius: 1.5 + Math.random() * 2.5,
   };
