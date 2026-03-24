@@ -406,26 +406,33 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
 // -------------------
 // gestion des trous (version douce, visible)
 // -------------------
+// -------------------
+// gestion densité = couverture (trous)
+// -------------------
+float d = clamp(density, 0.0, 1.0);      // slider densité
+float s = clamp(strength, 0.0, 1.0);     // slider opacité
+
+// bruit principal
 float wisps = smoothstep(0.30, 0.85, f);
-float holes = smoothstep(0.55, 0.88, f);
-
-// garde toujours un fond de brume, puis creuse localement
-float mask = clamp(0.42 + wisps * 0.75 - holes * 0.45, 0.12, 1.0);
-
-// découpe légère (pas destructrice)
 float breakup = noise(p * 3.0 + vec2(time * 0.03, -time * 0.02));
-mask *= (0.80 + 0.20 * smoothstep(0.30, 0.80, breakup));
 
+// seuil piloté par densité:
+// - densité faible => seuil haut => beaucoup de trous
+// - densité forte  => seuil bas => peu de trous
+float coverageThreshold = mix(0.78, 0.32, d);
+float coverage = smoothstep(coverageThreshold - 0.12, coverageThreshold + 0.12, wisps);
+
+// micro variation pour casser l'uniformité
+float micro = smoothstep(0.30, 0.80, breakup);
+float mask = clamp(coverage * (0.80 + 0.20 * micro), 0.0, 1.0);
+
+// couleur indépendante de la couverture
 vec3 baseFog = mix(color, vec3(0.90), clamp(abs(r.x), 0.25, 0.70));
 vec3 fogRGB  = applyContrast(baseFog * (0.65 + 0.55 * wisps), 1.25);
 
-// densité progressive mais pas trop punitive
-float d = clamp(density, 0.0, 1.0);
-d = pow(d, 1.35);
+// opacité ne gère QUE l'intensité visuelle
+float k = s * mask;
 
-float k = d * clamp(strength, 0.0, 1.0) * mask;
-
-// alpha un peu plus haut pour rester visible
 gl_FragColor = vec4(fogRGB, k);
     }
   `;
