@@ -97,7 +97,6 @@ interface EmberParticle {
   color: string;
 }
 
-Remplacer par :
 interface RainParticle {
   type: 'rain';
   x: number; y: number;
