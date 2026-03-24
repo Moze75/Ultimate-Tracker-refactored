@@ -847,10 +847,27 @@ if (p.type !== 'rain') {
             const aBase = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
             const col = effect.color ?? '#9ec5ff';
 
+                       // 0) trait de chute court (sensation "vient du dessus")
+            // visible surtout en début de phase, puis disparaît à l'impact
+            const fall = Math.max(0, 1.0 - p.phase * 2.2);
+            const streakLen = (3.5 + (effect.scale ?? 1) * 3.0) * fall;
+
+            if (fall > 0.02) {
+              ctx.save();
+              ctx.globalAlpha = aBase * 0.22 * fall;
+              ctx.strokeStyle = col;
+              ctx.lineWidth = Math.max(0.7, 0.9 * (effect.scale ?? 1));
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y - streakLen);
+              ctx.lineTo(p.x, p.y);
+              ctx.stroke();
+              ctx.restore();
+            }
+
             // 1) micro impact (point brillant court)
-            const hit = 1.0 - p.phase; // fort au début du cycle
+            const hit = 1.0 - p.phase;
             ctx.save();
-            ctx.globalAlpha = aBase * 0.35 * hit;
+            ctx.globalAlpha = aBase * 0.38 * hit;
             ctx.fillStyle = col;
             ctx.beginPath();
             ctx.arc(p.x, p.y, Math.max(0.8, p.radius * 0.35), 0, Math.PI * 2);
@@ -859,14 +876,13 @@ if (p.type !== 'rain') {
 
             // 2) anneau d'onde (ripple)
             const rr = p.radius + p.phase * (6 + (effect.scale ?? 1) * 8);
-            const ringAlpha = aBase * 0.28 * (1.0 - p.phase);
+            const ringAlpha = aBase * 0.30 * (1.0 - p.phase);
 
             ctx.save();
             ctx.globalAlpha = ringAlpha;
             ctx.strokeStyle = col;
             ctx.lineWidth = Math.max(0.6, 1.0 * (effect.scale ?? 1));
             ctx.beginPath();
-            // ellipse légèrement aplatie = sensation "sol"
             ctx.ellipse(p.x, p.y, rr, rr * 0.55, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
