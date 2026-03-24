@@ -330,34 +330,29 @@ const FOG_VERT_SRC = `
 `;
 
 /**
- * Construit le fragment shader GLSL en fonction du mode de performance.
- * Reproduction fidèle de FogShader.fragmentShader(mode) de Foundry VTT.
+ * // gestion du shader fog Foundry-like
+ * Construit un fragment shader proche de Foundry FogShader :
+ * - fbm temporel
+ * - une ou deux passes suivant le mode
+ * - smoothstep de contraste identique
  */
 function buildFogFragSrc(mode: 0 | 1 | 2): string {
   const octaves = mode + 2;
 
-  // fogGLSL : domain warp statique depuis uvW (= uvBase * warpFreq).
-  // Les fbm() du warp reçoivent uvW → la forme change avec warpFreq (c'est voulu).
-  // MAIS fbm() interne utilise un uvAnim séparé qui ne contient PAS warpFreq
-  // → speed n'interagit plus avec scale.
   const fogGLSL = mode === 0
-    ? `vec2 uvW = uvBase * warpFreq;
-       vec2 mv = vec2(
-         fbm(uvW + vec2(seedX,       1.7 + seedY)) - 0.5,
-         fbm(uvW + vec2(5.2 + seedX, seedY      )) - 0.5
-       ) * 1.6;
-       mist += fbm(uvW + mv);`
-    : `vec2 uvW = uvBase * warpFreq;
-       vec2 mv0 = vec2(
-         fbm(uvW + vec2(seedX,         1.7 + seedY)) - 0.5,
-         fbm(uvW + vec2(5.2 + seedX,   seedY      )) - 0.5
-       ) * 1.6;
-       mist += fbm(uvW + mv0) * 0.5;
-       vec2 mv1 = vec2(
-         fbm(uvW + vec2(seedX + 250.0, 251.7 + seedY)) - 0.5,
-         fbm(uvW + vec2(255.2 + seedX, 250.0 + seedY)) - 0.5
-       ) * 1.6;
-       mist += fbm(uvW + mv1) * 0.5;`;
+    ? `
+      vec2 uv = uvBase;
+      vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115 + vec2(seedX, seedY))) * 1.0;
+      mist += fbm(uv * 4.5 + mv - time * 0.0275) * 1.0;
+    `
+    : `
+      vec2 uv = uvBase;
+      for (int i = 0; i < 2; i++) {
+        float fi = float(i);
+        vec2 mv = vec2(fbm(uv * 4.5 + time * 0.115 + vec2(fi * 250.0 + seedX, fi * 250.0 + seedY))) * 0.5;
+        mist += fbm(uv * 4.5 + mv - time * 0.0275) * 0.5;
+      }
+    `;
 
   return `
     precision mediump float;
@@ -366,7 +361,6 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     uniform float speed;
     uniform float intensity;
     uniform float slope;
-    uniform float warpFreq;
     uniform float seedX;
     uniform float seedY;
     uniform float rotation;
@@ -376,44 +370,42 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     float random(in vec2 p) {
       return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
     }
+
     mat2 rot(float a) {
       float c = cos(a), s = sin(a);
       return mat2(c, -s, s, c);
     }
+
     float perceivedBrightness(vec3 col) {
-      return sqrt(0.299*col.r*col.r + 0.587*col.g*col.g + 0.114*col.b*col.b);
+      return sqrt(0.299 * col.r * col.r + 0.587 * col.g * col.g + 0.114 * col.b * col.b);
     }
+
+    // -------------------
+    // gestion du bruit de base
+    // -------------------
     float fnoise(in vec2 coords) {
-      vec2 i  = floor(coords);
-      vec2 f  = fract(coords);
+      vec2 i = floor(coords);
+      vec2 f = fract(coords);
       float a = random(i);
       float b = random(i + vec2(1.0, 0.0));
       float c = random(i + vec2(0.0, 1.0));
       float d = random(i + vec2(1.0, 1.0));
       vec2 cb = f * f * (3.0 - 2.0 * f);
-      return mix(a,b,cb.x) + (c-a)*cb.y*(1.0-cb.x) + (d-b)*cb.x*cb.y;
+      return mix(a, b, cb.x) + (c - a) * cb.y * (1.0 - cb.x) + (d - b) * cb.x * cb.y;
     }
 
-    // FBM : phase/freq dérivés de uvNorm (= uvBase normalisé, SANS warpFreq)
-    // → les vortex locaux sont indépendants de la taille → speed n'affecte pas la densité.
-    float fbm(in vec2 uvSpatial) {
-      // uvNorm : basse fréquence fixe pour le champ de phase/vitesse
-      // On divise par warpFreq pour revenir à l'espace [-1,1] de base
-      vec2 uvNorm = uvSpatial / warpFreq;
-      float phase = fnoise(uvNorm * 0.6 + vec2(seedX * 0.01, seedY * 0.01)) * 6.28318;
-      float freq  = (0.035 + fnoise(uvNorm * 0.4 + vec2(seedX * 0.01 + 3.7, seedY * 0.01 + 1.9)) * 0.055) * speed;
-
-      float r = 0.0, sc = 1.0;
-      vec2 uv = uvSpatial * 2.0;
+    // -------------------
+    // gestion du fbm animé
+    // -------------------
+    float fbm(in vec2 uv) {
+      float r = 0.0;
+      float scale = 1.0;
+      uv += time * 0.03 * speed;
+      uv *= 2.0;
       for (int i = 0; i < ${octaves}; i++) {
-        float fi = float(i);
-        vec2 disp = vec2(
-          sin(time * freq + phase + fi * 2.399) * 0.45,
-          cos(time * freq * 1.29  + phase + fi * 1.618) * 0.45
-        );
-        r  += fnoise(uv + disp) * sc;
+        r += fnoise(uv + time * 0.03 * speed) * scale;
         uv *= 3.0;
-        sc *= 0.3;
+        scale *= 0.3;
       }
       return r;
     }
@@ -421,38 +413,33 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     vec3 mistColor(in vec2 uvBase) {
       float mist = 0.0;
       ${fogGLSL}
-      return vec3(1.0, 0.98, 0.95) * mist;
+      return vec3(0.9, 0.85, 1.0) * mist;
     }
 
     void main() {
       vec2 vUvs = gl_FragCoord.xy / uResolution;
       vUvs.y = 1.0 - vUvs.y;
+
       vec2 ruv = vUvs;
       if (rotation != 0.0) {
-        ruv  = vUvs - 0.5;
-        ruv  = rot(rotation) * ruv;
+        ruv = vUvs - 0.5;
+        ruv = rot(rotation) * ruv;
         ruv += 0.5;
       }
 
-      vec2 uvBase = ruv * 2.0 - 1.0;
-      vec3 col = mistColor(uvBase) * 1.8;
+      vec3 col = mistColor(ruv * 2.0 - 1.0) * 1.33;
 
+      // -------------------
+      // gestion du contraste fog
+      // -------------------
       float pb = perceivedBrightness(col);
-      // slope [0.05 → 2.5] : seuil du smoothstep.
-      // Haut = seules les crêtes passent (fog épars). Bas = tout passe (nappe dense).
-      // Plage de smoothstep élargie : transition douce entre zones denses et creuses.
-      // Avant : slope+0.001 → quasi binaire (0 ou 1).
-      // Maintenant : slope*1.5 → large dégradé → opacité variable, aspect organique.
-      pb = smoothstep(slope * 0.3, slope * 1.5, pb);
+      pb = smoothstep(slope * 0.5, slope + 0.001, pb);
 
-      // Fond noir + mixBlendMode:screen côté CSS :
-      //   screen(rgb_canvas, rgb_fond=0) = rgb_canvas
-      // → zones noires (rgb=0) = invisibles, zones claires = lumineuses.
-      // C'est le RGB qui porte l'intensité — alpha=1 partout (canvas opaque).
-      // Deux couches screen superposées : screen(A,B) = 1-(1-A)(1-B)
-      // → là où les deux couches ont des crêtes → très lumineux (hétérogénéité !)
-      vec3 fogColor = tint * pb * intensity;
-      gl_FragColor  = vec4(fogColor, 1.0);
+      // -------------------
+      // gestion de la couleur finale
+      // -------------------
+      vec3 fogColor = mix(vec3(0.05, 0.05, 0.08), col * clamp(slope, 1.0, 2.0), pb) * tint * intensity;
+      gl_FragColor = vec4(fogColor, 1.0);
     }
   `;
 }
