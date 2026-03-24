@@ -862,8 +862,12 @@ fogGLA.render(dt, fe, width, height);
         fogGLB.clear(width, height);
       }
 
-      rafRef.current = requestAnimationFrame(animate);
-    };
+  rafRef.current = requestAnimationFrame(animate);
+  } catch (err) {
+    console.error('[VTTWeatherOverlay] animate crash:', err);
+    rafRef.current = requestAnimationFrame(animate);
+  }
+};
 
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
