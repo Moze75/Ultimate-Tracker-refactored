@@ -97,6 +97,7 @@ interface EmberParticle {
   color: string;
 }
 
+Remplacer par :
 interface RainParticle {
   type: 'rain';
   x: number; y: number;
@@ -108,6 +109,15 @@ interface RainParticle {
   phase: number;     // cycle impact
   phaseInc: number;  // vitesse cycle
   radius: number;    // taille ripple
+
+  // -------------------
+  // Gestion pluie top-down (inspiré FXMaster)
+  // -------------------
+  angle: number;       // angle de la goutte autour du centre
+  rNorm: number;       // position normalisée dans l'anneau [0..1]
+  speed: number;       // vitesse radiale (px/s)
+  minRadius: number;   // rayon interne torus
+  maxRadius: number;   // rayon externe torus
 }
 
 type AnyParticle = CloudParticle | CrowParticle | EmberParticle | RainParticle;
