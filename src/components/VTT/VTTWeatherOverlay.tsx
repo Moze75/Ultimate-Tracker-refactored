@@ -357,8 +357,12 @@ if (effect.type === 'clouds') {
   maxParticles = Math.max(4, Math.round(densityFactor * 40));
   frequency = (5 / speedFactor) / maxParticles;
 } else if (effect.type === 'rain') {
-  maxParticles = Math.max(80, Math.round(densityFactor * 260));
-  frequency = (0.35 / Math.max(0.2, speedFactor)) / maxParticles;
+  // -------------------
+  // Gestion densité pluie (alignée buildLayer)
+  // -------------------
+  const newMax = Math.max(80, Math.round(densityFactor * 260));
+  existing.maxParticles = newMax;
+  existing.frequency = (0.35 / Math.max(0.2, speedFactor)) / newMax;
 } else {
   maxParticles = Math.max(2, Math.round(densityFactor * 6));
   frequency = (30 / speedFactor) / maxParticles;
