@@ -404,28 +404,29 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       float f = fbm(p*0.2 + r*3.102);
 
 // -------------------
-// gestion des trous / poches d'air dans la brume
+// gestion des trous (version douce, visible)
 // -------------------
-float holes = smoothstep(0.28, 0.62, f);   // zones vides
-float wisps = smoothstep(0.45, 0.90, f);   // filaments
-float mask  = clamp(wisps - holes * 0.85, 0.0, 1.0);
+float wisps = smoothstep(0.30, 0.85, f);
+float holes = smoothstep(0.55, 0.88, f);
 
-// micro-découpe supplémentaire (évite l'effet "couverture uniforme")
-float breakup = noise(p * 6.0 + vec2(time * 0.05, -time * 0.03));
-mask *= smoothstep(0.22, 0.78, breakup);
+// garde toujours un fond de brume, puis creuse localement
+float mask = clamp(0.42 + wisps * 0.75 - holes * 0.45, 0.12, 1.0);
 
-vec3 baseFog = mix(color, vec3(0.92), clamp(abs(r.x), 0.25, 0.75));
-vec3 fogRGB  = applyContrast(baseFog * (0.55 + 0.75 * wisps), 1.35);
+// découpe légère (pas destructrice)
+float breakup = noise(p * 3.0 + vec2(time * 0.03, -time * 0.02));
+mask *= (0.80 + 0.20 * smoothstep(0.30, 0.80, breakup));
 
-// slider densité plus progressif
+vec3 baseFog = mix(color, vec3(0.90), clamp(abs(r.x), 0.25, 0.70));
+vec3 fogRGB  = applyContrast(baseFog * (0.65 + 0.55 * wisps), 1.25);
+
+// densité progressive mais pas trop punitive
 float d = clamp(density, 0.0, 1.0);
-d = d * d;
+d = pow(d, 1.35);
 
-// alpha final piloté par le masque de trous
 float k = d * clamp(strength, 0.0, 1.0) * mask;
 
-// rendu final : fog color + alpha non uniforme
-gl_FragColor = vec4(fogRGB, k * 0.85);
+// alpha un peu plus haut pour rester visible
+gl_FragColor = vec4(fogRGB, k);
     }
   `;
 }
