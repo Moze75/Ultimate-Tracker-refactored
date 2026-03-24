@@ -403,14 +403,18 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
 
       float f = fbm(p*0.2 + r*3.102);
 
-      vec3 baseFog = mix(color, vec3(1.5), clamp(abs(r.x), 0.4, 1.0));
-      float shape  = f*f*f + 0.6*f*f + 0.5*f;
-      vec3 fogRGB  = applyContrast(baseFog * shape, 3.0);
+vec3 baseFog = mix(color, vec3(0.95), clamp(abs(r.x), 0.35, 0.85));
+float shape  = f*f*f + 0.45*f*f + 0.35*f;
+vec3 fogRGB  = applyContrast(baseFog * shape, 1.45);
 
-      float k = clamp(density, 0.0, 1.0) * clamp(strength, 0.0, 1.0);
+// // gestion d'une réponse plus progressive du slider densité
+float d = clamp(density, 0.0, 1.0);
+d = d * d; // courbe gamma: réduit fortement la montée avant 0.6
 
-      // On sort directement la brume; le canvas est en mix-blend-mode: screen
-      gl_FragColor = vec4(fogRGB * k, 1.0);
+float k = d * clamp(strength, 0.0, 1.0);
+
+// alpha pilotée par k pour éviter le "blanc plein écran" en screen
+gl_FragColor = vec4(fogRGB, k * 0.75);
     }
   `;
 }
