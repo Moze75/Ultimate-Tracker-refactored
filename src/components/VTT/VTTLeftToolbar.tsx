@@ -1029,6 +1029,7 @@ const WEATHER_PRESETS: { type: VTTWeatherType; label: string; icon: string }[] =
   { type: 'crows',  label: 'Corbeaux', icon: '🐦‍⬛' },
   { type: 'embers', label: 'Braises',  icon: '🔥'    },
   { type: 'fog',    label: 'Brume',    icon: '🌫️'   },
+  { type: 'rain',   label: 'Pluie',    icon: '🌧️'   },
 ];
 
 const DEFAULT_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
