@@ -732,7 +732,7 @@ while (existing.particles.length < existing.maxParticles) {
         let ctx: CanvasRenderingContext2D | null;
 if      (effect.type === 'clouds') ctx = ctxScreen;
 else if (effect.type === 'embers') ctx = ctxAdd;
-else if (effect.type === 'rain')   ctx = ctxNormal;
+else if (effect.type === 'rain')   ctx = ctxRain;
 else                               ctx = ctxNormal;
         if (!ctx) continue;
 
