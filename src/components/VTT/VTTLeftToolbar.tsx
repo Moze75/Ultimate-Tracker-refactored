@@ -1190,7 +1190,7 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
               <span>Taille</span>
               <span className="text-sky-400 font-mono">{editingEffect.scale.toFixed(1)}×</span>
             </div>
-            <input type="range" min="0.2" max="3" step="0.1"
+            <input type="range" min="0.5" max="3" step="0.1"
               value={editingEffect.scale}
               onChange={e => update(editingType, { scale: parseFloat(e.target.value) })}
               className="w-full accent-sky-500"
