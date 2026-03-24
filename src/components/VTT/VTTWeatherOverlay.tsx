@@ -710,9 +710,10 @@ if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embe
         const { effect, particles } = layer;
 
         let ctx: CanvasRenderingContext2D | null;
-        if      (effect.type === 'clouds') ctx = ctxScreen;
-        else if (effect.type === 'embers') ctx = ctxAdd;
-        else                               ctx = ctxNormal;
+if      (effect.type === 'clouds') ctx = ctxScreen;
+else if (effect.type === 'embers') ctx = ctxAdd;
+else if (effect.type === 'rain')   ctx = ctxNormal;
+else                               ctx = ctxNormal;
         if (!ctx) continue;
 
         layer.spawnAccum += dt;
