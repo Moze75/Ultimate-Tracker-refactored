@@ -1046,6 +1046,14 @@ const DEFAULT_FOG_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
   scale: 1.4,
   color: '#b0c8e0'
 };
+
+const DEFAULT_EMBERS_WEATHER: Omit<VTTWeatherEffect, 'type'> = {
+  density: 1.6,
+  speed: 0.6,
+  alpha: 0.4,
+  scale: 0.5,
+  color: '#f77300'
+};
   
 const WeatherPopup = React.forwardRef<HTMLDivElement, {
   effects: VTTWeatherEffect[];
