@@ -420,17 +420,15 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
 interface FogGLState {
   gl:       WebGLRenderingContext;
   program:  WebGLProgram;
-  uniforms: {
-    time:        WebGLUniformLocation | null;
-    speed:       WebGLUniformLocation | null;
-    intensity:   WebGLUniformLocation | null;
-    slope:       WebGLUniformLocation | null;
-    seedX:       WebGLUniformLocation | null;
-    seedY:       WebGLUniformLocation | null;
-    rotation:    WebGLUniformLocation | null;
-    tint:        WebGLUniformLocation | null;
-    uResolution: WebGLUniformLocation | null;
-  };
+uniforms: {
+  time:        WebGLUniformLocation | null;
+  density:     WebGLUniformLocation | null;
+  strength:    WebGLUniformLocation | null;
+  dimensions:  WebGLUniformLocation | null;
+  color:       WebGLUniformLocation | null;
+  rotation:    WebGLUniformLocation | null;
+  uResolution: WebGLUniformLocation | null;
+};
 }
 
 interface FogLayerConfig {
