@@ -98,26 +98,20 @@ interface EmberParticle {
   color: string;
 }
 
+// -------------------
+// Type particule pluie top-down (phase-based : streak + impact + ripple)
+// Les champs vx/vy/len/angle/rNorm/speed/minRadius/maxRadius ont été retirés
+// car la pluie utilise exclusivement phase/phaseInc/radius pour son cycle.
+// -------------------
 interface RainParticle {
   type: 'rain';
   x: number; y: number;
-  vx: number; vy: number;
-  len: number;
   alpha: number;
   lifeNorm: number;
   lifeInc: number;
-  phase: number;     // cycle impact
-  phaseInc: number;  // vitesse cycle
-  radius: number;    // taille ripple
-
-  // -------------------
-  // Gestion pluie top-down (inspiré FXMaster)
-  // -------------------
-  angle: number;       // angle de la goutte autour du centre
-  rNorm: number;       // position normalisée dans l'anneau [0..1]
-  speed: number;       // vitesse radiale (px/s)
-  minRadius: number;   // rayon interne torus
-  maxRadius: number;   // rayon externe torus
+  phase: number;     // cycle impact (0→1, reset à chaque goutte)
+  phaseInc: number;  // vitesse du cycle (px/s normalisé)
+  radius: number;    // taille du ripple (px)
 }
 
 type AnyParticle = CloudParticle | CrowParticle | EmberParticle | RainParticle;
