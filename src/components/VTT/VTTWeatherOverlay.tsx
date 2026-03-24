@@ -739,12 +739,13 @@ else                               ctx = ctxNormal;
         if (!ctx) continue;
 
         layer.spawnAccum += dt;
-        while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
-          layer.spawnAccum -= layer.frequency;
-          if (effect.type === 'clouds')      particles.push(makeCloud(width, height, effect.speed, true));
-          else if (effect.type === 'embers') particles.push(makeEmber(width, height, effect.speed));
-          else                               particles.push(makeCrow(width, height, effect.speed));
-        }
+while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
+  layer.spawnAccum -= layer.frequency;
+  if (effect.type === 'clouds')      particles.push(makeCloud(width, height, effect.speed, true));
+  else if (effect.type === 'embers') particles.push(makeEmber(width, height, effect.speed));
+  else if (effect.type === 'rain')   particles.push(makeRain(width, height, effect.speed));
+  else                               particles.push(makeCrow(width, height, effect.speed));
+}
         if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
 
         for (let i = particles.length - 1; i >= 0; i--) {
