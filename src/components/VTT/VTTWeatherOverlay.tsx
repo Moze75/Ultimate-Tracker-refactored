@@ -690,11 +690,12 @@ if (effect.type !== 'clouds' && effect.type !== 'crows' && effect.type !== 'embe
           existing.frequency    = (30 / speedFactor) / newMax;
         }
 
-        while (existing.particles.length < existing.maxParticles) {
-          if (effect.type === 'clouds')      existing.particles.push(makeCloud(width, height, effect.speed, false));
-          else if (effect.type === 'embers') existing.particles.push(makeEmber(width, height, effect.speed));
-          else                               existing.particles.push(makeCrow(width, height, effect.speed));
-        }
+while (existing.particles.length < existing.maxParticles) {
+  if (effect.type === 'clouds')      existing.particles.push(makeCloud(width, height, effect.speed, false));
+  else if (effect.type === 'embers') existing.particles.push(makeEmber(width, height, effect.speed));
+  else if (effect.type === 'rain')   existing.particles.push(makeRain(width, height, effect.speed));
+  else                               existing.particles.push(makeCrow(width, height, effect.speed));
+}
         if (existing.particles.length > existing.maxParticles) {
           existing.particles.splice(existing.maxParticles);
         }
