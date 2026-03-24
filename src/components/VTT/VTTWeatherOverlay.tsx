@@ -431,7 +431,7 @@ uniforms: {
 };
 }
 
-ifunction useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
+function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
   const glStateRef  = useRef<FogGLState | null>(null);
   const modeRef     = useRef<0 | 1 | 2>(detectPerformanceMode());
 
