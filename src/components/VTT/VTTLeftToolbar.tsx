@@ -1063,7 +1063,8 @@ const WeatherPopup = React.forwardRef<HTMLDivElement, {
       onChange(effects.filter(e => e.type !== type));
       if (editingType === type) setEditingType(null);
     } else {
-      onChange([...effects, { type, ...DEFAULT_WEATHER }]);
+const defaults = type === 'fog' ? DEFAULT_FOG_WEATHER : DEFAULT_WEATHER;
+onChange([...effects, { type, ...defaults }]);
       // Ne pas ouvrir les réglages automatiquement
     }
   };
