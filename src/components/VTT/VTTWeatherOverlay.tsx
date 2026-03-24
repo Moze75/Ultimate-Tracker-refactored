@@ -421,11 +421,6 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     vec3 mistColor(in vec2 uvBase) {
       float mist = 0.0;
       ${fogGLSL}
-
-      // Masque basse fréquence : grandes zones vides vs zones de brume
-    vec3 mistColor(in vec2 uvBase) {
-      float mist = 0.0;
-      ${fogGLSL}
       return vec3(1.0, 0.98, 0.95) * mist;
     }
 
@@ -448,7 +443,7 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       // Plage de smoothstep élargie : transition douce entre zones denses et creuses.
       // Avant : slope+0.001 → quasi binaire (0 ou 1).
       // Maintenant : slope*1.5 → large dégradé → opacité variable, aspect organique.
-pb = smoothstep(slope * 0.3, slope * 1.5, pb);
+      pb = smoothstep(slope * 0.3, slope * 1.5, pb);
 
       // Fond noir + mixBlendMode:screen côté CSS :
       //   screen(rgb_canvas, rgb_fond=0) = rgb_canvas
@@ -643,7 +638,7 @@ function useFogWebGL(canvasRef: React.RefObject<HTMLCanvasElement>, cfg: FogLaye
     //   scale=3.0 → warpFreq=3.0  (max taille, encore du fog pas de l'eau)
     // Formule : 5.884 * scale^(-0.613), clamp [3.0, 9.0]
     const warpScale = cfg.warpScale ?? 1.0;
- const warpFreq = Math.min(6.5, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
+    const warpFreq = Math.min(9.0, Math.max(3.0, 5.884 * Math.pow(Math.max(scale, 0.1), -0.613) * warpScale));
 
     // slope : density=0 → 2.5 (quasi vide), density=1 → 0.68, density=2 → 0.05
     // Monotone décroissant sur tout [0,2] → jamais de pic puis disparition
@@ -704,7 +699,7 @@ export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayP
   const fogGLA = useFogWebGL(canvasFogARef, { seedX: 0.0,  seedY: 0.0,  warpScale: 1.0,  slopeOffset: 0.0  });
   // Couche B : échelle 60% plus grande + seuil de densité décalé de +0.35
   // → les nappes denses de B ne coïncident PAS avec celles de A → vraie hétérogénéité
- const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.55 });
+  const fogGLB = useFogWebGL(canvasFogBRef, { seedX: 47.3, seedY: 83.1, warpScale: 0.6, slopeOffset: 0.35 });
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
   const layersRef   = useRef<WeatherLayer[]>([]);
