@@ -558,34 +558,23 @@ uniforms: {
     gl.useProgram(program);
 
     // -------------------
-    // gestion des paramètres d'effet
+    // gestion des paramètres d'effet (FXMaster-like fog)
     // -------------------
-    const speedVal  = Math.min(3.0, Math.max(-60.0, fe.speed ?? 1));
-    const opacity   = Math.min(1, Math.max(0, (fe as any).intensity ?? fe.alpha ?? 1));
-    const density   = Math.min(2.5, Math.max(0.05, fe.density ?? 1));
-    const slope     = Math.max(0.05, Math.min(2.5, (fe as any).slope ?? (2.5 - density * 1.0 + (cfg.slopeOffset ?? 0))));
-    const rotation  = (fe as any).rotation ?? 0.0;
+    const speedVal    = Math.max(0, fe.speed ?? 0.5);
+    const densityVal  = Math.min(1, Math.max(0, fe.density ?? 0.5));
+    const strengthVal = Math.min(1, Math.max(0, (fe as any).intensity ?? fe.alpha ?? 1));
+    const scaleVal    = Math.max(0.05, (fe as any).scale ?? 1.0);
+    const rotation    = (fe as any).rotation ?? 0.0;
 
-    gl.uniform1f(uniforms.time,        performance.now() / 1000);
-    gl.uniform1f(uniforms.speed,       speedVal);
-    gl.uniform1f(uniforms.intensity,   opacity);
-    gl.uniform1f(uniforms.slope,       slope);
-    gl.uniform1f(uniforms.seedX,       cfg.seedX);
-    gl.uniform1f(uniforms.seedY,       cfg.seedY);
+    gl.uniform1f(uniforms.time,        (performance.now() / 1000) * speedVal);
+    gl.uniform1f(uniforms.density,     densityVal);
+    gl.uniform1f(uniforms.strength,    strengthVal);
+    gl.uniform2f(uniforms.dimensions,  scaleVal, scaleVal);
+    gl.uniform3f(uniforms.color,       tr, tg, tb);
     gl.uniform1f(uniforms.rotation,    rotation);
-    gl.uniform3f(uniforms.tint,        tr, tg, tb);
     gl.uniform2f(uniforms.uResolution, width, height);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  }, [cfg.seedX, cfg.seedY, cfg.slopeOffset]);
-
-  const clear = useCallback((width: number, height: number) => {
-    const state = glStateRef.current;
-    if (!state) return;
-    const { gl } = state;
-    gl.viewport(0, 0, width, height);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
   }, []);
 
   return { render, clear };
