@@ -173,21 +173,39 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
 
 function makeRain(w: number, h: number, speedFactor: number): RainParticle {
   // -------------------
-  // gestion pluie top-down : impacts répartis sur toute la carte
+  // Gestion pluie top-down : spawn en torus + déplacement vers le centre
   // -------------------
+  const cx = w / 2;
+  const cy = h / 2;
+  const sceneRadius = Math.sqrt(w * w + h * h) / 2;
+
+  // Comme FXMaster top-down : anneau externe couvrant au-delà de l'écran
+  const minRadius = sceneRadius * 0.95;
+  const maxRadius = sceneRadius * 2.2;
+
+  const angle = Math.random() * Math.PI * 2;
+  const rNorm = Math.random();
+  const r = minRadius + (maxRadius - minRadius) * rNorm;
+
   return {
     type: 'rain',
-    x: Math.random() * w,
-    y: Math.random() * h,
+    x: cx + Math.cos(angle) * r,
+    y: cy + Math.sin(angle) * r,
     vx: 0,
     vy: 0,
     len: 0,
     alpha: 0.45,
     lifeNorm: 0,
     lifeInc: 0,
-    phase: Math.random(), // désynchronise les impacts
-    phaseInc: (0.7 + Math.random() * 1.1) * speedFactor,
+    phase: Math.random(),
+    phaseInc: (0.7 + Math.random() * 1.1) * Math.max(0.2, speedFactor),
     radius: 1.5 + Math.random() * 2.5,
+
+    angle,
+    rNorm,
+    speed: (1600 + Math.random() * 450) * Math.max(0.2, speedFactor),
+    minRadius,
+    maxRadius,
   };
 }
 
@@ -838,70 +856,109 @@ if (p.type !== 'rain') {
             ctx.filter = 'none';
             ctx.restore();
 
-          } else if (p.type === 'rain') {
-            // -------------------
-            // gestion pluie top-down : streak sprite + impact + ripple
-            // -------------------
-            p.phase += p.phaseInc * dt;
+} else if (p.type === 'rain') {
+  // -------------------
+  // Gestion pluie top-down : flux radial vers le centre (FXMaster-like)
+  // -------------------
+  const cx = width / 2;
+  const cy = height / 2;
+  const s = Math.max(0.2, effect.speed ?? 1);
+  const aBase = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
+  const col = effect.color ?? '#9ec5ff';
+  const scale = effect.scale ?? 1;
 
-            if (p.phase >= 1) {
-              p.phase -= 1;
-              p.x = Math.random() * width;
-              p.y = Math.random() * height;
-              p.radius = (1.2 + Math.random() * 2.8) * (effect.scale ?? 1);
-              p.phaseInc = (0.7 + Math.random() * 1.1) * Math.max(0.2, effect.speed);
-            }
+  // -------------------
+  // Gestion du déplacement radial (extérieur -> centre)
+  // -------------------
+  const dx = cx - p.x;
+  const dy = cy - p.y;
+  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-            const aBase = Math.max(0.05, Math.min(1, effect.alpha ?? 0.7));
-            const col = effect.color ?? '#9ec5ff';
+  const ux = dx / dist;
+  const uy = dy / dist;
+  p.vx = ux * p.speed;
+  p.vy = uy * p.speed;
 
-            // 0) streak top-down (sprite-like, court, orienté vertical)
-            const fall = Math.max(0, 1.0 - p.phase * 1.8);
-            if (fall > 0.02) {
-              const streakLen = (8 + (effect.scale ?? 1) * 6) * fall;
-              const streakW = Math.max(0.8, 1.2 * (effect.scale ?? 1));
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
 
-              ctx.save();
-              ctx.globalAlpha = aBase * 0.35 * fall;
+  // cycle d'impact/ripple
+  p.phase += p.phaseInc * dt;
 
-              // dégradé type "rain.webp" : tête plus lumineuse, queue plus faible
-              const grad = ctx.createLinearGradient(p.x, p.y - streakLen, p.x, p.y);
-              grad.addColorStop(0, 'rgba(255,255,255,0.0)');
-              grad.addColorStop(0.35, col);
-              grad.addColorStop(1, 'rgba(255,255,255,0.95)');
+  // respawn en anneau quand la goutte arrive près du centre
+  if (dist < p.minRadius || p.phase >= 1) {
+    p.phase = 0;
+    p.angle = Math.random() * Math.PI * 2;
+    p.rNorm = Math.random();
 
-              ctx.strokeStyle = grad;
-              ctx.lineWidth = streakW;
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y - streakLen);
-              ctx.lineTo(p.x, p.y);
-              ctx.stroke();
-              ctx.restore();
-            }
+    // -------------------
+    // Gestion des bornes torus recalculées (resize-safe)
+    // -------------------
+    const sceneRadius = Math.sqrt(width * width + height * height) / 2;
+    p.minRadius = sceneRadius * 0.95;
+    p.maxRadius = sceneRadius * 2.2;
 
-            // 1) impact
-            const hit = 1.0 - p.phase;
-            ctx.save();
-            ctx.globalAlpha = aBase * 0.30 * hit;
-            ctx.fillStyle = col;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(0.7, p.radius * 0.3), 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+    const r = p.minRadius + (p.maxRadius - p.minRadius) * p.rNorm;
+    p.x = cx + Math.cos(p.angle) * r;
+    p.y = cy + Math.sin(p.angle) * r;
 
-            // 2) ripple
-            const rr = p.radius + p.phase * (6 + (effect.scale ?? 1) * 8);
-            const ringAlpha = aBase * 0.24 * (1.0 - p.phase);
+    p.radius = (1.2 + Math.random() * 2.8) * scale;
+    p.phaseInc = (0.7 + Math.random() * 1.1) * s;
+    p.speed = (1600 + Math.random() * 450) * s;
+  }
 
-            ctx.save();
-            ctx.globalAlpha = ringAlpha;
-            ctx.strokeStyle = col;
-            ctx.lineWidth = Math.max(0.6, 1.0 * (effect.scale ?? 1));
-            ctx.beginPath();
-            ctx.ellipse(p.x, p.y, rr, rr * 0.55, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-          }
+  // -------------------
+  // Gestion du streak orienté selon la trajectoire
+  // -------------------
+  const fall = Math.max(0, 1.0 - p.phase * 1.8);
+  if (fall > 0.02) {
+    const streakLen = (8 + scale * 6) * fall;
+    const streakW = Math.max(0.8, 1.2 * scale);
+
+    const tx = p.x - ux * streakLen;
+    const ty = p.y - uy * streakLen;
+
+    ctx.save();
+    ctx.globalAlpha = aBase * 0.35 * fall;
+
+    const grad = ctx.createLinearGradient(tx, ty, p.x, p.y);
+    grad.addColorStop(0, 'rgba(255,255,255,0.0)');
+    grad.addColorStop(0.35, col);
+    grad.addColorStop(1, 'rgba(255,255,255,0.95)');
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = streakW;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // -------------------
+  // Gestion impact + ripple
+  // -------------------
+  const hit = 1.0 - p.phase;
+  ctx.save();
+  ctx.globalAlpha = aBase * 0.30 * hit;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, Math.max(0.7, p.radius * 0.3), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const rr = p.radius + p.phase * (6 + scale * 8);
+  const ringAlpha = aBase * 0.24 * (1.0 - p.phase);
+
+  ctx.save();
+  ctx.globalAlpha = ringAlpha;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = Math.max(0.6, 1.0 * scale);
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y, rr, rr * 0.55, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
         }
       }
 
