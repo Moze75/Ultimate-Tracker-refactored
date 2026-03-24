@@ -891,6 +891,17 @@ fogGLA.render(dt, fe, width, height);
         />
       )}
 
+       {/* rain : screen */}
+      {effects.some(e => e.type === 'rain') && (
+        <canvas
+          ref={canvasRainRef}
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ mixBlendMode: 'normal' }}
+        />
+      )}
+      
       {/* Crows : normal */}
       {effects.some(e => e.type === 'crows') && (
         <canvas
