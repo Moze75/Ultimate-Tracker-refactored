@@ -47,7 +47,8 @@ export interface VTTWeatherEffect {
   density: number;   // 0.1 → 3.0
   speed: number;     // 0.2 → 3.0
   alpha: number;     // 0.1 → 1.0
-  scale: number;     // 0.2 → 3.0 — FXMaster p.scale (multiplicateur de taille)
+  scale: number;     // 0.2 → 3.0
+  color?: string;    // utilisé par fog/rain
 }
 
 export interface VTTRoomConfig {
