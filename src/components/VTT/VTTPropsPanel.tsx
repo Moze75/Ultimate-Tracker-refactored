@@ -146,7 +146,7 @@ if (type === 'folder') propLibrary.renameFolder(roomId, renamingId, renameValue)
 
   const handleDeleteFolder = (folderId: string) => {
     if (!window.confirm('Supprimer ce dossier ? Les props seront déplacées à la racine.')) return;
-    propLibrary.deleteFolder(folderId);
+    propLibrary.deleteFolder(roomId, folderId);
     persist();
   };
 
