@@ -33,7 +33,7 @@ export function VTTPropsPanel({
   roomId,
   onAddProp,
 }: VTTPropsPanelProps) {
-  const [lib, setLib] = useState<PropLibrary>(() => propLibrary.get());
+  const [lib, setLib] = useState<PropLibrary>(() => propLibrary.get(roomId));
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
