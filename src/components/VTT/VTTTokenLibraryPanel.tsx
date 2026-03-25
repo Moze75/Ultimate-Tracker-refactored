@@ -50,7 +50,7 @@ tokenLibrary.setCache(roomId, fetched);
   }, [roomId]);
 
   const persist = useCallback(() => {
-    const current = tokenLibrary.get();
+const current = tokenLibrary.get(roomId);
     setLib(current);
     saveTokenLibrary(roomId, current);
   }, [roomId]);
