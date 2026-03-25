@@ -67,17 +67,16 @@ export async function saveMapLibrary(roomId: string, lib: MapLibrary): Promise<v
 // ── Objet mapLibrary synchrone (lecture locale cache) ─────────────────────────
 // Utilisé par VTTMapLibrary pour le rendu synchrone, couplé à fetchMapLibrary au montage
 export const mapLibrary = {
-  get(): MapLibrary {
-    return loadLocal();
+  get(roomId: string): MapLibrary {
+    return loadLocal(roomId);
   },
 
-  setCache(lib: MapLibrary): void {
-    saveLocal(lib);
-  }, 
+  setCache(roomId: string, lib: MapLibrary): void {
+    saveLocal(roomId, lib);
+  },
 
-  // ── Dossiers ────────────────────────────────────────────────────────────────
-  createFolder(name: string): MapFolder {
-    const lib = loadLocal();
+  createFolder(roomId: string, name: string): MapFolder {
+    const lib = loadLocal(roomId);
     const folder: MapFolder = {
       id: crypto.randomUUID(),
       name: name.trim(),
