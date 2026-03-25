@@ -10,6 +10,7 @@ import { VTTCustomMonsterModal } from './VTTCustomMonsterModal';
 interface VTTTokenLibraryPanelProps {
   roomId: string;
   campaignId?: string;
+  userId: string;
 }
 
 interface DragGhost {
