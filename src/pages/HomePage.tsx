@@ -73,7 +73,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   }, []);
 
   const bgStyle: React.CSSProperties = {
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url(/fondecran/Table.png)`,
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table.png)`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed',
