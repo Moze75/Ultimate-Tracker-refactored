@@ -12,6 +12,7 @@ interface VTTPropsPanelProps {
   props: import('../../types/vtt').VTTProp[];       // props actives sur le canvas (non utilisé ici pour la lib)
   selectedPropId: string | null;
   role: 'gm' | 'player';
+  userId: string;
   roomId: string;
   onSelectProp: (id: string | null) => void;
   onAddProp: (prop: Omit<import('../../types/vtt').VTTProp, 'id'>) => void;
