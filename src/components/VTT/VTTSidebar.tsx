@@ -503,7 +503,7 @@ const visibleTokens = isGM
 
               {showTokenLibrary && (
                 <div style={{ height: '200px' }}>
-                  <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} />
+              <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} userId={userId} />
                 </div>
               )}
             </div>
