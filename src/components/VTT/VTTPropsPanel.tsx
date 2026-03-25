@@ -55,7 +55,7 @@ export function VTTPropsPanel({
   // ── Chargement depuis Supabase au montage ─────────────────────────────────
   useEffect(() => {
     fetchPropLibrary(roomId).then(fetched => {
-      propLibrary.setCache(fetched);
+      propLibrary.setCache(roomId, fetched);
       setLib(fetched);
     });
   }, [roomId]);
