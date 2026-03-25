@@ -61,7 +61,7 @@ export function DesktopView({
   const [concentrationDC, setConcentrationDC] = useState(10);
 
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-    return localStorage.getItem('desktop-background') || '/fondecran/Table.png';
+    return localStorage.getItem('desktop-background') || 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table.png';
   });
 
   const deviceType = useResponsiveLayout();
