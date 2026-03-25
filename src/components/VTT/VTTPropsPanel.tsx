@@ -154,7 +154,7 @@ if (type === 'folder') propLibrary.renameFolder(roomId, renamingId, renameValue)
   const handleAddUrl = (folderId: string | null) => {
     if (!addUrlValue.trim()) return;
     const url = addUrlValue.trim();
-    propLibrary.addProp({
+    propLibrary.addProp(roomId, {
       name: addUrlName.trim() || url.split('/').pop()?.split('?')[0] || 'Prop',
       url,
       folderId,
