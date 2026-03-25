@@ -5,11 +5,15 @@ import {
 } from 'lucide-react';
 import { mapLibrary, fetchMapLibrary, saveMapLibrary, type MapEntry, type MapLibrary } from '../../services/mapLibraryService';
 
+// 1. Ajouter userId dans l'interface props (vers ligne 8)
 interface VTTMapLibraryProps {
   roomId: string;
+  userId: string;   // ← ajouter
   currentMapUrl: string;
   onLoadMap: (url: string, width?: number, height?: number) => void;
 }
+
+
 
 // ── Ghost de drag custom ─────────────────────────────────────────────────────
 interface DragGhost {
@@ -183,7 +187,7 @@ export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibrar
 
       if (workerUrl) {
         const { uploadVttAsset } = await import('../../services/vttStorageService');
-        url = await uploadVttAsset(file, 'maps', roomId);
+url = await uploadVttAsset(file, 'maps', userId, roomId);
         await new Promise<void>((resolve) => {
           const img = new Image();
           img.onload = () => { width = img.naturalWidth; height = img.naturalHeight; resolve(); };
