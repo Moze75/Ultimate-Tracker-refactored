@@ -137,7 +137,7 @@ const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    const folder = mapLibrary.createFolder(newFolderName);
+  const folder = mapLibrary.createFolder(roomId, newFolderName);
     setOpenFolders(prev => new Set([...prev, folder.id]));
     setNewFolderMode(false);
     setNewFolderName('');
