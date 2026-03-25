@@ -173,7 +173,7 @@ export function VTTPropsPanel({
       let url: string;
       if (workerUrl) {
         const { uploadVttAsset } = await import('../../services/vttStorageService');
-        url = await uploadVttAsset(file, 'props', roomId);
+url = await uploadVttAsset(file, 'props', userId, roomId);
       } else {
         url = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
