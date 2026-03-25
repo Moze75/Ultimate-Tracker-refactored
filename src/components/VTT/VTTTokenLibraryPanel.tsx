@@ -44,7 +44,7 @@ const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get(roomId));
 
   useEffect(() => {
     fetchTokenLibrary(roomId).then(fetched => {
-      tokenLibrary.setCache(fetched);
+tokenLibrary.setCache(roomId, fetched);
       setLib(fetched);
     });
   }, [roomId]);
