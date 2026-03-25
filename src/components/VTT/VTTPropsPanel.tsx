@@ -98,7 +98,7 @@ export function VTTPropsPanel({
       const propId = dragPropIdRef.current;
       const target = dragOverTargetRef.current;
       if (propId && target !== null) {
-        propLibrary.moveProp(propId, target === 'root' ? null : target);
+propLibrary.moveProp(roomId, propId, target === 'root' ? null : target);
         persist();
       }
       dragPropIdRef.current = null;
