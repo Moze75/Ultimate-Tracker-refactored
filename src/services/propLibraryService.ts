@@ -3,7 +3,7 @@
 
 import { supabase } from '../lib/supabase';
 
-const LOCAL_KEY = 'vtt_prop_library_v1';
+const localKey = (roomId: string) => `vtt_prop_library_v1_${roomId}`;
 
 export interface PropEntry {
   id: string;
@@ -28,9 +28,9 @@ export interface PropLibrary {
 }
 
 // ── Helpers locaux ────────────────────────────────────────────────────────────
-function loadLocal(): PropLibrary {
+function loadLocal(roomId: string): PropLibrary {
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
+    const raw = localStorage.getItem(localKey(roomId));
     if (!raw) return { folders: [], props: [] };
     return JSON.parse(raw) as PropLibrary;
   } catch {
@@ -38,8 +38,8 @@ function loadLocal(): PropLibrary {
   }
 }
 
-function saveLocal(lib: PropLibrary): void {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(lib));
+function saveLocal(roomId: string, lib: PropLibrary): void {
+  localStorage.setItem(localKey(roomId), JSON.stringify(lib));
 }
 
 // ── API Supabase ──────────────────────────────────────────────────────────────
@@ -63,79 +63,79 @@ export async function savePropLibrary(roomId: string, lib: PropLibrary): Promise
   if (error) {
     console.error('[PropLib] Erreur sauvegarde Supabase:', error.message);
   }
-  saveLocal(lib);
+  saveLocal(roomId, lib);
 }
 
 // ── Objet propLibrary synchrone (lecture locale cache) ───────────────────────
 export const propLibrary = {
-  get(): PropLibrary {
-    return loadLocal();
+  get(roomId: string): PropLibrary {
+    return loadLocal(roomId);
   },
 
-  setCache(lib: PropLibrary): void {
-    saveLocal(lib);
+  setCache(roomId: string, lib: PropLibrary): void {
+    saveLocal(roomId, lib);
   },
 
   // ── Dossiers ────────────────────────────────────────────────────────────────
-  createFolder(name: string): PropFolder {
-    const lib = loadLocal();
+  createFolder(roomId: string, name: string): PropFolder {
+    const lib = loadLocal(roomId);
     const folder: PropFolder = {
       id: crypto.randomUUID(),
       name: name.trim(),
       createdAt: new Date().toISOString(),
     };
     lib.folders.push(folder);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
     return folder;
   },
 
-  renameFolder(folderId: string, name: string): void {
-    const lib = loadLocal();
+  renameFolder(roomId: string, folderId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const f = lib.folders.find(f => f.id === folderId);
     if (f) f.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteFolder(folderId: string): void {
-    const lib = loadLocal();
+  deleteFolder(roomId: string, folderId: string): void {
+    const lib = loadLocal(roomId);
     lib.folders = lib.folders.filter(f => f.id !== folderId);
     lib.props = lib.props.map(p =>
       p.folderId === folderId ? { ...p, folderId: null } : p
     );
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
   // ── Props ────────────────────────────────────────────────────────────────────
-  addProp(entry: Omit<PropEntry, 'id' | 'addedAt'>): PropEntry {
-    const lib = loadLocal();
+  addProp(roomId: string, entry: Omit<PropEntry, 'id' | 'addedAt'>): PropEntry {
+    const lib = loadLocal(roomId);
     const prop: PropEntry = {
       ...entry,
       id: crypto.randomUUID(),
       addedAt: new Date().toISOString(),
     };
     lib.props.push(prop);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
     return prop;
   },
 
-  renameProp(propId: string, name: string): void {
-    const lib = loadLocal();
+  renameProp(roomId: string, propId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const p = lib.props.find(p => p.id === propId);
     if (p) p.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteProp(propId: string): void {
-    const lib = loadLocal();
+  deleteProp(roomId: string, propId: string): void {
+    const lib = loadLocal(roomId);
     lib.props = lib.props.filter(p => p.id !== propId);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  moveProp(propId: string, folderId: string | null): void {
-    const lib = loadLocal();
+  moveProp(roomId: string, propId: string, folderId: string | null): void {
+    const lib = loadLocal(roomId);
     const p = lib.props.find(p => p.id === propId);
     if (p) p.folderId = folderId;
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 };
 
