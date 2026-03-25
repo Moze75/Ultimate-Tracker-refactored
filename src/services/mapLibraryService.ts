@@ -27,9 +27,9 @@ export interface MapLibrary {
 }
 
 // ── Helpers locaux ────────────────────────────────────────────────────────────
-function loadLocal(): MapLibrary {
+function loadLocal(roomId: string): MapLibrary {
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
+    const raw = localStorage.getItem(localKey(roomId));
     if (!raw) return { folders: [], maps: [] };
     return JSON.parse(raw) as MapLibrary;
   } catch {
