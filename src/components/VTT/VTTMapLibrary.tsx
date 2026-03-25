@@ -152,7 +152,7 @@ const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
   const handleRenameConfirm = (type: 'folder' | 'map') => {
     if (!renamingId || !renameValue.trim()) { setRenamingId(null); return; }
 if (type === 'folder') mapLibrary.renameFolder(roomId, renamingId, renameValue);
-    else mapLibrary.renameMap(renamingId, renameValue);
+    else mapLibrary.renameMap(roomId, renamingId, renameValue);
     setRenamingId(null);
     persist();
   };
