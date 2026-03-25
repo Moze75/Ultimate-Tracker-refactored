@@ -192,7 +192,7 @@ export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPane
 
       if (workerUrl) {
         const { uploadVttAsset } = await import('../../services/vttStorageService');
-      imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
+imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
       } else {
         imageUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
