@@ -22,7 +22,7 @@ interface DragGhost {
 }
 
 export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPanelProps) {
-  const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get());
+const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get(roomId));
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
   const [showMonsterModal, setShowMonsterModal] = useState(false);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
