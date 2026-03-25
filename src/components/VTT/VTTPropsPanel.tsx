@@ -124,7 +124,7 @@ propLibrary.moveProp(roomId, propId, target === 'root' ? null : target);
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    const folder = propLibrary.createFolder(newFolderName);
+    const folder = propLibrary.createFolder(roomId, newFolderName);
     setOpenFolders(prev => new Set([...prev, folder.id]));
     setNewFolderMode(false);
     setNewFolderName('');
