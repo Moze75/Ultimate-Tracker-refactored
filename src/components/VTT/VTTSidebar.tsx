@@ -209,7 +209,7 @@ export function VTTSidebar({
         if (workerUrl) {
           // ✅ Upload vers Cloudflare R2
           const { uploadVttAsset } = await import('../../services/vttStorageService');
-          const cdnUrl = await uploadVttAsset(file, 'maps', roomId);
+const cdnUrl = await uploadVttAsset(file, 'maps', userId, roomId);
           const dims = await new Promise<{ w: number; h: number }>((resolve) => {
             const img = new Image();
             img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
