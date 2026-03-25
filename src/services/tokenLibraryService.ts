@@ -3,7 +3,7 @@
 
 import { supabase } from '../lib/supabase';
 
-const LOCAL_KEY = 'vtt_token_library_v1';
+const localKey = (roomId: string) => `vtt_token_library_v1_${roomId}`;
 
 export interface TokenEntry {
   id: string;
@@ -29,9 +29,9 @@ export interface TokenLibrary {
   tokens: TokenEntry[];
 }
 
-function loadLocal(): TokenLibrary {
+function loadLocal(roomId: string): TokenLibrary {
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
+    const raw = localStorage.getItem(localKey(roomId));
     if (!raw) return { folders: [], tokens: [] };
     return JSON.parse(raw) as TokenLibrary;
   } catch {
@@ -39,8 +39,8 @@ function loadLocal(): TokenLibrary {
   }
 }
 
-function saveLocal(lib: TokenLibrary): void {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(lib));
+function saveLocal(roomId: string, lib: TokenLibrary): void {
+  localStorage.setItem(localKey(roomId), JSON.stringify(lib));
 }
 
 export async function fetchTokenLibrary(roomId: string): Promise<TokenLibrary> {
@@ -65,81 +65,81 @@ export async function saveTokenLibrary(roomId: string, lib: TokenLibrary): Promi
     console.error('[TokenLib] Erreur sauvegarde Supabase:', error.message);
   }
 
-  saveLocal(lib);
+  saveLocal(roomId, lib);
 }
 
 export const tokenLibrary = {
-  get(): TokenLibrary {
-    return loadLocal();
+  get(roomId: string): TokenLibrary {
+    return loadLocal(roomId);
   },
 
-  setCache(lib: TokenLibrary): void {
-    saveLocal(lib);
+  setCache(roomId: string, lib: TokenLibrary): void {
+    saveLocal(roomId, lib);
   },
 
   // -------------------
   // Gestion des dossiers
   // -------------------
-  createFolder(name: string): TokenFolder {
-    const lib = loadLocal();
+  createFolder(roomId: string, name: string): TokenFolder {
+    const lib = loadLocal(roomId);
     const folder: TokenFolder = {
       id: crypto.randomUUID(),
       name: name.trim(),
       createdAt: new Date().toISOString(),
     };
     lib.folders.push(folder);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
     return folder;
   },
 
-  renameFolder(folderId: string, name: string): void {
-    const lib = loadLocal();
+  renameFolder(roomId: string, folderId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const folder = lib.folders.find(f => f.id === folderId);
     if (folder) folder.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteFolder(folderId: string): void {
-    const lib = loadLocal();
+  deleteFolder(roomId: string, folderId: string): void {
+    const lib = loadLocal(roomId);
     lib.folders = lib.folders.filter(f => f.id !== folderId);
     lib.tokens = lib.tokens.map(token =>
       token.folderId === folderId ? { ...token, folderId: null } : token
     );
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
   // -------------------
   // Gestion des tokens
   // -------------------
-  addToken(entry: Omit<TokenEntry, 'id' | 'addedAt'>): TokenEntry {
-    const lib = loadLocal();
+  addToken(roomId: string, entry: Omit<TokenEntry, 'id' | 'addedAt'>): TokenEntry {
+    const lib = loadLocal(roomId);
     const token: TokenEntry = {
       ...entry,
       id: crypto.randomUUID(),
       addedAt: new Date().toISOString(),
     };
     lib.tokens.push(token);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
     return token;
   },
 
-  renameToken(tokenId: string, name: string): void {
-    const lib = loadLocal();
+  renameToken(roomId: string, tokenId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const token = lib.tokens.find(t => t.id === tokenId);
     if (token) token.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  moveToken(tokenId: string, folderId: string | null): void {
-    const lib = loadLocal();
+  moveToken(roomId: string, tokenId: string, folderId: string | null): void {
+    const lib = loadLocal(roomId);
     const token = lib.tokens.find(t => t.id === tokenId);
     if (token) token.folderId = folderId;
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteToken(tokenId: string): void {
-    const lib = loadLocal();
+  deleteToken(roomId: string, tokenId: string): void {
+    const lib = loadLocal(roomId);
     lib.tokens = lib.tokens.filter(t => t.id !== tokenId);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 };
