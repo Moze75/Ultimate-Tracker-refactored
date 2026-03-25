@@ -166,7 +166,7 @@ if (type === 'folder') mapLibrary.renameFolder(roomId, renamingId, renameValue);
   // ── Cartes ────────────────────────────────────────────────────────────────
   const handleAddUrl = (folderId: string | null) => {
     if (!addUrlValue.trim()) return;
-    mapLibrary.addMap({
+    mapLibrary.addMap(roomId, {
       name: addUrlName.trim() || addUrlValue.split('/').pop() || 'Carte',
       url: addUrlValue.trim(),
       folderId,
