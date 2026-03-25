@@ -509,7 +509,7 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
           onClose={() => setShowMonsterModal(false)}
           onSaved={() => {
             fetchTokenLibrary(roomId).then(fetched => {
-              tokenLibrary.setCache(fetched);
+   tokenLibrary.setCache(roomId, fetched);
               setLib(fetched);
               const customFolder = fetched.folders.find(f => f.name === 'Monstres customs');
               if (customFolder) {
