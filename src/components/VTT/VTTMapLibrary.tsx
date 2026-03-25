@@ -25,7 +25,7 @@ interface DragGhost {
 }
 
 export function VTTMapLibrary({ roomId, currentMapUrl, onLoadMap }: VTTMapLibraryProps) {
-  const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get());
+const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null); // folderId | 'root' | null
