@@ -217,7 +217,7 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
         console.warn('[PropLib] Suppression R2 ignorée:', err);
       }
     }
-    propLibrary.deleteProp(propId);
+    propLibrary.deleteProp(roomId, propId);
     persist();
   };
 
