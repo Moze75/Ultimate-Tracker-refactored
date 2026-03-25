@@ -130,7 +130,7 @@ const current = tokenLibrary.get(roomId);
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    const folder = tokenLibrary.createFolder(newFolderName);
+const folder = tokenLibrary.createFolder(roomId, newFolderName);
     setOpenFolders(prev => new Set([...prev, folder.id]));
     setNewFolderMode(false);
     setNewFolderName('');
