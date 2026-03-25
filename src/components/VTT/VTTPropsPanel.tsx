@@ -183,7 +183,7 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
           reader.readAsDataURL(file);
         });
       }
-      propLibrary.addProp({
+      propLibrary.addProp(roomId, {
         name: file.name.replace(/\.[^.]+$/, ''),
         url,
         folderId,
