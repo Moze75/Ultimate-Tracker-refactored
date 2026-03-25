@@ -570,10 +570,10 @@ useEffect(() => {
 
  
   
-const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { silent?: boolean } = {}) => {
+  const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
-
+ 
     // -------------------
     const nextFogState = normalizeFogState(scene.fogState);
     fogStateRef.current = nextFogState;
@@ -642,7 +642,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
       walls: scene.walls || [],
       doors: scene.doors || [],
       windows: scene.windows || [],
-    }); 
+    });
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
     //  lignes 402-426 avec le double rAF + setTimeout)
