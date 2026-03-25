@@ -37,8 +37,8 @@ function loadLocal(roomId: string): MapLibrary {
   }
 }
 
-function saveLocal(lib: MapLibrary): void {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(lib));
+function saveLocal(roomId: string, lib: MapLibrary): void {
+  localStorage.setItem(localKey(roomId), JSON.stringify(lib));
 }
 
 // ── API Supabase ──────────────────────────────────────────────────────────────
