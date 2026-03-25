@@ -57,7 +57,7 @@ const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
 
   // Persiste le cache local vers Supabase après chaque mutation
   const persist = useCallback(() => {
-    const current = mapLibrary.get();
+   const current = mapLibrary.get(roomId);
     setLib(current);
     saveMapLibrary(roomId, current);
   }, [roomId]);
