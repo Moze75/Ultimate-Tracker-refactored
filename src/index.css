@@ -1170,7 +1170,7 @@ select {
    Background pour le créateur de personnage
    ======================================== */
 .bg-fantasy {
-  background-image: url('/fondecran/Table.png');
+  background-image: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
