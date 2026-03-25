@@ -101,7 +101,7 @@ const current = tokenLibrary.get(roomId);
       const target = dragOverTargetRef.current;
 
       if (tokenId && target !== null) {
-        tokenLibrary.moveToken(tokenId, target === 'root' ? null : target);
+tokenLibrary.moveToken(roomId, tokenId, target === 'root' ? null : target);
         persist();
       }
 
