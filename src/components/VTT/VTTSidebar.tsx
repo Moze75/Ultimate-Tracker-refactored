@@ -641,9 +641,10 @@ const visibleTokens = isGM
 
             {/* Bibliothèque de cartes */}
             <div className="flex-1 overflow-hidden border-b border-gray-700/60">
-              <VTTMapLibrary
-                roomId={roomId}
-                currentMapUrl={config.mapImageUrl}
+<VTTMapLibrary
+  roomId={roomId}
+  userId={userId}
+  currentMapUrl={config.mapImageUrl}
                 onLoadMap={(url, width, height) => {
                   onUpdateMap({
                     mapImageUrl: url,
