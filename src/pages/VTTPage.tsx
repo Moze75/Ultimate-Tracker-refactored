@@ -598,12 +598,39 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
 
     setActiveSceneId(scene.id);
 
-   // ── AVANT ────────────────────────────────────────────────────────────────────
     if (scene.roomId) {
       localStorage.setItem(getLastSceneStorageKey(scene.roomId), scene.id);
     }
 
-    // ... double rAF + broadcastExploredMask ...
+    // -------------------
+    // Broadcast du masque exploré aux clients distants après changement de scène
+    // requestAnimationFrame laisse le temps à VTTCanvas de restaurer son
+    // exploredCanvasRef depuis localStorage avant d'encoder le snapshot
+    // -------------------
+     if (scene.id) {
+      // ===================================
+      // Broadcast du masque exploré (fog de vision)
+      // ===================================
+      // IMPORTANT : 2 rAF sont nécessaires.
+      // Le 1er rAF laisse VTTCanvas déclencher son useEffect[sceneId] (reset + pré-création canvas).
+      // Le 2ème rAF laisse restoreExploredMaskSnapshot() finir de charger l'image en async.
+      // Sans le 2ème rAF, getExploredMaskDataUrl() encode un canvas encore noir.
+      const sceneIdToSend = scene.id;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Petit délai supplémentaire pour la restauration async de l'image
+          setTimeout(() => {
+            const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
+            // -------------------
+            // Envoi du masque exploré aux clients distants
+            // -------------------
+            if (maskData?.dataUrl) {
+              vttService.broadcastExploredMask(sceneIdToSend, maskData);
+            }
+          }, 300);
+        });
+      });
+    }
 
     vttService.setActiveSceneId(scene.id);
     vttService.send({
@@ -615,39 +642,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
       walls: scene.walls || [],
       doors: scene.doors || [],
       windows: scene.windows || [],
-    });
-
-// ── APRÈS ────────────────────────────────────────────────────────────────────
-    localStorage.setItem(getLastSceneStorageKey(roomId), scene.id);
-
-    vttService.setActiveSceneId(scene.id);
-
-    if (!silent) {
-      if (scene.id) {
-        const sceneIdToSend = scene.id;
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              const maskData = vttCanvasRef.current?.getExploredMaskDataUrl?.();
-              if (maskData?.dataUrl) {
-                vttService.broadcastExploredMask(sceneIdToSend, maskData);
-              }
-            }, 300);
-          });
-        });
-      }
-
-      vttService.send({
-        type: 'SWITCH_SCENE',
-        sceneId: scene.id,
-        config: scene.config,
-        tokens: scene.tokens,
-        fogState: scene.fogState,
-        walls: scene.walls || [],
-        doors: scene.doors || [],
-        windows: scene.windows || [],
-      });
-    }
+    }); 
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
     //  lignes 402-426 avec le double rAF + setTimeout)
