@@ -250,7 +250,7 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
       }
     }
 
-    mapLibrary.deleteMap(mapId);
+    mapLibrary.deleteMap(roomId, mapId);
     persist();
   };
 
