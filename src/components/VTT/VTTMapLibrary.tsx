@@ -159,7 +159,7 @@ if (type === 'folder') mapLibrary.renameFolder(roomId, renamingId, renameValue);
 
   const handleDeleteFolder = (folderId: string) => {
     if (!window.confirm('Supprimer ce dossier ? Les cartes seront déplacées à la racine.')) return;
-    mapLibrary.deleteFolder(folderId);
+    mapLibrary.deleteFolder(roomId, folderId);
     persist();
   };
 
