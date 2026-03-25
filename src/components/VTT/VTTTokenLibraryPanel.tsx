@@ -169,7 +169,7 @@ tokenLibrary.deleteFolder(roomId, folderId);
 
     const url = addUrlValue.trim();
 
-    tokenLibrary.addToken({
+    tokenLibrary.addToken(roomId, {
       name: addUrlName.trim() || url.split('/').pop()?.split('?')[0] || 'Token',
       imageUrl: url,
       folderId,
