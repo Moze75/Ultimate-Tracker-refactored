@@ -138,7 +138,7 @@ propLibrary.moveProp(roomId, propId, target === 'root' ? null : target);
 
   const handleRenameConfirm = (type: 'folder' | 'prop') => {
     if (!renamingId || !renameValue.trim()) { setRenamingId(null); return; }
-    if (type === 'folder') propLibrary.renameFolder(renamingId, renameValue);
+if (type === 'folder') propLibrary.renameFolder(roomId, renamingId, renameValue);
     else propLibrary.renameProp(renamingId, renameValue);
     setRenamingId(null);
     persist();
