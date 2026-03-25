@@ -219,7 +219,7 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
         height = result.height;
       }
 
-      mapLibrary.addMap({ name: file.name.replace(/\.[^.]+$/, ''), url, folderId, width, height });
+ mapLibrary.addMap(roomId, { name: file.name.replace(/\.[^.]+$/, ''), url, folderId, width, height });
       persist();
     } catch (err) {
       console.error('Erreur upload carte:', err);
