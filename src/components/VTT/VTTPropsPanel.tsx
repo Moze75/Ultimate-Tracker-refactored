@@ -61,7 +61,7 @@ export function VTTPropsPanel({
   }, [roomId]);
 
   const persist = useCallback(() => {
-    const current = propLibrary.get();
+    const current = propLibrary.get(roomId);
     setLib(current);
     savePropLibrary(roomId, current);
   }, [roomId]);
