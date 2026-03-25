@@ -148,8 +148,8 @@ const folder = tokenLibrary.createFolder(roomId, newFolderName);
       return;
     }
 
-    if (type === 'folder') tokenLibrary.renameFolder(renamingId, renameValue);
-    else tokenLibrary.renameToken(renamingId, renameValue);
+if (type === 'folder') tokenLibrary.renameFolder(roomId, renamingId, renameValue);
+else tokenLibrary.renameToken(roomId, renamingId, renameValue);
 
     setRenamingId(null);
     persist();
