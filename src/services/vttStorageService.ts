@@ -1,5 +1,3 @@
-import { supabase } from '../lib/supabase';
-
 const WORKER_URL = import.meta.env.VITE_CF_UPLOAD_WORKER_URL || '';
 const UPLOAD_SECRET = import.meta.env.VITE_CF_UPLOAD_SECRET || '';
 
