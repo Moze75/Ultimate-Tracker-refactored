@@ -110,7 +110,7 @@ const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
 
       if (mapId && target !== null) {
         const folderId = target === 'root' ? null : target;
-        mapLibrary.moveMap(mapId, folderId);
+        mapLibrary.moveMap(roomId, mapId, folderId);
         persist();
       }
 
