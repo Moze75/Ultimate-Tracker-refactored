@@ -573,7 +573,7 @@ useEffect(() => {
   const applySceneToLive = useCallback((scene: VTTScene) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
- 
+
     // -------------------
     const nextFogState = normalizeFogState(scene.fogState);
     fogStateRef.current = nextFogState;
