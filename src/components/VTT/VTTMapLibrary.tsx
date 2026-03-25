@@ -47,7 +47,7 @@ const [lib, setLib] = useState<MapLibrary>(() => mapLibrary.get(roomId));
   // ── Chargement depuis Supabase au montage ─────────────────────────────────
   useEffect(() => {
     fetchMapLibrary(roomId).then(lib => {
-      mapLibrary.setCache(lib);
+   mapLibrary.setCache(roomId, lib);
       setLib(lib);
     });
   }, [roomId]);
