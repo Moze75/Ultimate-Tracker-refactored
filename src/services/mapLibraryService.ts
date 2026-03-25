@@ -61,7 +61,7 @@ export async function saveMapLibrary(roomId: string, lib: MapLibrary): Promise<v
     .update({ map_library: lib })
     .eq('id', roomId);
   // Mise en cache local pour réactivité UI
-  saveLocal(lib);
+  saveLocal(roomId, lib);
 }
 
 // ── Objet mapLibrary synchrone (lecture locale cache) ─────────────────────────
@@ -75,6 +75,7 @@ export const mapLibrary = {
     saveLocal(roomId, lib);
   },
 
+  // ── Dossiers ────────────────────────────────────────────────────────────────
   createFolder(roomId: string, name: string): MapFolder {
     const lib = loadLocal(roomId);
     const folder: MapFolder = {
@@ -83,56 +84,56 @@ export const mapLibrary = {
       createdAt: new Date().toISOString(),
     };
     lib.folders.push(folder);
-    saveLocal(lib); 
+    saveLocal(roomId, lib);
     return folder;
   },
 
-  renameFolder(folderId: string, name: string): void {
-    const lib = loadLocal();
+  renameFolder(roomId: string, folderId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const folder = lib.folders.find(f => f.id === folderId);
     if (folder) folder.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteFolder(folderId: string): void {
-    const lib = loadLocal();
+  deleteFolder(roomId: string, folderId: string): void {
+    const lib = loadLocal(roomId);
     lib.folders = lib.folders.filter(f => f.id !== folderId);
     lib.maps = lib.maps.map(m =>
       m.folderId === folderId ? { ...m, folderId: null } : m
     );
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
   // ── Cartes ──────────────────────────────────────────────────────────────────
-  addMap(entry: Omit<MapEntry, 'id' | 'addedAt'>): MapEntry {
-    const lib = loadLocal();
+  addMap(roomId: string, entry: Omit<MapEntry, 'id' | 'addedAt'>): MapEntry {
+    const lib = loadLocal(roomId);
     const map: MapEntry = {
       ...entry,
       id: crypto.randomUUID(),
       addedAt: new Date().toISOString(),
     };
     lib.maps.push(map);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
     return map;
   },
 
-  renameMap(mapId: string, name: string): void {
-    const lib = loadLocal();
+  renameMap(roomId: string, mapId: string, name: string): void {
+    const lib = loadLocal(roomId);
     const map = lib.maps.find(m => m.id === mapId);
     if (map) map.name = name.trim();
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  moveMap(mapId: string, folderId: string | null): void {
-    const lib = loadLocal();
+  moveMap(roomId: string, mapId: string, folderId: string | null): void {
+    const lib = loadLocal(roomId);
     const map = lib.maps.find(m => m.id === mapId);
     if (map) map.folderId = folderId;
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 
-  deleteMap(mapId: string): void {
-    const lib = loadLocal();
+  deleteMap(roomId: string, mapId: string): void {
+    const lib = loadLocal(roomId);
     lib.maps = lib.maps.filter(m => m.id !== mapId);
-    saveLocal(lib);
+    saveLocal(roomId, lib);
   },
 };
