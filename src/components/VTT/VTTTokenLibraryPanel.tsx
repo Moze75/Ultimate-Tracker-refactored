@@ -243,7 +243,7 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
       }
     }
 
-    tokenLibrary.deleteToken(tokenId);
+  tokenLibrary.deleteToken(roomId, tokenId);
     persist();
   };
 
