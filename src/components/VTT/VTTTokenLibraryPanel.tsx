@@ -157,7 +157,7 @@ else tokenLibrary.renameToken(roomId, renamingId, renameValue);
 
   const handleDeleteFolder = (folderId: string) => {
     if (!window.confirm('Supprimer ce dossier ? Les tokens seront déplacés à la racine.')) return;
-    tokenLibrary.deleteFolder(folderId);
+tokenLibrary.deleteFolder(roomId, folderId);
     persist();
   };
 
