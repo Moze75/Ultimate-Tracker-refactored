@@ -3,7 +3,7 @@
 
 import { supabase } from '../lib/supabase';
 
-const LOCAL_KEY = 'vtt_map_library_v1';
+const localKey = (roomId: string) => `vtt_map_library_v1_${roomId}`;
 
 export interface MapEntry {
   id: string;
