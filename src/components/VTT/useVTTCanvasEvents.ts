@@ -593,6 +593,8 @@ export function useVTTCanvasEvents({
               draggingWallPointRef.current = {
                 wallId: wall.id,
                 pointIndex: pi,
+                originalX: pt.x,
+                originalY: pt.y,
                 phase: 'selected',
               };
               selectedWallPointRef.current = { wallId: wall.id, pointIndex: pi };
