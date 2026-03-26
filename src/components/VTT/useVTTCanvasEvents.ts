@@ -157,12 +157,15 @@ export function useVTTCanvasEvents({
 
 
   // Refs internes pour l'édition de points de mur (wall-select)
-  const draggingWallPointRef = useRef<{
+  // Ajout de la propriété phase pour suivre l'état du drag d'un point de mur
+  interface DraggingWallPoint {
     wallId: string;
     pointIndex: number;
     originalX: number;
     originalY: number;
-  } | null>(null);
+    phase?: 'selected' | 'moving';
+  }
+  const draggingWallPointRef = useRef<DraggingWallPoint | null>(null);
 
   // Ref interne pour le drag d'une porte en mode wall-select
   const draggingDoorRef = useRef<{
