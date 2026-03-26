@@ -3,22 +3,22 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { monsterService } from '../services/monsterService';
 import { DiceRollContext } from '../components/ResponsiveGameLayout';
-import { DiceBox3D } from '../components/DiceBox3D';
+// import { DiceBox3D } from '../components/DiceBox3D';
 import { VTTCanvas, getExploredMaskStorageKey } from '../components/VTT/VTTCanvas';
-import type { VTTCanvasHandle } from '../components/VTT/VTTCanvas';
+import type { VTTCanvasHandle } from '../components/VTT/vttCanvasTypes';
 import { VTTLeftToolbar } from '../components/VTT/VTTLeftToolbar';
 import type { VTTActiveTool } from '../components/VTT/VTTLeftToolbar';
 import { VTTSidebar } from '../components/VTT/VTTSidebar';
 import { VTTSceneBar } from '../components/VTT/VTTSceneBar';
-import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
-import { AddTokenModal } from '../components/VTT/AddTokenModal';
-import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
-import { VTTVisionConfigModal } from '../components/VTT/VTTVisionConfigModal';
-import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
+// import { VTTContextMenu } from '../components/VTT/VTTContextMenu';
+// import { AddTokenModal } from '../components/VTT/AddTokenModal';
+// import { VTTTokenEditModal } from '../components/VTT/VTTTokenEditModal';
+// import { VTTVisionConfigModal } from '../components/VTT/VTTVisionConfigModal';
+// import { VTTSceneConfigModal } from '../components/VTT/VTTSceneConfigModal';
 import { VTTRoomLobby } from '../components/VTT/VTTRoomLobby';
 import { VTTPlayerList } from '../components/VTT/VTTPlayerList';
 import { VTTBroadcastFrame } from '../components/VTT/VTTBroadcastFrame';
-import { VTTTokenBindingModal } from '../components/VTT/VTTTokenBindingModal';
+// import { VTTTokenBindingModal } from '../components/VTT/VTTTokenBindingModal';
 import { vttService } from '../services/vttService';
 import type {
   VTTRole,
@@ -39,9 +39,9 @@ import type {
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
-import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
-import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
-import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
+// import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
+// import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
+// import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
 import type { DiceRollResult } from '../components/DiceBox3D';
 import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
@@ -258,7 +258,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   propsRef.current = props;
   const [broadcastFrameEnabled, setBroadcastFrameEnabled] = useState(false);
     const [draggingPropId, setDraggingPropId] = useState<string | null>(null);
-  const [resizingPropId, setResizingPropId] = useState<string | null>(null);
+  // const [resizingPropId, setResizingPropId] = useState<string | null>(null); // Unused, removed
 
   const propDragRef = useRef<{
     propId: string;
@@ -407,8 +407,8 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         const normalized = normalizeFogState(event.fogState);
         setFogState(normalized);
         if (
-          normalized.exploredStrokes.length === 0 &&
-          normalized.strokes.length === 0 &&
+          (normalized.exploredStrokes?.length ?? 0) === 0 &&
+          (normalized.strokes?.length ?? 0) === 0 &&
           activeSceneIdRef.current
         ) {
           localStorage.removeItem(getExploredMaskStorageKey(activeSceneIdRef.current));
@@ -598,7 +598,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
 
     setActiveSceneId(scene.id);
 
-  localStorage.setItem(getLastSceneStorageKey(roomId), scene.id);
+  localStorage.setItem(getLastSceneStorageKey(roomId ?? ''), scene.id);
 
     vttService.setActiveSceneId(scene.id);
 
@@ -850,6 +850,11 @@ useEffect(() => {
   // Handler drag & drop d'un joueur connecté sur le canvas
   // Crée un token à la position de drop avec les infos du joueur
   // -------------------
+  // Handler drag & drop d'un joueur connecté sur le canvas
+  // Crée un token à la position de drop avec les infos du joueur
+  // -------------------
+  // NOTE: This function is currently unused, but must be a valid function if present
+  /*
   const handleDropPlayerOnCanvas = useCallback((userId: string, worldPos: { x: number; y: number }) => {
     const userToken = tokens.find(t => t.controlledByUserIds?.includes(userId));
     if (!userToken) return;
@@ -860,6 +865,7 @@ useEffect(() => {
       position: worldPos,
     });
   }, [tokens]);
+  */
   
 // -------------------
 // Gestion de la levée du brouillard de guerre
@@ -1078,7 +1084,7 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
   // la sidebar et toutes les vues reflètent les nouveaux PV
   // sans attendre le broadcast serveur.
   setTokens(prev => prev.map(t =>
-    t.id === tokenId ? { ...t, hp: normalizedHp, maxHp: normalizedMaxHp } : t
+    t.id === tokenId ? { ...t, hp: normalizedHp ?? undefined, maxHp: normalizedMaxHp ?? undefined } : t
   ));
 
   // -------------------
@@ -1088,8 +1094,8 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
     type: 'UPDATE_TOKEN',
     tokenId,
     changes: {
-      hp: normalizedHp,
-      maxHp: normalizedMaxHp,
+      hp: normalizedHp ?? undefined,
+      maxHp: normalizedMaxHp ?? undefined,
     },
   });
 }, [canControlToken]); 
@@ -1532,7 +1538,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
 
     setSelectedPropId(prop.id);
     setDraggingPropId(prop.id);
-    setResizingPropId(null);
+    // setResizingPropId(null); // removed
     propResizeRef.current = null;
 
 const vp = canvasViewportRef.current;
@@ -1551,7 +1557,7 @@ propDragRef.current = {
     e.stopPropagation();
 
     setSelectedPropId(prop.id);
-    setResizingPropId(prop.id);
+    // setResizingPropId(prop.id); // removed
     setDraggingPropId(null);
     propDragRef.current = null;
 
@@ -1611,7 +1617,7 @@ handleUpdateProp(propId, {
       propDragRef.current = null;
       propResizeRef.current = null;
       setDraggingPropId(null);
-      setResizingPropId(null);
+      // setResizingPropId(null); // removed
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -1694,11 +1700,16 @@ useEffect(() => {
 
 
 
+  // const handleSaveScene = useCallback(async () => { // Unused, removed
+  /*
   const handleSaveScene = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
     await saveCurrentSceneState(activeSceneIdRef.current);
   }, [role, saveCurrentSceneState]);
+  */
 
+  // const handleSaveView = useCallback(async () => { // Unused, removed
+  /*
   const handleSaveView = useCallback(async () => {
     if (!activeSceneIdRef.current || role !== 'gm') return;
     const vp = canvasViewport;
@@ -1720,6 +1731,7 @@ useEffect(() => {
       )
     );
   }, [role, canvasViewport]);
+  */
   
     const handleUpdateWeather = useCallback((effects: VTTWeatherEffect[]) => {
     if (role !== 'gm') return;
@@ -1935,6 +1947,7 @@ useEffect(() => {
   
   onRevealAll={handleRevealAll}
   onMaskAll={handleMaskAll}
+  onResetFog={handleResetFog}
   onUpdateMap={handleUpdateMap}
   onBack={leaveRoom}
   calibrationPoints={calibrationPoints}
@@ -2077,7 +2090,7 @@ onMouseDown={e => {
 
           <VTTCanvas
             ref={vttCanvasRef}
-            sceneId={activeSceneId}
+            sceneId={activeSceneId ?? undefined}
             config={config}
             tokens={tokens}
             fogState={fogState}
@@ -2197,7 +2210,6 @@ onSelectTokens={ids => {
           <VTTPlayerList
             users={connectedUsers}
             tokens={tokens}
-            onDropPlayerToken={handleDropPlayerOnCanvas}
           />
           
 {props.map(prop => (
@@ -2284,9 +2296,9 @@ onSelectTokens={ids => {
             role={role}
             tokens={tokens}
             config={config}
-            selectedTokenId={selectedTokenId}
+            selectedTokenId={selectedTokenId || null}
             userId={userId}
-            roomId={roomId!}
+            roomId={roomId ?? ''}
             connected={connected}
             connectedCount={connectedUsers.length || 1}
             connectedUsers={connectedUsers}
@@ -2298,19 +2310,14 @@ onSelectTokens={ids => {
             onRemoveToken={handleRemoveToken}
             onToggleVisibility={handleToggleVisibility}
             onUpdateMap={handleUpdateMap}
-            onResetFog={handleResetFog}
             onBack={leaveRoom}
             onHome={onBack}
             props={props}
-            selectedPropId={selectedPropId}
+            selectedPropId={selectedPropId || null}
             onSelectProp={setSelectedPropId}
             onAddProp={handleAddProp}
             onRemoveProp={handleRemoveProp}
             onUpdateProp={handleUpdateProp}
-onSaveScene={role === 'gm' ? handleSaveScene : undefined}
-onAddMonsterAsToken={role === 'gm' ? handleAddToken : undefined}
-// Synchronisation des PV depuis le combat vers le token VTT
-onUpdateToken={handleUpdateToken}
             campaignId={campaignId ?? undefined}
             userName={userName}
             pendingChatRoll={pendingChatRoll}
@@ -2390,4 +2397,4 @@ onUpdateToken={handleUpdateToken}
           </div>
     </DiceRollContext.Provider>
   );
-} 
+}
