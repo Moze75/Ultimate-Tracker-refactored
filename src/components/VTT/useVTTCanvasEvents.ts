@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { VTTToken, VTTDoor, VTTWindow } from '../../types/vtt';
 import { wallBlocksToken, getDoorT1T2, getWindowT1T2 } from './vttCanvasUtils';
-import { pointInPolygon } from './vttCanvasUtils';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasRefs {
@@ -431,7 +430,6 @@ export function useVTTCanvasEvents({
 
         // Vérifier si on clique sur un endpoint (t1/t2) de porte
         const currentDoors0 = doorsRef.current || [];
-        let endpointFound = false;
         for (const door of currentDoors0) {
           const wall = currentWalls.find(w => w.id === door.wallId);
           if (!wall) continue;
@@ -460,7 +458,7 @@ export function useVTTCanvasEvents({
             draggingWallPointRef.current = null;
             selectedWallPointRef.current = null;
             selectedWallPointsRef.current = [];
-            endpointFound = true;
+            // endpointFound supprimé (inutile)
             drawRef.current();
             return;
           }
@@ -472,7 +470,7 @@ export function useVTTCanvasEvents({
             draggingWallPointRef.current = null;
             selectedWallPointRef.current = null;
             selectedWallPointsRef.current = [];
-            endpointFound = true;
+            // endpointFound supprimé (inutile)
             drawRef.current();
             return;
           }
@@ -512,7 +510,7 @@ export function useVTTCanvasEvents({
 
         // Vérifier si on clique sur un endpoint (t1/t2) de fenêtre
         const currentWindows0 = windowsRef.current || [];
-        let windowEndpointFound = false;
+        // windowEndpointFound supprimé (inutile)
         for (const win of currentWindows0) {
           const wall = currentWalls.find(w => w.id === win.wallId);
           if (!wall) continue;
@@ -538,7 +536,7 @@ export function useVTTCanvasEvents({
             selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't1' };
             selectedWindowRef.current = win.id;
             draggingWindowRef.current = null;
-            windowEndpointFound = true;
+            // windowEndpointFound supprimé (inutile)
             drawRef.current();
             return;
           }
@@ -547,7 +545,7 @@ export function useVTTCanvasEvents({
             selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't2' };
             selectedWindowRef.current = win.id;
             draggingWindowRef.current = null;
-            windowEndpointFound = true;
+            // windowEndpointFound supprimé (inutile)
             drawRef.current();
             return;
           }
@@ -580,7 +578,7 @@ export function useVTTCanvasEvents({
           }
         }
 
-        if (!windowEndpointFound && !windowFound) selectedWindowRef.current = null;
+        if (!windowFound) selectedWindowRef.current = null;
 
         // Chercher un point de mur à cliquer
         let found = false;
@@ -1060,10 +1058,12 @@ export function useVTTCanvasEvents({
               if (door) {
                 let updatedDoor;
                 if (dragEp.endpoint === 't1') {
-                  const newT1 = Math.min(tNew, door.t2 - 0.02);
+                  const t2 = door.t2 ?? 0.99;
+                  const newT1 = Math.min(tNew, t2 - 0.02);
                   updatedDoor = { ...door, t1: newT1 };
                 } else {
-                  const newT2 = Math.max(tNew, door.t1 + 0.02);
+                  const t1 = door.t1 ?? 0.01;
+                  const newT2 = Math.max(tNew, t1 + 0.02);
                   updatedDoor = { ...door, t2: newT2 };
                 }
                 doorsRef.current = currentDoors.map(d => d.id === dragEp.doorId ? updatedDoor : d);
@@ -1446,7 +1446,7 @@ export function useVTTCanvasEvents({
           const currentWalls = wallsRef.current || [];
           const found: { wallId: string; pointIndex: number }[] = [];
           for (const wall of currentWalls) {
-            wall.points.forEach((pt, pi) => {
+            wall.points.forEach((pt: { x: number; y: number }, pi: number) => {
               if (pt.x >= rx1 && pt.x <= rx2 && pt.y >= ry1 && pt.y <= ry2) {
                 found.push({ wallId: wall.id, pointIndex: pi });
               }
