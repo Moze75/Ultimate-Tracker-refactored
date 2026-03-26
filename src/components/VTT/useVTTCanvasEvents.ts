@@ -223,18 +223,22 @@ export function useVTTCanvasEvents({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+
     const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      // Nouveau comportement :
+      // - Clic droit (bouton 2) = déplacement du canvas
+      // - Shift + clic droit = menu contextuel (ciblage)
+      // - Clic molette (bouton 1) = ignoré
+      // - Alt+gauche = ignoré
+      if (e.button === 2 && !e.shiftKey) {
         lastPanRef.current = { x: e.clientX, y: e.clientY };
         isPanningRef.current = true;
+        // Empêche le menu contextuel natif
+        e.preventDefault();
         return;
       }
-      // -------------------
-      // Gestion du clic droit (ciblage — tous rôles)
-      // -------------------
-      // Le clic droit sur un token ouvre le menu contextuel via onRightClickTokenRef.
-      // Accessible à tous les rôles y compris les joueurs (pour cibler).
-      if (e.button === 2) {
+      // Shift + clic droit = menu contextuel (ciblage)
+      if (e.button === 2 && e.shiftKey) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         const wp2 = screenToWorld(sp2.x, sp2.y);
         const token2 = getTokenAt(wp2.x, wp2.y);
@@ -244,7 +248,10 @@ export function useVTTCanvasEvents({
         }
         return;
       }
-
+      // Désactive le pan au bouton central ou Alt+gauche
+      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+        return;
+      }
       if (e.button !== 0) return;
 
       const sp = getCanvasXY(e.clientX, e.clientY);
@@ -387,7 +394,7 @@ export function useVTTCanvasEvents({
         if (current) {
           const wall = currentWalls.find(w => w.id === current.wallId);
           if (wall) {
-            const newPoints = wall.points.map((pt, i) =>
+            const newPoints = wall.points.map((pt: { x: number; y: number }, i: number) =>
               i === current.pointIndex ? { x: wp.x, y: wp.y } : pt
             );
             const updatedWall = { ...wall, points: newPoints };
