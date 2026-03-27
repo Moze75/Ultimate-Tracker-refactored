@@ -1524,15 +1524,18 @@ const fuseWallPoints = (
           draggingWallPointRef.current = null;
         }
       }
-// Fusion des points co-localisés après déplacement en wall-select
+// Persistance + fusion des points co-localisés après déplacement en wall-select
 if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
   const drag = draggingWallPointRef.current;
   const currentWalls = wallsRef.current || [];
   const wall = currentWalls.find(w => w.id === drag.wallId);
-  if (wall) {
+  if (wall && drag.phase === 'moving') {
+    // 1. Persister la position finale du point déplacé
+    onWallUpdatedRef.current?.(wall);
+    // 2. Fusionner avec les points co-localisés des autres murs
     const movedPt = wall.points[drag.pointIndex];
     if (movedPt) {
-      fuseWallPoints([movedPt], currentWalls, onWallUpdatedRef.current);
+      fuseWallPoints([movedPt], currentWalls.filter(w => w.id !== drag.wallId), onWallUpdatedRef.current);
     }
   }
 }
