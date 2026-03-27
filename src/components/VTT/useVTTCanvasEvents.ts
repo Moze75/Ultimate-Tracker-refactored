@@ -194,6 +194,35 @@ export function useVTTCanvasEvents({
     segmentIndex: number;
     endpoint: 't1' | 't2';
   } | null>(null);
+
+// Snap un point vers le point le plus proche des murs existants
+// si la distance en pixels est < SNAP_RADIUS_PX.
+// wallIdToIgnore + pointIndexToIgnore : exclut le point lui-même lors d'un drag.
+const SNAP_RADIUS_PX = 14;
+const snapWallPoint = (
+  pos: { x: number; y: number },
+  walls: any[],
+  wallIdToIgnore?: string,
+  pointIndexToIgnore?: number
+): { x: number; y: number } => {
+  const scale = viewportRef.current.scale;
+  let best: { x: number; y: number } | null = null;
+  let bestDist = SNAP_RADIUS_PX / scale; // seuil en coordonnées monde
+  for (const w of walls) {
+    for (let pi = 0; pi < w.points.length; pi++) {
+      if (w.id === wallIdToIgnore && pi === pointIndexToIgnore) continue;
+      const pt = w.points[pi];
+      const dx = pt.x - pos.x;
+      const dy = pt.y - pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = pt;
+      }
+    }
+  }
+  return best ?? pos;
+};
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
