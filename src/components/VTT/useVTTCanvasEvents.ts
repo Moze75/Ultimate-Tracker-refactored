@@ -1533,18 +1533,48 @@ const fuseWallPoints = (
           draggingWallPointRef.current = null;
         }
       }
-// Persistance + fusion des points co-localisés après déplacement en wall-select
+// Persistance + fusion au lâcher en wall-select
 if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
   const drag = draggingWallPointRef.current;
   const currentWalls = wallsRef.current || [];
   const wall = currentWalls.find(w => w.id === drag.wallId);
   if (wall && drag.phase === 'moving') {
-    // 1. Persister la position finale du point déplacé
-    onWallUpdatedRef.current?.(wall);
-    // 2. Fusionner avec les points co-localisés des autres murs
     const movedPt = wall.points[drag.pointIndex];
-    if (movedPt) {
-      fuseWallPoints([movedPt], currentWalls.filter(w => w.id !== drag.wallId), onWallUpdatedRef.current);
+    const scale = viewportRef.current.scale;
+    const fusionRadius = SNAP_RADIUS_PX / scale;
+
+    // Chercher un point cible sur un autre mur dans le rayon de fusion
+    let targetPt: { x: number; y: number } | null = null;
+    for (const other of currentWalls) {
+      if (other.id === drag.wallId) continue;
+      for (const pt of other.points) {
+        const dx = pt.x - movedPt.x;
+        const dy = pt.y - movedPt.y;
+        if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
+          targetPt = pt;
+          break;
+        }
+      }
+      if (targetPt) break;
+    }
+
+    if (targetPt) {
+      // Remplacer le point déplacé par les coordonnées exactes du point cible
+      // puis supprimer les doublons consécutifs dans le mur source
+      const fused = wall.points.map((pt: { x: number; y: number }, i: number) =>
+        i === drag.pointIndex ? { x: targetPt!.x, y: targetPt!.y } : pt
+      );
+      const deduped = fused.filter(
+        (pt: { x: number; y: number }, i: number) =>
+          i === 0 || pt.x !== fused[i - 1].x || pt.y !== fused[i - 1].y
+      );
+      const finalPoints = deduped.length >= 2 ? deduped : fused;
+      const updatedWall = { ...wall, points: finalPoints };
+      wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+      onWallUpdatedRef.current?.(updatedWall);
+    } else {
+      // Pas de fusion, juste persister la position finale
+      onWallUpdatedRef.current?.(wall);
     }
   }
 }
