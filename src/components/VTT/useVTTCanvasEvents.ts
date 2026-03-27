@@ -1206,9 +1206,13 @@ const snapWallPoint = (
         }
       }
 
-      if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
+      if (activeToolRef.current === 'wall-draw') {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
-        wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        const rawWp = screenToWorld(sp2.x, sp2.y);
+        const snapped = snapWallPoint(rawWp, wallsRef.current);
+        wallPreviewPosRef.current = snapped;
+        // Stocker la cible du snap pour que le renderer la surligne
+        wallSnapTargetRef.current = snapped !== rawWp ? snapped : null;
         drawRef.current();
       }
 
