@@ -632,7 +632,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
     //  lignes 402-426 avec le double rAF + setTimeout)
-  }, []);
+  }, [roomId]);
 
 useEffect(() => {
   if (phase !== 'room' || !roomId || role !== 'gm') return;
