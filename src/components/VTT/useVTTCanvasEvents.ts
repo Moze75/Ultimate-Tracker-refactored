@@ -1203,9 +1203,11 @@ export function useVTTCanvasEvents({
         }
       }
 
-      if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
+      if (activeToolRef.current === 'wall-draw') {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
-        wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const snappedPreview = snapWallPoint(wp2, wallsRef.current);
+        wallPreviewPosRef.current = snappedPreview;
         drawRef.current();
       }
 
