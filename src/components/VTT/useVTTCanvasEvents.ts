@@ -220,6 +220,43 @@ export function useVTTCanvasEvents({
     }
     return best ?? pos;
   };
+
+  /**
+ * Après la création d'un nouveau mur, aligne les points existants d'autres murs
+ * qui sont co-localisés (dans le rayon de snap) avec les points du nouveau mur.
+ * Cela garantit que les nœuds partagés ont exactement les mêmes coordonnées,
+ * même si un léger décalage subsistait avant le snap.
+ */
+const fuseWallPoints = (
+  newPoints: { x: number; y: number }[],
+  allWalls: any[],
+  onWallUpdated: ((wall: any) => void) | undefined
+) => {
+  const scale = viewportRef.current.scale;
+  const fusionRadius = SNAP_RADIUS_PX / scale;
+
+  for (const newPt of newPoints) {
+    for (const wall of allWalls) {
+      let changed = false;
+      const fusedPoints = wall.points.map((pt: { x: number; y: number }) => {
+        const dx = pt.x - newPt.x;
+        const dy = pt.y - newPt.y;
+        if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
+          changed = true;
+          return { x: newPt.x, y: newPt.y }; // aligner exactement
+        }
+        return pt;
+      });
+      if (changed) {
+        const updatedWall = { ...wall, points: fusedPoints };
+        // Mettre à jour wallsRef localement pour les prochaines itérations
+        const idx = allWalls.findIndex(w => w.id === wall.id);
+        if (idx !== -1) allWalls[idx] = updatedWall;
+        onWallUpdated?.(updatedWall);
+      }
+    }
+  }
+};
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
