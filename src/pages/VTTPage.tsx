@@ -570,7 +570,7 @@ useEffect(() => {
 
  
   
-const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { silent?: boolean } = {}) => {
+const applySceneToLive = useCallback((scene: VTTScene, { silent = false, forRoomId }: { silent?: boolean; forRoomId?: string } = {}) => {
     configRef.current = scene.config;
     setConfig(scene.config);
     setTokens(scene.tokens);
