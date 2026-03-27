@@ -1488,6 +1488,27 @@ const snapWallPoint = (
           draggingWallPointRef.current = null;
         }
       }
+
+         if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
+        const drag = draggingWallPointRef.current;
+        if (drag.phase === 'moving') {
+          const currentWalls = wallsRef.current || [];
+          const wall = currentWalls.find((w: any) => w.id === drag.wallId);
+          if (wall) {
+            const rawPos = wall.points[drag.pointIndex];
+            const snapped = snapWallPoint(rawPos, wallsRef.current, drag.wallId, drag.pointIndex);
+            const newPoints = wall.points.map((pt: any, i: number) =>
+              i === drag.pointIndex ? snapped : pt
+            );
+            const updatedWall = { ...wall, points: newPoints };
+            wallsRef.current = currentWalls.map((w: any) => w.id === drag.wallId ? updatedWall : w);
+            onWallUpdatedRef.current?.(updatedWall);
+          }
+          selectedWallPointRef.current = null;
+          draggingWallPointRef.current = null;
+          drawRef.current();
+        }
+      }
       // Fin du drag d'un endpoint de porte : persister la nouvelle position
       if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
         const dragEp = draggingDoorEndpointRef.current;
