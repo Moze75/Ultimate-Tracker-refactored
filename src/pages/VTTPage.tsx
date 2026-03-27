@@ -657,7 +657,7 @@ useEffect(() => {
             ...parsed[0],
             props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
           };
-        // APRÈS
+
           setActiveSceneId(initialScene.id);
           applySceneToLive(initialScene, { silent: true });
           vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
