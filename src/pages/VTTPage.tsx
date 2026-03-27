@@ -673,7 +673,7 @@ useEffect(() => {
               const scene = dbSceneToVTTScene(s);
               setScenes([scene]);
               setActiveSceneId(scene.id);
-              applySceneToLive(scene);
+              applySceneToLive(scene, { silent: true });
             }
           });
       }
