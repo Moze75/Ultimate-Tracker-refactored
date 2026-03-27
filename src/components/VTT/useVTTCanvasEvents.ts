@@ -408,7 +408,8 @@ export function useVTTCanvasEvents({
       } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
         onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
       } else if (tool === 'wall-draw' && roleRef.current === 'gm') {
-        wallPointsRef.current = [...wallPointsRef.current, { x: wp.x, y: wp.y }];
+        const snapped = snapWallPoint(wp, wallsRef.current);
+        wallPointsRef.current = [...wallPointsRef.current, snapped];
         wallPreviewPosRef.current = null;
         drawRef.current();
       } else if (tool === 'wall-select' && roleRef.current === 'gm') {
