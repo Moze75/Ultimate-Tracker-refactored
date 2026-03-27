@@ -1594,16 +1594,18 @@ export function useVTTCanvasEvents({
           return;
         }
       }
-      if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
-        const pts = wallPointsRef.current;
-        if (pts.length >= 2) {
-          onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
-        }
-        wallPointsRef.current = [];
-        wallPreviewPosRef.current = null;
-        drawRef.current();
-        return;
-      }
+if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
+  const pts = wallPointsRef.current;
+  if (pts.length >= 2) {
+    onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+    // Fusionner les points du nouveau mur avec les points existants co-localisés
+    fuseWallPoints(pts, wallsRef.current, onWallUpdatedRef.current);
+  }
+  wallPointsRef.current = [];
+  wallPreviewPosRef.current = null;
+  drawRef.current();
+  return;
+}
 
       if (activeToolRef.current === 'wall-select' && roleRef.current === 'gm') {
         const sp = getCanvasXY(e.clientX, e.clientY);
