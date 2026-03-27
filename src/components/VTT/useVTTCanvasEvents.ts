@@ -9,7 +9,7 @@ export interface VTTCanvasRefs {
   viewportRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
   tokensRef: React.MutableRefObject<VTTToken[]>;
   configRef: React.MutableRefObject<any>;
-  roleRef: React.MutableRefObject<string>;
+  roleRef: React.MutableRefObject<string>; 
   userIdRef: React.MutableRefObject<string>;
   activeToolRef: React.MutableRefObject<VTTActiveTool>;
   fogBrushSizeRef: React.MutableRefObject<number>;
@@ -194,35 +194,6 @@ export function useVTTCanvasEvents({
     segmentIndex: number;
     endpoint: 't1' | 't2';
   } | null>(null);
-
-// Snap un point vers le point le plus proche des murs existants
-// si la distance en pixels est < SNAP_RADIUS_PX.
-// wallIdToIgnore + pointIndexToIgnore : exclut le point lui-même lors d'un drag.
-const SNAP_RADIUS_PX = 14;
-const snapWallPoint = (
-  pos: { x: number; y: number },
-  walls: any[],
-  wallIdToIgnore?: string,
-  pointIndexToIgnore?: number
-): { x: number; y: number } => {
-  const scale = viewportRef.current.scale;
-  let best: { x: number; y: number } | null = null;
-  let bestDist = SNAP_RADIUS_PX / scale; // seuil en coordonnées monde
-  for (const w of walls) {
-    for (let pi = 0; pi < w.points.length; pi++) {
-      if (w.id === wallIdToIgnore && pi === pointIndexToIgnore) continue;
-      const pt = w.points[pi];
-      const dx = pt.x - pos.x;
-      const dy = pt.y - pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = pt;
-      }
-    }
-  }
-  return best ?? pos;
-};
   
   // Reset wall/measure state when tool changes
   useEffect(() => {
@@ -411,8 +382,7 @@ const snapWallPoint = (
       } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
         onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
       } else if (tool === 'wall-draw' && roleRef.current === 'gm') {
-        const snapped = snapWallPoint(wp, wallsRef.current);
-        wallPointsRef.current = [...wallPointsRef.current, snapped];
+        wallPointsRef.current = [...wallPointsRef.current, { x: wp.x, y: wp.y }];
         wallPreviewPosRef.current = null;
         drawRef.current();
       } else if (tool === 'wall-select' && roleRef.current === 'gm') {
@@ -1057,9 +1027,8 @@ const snapWallPoint = (
         const currentWalls = wallsRef.current || [];
         const wall = currentWalls.find(w => w.id === drag.wallId);
         if (wall) {
-          const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
           const newPoints = wall.points.map((pt, i) =>
-            i === drag.pointIndex ? snappedPreview : pt
+            i === drag.pointIndex ? { x: wp2.x, y: wp2.y } : pt
           );
           const updatedWall = { ...wall, points: newPoints };
           wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
@@ -1206,13 +1175,9 @@ const snapWallPoint = (
         }
       }
 
-      if (activeToolRef.current === 'wall-draw') {
+      if (activeToolRef.current === 'wall-draw' && wallPointsRef.current.length > 0) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
-        const rawWp = screenToWorld(sp2.x, sp2.y);
-        const snapped = snapWallPoint(rawWp, wallsRef.current);
-        wallPreviewPosRef.current = snapped;
-        // Stocker la cible du snap pour que le renderer la surligne
-        wallSnapTargetRef.current = snapped !== rawWp ? snapped : null;
+        wallPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
         drawRef.current();
       }
 
@@ -1492,8 +1457,6 @@ const snapWallPoint = (
           draggingWallPointRef.current = null;
         }
       }
-
-
       // Fin du drag d'un endpoint de porte : persister la nouvelle position
       if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
         const dragEp = draggingDoorEndpointRef.current;
