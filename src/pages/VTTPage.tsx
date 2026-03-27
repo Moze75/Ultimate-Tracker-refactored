@@ -376,7 +376,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
           setWindows((event.state.room as any).windows || []);
           setWeatherEffects(event.state.room.config.weatherEffects || []);
         }
-        if ((event.state as any).activeSceneId && !activeSceneIdRef.current) {
+        if ((event.state as any).activeSceneId && !activeSceneIdRef.current && event.state.yourRole !== 'gm') {
           const scId = (event.state as any).activeSceneId as string;
           setActiveSceneId(scId);
           activeSceneIdRef.current = scId;
