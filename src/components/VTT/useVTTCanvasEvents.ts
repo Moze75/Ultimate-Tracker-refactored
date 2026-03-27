@@ -1543,15 +1543,34 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
 // Persistance + fusion au lâcher en wall-select
 if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
   const drag = draggingWallPointRef.current;
+  const snapTargetRef = useRef<{ x: number; y: number } | null>(null);
   const currentWalls = wallsRef.current || [];
   const wall = currentWalls.find(w => w.id === drag.wallId);
   if (wall && drag.phase === 'moving') {
-    const targetPt = snapTargetRef.current;
+    const movedPt = wall.points[drag.pointIndex];
+    const scale = viewportRef.current.scale;
+    const fusionRadius = SNAP_RADIUS_PX / scale;
+
+    // Chercher un point cible sur un autre mur dans le rayon de fusion
+    let targetPt: { x: number; y: number } | null = null;
+    for (const other of currentWalls) {
+      if (other.id === drag.wallId) continue;
+      for (const pt of other.points) {
+        const dx = pt.x - movedPt.x;
+        const dy = pt.y - movedPt.y;
+        if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
+          targetPt = pt;
+          break;
+        }
+      }
+      if (targetPt) break;
+    }
 
     if (targetPt) {
-      // Appliquer les coordonnées EXACTES du point cible (pas la position snappée approchée)
+      // Remplacer le point déplacé par les coordonnées exactes du point cible
+      // puis supprimer les doublons consécutifs dans le mur source
       const fused = wall.points.map((pt: { x: number; y: number }, i: number) =>
-        i === drag.pointIndex ? { x: targetPt.x, y: targetPt.y } : pt
+        i === drag.pointIndex ? { x: targetPt!.x, y: targetPt!.y } : pt
       );
       const deduped = fused.filter(
         (pt: { x: number; y: number }, i: number) =>
@@ -1562,13 +1581,10 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
       wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
       onWallUpdatedRef.current?.(updatedWall);
     } else {
-      // Pas de fusion, juste persister
+      // Pas de fusion, juste persister la position finale
       onWallUpdatedRef.current?.(wall);
     }
-  }
-  snapTargetRef.current = null;
-  draggingWallPointRef.current = null;
-  selectedWallPointRef.current = null;
+  } 
 }
 
 // Fin du drag d'un endpoint de porte : persister la nouvelle position
