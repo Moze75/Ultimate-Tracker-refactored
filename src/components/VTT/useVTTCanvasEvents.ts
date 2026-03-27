@@ -1890,16 +1890,18 @@ if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
         }
         return;
       }
-      if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
-        const pts = wallPointsRef.current;
-        if (pts.length >= 2) {
-          onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
-        }
-        wallPointsRef.current = [];
-        wallPreviewPosRef.current = null;
-        drawRef.current();
-        return;
-      }
+if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
+  const pts = wallPointsRef.current;
+  if (pts.length >= 2) {
+    onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+    // Fusionner les points du nouveau mur avec les points existants co-localisés
+    fuseWallPoints(pts, wallsRef.current, onWallUpdatedRef.current);
+  }
+  wallPointsRef.current = [];
+  wallPreviewPosRef.current = null;
+  drawRef.current();
+  return;
+}
       const selId = selectedTokenIdRef.current;
       if (!selId) return;
       const token = tokensRef.current.find(t => t.id === selId);
