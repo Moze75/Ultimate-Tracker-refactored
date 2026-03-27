@@ -220,7 +220,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onTokenDoubleClickRef.current = onTokenDoubleClick;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
-  const wallSnapTargetRef = useRef<{ x: number; y: number } | null>(null);
+   
   const doorInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
   const doorPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
   const selectedDoorRef = useRef<string | null>(null);
