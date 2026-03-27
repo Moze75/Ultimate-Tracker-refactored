@@ -686,8 +686,13 @@ useEffect(() => {
 
   
 
+ // APRÈS
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
+    // Vérification de cohérence : on ne sauvegarde que si sceneId
+    // correspond bien à la scène active. Évite d'écraser une scène
+    // avec la config d'une autre en cas de race condition.
+    if (sceneId !== activeSceneIdRef.current) return;
 
     await supabase
       .from('vtt_scenes')
