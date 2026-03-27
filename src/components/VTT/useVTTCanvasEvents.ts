@@ -1092,31 +1092,24 @@ const fuseWallPoints = (
         }
       }
 
-if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
-  const sp2 = getCanvasXY(e.clientX, e.clientY);
-  const wp2 = screenToWorld(sp2.x, sp2.y);
-  const drag = draggingWallPointRef.current;
-  drag.phase = 'moving';
-  const currentWalls = wallsRef.current || [];
-  const wall = currentWalls.find(w => w.id === drag.wallId);
-  if (wall) {
-    const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
-    // Stocker la cible exacte si on a snappé sur un point existant
-    const scale = viewportRef.current.scale;
-    const rawDx = snappedPreview.x - wp2.x;
-    const rawDy = snappedPreview.y - wp2.y;
-    const didSnap = Math.sqrt(rawDx * rawDx + rawDy * rawDy) > 0.001;
-    snapTargetRef.current = didSnap ? snappedPreview : null;
-
-    const newPoints = wall.points.map((pt, i) =>
-      i === drag.pointIndex ? snappedPreview : pt
-    );
-    const updatedWall = { ...wall, points: newPoints };
-    wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
-    drawRef.current();
-  }
-}
-
+      if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const drag = draggingWallPointRef.current;
+        drag.phase = 'moving';
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === drag.wallId);
+        if (wall) {
+          const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
+          const newPoints = wall.points.map((pt, i) =>
+            i === drag.pointIndex ? snappedPreview : pt
+          );
+          const updatedWall = { ...wall, points: newPoints };
+          wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+          drawRef.current();
+        }
+      }
+ 
       // Déplacement d'un endpoint de porte (t1 ou t2) le long de son segment de mur
       if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
@@ -1584,7 +1577,7 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
       // Pas de fusion, juste persister la position finale
       onWallUpdatedRef.current?.(wall);
     }
-  } 
+  }
 }
 
 // Fin du drag d'un endpoint de porte : persister la nouvelle position
