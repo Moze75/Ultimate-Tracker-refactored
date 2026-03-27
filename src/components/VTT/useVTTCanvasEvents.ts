@@ -1057,8 +1057,9 @@ const snapWallPoint = (
         const currentWalls = wallsRef.current || [];
         const wall = currentWalls.find(w => w.id === drag.wallId);
         if (wall) {
+          const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
           const newPoints = wall.points.map((pt, i) =>
-            i === drag.pointIndex ? { x: wp2.x, y: wp2.y } : pt
+            i === drag.pointIndex ? snappedPreview : pt
           );
           const updatedWall = { ...wall, points: newPoints };
           wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
