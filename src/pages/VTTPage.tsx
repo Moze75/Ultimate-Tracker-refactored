@@ -599,7 +599,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
 
     setActiveSceneId(scene.id);
 
-  localStorage.setItem(getLastSceneStorageKey(roomId ?? ''), scene.id);
+  if (roomId) localStorage.setItem(getLastSceneStorageKey(roomId), scene.id);
 
     vttService.setActiveSceneId(scene.id);
 
