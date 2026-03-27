@@ -1536,6 +1536,7 @@ const fuseWallPoints = (
 // Persistance + fusion au lâcher en wall-select
 if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
   const drag = draggingWallPointRef.current;
+  const snapTargetRef = useRef<{ x: number; y: number } | null>(null);
   const currentWalls = wallsRef.current || [];
   const wall = currentWalls.find(w => w.id === drag.wallId);
   if (wall && drag.phase === 'moving') {
