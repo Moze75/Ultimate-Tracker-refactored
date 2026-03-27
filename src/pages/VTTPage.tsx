@@ -363,19 +363,19 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
-        setConfig(event.state.room.config);
-        setTokens(event.state.room.tokens);
-        setFogState(normalizeFogState(event.state.room.fogState));
-        setWalls(event.state.room.walls || []);
-        setDoors(event.state.room.doors || []);
-        setWindows((event.state.room as any).windows || []);
         setRole(event.state.yourRole);
-        setWeatherEffects(event.state.room.config.weatherEffects || []);
-        // -------------------
-        // Récupération du sceneId actif dès la première connexion
-        // Sans cela, le VTTCanvas du joueur reste sur sceneId=null
-        // et ne restaure jamais le masque exploré depuis localStorage
-        // -------------------
+        // Le GM charge sa scène depuis Supabase via useEffect — ne pas écraser
+        // sa config/tokens avec l'état en mémoire du serveur (qui peut venir
+        // d'une autre scène ou d'une session précédente).
+        if (role !== 'gm') {
+          setConfig(event.state.room.config);
+          setTokens(event.state.room.tokens);
+          setFogState(normalizeFogState(event.state.room.fogState));
+          setWalls(event.state.room.walls || []);
+          setDoors(event.state.room.doors || []);
+          setWindows((event.state.room as any).windows || []);
+          setWeatherEffects(event.state.room.config.weatherEffects || []);
+        }
         if ((event.state as any).activeSceneId && !activeSceneIdRef.current) {
           const scId = (event.state as any).activeSceneId as string;
           setActiveSceneId(scId);
