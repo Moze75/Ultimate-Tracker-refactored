@@ -362,13 +362,12 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
-     case 'STATE_SYNC': {
-        const incomingRole = event.state.yourRole;
-        setRole(incomingRole);
-        // Le GM est source de vérité — il charge depuis Supabase via useEffect.
-        // Appliquer STATE_SYNC écraserait configRef avec la config du serveur
-        // (potentiellement d'une autre scène), corrompant les sauvegardes suivantes.
-        if (incomingRole !== 'gm') {
+      case 'STATE_SYNC':
+        setRole(event.state.yourRole);
+        // Le GM charge sa scène depuis Supabase via useEffect — ne pas écraser
+        // sa config/tokens avec l'état en mémoire du serveur (qui peut venir
+        // d'une autre scène ou d'une session précédente).
+        if (role !== 'gm') {
           setConfig(event.state.room.config);
           setTokens(event.state.room.tokens);
           setFogState(normalizeFogState(event.state.room.fogState));
@@ -383,8 +382,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
           activeSceneIdRef.current = scId;
           vttService.setActiveSceneId(scId);
         }
-        break;
-      }
+        break; 
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
           t.id === event.tokenId ? { ...t, position: event.position } : t
