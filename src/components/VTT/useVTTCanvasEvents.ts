@@ -238,18 +238,27 @@ const fuseWallPoints = (
   for (const newPt of newPoints) {
     for (const wall of allWalls) {
       let changed = false;
+      // Aligner les points co-localisés sur newPt
       const fusedPoints = wall.points.map((pt: { x: number; y: number }) => {
         const dx = pt.x - newPt.x;
         const dy = pt.y - newPt.y;
         if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
           changed = true;
-          return { x: newPt.x, y: newPt.y }; // aligner exactement
+          return { x: newPt.x, y: newPt.y };
         }
         return pt;
       });
       if (changed) {
-        const updatedWall = { ...wall, points: fusedPoints };
-        // Mettre à jour wallsRef localement pour les prochaines itérations
+        // Dédoublonner : supprimer les points consécutifs identiques
+        const deduped = fusedPoints.filter(
+          (pt: { x: number; y: number }, i: number) =>
+            i === 0 ||
+            pt.x !== fusedPoints[i - 1].x ||
+            pt.y !== fusedPoints[i - 1].y
+        );
+        // Ne pas créer un mur avec moins de 2 points
+        const finalPoints = deduped.length >= 2 ? deduped : fusedPoints;
+        const updatedWall = { ...wall, points: finalPoints };
         const idx = allWalls.findIndex(w => w.id === wall.id);
         if (idx !== -1) allWalls[idx] = updatedWall;
         onWallUpdated?.(updatedWall);
