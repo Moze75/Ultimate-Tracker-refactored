@@ -1524,8 +1524,21 @@ const fuseWallPoints = (
           draggingWallPointRef.current = null;
         }
       }
-      // Fin du drag d'un endpoint de porte : persister la nouvelle position
-      if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
+// Fusion des points co-localisés après déplacement en wall-select
+if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
+  const drag = draggingWallPointRef.current;
+  const currentWalls = wallsRef.current || [];
+  const wall = currentWalls.find(w => w.id === drag.wallId);
+  if (wall) {
+    const movedPt = wall.points[drag.pointIndex];
+    if (movedPt) {
+      fuseWallPoints([movedPt], currentWalls, onWallUpdatedRef.current);
+    }
+  }
+}
+
+// Fin du drag d'un endpoint de porte : persister la nouvelle position
+if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
         const dragEp = draggingDoorEndpointRef.current;
         const updatedDoor = (doorsRef.current || []).find(d => d.id === dragEp.doorId);
         if (updatedDoor) {
