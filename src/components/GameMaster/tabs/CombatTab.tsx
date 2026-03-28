@@ -13,7 +13,6 @@ import type { VTTToken } from '../../../types/vtt';
 import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
-import { MonsterStatBlockPopup } from '../../Combat/MonsterStatBlockPopup';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
@@ -98,7 +97,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
-  const [popupMonster, setPopupMonster] = useState<{ id: string; name: string; slug?: string; imageUrl?: string; monster?: Monster } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialTokensAppliedRef = useRef(false);
@@ -202,16 +200,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
   // -------------------
   // Synchronisation temps réel des tours (MJ → Joueurs)
   // -------------------
-  // Quand le MJ clique sur "Tour suivant", monsterService.updateEncounter()
-  // met à jour campaign_encounters en base. Ce callback est appelé par le hook
-  // dès que Supabase Realtime reçoit cet UPDATE, ce qui synchronise
-  // l'affichage du tour courant pour tous les clients (joueurs inclus).
-  // -------------------
-  // Callback de mise à jour de l'encounter via Realtime
-  // -------------------
-  // Reçoit les champs current_turn_index / round_number / status
-  // depuis le hook useCombatEncounterRealtimeSync et fusionne
-  // avec l'état local, sans provoquer de re-souscription du channel.
   const handleEncounterUpdatedFromRealtime = useCallback(
     (updates: Partial<CampaignEncounter>) => {
       setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
@@ -227,20 +215,14 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
   // -------------------
   // Polling joueur : détection du démarrage d'un combat
   // -------------------
-  // Quand un joueur est déjà sur l'onglet combat (pas de combat actif)
-  // et que le MJ lance un combat, le joueur ne reçoit pas l'événement
-  // car useCombatEncounterRealtimeSync n'a pas d'encounterId à écouter.
-  // Ce polling interroge la base toutes les 4s pour détecter
-  // l'apparition d'un encounter actif et recharge le composant.
   useEffect(() => {
-    if (isGM) return;           // le MJ n'en a pas besoin
-    if (isActive) return;       // déjà un combat actif, rien à faire
+    if (isGM) return;
+    if (isActive) return;
 
     const interval = setInterval(async () => {
       try {
         const enc = await monsterService.getActiveEncounter(campaignId);
         if (enc) {
-          // Un combat vient de démarrer : on recharge tout
           setEncounter(enc);
           const parts = await monsterService.getEncounterParticipants(enc.id);
           setParticipants(parts);
@@ -347,21 +329,16 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     }
   };
 
-  const viewMonsterById = (id?: string, fallbackName?: string) => {
-    const monster = id ? savedMonsters.find((m) => m.id === id) : undefined;
+  // -------------------
+  // viewMonsterById : dépliage inline (comme l'ancienne version)
+  // Cherche le monstre dans savedMonsters et charge ses stats via
+  // refreshMonsterFromSource, sans ouvrir de popup séparée.
+  // -------------------
+  const viewMonsterById = (id?: string) => {
+    if (!id) return;
+    const monster = savedMonsters.find((m) => m.id === id);
     if (monster) {
-      setPopupMonster({
-        id: monster.id || id || fallbackName || '',
-        name: monster.name,
-        slug: monster.slug,
-        imageUrl: monster.image_url ?? undefined,
-        monster,
-      });
-    } else if (fallbackName) {
-      setPopupMonster({
-        id: id || fallbackName,
-        name: fallbackName,
-      });
+      refreshMonsterFromSource(monster);
     }
   };
 
@@ -380,7 +357,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     const newEntries: CombatPreparationEntry[] = [];
     for (const entry of entries) {
       try {
-        // Pour les monstres custom/sauvegardés, utiliser directement les données en base
         let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
         let monsterData: Monster;
         if (existing && existing.source === 'custom') {
@@ -422,7 +398,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     if (!encounter) return;
     for (const entry of entries) {
       try {
-        // Pour les monstres custom/sauvegardés, utiliser directement les données en base
         let existing = savedMonsters.find((m) => m.slug === entry.monster.slug);
         if (existing && existing.source === 'custom') {
           await handleAddMonsterToEncounter(existing, entry.quantity);
@@ -619,7 +594,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     }
   };
 
-    const handleNextTurn = async () => {
+  const handleNextTurn = async () => {
     if (!encounter || participants.length === 0) return;
     let nextIdx = encounter.current_turn_index + 1;
     let newRound = encounter.round_number;
@@ -634,12 +609,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
       });
       setEncounter(updated);
 
-      // -------------------
-      // Broadcast instantané du changement de tour (< 100ms)
-      // -------------------
-      // Envoie le nouveau tour via Supabase Broadcast sur le même channel
-      // que useCombatEncounterRealtimeSync. Les joueurs le reçoivent
-      // immédiatement, sans attendre le délai WAL de postgres_changes (1-3s).
       supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
         type: 'broadcast',
         event: 'turn-changed',
@@ -760,6 +729,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
           initiative_roll: 0,
           current_hp: monster.hit_points,
           max_hp: monster.hit_points,
+          temporary_hp: 0,
           armor_class: monster.armor_class,
           conditions: [] as string[],
           sort_order: participants.length + i,
@@ -836,70 +806,32 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     handleUpdateParticipant(p.id, { current_hp: newHp });
     setHpDelta((prev) => ({ ...prev, [p.id]: '' }));
 
-      // -------------------
-    // Broadcast instantané du changement de PV (< 100ms)
-    // -------------------
-    // On utilise sendHpBroadcast (exposé par le hook) qui émet
-    // sur le channel DÉJÀ souscrit — pas un nouveau channel éphémère.
-    // supabase.channel(name).send() crée un channel distinct non abonné
-    // et le message ne serait pas reçu par les joueurs.
-markLocalUpdate(p.id);
-sendHpBroadcast({
-  participantId: p.id,
-  current_hp: newHp,
-  temporary_hp: p.temporary_hp ?? 0,
-});
-
-// -------------------
-// Sync HP combat → token VTT sur le canvas
-// -------------------
-// Cherche le token VTT correspondant au participant (via characterId, label, ou monsterSlug)
-// et propage le changement de PV pour que la barre de vie du token soit à jour.
-// On utilise liveTokensRef.current (toujours à jour) au lieu de initialTokens.
-if (onUpdateToken && liveTokensRef.current) {
-  const matchingToken = liveTokensRef.current.find(t =>
-    // -------------------
-    // Matching par characterId (joueurs liés à une fiche)
-    // -------------------
-    (p.participant_type === 'player' && t.characterId && p.player_member_id &&
-      members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
-    // -------------------
-    // Fallback : matching par nom exact (monstres ou joueurs sans fiche)
-    // -------------------
-    || t.label === p.display_name
-  );
-
-  if (matchingToken) {
-    console.log('[CombatTab] Sync HP → token VTT', {
-      tokenId: matchingToken.id,
-      tokenLabel: matchingToken.label,
-      oldHp: matchingToken.hp,
-      newHp,
-      maxHp: p.max_hp,
+    markLocalUpdate(p.id);
+    sendHpBroadcast({
+      participantId: p.id,
+      current_hp: newHp,
+      temporary_hp: p.temporary_hp ?? 0,
     });
-    // -------------------
-    // Envoi HP + maxHp pour que la barre de vie
-    // s'affiche correctement même si maxHp a changé
-    // -------------------
-    onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
-  } else {
-    console.warn('[CombatTab] ⚠️ Aucun token VTT trouvé pour le participant', {
-      displayName: p.display_name,
-      participantType: p.participant_type,
-      playerMemberId: p.player_member_id,
-      tokensCount: liveTokensRef.current.length,
-      tokenLabels: liveTokensRef.current.map(t => t.label),
-    });
-  }
-}
 
-if (p.participant_type === 'player' && p.player_member_id) {
+    // -------------------
+    // Sync HP combat → token VTT sur le canvas
+    // -------------------
+    if (onUpdateToken && liveTokensRef.current) {
+      const matchingToken = liveTokensRef.current.find(t =>
+        (p.participant_type === 'player' && t.characterId && p.player_member_id &&
+          members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
+        || t.label === p.display_name
+      );
+
+      if (matchingToken) {
+        onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
+      }
+    }
+
+    if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
       if (member?.player_id) {
-        // -------------------
-        // Sync HP joueur dans la table players (pour la fiche perso)
-        // -------------------
-        markLocalUpdate(member.player_id); // filtre l'écho postgres_changes (clé = playerId)
+        markLocalUpdate(member.player_id);
         supabase
           .from('players')
           .update({ current_hp: newHp })
@@ -940,14 +872,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
     );
   }
 
-  // -------------------
-  // Vue joueur : pas de combat actif
-  // -------------------
-  // IMPORTANT : ce guard est placé APRÈS le loading.
-  // On n'affiche le message d'attente que si le fetch est terminé
-  // ET qu'aucun encounter actif n'existe réellement en base.
-  // Cela évite le cas où encounter=null pendant le chargement
-  // ferait croire qu'il n'y a pas de combat alors qu'il est en cours.
   if (!loading && !isGM && !isActive) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
@@ -1196,12 +1120,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 </p>
               </div>
             </div>
-            {/* -------------------
-                Contrôles du combat (MJ uniquement)
-                -------------------
-                Initiative, tour suivant, sauvegarder, fin de combat.
-                Les joueurs ne voient que le tracker en lecture seule.
-            */}
             {isGM && (
             <div className="flex gap-1.5 w-full">
               {isActive ? (
@@ -1247,9 +1165,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
             )}
           </div>
 
-          {/* -------------------
-              Nom du combat en préparation (MJ uniquement)
-              ------------------- */}
           {!isActive && isGM && (
             <div className="px-4 py-2">
               <input
@@ -1261,9 +1176,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
             </div>
           )}
 
-          {/* -------------------
-              Ajouter joueurs / Trier par initiative (MJ uniquement)
-              ------------------- */}
           {isActive && isGM && (
             <div className="px-4 py-2 border-b border-gray-800 space-y-2">
               <div className="flex gap-2">
@@ -1313,20 +1225,8 @@ if (p.participant_type === 'player' && p.player_member_id) {
             </div>
           )}
 
-          {/* -------------------
-              Liste des participants
-              -------------------
-              - Combat actif : ActiveParticipantsList (lecture seule pour les joueurs)
-              - Pas de combat actif + joueur : message d'attente
-              - Pas de combat actif + MJ : PrepParticipantsList
-          */}
           <div className={vttMode ? 'flex-1 overflow-y-auto min-h-0' : 'max-h-[70vh] overflow-y-auto'} ref={scrollContainerRef}>
             {isActive ? (
-              // -------------------
-              // Vue combat actif : visible par tous
-              // -------------------
-              // Le prop role est passé pour que ActiveParticipantsList
-              // masque les actions MJ (supprimer, modifier initiative) côté joueur.
               <ActiveParticipantsList
                 encounter={encounter}
                 participants={participants}
@@ -1347,20 +1247,12 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 role={role}
               />
             ) : !isGM ? (
-              // -------------------
-              // Vue joueur : pas de combat actif
-              // -------------------
-              // On affiche un écran d'attente sobre pour ne pas laisser
-              // le joueur face à un panneau vide ou une liste de préparation MJ.
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
                 <Swords size={28} className="text-gray-600" />
                 <p className="text-sm text-gray-400">Aucun combat en cours.</p>
                 <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
               </div>
             ) : (
-              // -------------------
-              // Vue MJ : préparation du combat
-              // -------------------
               <PrepParticipantsList
                 playerEntries={playerPrep}
                 monsterEntries={monsterPrep}
@@ -1375,9 +1267,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
             )}
           </div>
 
-          {/* -------------------
-              Footer : Lancer / Sauvegarder le combat (MJ uniquement)
-              ------------------- */}
           {!isActive && isGM && (
             <div className="px-4 py-3 border-t border-gray-800 space-y-2">
               <button
@@ -1441,18 +1330,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
           }}
         />
       )}
-
-      {popupMonster && (
-        <MonsterStatBlockPopup
-          monsterId={popupMonster.id}
-          monsterName={popupMonster.name}
-          monsterSlug={popupMonster.slug}
-          monsterImageUrl={popupMonster.imageUrl}
-          savedMonster={popupMonster.monster}
-          onClose={() => setPopupMonster(null)}
-          onRollDice={onRollDice}
-        />
-      )}
     </div>
   );
 }
@@ -1492,10 +1369,8 @@ function PrepParticipantsList({
 
   const handleMonsterClick = (entry: CombatPreparationEntry) => {
     if (isDesktop) {
-      // En desktop, on affiche le détail dans le panneau de gauche, pas de dépliement
       onClickMonster(entry.monsterSlug);
     } else {
-      // En mobile, on déplie/replie sous le monstre
       if (expandedId === entry.id) {
         setExpandedId(null);
       } else {
@@ -1535,7 +1410,7 @@ function PrepParticipantsList({
             <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">Monstres</span>
           </div>
           <div className="space-y-1">
-                     {monsterEntries.map((entry) => (
+            {monsterEntries.map((entry) => (
               <PrepRow
                 key={entry.id}
                 entry={entry}
@@ -1725,6 +1600,7 @@ function ActiveParticipantsList({
   isDesktop,
   scrollContainerRef,
   vttMode,
+  role,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1733,7 +1609,11 @@ function ActiveParticipantsList({
   onApplyHp: (p: EncounterParticipant, mode: 'damage' | 'heal') => void;
   onToggleCondition: (p: EncounterParticipant, condition: string) => void;
   onRemove: (id: string) => void;
-  onViewMonster: (monsterId?: string, fallbackName?: string) => void;
+  // -------------------
+  // Signature simplifiée : plus de fallbackName, le dépliage inline
+  // est géré directement dans ActiveParticipantsList via expandedId.
+  // -------------------
+  onViewMonster: (monsterId?: string) => void;
   onViewPlayer: (memberId?: string) => void;
   onUpdateInitiative: (id: string, value: number) => void;
   selectedMonster: Monster | null;
@@ -1742,18 +1622,16 @@ function ActiveParticipantsList({
   isDesktop: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
   vttMode?: boolean;
+  role?: 'gm' | 'player';
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Auto-scroll vers le participant actif quand le tour change (en haut du conteneur)
-  // setTimeout pour laisser le DOM se mettre à jour (repli de la carte précédente)
   useEffect(() => {
     if (participants.length === 0) return;
     const currentParticipant = participants[encounter.current_turn_index];
     if (!currentParticipant) return;
 
-    // Replier toute carte dépliée quand le tour change
     setExpandedId(null);
 
     const timer = setTimeout(() => {
@@ -1786,22 +1664,28 @@ function ActiveParticipantsList({
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
         const clickable = isMonster || (isPlayer && !!p.player_member_id);
-              const useInlineExpand = !isDesktop || vttMode;
+
+        // -------------------
+        // Dépliage inline restauré (comme l'ancienne version) :
+        // - Desktop hors vttMode → affiche dans le panneau gauche via onViewMonster
+        // - Mobile OU vttMode → déplie le statbloc directement sous la ligne
+        // -------------------
+        const useInlineExpand = !isDesktop || vttMode;
         const isExpanded = useInlineExpand && expandedId === p.id && isMonster;
 
-             const handleParticipantClick = () => {
+        const handleParticipantClick = () => {
           if (!clickable) return;
           if (isMonster) {
-            if (vttMode) {
-              onViewMonster(p.monster_id, p.display_name);
-            } else if (!useInlineExpand) {
-              onViewMonster(p.monster_id, p.display_name);
+            if (!useInlineExpand) {
+              // Desktop standard : affiche dans le panneau gauche
+              onViewMonster(p.monster_id);
             } else {
+              // Mobile / vttMode : déplie/replie inline
               if (expandedId === p.id) {
                 setExpandedId(null);
               } else {
                 setExpandedId(p.id);
-                onViewMonster(p.monster_id, p.display_name);
+                onViewMonster(p.monster_id);
               }
             }
           } else if (isPlayer) {
@@ -1933,11 +1817,11 @@ function ActiveParticipantsList({
                   <div className="flex items-center justify-center py-6 text-gray-400">
                     <Loader2 size={18} className="animate-spin mr-2" />
                   </div>
-) : selectedMonster ? (
-  <div className="monster-statblock-wrapper">
-    <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
-  </div>
-) : null}
+                ) : selectedMonster ? (
+                  <div className="monster-statblock-wrapper">
+                    <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+                  </div>
+                ) : null}
               </div>  
             )} 
           </div>
@@ -1945,5 +1829,4 @@ function ActiveParticipantsList({
       })}
     </div>
   );
-} 
- 
+}
