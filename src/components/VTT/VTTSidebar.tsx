@@ -12,9 +12,8 @@ import { CombatTab } from '../GameMaster/tabs/CombatTab';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat';
 
-
 interface VTTSidebarProps {
-  authToken?: string;
+    authToken?: string;
   role: 'gm' | 'player';
   tokens: VTTToken[];
   config: VTTRoomConfig;
@@ -41,10 +40,10 @@ interface VTTSidebarProps {
   onAddProp: (prop: Omit<VTTProp, 'id'>) => void;
   onRemoveProp: (propId: string) => void;
   onUpdateProp: (propId: string, changes: Partial<VTTProp>) => void;
-  onSaveScene?: () => Promise<void>;
-  onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
-  // Callback pour synchroniser les PV du token VTT depuis le combat ou la fiche perso
-  onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
+onSaveScene?: () => Promise<void>;
+onAddMonsterAsToken?: (token: Omit<VTTToken, 'id'>) => void;
+// Callback pour synchroniser les PV du token VTT depuis le combat ou la fiche perso
+onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
   // -------------------
   // Props du chat live
   // -------------------
@@ -94,6 +93,7 @@ export function VTTSidebar({
   onRemoveToken,
   onToggleVisibility,
   onUpdateMap,
+  onResetFog,
   onBack,
   props,
   selectedPropId,
@@ -105,7 +105,7 @@ export function VTTSidebar({
   authToken,
   onSaveScene,
   onAddMonsterAsToken,
-  onUpdateToken,
+   onUpdateToken,
   campaignId,
   userName = 'Joueur',
   pendingChatRoll,
@@ -856,3 +856,4 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
     </button>
   );
 } 
+ 
