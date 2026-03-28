@@ -363,26 +363,26 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
       case 'STATE_SYNC':
+        setConfig(event.state.room.config);
+        setTokens(event.state.room.tokens);
+        setFogState(normalizeFogState(event.state.room.fogState));
+        setWalls(event.state.room.walls || []);
+        setDoors(event.state.room.doors || []);
+        setWindows((event.state.room as any).windows || []);
         setRole(event.state.yourRole);
-        // Le GM charge sa scène depuis Supabase via useEffect — ne pas écraser
-        // sa config/tokens avec l'état en mémoire du serveur (qui peut venir
-        // d'une autre scène ou d'une session précédente).
-        if (role !== 'gm') {
-          setConfig(event.state.room.config);
-          setTokens(event.state.room.tokens);
-          setFogState(normalizeFogState(event.state.room.fogState));
-          setWalls(event.state.room.walls || []);
-          setDoors(event.state.room.doors || []);
-          setWindows((event.state.room as any).windows || []);
-          setWeatherEffects(event.state.room.config.weatherEffects || []);
-        }
-        if ((event.state as any).activeSceneId && !activeSceneIdRef.current && event.state.yourRole !== 'gm') {
+        setWeatherEffects(event.state.room.config.weatherEffects || []);
+        // -------------------
+        // Récupération du sceneId actif dès la première connexion
+        // Sans cela, le VTTCanvas du joueur reste sur sceneId=null
+        // et ne restaure jamais le masque exploré depuis localStorage
+        // -------------------
+        if ((event.state as any).activeSceneId && !activeSceneIdRef.current) {
           const scId = (event.state as any).activeSceneId as string;
           setActiveSceneId(scId);
           activeSceneIdRef.current = scId;
           vttService.setActiveSceneId(scId);
         }
-        break; 
+        break;
       case 'TOKEN_MOVED':
         setTokens(prev => prev.map(t =>
           t.id === event.tokenId ? { ...t, position: event.position } : t
@@ -570,8 +570,7 @@ useEffect(() => {
 
  
   
-const applySceneToLive = useCallback((scene: VTTScene, { silent = false, forRoomId }: { silent?: boolean; forRoomId?: string } = {}) => {
-    configRef.current = scene.config; 
+const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { silent?: boolean } = {}) => {
     setConfig(scene.config);
     setTokens(scene.tokens);
 
@@ -599,7 +598,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false, forRoom
 
     setActiveSceneId(scene.id);
 
-  if (roomId) localStorage.setItem(getLastSceneStorageKey(roomId), scene.id);
+  localStorage.setItem(getLastSceneStorageKey(roomId ?? ''), scene.id);
 
     vttService.setActiveSceneId(scene.id);
 
@@ -632,7 +631,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false, forRoom
 
     // (Le broadcast du masque exploré est déjà géré par le bloc précédent
     //  lignes 402-426 avec le double rAF + setTimeout)
-  }, [roomId]);
+  }, []);
 
 useEffect(() => {
   if (phase !== 'room' || !roomId || role !== 'gm') return;
@@ -657,9 +656,8 @@ useEffect(() => {
             ...parsed[0],
             props: Array.isArray(parsed[0].props) ? parsed[0].props : [],
           };
-
           setActiveSceneId(initialScene.id);
-          applySceneToLive(initialScene, { silent: true });
+          applySceneToLive(initialScene);
           vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
         }
       } else {
@@ -674,7 +672,7 @@ useEffect(() => {
               const scene = dbSceneToVTTScene(s);
               setScenes([scene]);
               setActiveSceneId(scene.id);
-              applySceneToLive(scene, { silent: true });
+              applySceneToLive(scene);
             }
           });
       }
@@ -686,13 +684,8 @@ useEffect(() => {
 
   
 
- // APRÈS
   const saveCurrentSceneState = useCallback(async (sceneId: string) => {
     if (!sceneId || !roomId) return;
-    // Vérification de cohérence : on ne sauvegarde que si sceneId
-    // correspond bien à la scène active. Évite d'écraser une scène
-    // avec la config d'une autre en cas de race condition.
-    if (sceneId !== activeSceneIdRef.current) return;
 
     await supabase
       .from('vtt_scenes')
@@ -2325,6 +2318,7 @@ onSelectTokens={ids => {
             onAddProp={handleAddProp}
             onRemoveProp={handleRemoveProp}
             onUpdateProp={handleUpdateProp}
+            onUpdateToken={handleUpdateToken}
             campaignId={campaignId ?? undefined}
             userName={userName}
             pendingChatRoll={pendingChatRoll}
