@@ -382,14 +382,97 @@ const visibleTokens = isGM
               </button>
 
               {showCanvasTokens && (
-                <div ref={tokenListRef} className="p-2 space-y-1 overflow-y-auto flex-1 min-h-0">
+                <div ref={tokenListRef} className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: '220px' }}>
                   {visibleTokens.length === 0 && (
                     <p className="text-xs text-gray-400 text-center py-4">Aucun token sur la carte</p>
                   )}
+
                   {visibleTokens.map(token => {
-                    // ...existing code...
+                    const canEdit = role === 'gm' || token.ownerUserId === userId;
+                    const isSelected = token.id === selectedTokenId;
+
                     return (
-                      // ...existing code...
+                      <div
+                        key={token.id}
+                        data-token-id={token.id}
+                        draggable
+                        onDragStart={e => {
+                          e.dataTransfer.setData('application/vtt-token-id', token.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing group transition-colors ${
+                          isSelected
+                            ? 'bg-amber-500/15 border border-amber-500/40'
+                            : 'hover:bg-gray-800 border border-transparent'
+                        }`}
+                        onClick={() => onSelectToken(isSelected ? null : token.id)}
+                      >
+                        <div
+                          className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white overflow-hidden"
+                          style={{ backgroundColor: token.imageUrl ? 'transparent' : token.color }}
+                        >
+                          {token.imageUrl ? (
+                            <img src={token.imageUrl} alt="" draggable={false} className="w-full h-full object-cover rounded-full pointer-events-none" />
+                          ) : (
+                            token.label.slice(0, 2)
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs truncate ${isSelected ? 'text-amber-300' : 'text-white'}`}>
+                            {token.label}
+                          </p>
+
+                          {token.maxHp != null && token.hp != null && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.max(0, Math.min(100, (token.hp / token.maxHp) * 100))}%`,
+                                    backgroundColor: token.hp / token.maxHp > 0.5 ? '#22c55e' : token.hp / token.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
+                                  }}
+                                />
+                              </div>
+                              <span className="text-[9px] text-gray-500">{token.hp}/{token.maxHp}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {!token.visible && <EyeOff size={11} className="text-gray-500 shrink-0" />}
+
+                        {canEdit && (
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            {role === 'gm' && (
+                              <button
+                                onClick={e => { e.stopPropagation(); onToggleVisibility(token.id); }}
+                                className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                                title={token.visible ? 'Masquer' : 'Afficher'}
+                              >
+                                {token.visible ? <Eye size={11} /> : <EyeOff size={11} />}
+                              </button>
+                            )}
+
+                            <button
+                              onClick={e => { e.stopPropagation(); onEditToken(token); }}
+                              className="p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                              title="Éditer"
+                            >
+                              <Settings size={11} />
+                            </button>
+
+                            {role === 'gm' && (
+                              <button
+                                onClick={e => { e.stopPropagation(); onRemoveToken(token.id); }}
+                                className="p-1 rounded hover:bg-red-700/40 text-gray-400 hover:text-red-400 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -402,7 +485,7 @@ const visibleTokens = isGM
                 Cette section contient les tokens importes et ranges
                 dans des dossiers, avec drag and drop vers le canvas.
             */}
-            <div className="flex flex-col border-t border-gray-700/60 flex-1 min-h-0">
+            <div className="flex flex-col border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowTokenLibrary(prev => !prev)}
@@ -419,14 +502,14 @@ const visibleTokens = isGM
               </button>
 
               {showTokenLibrary && (
-                <div className="flex-1 min-h-0 overflow-y-auto">
-                  <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} userId={userId} />
+                <div style={{ height: '200px' }}>
+              <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} userId={userId} />
                 </div>
               )}
             </div>
 
             {/* Bestiaire */}
-            <div className="flex flex-col border-t border-gray-700/60 flex-1 min-h-0">
+            <div className="flex flex-col border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowBestiary(prev => !prev)}
@@ -444,10 +527,27 @@ const visibleTokens = isGM
               </button>
 
               {showBestiary && (
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <div style={{ height: '400px' }}>
                   <VTTMonsterBestiary
                     onAddAsToken={onAddMonsterAsToken ? (m: MonsterListItem, detail: Monster | null) => {
-                      // ...existing code...
+                      const hp = typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10;
+                      onAddMonsterAsToken({
+                        characterId: null,
+                        monsterSlug: m.slug || undefined,
+                        ownerUserId: '',
+                        label: m.name,
+                        imageUrl: detail?.image_url || null,
+                        position: { x: 200, y: 200 },
+                        size: 1,
+                        rotation: 0,
+                        visible: true,
+                        color: '#ef4444',
+                        hp,
+                        maxHp: hp,
+                        showLabel: true,
+                        visionMode: 'none',
+                        lightSource: 'none',
+                      });
                     } : undefined}
                   />
                 </div>
@@ -757,3 +857,4 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
     </button>
   );
 } 
+  
