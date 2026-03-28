@@ -1,5 +1,28 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Swords, Plus, Search, BookOpen, Loader2, ArrowLeft, Users, Skull, Save, CreditCard as Edit3, Trash2, X, Dices, Shield, Heart, User, SkipForward, Square, Minus, Eye, AlertTriangle, Upload } from 'lucide-react';
+import {
+  Swords,
+  Plus,
+  Search,
+  BookOpen,
+  Loader2,
+  ArrowLeft,
+  Users,
+  Skull,
+  Save,
+  Edit3,
+  Trash2,
+  X,
+  Dices,
+  Shield,
+  Heart,
+  User,
+  SkipForward,
+  Square,
+  Minus,
+  Eye,
+  AlertTriangle,
+  Upload,
+} from 'lucide-react';
 import {
   CampaignMember,
   CampaignEncounter,
@@ -9,41 +32,21 @@ import {
   DND_CONDITIONS,
 } from '../../../types/campaign';
 import { monsterService } from '../../../services/monsterService';
-import type { VTTToken } from '../../../types/vtt';
 import { supabase } from '../../../lib/supabase';
 import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
-import { MonsterStatBlockPopup } from '../../Combat/MonsterStatBlockPopup';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import { useCombatPlayersRealtimeSync } from '../hooks/useCombatPlayersRealtimeSync';
-import { useCombatEncounterRealtimeSync } from '../hooks/useCombatEncounterRealtimeSync';
 import toast from 'react-hot-toast';
 
-// -------------------
-// Props du composant Combat
-// -------------------
-// role : détermine si l'utilisateur est MJ ou joueur.
-// Les joueurs voient le tracker en lecture seule (pas de contrôle du combat).
 interface CombatTabProps {
   campaignId: string;
   members: CampaignMember[];
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
-  initialTokens?: VTTToken[];
-  // -------------------
-  // Liste live des tokens VTT (mise à jour à chaque changement)
-  // Utilisée pour le matching HP combat → token canvas.
-  // initialTokens est un snapshot figé au lancement du combat,
-  // liveTokens suit l'état courant des tokens sur le canvas.
-  // -------------------
-  liveTokens?: VTTToken[];
-  vttMode?: boolean;
-  role?: 'gm' | 'player';
-  // Synchronisation HP du token VTT depuis la fenêtre de combat
-  onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
 }
 
 interface CombatPreparationEntry {
@@ -76,11 +79,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export function CombatTab({ campaignId, members, onRollDice, initialTokens, liveTokens, vttMode, role = 'gm', onUpdateToken }: CombatTabProps) {
-  // -------------------
-  // Détection du rôle MJ pour conditionner les contrôles de combat
-  // -------------------
-  const isGM = role === 'gm';
+export function CombatTab({ campaignId, members, onRollDice }: CombatTabProps) {
   const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
   const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
   const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
@@ -98,46 +97,10 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
   const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
-  const [popupMonster, setPopupMonster] = useState<{ id: string; name: string; slug?: string; imageUrl?: string; monster?: Monster } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const initialTokensAppliedRef = useRef(false);
   const isDesktop = useIsDesktop();
-
-  // -------------------
-  // Ref live des tokens pour le matching HP → token VTT
-  // -------------------
-
-  const liveTokensRef = useRef(liveTokens ?? initialTokens);
-  liveTokensRef.current = liveTokens ?? initialTokens;
   const isActive = !!encounter;
-
-  const prevInitialTokensRef = useRef<VTTToken[] | undefined>(undefined);
-
-  useEffect(() => {
-    if (!initialTokens || initialTokens.length === 0) return;
-    if (prevInitialTokensRef.current !== initialTokens) {
-      prevInitialTokensRef.current = initialTokens;
-      initialTokensAppliedRef.current = false;
-    }
-    if (initialTokensAppliedRef.current || isActive) return;
-    initialTokensAppliedRef.current = true;
-    const tokenEntries: CombatPreparationEntry[] = initialTokens.map((t) => {
-      const matchedMember = members.find((m) => m.player_id && t.characterId && m.player_id === t.characterId);
-      return {
-        id: `prep-token-${t.id}-${++prepIdCounter}`,
-        type: matchedMember ? 'player' : 'monster',
-        name: t.label || 'Token',
-        memberId: matchedMember?.id,
-        playerId: matchedMember?.player_id,
-        hp: t.hp ?? matchedMember?.current_hp ?? 0,
-        maxHp: t.maxHp ?? matchedMember?.max_hp ?? 0,
-        ac: matchedMember?.armor_class ?? 10,
-        initiative: 0,
-      };
-    });
-    setPrepEntries(tokenEntries);
-  }, [initialTokens, isActive, members]);
 
   // Bloquer le scroll body quand l'overlay mobile bestiaire est ouvert
   useEffect(() => {
@@ -193,65 +156,11 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     []
   );
 
-  const { markLocalUpdate, sendHpBroadcast } = useCombatPlayersRealtimeSync({
+  const { markLocalUpdate } = useCombatPlayersRealtimeSync({
     members,
     participants,
     onParticipantHPUpdate: handlePlayerHPUpdateFromRealtime,
   });
-
-  // -------------------
-  // Synchronisation temps réel des tours (MJ → Joueurs)
-  // -------------------
-  // Quand le MJ clique sur "Tour suivant", monsterService.updateEncounter()
-  // met à jour campaign_encounters en base. Ce callback est appelé par le hook
-  // dès que Supabase Realtime reçoit cet UPDATE, ce qui synchronise
-  // l'affichage du tour courant pour tous les clients (joueurs inclus).
-  // -------------------
-  // Callback de mise à jour de l'encounter via Realtime
-  // -------------------
-  // Reçoit les champs current_turn_index / round_number / status
-  // depuis le hook useCombatEncounterRealtimeSync et fusionne
-  // avec l'état local, sans provoquer de re-souscription du channel.
-  const handleEncounterUpdatedFromRealtime = useCallback(
-    (updates: Partial<CampaignEncounter>) => {
-      setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
-    },
-    []
-  );
-
-  useCombatEncounterRealtimeSync({
-    encounterId: encounter?.id,
-    onEncounterUpdated: handleEncounterUpdatedFromRealtime,
-  });
-
-  // -------------------
-  // Polling joueur : détection du démarrage d'un combat
-  // -------------------
-  // Quand un joueur est déjà sur l'onglet combat (pas de combat actif)
-  // et que le MJ lance un combat, le joueur ne reçoit pas l'événement
-  // car useCombatEncounterRealtimeSync n'a pas d'encounterId à écouter.
-  // Ce polling interroge la base toutes les 4s pour détecter
-  // l'apparition d'un encounter actif et recharge le composant.
-  useEffect(() => {
-    if (isGM) return;           // le MJ n'en a pas besoin
-    if (isActive) return;       // déjà un combat actif, rien à faire
-
-    const interval = setInterval(async () => {
-      try {
-        const enc = await monsterService.getActiveEncounter(campaignId);
-        if (enc) {
-          // Un combat vient de démarrer : on recharge tout
-          setEncounter(enc);
-          const parts = await monsterService.getEncounterParticipants(enc.id);
-          setParticipants(parts);
-        }
-      } catch {
-        // Polling silencieux
-      }
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isGM, isActive, campaignId]);
 
   const handleLoadEncounter = async (encounterId: string) => {
     try {
@@ -347,21 +256,14 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     }
   };
 
-  const viewMonsterById = (id?: string, fallbackName?: string) => {
-    const monster = id ? savedMonsters.find((m) => m.id === id) : undefined;
+  const viewMonsterById = (id?: string) => {
+    if (!id) return;
+    const monster = savedMonsters.find((m) => m.id === id);
     if (monster) {
-      setPopupMonster({
-        id: monster.id || id || fallbackName || '',
-        name: monster.name,
-        slug: monster.slug,
-        imageUrl: monster.image_url ?? undefined,
-        monster,
-      });
-    } else if (fallbackName) {
-      setPopupMonster({
-        id: id || fallbackName,
-        name: fallbackName,
-      });
+      if (isDesktop) {
+        setMobileSearchOpen(true);
+      }
+      refreshMonsterFromSource(monster);
     }
   };
 
@@ -521,7 +423,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
         initiative_roll: entry.initiative,
         current_hp: entry.hp,
         max_hp: entry.maxHp,
-        temporary_hp: 0,
         armor_class: entry.ac,
         conditions: [] as string[],
         sort_order: i,
@@ -564,7 +465,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
         initiative_roll: entry.initiative,
         current_hp: entry.hp,
         max_hp: entry.maxHp,
-        temporary_hp: 0,
         armor_class: entry.ac,
         conditions: [] as string[],
         sort_order: i,
@@ -619,7 +519,7 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     }
   };
 
-    const handleNextTurn = async () => {
+  const handleNextTurn = async () => {
     if (!encounter || participants.length === 0) return;
     let nextIdx = encounter.current_turn_index + 1;
     let newRound = encounter.round_number;
@@ -633,22 +533,6 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
         round_number: newRound,
       });
       setEncounter(updated);
-
-      // -------------------
-      // Broadcast instantané du changement de tour (< 100ms)
-      // -------------------
-      // Envoie le nouveau tour via Supabase Broadcast sur le même channel
-      // que useCombatEncounterRealtimeSync. Les joueurs le reçoivent
-      // immédiatement, sans attendre le délai WAL de postgres_changes (1-3s).
-      supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
-        type: 'broadcast',
-        event: 'turn-changed',
-        payload: {
-          current_turn_index: nextIdx,
-          round_number: newRound,
-          status: updated.status,
-        },
-      });
     } catch (err) {
       console.error(err);
       toast.error('Erreur tour suivant');
@@ -836,70 +720,10 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
     handleUpdateParticipant(p.id, { current_hp: newHp });
     setHpDelta((prev) => ({ ...prev, [p.id]: '' }));
 
-      // -------------------
-    // Broadcast instantané du changement de PV (< 100ms)
-    // -------------------
-    // On utilise sendHpBroadcast (exposé par le hook) qui émet
-    // sur le channel DÉJÀ souscrit — pas un nouveau channel éphémère.
-    // supabase.channel(name).send() crée un channel distinct non abonné
-    // et le message ne serait pas reçu par les joueurs.
-markLocalUpdate(p.id);
-sendHpBroadcast({
-  participantId: p.id,
-  current_hp: newHp,
-  temporary_hp: p.temporary_hp ?? 0,
-});
-
-// -------------------
-// Sync HP combat → token VTT sur le canvas
-// -------------------
-// Cherche le token VTT correspondant au participant (via characterId, label, ou monsterSlug)
-// et propage le changement de PV pour que la barre de vie du token soit à jour.
-// On utilise liveTokensRef.current (toujours à jour) au lieu de initialTokens.
-if (onUpdateToken && liveTokensRef.current) {
-  const matchingToken = liveTokensRef.current.find(t =>
-    // -------------------
-    // Matching par characterId (joueurs liés à une fiche)
-    // -------------------
-    (p.participant_type === 'player' && t.characterId && p.player_member_id &&
-      members.find(m => m.id === p.player_member_id)?.player_id === t.characterId)
-    // -------------------
-    // Fallback : matching par nom exact (monstres ou joueurs sans fiche)
-    // -------------------
-    || t.label === p.display_name
-  );
-
-  if (matchingToken) {
-    console.log('[CombatTab] Sync HP → token VTT', {
-      tokenId: matchingToken.id,
-      tokenLabel: matchingToken.label,
-      oldHp: matchingToken.hp,
-      newHp,
-      maxHp: p.max_hp,
-    });
-    // -------------------
-    // Envoi HP + maxHp pour que la barre de vie
-    // s'affiche correctement même si maxHp a changé
-    // -------------------
-    onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
-  } else {
-    console.warn('[CombatTab] ⚠️ Aucun token VTT trouvé pour le participant', {
-      displayName: p.display_name,
-      participantType: p.participant_type,
-      playerMemberId: p.player_member_id,
-      tokensCount: liveTokensRef.current.length,
-      tokenLabels: liveTokensRef.current.map(t => t.label),
-    });
-  }
-}
-
-if (p.participant_type === 'player' && p.player_member_id) {
+    if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
       if (member?.player_id) {
-        // -------------------
-        // Sync HP joueur dans la table players (pour la fiche perso)
-        // -------------------
-        markLocalUpdate(member.player_id); // filtre l'écho postgres_changes (clé = playerId)
+        markLocalUpdate(member.player_id);
         supabase
           .from('players')
           .update({ current_hp: newHp })
@@ -934,26 +758,9 @@ if (p.participant_type === 'player' && p.player_member_id) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin text-amber-400" size={24} />
-      </div>
-    );
-  }
-
-  // -------------------
-  // Vue joueur : pas de combat actif
-  // -------------------
-  // IMPORTANT : ce guard est placé APRÈS le loading.
-  // On n'affiche le message d'attente que si le fetch est terminé
-  // ET qu'aucun encounter actif n'existe réellement en base.
-  // Cela évite le cas où encounter=null pendant le chargement
-  // ferait croire qu'il n'y a pas de combat alors qu'il est en cours.
-  if (!loading && !isGM && !isActive) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
-        <Swords size={32} className="text-gray-600" />
-        <p className="text-sm text-gray-400">Aucun combat en cours.</p>
-        <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
+      <div className="flex items-center justify-center py-16 text-gray-400">
+        <Loader2 size={24} className="animate-spin mr-3" />
+        Chargement...
       </div>
     );
   }
@@ -962,9 +769,9 @@ if (p.participant_type === 'player' && p.player_member_id) {
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   return (
-    <div className={vttMode ? 'flex flex-col flex-1 min-h-0' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
-      {/* LEFT: Search / Bestiary - Desktop only, hidden in vttMode */}
-        <div className={`${vttMode ? 'hidden' : 'hidden lg:block'} space-y-4 bestiary-panel bestiary-panel--no-frame bestiary-panel--no-border rounded-xl lg:mx-[30px] lg:mt-[30px] p-4`}>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* LEFT: Search / Bestiary - Desktop only */}
+        <div className="hidden lg:block space-y-4 bestiary-panel bestiary-panel--no-frame bestiary-panel--no-border rounded-xl lg:mx-[30px] lg:mt-[30px] p-4">
         <div className="flex gap-2 border-b border-gray-700 pb-2">
           {panelView === 'detail' && (
             <button
@@ -1058,9 +865,9 @@ if (p.participant_type === 'player' && p.player_member_id) {
       </div>
 
        {/* RIGHT: Unified combat panel */}
-      <div className={vttMode ? 'flex flex-col flex-1 min-h-0 relative' : 'space-y-4 relative'}>
-        {/* Mobile-only: search toolbar + panel ABOVE combat box (also hidden in vttMode) */}
-        <div className={`${vttMode ? 'hidden' : 'lg:hidden'} space-y-3`}>
+      <div className="space-y-4 relative">
+        {/* Mobile-only: search toolbar + panel ABOVE combat box */}
+        <div className="lg:hidden space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {panelView === 'detail' && mobileSearchOpen && (
               <button
@@ -1169,9 +976,9 @@ if (p.participant_type === 'player' && p.player_member_id) {
           )}
         </div>
 
-            {!vttMode && <div className="hidden lg:block" style={{ height: '81px' }}></div>}
-<div className={`combat-panel rounded-xl ${vttMode ? 'flex flex-col flex-1 min-h-0' : 'lg:mx-[30px] lg:mb-[34px]'}`}>
-              {/* Header */}
+            <div className="hidden lg:block" style={{ height: '81px' }}></div>
+<div className="combat-panel rounded-xl lg:mx-[30px] lg:mb-[34px]">
+          {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 space-y-2">
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
@@ -1196,13 +1003,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 </p>
               </div>
             </div>
-            {/* -------------------
-                Contrôles du combat (MJ uniquement)
-                -------------------
-                Initiative, tour suivant, sauvegarder, fin de combat.
-                Les joueurs ne voient que le tracker en lecture seule.
-            */}
-            {isGM && (
             <div className="flex gap-1.5 w-full">
               {isActive ? (
                 <div className="hidden sm:flex gap-1.5 w-full">
@@ -1215,24 +1015,21 @@ if (p.participant_type === 'player' && p.player_member_id) {
                   </button>
                   <button
                     onClick={handleNextTurn}
-                    title="Tour suivant"
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
-                    <SkipForward size={12} className="shrink-0" /> {!vttMode && 'Tour suivant'}
+                    <SkipForward size={12} className="shrink-0" /> Tour suivant
                   </button>
                   <button
                     onClick={handleSaveEncounter}
-                    title="Sauvegarder"
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
-                    <Save size={12} className="shrink-0" /> {!vttMode && 'Sauvegarder'}
+                    <Save size={12} className="shrink-0" /> Sauvegarder
                   </button>
                   <button
                     onClick={handleEndCombat}
-                    title="Fin du combat"
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors ${vttMode ? 'flex-none w-8 px-0' : ''}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
                   >
-                    <Square size={12} className="shrink-0" /> {!vttMode && 'Fin'}
+                    <Square size={12} className="shrink-0" /> Fin
                   </button>
                 </div>
               ) : (
@@ -1242,15 +1039,12 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 >
                   <Dices size={12} /> Initiatives
                 </button>
-              )} 
-            </div> 
-            )}
+              )}
+            </div>
           </div>
 
-          {/* -------------------
-              Nom du combat en préparation (MJ uniquement)
-              ------------------- */}
-          {!isActive && isGM && (
+          {/* Encounter name (prep only) */}
+          {!isActive && (
             <div className="px-4 py-2">
               <input
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-amber-600 focus:outline-none"
@@ -1261,10 +1055,7 @@ if (p.participant_type === 'player' && p.player_member_id) {
             </div>
           )}
 
-          {/* -------------------
-              Ajouter joueurs / Trier par initiative (MJ uniquement)
-              ------------------- */}
-          {isActive && isGM && (
+          {isActive && (
             <div className="px-4 py-2 border-b border-gray-800 space-y-2">
               <div className="flex gap-2">
                 <button
@@ -1302,10 +1093,10 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 onClick={handleSaveEncounter}
                 className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
               >
-                <Save size={12} className="shrink-0" /> Sauver 
-              </button> 
-              <button 
-                onClick={handleEndCombat}  
+                <Save size={12} className="shrink-0" /> Sauver
+              </button>
+              <button
+                onClick={handleEndCombat}
                 className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
               >
                 <Square size={12} className="shrink-0" /> Fin
@@ -1313,20 +1104,9 @@ if (p.participant_type === 'player' && p.player_member_id) {
             </div>
           )}
 
-          {/* -------------------
-              Liste des participants
-              -------------------
-              - Combat actif : ActiveParticipantsList (lecture seule pour les joueurs)
-              - Pas de combat actif + joueur : message d'attente
-              - Pas de combat actif + MJ : PrepParticipantsList
-          */}
-          <div className={vttMode ? 'flex-1 overflow-y-auto min-h-0' : 'max-h-[70vh] overflow-y-auto'} ref={scrollContainerRef}>
+          {/* Participants list */}
+          <div className="max-h-[70vh] overflow-y-auto" ref={scrollContainerRef}>
             {isActive ? (
-              // -------------------
-              // Vue combat actif : visible par tous
-              // -------------------
-              // Le prop role est passé pour que ActiveParticipantsList
-              // masque les actions MJ (supprimer, modifier initiative) côté joueur.
               <ActiveParticipantsList
                 encounter={encounter}
                 participants={participants}
@@ -1343,24 +1123,8 @@ if (p.participant_type === 'player' && p.player_member_id) {
                 onRollDice={onRollDice}
                 isDesktop={isDesktop}
                 scrollContainerRef={scrollContainerRef}
-                vttMode={vttMode}
-                role={role}
               />
-            ) : !isGM ? (
-              // -------------------
-              // Vue joueur : pas de combat actif
-              // -------------------
-              // On affiche un écran d'attente sobre pour ne pas laisser
-              // le joueur face à un panneau vide ou une liste de préparation MJ.
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
-                <Swords size={28} className="text-gray-600" />
-                <p className="text-sm text-gray-400">Aucun combat en cours.</p>
-                <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
-              </div>
             ) : (
-              // -------------------
-              // Vue MJ : préparation du combat
-              // -------------------
               <PrepParticipantsList
                 playerEntries={playerPrep}
                 monsterEntries={monsterPrep}
@@ -1375,10 +1139,8 @@ if (p.participant_type === 'player' && p.player_member_id) {
             )}
           </div>
 
-          {/* -------------------
-              Footer : Lancer / Sauvegarder le combat (MJ uniquement)
-              ------------------- */}
-          {!isActive && isGM && (
+          {/* Footer: Launch / empty state */}
+          {!isActive && (
             <div className="px-4 py-3 border-t border-gray-800 space-y-2">
               <button
                 onClick={handleLaunchCombat}
@@ -1439,18 +1201,6 @@ if (p.participant_type === 'player' && p.player_member_id) {
               setParticipants(parts);
             }
           }}
-        />
-      )}
-
-      {popupMonster && (
-        <MonsterStatBlockPopup
-          monsterId={popupMonster.id}
-          monsterName={popupMonster.name}
-          monsterSlug={popupMonster.slug}
-          monsterImageUrl={popupMonster.imageUrl}
-          savedMonster={popupMonster.monster}
-          onClose={() => setPopupMonster(null)}
-          onRollDice={onRollDice}
         />
       )}
     </div>
@@ -1724,7 +1474,6 @@ function ActiveParticipantsList({
   onRollDice,
   isDesktop,
   scrollContainerRef,
-  vttMode,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
@@ -1733,7 +1482,7 @@ function ActiveParticipantsList({
   onApplyHp: (p: EncounterParticipant, mode: 'damage' | 'heal') => void;
   onToggleCondition: (p: EncounterParticipant, condition: string) => void;
   onRemove: (id: string) => void;
-  onViewMonster: (monsterId?: string, fallbackName?: string) => void;
+  onViewMonster: (monsterId?: string) => void;
   onViewPlayer: (memberId?: string) => void;
   onUpdateInitiative: (id: string, value: number) => void;
   selectedMonster: Monster | null;
@@ -1741,7 +1490,6 @@ function ActiveParticipantsList({
   onRollDice?: (data: DiceRollData) => void;
   isDesktop: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
-  vttMode?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -1785,29 +1533,28 @@ function ActiveParticipantsList({
         const isDead = p.current_hp <= 0 && p.max_hp > 0;
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
-        const clickable = isMonster || (isPlayer && !!p.player_member_id);
-              const useInlineExpand = !isDesktop || vttMode;
-        const isExpanded = useInlineExpand && expandedId === p.id && isMonster;
+        const clickable = (isMonster && !!p.monster_id) || (isPlayer && !!p.player_member_id);
+              const isExpanded = !isDesktop && expandedId === p.id && isMonster;
 
              const handleParticipantClick = () => {
           if (!clickable) return;
           if (isMonster) {
-            if (vttMode) {
-              onViewMonster(p.monster_id, p.display_name);
-            } else if (!useInlineExpand) {
-              onViewMonster(p.monster_id, p.display_name);
+            if (isDesktop) {
+              // En desktop, afficher dans le panneau de gauche uniquement
+              onViewMonster(p.monster_id);
             } else {
+              // En mobile, déplier/replier sous le monstre
               if (expandedId === p.id) {
                 setExpandedId(null);
               } else {
                 setExpandedId(p.id);
-                onViewMonster(p.monster_id, p.display_name);
+                onViewMonster(p.monster_id);
               }
             }
           } else if (isPlayer) {
             onViewPlayer(p.player_member_id);
           }
-        };
+        }; 
 
         return (
           <div
@@ -1866,32 +1613,10 @@ function ActiveParticipantsList({
                     <Shield size={10} className="text-gray-500" />
                     <span className="text-gray-400">{p.armor_class}</span>
                   </div>
-                  {!vttMode && <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} /></div>}
+                  <div className="flex-1"><HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} /></div>
                 </div>
-                {vttMode && (
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <input
-                      type="number"
-                      className="w-12 px-1 py-1 bg-black/30 border border-gray-700 rounded text-xs text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="0"
-                      value={hpDelta[p.id] || ''}
-                      onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                      onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
-                    />
-                    <button onClick={() => onApplyHp(p, 'damage')} className="p-1 text-red-500 hover:bg-red-900/30 rounded transition-colors" title="Degats">
-                      <Minus size={12} />
-                    </button>
-                    <button onClick={() => onApplyHp(p, 'heal')} className="p-1 text-green-500 hover:bg-green-900/30 rounded transition-colors" title="Soins">
-                      <Plus size={12} />
-                    </button>
-                    <button onClick={() => onRemove(p.id)} className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors" title="Supprimer">
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                )}
               </div>
 
-              {!vttMode && (
               <div className="flex items-center gap-1 shrink-0 mt-0.5">
                 <input
                   type="number"
@@ -1911,7 +1636,6 @@ function ActiveParticipantsList({
                   <Trash2 size={12} />
                 </button>
               </div>
-              )}
             </div>
 
             {(p.conditions?.length > 0 || isCurrentTurn) && (
