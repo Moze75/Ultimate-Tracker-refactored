@@ -1060,7 +1060,9 @@ export function CombatTab({ campaignId, members, onRollDice, initialTokens, live
                     </div>
                   ) : selectedMonster ? ( 
                     <div className="space-y-3">
-                      <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+          <div className="monster-statblock-wrapper">
+                        <MonsterStatBlock monster={selectedMonster} onRollDice={onRollDice} />
+                      </div>
                       <div className="flex gap-2">
                         {!selectedMonster.id && (
                           <button
