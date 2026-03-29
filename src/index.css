@@ -920,7 +920,8 @@ select {
   color: inherit !important;
 }
 
-.bestiary-overlay-mobile .border-\[\#922610\] .text-\[\#922610\] {
+.bestiary-overlay-mobile .border-\[\#922610\] .text-\[\#922610\],
+.bestiary-overlay-mobile .border-\[\#922610\] h3 {
   color: #922610 !important;
 }
 
