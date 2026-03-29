@@ -92,7 +92,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   };
 
   const galleryImages = [
-    { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Classes.png", alt: "Classes et Personnages" },
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Classes%20et%20personnages.png", alt: "Classes et Personnages" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Fiche%20personnage%20compl%C3%A8te.png", alt: "Fiche Personnage Complète" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Cr%C3%A9ation%20d'objets.png", alt: "Création d'objets" },
      {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
