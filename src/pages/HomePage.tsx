@@ -536,7 +536,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             <div className="flex-1 flex justify-center md:justify-end order-2 md:order-1">
                <div className="relative rounded-[2.5rem] border-8 border-gray-900 bg-gray-900 shadow-2xl shadow-blue-900/20 overflow-hidden max-w-[280px] transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
                  <img 
-                   src="https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/ecran_mobile_1.png" 
+                   src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/mode_mobile.png" 
                    alt="Interface Mobile Le Compagnon" 
                    className="w-full h-auto block"
                  />
