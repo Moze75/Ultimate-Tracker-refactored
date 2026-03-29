@@ -98,8 +98,8 @@ export function HomePage({ onGetStarted }: HomePageProps) {
      {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20loots.png", alt: "Gestion des Loots" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20sorts.png", alt: "Gestion des Sorts" },
-    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Personnalisation.png", alt: "Personnalisation" }
-    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Combat_Tracker.png", alt: "Combat Tracker" }
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Personnalisation.png", alt: "Personnalisation" },
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Combat_Tracker.png", alt: "Combat Tracker" },
   ];
 
   // --- LOGIQUE DU VIEWER ---
