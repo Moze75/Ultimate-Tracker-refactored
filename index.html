@@ -3,53 +3,170 @@
   <head>
     <meta charset="UTF-8" />
 
-    <!-- Viewport unique (fusion des deux versions précédentes) -->
+    <!-- Viewport -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
     />
 
-  <title>Le Compagnon - D&D</title>
-    <meta name="description" content="Le Compagnon - D&D - Gérez vos parties, personnages et combats efficacement." />
+    <!-- ═══════════════════════════════════════════
+         SEO — TITRE & DESCRIPTION
+    ═══════════════════════════════════════════ -->
+    <title>Le Compagnon D&D – Application D&D 5e en français pour joueurs et MJ</title>
+    <meta
+      name="description"
+      content="Gérez vos parties de Donjons & Dragons 5e en français : fiches de personnage, combats automatisés, sorts, loots et campagnes. Essai gratuit 15 jours, sans carte bancaire."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://le-compagnon-dnd.fr/" />
+    <meta name="language" content="fr" />
+    <link rel="alternate" hreflang="fr" href="https://le-compagnon-dnd.fr/" />
 
-    <!-- Google Search Console verification -->
+    <!-- ═══════════════════════════════════════════
+         OPEN GRAPH (Facebook, Discord, WhatsApp…)
+    ═══════════════════════════════════════════ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://le-compagnon-dnd.fr/" />
+    <meta property="og:title" content="Le Compagnon D&D – Application D&D 5e en français" />
+    <meta
+      property="og:description"
+      content="Fiches de personnage, combats automatisés, gestion des sorts et loots. L'outil ultime pour vos parties de D&D 5e en français."
+    />
+    <meta property="og:image" content="https://le-compagnon-dnd.fr/icons/wmremove-transformed.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Le Compagnon D&D" />
+
+    <!-- ═══════════════════════════════════════════
+         TWITTER CARD
+    ═══════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Le Compagnon D&D – Application D&D 5e en français" />
+    <meta
+      name="twitter:description"
+      content="Fiches de personnage, combats automatisés, gestion des sorts et loots. L'outil ultime pour vos parties de D&D 5e en français."
+    />
+    <meta name="twitter:image" content="https://le-compagnon-dnd.fr/icons/wmremove-transformed.png" />
+
+    <!-- ═══════════════════════════════════════════
+         DONNÉES STRUCTURÉES JSON-LD
+         → SoftwareApplication + FAQPage
+         → Génère des rich snippets dans Google
+    ═══════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Le Compagnon D&D",
+          "url": "https://le-compagnon-dnd.fr",
+          "description": "Application web pour gérer vos parties de Donjons & Dragons 5e en français : fiches de personnage, combats automatisés, sorts, loots et campagnes.",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "inLanguage": "fr",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "description": "Essai gratuit 15 jours, toutes fonctionnalités, sans carte bancaire"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Est-ce que c'est gratuit au début ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui. 15 jours d'essai, toutes fonctionnalités, sans carte bancaire."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Est-ce que c'est comme Roll20 ou Foundry ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Non. Le Compagnon n'est pas une table virtuelle (VTT). C'est un assistant intelligent pour vos parties en présentiel ou en vocal, conçu pour fluidifier le jeu, pas pour gérer des cartes tactiques complexes."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Est-ce que ça fonctionne hors ligne ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Non. L'app est 100% en ligne, pour garantir une navigation rapide, fluide, et à jour. Cependant, une fois installée en tant qu'App (PWA), elle offre une expérience très proche du natif."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Est-ce compatible mobile, tablette et PC ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui. Vous pouvez y accéder depuis n'importe quel appareil connecté. L'interface s'adapte automatiquement."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Et si j'ai un bug ou un souci ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Une équipe réactive est disponible via le support. Les abonnés Célestes bénéficient d'un support prioritaire."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══════════════════════════════════════════
+         GOOGLE SEARCH CONSOLE
+    ═══════════════════════════════════════════ -->
     <meta name="google-site-verification" content="Zc_wtVKFsKBpLTKwNhllw6oEz_u7yFJlftFZFN2Q1ZM" />
 
-    <!-- PWA Manifest -->
+    <!-- ═══════════════════════════════════════════
+         PWA MANIFEST & ICÔNES
+    ═══════════════════════════════════════════ -->
     <link rel="manifest" href="/manifest.webmanifest" />
-
-    <!-- Icônes -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Couleurs / thèmes -->
+    <!-- ═══════════════════════════════════════════
+         THÈME & COULEURS
+    ═══════════════════════════════════════════ -->
     <meta name="theme-color" content="#111827" />
     <meta name="color-scheme" content="dark light" />
 
     <!-- iOS / iPadOS PWA hints -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="D&D Tracker" />
+    <meta name="apple-mobile-web-app-title" content="Le Compagnon D&D" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <!-- Windows / Android -->
     <meta name="msapplication-TileColor" content="#111827" />
 
-    <!-- Google Fonts: Cinzel (titres campagnes) + Inter (meta) -->
+    <!-- ═══════════════════════════════════════════
+         POLICES — Google Fonts
+    ═══════════════════════════════════════════ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- Pré-connexion (optimise handshake réseau) -->
+    <!-- Pré-connexion Supabase (remplace par ta vraie URL) -->
     <link rel="preconnect" href="https://api.supabase.io" />
-    <!-- Mets la vraie URL de ton instance Supabase (ex: https://xyzcompany.supabase.co) -->
     <!-- <link rel="preconnect" href="https://<TON-PROJET>.supabase.co" /> -->
 
-    <!-- (Optionnel) Pré-chargement de la police si tu as une font critique -->
-    <!-- <link rel="preload" as="font" type="font/woff2" href="/fonts/xxx.woff2" crossorigin /> -->
-
-    <!-- Safe area CSS (iOS notch) -->
+    <!-- ═══════════════════════════════════════════
+         STYLES DE BASE
+    ═══════════════════════════════════════════ -->
     <style>
       html, body, #root {
         height: 100%;
@@ -74,15 +191,15 @@
       }
     </style>
   </head>
+
   <body>
     <noscript>
       <div class="no-js">
-        JavaScript est requis pour exécuter le Compagnon - DND.
+        JavaScript est requis pour exécuter Le Compagnon D&D.
       </div>
     </noscript>
 
     <div id="root">
-      <!-- Un léger fallback visuel si le JS met du temps -->
       <div style="
         display:flex;
         height:100%;
@@ -91,22 +208,19 @@
         font:16px system-ui, sans-serif;
         color:#cbd5e1;
       ">
-        Chargement...
+        Chargement…
       </div>
     </div>
 
     <!-- Point d'entrée Vite -->
     <script type="module">
       console.log('[BOOT] Pré-main');
-      // Handlers globaux d'erreurs (diagnostic)
       window.addEventListener('error', (e) => {
         console.log('[GLOBAL ERROR]', e.error || e.message, e);
       });
       window.addEventListener('unhandledrejection', (e) => {
         console.log('[GLOBAL UNHANDLED REJECTION]', e.reason);
       });
-
-      // Expose un flag pour debug rapide depuis la console remote
       window.__APP_DIAGNOSTIC__ = {
         ts: Date.now(),
         mode: import.meta.env.MODE,
@@ -115,10 +229,7 @@
     </script>
     <script type="module" src="/src/main.tsx"></script>
 
-
-    <!-- (Optionnel) Script pour détecter/display-mode vs add to home screen -->
     <script>
-      // Démo: log l'état display-mode
       const checkDisplayMode = () => {
         const standalone = window.matchMedia('(display-mode: standalone)').matches
           || window.navigator.standalone === true;
