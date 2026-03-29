@@ -178,55 +178,92 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     <div className="min-h-screen text-gray-100 font-sans" style={bgStyle}>
       
       {/* --- SECTION 1 : ACCROCHE --- */}
-      <div className="container mx-auto px-4 pt-24 pb-16 text-center relative z-10">
-        <div className="inline-block mb-6">
+      <div className="container mx-auto px-4 pt-24 pb-20 text-center relative z-10">
+
+        {/* Logo */}
+        <div className="inline-block mb-5">
           <img 
             src="/icons/wmremove-transformed.png" 
             alt="Le Compagnon D&D" 
-            className="h-32 w-32 mx-auto object-contain"
+            className="h-28 w-28 mx-auto object-contain drop-shadow-2xl"
             style={{ backgroundColor: 'transparent' }}
           />
         </div>
-        
-        {/* 1. TITRE MODIFIÉ */}
-<h1 
-  className="text-5xl md:text-7xl font-semibold text-[#EFE6D8] mb-4 tracking-tight" 
-  style={{ 
-    fontFamily: 'Cinzel, serif',
-    textShadow: '0 0 30px rgba(239,230,216,0.4)'
-  }}
->
-  Le Compagnon D&D
-</h1>
 
-<h2 
-  className="text-2xl md:text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6"
-  style={{ fontFamily: 'Cinzel, serif' }}
->
-  L'outil ultime pour D&D 5e, pensé pour les francophones
-</h2>
-        
-<p 
-  className="text-lg text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed"
-  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
->
-  Fiches persos. Objets. Combats. Jets. Sorts. Campagnes.<br/>
-  Tout est là, <span className="text-white font-semibold" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>automatisé, fluide, et 100% en français</span>. 
-  Plus besoin de perdre du temps avec des outils lourds ou en anglais.
-</p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        {/* Badge social proof */}
+        <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
+          <span className="flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
+            ))}
+          </span>
+          <span className="text-sm text-gray-300" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}>
+            Rejoignez +XX aventuriers francophones {/* ← remplace XX par ton vrai chiffre */}
+          </span>
+        </div>
+
+        {/* H1 */}
+        <h1 
+          className="text-5xl md:text-7xl font-semibold text-[#EFE6D8] mb-4 tracking-tight" 
+          style={{ 
+            fontFamily: 'Cinzel, serif',
+            textShadow: '0 0 40px rgba(239,230,216,0.3)'
+          }}
+        >
+          Le Compagnon D&D
+        </h1>
+
+        {/* H2 */}
+        <h2 
+          className="text-xl md:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 max-w-2xl mx-auto"
+          style={{ fontFamily: 'Cinzel, serif' }}
+        >
+          L'outil ultime pour D&D 5e, pensé pour les francophones
+        </h2>
+
+        {/* Description */}
+        <p 
+          className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
+          style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
+        >
+          Fiches de personnage, combats, sorts et campagnes —{' '}
+          <span className="text-white font-semibold">automatisés, fluides, et 100% en français.</span>{' '}
+          Plus besoin de jongler avec des outils lourds ou en anglais.
+        </p>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
           <button
             onClick={onGetStarted}
             className="btn-primary px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-bold hover:scale-105 transition-transform shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/50"
           >
-            Commencer l'aventure
-            <ArrowRight size={24} />
+            Commencer gratuitement
+            <ArrowRight size={22} />
+          </button>
+          <button
+            onClick={scrollToSubscription}
+            className="px-8 py-4 rounded-xl border border-white/20 bg-black/30 text-white font-semibold hover:bg-white/10 transition-colors flex items-center gap-2"
+          >
+            Voir les tarifs
           </button>
         </div>
+
+        {/* Trust indicators */}
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-400" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 size={14} className="text-green-400" /> 15 jours d'essai gratuit
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 size={14} className="text-green-400" /> Sans carte bancaire
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 size={14} className="text-green-400" /> Accès immédiat
+          </span>
+        </div>
+
       </div>
 
-      {/* --- SECTION 2 : POURQUOI LE COMPAGNON ? --- */}
+            {/* --- SECTION 2 : POURQUOI LE COMPAGNON ? --- */}
       <div className="bg-black/60 backdrop-blur-md py-20 border-y border-white/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -619,6 +656,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">10€</span>
                   <span className="text-gray-400 text-sm ml-2">/ an</span>
+                  <p className="text-green-400 text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>soit 0,83€ / mois</p>
                 </div>
               </div>
               <div className="p-6 flex-grow">
@@ -676,6 +714,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">15€</span>
                   <span className="text-gray-400 text-sm ml-2">/ an</span>
+                  <p className="text-green-400 text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>soit 1,25€ / mois</p>
                 </div>
               </div>
               <div className="p-6 flex-grow">
@@ -726,6 +765,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-white">30€</span>
                   <span className="text-gray-400 text-sm ml-2">/ an</span>
+                  <p className="text-green-400 text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>soit 2,50€ / mois</p>
                 </div>
               </div>
               <div className="p-6 flex-grow">
@@ -756,7 +796,17 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 </li>
                 </ul>
                 
-                <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-2">
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-2 space-y-2">
+                  <p className="text-xs text-yellow-300 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    ✦ Nouvelles fonctionnalités en avant-première
+                  </p>
+                  <p className="text-xs text-yellow-300 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    ✦ Support réponse sous 24h garanti
+                  </p>
+                  <p className="text-xs text-yellow-300 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    ✦ Votre avis influence les futures mises à jour
+                  </p>
+                  <hr className="border-yellow-500/20 my-1" />
 <p 
   className="text-xs text-yellow-200 italic leading-relaxed"
   style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
@@ -773,6 +823,46 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             </div>
 
           </div>
+
+          {/* Tableau comparatif */}
+          <div className="mt-16 max-w-3xl mx-auto">
+            <h3 className="text-center text-[#EFE6D8] text-lg font-semibold mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
+              Comparer les plans
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <thead>
+                  <tr className="bg-white/5 border-b border-white/10">
+                    <th className="text-left px-4 py-3 text-gray-400 font-normal">Fonctionnalité</th>
+                    <th className="text-center px-4 py-3 text-gray-400 font-normal">Essai</th>
+                    <th className="text-center px-4 py-3 text-blue-400 font-semibold">Héros</th>
+                    <th className="text-center px-4 py-3 text-purple-400 font-semibold">MJ</th>
+                    <th className="text-center px-4 py-3 text-yellow-400 font-semibold">Céleste</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[
+                    ["Personnages", "1", "5", "15", "∞"],
+                    ["Toutes les fonctionnalités", "✓", "✓", "✓", "✓"],
+                    ["Objets personnalisés", "✓", "✓", "✓", "✓"],
+                    ["Outils Maître du Jeu", "–", "–", "✓", "✓"],
+                    ["Campagnes & gestion joueurs", "–", "–", "✓", "✓"],
+                    ["Accès anticipé nouveautés", "–", "–", "–", "✓"],
+                    ["Support prioritaire 24h", "–", "–", "–", "✓"],
+                  ].map(([feature, trial, hero, mj, cel], i) => (
+                    <tr key={i} className="hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3 text-gray-300">{feature}</td>
+                      <td className="px-4 py-3 text-center text-gray-500">{trial}</td>
+                      <td className="px-4 py-3 text-center text-blue-400 font-medium">{hero}</td>
+                      <td className="px-4 py-3 text-center text-purple-400 font-medium">{mj}</td>
+                      <td className="px-4 py-3 text-center text-yellow-400 font-medium">{cel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -932,18 +1022,33 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
 
 
-      {/* --- CTA FLOTTANT --- */}
-      <div 
-        className={`fixed bottom-8 right-8 z-40 transition-all duration-500 ${
-          showFloatingCTA ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+      {/* --- BARRE D'ACTION DISCRÈTE --- */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-500 ${
+          showFloatingCTA ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
         }`}
       >
-        <button
-          onClick={onGetStarted}
-          className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-full shadow-lg shadow-blue-900/50 flex items-center gap-2 animate-bounce-slow"
-        >
-          Commencer <ArrowRight size={18} />
-        </button>
+        <div className="bg-black/80 backdrop-blur-md border-t border-white/10 px-4 py-3">
+          <div className="container mx-auto flex items-center justify-between gap-4 max-w-4xl">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/icons/wmremove-transformed.png" alt="" className="h-7 w-7 object-contain shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#EFE6D8] truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+                  Le Compagnon D&D
+                </p>
+                <p className="text-xs text-gray-400 hidden sm:block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  15 jours d'essai gratuit · Sans carte bancaire
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onGetStarted}
+              className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-5 rounded-lg flex items-center gap-2 text-sm transition-colors"
+            >
+              Commencer gratuitement <ArrowRight size={15} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* --- NOUVEAU IMAGE VIEWER AVEC ZOOM --- */}
