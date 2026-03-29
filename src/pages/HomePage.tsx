@@ -97,7 +97,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Cr%C3%A9ation_objets_perso.png", alt: "Création d'objets" },
      {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_loots.png", alt: "Gestion des Loots" },
-    { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Gestion_sorts.png", alt: "Gestion des Sorts" },
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20sorts.png", alt: "Gestion des Sorts" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Personnalisation.png", alt: "Personnalisation" }
       
   ];
