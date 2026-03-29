@@ -1,0 +1,103 @@
+[
+  {
+    "version": "2.2.1",
+    "date": "2026-03-01",
+    "tag": "Correction",
+    "title": "Mises à jour graphiques & correctifs sorts",
+    "changes": [
+      "Refonte graphique du créateur de personnage",
+      "Refonte graphique du gestionnaire de combat (mode MJ)",
+      "Correction des problèmes de parsing sur les fiches de monstres",
+      "Correction des calculs de DD et bonus dans l'onglet sorts (prise en compte des équipements)",
+      "Corrections diverses"
+    ]
+  },
+  {
+    "version": "2.0.1",
+    "date": "2026-02-17",
+    "tag": "Nouveauté",
+    "title": "Gestion des familiers & fin du lifting visuel",
+    "changes": [
+      "Ajout de la gestion des familiers et des formes de druide, accessible depuis l'icône loup",
+      "Lifting visuel quasi finalisé sur toutes les vues"
+    ]
+  },
+  {
+    "version": "1.6.1",
+    "date": "2026-02-15",
+    "tag": "Amélioration",
+    "title": "Refonte graphique desktop & mobile",
+    "changes": [
+      "Lifting graphique complet de l'application sur les versions desktop et mobile",
+      "À venir : paramètres pour changer les thèmes graphiques"
+    ]
+  },
+  {
+    "version": "1.5.2",
+    "date": "2026-02-04",
+    "tag": "Nouveauté",
+    "title": "Gestionnaire de combat avec traqueur d'initiative 🐉",
+    "changes": [
+      "Ajout du gestionnaire de combat (traqueur d'initiative) pour les MJ — base de données des monstres en français intégrée",
+      "Gestion des PV des joueurs en temps réel, appliquée directement sur les fiches des joueurs de la campagne",
+      "Lancer les dés directement depuis les fiches de monstres",
+      "Création de monstres personnalisés et import de monstres en .JSON (format CritterDB compatible)",
+      "Possibilité de sauvegarder ou reprendre un combat en cours",
+      "Ajout des pastilles de maîtrises",
+      "Note : la base de données provient d'AideDD, certaines fiches monstres peuvent être incomplètes"
+    ]
+  },
+  {
+    "version": "1.4.6",
+    "date": "2026-02-04",
+    "tag": "Amélioration",
+    "title": "Roue des paramètres, soins & historiques personnalisés",
+    "changes": [
+      "Ajout d'une roue des paramètres pour modifier les compétences en mode desktop",
+      "Ajout d'un effet visuel de soin",
+      "Ajout des historiques personnalisés",
+      "Correction : les classes et espèces personnalisées se sauvegardent correctement après création",
+      "Les dons octroyant des bonus de caractéristique proposent désormais une application automatique",
+      "Possibilité d'ajouter des bonus aux attaques ou dégâts des sorts (via la roue des paramètres sur les sorts dépliés)",
+      "Correctifs visuels divers (fenêtre des équipements centrée en mode liste et custom)"
+    ]
+  },
+  {
+    "version": "1.4.3",
+    "date": "2026-01-21",
+    "tag": "Nouveauté",
+    "title": "Gestionnaire d'images pour le MJ (bêta)",
+    "changes": [
+      "Ajout d'un gestionnaire d'images (bêta) en mode Campagne pour le MJ — URLs externes uniquement pour le moment",
+      "Cette fonctionnalité sera enrichie dans les prochaines mises à jour"
+    ]
+  },
+  {
+    "version": "1.4.2",
+    "date": "2026-01-13",
+    "tag": "Nouveauté",
+    "title": "Module de prise de notes pour le MJ",
+    "changes": [
+      "Ajout du module de prise de notes en mode Campagne pour le MJ"
+    ]
+  },
+  {
+    "version": "1.4.1",
+    "date": "2026-01-10",
+    "tag": "Nouveauté",
+    "title": "Gestion des PV des joueurs par le MJ",
+    "changes": [
+      "Le MJ peut désormais gérer les points de vie des joueurs directement depuis le mode Campagne"
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-01-09",
+    "tag": "Nouveauté",
+    "title": "Classes personnalisées (bêta)",
+    "changes": [
+      "Implémentation des classes personnalisées en mode bêta, accessible depuis la création de personnage",
+      "Possibilité d'ajouter des ressources de classe et des compétences de classe personnalisées"
+    ]
+  }
+]
