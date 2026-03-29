@@ -181,11 +181,11 @@ export function HomePage({ onGetStarted }: HomePageProps) {
       <div className="container mx-auto px-4 pt-24 pb-20 text-center relative z-10">
 
         {/* Logo */}
-        <div className="inline-block mb-5">
-          <img 
-            src="/icons/wmremove-transformed.png" 
-            alt="Le Compagnon D&D" 
-            className="h-28 w-28 mx-auto object-contain drop-shadow-2xl"
+<div className="flex justify-center mb-5">
+  <img 
+    src="/icons/wmremove-transformed.png" 
+    alt="Le Compagnon D&D" 
+    className="h-28 w-28 object-contain drop-shadow-2xl"
             style={{ backgroundColor: 'transparent' }}
           />
         </div>
