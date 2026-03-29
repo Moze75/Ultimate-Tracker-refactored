@@ -94,7 +94,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   const galleryImages = [
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Classes.png", alt: "Classes et Personnages" },
     { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/fiche_perso.png", alt: "Fiche Personnage Complète" },
-    { src: "https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Cr%C3%A9ation_objets_perso.png", alt: "Création d'objets" },
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Cr%C3%A9ation%20d'objets.png", alt: "Création d'objets" },
      {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20loots.png", alt: "Gestion des Loots" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20sorts.png", alt: "Gestion des Sorts" },
