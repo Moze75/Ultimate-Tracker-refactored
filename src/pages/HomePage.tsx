@@ -198,7 +198,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             ))}
           </span>
           <span className="text-sm text-gray-300" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}>
-            Rejoignez +XX aventuriers francophones {/* ← remplace XX par ton vrai chiffre */}
+            Rejoignez +200 aventuriers francophones {/* ← remplace XX par ton vrai chiffre */}
           </span>
         </div>
 
