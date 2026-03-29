@@ -183,7 +183,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           <img 
             src="/icons/wmremove-transformed.png" 
             alt="Le Compagnon D&D" 
-            className="h-32 w-32 mx-auto object-contain animate-pulse"
+            className="h-32 w-32 mx-auto object-contain"
             style={{ backgroundColor: 'transparent' }}
           />
         </div>
@@ -196,7 +196,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
     textShadow: '0 0 30px rgba(239,230,216,0.4)'
   }}
 >
-  Le Compagnon
+  Le Compagnon D&D
 </h1>
 
 <h2 
@@ -266,7 +266,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   className="mt-4 text-blue-100/80"
   style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
 >
-  une appli 100% ligne, légère et toujours à jours. Pensée pour le plaisir du jeu, sans prise de tête. 
+  Une appli 100% en ligne, légère et toujours à jour. Pensée pour le plaisir du jeu, sans prise de tête.
 </p>
             </div>
           </div>
@@ -528,18 +528,11 @@ export function HomePage({ onGetStarted }: HomePageProps) {
   style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300 }}
 >
   <p>
-    Le Compagnon s'adapte à votre façon de jouer, sans compromis.
+    Le Compagnon s'adapte à votre façon de jouer, sans compromis. Pas de version comprimée ou bricolée après coup : chaque détail a été pensé pour la fluidité, la lisibilité, et l'accessibilité, même en pleine partie.
   </p>
   <p>
-Pas de version comprimée ou bricolée après coup :
-        </p> 
-  <p>
-chaque détail a été pensé pour la fluidité, la lisibilité, et l'accessibilité, même en pleine partie.
-
-Et contrairement à d’autres outils, ici tout est en français, dès le premier clic.
-Pas de traductions à la volée, pas de confusion :
-juste une app claire, accessible, et conçue pour la communauté francophone.
-                 </p>
+    Et contrairement à d'autres outils, ici tout est en français, dès le premier clic. Pas de traductions à la volée, pas de confusion : juste une app claire, accessible, et conçue pour la communauté francophone.
+  </p>
                </div>
             </div>
             
@@ -590,13 +583,13 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
   className="flex items-start gap-3 text-gray-300"
   style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
 >
-  <CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> 1 personnage max
+  <CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Accès complet à toutes les fonctionnalités
 </li>
 <li 
   className="flex items-start gap-3 text-gray-300"
   style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400 }}
 >
-  <CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Toutes les fonctionnalités disponibles
+  <CheckCircle2 size={18} className="text-gray-500 mt-0.5 shrink-0"/> Limité à 1 personnage
 </li>
 <li 
   className="flex items-start gap-3 text-gray-300"
@@ -929,7 +922,7 @@ juste une app claire, accessible, et conçue pour la communauté francophone.
           </div>
           
           <p className="text-gray-600 text-sm">
-            © 2025 Le Compagnon D&D - Une application créée par des joueurs, pour des joueurs.
+            © 2026 Le Compagnon D&D - Une application créée par des joueurs, pour des joueurs.
           </p>
           <p className="text-gray-700 text-xs mt-2 max-w-2xl mx-auto">
             Le Compagnon D&D n'est pas affilié à Wizards of the Coast. Donjons & Dragons est une marque déposée de Wizards of the Coast LLC.
