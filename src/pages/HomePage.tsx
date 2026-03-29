@@ -842,7 +842,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {[
-                    ["Personnages", "1", "5", "15", "∞"],
+                    ["Personnages", "1", "5", "15", "15"],
                     ["Toutes les fonctionnalités", "✓", "✓", "✓", "✓"],
                     ["Objets personnalisés", "✓", "✓", "✓", "✓"],
                     ["Outils Maître du Jeu", "–", "–", "✓", "✓"],
