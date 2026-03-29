@@ -93,13 +93,13 @@ export function HomePage({ onGetStarted }: HomePageProps) {
 
   const galleryImages = [
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Classes%20et%20personnages.png", alt: "Classes et Personnages" },
-    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Fiche%20personnage%20compl%C3%A8te.png", alt: "Fiche Personnage Complète" },
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Fiche%20personnage%20compl%C3%A8te.png", alt: "Dice Roller 3d" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Cr%C3%A9ation%20d'objets.png", alt: "Création d'objets" },
      {src: 'https://raw.githubusercontent.com/Moze75/Ultimate_Tracker/main/Visuels_HomePage/Le-Compagnon-dans-Obsidian.png', alt: "Mode MJ dans Obsidian" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20loots.png", alt: "Gestion des Loots" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Gestion%20des%20sorts.png", alt: "Gestion des Sorts" },
     { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Personnalisation.png", alt: "Personnalisation" }
-      
+    { src: "https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/Apercu_de_l_app/Combat_Tracker.png", alt: "Combat Tracker" }
   ];
 
   // --- LOGIQUE DU VIEWER ---
