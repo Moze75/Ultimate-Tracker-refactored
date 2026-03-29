@@ -944,8 +944,9 @@ select {
 .frame-card--light .border-\[\#922610\] * {
   color: inherit !important;
 }
-
-.frame-card--light .border-\[\#922610\] .text-\[\#922610\] {
+ 
+.frame-card--light .border-\[\#922610\] .text-\[\#922610\],
+.frame-card--light .border-\[\#922610\] h3 {
   color: #922610 !important;
 }
 
