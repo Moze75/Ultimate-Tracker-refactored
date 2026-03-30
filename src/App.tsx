@@ -643,6 +643,20 @@ if (currentPath === '/changelog') {
   return <ChangelogPage />;
 }
 
+      // ✅ AJOUT : Changelog depuis la homepage (sans changer l'URL)
+if (showChangelog) {
+  return <ChangelogPage onBack={() => setShowChangelog(false)} />;
+}
+
+if (showHomePage) {
+  return (
+    <HomePage
+      onGetStarted={() => setShowHomePage(false)}
+      onChangelog={() => setShowChangelog(true)} // ✅ AJOUT
+    />
+  );
+}
+
             const urlParams = new URLSearchParams(window.location.search);
             const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
 
