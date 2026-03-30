@@ -994,8 +994,9 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
                 <a href="https://le-compagnon-dnd.fr/confidentialite.html" className="hover:text-white transition-colors">Mentions légales & Confidentialité</a>
                 <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
 
-           {/* ✅ AJOUT : lien changelog depuis le footer */}
-onClick={(e) => { e.preventDefault(); onChangelog(); }}
+{/* ✅ AJOUT : lien changelog depuis le footer */}
+
+  onClick={(e) => { e.preventDefault(); onChangelog(); }}
   href="#"
   className="hover:text-white transition-colors cursor-pointer"
 >
