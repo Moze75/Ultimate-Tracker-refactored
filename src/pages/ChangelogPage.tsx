@@ -25,8 +25,8 @@ export function ChangelogPage({ onBack }: ChangelogPageProps) {
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage:
-            'url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table_9.16.webp)',
-          backgroundSize: 'auto 100%',
+            'url(https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Table_19.9.webp)',
+          backgroundSize: 'cover',
           backgroundPosition: 'center center',
         }}
       />
