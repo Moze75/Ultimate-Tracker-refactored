@@ -57,7 +57,7 @@ function ZoomableImageModal({ src, alt, onClose }: { src: string; alt: string; o
   );
 }
 
-export function HomePage({ onGetStarted }: HomePageProps) {
+export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
