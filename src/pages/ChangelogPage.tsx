@@ -6,7 +6,11 @@ const tagColors: Record<string, string> = {
   'Correction':   'bg-green-500/20 text-green-300 border-green-500/30',
 };
 
-export function ChangelogPage() {
+interface ChangelogPageProps {
+  onBack?: () => void;
+}
+
+export function ChangelogPage({ onBack }: ChangelogPageProps) {
   return (
     <div className="min-h-screen bg-[#0f172a] text-gray-100 py-24 px-4">
       <div className="max-w-2xl mx-auto">
