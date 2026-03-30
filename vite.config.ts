@@ -1,11 +1,27 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import sitemap from 'vite-plugin-sitemap';
 import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
+
+    // ── Sitemap automatique ──────────────────────────────────────────
+    // Généré à chaque build dans /dist/sitemap.xml
+    // À soumettre dans Google Search Console après le premier déploiement
+    sitemap({
+      hostname: 'https://le-compagnon-dnd.fr',
+      dynamicRoutes: [
+        '/',
+        '/changelog',
+      ],
+      // Priorités SEO : homepage en premier
+      changefreq: 'weekly',
+      priority: 0.8,
+    }),
+
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
@@ -34,35 +50,37 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true
       },
-    manifest: {
-      name: 'Le Compagnon - D&D',
-      short_name: 'Le Compagnon',
-      description: 'Gestionnaire de personnages D&D 2024',
-      theme_color: '#1f2937',
-      background_color: '#111827',
-      display: 'standalone',
-      start_url: '/',
-      scope: '/',
-      icons: [
-        {
-          src: '/icon-192.png',
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/apple-touch-icon.png',
-          sizes: '180x180',
-          type: 'image/png'
-        }
-      ]
-    }
+      manifest: {
+        // ── Corrigé : nom cohérent avec la homepage ──────────────────
+        name: 'Le Compagnon D&D',
+        short_name: 'Le Compagnon',
+        // ── Corrigé : description à jour (était "2024") ──────────────
+        description: 'Application D&D 5e en français — fiches de personnage, combats, sorts et campagnes.',
+        theme_color: '#1f2937',
+        background_color: '#111827',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        icons: [
+          {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png'
+          }
+        ]
+      }
     })
   ],
   resolve: {
