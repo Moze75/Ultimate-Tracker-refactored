@@ -995,9 +995,13 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
                 <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
 
            {/* ✅ AJOUT : lien changelog depuis le footer */}
-<button onClick={onChangelog} className="hover:text-white transition-colors text-gray-500">
+<button 
+  onClick={onChangelog} 
+  className="hover:text-white transition-colors text-gray-500 text-sm"
+  style={{ fontFamily: 'Inter, sans-serif' }}
+>
   Journal des mises à jour
-</button>    
+</button> 
                
                 <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
              </div>
