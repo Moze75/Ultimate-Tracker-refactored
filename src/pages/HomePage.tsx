@@ -237,7 +237,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
             onClick={onGetStarted}
             className="btn-primary px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-bold hover:scale-105 transition-transform shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/50"
           >
-            Commencer gratuitement
+            Commencer l'aventure
             <ArrowRight size={22} />
           </button>
           <button
