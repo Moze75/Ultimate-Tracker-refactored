@@ -10,6 +10,13 @@ interface HomePageProps {
   onGetStarted: () => void;
 }
 
+interface HomePageProps {
+  onGetStarted: () => void;
+  onChangelog: () => void; // ✅ AJOUT : navigation vers le changelog sans changer d'URL
+}
+
+export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
+
 /* --- NOUVEAU COMPOSANT POUR LE ZOOM --- */
 function ZoomableImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
   const [isZoomed, setIsZoomed] = useState(false);
