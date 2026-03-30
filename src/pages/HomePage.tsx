@@ -996,15 +996,6 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
   <a onClick={(e) => { e.preventDefault(); onChangelog(); }} href="#" className="hover:text-white transition-colors cursor-pointer">Journal des mises à jour</a>
   <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
 </div>
-
-{/* ✅ AJOUT : lien changelog depuis le footer */}
-
-  onClick={(e) => { e.preventDefault(); onChangelog(); }}
-  href="#"
-  className="hover:text-white transition-colors cursor-pointer"
->
-  Journal des mises à jour
-</a>
                
                 <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
              </div>
