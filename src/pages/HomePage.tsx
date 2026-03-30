@@ -8,6 +8,7 @@ import {
 
 interface HomePageProps {
   onGetStarted: () => void;
+  onChangelog: () => void; // ✅ AJOUT : navigation vers le changelog sans changer d'URL
 }
 
  
