@@ -13,6 +13,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { ClearCachePage } from './pages/ClearCachePage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { welcomeEmailService } from './services/welcomeEmailService';
+import { ChangelogPage } from './pages/ChangelogPage';
 
 const LAST_SELECTED_CHARACTER_SNAPSHOT = 'selectedCharacter';
 const SKIP_AUTO_RESUME_ONCE = 'ut:skipAutoResumeOnce';
