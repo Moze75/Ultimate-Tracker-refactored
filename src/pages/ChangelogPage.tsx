@@ -28,7 +28,7 @@ export function ChangelogPage({ onBack }: ChangelogPageProps) {
 
         <h1 className="text-4xl font-semibold text-[#EFE6D8] mb-2 text-center"
             style={{ fontFamily: 'Cinzel, serif' }}>
-          Journal des aventures
+          Journal des mises à jour
         </h1>
         <p className="text-gray-400 text-center mb-16"
            style={{ fontFamily: 'Inter, sans-serif' }}>
