@@ -69,6 +69,7 @@ function App() {
   const [showHomePage, setShowHomePage] = useState(true);
   const [showVTT, setShowVTT] = useState(false);
   const [broadcastRoomId, setBroadcastRoomId] = useState<string | null>(null);
+  const [showChangelog, setShowChangelog] = useState(false);
 
   // Refs pour le handler "back"
   const backPressRef = useRef<number>(0);
