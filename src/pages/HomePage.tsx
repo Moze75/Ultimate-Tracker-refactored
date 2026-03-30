@@ -997,8 +997,8 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
            {/* ✅ AJOUT : lien changelog depuis le footer */}
 <button 
   onClick={onChangelog} 
-  className="hover:text-white transition-colors text-gray-500 text-sm leading-none"
-  style={{ fontFamily: 'Inter, sans-serif', padding: 0, background: 'none', border: 'none' }}
+  style={{ fontFamily: 'Inter, sans-serif', padding: 0, background: 'none', border: 'none', verticalAlign: 'middle' }}
+  className="hover:text-white transition-colors text-gray-500 text-sm"
 >
   Journal des mises à jour
 </button>
