@@ -993,6 +993,12 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
              <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                 <a href="https://le-compagnon-dnd.fr/confidentialite.html" className="hover:text-white transition-colors">Mentions légales & Confidentialité</a>
                 <a href="https://le-compagnon-dnd.fr/conditions.html" className="hover:text-white transition-colors">CGU</a>
+
+           {/* ✅ AJOUT : lien changelog depuis le footer */}
+<button onClick={onChangelog} className="hover:text-white transition-colors text-gray-500">
+  Journal des mises à jour
+</button>    
+               
                 <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
              </div>
 
