@@ -997,11 +997,11 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
            {/* ✅ AJOUT : lien changelog depuis le footer */}
 <button 
   onClick={onChangelog} 
-  className="hover:text-white transition-colors text-gray-500 text-sm"
-  style={{ fontFamily: 'Inter, sans-serif' }}
+  className="hover:text-white transition-colors text-gray-500 text-sm leading-none"
+  style={{ fontFamily: 'Inter, sans-serif', padding: 0, background: 'none', border: 'none' }}
 >
   Journal des mises à jour
-</button> 
+</button>
                
                 <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
              </div>
