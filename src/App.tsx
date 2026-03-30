@@ -633,9 +633,13 @@ useEffect(() => {
           {(() => {
             const currentPath = window.location.pathname;
 
-            if (currentPath === '/clear-cache') {
-              return <ClearCachePage />;
-            }
+if (currentPath === '/clear-cache') {
+  return <ClearCachePage />;
+}
+
+if (currentPath === '/changelog') {
+  return <ChangelogPage />;
+}
 
             const urlParams = new URLSearchParams(window.location.search);
             const isPaymentSuccess = urlParams.has('userId') && urlParams.has('tier');
