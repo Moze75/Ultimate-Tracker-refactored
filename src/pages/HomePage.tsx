@@ -997,8 +997,7 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
   <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
 </div>
                
-                <a href="mailto:Contact@le-compagnon-dnd.fr" className="hover:text-white transition-colors">Contact : Contact@le-compagnon-dnd.fr</a>
-             </div>
+
 
              {/* 6. LIEN DISCORD */}
              <div className="mt-4">
