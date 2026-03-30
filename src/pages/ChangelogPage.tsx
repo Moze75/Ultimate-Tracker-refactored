@@ -11,20 +11,8 @@ interface ChangelogPageProps {
 }
 
 export function ChangelogPage({ onBack }: ChangelogPageProps) {
-  return (
-<div className="min-h-screen bg-[#0f172a] text-gray-100 py-24 px-4">
-
-  {/* ✅ AJOUT : bouton retour visible seulement si on vient de la homepage */}
-  {onBack && (
-    <button
-      onClick={onBack}
-      className="fixed top-4 left-4 text-gray-400 hover:text-white flex items-center gap-2 text-sm transition-colors"
-    >
-      ← Retour
-    </button>
-  )}
-
-  <div className="max-w-2xl mx-auto">
+  return ( 
+    <div className="min-h-screen bg-[#0f172a] text-gray-100 py-24 px-4">
       <div className="max-w-2xl mx-auto">
 
         <h1 className="text-4xl font-semibold text-[#EFE6D8] mb-2 text-center"
