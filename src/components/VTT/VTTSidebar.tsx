@@ -609,6 +609,8 @@ const visibleTokens = isGM
               liveTokens={tokens}
               role={role}
               onUpdateToken={onUpdateToken}
+              autoFocusCombatTurn={autoFocusCombatTurn}
+              onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
