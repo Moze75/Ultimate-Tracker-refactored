@@ -13,6 +13,7 @@ import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import { monsterService } from '../../../services/monsterService';
+} from '../../../types/campaign';
 import {
   useCombatController,
   type CombatTabProps,
