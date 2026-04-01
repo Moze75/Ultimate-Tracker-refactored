@@ -41,6 +41,11 @@ import {
   type CombatPreparationEntry,
 } from '../../GameMaster/hooks/useCombatController';
 
+type VTTCombatTabProps = CombatTabProps & {
+  autoFocusCombatTurn?: boolean;
+  onFocusCombatTokenByLabel?: (displayName: string) => void;
+};
+
 export function VTTCombatTab({
   campaignId,
   members,
@@ -50,7 +55,9 @@ export function VTTCombatTab({
   liveTokens,
   role = 'gm',
   onUpdateToken,
-}: CombatTabProps) {
+  autoFocusCombatTurn = true,
+  onFocusCombatTokenByLabel,
+}: VTTCombatTabProps) {
   const {
     isGM,
     isDesktop,
