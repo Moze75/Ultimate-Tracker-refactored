@@ -7,10 +7,8 @@ import {
   Monster,
   DND_CONDITIONS,
 } from '../../../types/campaign';
-import { monsterService } from '../../../services/monsterService';
 import type { VTTToken } from '../../../types/vtt';
-import { supabase } from '../../../lib/supabase';
-import { MonsterSearch, SelectedMonsterEntry } from '../../Combat/MonsterSearch';
+import { MonsterSearch } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
