@@ -130,6 +130,24 @@ export function VTTCombatTab({
     onUpdateToken,
   });
 
+   useEffect(() => {
+    if (!autoFocusCombatTurn) return;
+    if (!isActive) return;
+    if (!encounter) return;
+    if (participants.length === 0) return;
+
+    const currentParticipant = participants[encounter.current_turn_index];
+    if (!currentParticipant?.display_name) return;
+
+    onFocusCombatTokenByLabel?.(currentParticipant.display_name);
+  }, [
+    autoFocusCombatTurn,
+    isActive,
+    encounter,
+    participants,
+    onFocusCombatTokenByLabel,
+  ]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -147,24 +165,6 @@ export function VTTCombatTab({
       </div>
     );
   }
-
-  useEffect(() => {
-    if (!autoFocusCombatTurn) return;
-    if (!isActive) return;
-    if (participants.length === 0) return;
-
-    const currentParticipant = participants[encounter.current_turn_index];
-    if (!currentParticipant?.display_name) return;
-
-    onFocusCombatTokenByLabel?.(currentParticipant.display_name);
-  }, [
-    autoFocusCombatTurn,
-    isActive,
-    participants,
-    encounter.current_turn_index,
-    onFocusCombatTokenByLabel,
-    encounter,
-  ]);
 
   
   const playerPrep = prepEntries.filter((e) => e.type === 'player');
