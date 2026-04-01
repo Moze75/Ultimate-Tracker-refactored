@@ -41,7 +41,7 @@ export interface CombatPreparationEntry {
   initiative: number;
 }
 
-export type PanelView = 'search' | 'detail' | 'saved';
+export type PanelView = 'search' | 'detail';
 
 let prepIdCounter = 0;
 
