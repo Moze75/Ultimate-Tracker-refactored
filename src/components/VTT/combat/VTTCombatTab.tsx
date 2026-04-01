@@ -780,7 +780,6 @@ function ActiveParticipantsList({
   isDesktop,
   scrollContainerRef,
   vttMode,
-  role,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
