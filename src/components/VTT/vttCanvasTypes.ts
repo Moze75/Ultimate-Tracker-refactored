@@ -3,6 +3,7 @@ import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
+  centerOnWorldPosition: (x: number, y: number) => void;
   // -------------------
   // Permet à VTTPage de déclencher la sauvegarde du snapshot
   // avant de quitter vers le lobby
