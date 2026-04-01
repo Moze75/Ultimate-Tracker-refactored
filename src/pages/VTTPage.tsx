@@ -2338,6 +2338,9 @@ onSelectTokens={ids => {
             userName={userName}
             pendingChatRoll={pendingChatRoll}
             onChatRollConsumed={() => setPendingChatRoll(null)}
+              autoFocusCombatTurn={autoFocusCombatTurn}
+  onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)}
+  onFocusCombatTokenByLabel={focusCombatTokenByLabel}
           />
         </div>
       </div>
