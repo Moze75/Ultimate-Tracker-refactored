@@ -104,7 +104,7 @@ export function CombatTab({ campaignId, members, onReload, onRollDice, initialTo
         <Loader2 className="animate-spin text-amber-400" size={24} />
       </div>
     );
-  }
+  } 
 
   // Bloquer le scroll body quand l'overlay mobile bestiaire est ouvert
   useEffect(() => {
