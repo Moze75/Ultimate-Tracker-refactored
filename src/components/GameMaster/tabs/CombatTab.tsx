@@ -99,29 +99,12 @@ export function CombatTab({ campaignId, members, onReload, onRollDice, initialTo
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
   if (loading) {
-    if (!initialTokens || initialTokens.length === 0) return;
-    if (prevInitialTokensRef.current !== initialTokens) {
-      prevInitialTokensRef.current = initialTokens;
-      initialTokensAppliedRef.current = false;
-    }
-    if (initialTokensAppliedRef.current || isActive) return;
-    initialTokensAppliedRef.current = true;
-    const tokenEntries: CombatPreparationEntry[] = initialTokens.map((t) => {
-      const matchedMember = members.find((m) => m.player_id && t.characterId && m.player_id === t.characterId);
-      return {
-        id: `prep-token-${t.id}-${++prepIdCounter}`,
-        type: matchedMember ? 'player' : 'monster',
-        name: t.label || 'Token',
-        memberId: matchedMember?.id,
-        playerId: matchedMember?.player_id,
-        hp: t.hp ?? matchedMember?.current_hp ?? 0,
-        maxHp: t.maxHp ?? matchedMember?.max_hp ?? 0,
-        ac: matchedMember?.armor_class ?? 10,
-        initiative: 0,
-      };
-    });
-    setPrepEntries(tokenEntries);
-  }, [initialTokens, isActive, members]);
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin text-amber-400" size={24} />
+      </div>
+    );
+  }
 
   // Bloquer le scroll body quand l'overlay mobile bestiaire est ouvert
   useEffect(() => {
