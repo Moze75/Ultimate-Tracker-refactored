@@ -5,7 +5,6 @@ import {
   CampaignEncounter,
   EncounterParticipant,
   Monster,
-  MonsterListItem,
   DND_CONDITIONS,
 } from '../../../types/campaign';
 import { monsterService } from '../../../services/monsterService';
