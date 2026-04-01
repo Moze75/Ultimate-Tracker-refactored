@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Swords, Plus, Search, BookOpen, Loader2, ArrowLeft, Users, Skull, Save, Trash2, X, Dices, Shield, Heart, User, SkipForward, Square, Minus, Eye, AlertTriangle, Upload } from 'lucide-react';
 import {
-  CampaignMember,
   CampaignEncounter,
   EncounterParticipant,
   Monster,
   DND_CONDITIONS,
 } from '../../../types/campaign';
-import type { VTTToken } from '../../../types/vtt';
 import { MonsterSearch } from '../../Combat/MonsterSearch';
 import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
