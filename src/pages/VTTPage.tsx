@@ -324,12 +324,19 @@ canvasViewportRef.current = canvasViewport;
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 const sceneLoadedRef = useRef<string | null>(null);
 
- const focusCombatTokenByLabel = useCallback((displayName: string) => {
+const focusCombatTokenByLabel = useCallback((displayName: string) => {
   const token = tokens.find((t) => t.label === displayName);
   if (!token) return;
 
   setSelectedTokenId(token.id);
-}, [tokens]);  
+
+  const gridSize = room.config.gridSize || 50;
+  const tokenWorldSize = (token.size || 1) * gridSize;
+  const centerX = token.position.x + tokenWorldSize / 2;
+  const centerY = token.position.y + tokenWorldSize / 2;
+
+  vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
+}, [tokens, room.config.gridSize]);
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
