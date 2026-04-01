@@ -148,6 +148,25 @@ export function VTTCombatTab({
     );
   }
 
+  useEffect(() => {
+    if (!autoFocusCombatTurn) return;
+    if (!isActive) return;
+    if (participants.length === 0) return;
+
+    const currentParticipant = participants[encounter.current_turn_index];
+    if (!currentParticipant?.display_name) return;
+
+    onFocusCombatTokenByLabel?.(currentParticipant.display_name);
+  }, [
+    autoFocusCombatTurn,
+    isActive,
+    participants,
+    encounter.current_turn_index,
+    onFocusCombatTokenByLabel,
+    encounter,
+  ]);
+
+  
   const playerPrep = prepEntries.filter((e) => e.type === 'player');
   const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
