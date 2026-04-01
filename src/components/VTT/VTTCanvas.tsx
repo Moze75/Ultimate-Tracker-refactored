@@ -65,6 +65,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
+  const viewportFocusAnimRef = useRef<number | null>(null);
 
     const sceneIdRef = useRef<string | null>(sceneId ?? null);
 
