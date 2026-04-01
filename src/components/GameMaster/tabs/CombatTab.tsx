@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Swords, Plus, Search, BookOpen, Loader2, ArrowLeft, Users, Skull, Save, CreditCard as Edit3, Trash2, X, Dices, Shield, Heart, User, SkipForward, Square, Minus, Eye, AlertTriangle, Upload } from 'lucide-react';
+import { Swords, Plus, Search, BookOpen, Loader2, ArrowLeft, Users, Skull, Save, Trash2, X, Dices, Shield, Heart, User, SkipForward, Square, Minus, Eye, AlertTriangle, Upload } from 'lucide-react';
 import {
   CampaignMember,
   CampaignEncounter,
