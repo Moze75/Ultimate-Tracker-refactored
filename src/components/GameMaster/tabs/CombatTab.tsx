@@ -14,9 +14,11 @@ import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
-import { useCombatPlayersRealtimeSync } from '../hooks/useCombatPlayersRealtimeSync';
-import { useCombatEncounterRealtimeSync } from '../hooks/useCombatEncounterRealtimeSync';
-import toast from 'react-hot-toast';
+import {
+  useCombatController,
+  type CombatTabProps,
+  type CombatPreparationEntry,
+} from '../hooks/useCombatController';
 
 // -------------------
 // Props du composant Combat
