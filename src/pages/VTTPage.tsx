@@ -324,20 +324,7 @@ canvasViewportRef.current = canvasViewport;
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 const sceneLoadedRef = useRef<string | null>(null);
 
-  const findTokenForCombatParticipant = useCallback((participant: EncounterParticipant) => {
-  const currentTokens = tokensRef.current;
-
-  if (participant.participant_type === 'player' && participant.player_member_id) {
-    const member = membersRef.current?.find?.((m: any) => m.id === participant.player_member_id);
-    if (member?.player_id) {
-      const byCharacter = currentTokens.find((t) => t.characterId === member.player_id);
-      if (byCharacter) return byCharacter;
-    }
-  }
-
-  const byLabel = currentTokens.find((t) => t.label === participant.display_name);
-  return byLabel ?? null;
-}, []);
+   
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
