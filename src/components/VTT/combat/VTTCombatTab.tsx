@@ -403,8 +403,7 @@ export function VTTCombatTab({
               isDesktop={isDesktop}
               scrollContainerRef={scrollContainerRef}
               vttMode
-              role={role}
-            />
+                      />
           ) : isGM ? (
             <PrepParticipantsList
               playerEntries={playerPrep}
