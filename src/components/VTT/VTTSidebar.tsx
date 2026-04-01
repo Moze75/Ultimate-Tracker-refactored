@@ -113,6 +113,9 @@ export function VTTSidebar({
   userName = 'Joueur',
   pendingChatRoll,
   onChatRollConsumed,
+  autoFocusCombatTurn = true,
+  onToggleAutoFocusCombatTurn,
+  onFocusCombatTokenByLabel,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
