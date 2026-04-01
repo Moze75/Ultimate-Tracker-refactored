@@ -8,7 +8,7 @@ import { VTTTokenLibraryPanel } from './VTTTokenLibraryPanel';
 import { VTTMonsterBestiary } from './VTTMonsterBestiary';
 import type { MonsterListItem, Monster, CampaignMember } from '../../types/campaign';
 import { campaignService } from '../../services/campaignService';
-import { CombatTab } from '../GameMaster/tabs/CombatTab';
+import { VTTCombatTab } from './combat/VTTCombatTab';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat';
 
