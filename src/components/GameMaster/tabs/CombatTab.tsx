@@ -102,8 +102,7 @@ export function CombatTab({ campaignId, members, onReload, onRollDice, initialTo
     );
   }
 
-  const playerPrep = prepEntries.filter((e) => e.type === 'player');
-  const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
+  if (!loading && !isGM && !isActive) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
         <Swords size={32} className="text-gray-600" />
