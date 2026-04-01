@@ -189,15 +189,6 @@ export function VTTCombatTab({
               <Search size={12} /> Ajouter monstres
             </button>
 
-            <button
-              onClick={() => {
-                setEditingMonster(null);
-                setShowCustomModal(true);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
-            >
-              <Plus size={12} /> Créer monstre
-            </button>
 
             <button
               onClick={() => setShowImportModal(true)}
