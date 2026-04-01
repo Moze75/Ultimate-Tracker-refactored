@@ -478,8 +478,7 @@ if (!isGM && !isActive) {
                 isDesktop={isDesktop}
                 scrollContainerRef={scrollContainerRef}
                 vttMode={vttMode}
-                role={role}
-              />
+                             />
             ) : !isGM ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
                 <Swords size={28} className="text-gray-600" />
