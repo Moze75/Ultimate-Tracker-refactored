@@ -324,7 +324,12 @@ canvasViewportRef.current = canvasViewport;
 const vttCanvasRef = useRef<VTTCanvasHandle>(null);
 const sceneLoadedRef = useRef<string | null>(null);
 
-   
+ const focusCombatTokenByLabel = useCallback((displayName: string) => {
+  const token = tokens.find((t) => t.label === displayName);
+  if (!token) return;
+
+  setSelectedTokenId(token.id);
+}, [tokens]);  
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
