@@ -429,7 +429,8 @@ export function VTTCombatTab({
               isDesktop={isDesktop}
               scrollContainerRef={scrollContainerRef}
               vttMode
-                      />
+              onFocusToken={onFocusCombatTokenByLabel}
+            />
           ) : isGM ? (
             <PrepParticipantsList
               playerEntries={playerPrep}
