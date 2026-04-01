@@ -20,98 +20,85 @@ import {
   type CombatPreparationEntry,
 } from '../hooks/useCombatController';
 
-// -------------------
-// Props du composant Combat
-// -------------------
-// role : détermine si l'utilisateur est MJ ou joueur.
-// Les joueurs voient le tracker en lecture seule (pas de contrôle du combat).
-interface CombatTabProps {
-  campaignId: string;
-  members: CampaignMember[];
-  onReload: () => void;
-  onRollDice?: (data: DiceRollData) => void;
-  initialTokens?: VTTToken[];
-  // -------------------
-  // Liste live des tokens VTT (mise à jour à chaque changement)
-  // Utilisée pour le matching HP combat → token canvas.
-  // initialTokens est un snapshot figé au lancement du combat,
-  // liveTokens suit l'état courant des tokens sur le canvas.
-  // -------------------
-  liveTokens?: VTTToken[];
-  vttMode?: boolean;
-  role?: 'gm' | 'player';
-  // Synchronisation HP du token VTT depuis la fenêtre de combat
-  onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
-}
 
-interface CombatPreparationEntry {
-  id: string;
-  type: 'player' | 'monster';
-  name: string;
-  memberId?: string;
-  playerId?: string;
-  monsterSlug?: string;
-  monsterId?: string;
-  hp: number;
-  maxHp: number;
-  ac: number;
-  initiative: number;
-}
 
-type PanelView = 'search' | 'detail' | 'saved';
 
-let prepIdCounter = 0;
+export function CombatTab({ campaignId, members, onReload, onRollDice, initialTokens, liveTokens, vttMode, role = 'gm', onUpdateToken }: CombatTabProps) {
+  const {
+    isGM,
+    isDesktop,
+    isActive,
+    encounter,
+    participants,
+    savedMonsters,
+    loading,
+    panelView,
+    selectedMonster,
+    loadingDetail,
+    showCustomModal,
+    editingMonster,
+    addCount,
+    prepEntries,
+    encounterName,
+    launching,
+    hpDelta,
+    showLoadEncounterModal,
+    showImportModal,
+    selectedPlayerDetails,
+    mobileSearchOpen,
+    scrollContainerRef,
+    setPanelView,
+    setShowCustomModal,
+    setEditingMonster,
+    setSavedMonsters,
+    setEncounterName,
+    setHpDelta,
+    setShowLoadEncounterModal,
+    setShowImportModal,
+    setSelectedPlayerDetails,
+    setMobileSearchOpen,
+    handleLoadEncounter,
+    viewMonsterBySlug,
+    viewMonsterById,
+    viewPlayerById,
+    handleAddMonstersFromSearch,
+    handleAddMonstersFromSearchToEncounter,
+    handleAddSavedMonsterToPrep,
+    handleRemovePrepEntry,
+    handleUpdatePrepInitiative,
+    handleRollAllInitiative,
+    handleRollMonsterInitiativeActive,
+    handleLaunchCombat,
+    handleSavePreparation,
+    handleSaveEncounter,
+    handleEndCombat,
+    handleNextTurn,
+    handleSelectMonsterFromSearch,
+    handleSaveMonster,
+    handleDeleteMonster,
+    handleRemoveParticipant,
+    handleUpdateActiveInitiative,
+    handleSortByInitiative,
+    handleAddMonsterToEncounter,
+    handleAddPlayersToEncounter,
+    applyHp,
+    toggleCondition,
+  } = useCombatController({
+    campaignId,
+    members,
+    onReload,
+    onRollDice,
+    initialTokens,
+    liveTokens,
+    vttMode,
+    role,
+    onUpdateToken,
+  });
 
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsDesktop(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-  return isDesktop;
-}
+  const playerPrep = prepEntries.filter((e) => e.type === 'player');
+  const monsterPrep = prepEntries.filter((e) => e.type === 'monster');
 
-export function CombatTab({ campaignId, members, onRollDice, initialTokens, liveTokens, vttMode, role = 'gm', onUpdateToken }: CombatTabProps) {
-  // -------------------
-  // Détection du rôle MJ pour conditionner les contrôles de combat
-  // -------------------
-  const isGM = role === 'gm';
-  const [encounter, setEncounter] = useState<CampaignEncounter | null>(null);
-  const [participants, setParticipants] = useState<EncounterParticipant[]>([]);
-  const [savedMonsters, setSavedMonsters] = useState<Monster[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [panelView, setPanelView] = useState<PanelView>('search');
-  const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [editingMonster, setEditingMonster] = useState<Monster | null>(null);
-  const [addCount, setAddCount] = useState(1);
-  const [prepEntries, setPrepEntries] = useState<CombatPreparationEntry[]>([]);
-  const [encounterName, setEncounterName] = useState('');
-  const [launching, setLaunching] = useState(false);
-  const [hpDelta, setHpDelta] = useState<Record<string, string>>({});
-  const [showLoadEncounterModal, setShowLoadEncounterModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState<{ id: string; name: string } | null>(null);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const initialTokensAppliedRef = useRef(false);
-  const isDesktop = useIsDesktop();
-
-  // -------------------
-  // Ref live des tokens pour le matching HP → token VTT
-  // -------------------
-
-  const liveTokensRef = useRef(liveTokens ?? initialTokens);
-  liveTokensRef.current = liveTokens ?? initialTokens;
-  const isActive = !!encounter;
-
-  const prevInitialTokensRef = useRef<VTTToken[] | undefined>(undefined);
-
-  useEffect(() => {
+  if (loading) {
     if (!initialTokens || initialTokens.length === 0) return;
     if (prevInitialTokensRef.current !== initialTokens) {
       prevInitialTokensRef.current = initialTokens;
