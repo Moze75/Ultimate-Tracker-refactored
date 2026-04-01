@@ -237,6 +237,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat'>(role === 'player' ? 'chat' : 'tokens');
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
+    const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
 
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
