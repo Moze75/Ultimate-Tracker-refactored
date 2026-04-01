@@ -873,6 +873,8 @@ function ActiveParticipantsList({
         const handleParticipantClick = () => {
           if (!clickable) return;
 
+          onFocusToken?.(p.display_name);
+
           if (isMonster) {
             if (!useInlineExpand) {
               onViewMonster(p.monster_id);
