@@ -594,14 +594,13 @@ const visibleTokens = isGM
           className="flex flex-col h-full overflow-hidden"
           style={{ display: activeTab === 'combat' ? 'flex' : 'none' }}
         >
-          {campaignId ? (
-            <CombatTab
+                   {campaignId ? (
+            <VTTCombatTab
               campaignId={campaignId}
               members={members}
               onReload={reloadMembers}
               initialTokens={combatInitTokens ?? tokens}
               liveTokens={tokens}
-              vttMode
               role={role}
               onUpdateToken={onUpdateToken}
             />
