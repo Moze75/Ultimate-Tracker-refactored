@@ -704,8 +704,22 @@ const visibleTokens = isGM
           />
         )}
 
-        {activeTab === 'settings' && (
-          <div className="p-3 space-y-4">
+            <div>
+              <p className="text-xs text-gray-200 mb-2 font-medium">Combat</p>
+              <button
+                onClick={onToggleAutoFocusCombatTurn}
+                className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-xs transition-colors border border-gray-700"
+              >
+                <span>Auto-centrage au passage des tours</span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                  autoFocusCombatTurn
+                    ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-800/50'
+                    : 'bg-gray-700 text-gray-300 border border-gray-600'
+                }`}>
+                  {autoFocusCombatTurn ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            </div>
             {onSaveScene && (
               <div>
                 <p className="text-xs text-gray-200 mb-2 font-medium">Scène</p>
