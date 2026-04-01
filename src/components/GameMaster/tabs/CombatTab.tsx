@@ -12,6 +12,7 @@ import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../modals/LoadEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
+import { monsterService } from '../../../services/monsterService';
 import {
   useCombatController,
   type CombatTabProps,
