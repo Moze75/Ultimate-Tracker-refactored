@@ -806,6 +806,7 @@ function ActiveParticipantsList({
   isDesktop,
   scrollContainerRef,
   vttMode,
+  onFocusToken,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
