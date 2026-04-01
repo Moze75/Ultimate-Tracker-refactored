@@ -854,7 +854,7 @@ function ActiveParticipantsList({
   isDesktop: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
   vttMode?: boolean;
-  role?: 'gm' | 'player';
+
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
