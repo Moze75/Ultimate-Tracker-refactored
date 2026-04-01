@@ -51,6 +51,9 @@ interface VTTSidebarProps {
   userName?: string;
   pendingChatRoll?: VTTChatMessage | null;
   onChatRollConsumed?: () => void;
+  autoFocusCombatTurn?: boolean;
+  onToggleAutoFocusCombatTurn?: () => void;
+  onFocusCombatTokenByLabel?: (displayName: string) => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
