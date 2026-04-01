@@ -615,6 +615,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         cancelAnimationFrame(fogPaintRafRef.current);
         fogPaintRafRef.current = null;
       }
+
+      // Annule l'animation de centrage si en cours
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
       if (!exploredMaskWasResetRef.current) {
         saveExploredMaskSnapshot(sceneIdRef.current);
       }
