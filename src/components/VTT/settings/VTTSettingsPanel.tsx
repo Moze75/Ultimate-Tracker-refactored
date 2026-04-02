@@ -101,20 +101,22 @@ export function VTTSettingsPanel({
 }: VTTSettingsPanelProps) {
   return (
     <div className="p-3 space-y-4">
-      <SettingsSection title="Combat" defaultOpen>
-        <ToggleSwitch
-          checked={autoFocusCombatTurn}
-          onChange={onToggleAutoFocusCombatTurn}
-          label="Focus sur le token au passage de tour"
-          description="Centre la vue une fois au changement de tour. Le clic sur une ligne du tracker centre toujours la vue."
-        />
+           <SettingsSection title="Combat" defaultOpen>
+        <div className="divide-y divide-gray-800">
+          <ToggleSwitch
+            checked={autoFocusCombatTurn}
+            onChange={onToggleAutoFocusCombatTurn}
+            label="Focus sur le token au passage de tour"
+            description="Centre la vue une fois au changement de tour. Le clic sur une ligne du tracker centre toujours la vue."
+          />
 
-        <ToggleSwitch
-          checked={followCameraOnTokenMove}
-          onChange={onToggleFollowCameraOnTokenMove}
-          label="Suivi du token par la caméra"
-          description="Pendant le déplacement d’un token, la caméra reste accrochée à son mouvement."
-        />
+          <ToggleSwitch
+            checked={followCameraOnTokenMove}
+            onChange={onToggleFollowCameraOnTokenMove}
+            label="Suivi du token par la caméra"
+            description="Suit uniquement les déplacements locaux du token sur cette fenêtre."
+          />
+        </div>
       </SettingsSection>
 
       {onSaveScene && (
