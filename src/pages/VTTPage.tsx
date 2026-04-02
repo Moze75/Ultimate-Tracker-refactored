@@ -335,7 +335,13 @@ const focusCombatTokenByLabel = useCallback((displayName: string) => {
   const centerY = token.position.y + gridSize / 2;
 
   vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
-}, [tokens, config.gridSize]);
+
+  if (followCameraOnTokenMove) {
+    setCameraFollowTokenId(token.id);
+  } else {
+    setCameraFollowTokenId(null);
+  }
+}, [tokens, config.gridSize, followCameraOnTokenMove]);
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
