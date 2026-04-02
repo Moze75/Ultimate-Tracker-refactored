@@ -112,8 +112,8 @@ export function VTTSettingsPanel({
         <ToggleSwitch
           checked={followCameraOnTokenMove}
           onChange={onToggleFollowCameraOnTokenMove}
-          label="Suivre la caméra au déplacement du token"
-          description="Lorsque vous déplacez un token, la caméra suit son mouvement au lieu de rester fixe."
+          label="Suivi du token par la caméra"
+          description="Pendant le déplacement d’un token, la caméra reste accrochée à son mouvement."
         />
       </SettingsSection>
 
