@@ -328,14 +328,16 @@ const focusCombatTokenByLabel = useCallback((displayName: string) => {
   const token = tokens.find((t) => t.label === displayName);
   if (!token) return;
 
-  setSelectedTokenId(token.id);
+  if (role === 'gm') {
+    setSelectedTokenId(token.id);
+  }
 
-  const gridSize = token.size != null && token.size > 0 ? 50 * token.size : 50;
+  const gridSize = (config.gridSize || 50) * (token.size || 1);
   const centerX = token.position.x + gridSize / 2;
   const centerY = token.position.y + gridSize / 2;
 
   vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
-}, [tokens]);
+}, [tokens, role, config.gridSize]);
   
 // Ref pour casser la dépendance circulaire entre useVTTUndo et useVTTGeometry
 const pushUndoSnapshotRef = useRef<() => void>(() => {});
