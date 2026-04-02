@@ -134,6 +134,30 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       viewportFocusAnimRef.current = requestAnimationFrame(animate);
     },
+    centerOnWorldPositionImmediate: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
+      const vp = viewportRef.current;
+      viewportRef.current = {
+        ...vp,
+        x: canvas.width / 2 - x * vp.scale,
+        y: canvas.height / 2 - y * vp.scale,
+      };
+
+      onViewportChangeRef.current?.({
+        x: viewportRef.current.x,
+        y: viewportRef.current.y,
+        scale: viewportRef.current.scale,
+      });
+
+      drawRef.current();
+    },
     // -------------------
     // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
     // Passe par une ref pour éviter le problème d'ordre de déclaration
