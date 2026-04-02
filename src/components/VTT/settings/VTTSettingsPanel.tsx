@@ -1,8 +1,11 @@
-import { RefreshCw, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronRight, RefreshCw, Upload } from 'lucide-react';
 
 interface VTTSettingsPanelProps {
   autoFocusCombatTurn?: boolean;
   onToggleAutoFocusCombatTurn?: () => void;
+  followCameraOnTokenMove?: boolean;
+  onToggleFollowCameraOnTokenMove?: () => void;
   onSaveScene?: () => Promise<void>;
   roomId: string;
   saving: boolean;
@@ -11,9 +14,84 @@ interface VTTSettingsPanelProps {
   setSaveOk: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange?: () => void;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded">
+      <div className="min-w-0">
+        <p className="text-xs text-gray-100">{label}</p>
+        {description && (
+          <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">{description}</p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onChange}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+          checked ? 'bg-emerald-600' : 'bg-gray-600'
+        }`}
+        title={checked ? 'Activé' : 'Désactivé'}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+            checked ? 'translate-x-5' : 'translate-x-1'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function SettingsSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <section className="border border-gray-700 rounded-lg overflow-hidden bg-gray-900/40">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-800/40 transition-colors"
+      >
+        <span className="text-xs text-gray-200 font-medium">{title}</span>
+        {open ? (
+          <ChevronDown size={14} className="text-gray-500" />
+        ) : (
+          <ChevronRight size={14} className="text-gray-500" />
+        )}
+      </button>
+
+      {open && (
+        <div className="p-3 pt-0 space-y-2">
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function VTTSettingsPanel({
   autoFocusCombatTurn = true,
   onToggleAutoFocusCombatTurn,
+  followCameraOnTokenMove = false,
+  onToggleFollowCameraOnTokenMove,
   onSaveScene,
   roomId,
   saving,
@@ -23,35 +101,24 @@ export function VTTSettingsPanel({
 }: VTTSettingsPanelProps) {
   return (
     <div className="p-3 space-y-4">
-      <section className="space-y-2">
-        <p className="text-xs text-gray-200 font-medium">Combat</p>
+      <SettingsSection title="Combat" defaultOpen>
+        <ToggleSwitch
+          checked={autoFocusCombatTurn}
+          onChange={onToggleAutoFocusCombatTurn}
+          label="Suivre automatiquement le token actif"
+          description="Centre la vue automatiquement au passage des tours. Le clic sur une ligne du tracker centre toujours la vue."
+        />
 
-        <button
-          onClick={onToggleAutoFocusCombatTurn}
-          className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-xs transition-colors border border-gray-700"
-        >
-          <span>Suivre automatiquement le token actif</span>
-          <span
-            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-              autoFocusCombatTurn
-                ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-800/50'
-                : 'bg-gray-700 text-gray-300 border border-gray-600'
-            }`}
-          >
-            {autoFocusCombatTurn ? 'ON' : 'OFF'}
-          </span>
-        </button>
-
-        <p className="text-[10px] text-gray-500 leading-relaxed">
-          Le clic sur une ligne du tracker centre toujours la vue. Ce réglage contrôle uniquement le suivi
-          automatique lors du passage des tours.
-        </p>
-      </section>
+        <ToggleSwitch
+          checked={followCameraOnTokenMove}
+          onChange={onToggleFollowCameraOnTokenMove}
+          label="Suivre la caméra au déplacement du token"
+          description="Lorsque vous déplacez un token, la caméra suit son mouvement au lieu de rester fixe."
+        />
+      </SettingsSection>
 
       {onSaveScene && (
-        <section className="space-y-2">
-          <p className="text-xs text-gray-200 font-medium">Scène</p>
-
+        <SettingsSection title="Scène" defaultOpen>
           <button
             onClick={async () => {
               setSaving(true);
@@ -75,15 +142,14 @@ export function VTTSettingsPanel({
               </>
             )}
           </button>
-        </section>
+        </SettingsSection>
       )}
 
-      <section className="space-y-2">
-        <p className="text-xs text-gray-200 font-medium">Salle</p>
+      <SettingsSection title="Salle" defaultOpen={false}>
         <div className="font-mono text-gray-300 text-xs break-all bg-gray-800 rounded px-2 py-1.5 border border-gray-700">
           {roomId}
         </div>
-      </section>
+      </SettingsSection>
     </div>
   );
 }
