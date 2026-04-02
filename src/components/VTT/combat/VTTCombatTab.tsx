@@ -157,7 +157,7 @@ export function VTTCombatTab({
     encounter?.current_turn_index,
     participants,
     onFocusCombatTokenByLabel,
-  ]); 
+  ]);
 
   if (loading) {
     return (
