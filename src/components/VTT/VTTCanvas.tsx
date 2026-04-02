@@ -160,6 +160,81 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       drawRef.current();
     },
+
+        followWorldPosition: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      viewportFollowTargetRef.current = { x, y };
+
+      if (viewportFollowAnimRef.current) return;
+
+      const animate = () => {
+        const target = viewportFollowTargetRef.current;
+        const currentCanvas = canvasRef.current;
+
+        if (!target || !currentCanvas) {
+          viewportFollowAnimRef.current = null;
+          return;
+        }
+
+        const vp = viewportRef.current;
+        const targetX = currentCanvas.width / 2 - target.x * vp.scale;
+        const targetY = currentCanvas.height / 2 - target.y * vp.scale;
+
+        const lerp = 0.18;
+        const nextX = vp.x + (targetX - vp.x) * lerp;
+        const nextY = vp.y + (targetY - vp.y) * lerp;
+
+        viewportRef.current = {
+          ...vp,
+          x: nextX,
+          y: nextY,
+        };
+
+        onViewportChangeRef.current?.({
+          x: viewportRef.current.x,
+          y: viewportRef.current.y,
+          scale: viewportRef.current.scale,
+        });
+
+        drawRef.current();
+
+        const done =
+          Math.abs(targetX - nextX) < 0.5 &&
+          Math.abs(targetY - nextY) < 0.5;
+
+        if (done) {
+          viewportRef.current = {
+            ...viewportRef.current,
+            x: targetX,
+            y: targetY,
+          };
+
+          onViewportChangeRef.current?.({
+            x: viewportRef.current.x,
+            y: viewportRef.current.y,
+            scale: viewportRef.current.scale,
+          });
+
+          drawRef.current();
+          viewportFollowAnimRef.current = null;
+          return;
+        }
+
+        viewportFollowAnimRef.current = requestAnimationFrame(animate);
+      };
+
+      viewportFollowAnimRef.current = requestAnimationFrame(animate);
+    },
+    stopFollowingWorldPosition: () => {
+      viewportFollowTargetRef.current = null;
+      if (viewportFollowAnimRef.current) {
+        cancelAnimationFrame(viewportFollowAnimRef.current);
+        viewportFollowAnimRef.current = null;
+      }
+    },
+    
     // -------------------
     // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
     // Passe par une ref pour éviter le problème d'ordre de déclaration
