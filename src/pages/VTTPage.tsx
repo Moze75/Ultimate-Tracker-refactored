@@ -335,7 +335,7 @@ const focusCombatTokenByLabel = useCallback((displayName: string) => {
   const centerX = token.position.x + gridSize / 2;
   const centerY = token.position.y + gridSize / 2;
 
-  vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
+  vttCanvasRef.current?.centerOnWorldPositionImmediate(centerX, centerY);
 
 
 }, [tokens, config.gridSize, followCameraOnTokenMove]);
