@@ -836,33 +836,47 @@ useEffect(() => {
     });
   }, [handleSwitchScene]);
 
-  const handleMoveToken = useCallback((tokenId: string, position: { x: number; y: number }) => {
-    setTokens(prev => {
-      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
-      tokensRef.current = next;
-      return next;
-    });
+const handleMoveToken = useCallback((
+  tokenId: string,
+  position: { x: number; y: number },
+  options?: { localCameraFollow?: boolean }
+) => {
+  setTokens(prev => {
+    const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+    tokensRef.current = next;
+    return next;
+  });
 
-    pendingMovesRef.current.set(tokenId, position);
-    const existing = moveThrottleRef.current.get(tokenId);
-    if (existing) clearTimeout(existing);
-    const timer = setTimeout(() => {
-      const pos = pendingMovesRef.current.get(tokenId);
-      if (pos) {
-        vttService.send({ type: 'MOVE_TOKEN_REQUEST', tokenId, position: pos });
-        pendingMovesRef.current.delete(tokenId);
+  if (options?.localCameraFollow && followCameraOnTokenMove) {
+    const movedToken = tokensRef.current.find(t => t.id === tokenId);
+    const tokenSizePx = ((movedToken?.size || 1) * (configRef.current.gridSize || 50));
 
-        const sceneId = activeSceneIdRef.current;
-        if (sceneId) {
-          saveCurrentSceneState(sceneId).catch(err => {
-            console.error('[VTT] Save scene after token move error:', err);
-          });
-        }
+    vttCanvasRef.current?.followWorldPosition(
+      position.x + tokenSizePx / 2,
+      position.y + tokenSizePx / 2
+    );
+  }
+
+  pendingMovesRef.current.set(tokenId, position);
+  const existing = moveThrottleRef.current.get(tokenId);
+  if (existing) clearTimeout(existing);
+  const timer = setTimeout(() => {
+    const pos = pendingMovesRef.current.get(tokenId);
+    if (pos) {
+      vttService.send({ type: 'MOVE_TOKEN_REQUEST', tokenId, position: pos });
+      pendingMovesRef.current.delete(tokenId);
+
+      const sceneId = activeSceneIdRef.current;
+      if (sceneId) {
+        saveCurrentSceneState(sceneId).catch(err => {
+          console.error('[VTT] Save scene after token move error:', err);
+        });
       }
-      moveThrottleRef.current.delete(tokenId);
-    }, 50);
-    moveThrottleRef.current.set(tokenId, timer);
-  }, [saveCurrentSceneState]);
+    }
+    moveThrottleRef.current.delete(tokenId);
+  }, 50);
+  moveThrottleRef.current.set(tokenId, timer);
+}, [saveCurrentSceneState, followCameraOnTokenMove]);
 
 
   // -------------------
