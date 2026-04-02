@@ -105,8 +105,8 @@ export function VTTSettingsPanel({
         <ToggleSwitch
           checked={autoFocusCombatTurn}
           onChange={onToggleAutoFocusCombatTurn}
-          label="Suivre automatiquement le token actif"
-          description="Centre la vue automatiquement au passage des tours. Le clic sur une ligne du tracker centre toujours la vue."
+          label="Focus sur le token au passage de tour"
+          description="Centre la vue une fois au changement de tour. Le clic sur une ligne du tracker centre toujours la vue."
         />
 
         <ToggleSwitch
