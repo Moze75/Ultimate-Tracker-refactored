@@ -55,6 +55,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onSeenDoorsUpdate,
   fogResetSignal = 0,
   onTokenDoubleClick,
+  followCameraOnTokenMove = false,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
