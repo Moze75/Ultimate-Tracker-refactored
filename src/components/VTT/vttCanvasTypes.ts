@@ -67,4 +67,5 @@ export interface VTTCanvasProps {
   onSeenDoorsUpdate?: (seenIds: string[]) => void;
   fogResetSignal?: number;
   onTokenDoubleClick?: (token: VTTToken) => void;
+  followCameraOnTokenMove?: boolean;
 }
