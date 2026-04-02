@@ -1744,6 +1744,12 @@ useEffect(() => {
   vttCanvasRef.current?.followWorldPosition(centerX, centerY);
 }, [tokens, followCameraOnTokenMove, role, userId, config.gridSize]);
 
+  useEffect(() => {
+  if (!followCameraOnTokenMove) {
+    vttCanvasRef.current?.stopFollowingWorldPosition();
+  }
+}, [followCameraOnTokenMove]);
+
 
   // const handleSaveScene = useCallback(async () => { // Unused, removed
   /*
