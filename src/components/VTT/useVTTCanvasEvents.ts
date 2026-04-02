@@ -1441,6 +1441,14 @@ const fuseWallPoints = (
           if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current, oldPos?.x, oldPos?.y)) return;
           onMoveTokenRef.current(drag.id, snapped);
         }
+                  if (followCameraOnTokenMoveRef.current) {
+            const movedToken = tokensRef.current.find(t => t.id === draggingTokenRef.current?.id);
+            const effectiveSize = ((movedToken?.size || 1) * (configRef.current.gridSize || 50));
+            centerOnWorldPositionImmediate(
+              snapped.x + effectiveSize / 2,
+              snapped.y + effectiveSize / 2
+            );
+          }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
         // -------------------
         // Pinceau fog : peinture continue
