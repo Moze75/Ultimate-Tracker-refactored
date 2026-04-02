@@ -1405,18 +1405,20 @@ const fuseWallPoints = (
         selectionRectRef.current.x2 = wp.x;
         selectionRectRef.current.y2 = wp.y;
         drawRef.current();
-      } else if (draggingTokenRef.current) {
+          } else if (draggingTokenRef.current) {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const wp = screenToWorld(sp.x, sp.y);
         const drag = draggingTokenRef.current;
         const nx = wp.x - drag.offsetX;
         const ny = wp.y - drag.offsetY;
         const snapped = snapToGrid(nx, ny);
+
         if (drag.multiInitial && drag.multiInitial.size > 1) {
           const primaryInit = drag.multiInitial.get(drag.id)!;
           const dx = snapped.x - primaryInit.x;
           const dy = snapped.y - primaryInit.y;
           const currentWalls = wallsRef.current || [];
+
           if (currentWalls.length > 0) {
             let blocked = false;
             drag.multiInitial.forEach((initPos, tid) => {
@@ -1425,30 +1427,49 @@ const fuseWallPoints = (
               const mt = tokensRef.current.find(t => t.id === tid);
               const mSize = (mt?.size || 1) * (configRef.current.gridSize || 50);
               const curPos = mt?.position;
-              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls, doorsRef.current, curPos?.x, curPos?.y)) blocked = true;
+              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls, doorsRef.current, curPos?.x, curPos?.y)) {
+                blocked = true;
+              }
             });
             if (blocked) return;
           }
+
           drag.multiInitial.forEach((initPos, tid) => {
             const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
             onMoveTokenRef.current(tid, newPos);
           });
-        } else {
-          const movingToken = tokensRef.current.find(t => t.id === drag.id);
-          const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
-          const currentWalls = wallsRef.current || [];
-          const oldPos = movingToken?.position;
-          if (currentWalls.length > 0 && wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current, oldPos?.x, oldPos?.y)) return;
-          onMoveTokenRef.current(drag.id, snapped);
-        }
-                  if (followCameraOnTokenMoveRef.current) {
-            const movedToken = tokensRef.current.find(t => t.id === draggingTokenRef.current?.id);
+
+          if (followCameraOnTokenMoveRef.current) {
+            const movedToken = tokensRef.current.find(t => t.id === drag.id);
             const effectiveSize = ((movedToken?.size || 1) * (configRef.current.gridSize || 50));
             centerOnWorldPositionImmediate(
               snapped.x + effectiveSize / 2,
               snapped.y + effectiveSize / 2
             );
           }
+        } else {
+          const movingToken = tokensRef.current.find(t => t.id === drag.id);
+          const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
+          const currentWalls = wallsRef.current || [];
+          const oldPos = movingToken?.position;
+
+          if (
+            currentWalls.length > 0 &&
+            wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current, oldPos?.x, oldPos?.y)
+          ) {
+            return;
+          }
+
+          onMoveTokenRef.current(drag.id, snapped);
+
+          if (followCameraOnTokenMoveRef.current) {
+            const effectiveSize = ((movingToken?.size || 1) * (configRef.current.gridSize || 50));
+            centerOnWorldPositionImmediate(
+              snapped.x + effectiveSize / 2,
+              snapped.y + effectiveSize / 2
+            );
+          }
+        }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
         // -------------------
         // Pinceau fog : peinture continue
