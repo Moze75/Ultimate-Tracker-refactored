@@ -1717,34 +1717,7 @@ useEffect(() => {
   vttService.sendBroadcastViewport(broadcastFrame);
 }, [role, broadcastFrameEnabled, broadcastMode, broadcastFrame]);
 
-useEffect(() => {
-  const previousPositions = previousTokenPositionsRef.current;
 
-  const movedTokens = tokens.filter((token) => {
-    const prev = previousPositions[token.id];
-    return !!prev && (prev.x !== token.position.x || prev.y !== token.position.y);
-  });
-
-  previousTokenPositionsRef.current = Object.fromEntries(
-    tokens.map((token) => [token.id, { x: token.position.x, y: token.position.y }])
-  );
-
-  if (!followCameraOnTokenMove) return;
-  if (movedTokens.length === 0) return;
-
-  const followedToken =
-    role === 'gm'
-      ? movedTokens[0]
-      : movedTokens.find((token) => token.controlledByUserIds?.includes(userId));
-
-  if (!followedToken) return;
-
-  const gridSize = (config.gridSize || 50) * (followedToken.size || 1);
-  const centerX = followedToken.position.x + gridSize / 2;
-  const centerY = followedToken.position.y + gridSize / 2;
-
-  vttCanvasRef.current?.followWorldPosition(centerX, centerY);
-}, [tokens, followCameraOnTokenMove, role, userId, config.gridSize]);
 
   useEffect(() => {
   if (!followCameraOnTokenMove) {
