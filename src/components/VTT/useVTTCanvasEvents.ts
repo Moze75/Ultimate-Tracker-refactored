@@ -2033,16 +2033,14 @@ if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
       else if (e.key === 'ArrowDown') dy = c;
       else return;
       e.preventDefault();
-const newX = token.position.x + dx;
-const newY = token.position.y + dy;
-const tokenSizePx = (token.size || 1) * c;
-const currentWalls = wallsRef.current || [];
-if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
+      const newX = token.position.x + dx;
+      const newY = token.position.y + dy;
+      const tokenSizePx = (token.size || 1) * c;
+      const currentWalls = wallsRef.current || [];
+      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
 onMoveTokenRef.current(
   selId,
-  { x: newX, y: newY },
-  { localCameraFollow: followCameraOnTokenMoveRef.current }
-);
+  { x: newX, y: newY }, 
   { localCameraFollow: followCameraOnTokenMoveRef.current }
 );
     };
