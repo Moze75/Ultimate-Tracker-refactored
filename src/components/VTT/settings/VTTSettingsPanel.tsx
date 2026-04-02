@@ -148,8 +148,10 @@ export function VTTSettingsPanel({
       )}
 
       <SettingsSection title="Salle" defaultOpen={false}>
-        <div className="font-mono text-gray-300 text-xs break-all bg-gray-800 rounded px-2 py-1.5 border border-gray-700">
-          {roomId}
+        <div className="pt-3 border-t border-gray-800">
+          <div className="font-mono text-gray-300 text-xs break-all">
+            {roomId}
+          </div>
         </div>
       </SettingsSection>
     </div>
