@@ -709,10 +709,12 @@ const visibleTokens = isGM
           />
         )}
 
-          {activeTab === 'settings' && (
+        {activeTab === 'settings' && (
           <VTTSettingsPanel
             autoFocusCombatTurn={autoFocusCombatTurn}
             onToggleAutoFocusCombatTurn={onToggleAutoFocusCombatTurn}
+            followCameraOnTokenMove={followCameraOnTokenMove}
+            onToggleFollowCameraOnTokenMove={onToggleFollowCameraOnTokenMove}
             onSaveScene={onSaveScene}
             roomId={roomId}
             saving={saving}
