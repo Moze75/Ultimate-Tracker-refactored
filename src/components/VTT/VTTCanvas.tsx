@@ -268,6 +268,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onViewportChangeRef.current = onViewportChange;
   const onTokenDoubleClickRef = useRef(onTokenDoubleClick);
   onTokenDoubleClickRef.current = onTokenDoubleClick;
+    const followCameraOnTokenMoveRef = useRef(followCameraOnTokenMove);
+  followCameraOnTokenMoveRef.current = followCameraOnTokenMove;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
    
