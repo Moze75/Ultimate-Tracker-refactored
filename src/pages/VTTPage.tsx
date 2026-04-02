@@ -251,6 +251,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const fogStateRef = useRef(fogState);
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
+  const previousTokenPositionsRef = useRef<Record<string, { x: number; y: number }>>({});
   const activeSceneIdRef = useRef(activeSceneId);
   activeSceneIdRef.current = activeSceneId;
 
