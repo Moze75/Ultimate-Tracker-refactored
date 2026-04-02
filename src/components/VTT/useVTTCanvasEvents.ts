@@ -2047,7 +2047,14 @@ if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
       const tokenSizePx = (token.size || 1) * c;
       const currentWalls = wallsRef.current || [];
       if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
-      onMoveTokenRef.current(selId, { x: newX, y: newY });
+         onMoveTokenRef.current(selId, { x: newX, y: newY });
+
+      if (followCameraOnTokenMoveRef.current) {
+        centerOnWorldPositionImmediate(
+          newX + tokenSizePx / 2,
+          newY + tokenSizePx / 2
+        );
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
