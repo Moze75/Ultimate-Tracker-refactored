@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Users, Map, Settings, Eye, EyeOff, Trash2, Upload, LogOut, Package, RefreshCw, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull, Swords, MessageSquare } from 'lucide-react';
+import { Users, Map, Settings, Eye, EyeOff, Trash2, LogOut, Package, DoorOpen, ChevronRight, ChevronLeft, ChevronDown, Skull, Swords, MessageSquare } from 'lucide-react';
 import type { VTTToken, VTTRoomConfig, VTTProp, VTTChatMessage } from '../../types/vtt';
 import { VTTChatPanel } from './VTTChatPanel'; 
 import { VTTPropsPanel } from './VTTPropsPanel';
