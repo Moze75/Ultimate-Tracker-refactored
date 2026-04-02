@@ -236,6 +236,40 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         viewportFollowAnimRef.current = null;
       }
     },
+    triggerCombatTurnHighlight: (tokenId: string) => {
+      combatTurnHighlightRef.current = {
+        tokenId,
+        startedAt: performance.now(),
+      };
+
+      if (combatTurnHighlightAnimRef.current) {
+        cancelAnimationFrame(combatTurnHighlightAnimRef.current);
+        combatTurnHighlightAnimRef.current = null;
+      }
+
+      const duration = 1400;
+      const tick = () => {
+        const current = combatTurnHighlightRef.current;
+        if (!current || current.tokenId !== tokenId) {
+          combatTurnHighlightAnimRef.current = null;
+          return;
+        }
+
+        const elapsed = performance.now() - current.startedAt;
+        drawRef.current();
+
+        if (elapsed >= duration) {
+          combatTurnHighlightRef.current = null;
+          combatTurnHighlightAnimRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        combatTurnHighlightAnimRef.current = requestAnimationFrame(tick);
+      };
+
+      combatTurnHighlightAnimRef.current = requestAnimationFrame(tick);
+    },
     
     // -------------------
     // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
