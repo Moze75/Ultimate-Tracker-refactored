@@ -2163,6 +2163,7 @@ onSelectTokens={ids => {
             onViewportChange={handleCanvasViewportChange}
             onSeenDoorsUpdate={role === 'player' ? handleSeenDoorsUpdate : undefined}
             fogResetSignal={fogResetSignal}
+            followCameraOnTokenMove={followCameraOnTokenMove}
           />
 
           {/* -------------------
