@@ -1439,14 +1439,7 @@ const fuseWallPoints = (
             onMoveTokenRef.current(tid, newPos);
           });
 
-          if (followCameraOnTokenMoveRef.current) {
-            const movedToken = tokensRef.current.find(t => t.id === drag.id);
-            const effectiveSize = ((movedToken?.size || 1) * (configRef.current.gridSize || 50));
-            centerOnWorldPositionImmediate(
-              snapped.x + effectiveSize / 2,
-              snapped.y + effectiveSize / 2
-            );
-          }
+
         } else {
           const movingToken = tokensRef.current.find(t => t.id === drag.id);
           const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
