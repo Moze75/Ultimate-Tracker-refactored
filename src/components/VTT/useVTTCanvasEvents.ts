@@ -154,6 +154,8 @@ export function useVTTCanvasEvents({
     getTokenAt,
     snapToGrid,
     activeTool,
+    followCameraOnTokenMoveRef,
+    centerOnWorldPositionImmediate,
 }: VTTCanvasRefs) {
 
 
