@@ -54,6 +54,8 @@ interface VTTSidebarProps {
   onChatRollConsumed?: () => void;
   autoFocusCombatTurn?: boolean;
   onToggleAutoFocusCombatTurn?: () => void;
+  followCameraOnTokenMove?: boolean;
+  onToggleFollowCameraOnTokenMove?: () => void;
   onFocusCombatTokenByLabel?: (displayName: string) => void;
 }
 
