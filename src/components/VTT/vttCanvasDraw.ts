@@ -335,8 +335,23 @@ const myVisionTokens = isPlayerVisionSpectator
   return myControlledTokens.some(mt => mt.id === token.id);
 };
 
+const combatTurnHighlight = ctx2d.combatTurnHighlightRef.current;
+const now = performance.now();
+
 ctx2d.tokensRef.current.forEach(token => {
   if (curRole === 'player' && !isTokenVisibleToPlayer(token)) return;
+
+  if (combatTurnHighlight?.tokenId === token.id) {
+    drawCombatTurnHighlight({
+      ctx,
+      token,
+      CELL,
+      now,
+      startedAt: combatTurnHighlight.startedAt,
+      scale: vp.scale,
+    });
+  }
+
   drawToken({
     ctx,
     token,
