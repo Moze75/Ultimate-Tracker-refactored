@@ -1732,6 +1732,20 @@ useEffect(() => {
   vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
 }, [tokens, cameraFollowTokenId, followCameraOnTokenMove, config.gridSize]);
 
+  useEffect(() => {
+  if (!followCameraOnTokenMove) return;
+  if (!cameraFollowTokenId) return;
+
+  const token = tokens.find((t) => t.id === cameraFollowTokenId);
+  if (!token) return;
+
+  const gridSize = (config.gridSize || 50) * (token.size || 1);
+  const centerX = token.position.x + gridSize / 2;
+  const centerY = token.position.y + gridSize / 2;
+
+  vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
+}, [tokens, cameraFollowTokenId, followCameraOnTokenMove, config.gridSize]);
+
   // const handleSaveScene = useCallback(async () => { // Unused, removed
   /*
   const handleSaveScene = useCallback(async () => {
