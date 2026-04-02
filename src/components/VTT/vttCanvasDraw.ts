@@ -81,6 +81,70 @@ export interface VTTDrawContext {
 // En animation torche (~60fps), cela évite de créer un canvas
 // mapW×mapH + fillRect + drawImage à chaque frame.
 // -------------------
+function drawCombatTurnHighlight(params: {
+  ctx: CanvasRenderingContext2D;
+  token: VTTToken;
+  CELL: number;
+  now: number;
+  startedAt: number;
+  scale: number;
+}) {
+  const { ctx, token, CELL, now, startedAt, scale } = params;
+
+  const elapsed = now - startedAt;
+  const duration = 1400;
+  if (elapsed < 0 || elapsed > duration) return;
+
+  const progress = elapsed / duration;
+  const easeOut = 1 - Math.pow(1 - progress, 3);
+  const pulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 3.2);
+
+  const tokenSize = (token.size || 1) * CELL;
+  const cx = token.position.x + tokenSize / 2;
+  const cy = token.position.y + tokenSize / 2;
+
+  const baseRadius = tokenSize * 0.62;
+  const outerRadius = baseRadius + tokenSize * 0.12 + pulse * tokenSize * 0.08;
+  const haloRadius = baseRadius + tokenSize * 0.28 + pulse * tokenSize * 0.14;
+  const flashRadius = baseRadius + easeOut * tokenSize * 0.55;
+
+  ctx.save();
+
+  // Halo doux ambre
+  const haloGradient = ctx.createRadialGradient(cx, cy, baseRadius * 0.35, cx, cy, haloRadius);
+  haloGradient.addColorStop(0, `rgba(251,191,36,${0.22 * (1 - progress)})`);
+  haloGradient.addColorStop(0.6, `rgba(245,158,11,${0.14 * (1 - progress)})`);
+  haloGradient.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = haloGradient;
+  ctx.beginPath();
+  ctx.arc(cx, cy, haloRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flash radial très court au début
+  if (progress < 0.45) {
+    ctx.strokeStyle = `rgba(255,245,200,${0.55 * (1 - progress / 0.45)})`;
+    ctx.lineWidth = Math.max(2.5, 4 / scale);
+    ctx.beginPath();
+    ctx.arc(cx, cy, flashRadius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Anneau principal pulsant
+  ctx.strokeStyle = `rgba(251,191,36,${0.95 - progress * 0.35})`;
+  ctx.lineWidth = Math.max(2.5, 4 / scale);
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Anneau interne plus lumineux
+  ctx.strokeStyle = `rgba(255,255,255,${0.85 - progress * 0.45})`;
+  ctx.lineWidth = Math.max(1.5, 2 / scale);
+  ctx.beginPath();
+  ctx.arc(cx, cy, baseRadius + pulse * tokenSize * 0.03, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
 function getOrBuildFogInv(ctx2d: VTTDrawContext, mapW: number, mapH: number): HTMLCanvasElement | null {
   if (!ctx2d.fogCanvasRef.current || !mapW || !mapH) return null;
 
