@@ -1741,7 +1741,7 @@ useEffect(() => {
   const centerX = followedToken.position.x + gridSize / 2;
   const centerY = followedToken.position.y + gridSize / 2;
 
-  vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
+  vttCanvasRef.current?.centerOnWorldPositionImmediate(centerX, centerY);
 }, [tokens, followCameraOnTokenMove, role, userId, config.gridSize]);
 
 
