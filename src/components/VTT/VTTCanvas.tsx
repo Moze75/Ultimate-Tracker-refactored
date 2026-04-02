@@ -1133,7 +1133,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     selectedWallPointsRef,
      onViewportChangeRef,
     onTokenDoubleClickRef,
-        followCameraOnTokenMoveRef,
     // -------------------
     // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle au mouseUp)
     // -------------------
