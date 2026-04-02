@@ -2337,7 +2337,7 @@ onSelectTokens={ids => {
             pendingChatRoll={pendingChatRoll}
             onChatRollConsumed={() => setPendingChatRoll(null)}
               autoFocusCombatTurn={autoFocusCombatTurn}
-  onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)}
+  onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)} 
   onFocusCombatTokenByLabel={focusCombatTokenByLabel}
               followCameraOnTokenMove={followCameraOnTokenMove}
   onToggleFollowCameraOnTokenMove={() => setFollowCameraOnTokenMove((prev) => !prev)}
