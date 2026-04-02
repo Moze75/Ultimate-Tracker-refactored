@@ -67,6 +67,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
   const viewportFocusAnimRef = useRef<number | null>(null);
+  const viewportFollowAnimRef = useRef<number | null>(null);
+  const viewportFollowTargetRef = useRef<{ x: number; y: number } | null>(null);
 
     const sceneIdRef = useRef<string | null>(sceneId ?? null);
 
