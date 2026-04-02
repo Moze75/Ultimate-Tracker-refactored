@@ -118,6 +118,8 @@ export function VTTSidebar({
   onChatRollConsumed,
   autoFocusCombatTurn = true,
   onToggleAutoFocusCombatTurn,
+  followCameraOnTokenMove = false,
+  onToggleFollowCameraOnTokenMove,
   onFocusCombatTokenByLabel,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
