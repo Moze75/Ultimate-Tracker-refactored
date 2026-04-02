@@ -2343,6 +2343,8 @@ onSelectTokens={ids => {
               autoFocusCombatTurn={autoFocusCombatTurn}
   onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)}
   onFocusCombatTokenByLabel={focusCombatTokenByLabel}
+              followCameraOnTokenMove={followCameraOnTokenMove}
+  onToggleFollowCameraOnTokenMove={() => setFollowCameraOnTokenMove((prev) => !prev)}
           />
         </div>
       </div>
