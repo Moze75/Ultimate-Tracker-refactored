@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, RefreshCw, Upload } from 'lucide-react';
+import { ChevronDown, ChevronRight, RefreshCw, Upload } from 'lucide-react'; 
 
 interface VTTSettingsPanelProps {
   autoFocusCombatTurn?: boolean;
