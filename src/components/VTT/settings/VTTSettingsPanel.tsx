@@ -64,7 +64,7 @@ function SettingsSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <section className="border border-gray-700 rounded-lg overflow-hidden bg-gray-900/40">
+<section className="border-b border-gray-800 pb-2">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
