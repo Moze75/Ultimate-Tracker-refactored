@@ -130,6 +130,8 @@ export function VTTCombatTab({
     onUpdateToken,
   });
 
+    const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!autoFocusCombatTurn) {
       lastAutoFocusedTurnKeyRef.current = null;
