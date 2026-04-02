@@ -24,6 +24,7 @@ export interface VTTDrawContext {
   selectedTokenIdRef: React.MutableRefObject<string | null>;
   selectedTokenIdsRef: React.MutableRefObject<string[]>;
   tokensRef: React.MutableRefObject<VTTToken[]>;
+    combatTurnHighlightRef: React.MutableRefObject<{ tokenId: string; startedAt: number } | null>;
   wallsRef: React.MutableRefObject<VTTWall[] | undefined>;
   doorsRef: React.MutableRefObject<VTTDoor[]>;
   windowsRef: React.MutableRefObject<VTTWindow[]>;
