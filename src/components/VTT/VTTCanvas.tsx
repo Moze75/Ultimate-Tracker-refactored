@@ -748,7 +748,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // -------------------
   // Gestion du snapshot local du masque exploré + nettoyage RAF peinture fog
   // -------------------
-  useEffect(() => {
+   useEffect(() => {
     return () => {
       // Annule le RAF de peinture fog si en cours
       if (fogPaintRafRef.current) {
@@ -762,11 +762,17 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         viewportFocusAnimRef.current = null;
       }
 
-            if (viewportFollowAnimRef.current) {
+      if (viewportFollowAnimRef.current) {
         cancelAnimationFrame(viewportFollowAnimRef.current);
         viewportFollowAnimRef.current = null;
       }
       viewportFollowTargetRef.current = null;
+
+      if (combatTurnHighlightAnimRef.current) {
+        cancelAnimationFrame(combatTurnHighlightAnimRef.current);
+        combatTurnHighlightAnimRef.current = null;
+      }
+      combatTurnHighlightRef.current = null;
 
       if (!exploredMaskWasResetRef.current) {
         saveExploredMaskSnapshot(sceneIdRef.current);
