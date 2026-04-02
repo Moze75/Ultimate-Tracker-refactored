@@ -614,7 +614,8 @@ const visibleTokens = isGM
               liveTokens={tokens}
               role={role}
               onUpdateToken={onUpdateToken}
-              autoFocusCombatTurn={autoFocusCombatTurn}
+                        autoFocusCombatTurn={autoFocusCombatTurn}
+            onToggleAutoFocusCombatTurn={onToggleAutoFocusCombatTurn}
               onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
             />
           ) : (
