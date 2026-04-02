@@ -238,6 +238,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
     const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
+    const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState(false);
 
 
   const [scenes, setScenes] = useState<VTTScene[]>([]);
