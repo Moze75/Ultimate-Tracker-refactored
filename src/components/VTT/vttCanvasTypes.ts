@@ -5,6 +5,8 @@ export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
   centerOnWorldPosition: (x: number, y: number) => void;
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
+  followWorldPosition: (x: number, y: number) => void;
+  stopFollowingWorldPosition: () => void;
   // -------------------
   // Permet à VTTPage de déclencher la sauvegarde du snapshot
   // avant de quitter vers le lobby
