@@ -34,7 +34,9 @@ export interface VTTCanvasRefs {
   isDragSelectingRef: React.MutableRefObject<boolean>;
   onSelectTokenRef: React.MutableRefObject<(id: string | null) => void>;
   onSelectTokensRef: React.MutableRefObject<((ids: string[]) => void) | undefined>;
-  onMoveTokenRef: React.MutableRefObject<(id: string, pos: { x: number; y: number }) => void>;
+  onMoveTokenRef: React.MutableRefObject<
+    (id: string, pos: { x: number; y: number }, options?: { localCameraFollow?: boolean }) => void
+  >;
   onRevealFogRef: React.MutableRefObject<(stroke: any) => void>;
   onResizeTokenRef: React.MutableRefObject<((id: string, size: number) => void) | undefined>;
   onRightClickTokenRef: React.MutableRefObject<((token: VTTToken, x: number, y: number) => void) | undefined>;
