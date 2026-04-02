@@ -339,6 +339,7 @@ const focusCombatTokenByLabel = useCallback((displayName: string) => {
     vttCanvasRef.current?.stopFollowingWorldPosition();
   }
 
+  vttCanvasRef.current?.triggerCombatTurnHighlight(token.id);
   vttCanvasRef.current?.centerOnWorldPosition(centerX, centerY);
 }, [tokens, config.gridSize, followCameraOnTokenMove]);
   
