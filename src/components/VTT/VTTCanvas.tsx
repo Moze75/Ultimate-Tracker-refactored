@@ -1149,6 +1149,54 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     snapToGrid,
     activeTool,
     followCameraOnTokenMoveRef,
+    centerOnWorldPosition: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
+      const start = { ...viewportRef.current };
+      const targetX = canvas.width / 2 - x * start.scale;
+      const targetY = canvas.height / 2 - y * start.scale;
+      const duration = 280;
+      const startTime = performance.now();
+
+      const easeInOutCubic = (t: number) =>
+        t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const rawT = Math.min(1, elapsed / duration);
+        const t = easeInOutCubic(rawT);
+
+        viewportRef.current = {
+          ...viewportRef.current,
+          x: start.x + (targetX - start.x) * t,
+          y: start.y + (targetY - start.y) * t,
+        };
+
+        onViewportChangeRef.current?.({
+          x: viewportRef.current.x,
+          y: viewportRef.current.y,
+          scale: viewportRef.current.scale,
+        });
+
+        drawRef.current();
+
+        if (rawT < 1) {
+          viewportFocusAnimRef.current = requestAnimationFrame(animate);
+        } else {
+          viewportFocusAnimRef.current = null;
+        }
+      };
+
+      viewportFocusAnimRef.current = requestAnimationFrame(animate);
+    },
     centerOnWorldPositionImmediate: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
