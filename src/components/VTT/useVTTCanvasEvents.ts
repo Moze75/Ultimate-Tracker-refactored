@@ -1455,13 +1455,7 @@ const fuseWallPoints = (
 
           onMoveTokenRef.current(drag.id, snapped);
 
-          if (followCameraOnTokenMoveRef.current) {
-            const effectiveSize = ((movingToken?.size || 1) * (configRef.current.gridSize || 50));
-            centerOnWorldPositionImmediate(
-              snapped.x + effectiveSize / 2,
-              snapped.y + effectiveSize / 2
-            );
-          }
+
         }
       } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
         // -------------------
