@@ -774,7 +774,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     };
   }, [saveExploredMaskSnapshot]);
 
+      if (viewportFollowAnimRef.current) {
+        cancelAnimationFrame(viewportFollowAnimRef.current);
+        viewportFollowAnimRef.current = null;
+      }
 
+      viewportFollowTargetRef.current = null;
 
   const getCanvasXY = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
