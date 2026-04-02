@@ -34,7 +34,11 @@ export interface VTTCanvasProps {
   userId: string;
   activeTool: VTTActiveTool;
   fogBrushSize: number;
-  onMoveToken: (tokenId: string, position: { x: number; y: number }) => void;
+  onMoveToken: (
+    tokenId: string,
+    position: { x: number; y: number },
+    options?: { localCameraFollow?: boolean }
+  ) => void;
   // -------------------
   // Accepte un stroke unique OU un batch de strokes pour le painting continu
   // -------------------
