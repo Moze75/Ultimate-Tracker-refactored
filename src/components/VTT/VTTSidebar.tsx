@@ -9,6 +9,7 @@ import { VTTMonsterBestiary } from './VTTMonsterBestiary';
 import type { MonsterListItem, Monster, CampaignMember } from '../../types/campaign';
 import { campaignService } from '../../services/campaignService';
 import { VTTCombatTab } from './combat/VTTCombatTab';
+import { VTTSettingsPanel } from './settings/VTTSettingsPanel';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat';
 
