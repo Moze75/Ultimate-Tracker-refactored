@@ -79,6 +79,8 @@ export interface VTTCanvasRefs {
   getTokenAt: (wx: number, wy: number) => VTTToken | null;
   snapToGrid: (wx: number, wy: number) => { x: number; y: number };
   activeTool: VTTActiveTool;
+  followCameraOnTokenMoveRef: React.MutableRefObject<boolean>;
+  centerOnWorldPositionImmediate: (x: number, y: number) => void;
 }
 
 // État interne partagé pour l'édition de murs (wall-select)
