@@ -2043,7 +2043,7 @@ if (followCameraOnTokenMoveRef.current) {
     newX + tokenSizePx / 2,
     newY + tokenSizePx / 2
   );
-}
+
       }
     };
     window.addEventListener('keydown', handleKey);
