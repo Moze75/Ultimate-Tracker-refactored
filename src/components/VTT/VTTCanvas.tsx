@@ -901,6 +901,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       selectedTokenIdRef,
       selectedTokenIdsRef,
       tokensRef,
+            combatTurnHighlightRef,
       wallsRef,
       doorsRef,
       windowsRef,
