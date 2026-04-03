@@ -955,26 +955,7 @@ function PrepRow({
   );
 }
 
-// ---------------------------------------------------------------------------
-// HpBar
-// ---------------------------------------------------------------------------
-function HpBar({ current, max, temp = 0 }: { current: number; max: number; temp?: number }) {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
-  const tempPct = max > 0 ? Math.max(0, Math.min(100 - pct, (temp / max) * 100)) : 0;
 
-  let color = 'bg-emerald-500';
-  if (pct <= 25) color = 'bg-red-500';
-  else if (pct <= 50) color = 'bg-amber-500';
-
-  return (
-    <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden flex">
-      <div className={`h-full ${color} transition-all duration-300`} style={{ width: `${pct}%` }} />
-      {temp > 0 && (
-        <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${tempPct}%` }} />
-      )}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // ConditionBadges
