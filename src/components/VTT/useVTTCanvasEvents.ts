@@ -14,6 +14,8 @@ export interface VTTCanvasRefs {
   activeToolRef: React.MutableRefObject<VTTActiveTool>;
   fogBrushSizeRef: React.MutableRefObject<number>;
   wallsRef: React.MutableRefObject<any[]>;
+    restrictPlayerMovementOutsideTurnRef: React.MutableRefObject<boolean>;
+  currentCombatTurnLabelRef: React.MutableRefObject<string | null>;
   wallPointsRef: React.MutableRefObject<{ x: number; y: number }[]>;
   wallPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   measureStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -84,8 +86,7 @@ export interface VTTCanvasRefs {
   followCameraOnTokenMoveRef: React.MutableRefObject<boolean>;
   centerOnWorldPosition: (x: number, y: number) => void;
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
-    restrictPlayerMovementOutsideTurnRef: React.MutableRefObject<boolean>;
-  currentCombatTurnLabelRef: React.MutableRefObject<string | null>;
+
 }
 
 // État interne partagé pour l'édition de murs (wall-select)
