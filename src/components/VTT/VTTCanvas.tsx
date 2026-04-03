@@ -1282,6 +1282,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     snapToGrid,
     activeTool,
     followCameraOnTokenMoveRef,
+    restrictPlayerMovementOutsideTurnRef,
+    currentCombatTurnLabelRef,
     centerOnWorldPosition: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
