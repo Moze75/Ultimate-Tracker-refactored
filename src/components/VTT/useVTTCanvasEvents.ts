@@ -1445,12 +1445,15 @@ const fuseWallPoints = (
             onMoveTokenRef.current(tid, newPos);
           });
 
-
         } else {
           const movingToken = tokensRef.current.find(t => t.id === drag.id);
           const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
           const currentWalls = wallsRef.current || [];
           const oldPos = movingToken?.position;
+
+          if (isPlayerBlockedByTurnLock(movingToken)) {
+            return;
+          }
 
           if (
             currentWalls.length > 0 &&
