@@ -79,4 +79,5 @@ export interface VTTCanvasProps {
   followCameraOnTokenMove?: boolean;
   restrictPlayerMovementOutsideTurn?: boolean;
   currentCombatTurnLabel?: string | null;
+    isCombatActive?: boolean;
 }
