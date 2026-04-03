@@ -7,7 +7,6 @@ import { useVTTCanvasEvents } from './useVTTCanvasEvents';
 import { drawVTTCanvas } from './vttCanvasDraw';
 
 
-
 // -------------------
 // Gestion du snapshot local du masque exploré
 // -------------------
@@ -56,7 +55,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   fogResetSignal = 0,
   onTokenDoubleClick,
   followCameraOnTokenMove = false,
-  restrictPlayerMovementOutsideTurn = false,
+  restrictPlayerMovementOutsideTurn = true,
   currentCombatTurnLabel = null,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -531,7 +530,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         })
       );
 
-
+      return true;
 
     } catch (error) {
       console.warn('[FOG-SNAPSHOT] save: ERREUR', error);
@@ -696,8 +695,6 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
                 JSON.stringify({ width: sw, height: sh, dataUrl })
               );
 
-
-
             }
           } catch (e) {
             console.warn('[FOG-SNAPSHOT] save gelé ERREUR:', e);
@@ -787,9 +784,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     };
   }, [saveExploredMaskSnapshot]);
 
-
-
-  const getCanvasXY = (clientX: number, clientY: number) => {
+   const getCanvasXY = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
