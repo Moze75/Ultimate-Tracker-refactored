@@ -335,6 +335,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const [mapLoading, setMapLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+    const [turnLockMessageVisible, setTurnLockMessageVisible] = useState(false);
 
   // Sync all props to refs so native event handlers always read current values
   const tokensRef = useRef(tokens);
