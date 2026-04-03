@@ -282,13 +282,13 @@ const fuseWallPoints = (
   }
 };
 
-    const isPlayerBlockedByTurnLock = (token: VTTToken | null | undefined) => {
+  const isPlayerBlockedByTurnLock = (token: VTTToken | null | undefined) => {
     if (roleRef.current !== 'player') return false;
     if (!restrictPlayerMovementOutsideTurnRef.current) return false;
-    if (!token) return true;
-
+    // Pas de combat actif (label null) = pas de blocage
     const currentTurnLabel = currentCombatTurnLabelRef.current;
-    if (!currentTurnLabel) return true;
+    if (!currentTurnLabel) return false;
+    if (!token) return true;
 
     return token.label !== currentTurnLabel;
   };
