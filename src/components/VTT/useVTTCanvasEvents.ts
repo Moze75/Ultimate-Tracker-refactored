@@ -440,11 +440,8 @@ const fuseWallPoints = (
           // -------------------
           // Un joueur peut sélectionner n'importe quel token pour le ciblage,
           // mais seul le MJ ou le propriétaire peut le déplacer.
-          if (canControl) {
-            if (isPlayerBlockedByTurnLock(token)) {
-              onBlockedByTurnLock?.();
-            } else {
-              const multiSel = selectedTokenIdsRef.current;
+          if (canControl && !isPlayerBlockedByTurnLock(token)) { 
+            const multiSel = selectedTokenIdsRef.current;
             if (multiSel.length > 1 && multiSel.includes(token.id)) {
               const initialPositions = new Map<string, { x: number; y: number }>();
               tokensRef.current.forEach(t => {
