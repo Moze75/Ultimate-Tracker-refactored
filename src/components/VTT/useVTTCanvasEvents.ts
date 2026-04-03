@@ -418,7 +418,7 @@ const fuseWallPoints = (
         }
 
         const token = getTokenAt(wp.x, wp.y);
-        if (token) {
+         if (token) {
           const canControl = roleRef.current === 'gm' || (token.controlledByUserIds?.includes(userIdRef.current) ?? false);
 
           // -------------------
@@ -426,7 +426,7 @@ const fuseWallPoints = (
           // -------------------
           // Un joueur peut sélectionner n'importe quel token pour le ciblage,
           // mais seul le MJ ou le propriétaire peut le déplacer.
-          if (canControl) {
+          if (canControl && !isPlayerBlockedByTurnLock(token)) {
             const multiSel = selectedTokenIdsRef.current;
             if (multiSel.length > 1 && multiSel.includes(token.id)) {
               const initialPositions = new Map<string, { x: number; y: number }>();
