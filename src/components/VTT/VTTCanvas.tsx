@@ -1300,6 +1300,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     followCameraOnTokenMoveRef,
     restrictPlayerMovementOutsideTurnRef,
     currentCombatTurnLabelRef,
+    onBlockedByTurnLock: showTurnLockMessage,
     centerOnWorldPosition: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
