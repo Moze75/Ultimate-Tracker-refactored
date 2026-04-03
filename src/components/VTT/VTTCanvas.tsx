@@ -1,1241 +1,2011 @@
-import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import type { VTTToken, VTTFogStroke, VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
-import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
-import { wallBlocksToken } from './vttCanvasUtils';
-import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
-import { useVTTCanvasEvents } from './useVTTCanvasEvents';
-import { drawVTTCanvas } from './vttCanvasDraw';
+import { useEffect, useRef } from 'react';
+import type { VTTToken, VTTDoor, VTTWindow } from '../../types/vtt';
+import { wallBlocksToken, getDoorT1T2, getWindowT1T2 } from './vttCanvasUtils';
+import type { VTTActiveTool } from './VTTLeftToolbar';
 
+export interface VTTCanvasRefs {
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+  brushOverlayRef: React.RefObject<HTMLDivElement>;
+  viewportRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
+  tokensRef: React.MutableRefObject<VTTToken[]>;
+  configRef: React.MutableRefObject<any>;
+  roleRef: React.MutableRefObject<string>;
+  userIdRef: React.MutableRefObject<string>;
+  activeToolRef: React.MutableRefObject<VTTActiveTool>;
+  fogBrushSizeRef: React.MutableRefObject<number>;
+  wallsRef: React.MutableRefObject<any[]>;
+  restrictPlayerMovementOutsideTurnRef: React.MutableRefObject<boolean>;
+  currentCombatTurnLabelRef: React.MutableRefObject<string | null>;
+  onBlockedMoveAttemptRef: React.MutableRefObject<((message: string) => void) | undefined>;
+  // ...existing code...
+}
 
+// État interne partagé pour l'édition de murs (wall-select)
+// wallEditStateRef : { wallId, pointIndex } du point en cours de drag
 
-// -------------------
-// Gestion du snapshot local du masque exploré
-// -------------------
-export const getExploredMaskStorageKey = (sceneId: string) => `vtt:explored-mask:${sceneId}`;
-
-export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VTTCanvas({
-  sceneId,
-  config,
-  tokens,
-  fogState,
-  role,
-  userId,
+export function useVTTCanvasEvents({
+  canvasRef,
+  brushOverlayRef,
+  viewportRef,
+  tokensRef,
+  configRef,
+  roleRef,
+  userIdRef,
+  activeToolRef,
+  fogBrushSizeRef,
+  wallsRef,
+  wallPointsRef,
+  wallPreviewPosRef,
+  measureStartRef,
+  measureEndRef,
+  measureLockedRef,
+  selectedTokenIdRef,
+  selectedTokenIdsRef,
+  draggingTokenRef,
+  resizingTokenRef,
+  isPaintingFogRef,
+  lastPanRef,
+  isPanningRef,
+  selectionRectRef,
+  fogRectRef,
+  isDragSelectingRef,
+  onSelectTokenRef,
+  onSelectTokensRef,
+  onMoveTokenRef,
+  // -------------------
+  // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle)
+  // -------------------
+  onRevealFogRef,
+  onResizeTokenRef,
+  onRightClickTokenRef,
+  onCalibrationPointRef,
+  onWallAddedRef,
+  onWallUpdatedRef,
+  onWallRemovedRef,
+  doorsRef,
+  onDoorAddedRef,
+  onDoorToggledRef,
+  onDoorRemovedRef,
+  doorInProgressRef,
+  doorPreviewPosRef,
+  selectedDoorRef,
+  hoveredDoorRef,
+  selectedDoorEndpointRef,
+  windowsRef,
+  onWindowAddedRef,
+  onWindowRemovedRef,
+  windowInProgressRef,
+  windowPreviewPosRef,
+  hoveredWindowRef,
+  selectedWindowRef,
+  selectedWindowEndpointRef,
+  selectedWallPointRef,
+  selectedWallPointsRef,
+  onViewportChangeRef,
+  onTokenDoubleClickRef,
+  drawRef,
+  paintFogAt,
+  flushFogBatch,
+  getCanvasXY,
+  screenToWorld,
+  getTokenAt,
+  snapToGrid,
   activeTool,
-  fogBrushSize,
-  onMoveToken,
-  onRevealFog,
-  selectedTokenId,
-  onSelectToken,
-  selectedTokenIds = [],
-  onSelectTokens,
-  onRightClickToken,
-  onMapDimensions,
-  onDropToken,
-  onDropProp,
-  onAddTokenAtPos,
-  onResizeToken,
-  calibrationPoints,
-  onCalibrationPoint,
-  walls,
-  onWallAdded,
-  onWallUpdated,
-  onWallRemoved,
-  showWalls = false,
-  doors,
-  onDoorAdded,
-  onDoorToggled,
-  onDoorRemoved,
-  windows,
-  onWindowAdded,
-  onWindowRemoved,
-  forceViewport: forceViewportProp = null,
-  initialViewport = null,
-  onViewportChange,
-  spectatorMode = 'none',
-  onSeenDoorsUpdate,
-  fogResetSignal = 0,
-  onTokenDoubleClick,
-}: VTTCanvasProps, ref) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const brushOverlayRef = useRef<HTMLDivElement>(null);
+  followCameraOnTokenMoveRef,
+  restrictPlayerMovementOutsideTurnRef,
+  currentCombatTurnLabelRef,
+  centerOnWorldPosition,
+  centerOnWorldPositionImmediate,
+}: VTTCanvasRefs) {
 
-  const mapImgRef = useRef<HTMLImageElement | null>(null);
-  const mapLoadedRef = useRef(false);
-  const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
-  const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
-  const viewportFocusAnimRef = useRef<number | null>(null);
+  // Refs internes pour l'édition de points de mur (wall-select)
+  // Ajout de la propriété phase pour suivre l'état du drag d'un point de mur
+  interface DraggingWallPoint {
+    wallId: string;
+    pointIndex: number;
+    originalX: number;
+    originalY: number;
+    phase?: 'selected' | 'moving';
+  }
+  const draggingWallPointRef = useRef<DraggingWallPoint | null>(null);
 
-    const sceneIdRef = useRef<string | null>(sceneId ?? null);
+  // Ref interne pour le drag d'une porte en mode wall-select
+  const draggingDoorRef = useRef<{
+    doorId: string;
+    wallId: string;
+    segmentIndex: number;
+  } | null>(null);
 
-  // -------------------
-  // Ref de la fonction save pour éviter la dépendance d'ordre avec useImperativeHandle
-  // (useImperativeHandle est déclaré avant saveExploredMaskSnapshot dans le fichier)
-  // -------------------
-  const saveExploredMaskSnapshotRef = useRef<((targetSceneId?: string | null) => void) | null>(null);
+  // Ref interne pour le drag d'un endpoint de porte (t1 ou t2) en mode wall-select
+  const draggingDoorEndpointRef = useRef<{
+    doorId: string;
+    wallId: string;
+    segmentIndex: number;
+    endpoint: 't1' | 't2';
+  } | null>(null);
 
-  useImperativeHandle(ref, () => ({
-    getViewportCenter: () => {
-      const vp = viewportRef.current;
-      const canvas = canvasRef.current;
-      if (!canvas) return { x: 0, y: 0 };
-      return {
-        x: (canvas.width / 2 - vp.x) / vp.scale,
-        y: (canvas.height / 2 - vp.y) / vp.scale,
-      };
-    },
-    centerOnWorldPosition: (x: number, y: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
+  // Refs internes pour le drag d'une fenêtre et de ses endpoints en mode wall-select
+  const draggingWindowRef = useRef<{
+    windowId: string;
+    wallId: string;
+    segmentIndex: number;
+  } | null>(null);
 
-      if (viewportFocusAnimRef.current) {
-        cancelAnimationFrame(viewportFocusAnimRef.current);
-        viewportFocusAnimRef.current = null;
+  const draggingWindowEndpointRef = useRef<{
+    windowId: string;
+    wallId: string;
+    segmentIndex: number;
+    endpoint: 't1' | 't2';
+  } | null>(null);
+
+  const SNAP_RADIUS_PX = 14;
+  const snapWallPoint = (
+    pos: { x: number; y: number },
+    walls: any[],
+    wallIdToIgnore?: string,
+    pointIndexToIgnore?: number
+  ): { x: number; y: number } => {
+    const scale = viewportRef.current.scale;
+    let best: { x: number; y: number } | null = null;
+    let bestDist = SNAP_RADIUS_PX / scale;
+    for (const w of walls) {
+      for (let pi = 0; pi < w.points.length; pi++) {
+        if (w.id === wallIdToIgnore && pi === pointIndexToIgnore) continue;
+        const pt = w.points[pi];
+        const dx = pt.x - pos.x;
+        const dy = pt.y - pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = pt;
+        }
+      }
+    }
+    return best ?? pos;
+  };
+
+  /**
+ * Après la création d'un nouveau mur, aligne les points existants d'autres murs
+ * qui sont co-localisés (dans le rayon de snap) avec les points du nouveau mur.
+ * Cela garantit que les nœuds partagés ont exactement les mêmes coordonnées,
+ * même si un léger décalage subsistait avant le snap.
+ */
+const fuseWallPoints = (
+  newPoints: { x: number; y: number }[],
+  allWalls: any[],
+  onWallUpdated: ((wall: any) => void) | undefined
+) => {
+  const scale = viewportRef.current.scale;
+  const fusionRadius = SNAP_RADIUS_PX / scale;
+
+  for (const newPt of newPoints) {
+    for (const wall of allWalls) {
+      let changed = false;
+      // Aligner les points co-localisés sur newPt
+      const fusedPoints = wall.points.map((pt: { x: number; y: number }) => {
+        const dx = pt.x - newPt.x;
+        const dy = pt.y - newPt.y;
+        if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
+          changed = true;
+          return { x: newPt.x, y: newPt.y };
+        }
+        return pt;
+      });
+      if (changed) {
+        // Dédoublonner : supprimer les points consécutifs identiques
+        const deduped = fusedPoints.filter(
+          (pt: { x: number; y: number }, i: number) =>
+            i === 0 ||
+            pt.x !== fusedPoints[i - 1].x ||
+            pt.y !== fusedPoints[i - 1].y
+        );
+        // Ne pas créer un mur avec moins de 2 points
+        const finalPoints = deduped.length >= 2 ? deduped : fusedPoints;
+        const updatedWall = { ...wall, points: finalPoints };
+        const idx = allWalls.findIndex(w => w.id === wall.id);
+        if (idx !== -1) allWalls[idx] = updatedWall;
+        onWallUpdated?.(updatedWall);
+      }
+    }
+  }
+};
+
+    const isPlayerBlockedByTurnLock = (token: VTTToken | null | undefined) => {
+    if (roleRef.current !== 'player') return false;
+    if (!restrictPlayerMovementOutsideTurnRef.current) return false;
+    if (!token) return true;
+
+    const currentTurnLabel = currentCombatTurnLabelRef.current;
+    if (!currentTurnLabel) return true;
+
+    return token.label !== currentTurnLabel;
+  };
+  
+  // Reset wall/measure state when tool changes
+  useEffect(() => {
+    if (activeTool !== 'wall-draw') {
+      wallPointsRef.current = [];
+      wallPreviewPosRef.current = null;
+    }
+    if (activeTool !== 'wall-select') {
+      draggingWallPointRef.current = null;
+    }
+    if (activeTool !== 'measure') {
+      measureStartRef.current = null;
+      measureEndRef.current = null;
+      measureLockedRef.current = false;
+    }
+    if (activeTool !== 'door-place') {
+      doorInProgressRef.current = null;
+      doorPreviewPosRef.current = null;
+    }
+    if (activeTool !== 'window-place') {
+      windowInProgressRef.current = null;
+      windowPreviewPosRef.current = null;
+    }
+    drawRef.current();
+  }, [activeTool]);
+
+  // Native mouse/wheel events
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+
+    const onMouseDown = (e: MouseEvent) => {
+      // Nouveau comportement :
+      // - Clic droit (bouton 2) = déplacement du canvas
+      // - Shift + clic droit = menu contextuel (ciblage)
+      // - Clic molette (bouton 1) = ignoré
+      // - Alt+gauche = ignoré
+      if (e.button === 2 && !e.shiftKey) {
+        lastPanRef.current = { x: e.clientX, y: e.clientY };
+        isPanningRef.current = true;
+        // Empêche le menu contextuel natif
+        e.preventDefault();
+        return;
+      }
+      // Shift + clic droit = menu contextuel (ciblage)
+      if (e.button === 2 && e.shiftKey) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const token2 = getTokenAt(wp2.x, wp2.y);
+        if (token2) {
+          e.preventDefault();
+          onRightClickTokenRef.current?.(token2, e.clientX, e.clientY);
+        }
+        return;
+      }
+      // Désactive le pan au bouton central ou Alt+gauche
+      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+        return;
+      }
+      if (e.button !== 0) return;
+
+      const sp = getCanvasXY(e.clientX, e.clientY);
+      const wp = screenToWorld(sp.x, sp.y);
+      const tool = activeToolRef.current;
+
+      // Clic sur une porte en mode select (tous rôles) = toggle open/closed
+      if (tool === 'select') {
+        const vp0 = viewportRef.current;
+        const currentDoors0 = doorsRef.current || [];
+        const currentWalls0 = wallsRef.current || [];
+        for (const door of currentDoors0) {
+          const wall = currentWalls0.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp0.scale;
+          const ddy = (wp.y - cy) * vp0.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            onDoorToggledRef.current?.(door.id, !door.open);
+            drawRef.current();
+            return;
+          }
+        }
       }
 
-      const start = { ...viewportRef.current };
-      const targetX = canvas.width / 2 - x * start.scale;
-      const targetY = canvas.height / 2 - y * start.scale;
-      const duration = 280;
-      const startTime = performance.now();
+      if (tool === 'select') {
+        const selId = selectedTokenIdRef.current;
+        
+        // -------------------
+        // Gestion du resize des tokens
+        // -------------------
+        // Le redimensionnement interactif des tokens est reserve au MJ.
+        
+        if (selId && roleRef.current === 'gm') {
+          const selToken = tokensRef.current.find(t => t.id === selId);
+          if (selToken) {
+            const CELL2 = configRef.current.gridSize || 50;
+            const tokenPxSize = (selToken.size || 1) * CELL2;
+            const vp2 = viewportRef.current;
+            const pad2 = 5 / vp2.scale;
+            const handleWx = selToken.position.x + tokenPxSize + pad2;
+            const handleWy = selToken.position.y + tokenPxSize + pad2;
+            const distPx = Math.sqrt(
+              Math.pow((wp.x - handleWx) * vp2.scale, 2) +
+              Math.pow((wp.y - handleWy) * vp2.scale, 2)
+            );
 
-      const easeInOutCubic = (t: number) =>
-        t < 0.5
-          ? 4 * t * t * t
-          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            if (distPx < 12) {
+              resizingTokenRef.current = {
+                id: selId,
+                tokenPx: selToken.position.x,
+                tokenPy: selToken.position.y,
+              };
+              return;
+            }
+          }
+        }
 
-      const animate = (now: number) => {
-        const elapsed = now - startTime;
-        const rawT = Math.min(1, elapsed / duration);
-        const t = easeInOutCubic(rawT);
+        const token = getTokenAt(wp.x, wp.y);
+         if (token) {
+          const canControl = roleRef.current === 'gm' || (token.controlledByUserIds?.includes(userIdRef.current) ?? false);
 
+          // -------------------
+          // Déplacement (drag) — réservé au propriétaire ou MJ
+          // -------------------
+          // Un joueur peut sélectionner n'importe quel token pour le ciblage,
+          // mais seul le MJ ou le propriétaire peut le déplacer.
+          if (canControl && !isPlayerBlockedByTurnLock(token)) {
+            const multiSel = selectedTokenIdsRef.current;
+            if (multiSel.length > 1 && multiSel.includes(token.id)) {
+              const initialPositions = new Map<string, { x: number; y: number }>();
+              tokensRef.current.forEach(t => {
+                if (multiSel.includes(t.id)) initialPositions.set(t.id, { ...t.position });
+              });
+              draggingTokenRef.current = {
+                id: token.id,
+                offsetX: wp.x - token.position.x,
+                offsetY: wp.y - token.position.y,
+                multiInitial: initialPositions,
+              };
+            } else {
+              draggingTokenRef.current = {
+                id: token.id,
+                offsetX: wp.x - token.position.x,
+                offsetY: wp.y - token.position.y,
+              };
+            }
+          }
+
+          // -------------------
+          // Sélection — accessible à tous les rôles
+          // -------------------
+          // Permet au joueur de sélectionner plusieurs tokens
+          // pour un ciblage groupé via clic droit.
+          onSelectTokenRef.current(token.id);
+          if (selectedTokenIdsRef.current.length <= 1 || !selectedTokenIdsRef.current.includes(token.id)) {
+            onSelectTokensRef.current?.([token.id]);
+          }
+        } else {
+          isDragSelectingRef.current = true;
+          selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
+          onSelectTokenRef.current(null);
+          onSelectTokensRef.current?.([]);
+        }
+      } else if ((tool === 'fog-reveal' || tool === 'fog-erase') && roleRef.current === 'gm') {
+        // -------------------
+        // Pinceau fog classique
+        // -------------------
+        isPaintingFogRef.current = true;
+        paintFogAt(wp.x, wp.y);
+      } else if ((tool === 'fog-rect-reveal' || tool === 'fog-rect-erase') && roleRef.current === 'gm') {
+        // -------------------
+        // Début du rectangle de sélection fog
+        // -------------------
+        fogRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
+        drawRef.current();
+      } else if (tool === 'grid-calibrate' && roleRef.current === 'gm') {
+        onCalibrationPointRef.current?.({ x: wp.x, y: wp.y });
+      } else if (tool === 'wall-draw' && roleRef.current === 'gm') {
+        const snapped = snapWallPoint(wp, wallsRef.current);
+        wallPointsRef.current = [...wallPointsRef.current, snapped];
+        wallPreviewPosRef.current = null;
+        drawRef.current();
+      } else if (tool === 'wall-select' && roleRef.current === 'gm') {
+        const vp = viewportRef.current;
+        const HIT_RADIUS_PX = 12;
+        const currentWalls = wallsRef.current || [];
+        const current = draggingWallPointRef.current;
+
+        // Si un point de mur est déjà sélectionné/en déplacement :
+        // un clic valide la nouvelle position
+        if (current) {
+          const wall = currentWalls.find(w => w.id === current.wallId);
+          if (wall) {
+            const newPoints = wall.points.map((pt: { x: number; y: number }, i: number) =>
+              i === current.pointIndex ? { x: wp.x, y: wp.y } : pt
+            );
+            const updatedWall = { ...wall, points: newPoints };
+            wallsRef.current = currentWalls.map(w => w.id === current.wallId ? updatedWall : w);
+            onWallUpdatedRef.current?.(updatedWall);
+          }
+          selectedWallPointRef.current = null;
+          draggingWallPointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // Si un endpoint de porte est en cours de déplacement : valider
+        if (draggingDoorEndpointRef.current) {
+          const endpointDoor = draggingDoorEndpointRef.current;
+          const currentDoors2 = doorsRef.current || [];
+          const updatedDoor2 = currentDoors2.find(d => d.id === endpointDoor.doorId);
+          if (updatedDoor2) onDoorToggledRef.current?.(updatedDoor2.id, updatedDoor2.open);
+          draggingDoorEndpointRef.current = null;
+          selectedDoorEndpointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // Si une porte est en cours de déplacement : valider
+        if (draggingDoorRef.current) {
+          draggingDoorRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // Vérifier si on clique sur un endpoint (t1/t2) de porte
+        const currentDoors0 = doorsRef.current || [];
+        for (const door of currentDoors0) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { t1, t2 } = getDoorT1T2(door, segLen);
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const ax = p1.x + nx * segLen * t1;
+          const ay = p1.y + ny * segLen * t1;
+          const bx = p1.x + nx * segLen * t2;
+          const by = p1.y + ny * segLen * t2;
+          const dax = (wp.x - ax) * vp.scale;
+          const day = (wp.y - ay) * vp.scale;
+          const dbx = (wp.x - bx) * vp.scale;
+          const dby = (wp.y - by) * vp.scale;
+          if (Math.sqrt(dax * dax + day * day) < HIT_RADIUS_PX) {
+            draggingDoorEndpointRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex, endpoint: 't1' };
+            selectedDoorEndpointRef.current = { doorId: door.id, endpoint: 't1' };
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = null;
+            draggingWallPointRef.current = null;
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            // endpointFound supprimé (inutile)
+            drawRef.current();
+            return;
+          }
+          if (Math.sqrt(dbx * dbx + dby * dby) < HIT_RADIUS_PX) {
+            draggingDoorEndpointRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex, endpoint: 't2' };
+            selectedDoorEndpointRef.current = { doorId: door.id, endpoint: 't2' };
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = null;
+            draggingWallPointRef.current = null;
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            // endpointFound supprimé (inutile)
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Vérifier si on clique sur l'icône d'une porte (sélection porte)
+        const currentDoors = doorsRef.current || [];
+        let doorFound = false;
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            selectedDoorRef.current = door.id;
+            draggingDoorRef.current = { doorId: door.id, wallId: door.wallId, segmentIndex: door.segmentIndex };
+            selectedWallPointRef.current = null;
+            selectedWallPointsRef.current = [];
+            draggingWallPointRef.current = null;
+            doorFound = true;
+            drawRef.current();
+            return;
+          }
+        }
+
+        if (!doorFound) selectedDoorRef.current = null;
+
+        // Vérifier si on clique sur un endpoint (t1/t2) de fenêtre
+        const currentWindows0 = windowsRef.current || [];
+        // windowEndpointFound supprimé (inutile)
+        for (const win of currentWindows0) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { t1, t2 } = getWindowT1T2(win, segLen);
+          const nx = segDx / segLen, ny = segDy / segLen;
+          const ax = p1.x + nx * segLen * t1;
+          const ay = p1.y + ny * segLen * t1;
+          const bx = p1.x + nx * segLen * t2;
+          const by = p1.y + ny * segLen * t2;
+          const dax = (wp.x - ax) * vp.scale;
+          const day = (wp.y - ay) * vp.scale;
+          const dbx = (wp.x - bx) * vp.scale;
+          const dby = (wp.y - by) * vp.scale;
+          if (Math.sqrt(dax * dax + day * day) < HIT_RADIUS_PX) {
+            draggingWindowEndpointRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex, endpoint: 't1' };
+            selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't1' };
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = null;
+            // windowEndpointFound supprimé (inutile)
+            drawRef.current();
+            return;
+          }
+          if (Math.sqrt(dbx * dbx + dby * dby) < HIT_RADIUS_PX) {
+            draggingWindowEndpointRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex, endpoint: 't2' };
+            selectedWindowEndpointRef.current = { windowId: win.id, endpoint: 't2' };
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = null;
+            // windowEndpointFound supprimé (inutile)
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Vérifier si on clique sur l'icône d'une fenêtre
+        const currentWindows = windowsRef.current || [];
+        let windowFound = false;
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            selectedWindowRef.current = win.id;
+            draggingWindowRef.current = { windowId: win.id, wallId: win.wallId, segmentIndex: win.segmentIndex };
+            windowFound = true;
+            drawRef.current();
+            return;
+          }
+        }
+
+        if (!windowFound) selectedWindowRef.current = null;
+
+        // Chercher un point de mur à cliquer
+        let found = false;
+        for (const wall of currentWalls) {
+          for (let pi = 0; pi < wall.points.length; pi++) {
+            const pt = wall.points[pi];
+            const dx = (pt.x - wp.x) * vp.scale;
+            const dy = (pt.y - wp.y) * vp.scale;
+            if (Math.sqrt(dx * dx + dy * dy) < HIT_RADIUS_PX) {
+              draggingWallPointRef.current = {
+                wallId: wall.id,
+                pointIndex: pi,
+                originalX: pt.x,
+                originalY: pt.y,
+                phase: 'selected',
+              };
+              selectedWallPointRef.current = { wallId: wall.id, pointIndex: pi };
+              found = true;
+              break;
+            }
+          }
+          if (found) break;
+        }
+        // Clic dans le vide = désélectionner tout
+        if (!found && !doorFound) {
+          draggingWallPointRef.current = null;
+          selectedWallPointRef.current = null;
+          selectedWallPointsRef.current = [];
+          draggingDoorRef.current = null;
+          draggingDoorEndpointRef.current = null;
+          selectedDoorEndpointRef.current = null;
+          isDragSelectingRef.current = true;
+          selectionRectRef.current = { x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y };
+        }
+        drawRef.current();
+      // FIN du bloc wall-select
+      } else if (tool === 'door-place') {
+        // -------------------
+        // Outil porte (GM seulement) : pose en 2 clics sur un segment de mur
+        //   1er clic = point de départ (t1), stocké dans doorInProgressRef
+        //   2ème clic = point de fin (t2), crée la porte
+        // Clic sur icône porte existante = toggle open/closed
+        // -------------------
+        if (roleRef.current !== 'gm') return;
+
+        const vp = viewportRef.current;
+        const currentDoors = doorsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+
+        // Vérifier si on clique sur l'icône d'une porte existante
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            onDoorToggledRef.current?.(door.id, !door.open);
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Trouver le segment de mur le plus proche du clic
+        let bestDist = Infinity;
+        let bestWallId = '';
+        let bestSegIdx = -1;
+        let bestT = 0.5;
+        let bestWorldX = wp.x;
+        let bestWorldY = wp.y;
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i], p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0.02, Math.min(0.98, t));
+            const projX = p1.x + t * dx, projY = p1.y + t * dy;
+            const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
+            if (distPx < bestDist) {
+              bestDist = distPx;
+              bestWallId = wall.id;
+              bestSegIdx = i;
+              bestT = t;
+              bestWorldX = projX;
+              bestWorldY = projY;
+            }
+          }
+        }
+
+        if (bestSegIdx < 0 || bestDist >= 20) return;
+
+        const inProgress = doorInProgressRef.current;
+        if (!inProgress) {
+          // 1er clic : stocker le point de départ sur ce segment
+          doorInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        } else if (inProgress.wallId === bestWallId && inProgress.segmentIndex === bestSegIdx) {
+          // 2ème clic sur le même segment : créer la porte
+          const t1 = Math.min(inProgress.t, bestT);
+          const t2 = Math.max(inProgress.t, bestT);
+          if (t2 - t1 > 0.02) {
+            const newDoor: VTTDoor = {
+              id: crypto.randomUUID(),
+              wallId: bestWallId,
+              segmentIndex: bestSegIdx,
+              t1,
+              t2,
+              open: false,
+            };
+            onDoorAddedRef.current?.(newDoor);
+          }
+          doorInProgressRef.current = null;
+          doorPreviewPosRef.current = null;
+          drawRef.current();
+        } else {
+          // 2ème clic sur un segment différent : annuler et démarrer sur le nouveau segment
+          doorInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        }
+      } else if (tool === 'window-place') {
+        if (roleRef.current !== 'gm') return;
+
+        const vp = viewportRef.current;
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            drawRef.current();
+            return;
+          }
+        }
+
+        let bestDist = Infinity;
+        let bestWallId = '';
+        let bestSegIdx = -1;
+        let bestT = 0.5;
+        let bestWorldX = wp.x;
+        let bestWorldY = wp.y;
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i], p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0.02, Math.min(0.98, t));
+            const projX = p1.x + t * dx, projY = p1.y + t * dy;
+            const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
+            if (distPx < bestDist) {
+              bestDist = distPx;
+              bestWallId = wall.id;
+              bestSegIdx = i;
+              bestT = t;
+              bestWorldX = projX;
+              bestWorldY = projY;
+            }
+          }
+        }
+
+        if (bestSegIdx < 0 || bestDist >= 20) return;
+
+        const winProgress = windowInProgressRef.current;
+        if (!winProgress) {
+          windowInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        } else if (winProgress.wallId === bestWallId && winProgress.segmentIndex === bestSegIdx) {
+          const t1 = Math.min(winProgress.t, bestT);
+          const t2 = Math.max(winProgress.t, bestT);
+          if (t2 - t1 > 0.02) {
+            const newWindow: VTTWindow = {
+              id: crypto.randomUUID(),
+              wallId: bestWallId,
+              segmentIndex: bestSegIdx,
+              t1,
+              t2,
+            };
+            onWindowAddedRef.current?.(newWindow);
+          }
+          windowInProgressRef.current = null;
+          windowPreviewPosRef.current = null;
+          drawRef.current();
+        } else {
+          windowInProgressRef.current = {
+            wallId: bestWallId,
+            segmentIndex: bestSegIdx,
+            t: bestT,
+            worldX: bestWorldX,
+            worldY: bestWorldY,
+          };
+          drawRef.current();
+        }
+      } else if (tool === 'measure') {
+        if (measureLockedRef.current) {
+          measureStartRef.current = null;
+          measureEndRef.current = null;
+          measureLockedRef.current = false;
+          drawRef.current();
+        } else if (!measureStartRef.current) {
+          measureStartRef.current = { x: wp.x, y: wp.y };
+          measureEndRef.current = { x: wp.x, y: wp.y };
+          measureLockedRef.current = false;
+        } else {
+          measureLockedRef.current = true;
+        }
+      }
+    };
+
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      const tool = activeToolRef.current;
+      const sp = getCanvasXY(e.clientX, e.clientY);
+      const wp = screenToWorld(sp.x, sp.y);
+
+      // En mode door-place : clic droit = annuler placement en cours OU supprimer porte existante
+      if (tool === 'door-place' && roleRef.current === 'gm') {
+        // Si un placement est en cours, l'annuler
+        if (doorInProgressRef.current) {
+          doorInProgressRef.current = null;
+          doorPreviewPosRef.current = null;
+          drawRef.current();
+          return;
+        }
+        const vp = viewportRef.current;
+        const currentDoors = doorsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            onDoorRemovedRef.current?.(door.id);
+            return;
+          }
+        }
+        return;
+      }
+
+      // En mode window-place : clic droit = annuler placement en cours OU supprimer fenêtre existante
+      if (tool === 'window-place' && roleRef.current === 'gm') {
+        if (windowInProgressRef.current) {
+          windowInProgressRef.current = null;
+          windowPreviewPosRef.current = null;
+          drawRef.current();
+          return;
+        }
+        const vp = viewportRef.current;
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + segDx * tCenter;
+          const cy = p1.y + segDy * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 14) {
+            onWindowRemovedRef.current?.(win.id);
+            return;
+          }
+        }
+        return;
+      }
+
+      // En mode wall-select : clic droit sur porte = suppression, sur segment = suppression mur
+      if (tool === 'wall-select' && roleRef.current === 'gm') {
+        const vp = viewportRef.current;
+        const currentWalls = wallsRef.current || [];
+        const currentDoors = doorsRef.current || [];
+
+        // Clic droit sur icône porte = supprimer la porte
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 16) {
+            onDoorRemovedRef.current?.(door.id);
+            if (selectedDoorRef.current === door.id) selectedDoorRef.current = null;
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Clic droit sur icône fenêtre = supprimer la fenêtre
+        const currentWindows0 = windowsRef.current || [];
+        for (const win of currentWindows0) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const ddx = (wp.x - cx) * vp.scale;
+          const ddy = (wp.y - cy) * vp.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 16) {
+            onWindowRemovedRef.current?.(win.id);
+            if (selectedWindowRef.current === win.id) selectedWindowRef.current = null;
+            drawRef.current();
+            return;
+          }
+        }
+
+        // Clic droit sur segment = supprimer le mur entier
+        const HIT_PX = 8;
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i];
+            const p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0, Math.min(1, t));
+            const projX = p1.x + t * dx, projY = p1.y + t * dy;
+            const distPx = Math.sqrt(Math.pow((wp.x - projX) * vp.scale, 2) + Math.pow((wp.y - projY) * vp.scale, 2));
+            if (distPx < HIT_PX) {
+              onWallRemovedRef.current?.(wall.id);
+              return;
+            }
+          }
+        }
+        return;
+      }
+
+      // -------------------
+      // Menu contextuel (clic droit) — accessible à tous les rôles
+      // -------------------
+      // Un joueur peut ouvrir le menu sur n'importe quel token visible
+      // pour accéder au ciblage (onToggleTarget).
+      // Les actions sensibles (édition, suppression) restent filtrées
+      // dans le composant VTTContextMenu selon canEdit.
+      const cb = onRightClickTokenRef.current;
+      if (!cb) return;
+      const token = getTokenAt(wp.x, wp.y);
+      if (token) {
+        cb(token, e.clientX, e.clientY);
+      }
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      const tool = activeToolRef.current;
+      const overlay = brushOverlayRef.current;
+
+      if (overlay) {
+        const isFog = tool === 'fog-reveal' || tool === 'fog-erase';
+        if (isFog) {
+          const vp = viewportRef.current;
+          const brushPx = fogBrushSizeRef.current * vp.scale;
+          overlay.style.display = 'block';
+          overlay.style.left = `${e.clientX}px`;
+          overlay.style.top = `${e.clientY}px`;
+          overlay.style.width = `${brushPx * 2}px`;
+          overlay.style.height = `${brushPx * 2}px`;
+          overlay.style.borderColor = tool === 'fog-reveal'
+            ? 'rgba(251,191,36,0.8)'
+            : 'rgba(239,68,68,0.8)';
+          overlay.style.backgroundColor = tool === 'fog-reveal'
+            ? 'rgba(251,191,36,0.08)'
+            : 'rgba(239,68,68,0.08)';
+        } else {
+          overlay.style.display = 'none';
+        }
+      }
+
+      if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const drag = draggingWallPointRef.current;
+        drag.phase = 'moving';
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === drag.wallId);
+        if (wall) {
+          const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
+          const newPoints = wall.points.map((pt, i) =>
+            i === drag.pointIndex ? snappedPreview : pt
+          );
+          const updatedWall = { ...wall, points: newPoints };
+          wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+          drawRef.current();
+        }
+      }
+ 
+      // Déplacement d'un endpoint de porte (t1 ou t2) le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragEp = draggingDoorEndpointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragEp.wallId);
+        if (wall) {
+          const si = dragEp.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentDoors = doorsRef.current || [];
+              const door = currentDoors.find(d => d.id === dragEp.doorId);
+              if (door) {
+                let updatedDoor;
+                if (dragEp.endpoint === 't1') {
+                  const t2 = door.t2 ?? 0.99;
+                  const newT1 = Math.min(tNew, t2 - 0.02);
+                  updatedDoor = { ...door, t1: newT1 };
+                } else {
+                  const t1 = door.t1 ?? 0.01;
+                  const newT2 = Math.max(tNew, t1 + 0.02);
+                  updatedDoor = { ...door, t2: newT2 };
+                }
+                doorsRef.current = currentDoors.map(d => d.id === dragEp.doorId ? updatedDoor : d);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
+      // Déplacement d'une porte le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragDoor = draggingDoorRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragDoor.wallId);
+        if (wall) {
+          const si = dragDoor.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentDoors = doorsRef.current || [];
+              const door = currentDoors.find(d => d.id === dragDoor.doorId);
+              if (door) {
+                const halfWidth = door.width ? door.width / 2 / Math.sqrt(lenSq) : 0.1;
+                const newT1 = Math.max(0.01, tNew - halfWidth);
+                const newT2 = Math.min(0.99, tNew + halfWidth);
+                const updatedDoor = { ...door, t1: newT1, t2: newT2 };
+                doorsRef.current = currentDoors.map(d => d.id === dragDoor.doorId ? updatedDoor : d);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
+      // Déplacement d'un endpoint de fenêtre (t1 ou t2) le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingWindowEndpointRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragEpW = draggingWindowEndpointRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragEpW.wallId);
+        if (wall) {
+          const si = dragEpW.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentWindows = windowsRef.current || [];
+              const win = currentWindows.find(w => w.id === dragEpW.windowId);
+              if (win) {
+                let updatedWin;
+                if (dragEpW.endpoint === 't1') {
+                  const newT1 = Math.min(tNew, (win.t2 ?? 0.9) - 0.02);
+                  updatedWin = { ...win, t1: newT1 };
+                } else {
+                  const newT2 = Math.max(tNew, (win.t1 ?? 0.1) + 0.02);
+                  updatedWin = { ...win, t2: newT2 };
+                }
+                windowsRef.current = currentWindows.map(w => w.id === dragEpW.windowId ? updatedWin : w);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
+      // Déplacement d'une fenêtre le long de son segment de mur
+      if (activeToolRef.current === 'wall-select' && draggingWindowRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const dragWin = draggingWindowRef.current;
+        const currentWalls = wallsRef.current || [];
+        const wall = currentWalls.find(w => w.id === dragWin.wallId);
+        if (wall) {
+          const si = dragWin.segmentIndex;
+          const pts = wall.points;
+          if (si >= 0 && si < pts.length - 1) {
+            const p1 = pts[si], p2 = pts[si + 1];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq > 0) {
+              let tNew = ((wp2.x - p1.x) * dx + (wp2.y - p1.y) * dy) / lenSq;
+              tNew = Math.max(0.01, Math.min(0.99, tNew));
+              const currentWindows = windowsRef.current || [];
+              const win = currentWindows.find(w => w.id === dragWin.windowId);
+              if (win) {
+                const { t1: wt1, t2: wt2 } = getWindowT1T2(win, Math.sqrt(lenSq));
+                const halfWidth = (wt2 - wt1) / 2;
+                const newT1 = Math.max(0.01, tNew - halfWidth);
+                const newT2 = Math.min(0.99, tNew + halfWidth);
+                const updatedWin = { ...win, t1: newT1, t2: newT2 };
+                windowsRef.current = currentWindows.map(w => w.id === dragWin.windowId ? updatedWin : w);
+                drawRef.current();
+              }
+            }
+          }
+        }
+      }
+
+      if (activeToolRef.current === 'wall-draw') {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const snappedPreview = snapWallPoint(wp2, wallsRef.current);
+        wallPreviewPosRef.current = snappedPreview;
+        drawRef.current();
+      }
+
+      if (activeToolRef.current === 'door-place' && doorInProgressRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        doorPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      if (activeToolRef.current === 'window-place' && windowInProgressRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        windowPreviewPosRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      // Détection hover porte et fenêtre (mode select uniquement)
+      if (activeToolRef.current === 'select') {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const currentDoors = doorsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        let foundHoveredDoor: string | null = null;
+        for (const door of currentDoors) {
+          const wall = currentWalls.find(w => w.id === door.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = door.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getDoorT1T2(door, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const vp0 = viewportRef.current;
+          const ddx = (wp2.x - cx) * vp0.scale;
+          const ddy = (wp2.y - cy) * vp0.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 18) {
+            foundHoveredDoor = door.id;
+            break;
+          }
+        }
+        if (hoveredDoorRef.current !== foundHoveredDoor) {
+          hoveredDoorRef.current = foundHoveredDoor;
+          const canvas = canvasRef.current;
+          if (canvas) canvas.style.cursor = foundHoveredDoor ? 'pointer' : 'default';
+          drawRef.current();
+        }
+      } else if (hoveredDoorRef.current !== null) {
+        hoveredDoorRef.current = null;
+        const canvas = canvasRef.current;
+        if (canvas) canvas.style.cursor = 'default';
+        drawRef.current();
+      }
+
+      // Hover pour les fenêtres (mode select et window-place)
+      if (activeToolRef.current === 'select' || activeToolRef.current === 'window-place') {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const currentWindows = windowsRef.current || [];
+        const currentWalls = wallsRef.current || [];
+        let foundHoveredWindow: string | null = null;
+        for (const win of currentWindows) {
+          const wall = currentWalls.find(w => w.id === win.wallId);
+          if (!wall) continue;
+          const pts = wall.points;
+          const si = win.segmentIndex;
+          if (si < 0 || si >= pts.length - 1) continue;
+          const p1 = pts[si], p2 = pts[si + 1];
+          const segDx = p2.x - p1.x, segDy = p2.y - p1.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+          if (segLen < 1) continue;
+          const { tCenter } = getWindowT1T2(win, segLen);
+          const cx = p1.x + (segDx / segLen) * segLen * tCenter;
+          const cy = p1.y + (segDy / segLen) * segLen * tCenter;
+          const vp0 = viewportRef.current;
+          const ddx = (wp2.x - cx) * vp0.scale;
+          const ddy = (wp2.y - cy) * vp0.scale;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) < 18) {
+            foundHoveredWindow = win.id;
+            break;
+          }
+        }
+        if (hoveredWindowRef.current !== foundHoveredWindow) {
+          hoveredWindowRef.current = foundHoveredWindow;
+          drawRef.current();
+        }
+      } else if (hoveredWindowRef.current !== null) {
+        hoveredWindowRef.current = null;
+        drawRef.current();
+      }
+
+      if (activeToolRef.current === 'measure' && measureStartRef.current && !measureLockedRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        measureEndRef.current = screenToWorld(sp2.x, sp2.y);
+        drawRef.current();
+      }
+
+      // Rectangle de sélection de points de mur (wall-select, glissé dans le vide)
+      if (activeToolRef.current === 'wall-select' && isDragSelectingRef.current && selectionRectRef.current) {
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        selectionRectRef.current.x2 = wp2.x;
+        selectionRectRef.current.y2 = wp2.y;
+        drawRef.current();
+        return;
+      }
+
+      
+      if (isPanningRef.current && lastPanRef.current) {
+        const dx = e.clientX - lastPanRef.current.x;
+        const dy = e.clientY - lastPanRef.current.y;
+        lastPanRef.current = { x: e.clientX, y: e.clientY };
+        viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        onViewportChangeRef.current?.(viewportRef.current);
+        drawRef.current();
+        return;
+      }
+
+      // -------------------
+      // Gestion du resize des tokens
+      // -------------------
+      // Securite supplementaire : seul le MJ peut appliquer un resize.
+      if (resizingTokenRef.current) {
+        if (roleRef.current !== 'gm') {
+          resizingTokenRef.current = null;
+          return;
+        }
+
+        const sp2 = getCanvasXY(e.clientX, e.clientY);
+        const wp2 = screenToWorld(sp2.x, sp2.y);
+        const { id: rId, tokenPx, tokenPy } = resizingTokenRef.current;
+        const CELLR = configRef.current.gridSize || 50;
+        const rawPx = Math.max(wp2.x - tokenPx, wp2.y - tokenPy, CELLR * 0.1);
+        const newSize = Math.max(Math.round((rawPx / CELLR) * 10) / 10, 0.1);
+
+        onResizeTokenRef.current?.(rId, newSize);
+        return;
+      }
+
+      if (isDragSelectingRef.current && selectionRectRef.current) {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        selectionRectRef.current.x2 = wp.x;
+        selectionRectRef.current.y2 = wp.y;
+        drawRef.current();
+          } else if (draggingTokenRef.current) {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const drag = draggingTokenRef.current;
+        const nx = wp.x - drag.offsetX;
+        const ny = wp.y - drag.offsetY;
+        const snapped = snapToGrid(nx, ny);
+
+        if (drag.multiInitial && drag.multiInitial.size > 1) {
+          const primaryInit = drag.multiInitial.get(drag.id)!;
+          const dx = snapped.x - primaryInit.x;
+          const dy = snapped.y - primaryInit.y;
+          const currentWalls = wallsRef.current || [];
+
+          let blockedByTurnLock = false;
+          drag.multiInitial.forEach((_, tid) => {
+            if (blockedByTurnLock) return;
+            const mt = tokensRef.current.find(t => t.id === tid);
+            if (isPlayerBlockedByTurnLock(mt)) {
+              blockedByTurnLock = true;
+            }
+          });
+          if (blockedByTurnLock) return;
+
+          if (currentWalls.length > 0) {
+            let blocked = false;
+            drag.multiInitial.forEach((initPos, tid) => {
+              if (blocked) return;
+              const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
+              const mt = tokensRef.current.find(t => t.id === tid);
+              const mSize = (mt?.size || 1) * (configRef.current.gridSize || 50);
+              const curPos = mt?.position;
+              if (wallBlocksToken(newPos.x, newPos.y, mSize, currentWalls, doorsRef.current, curPos?.x, curPos?.y)) {
+                blocked = true;
+              }
+            });
+            if (blocked) return;
+          }
+
+          drag.multiInitial.forEach((initPos, tid) => {
+            const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
+            onMoveTokenRef.current(tid, newPos);
+          });
+
+        } else {
+          const movingToken = tokensRef.current.find(t => t.id === drag.id);
+          const tokenSizePx = (movingToken?.size || 1) * (configRef.current.gridSize || 50);
+          const currentWalls = wallsRef.current || [];
+          const oldPos = movingToken?.position;
+
+          if (isPlayerBlockedByTurnLock(movingToken)) {
+            return;
+          }
+
+          if (
+            currentWalls.length > 0 &&
+            wallBlocksToken(snapped.x, snapped.y, tokenSizePx, currentWalls, doorsRef.current, oldPos?.x, oldPos?.y)
+          ) {
+            return;
+          }
+
+          onMoveTokenRef.current(drag.id, snapped);
+
+
+        }
+      } else if (isPaintingFogRef.current && roleRef.current === 'gm' && e.buttons === 1) {
+        // -------------------
+        // Pinceau fog : peinture continue
+        // -------------------
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        paintFogAt(wp.x, wp.y);
+      } else if (fogRectRef.current && (tool === 'fog-rect-reveal' || tool === 'fog-rect-erase')) {
+        // -------------------
+        // Rectangle fog : mise à jour du coin opposé pendant le drag
+        // -------------------
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        fogRectRef.current.x2 = wp.x;
+        fogRectRef.current.y2 = wp.y;
+        drawRef.current();
+      }
+    };
+
+    const onMouseUp = () => {
+      // -------------------
+      // Finalisation du rectangle de sélection fog (fog-rect-reveal / fog-rect-erase)
+      // Au mouseUp, on transforme les coordonnées du rectangle en un stroke
+      // rectangulaire et on l'envoie à onRevealFogRef pour persist + broadcast.
+      // On applique aussi le stroke localement sur le fogCanvas pour un retour
+      // visuel immédiat sans attendre le re-render React.
+      // -------------------
+      if (fogRectRef.current) {
+        const rect = fogRectRef.current;
+        const fx1 = Math.min(rect.x1, rect.x2);
+        const fy1 = Math.min(rect.y1, rect.y2);
+        const fx2 = Math.max(rect.x1, rect.x2);
+        const fy2 = Math.max(rect.y1, rect.y2);
+        const fw = fx2 - fx1;
+        const fh = fy2 - fy1;
+        // Ne pas appliquer si le rectangle est trop petit (simple clic sans drag)
+        if (fw > 3 && fh > 3) {
+          const tool = activeToolRef.current;
+          const erase = tool === 'fog-rect-erase';
+          const stroke = { x: fx1, y: fy1, r: 0, erase, shape: 'rect' as const, w: fw, h: fh };
+          // Envoi direct au handler fog (bypass paintFogAt qui est pensé pour le pinceau)
+          onRevealFogRef.current(stroke);
+        }
+        fogRectRef.current = null;
+        drawRef.current();
+      }
+      if (isDragSelectingRef.current && selectionRectRef.current) {
+        const rect = selectionRectRef.current;
+        const x1 = Math.min(rect.x1, rect.x2);
+        const y1 = Math.min(rect.y1, rect.y2);
+        const x2 = Math.max(rect.x1, rect.x2);
+        const y2 = Math.max(rect.y1, rect.y2);
+        const minSize = 5 / viewportRef.current.scale;
+        if (x2 - x1 > minSize || y2 - y1 > minSize) {
+          const CELL2 = configRef.current.gridSize || 50;
+          const found = tokensRef.current.filter(t => {
+            // -------------------
+            // Sélection rectangulaire — filtrage des tokens invisibles
+            // -------------------
+            // Un joueur ne voit pas les tokens masqués (visible=false).
+            // En revanche, il peut sélectionner n'importe quel token visible,
+            // même ceux qu'il ne contrôle pas, pour le ciblage groupé.
+            if (roleRef.current === 'player' && !t.visible) return false;
+            const ts = (t.size || 1) * CELL2;
+            return t.position.x < x2 && t.position.x + ts > x1 &&
+                   t.position.y < y2 && t.position.y + ts > y1;
+          });
+          if (found.length > 0) {
+            onSelectTokensRef.current?.(found.map(t => t.id));
+            onSelectTokenRef.current(found[0].id);
+          }
+        }
+      }
+      // En wall-select : sélection multiple de points par rectangle
+      if (activeToolRef.current === 'wall-select' && isDragSelectingRef.current && selectionRectRef.current) {
+        const rect = selectionRectRef.current;
+        const rx1 = Math.min(rect.x1, rect.x2);
+        const ry1 = Math.min(rect.y1, rect.y2);
+        const rx2 = Math.max(rect.x1, rect.x2);
+        const ry2 = Math.max(rect.y1, rect.y2);
+        const minSize = 5 / viewportRef.current.scale;
+        if (rx2 - rx1 > minSize || ry2 - ry1 > minSize) {
+          const currentWalls = wallsRef.current || [];
+          const found: { wallId: string; pointIndex: number }[] = [];
+          for (const wall of currentWalls) {
+            wall.points.forEach((pt: { x: number; y: number }, pi: number) => {
+              if (pt.x >= rx1 && pt.x <= rx2 && pt.y >= ry1 && pt.y <= ry2) {
+                found.push({ wallId: wall.id, pointIndex: pi });
+              }
+            });
+          }
+          selectedWallPointsRef.current = found;
+          selectedWallPointRef.current = null;
+          draggingWallPointRef.current = null;
+        }
+      }
+// Persistance + fusion au lâcher en wall-select
+if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
+  const drag = draggingWallPointRef.current;
+  const snapTargetRef = useRef<{ x: number; y: number } | null>(null);
+  const currentWalls = wallsRef.current || [];
+  const wall = currentWalls.find(w => w.id === drag.wallId);
+  if (wall && drag.phase === 'moving') {
+    const movedPt = wall.points[drag.pointIndex];
+    const scale = viewportRef.current.scale;
+    const fusionRadius = SNAP_RADIUS_PX / scale;
+
+    // Chercher un point cible sur un autre mur dans le rayon de fusion
+    let targetPt: { x: number; y: number } | null = null;
+    for (const other of currentWalls) {
+      if (other.id === drag.wallId) continue;
+      for (const pt of other.points) {
+        const dx = pt.x - movedPt.x;
+        const dy = pt.y - movedPt.y;
+        if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
+          targetPt = pt;
+          break;
+        }
+      }
+      if (targetPt) break;
+    }
+
+    if (targetPt) {
+      // Remplacer le point déplacé par les coordonnées exactes du point cible
+      // puis supprimer les doublons consécutifs dans le mur source
+      const fused = wall.points.map((pt: { x: number; y: number }, i: number) =>
+        i === drag.pointIndex ? { x: targetPt!.x, y: targetPt!.y } : pt
+      );
+      const deduped = fused.filter(
+        (pt: { x: number; y: number }, i: number) =>
+          i === 0 || pt.x !== fused[i - 1].x || pt.y !== fused[i - 1].y
+      );
+      const finalPoints = deduped.length >= 2 ? deduped : fused;
+      const updatedWall = { ...wall, points: finalPoints };
+      wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+      onWallUpdatedRef.current?.(updatedWall);
+    } else {
+      // Pas de fusion, juste persister la position finale
+      onWallUpdatedRef.current?.(wall);
+    }
+  }
+}
+
+// Fin du drag d'un endpoint de porte : persister la nouvelle position
+if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) {
+        const dragEp = draggingDoorEndpointRef.current;
+        const updatedDoor = (doorsRef.current || []).find(d => d.id === dragEp.doorId);
+        if (updatedDoor) {
+          onDoorRemovedRef.current?.(updatedDoor.id);
+          onDoorAddedRef.current?.(updatedDoor);
+        }
+        draggingDoorEndpointRef.current = null;
+        selectedDoorEndpointRef.current = null;
+      }
+
+      // Fin du drag d'une porte : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingDoorRef.current) {
+        const dragDoor = draggingDoorRef.current;
+        const updatedDoor = (doorsRef.current || []).find(d => d.id === dragDoor.doorId);
+        if (updatedDoor) {
+          onDoorRemovedRef.current?.(updatedDoor.id);
+          onDoorAddedRef.current?.(updatedDoor);
+        }
+        draggingDoorRef.current = null;
+      }
+
+      // Fin du drag d'un endpoint de fenêtre : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingWindowEndpointRef.current) {
+        const dragEpW = draggingWindowEndpointRef.current;
+        const updatedWin = (windowsRef.current || []).find(w => w.id === dragEpW.windowId);
+        if (updatedWin) {
+          onWindowRemovedRef.current?.(updatedWin.id);
+          onWindowAddedRef.current?.(updatedWin);
+        }
+        draggingWindowEndpointRef.current = null;
+        selectedWindowEndpointRef.current = null;
+      }
+
+      // Fin du drag d'une fenêtre : persister la nouvelle position
+      if (activeToolRef.current === 'wall-select' && draggingWindowRef.current) {
+        const dragWin = draggingWindowRef.current;
+        const updatedWin = (windowsRef.current || []).find(w => w.id === dragWin.windowId);
+        if (updatedWin) {
+          onWindowRemovedRef.current?.(updatedWin.id);
+          onWindowAddedRef.current?.(updatedWin);
+        }
+        draggingWindowRef.current = null;
+      }
+
+      isDragSelectingRef.current = false;
+      selectionRectRef.current = null;
+      draggingTokenRef.current = null;
+      resizingTokenRef.current = null;
+          // -------------------
+      // Fin du painting fog : flush le batch accumulé depuis mouseDown
+      // Un seul setState + broadcast + RPC pour tout le trait de pinceau
+      // -------------------
+      if (isPaintingFogRef.current) {
+        flushFogBatch();
+      }
+           isPaintingFogRef.current = false;
+      fogRectRef.current = null;
+      isPanningRef.current = false;
+      lastPanRef.current = null;
+      drawRef.current();
+    };
+
+    const onMouseLeave = () => {
+      if (brushOverlayRef.current) brushOverlayRef.current.style.display = 'none';
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const vp = viewportRef.current;
+
+      // ── Pinch trackpad (ctrlKey=true) ou molette souris → ZOOM ──────────────
+      if (e.ctrlKey || e.metaKey) {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
+        const wx = (sp.x - vp.x) / vp.scale;
+        const wy = (sp.y - vp.y) / vp.scale;
+        viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+      } else {
+        // ── Scroll 2 doigts trackpad → PAN ────────────────────────────────────
+        viewportRef.current = {
+          ...vp,
+          x: vp.x - e.deltaX,
+          y: vp.y - e.deltaY,
+        };
+      }
+
+      onViewportChangeRef.current?.(viewportRef.current);
+      drawRef.current();
+    };
+ 
+    const onDblClick = (e: MouseEvent) => {
+      if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
+        // handled below
+      } else if (activeToolRef.current === 'wall-select' && roleRef.current === 'gm') {
+        // handled below
+      } else {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const token = getTokenAt(wp.x, wp.y);
+        if (token) {
+          onTokenDoubleClickRef.current?.(token);
+          return;
+        }
+      }
+if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
+  const pts = wallPointsRef.current;
+  if (pts.length >= 2) {
+    onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+    // Fusionner les points du nouveau mur avec les points existants co-localisés
+    fuseWallPoints(pts, wallsRef.current, onWallUpdatedRef.current);
+  }
+  wallPointsRef.current = [];
+  wallPreviewPosRef.current = null;
+  drawRef.current();
+  return;
+}
+
+      if (activeToolRef.current === 'wall-select' && roleRef.current === 'gm') {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        const vp = viewportRef.current;
+        const HIT_PX = 10;
+        const currentWalls = wallsRef.current || [];
+
+        let bestWall: any = null;
+        let bestSegIndex = -1;
+        let bestDist = Infinity;
+        let bestProj = { x: 0, y: 0 };
+
+        for (const wall of currentWalls) {
+          for (let i = 0; i < wall.points.length - 1; i++) {
+            const p1 = wall.points[i];
+            const p2 = wall.points[i + 1];
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            let t = lenSq > 0 ? ((wp.x - p1.x) * dx + (wp.y - p1.y) * dy) / lenSq : 0;
+            t = Math.max(0, Math.min(1, t));
+            const projX = p1.x + t * dx;
+            const projY = p1.y + t * dy;
+            const distPx = Math.sqrt(
+              Math.pow((wp.x - projX) * vp.scale, 2) +
+              Math.pow((wp.y - projY) * vp.scale, 2)
+            );
+            if (distPx < HIT_PX && distPx < bestDist) {
+              bestDist = distPx;
+              bestWall = wall;
+              bestSegIndex = i;
+              bestProj = { x: projX, y: projY };
+            }
+          }
+        }
+
+        if (bestWall && bestSegIndex >= 0) {
+          // Insérer le nouveau point après l'index du segment
+          const newPoints = [
+            ...bestWall.points.slice(0, bestSegIndex + 1),
+            bestProj,
+            ...bestWall.points.slice(bestSegIndex + 1),
+          ];
+          const updatedWall = { ...bestWall, points: newPoints };
+          wallsRef.current = currentWalls.map(w => w.id === bestWall.id ? updatedWall : w);
+          onWallUpdatedRef.current?.(updatedWall);
+          // Sélectionner immédiatement le nouveau point pour le déplacer
+          const newPointIndex = bestSegIndex + 1;
+          selectedWallPointRef.current = { wallId: bestWall.id, pointIndex: newPointIndex };
+          drawRef.current();
+        }
+      }
+    };
+
+    // ── Touch events (pan 2 doigts + pinch) ─────────────────────────────────
+    let lastTouchDist: number | null = null;   // distance entre 2 doigts (pinch)
+    let lastTouchMid: { x: number; y: number } | null = null; // milieu des 2 doigts
+
+    const getTouchDist = (t1: Touch, t2: Touch) =>
+      Math.sqrt((t2.clientX - t1.clientX) ** 2 + (t2.clientY - t1.clientY) ** 2);
+
+    const getTouchMid = (t1: Touch, t2: Touch) => ({
+      x: (t1.clientX + t2.clientX) / 2,
+      y: (t1.clientY + t2.clientY) / 2,
+    });
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const [t1, t2] = [e.touches[0], e.touches[1]];
+        lastTouchDist = getTouchDist(t1, t2);
+        lastTouchMid  = getTouchMid(t1, t2);
+        // Annuler tout drag en cours
+        isPanningRef.current    = false;
+        lastPanRef.current      = null;
+        draggingTokenRef.current = null;
+      } else if (e.touches.length === 1) {
+        // 1 doigt = simuler mousedown pour le pan (bouton central / alt)
+        // On ne simule que le pan, pas les actions sur tokens
+        lastTouchDist = null;
+        lastTouchMid  = null;
+        isPanningRef.current  = true;
+        lastPanRef.current    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const [t1, t2] = [e.touches[0], e.touches[1]];
+        const newDist = getTouchDist(t1, t2);
+        const newMid  = getTouchMid(t1, t2);
+
+        if (lastTouchDist !== null && lastTouchMid !== null) {
+          const vp = viewportRef.current;
+
+          // ── Pinch → zoom ──────────────────────────────────────
+          const ratio = newDist / lastTouchDist;
+          const newScale = Math.max(0.2, Math.min(4, vp.scale * ratio));
+          const sp = getCanvasXY(newMid.x, newMid.y);
+          const wx = (sp.x - vp.x) / vp.scale;
+          const wy = (sp.y - vp.y) / vp.scale;
+
+          // ── Pan 2 doigts ───────────────────────────────────────
+          const panDx = newMid.x - lastTouchMid.x;
+          const panDy = newMid.y - lastTouchMid.y;
+
+          viewportRef.current = {
+            scale: newScale,
+            x: sp.x - wx * newScale + panDx,
+            y: sp.y - wy * newScale + panDy,
+          };
+          onViewportChangeRef.current?.(viewportRef.current);
+          drawRef.current();
+        }
+
+        lastTouchDist = newDist;
+        lastTouchMid  = newMid;
+      } else if (e.touches.length === 1 && isPanningRef.current && lastPanRef.current) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - lastPanRef.current.x;
+        const dy = e.touches[0].clientY - lastPanRef.current.y;
+        lastPanRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         viewportRef.current = {
           ...viewportRef.current,
-          x: start.x + (targetX - start.x) * t,
-          y: start.y + (targetY - start.y) * t,
+          x: viewportRef.current.x + dx,
+          y: viewportRef.current.y + dy,
         };
-
-        onViewportChangeRef.current?.({
-          x: viewportRef.current.x,
-          y: viewportRef.current.y,
-          scale: viewportRef.current.scale,
-        });
-
+        onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
+      }
+    };
 
-        if (rawT < 1) {
-          viewportFocusAnimRef.current = requestAnimationFrame(animate);
-        } else {
-          viewportFocusAnimRef.current = null;
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        lastTouchDist = null;
+        lastTouchMid  = null;
+      }
+      if (e.touches.length === 0) {
+        isPanningRef.current = false;
+        lastPanRef.current   = null;
+      }
+    };
+
+    const onWindowMouseMove = (e: MouseEvent) => {
+      if (e.buttons === 0) {
+        if (isPaintingFogRef.current) {
+          if (isPaintingFogRef.current) flushFogBatch();
+          isPaintingFogRef.current = false;
         }
-      };
-
-      viewportFocusAnimRef.current = requestAnimationFrame(animate);
-    },
-    // -------------------
-    // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
-    // Passe par une ref pour éviter le problème d'ordre de déclaration
-    // -------------------
-    saveExploredMaskSnapshot: () => {
-
-      saveExploredMaskSnapshotRef.current?.(sceneIdRef.current);
-    },
-    // -------------------
-    // Encode le canvas exploré actuel pour broadcast Realtime vers clients distants
-    // Résolution réduite à 256px max + WebP pour rester sous 32KB (limite Supabase)
-    // -------------------
-    getExploredMaskDataUrl: () => {
-      const exploredCanvas = exploredCanvasRef.current;
-      if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) return null;
-      try {
-        const maxW = 256;
-        const scale = Math.min(1, maxW / exploredCanvas.width);
-        const sw = Math.max(1, Math.round(exploredCanvas.width * scale));
-        const sh = Math.max(1, Math.round(exploredCanvas.height * scale));
-        const snap = document.createElement('canvas');
-        snap.width = sw;
-        snap.height = sh;
-        const ctx = snap.getContext('2d');
-        if (!ctx) return null;
-        ctx.drawImage(exploredCanvas, 0, 0, sw, sh);
-        // -------------------
-        // WebP avec fallback PNG si navigateur non compatible
-        // -------------------
-        const webpDataUrl = snap.toDataURL('image/webp', 0.85);
-        const dataUrl = webpDataUrl.startsWith('data:image/webp')
-          ? webpDataUrl
-          : snap.toDataURL('image/png');
-        return { dataUrl, width: sw, height: sh };
-      } catch {
-        return null;
+        isPanningRef.current = false;
+        lastPanRef.current = null;
+        return;
       }
-    },
-  }));
-
-  const draggingTokenRef = useRef<{ id: string; offsetX: number; offsetY: number; multiInitial?: Map<string, { x: number; y: number }> } | null>(null);
-  const resizingTokenRef = useRef<{ id: string; tokenPx: number; tokenPy: number } | null>(null);
-  const isPaintingFogRef = useRef(false);
-  const lastPanRef = useRef<{ x: number; y: number } | null>(null);
-  const isPanningRef = useRef(false);
-  const selectionRectRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-  // -------------------
-  // Rectangle de sélection fog (fog-rect-reveal / fog-rect-erase)
-  // -------------------
-  const fogRectRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-    // Ref partagé pour le point de mur sélectionné en mode wall-select (highlight)
-  const selectedWallPointRef = useRef<{ wallId: string; pointIndex: number } | null>(null);
-    // Ref pour la sélection multiple de points de mur (wall-select)
-  const selectedWallPointsRef = useRef<{ wallId: string; pointIndex: number }[]>([]);
-  const isDragSelectingRef = useRef(false);
-  const selectedTokenIdsRef = useRef(selectedTokenIds);
-  selectedTokenIdsRef.current = selectedTokenIds;
-  const onSelectTokensRef = useRef(onSelectTokens);
-  onSelectTokensRef.current = onSelectTokens;
-
-  const [mapLoading, setMapLoading] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
-
-  // Sync all props to refs so native event handlers always read current values
-  const tokensRef = useRef(tokens);
-  tokensRef.current = tokens;
-  const selectedTokenIdRef = useRef(selectedTokenId);
-  selectedTokenIdRef.current = selectedTokenId;
-  const configRef = useRef(config);
-  configRef.current = config;
-  const fogStateRef = useRef(fogState);
-  fogStateRef.current = fogState;
-  const roleRef = useRef(role);
-  roleRef.current = role;
-  const userIdRef = useRef(userId);
-  userIdRef.current = userId;
-  const activeToolRef = useRef(activeTool);
-  activeToolRef.current = activeTool;
-  const fogBrushSizeRef = useRef(fogBrushSize);
-  fogBrushSizeRef.current = fogBrushSize;
-  const onMoveTokenRef = useRef(onMoveToken);
-  onMoveTokenRef.current = onMoveToken;
-  const onRevealFogRef = useRef(onRevealFog);
-  onRevealFogRef.current = onRevealFog;
-  const onSelectTokenRef = useRef(onSelectToken);
-  onSelectTokenRef.current = onSelectToken;
-  const onRightClickTokenRef = useRef(onRightClickToken);
-  onRightClickTokenRef.current = onRightClickToken;
-  const onMapDimensionsRef = useRef(onMapDimensions);
-  onMapDimensionsRef.current = onMapDimensions;
-  const onDropTokenRef = useRef(onDropToken);
-  onDropTokenRef.current = onDropToken;
-    const onDropPropRef = useRef(onDropProp);
-  onDropPropRef.current = onDropProp;
-  const onAddTokenAtPosRef = useRef(onAddTokenAtPos);
-  onAddTokenAtPosRef.current = onAddTokenAtPos;
-  const onResizeTokenRef = useRef(onResizeToken);
-  onResizeTokenRef.current = onResizeToken;
-  const onCalibrationPointRef = useRef(onCalibrationPoint);
-  onCalibrationPointRef.current = onCalibrationPoint;
-  const calibrationPointsRef = useRef(calibrationPoints);
-  calibrationPointsRef.current = calibrationPoints;
-  const wallsRef = useRef(walls);
-  wallsRef.current = walls;
-  const onWallAddedRef = useRef(onWallAdded);
-    const onWallUpdatedRef = useRef(onWallUpdated);
-  onWallUpdatedRef.current = onWallUpdated;
-  const onWallRemovedRef = useRef(onWallRemoved);
-  onWallRemovedRef.current = onWallRemoved;
-  onWallAddedRef.current = onWallAdded;
-  const showWallsRef = useRef(showWalls);
-  showWallsRef.current = showWalls;
-  const doorsRef = useRef<VTTDoor[]>(doors || []);
-  doorsRef.current = doors || [];
-  const windowsRef = useRef<VTTWindow[]>(windows || []);
-  windowsRef.current = windows || [];
-  const seenDoorsRef = useRef<Set<string>>(new Set(fogState.seenDoors || []));
-  const seenWindowsRef = useRef<Set<string>>(new Set());
-  const onSeenDoorsUpdateRef = useRef(onSeenDoorsUpdate);
-  onSeenDoorsUpdateRef.current = onSeenDoorsUpdate;
-  const onDoorAddedRef = useRef(onDoorAdded);
-  onDoorAddedRef.current = onDoorAdded;
-  const onDoorToggledRef = useRef(onDoorToggled);
-  onDoorToggledRef.current = onDoorToggled;
-  const onDoorRemovedRef = useRef(onDoorRemoved);
-  onDoorRemovedRef.current = onDoorRemoved;
-  const onWindowAddedRef = useRef(onWindowAdded);
-  onWindowAddedRef.current = onWindowAdded;
-  const onWindowRemovedRef = useRef(onWindowRemoved);
-  onWindowRemovedRef.current = onWindowRemoved;
-  const onViewportChangeRef = useRef(onViewportChange);
-  onViewportChangeRef.current = onViewportChange;
-  const onTokenDoubleClickRef = useRef(onTokenDoubleClick);
-  onTokenDoubleClickRef.current = onTokenDoubleClick;
-  const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
-  const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
-   
-  const doorInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
-  const doorPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
-  const selectedDoorRef = useRef<string | null>(null);
-  const hoveredDoorRef = useRef<string | null>(null);
-  const selectedDoorEndpointRef = useRef<{ doorId: string; endpoint: 't1' | 't2' } | null>(null);
-  const windowInProgressRef = useRef<{ wallId: string; segmentIndex: number; t: number; worldX: number; worldY: number } | null>(null);
-  const windowPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
-  const hoveredWindowRef = useRef<string | null>(null);
-  const selectedWindowRef = useRef<string | null>(null);
-  const selectedWindowEndpointRef = useRef<{ windowId: string; endpoint: 't1' | 't2' } | null>(null);
-  const measureStartRef = useRef<{ x: number; y: number } | null>(null);
-  const measureEndRef = useRef<{ x: number; y: number } | null>(null);
-  const measureLockedRef = useRef(false);
-
-  const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const fogCanvasSizeRef = useRef({ w: 0, h: 0 });
-  // -------------------
-  // Cache du masque inversé du fog (fogInv)
-  // Recalculé uniquement quand fogCanvasRef change, pas à chaque frame.
-  // Évite de créer un canvas mapW×mapH à chaque draw() pendant l'animation torche.
-  // -------------------
-  const fogInvCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const fogInvVersionRef = useRef<number>(0);
-  const visionCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const visionCanvasSizeRef = useRef({ w: 0, h: 0 });
-  const dayVisionCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const dayVisionCanvasSizeRef = useRef({ w: 0, h: 0 });
-  const exploredCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const exploredCanvasSizeRef = useRef({ w: 0, h: 0 });
-  // -------------------
-  // Flag de protection : empêche vttCanvasDraw de recréer exploredCanvas
-  // pendant qu'une restauration asynchrone est en cours
-  // ------------------- 
-  const exploredCanvasRestoringRef = useRef(false);
-  const exploredMaskWasResetRef = useRef(false);
-  // -------------------
-  // Mémorise la longueur précédente de exploredStrokes
-  // pour détecter uniquement un reset fog intentionnel (transition N→0)
-  // -------------------
-
-  const torchAnimRef = useRef<number | null>(null);
-  const forceViewportRef = useRef(forceViewportProp);
-  forceViewportRef.current = forceViewportProp;
-  const spectatorModeRef = useRef(spectatorMode);
-  spectatorModeRef.current = spectatorMode;
-
-  // drawRef allows image load callbacks to always call latest draw
-  const drawRef = useRef<() => void>(() => {});
-
-  // Sync seenDoorsRef when fogState.seenDoors is updated from server or scene switch
-  useEffect(() => {
-    const incoming = fogState.seenDoors || [];
-    if (incoming.length === 0) {
-      // Empty seenDoors from server = fog was reset, clear local memory
-      seenDoorsRef.current.clear();
-    } else {
-      incoming.forEach(id => seenDoorsRef.current.add(id));
-    }
-  }, [fogState.seenDoors]);
-
-  // -------------------
-  // Gestion du snapshot local du masque exploré
-  // -------------------
-  const saveExploredMaskSnapshot = useCallback((targetSceneId?: string | null) => {
-    const sceneIdToSave = targetSceneId ?? sceneId;
-    if (!sceneIdToSave) {
-      console.warn('[FOG-SNAPSHOT] save: sceneId manquant, abandon');
-      return;
-    }
-
-    const exploredCanvas = exploredCanvasRef.current;
-    if (!exploredCanvas || exploredCanvas.width === 0 || exploredCanvas.height === 0) {
-      console.warn('[FOG-SNAPSHOT] save: canvas invalide ou absent', {
-        canvas: !!exploredCanvas,
-        w: exploredCanvas?.width,
-        h: exploredCanvas?.height,
-      });
-      return;
-    }
-
-
-    try {
-      const maxSnapshotWidth = 512;
-      const scale = Math.min(1, maxSnapshotWidth / exploredCanvas.width);
-      const snapshotWidth = Math.max(1, Math.round(exploredCanvas.width * scale));
-      const snapshotHeight = Math.max(1, Math.round(exploredCanvas.height * scale));
-
-      const snapshotCanvas = document.createElement('canvas');
-      snapshotCanvas.width = snapshotWidth;
-      snapshotCanvas.height = snapshotHeight;
-
-      const snapshotCtx = snapshotCanvas.getContext('2d');
-      if (!snapshotCtx) return;
-
-      snapshotCtx.drawImage(exploredCanvas, 0, 0, snapshotWidth, snapshotHeight);
-
-       // -------------------
-      // WebP est 5-8x plus léger que PNG sur un masque monochromatique
-      // Fallback PNG si le navigateur ne supporte pas WebP (rare)
-      // -------------------
-      const webpDataUrl = snapshotCanvas.toDataURL('image/webp', 0.85);
-      const dataUrl = webpDataUrl.startsWith('data:image/webp')
-        ? webpDataUrl
-        : snapshotCanvas.toDataURL('image/png');
-
-      localStorage.setItem(
-        getExploredMaskStorageKey(sceneIdToSave),
-        JSON.stringify({
-          width: snapshotWidth,
-          height: snapshotHeight,
-          dataUrl,
-        })
-      );
-
-
-
-    } catch (error) {
-      console.warn('[FOG-SNAPSHOT] save: ERREUR', error);
-    }
-  }, [sceneId]);
-  // Maintient la ref synchronisée avec la dernière version du callback
-  saveExploredMaskSnapshotRef.current = saveExploredMaskSnapshot;
-
-  // -------------------
-  // Gestion du snapshot local du masque exploré
-  // -------------------
-   // -------------------
-  // Restauration du snapshot local du masque exploré
-  // Utilise exploredCanvasRestoringRef pour protéger le canvas pendant
-  // le chargement asynchrone de l'image, afin que vttCanvasDraw ne
-  // le recrée pas en noir entre-temps
-  // -------------------
-  const restoreExploredMaskSnapshot = useCallback(() => {
-    if (!sceneId) {
-      console.warn('[FOG-SNAPSHOT] restore: sceneId manquant');
-      return false;
-    }
-    console.log('[FOG-SNAPSHOT] restore: tentative pour scène', sceneId);
-
-    const mapW = configRef.current.mapWidth || 2000;
-    const mapH = configRef.current.mapHeight || 2000;
-
-    // Réutilise le canvas pré-créé si les dimensions correspondent,
-    // sinon en crée un nouveau (cas de changement de taille de carte)
-    if (!exploredCanvasRef.current || exploredCanvasRef.current.width !== mapW || exploredCanvasRef.current.height !== mapH) {
-      const nextCanvas = document.createElement('canvas');
-      nextCanvas.width = mapW;
-      nextCanvas.height = mapH;
-      const nextCtx = nextCanvas.getContext('2d');
-      if (nextCtx) {
-        nextCtx.fillStyle = 'rgba(0,0,0,1)';
-        nextCtx.fillRect(0, 0, mapW, mapH);
+      if (isPaintingFogRef.current && roleRef.current === 'gm') {
+        const sp = getCanvasXY(e.clientX, e.clientY);
+        const wp = screenToWorld(sp.x, sp.y);
+        paintFogAt(wp.x, wp.y);
       }
-      exploredCanvasRef.current = nextCanvas;
-      exploredCanvasSizeRef.current = { w: mapW, h: mapH };
-    }
-
-    const targetCanvas = exploredCanvasRef.current;
-    const targetCtx = targetCanvas?.getContext('2d');
-    if (!targetCanvas || !targetCtx) return false;
-
-       try {
-      const raw = localStorage.getItem(getExploredMaskStorageKey(sceneId));
-      if (!raw) {
-        console.log('[FOG-SNAPSHOT] restore: aucun snapshot en localStorage pour', sceneId);
-        return false;
-      }
-      console.log('[FOG-SNAPSHOT] restore: snapshot trouvé, taille JSON =', raw.length);
-
-      const parsed = JSON.parse(raw) as { width: number; height: number; dataUrl: string };
-      if (!parsed?.dataUrl) {
-        console.log('[FOG-SNAP] snapshot corrompu pour scène', sceneId);
-        return false;
-      }
-
-
-
-      // -------------------
-      // Pose le flag de restauration : vttCanvasDraw ne doit PAS recréer
-      // exploredCanvasRef tant que ce flag est true
-      // -------------------
-      exploredCanvasRestoringRef.current = true;
-
-      const img = new Image();
-      img.onload = () => {
-        // -------------------
-        // On force la réassignation dans exploredCanvasRef : le snapshot prime
-        // même si vttCanvasDraw a recréé le canvas entre-temps
-        // -------------------
-
-        targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-        targetCtx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
-        exploredCanvasRef.current = targetCanvas;
-        exploredCanvasSizeRef.current = { w: targetCanvas.width, h: targetCanvas.height };
-        exploredCanvasRestoringRef.current = false;
+      if (isPanningRef.current && lastPanRef.current) {
+        const dx = e.clientX - lastPanRef.current.x;
+        const dy = e.clientY - lastPanRef.current.y;
+        lastPanRef.current = { x: e.clientX, y: e.clientY };
+        viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
-      };
-      img.onerror = () => {
-        console.error('[FOG-SNAPSHOT] restore: img.onerror — snapshot corrompu ou inaccessible');
-        exploredCanvasRestoringRef.current = false;
-      };
-      img.src = parsed.dataUrl;
-
-      return true;
-    } catch (error) {
-      exploredCanvasRestoringRef.current = false;
-      console.warn('[VTT] Impossible de restaurer le snapshot local du masque exploré:', error);
-      return false;
-    }
-  }, [sceneId]);
-
-  
-  // -------------------
-  // Reset explicite du canvas exploré sur signal "tout masquer"
-  // Contourne la détection par transition de longueur (cas strokes déjà vides)
-  // -------------------
-  useEffect(() => {
-    if (fogResetSignal === 0) return;
-    const mapW = configRef.current.mapWidth || 2000;
-    const mapH = configRef.current.mapHeight || 2000;
-    if (exploredCanvasRef.current) {
-      const eCtx = exploredCanvasRef.current.getContext('2d');
-      if (eCtx) {
-        eCtx.fillStyle = 'rgba(0,0,0,1)';
-        eCtx.fillRect(0, 0, mapW, mapH);
       }
-    }
-    if (sceneIdRef.current) {
-      localStorage.removeItem(getExploredMaskStorageKey(sceneIdRef.current));
-    }
-    exploredMaskWasResetRef.current = true;
-    drawRef.current();
-  }, [fogResetSignal]);
+    };
 
-  // -------------------
-  // Réinitialisation des canvases mémoire au changement de scène
-  // -------------------
-   useEffect(() => {
-    const previousSceneId = sceneIdRef.current;
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('dblclick', onDblClick);
+    canvas.addEventListener('contextmenu', onContextMenu);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseleave', onMouseLeave);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    canvas.addEventListener('touchstart',  onTouchStart,  { passive: false });
+    canvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
+    canvas.addEventListener('touchend',    onTouchEnd,    { passive: true  });
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onWindowMouseMove);
 
-    // -------------------
-    // Sauvegarde de la scène précédente
-    // On capture le canvas MAINTENANT, avant tout reset ou redraw
-    // On travaille sur une copie gelée pour éviter qu'un draw concurrent l'écrase
-    // -------------------
-    if (previousSceneId && previousSceneId !== sceneId && !exploredMaskWasResetRef.current) {
-      const canvasToSave = exploredCanvasRef.current;
-      if (canvasToSave && canvasToSave.width > 0 && canvasToSave.height > 0) {
-        // -------------------
-        // Copie défensive : on clone le canvas MAINTENANT pour éviter
-        // qu'un draw suivant l'écrase avant la fin de la sauvegarde
-        // -------------------
-        const frozenCanvas = document.createElement('canvas');
-        frozenCanvas.width = canvasToSave.width;
-        frozenCanvas.height = canvasToSave.height;
-        const frozenCtx = frozenCanvas.getContext('2d');
-        if (frozenCtx) {
-          frozenCtx.drawImage(canvasToSave, 0, 0);
-
-
-
-          // Sauvegarde depuis la copie gelée
-          try {
-            const maxW = 512;
-            const scale = Math.min(1, maxW / frozenCanvas.width);
-            const sw = Math.max(1, Math.round(frozenCanvas.width * scale));
-            const sh = Math.max(1, Math.round(frozenCanvas.height * scale));
-            const snapCanvas = document.createElement('canvas');
-            snapCanvas.width = sw;
-            snapCanvas.height = sh;
-            const snapCtx = snapCanvas.getContext('2d');
-            if (snapCtx) {
-              snapCtx.drawImage(frozenCanvas, 0, 0, sw, sh);
-              const dataUrl = snapCanvas.toDataURL('image/png');
-              localStorage.setItem(
-                getExploredMaskStorageKey(previousSceneId),
-                JSON.stringify({ width: sw, height: sh, dataUrl })
-              );
-
-
-
-            }
-          } catch (e) {
-            console.warn('[FOG-SNAPSHOT] save gelé ERREUR:', e);
-          }
-        }
-      } else {
-        console.warn('[FOG-SNAPSHOT] save gelé: canvas absent ou vide au moment du changement de scène');
-        // Fallback : tentative via saveExploredMaskSnapshot classique
-        saveExploredMaskSnapshot(previousSceneId);
-      }
-    }
-
-    // -------------------
-    // Reset des canvases mémoire après sauvegarde
-    // -------------------
-    fogCanvasRef.current = null;
-    fogCanvasSizeRef.current = { w: 0, h: 0 };
-
-    visionCanvasRef.current = null;
-    visionCanvasSizeRef.current = { w: 0, h: 0 };
-
-    dayVisionCanvasRef.current = null;
-    dayVisionCanvasSizeRef.current = { w: 0, h: 0 };
-
-    // -------------------
-    // Pré-création du canvas exploré AVANT le draw
-    // -------------------
-    const mapW = configRef.current.mapWidth || 2000;
-    const mapH = configRef.current.mapHeight || 2000;
-    const preCanvas = document.createElement('canvas');
-    preCanvas.width = mapW;
-    preCanvas.height = mapH;
-    const preCtx = preCanvas.getContext('2d');
-    if (preCtx) {
-      preCtx.fillStyle = 'rgba(0,0,0,1)';
-      preCtx.fillRect(0, 0, mapW, mapH);
-    }
-    exploredCanvasRef.current = preCanvas;
-    exploredCanvasSizeRef.current = { w: mapW, h: mapH };
-
-    sceneIdRef.current = sceneId ?? null;
-    prevExploredStrokesLenRef.current = -1;
-    prevStrokesLenRef.current = 0;
-    exploredMaskWasResetRef.current = false;
-
-    // Reset seenDoors for new scene, then load persisted ones
-    seenDoorsRef.current = new Set(fogStateRef.current.seenDoors || []);
-    seenWindowsRef.current = new Set();
-
-    drawRef.current();
-
-    restoreExploredMaskSnapshot();
-  }, [sceneId, restoreExploredMaskSnapshot, saveExploredMaskSnapshot]);
-
-    // -------------------
-  // Gestion du snapshot local du masque exploré + nettoyage RAF peinture fog
-  // -------------------
-  useEffect(() => {
     return () => {
-      // Annule le RAF de peinture fog si en cours
-      if (fogPaintRafRef.current) {
-        cancelAnimationFrame(fogPaintRafRef.current);
-        fogPaintRafRef.current = null;
-      }
-
-      // Annule l'animation de centrage si en cours
-      if (viewportFocusAnimRef.current) {
-        cancelAnimationFrame(viewportFocusAnimRef.current);
-        viewportFocusAnimRef.current = null;
-      }
-
-      if (!exploredMaskWasResetRef.current) {
-        saveExploredMaskSnapshot(sceneIdRef.current);
-      }
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('dblclick', onDblClick);
+      canvas.removeEventListener('contextmenu', onContextMenu);
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
+      canvas.removeEventListener('wheel', onWheel);
+      canvas.removeEventListener('touchstart',  onTouchStart);
+      canvas.removeEventListener('touchmove',   onTouchMove);
+      canvas.removeEventListener('touchend',    onTouchEnd);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('mousemove', onWindowMouseMove);
     };
-  }, [saveExploredMaskSnapshot]);
-
-
-
-  const getCanvasXY = (clientX: number, clientY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  };
-
-  const screenToWorld = (sx: number, sy: number) => {
-    const vp = viewportRef.current;
-    return { x: (sx - vp.x) / vp.scale, y: (sy - vp.y) / vp.scale };
-  };
-
-  const getTokenAt = (wx: number, wy: number): VTTToken | null => {
-    const toks = tokensRef.current;
-    const c = configRef.current.gridSize || 50;
-    for (let i = toks.length - 1; i >= 0; i--) {
-      const t = toks[i];
-      if (roleRef.current === 'player' && !t.visible) continue;
-      const size = (t.size || 1) * c;
-      if (wx >= t.position.x && wx <= t.position.x + size &&
-          wy >= t.position.y && wy <= t.position.y + size) {
-        return t;
-      }
-    }
-    return null;
-  };
-
-  const snapToGrid = (wx: number, wy: number) => {
-    const cfg = configRef.current;
-    if (!cfg.snapToGrid) return { x: wx, y: wy };
-    const c = cfg.gridSize || 50;
-    const ox = ((cfg.gridOffsetX || 0) % c + c) % c;
-    const oy = ((cfg.gridOffsetY || 0) % c + c) % c;
-    return {
-      x: Math.round((wx - ox) / c) * c + ox,
-      y: Math.round((wy - oy) / c) * c + oy,
-    };
-  };
-
-  // -------------------
-  // -------------------
-  // Gestion de la peinture du brouillard de guerre
-  // Applique le stroke localement sur le fogCanvas pour un retour visuel
-  // instantané, puis planifie un seul redraw via requestAnimationFrame.
-  // L'envoi au state partagé est différé (batched) pour ne pas provoquer
-  // un re-render React + useEffect + draw() supplémentaire à chaque pixel.
-  // -------------------
-  const fogPaintRafRef = useRef<number | null>(null);
-  const fogPaintBatchRef = useRef<VTTFogStroke[]>([]);
-
-  const paintFogAt = (wx: number, wy: number) => {
-    const erase = activeToolRef.current === 'fog-erase';
-    const stroke: VTTFogStroke = { x: wx, y: wy, r: fogBrushSizeRef.current, erase };
-
-    // -------------------
-    // Application locale immédiate sur le fogCanvas (O(1) : 1 seul arc)
-    // -------------------
-    applyStrokeToFogCanvas(stroke, fogCanvasRef);
-
-    // -------------------
-    // Invalidation du cache fogInv UNE SEULE FOIS par frame
-    // (pas à chaque mousemove — un seul null suffit)
-    // -------------------
-    fogInvCanvasRef.current = null;
-
-    // -------------------
-    // Accumule le stroke dans le batch pour envoi différé
-    // -------------------
-    fogPaintBatchRef.current.push(stroke);
-    prevStrokesLenRef.current++;
-
-    // -------------------
-    // Planifie un seul draw + flush par frame d'animation
-    // Si un RAF est déjà en attente, on n'en crée pas un deuxième.
-    // Cela regroupe tous les mousemove d'une même frame en un seul draw().
-    // -------------------
-    // -------------------
-    // Planifie UN SEUL draw par frame d'animation pour le retour visuel MJ
-    // Le flush du batch (setState + broadcast + RPC) est DIFFÉRÉ au mouseUp
-    // pour ne pas provoquer 60 re-renders + 60 broadcasts par seconde.
-    // Le MJ voit le résultat immédiatement grâce à applyStrokeToFogCanvas (ci-dessus).
-    // -------------------
-    if (fogPaintRafRef.current === null) {
-      fogPaintRafRef.current = requestAnimationFrame(() => {
-        fogPaintRafRef.current = null;
-        draw();
-      });
-    }
-  };
-
-  // -------------------
-  // Flush du batch fog : appelé au mouseUp (fin du painting)
-  // Envoie en UNE SEULE FOIS tous les strokes accumulés pendant le drag.
-  // C'est CE flush qui provoque le setState + broadcast + RPC Supabase,
-  // donc ne se fait qu'une seule fois au lieu de 60/s.
-  // -------------------
-  const flushFogBatch = useCallback(() => {
-    // Annule tout RAF en attente
-    if (fogPaintRafRef.current) {
-      cancelAnimationFrame(fogPaintRafRef.current);
-      fogPaintRafRef.current = null;
-    }
-    const batch = fogPaintBatchRef.current;
-    fogPaintBatchRef.current = [];
-    if (batch.length > 0) {
-      onRevealFogRef.current(batch);
-    }
   }, []);
 
-    const draw = useCallback(() => {
-    drawVTTCanvas({
-      canvasRef,
-      mapImgRef,
-      mapLoadedRef,
-      tokenImageCache,
-      viewportRef,
-      forceViewportRef,
-      spectatorModeRef,
-      configRef,
-      fogStateRef,
-      roleRef,
-      userIdRef,
-      selectedTokenIdRef,
-      selectedTokenIdsRef,
-      tokensRef,
-      wallsRef,
-      doorsRef,
-      windowsRef,
-      activeToolRef,
-      showWallsRef,
-      wallPointsRef,
-      wallPreviewPosRef,
-      doorInProgressRef,
-      doorPreviewPosRef,
-      selectedDoorRef,
-      hoveredDoorRef,
-      selectedDoorEndpointRef,
-      windowInProgressRef,
-      windowPreviewPosRef,
-      hoveredWindowRef,
-      selectedWindowRef,
-      selectedWindowEndpointRef,
-      selectedWallPointRef,
-      selectedWallPointsRef,
-      measureStartRef,
-      measureEndRef,
-      selectionRectRef,
-      // -------------------
-      // Rectangle de preview fog (fog-rect-reveal / fog-rect-erase)
-      // -------------------
-      fogRectRef,
-      calibrationPointsRef,
-      fogCanvasRef,
-      fogCanvasSizeRef,
-      // -------------------
-      // Refs du cache fogInv (masque inversé du fog pour percement vision)
-      // -------------------
-      fogInvCanvasRef,
-      fogInvVersionRef,
-      visionCanvasRef,
-      visionCanvasSizeRef,
-      dayVisionCanvasRef,
-      dayVisionCanvasSizeRef,
-      exploredCanvasRef,
-      exploredCanvasSizeRef,
-      exploredCanvasRestoringRef,
-      drawRef,
-      seenDoorsRef,
-      onSeenDoorsUpdate: onSeenDoorsUpdateRef.current
-        ? (newIds: string[]) => onSeenDoorsUpdateRef.current?.(newIds)
-        : undefined,
-      seenWindowsRef,
-    });
-  }, []);
-
-  drawRef.current = draw;
-
-  // Load map image — clear old image immediately to prevent stale map showing
+  // Keyboard events (arrows + Escape)
   useEffect(() => {
-    if (!config.mapImageUrl) {
-      setMapLoading(false);
-      mapLoadedRef.current = false;
-      mapImgRef.current = null;
-      draw();
-      return;
-    }
-    // Immediately clear previous image so canvas shows dark bg while loading
-    mapImgRef.current = null;
-    mapLoadedRef.current = false;
-    setMapLoading(true);
-    draw();
-
-    const img = new Image();
-    img.onload = () => {
-      mapImgRef.current = img;
-      mapLoadedRef.current = true;
-      setMapLoading(false);
-      if (onMapDimensionsRef.current && img.naturalWidth > 0) {
-        onMapDimensionsRef.current(img.naturalWidth, img.naturalHeight);
-      }
-      draw();
-    };
-    img.onerror = () => {
-      mapImgRef.current = null;
-      mapLoadedRef.current = false;
-      setMapLoading(false);
-      draw();
-    };
-    img.src = config.mapImageUrl;
-  }, [config.mapImageUrl, draw]);
-
-  // -------------------
-   // -------------------
-  // Reconstruction du canvas de brouillard de guerre
-  // + détection du reset fog (tout masquer) et du reveal all (tout révéler)
-  // + application des strokes erase sur le canvas exploré (mémoire)
-  // -------------------
-  const prevExploredStrokesLenRef = useRef<number>(-1);
-  const prevStrokesLenRef = useRef<number>(0);
-
-  useEffect(() => { 
-    const strokes = fogState.strokes || [];
-    const exploredStrokes = fogState.exploredStrokes || [];
-    const mapW = config.mapWidth || 2000;
-    const mapH = config.mapHeight || 2000;
-
-    // -------------------
-    // Reconstruction du fogCanvas — incrémentale ou totale
-    // On ne reconstruit depuis zéro QUE si :
-    //   - le fogCanvas n'existe pas (premier render, changement de scène)
-    //   - la taille de la carte a changé
-    //   - un reset fog a eu lieu (strokes vide ou diminué)
-    // Sinon on applique uniquement les nouveaux strokes → O(1) au lieu de O(N)
-    // -------------------
-    const prevSLen = prevStrokesLenRef.current;
-    const needsFullRebuild =
-      !fogCanvasRef.current ||
-      fogCanvasSizeRef.current.w !== mapW ||
-      fogCanvasSizeRef.current.h !== mapH ||
-      strokes.length < prevSLen ||
-      strokes.length === 0;
-
-    if (needsFullRebuild) {
-      fogCanvasRef.current = null;
-      fogCanvasSizeRef.current = { w: 0, h: 0 };
-      buildFogCanvas(strokes, mapW, mapH, fogCanvasRef, fogCanvasSizeRef);
-    } else if (strokes.length > prevSLen) {
-      // Application incrémentale : seuls les nouveaux strokes sont dessinés
-      for (let i = prevSLen; i < strokes.length; i++) {
-        applyStrokeToFogCanvas(strokes[i], fogCanvasRef);
-      }
-    }
-
-    // -------------------
-    // Invalidation du cache fogInv (masque inversé du fog)
-    // Sera recalculé au prochain draw() uniquement
-    // -------------------
-    fogInvCanvasRef.current = null;
-    fogInvVersionRef.current++; 
- 
-    // -------------------
-    // Détection du reset fog (tout masquer)
-    // Condition : strokes passe de > 0 à 0 (reset intentionnel)
-    // Le prevLen === -1 est ignoré (premier chargement / changement de scène)
-    // -------------------
-    const prevLen = prevExploredStrokesLenRef.current;
-    const currLen = exploredStrokes.length;
-    const isIntentionalReset = (prevLen > 0 && currLen === 0) || (prevStrokesLenRef.current > 0 && strokes.length === 0);
-    prevExploredStrokesLenRef.current = currLen;
-
-    if (isIntentionalReset && exploredCanvasRef.current) {
-      // Réinitialise le canvas exploré en noir (tout masqué)
-      const eCtx = exploredCanvasRef.current.getContext('2d');
-      if (eCtx) {
-        eCtx.fillStyle = 'rgba(0,0,0,1)';
-        eCtx.fillRect(0, 0, mapW, mapH);
-      }
-      // Supprime le snapshot localStorage pour éviter une restauration fantôme
-      if (sceneId) {
-        localStorage.removeItem(getExploredMaskStorageKey(sceneId));
-      }
-      // Marque que le fog a été resetté pour empêcher une re-sauvegarde au démontage
-      exploredMaskWasResetRef.current = true;
-    }
-
-    // -------------------
-    // Détection du "Tout révéler" : strokes contient un unique stroke géant non-erase
-    // qui couvre toute la carte. On applique destination-out sur tout le exploredCanvas
-    // pour que la mémoire soit aussi entièrement explorée.
-    // -------------------
-    if (exploredCanvasRef.current && strokes.length > 0 && exploredStrokes.length > 0) {
-      const lastStroke = strokes[strokes.length - 1];
-      const diag = Math.sqrt(mapW * mapW + mapH * mapH);
-      // Si le dernier stroke est un cercle géant qui couvre la carte → c'est un reveal all
-      if (!lastStroke.erase && lastStroke.r >= diag * 0.9) {
-        const eCtx = exploredCanvasRef.current.getContext('2d');
-        if (eCtx) {
-          // Efface tout le noir du canvas exploré → tout est exploré
-          eCtx.clearRect(0, 0, mapW, mapH);
-        }
-      }
-    }
-
-    // -------------------
-    // Application des strokes erase sur le canvas exploré (mémoire)
-    // Quand le MJ utilise le pinceau fog-erase, le stroke erase est ajouté
-    // aux strokes mais PAS aux exploredStrokes. Il faut repérer les nouveaux
-    // strokes erase et peindre du noir opaque sur le canvas exploré pour
-    // effacer la mémoire de cette zone (sinon on voit du gris au lieu du noir).
-    // -------------------
-    const prevStrokesLen = prevStrokesLenRef.current;
-    prevStrokesLenRef.current = strokes.length;
-
-    if (strokes.length > prevStrokesLen && prevStrokesLen >= 0 && exploredCanvasRef.current) {
-      const ec = exploredCanvasRef.current;
-      const eCtx = ec.getContext('2d');
-      if (eCtx) {
-        for (let i = prevStrokesLen; i < strokes.length; i++) {
-          const s = strokes[i];
-          if (s.erase) {
-            // Peint du noir opaque → efface la mémoire explorée pour cette zone
-            eCtx.globalCompositeOperation = 'source-over';
-            eCtx.fillStyle = 'rgba(0,0,0,1)';
-            eCtx.beginPath();
-            eCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            eCtx.fill();
-          }
-        }
-      }
-    }
-
-    // -------------------
-    // Redraw seulement si le changement ne vient PAS de paintFogAt
-    // (paintFogAt fait déjà son propre draw via RAF, pas besoin d'un 2e)
-    // Si fogPaintRafRef est non-null, un RAF est en attente → skip le draw
-    // -------------------
-    if (!fogPaintRafRef.current) {
-      drawRef.current();
-    }
-  }, [fogState.strokes, fogState.exploredStrokes, config.mapWidth, config.mapHeight, sceneId]);
-
-  // Redraw when visual state changes
-  useEffect(() => { draw(); }, [draw, tokens, selectedTokenId, selectedTokenIds, config, calibrationPoints, walls, showWalls, doors]);
-
-  useEffect(() => {
-    const hasTorch = tokens.some(t => t.visible && t.lightSource === 'torch');
-    const hasNightVision = tokens.some(t => t.visible && (t.visionMode === 'darkvision' || t.visionMode === 'normal' || (t.lightSource && t.lightSource !== 'none')));
-    const isNight = config.timeOfDay != null && (config.timeOfDay >= 19 || config.timeOfDay < 5);
-    if ((hasTorch || hasNightVision) && isNight) {
-      let running = true;
-      const animate = () => {
-        if (!running) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeToolRef.current === 'measure') {
+        measureStartRef.current = null;
+        measureEndRef.current = null;
+        measureLockedRef.current = false;
         drawRef.current();
-        torchAnimRef.current = requestAnimationFrame(animate);
-      };
-      torchAnimRef.current = requestAnimationFrame(animate);
-      return () => {
-        running = false;
-        if (torchAnimRef.current) cancelAnimationFrame(torchAnimRef.current);
-      };
-    } else {
-      if (torchAnimRef.current) {
-        cancelAnimationFrame(torchAnimRef.current);
-        torchAnimRef.current = null;
+        return;
       }
-    }
-  }, [tokens, config.timeOfDay]);
+      if (e.key === 'Escape' && activeToolRef.current === 'wall-select') {
+        selectedWallPointRef.current = null;
+        selectedWallPointsRef.current = [];
+        draggingWallPointRef.current = null;
+        draggingDoorRef.current = null;
+        draggingDoorEndpointRef.current = null;
+        selectedDoorEndpointRef.current = null;
+        selectedDoorRef.current = null;
+        isDragSelectingRef.current = false;
+        selectionRectRef.current = null;
+        drawRef.current();
+        return;
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && activeToolRef.current === 'wall-select') {
+        if (roleRef.current !== 'gm') return;
 
-  // Resize observer
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-    const resize = () => {
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      draw();
+        // Suppression d'une porte sélectionnée
+        const selDoor = selectedDoorRef.current;
+        if (selDoor) {
+          onDoorRemovedRef.current?.(selDoor);
+          selectedDoorRef.current = null;
+          draggingDoorRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        let currentWalls = wallsRef.current || [];
+
+        // --- Sélection MULTIPLE (rectangle) ---
+        const multiSel = selectedWallPointsRef.current;
+        if (multiSel.length > 0) {
+          // Grouper les points à supprimer par wallId
+          const toDeleteByWall = new Map<string, Set<number>>();
+          for (const sp of multiSel) {
+            if (!toDeleteByWall.has(sp.wallId)) toDeleteByWall.set(sp.wallId, new Set());
+            toDeleteByWall.get(sp.wallId)!.add(sp.pointIndex);
+          }
+          for (const [wallId, indices] of toDeleteByWall) {
+            const wall = currentWalls.find(w => w.id === wallId);
+            if (!wall) continue;
+            const newPoints = wall.points.filter((_, i) => !indices.has(i));
+            if (newPoints.length < 2) {
+              onWallRemovedRef.current?.(wallId);
+              currentWalls = currentWalls.filter(w => w.id !== wallId);
+            } else {
+              const updatedWall = { ...wall, points: newPoints };
+              currentWalls = currentWalls.map(w => w.id === wallId ? updatedWall : w);
+              onWallUpdatedRef.current?.(updatedWall);
+            }
+          }
+          wallsRef.current = currentWalls;
+          selectedWallPointsRef.current = [];
+          draggingWallPointRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        // --- Sélection SIMPLE (un seul point) ---
+        const sel = draggingWallPointRef.current;
+        if (sel) {
+          const wall = currentWalls.find(w => w.id === sel.wallId);
+          if (wall) {
+            const newPoints = wall.points.filter((_, i) => i !== sel.pointIndex);
+            if (newPoints.length < 2) {
+              onWallRemovedRef.current?.(wall.id);
+            } else {
+              const updatedWall = { ...wall, points: newPoints };
+              wallsRef.current = currentWalls.map(w => w.id === sel.wallId ? updatedWall : w);
+              onWallUpdatedRef.current?.(updatedWall);
+            }
+          }
+          draggingWallPointRef.current = null;
+          selectedWallPointRef.current = null;
+          drawRef.current();
+        }
+        return;
+      }
+if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
+  const pts = wallPointsRef.current;
+  if (pts.length >= 2) {
+    onWallAddedRef.current?.({ id: crypto.randomUUID(), points: [...pts] });
+    // Fusionner les points du nouveau mur avec les points existants co-localisés
+    fuseWallPoints(pts, wallsRef.current, onWallUpdatedRef.current);
+  }
+  wallPointsRef.current = [];
+  wallPreviewPosRef.current = null;
+  drawRef.current();
+  return;
+}
+      const selId = selectedTokenIdRef.current;
+      if (!selId) return;
+      const token = tokensRef.current.find(t => t.id === selId);
+      if (!token) return;
+      const canMove = roleRef.current === 'gm' || (token.controlledByUserIds && token.controlledByUserIds.includes(userIdRef.current));
+      if (!canMove) return;
+      const c = configRef.current.gridSize || 50;
+      let dx = 0, dy = 0;
+      if (e.key === 'ArrowLeft') dx = -c;
+      else if (e.key === 'ArrowRight') dx = c;
+      else if (e.key === 'ArrowUp') dy = -c;
+      else if (e.key === 'ArrowDown') dy = c;
+      else return;
+      e.preventDefault();
+      const newX = token.position.x + dx;
+      const newY = token.position.y + dy;
+      const tokenSizePx = (token.size || 1) * c;
+      const currentWalls = wallsRef.current || [];
+      if (isPlayerBlockedByTurnLock(token)) return;
+      if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
+      onMoveTokenRef.current(
+        selId,
+        { x: newX, y: newY },
+        { localCameraFollow: followCameraOnTokenMoveRef.current }
+      );
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [draw]);
-
-  useEffect(() => {
-    if (forceViewportProp) draw();
-  }, [forceViewportProp, draw]);
-
-  // Applique la vue initiale sauvegardée (one-shot, ne se ré-applique pas si les coordonnées changent après)
-  const initialViewportAppliedRef = useRef(false);
-  const lastAppliedInitialViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
-   // -------------------
-  // Application du viewport initial (savedViewport GM ou playerInitialViewport)
-  // On notifie onViewportChange après application pour que VTTPage
-  // mette à jour canvasViewport immédiatement — sans attendre le premier pan/zoom.
-  // Cela garantit que les rings de ciblage et les props HTML sont bien
-  // positionnés dès la première connexion.
-  // -------------------
-  useEffect(() => {
-    if (!initialViewport) return;
-    const prev = lastAppliedInitialViewportRef.current;
-    // Ne ré-applique QUE si c'est une valeur différente de la dernière appliquée
-    // (protège contre les re-renders React qui recréent l'objet)
-    if (
-      prev &&
-      Math.abs(prev.x - initialViewport.x) < 0.01 &&
-      Math.abs(prev.y - initialViewport.y) < 0.01 &&
-      Math.abs(prev.scale - initialViewport.scale) < 0.0001
-    ) return;
-    lastAppliedInitialViewportRef.current = { ...initialViewport };
-    viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
-    draw();
-    // -------------------
-    // Notifie VTTPage du viewport réel appliqué
-    // (sans cela, canvasViewport reste à {x:0,y:0,scale:1} jusqu'au 1er mouvement)
-    // -------------------
-    onViewportChangeRef.current?.({ x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
-
-  useVTTCanvasEvents({
-    canvasRef,
-    brushOverlayRef,
-    viewportRef,
-    tokensRef,
-    configRef,
-    roleRef,
-    userIdRef,
-    activeToolRef,
-    fogBrushSizeRef,
-    wallsRef,
-    wallPointsRef,
-    wallPreviewPosRef,
-    measureStartRef,
-    measureEndRef,
-    measureLockedRef,
-    selectedTokenIdRef,
-    selectedTokenIdsRef,
-    draggingTokenRef,
-    resizingTokenRef,
-    isPaintingFogRef,
-    lastPanRef,
-    isPanningRef,
-    selectionRectRef,
-    fogRectRef,
-    isDragSelectingRef,
-    onSelectTokenRef,
-    onSelectTokensRef,
-    onMoveTokenRef,
-    onResizeTokenRef,
-    onRightClickTokenRef,
-    onCalibrationPointRef,
-    onWallAddedRef,
-    onWallUpdatedRef,
-    onWallRemovedRef,
-    doorsRef,
-    onDoorAddedRef,
-    onDoorToggledRef,
-    onDoorRemovedRef,
-    doorInProgressRef,
-    doorPreviewPosRef,
-    selectedDoorRef,
-    hoveredDoorRef,
-    selectedDoorEndpointRef,
-    windowsRef,
-    onWindowAddedRef,
-    onWindowRemovedRef,
-    windowInProgressRef,
-    windowPreviewPosRef,
-    hoveredWindowRef,
-    selectedWindowRef,
-    selectedWindowEndpointRef,
-    selectedWallPointRef,
-    selectedWallPointsRef,
-     onViewportChangeRef,
-    onTokenDoubleClickRef,
-    // -------------------
-    // Ref vers le handler fog (utilisé par fog-rect pour envoyer le stroke rectangle au mouseUp)
-    // -------------------
-    onRevealFogRef,
-    drawRef,
-    paintFogAt,
-    // -------------------
-    // Flush batch fog au mouseUp — un seul broadcast/setState pour tout le trait
-    // -------------------
-    flushFogBatch,
-    getCanvasXY,
-    screenToWorld,
-    getTokenAt,
-    snapToGrid,
-    activeTool,
-  });
-
-  // -------------------
-  // Détection de tous les outils fog (pinceau + rectangle)
-  // -------------------
-  const isFogTool = activeTool === 'fog-reveal' || activeTool === 'fog-erase';
-  const isFogRectTool = activeTool === 'fog-rect-reveal' || activeTool === 'fog-rect-erase';
-  const isAnyFogTool = isFogTool || isFogRectTool;
-  const isWallTool = activeTool === 'wall-draw';
-  const isWallSelectTool = activeTool === 'wall-select';
-  const isAnyWallTool = isWallTool || isWallSelectTool;
-  const isMeasureTool = activeTool === 'measure';
-
-  const handleDragOver = (e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes('application/vtt-token-id')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      setIsDragOver(true);
-    } else if (e.dataTransfer.types.includes('application/vtt-new-token')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      setIsDragOver(true);
-    } else if (e.dataTransfer.types.includes('application/vtt-prop-url')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    setIsDragOver(false);
-    e.preventDefault();
-    const sp = getCanvasXY(e.clientX, e.clientY);
-    const wp = screenToWorld(sp.x, sp.y);
-    const cfg = configRef.current;
-    const CELL = cfg.gridSize || 50;
-    const ox = ((cfg.gridOffsetX || 0) % CELL + CELL) % CELL;
-    const oy = ((cfg.gridOffsetY || 0) % CELL + CELL) % CELL;
-    const snapped = cfg.snapToGrid
-      ? { x: Math.round((wp.x - ox) / CELL) * CELL + ox, y: Math.round((wp.y - oy) / CELL) * CELL + oy }
-      : wp;
-
-    const newTokenData = e.dataTransfer.getData('application/vtt-new-token');
-    if (newTokenData && onAddTokenAtPosRef.current) {
-      try {
-        const tokenTemplate = JSON.parse(newTokenData) as Omit<VTTToken, 'id'>;
-        onAddTokenAtPosRef.current(tokenTemplate, snapped);
-      } catch {}
-      return;
-    }
-
-    const tokenId = e.dataTransfer.getData('application/vtt-token-id');
-    if (tokenId && onDropTokenRef.current) {
-      onDropTokenRef.current(tokenId, snapped);
-      return;
-    }
-
-    // Drop depuis la bibliothèque de props
-    const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
-    if (propUrl && onDropPropRef.current) {
-      onDropPropRef.current({
-        url: propUrl,
-        name: e.dataTransfer.getData('application/vtt-prop-name') || 'Prop',
-        isVideo: e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true',
-      }, snapped);
-    }
-  };
-
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full relative overflow-hidden bg-gray-950"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 touch-none"
-               style={{ cursor: isFogTool ? 'none' : (isFogRectTool || isWallTool || isMeasureTool) ? 'crosshair' : 'default' }}
-      />
-
-      {isDragOver && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-amber-400/60 bg-amber-400/5 z-10 flex items-center justify-center">
-          <div className="bg-gray-900/80 border border-amber-500/60 rounded-xl px-4 py-2 text-amber-300 text-sm font-medium shadow-xl">
-            Déposer le token ici
-          </div>
-        </div>
-      )}
-
-      {mapLoading && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20 bg-gray-950/60">
-          <div className="flex flex-col items-center gap-3">
-            <img
-              src="/icons/wmremove-transformed.png"
-              alt="Chargement..."
-              className="w-16 h-16 object-contain animate-spin opacity-80"
-            />
-            <span className="text-gray-400 text-sm">Chargement de la carte...</span>
-          </div>
-        </div>
-      )}
-
-      <div
-        ref={brushOverlayRef}
-        className="pointer-events-none fixed rounded-full border-2 -translate-x-1/2 -translate-y-1/2"
-        style={{ display: 'none' }}
-      />
-    </div>
-  );
-});
-
-VTTCanvas.displayName = 'VTTCanvas'; 
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+}
