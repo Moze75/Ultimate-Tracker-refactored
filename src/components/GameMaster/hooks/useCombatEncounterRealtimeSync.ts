@@ -105,6 +105,13 @@ export function useCombatEncounterRealtimeSync({
           ...(data.status ? { status: data.status } : {}),
         });
       })
+      .on('broadcast', { event: 'combat-ended' }, (payload) => {
+        const data = payload.payload as { encounterId?: string; status?: string };
+        console.log('[RealtimeSync] Broadcast combat-ended reçu:', data);
+        callbackRef.current({
+          status: data.status ?? 'completed',
+        });
+      })
       // -------------------
       // Écoute postgres_changes : filet de secours WAL (1-3s)
       // -------------------
