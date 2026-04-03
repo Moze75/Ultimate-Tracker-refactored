@@ -3,6 +3,7 @@ import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
   getViewportCenter: () => { x: number; y: number };
+    onBlockedByTurnLock?: () => void;
   centerOnWorldPosition: (x: number, y: number) => void;
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
   followWorldPosition: (x: number, y: number) => void;
