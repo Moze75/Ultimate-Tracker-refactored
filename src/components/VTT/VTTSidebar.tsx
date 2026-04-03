@@ -620,11 +620,14 @@ const visibleTokens = isGM
               liveTokens={tokens}
               role={role}
               onUpdateToken={onUpdateToken}
-                        autoFocusCombatTurn={autoFocusCombatTurn}
-            onToggleAutoFocusCombatTurn={onToggleAutoFocusCombatTurn}
-                          followCameraOnTokenMove={followCameraOnTokenMove}
-            onToggleFollowCameraOnTokenMove={onToggleFollowCameraOnTokenMove}
+              autoFocusCombatTurn={autoFocusCombatTurn}
+              onToggleAutoFocusCombatTurn={onToggleAutoFocusCombatTurn}
+              followCameraOnTokenMove={followCameraOnTokenMove}
+              onToggleFollowCameraOnTokenMove={onToggleFollowCameraOnTokenMove}
+              lockPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
+              onToggleLockPlayerMovementOutsideTurn={onToggleLockPlayerMovementOutsideTurn}
               onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
+              onCurrentTurnLabelChange={onCurrentTurnLabelChange}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
