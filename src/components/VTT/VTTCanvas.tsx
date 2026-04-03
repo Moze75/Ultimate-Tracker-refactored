@@ -55,6 +55,9 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onSeenDoorsUpdate,
   fogResetSignal = 0,
   onTokenDoubleClick,
+  followCameraOnTokenMove = false,
+  restrictPlayerMovementOutsideTurn = false,
+  currentCombatTurnLabel = null,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +69,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
   const viewportFocusAnimRef = useRef<number | null>(null);
+  const viewportFollowAnimRef = useRef<number | null>(null);
+  const viewportFollowTargetRef = useRef<{ x: number; y: number } | null>(null);
+    const combatTurnHighlightRef = useRef<{ tokenId: string; startedAt: number } | null>(null);
+  const combatTurnHighlightAnimRef = useRef<number | null>(null);
 
     const sceneIdRef = useRef<string | null>(sceneId ?? null);
 
@@ -133,6 +140,139 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
       viewportFocusAnimRef.current = requestAnimationFrame(animate);
     },
+    centerOnWorldPositionImmediate: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
+      const vp = viewportRef.current;
+      viewportRef.current = {
+        ...vp,
+        x: canvas.width / 2 - x * vp.scale,
+        y: canvas.height / 2 - y * vp.scale,
+      };
+
+      onViewportChangeRef.current?.({
+        x: viewportRef.current.x,
+        y: viewportRef.current.y,
+        scale: viewportRef.current.scale,
+      });
+
+      drawRef.current();
+    },
+
+        followWorldPosition: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      viewportFollowTargetRef.current = { x, y };
+
+      if (viewportFollowAnimRef.current) return;
+
+      const animate = () => {
+        const target = viewportFollowTargetRef.current;
+        const currentCanvas = canvasRef.current;
+
+        if (!target || !currentCanvas) {
+          viewportFollowAnimRef.current = null;
+          return;
+        }
+
+        const vp = viewportRef.current;
+        const targetX = currentCanvas.width / 2 - target.x * vp.scale;
+        const targetY = currentCanvas.height / 2 - target.y * vp.scale;
+
+        const lerp = 0.18;
+        const nextX = vp.x + (targetX - vp.x) * lerp;
+        const nextY = vp.y + (targetY - vp.y) * lerp;
+
+        viewportRef.current = {
+          ...vp,
+          x: nextX,
+          y: nextY,
+        };
+
+        onViewportChangeRef.current?.({
+          x: viewportRef.current.x,
+          y: viewportRef.current.y,
+          scale: viewportRef.current.scale,
+        });
+
+        drawRef.current();
+
+        const done =
+          Math.abs(targetX - nextX) < 0.5 &&
+          Math.abs(targetY - nextY) < 0.5;
+
+        if (done) {
+          viewportRef.current = {
+            ...viewportRef.current,
+            x: targetX,
+            y: targetY,
+          };
+
+          onViewportChangeRef.current?.({
+            x: viewportRef.current.x,
+            y: viewportRef.current.y,
+            scale: viewportRef.current.scale,
+          });
+
+          drawRef.current();
+          viewportFollowAnimRef.current = null;
+          return;
+        }
+
+        viewportFollowAnimRef.current = requestAnimationFrame(animate);
+      };
+
+      viewportFollowAnimRef.current = requestAnimationFrame(animate);
+    },
+    stopFollowingWorldPosition: () => {
+      viewportFollowTargetRef.current = null;
+      if (viewportFollowAnimRef.current) {
+        cancelAnimationFrame(viewportFollowAnimRef.current);
+        viewportFollowAnimRef.current = null;
+      }
+    },
+    triggerCombatTurnHighlight: (tokenId: string) => {
+      combatTurnHighlightRef.current = {
+        tokenId,
+        startedAt: performance.now(),
+      };
+
+      if (combatTurnHighlightAnimRef.current) {
+        cancelAnimationFrame(combatTurnHighlightAnimRef.current);
+        combatTurnHighlightAnimRef.current = null;
+      }
+
+      const duration = 1400;
+      const tick = () => {
+        const current = combatTurnHighlightRef.current;
+        if (!current || current.tokenId !== tokenId) {
+          combatTurnHighlightAnimRef.current = null;
+          return;
+        }
+
+        const elapsed = performance.now() - current.startedAt;
+        drawRef.current();
+
+        if (elapsed >= duration) {
+          combatTurnHighlightRef.current = null;
+          combatTurnHighlightAnimRef.current = null;
+          drawRef.current();
+          return;
+        }
+
+        combatTurnHighlightAnimRef.current = requestAnimationFrame(tick);
+      };
+
+      combatTurnHighlightAnimRef.current = requestAnimationFrame(tick);
+    },
+    
     // -------------------
     // Exposé pour VTTPage : sauvegarde le snapshot avant retour lobby
     // Passe par une ref pour éviter le problème d'ordre de déclaration
@@ -267,6 +407,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onViewportChangeRef.current = onViewportChange;
   const onTokenDoubleClickRef = useRef(onTokenDoubleClick);
   onTokenDoubleClickRef.current = onTokenDoubleClick;
+    const followCameraOnTokenMoveRef = useRef(followCameraOnTokenMove);
+  followCameraOnTokenMoveRef.current = followCameraOnTokenMove;
+    const restrictPlayerMovementOutsideTurnRef = useRef(restrictPlayerMovementOutsideTurn);
+  restrictPlayerMovementOutsideTurnRef.current = restrictPlayerMovementOutsideTurn;
+
+  const currentCombatTurnLabelRef = useRef<string | null>(currentCombatTurnLabel);
+  currentCombatTurnLabelRef.current = currentCombatTurnLabel;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
    
@@ -608,7 +755,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // -------------------
   // Gestion du snapshot local du masque exploré + nettoyage RAF peinture fog
   // -------------------
-  useEffect(() => {
+   useEffect(() => {
     return () => {
       // Annule le RAF de peinture fog si en cours
       if (fogPaintRafRef.current) {
@@ -621,6 +768,18 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         cancelAnimationFrame(viewportFocusAnimRef.current);
         viewportFocusAnimRef.current = null;
       }
+
+      if (viewportFollowAnimRef.current) {
+        cancelAnimationFrame(viewportFollowAnimRef.current);
+        viewportFollowAnimRef.current = null;
+      }
+      viewportFollowTargetRef.current = null;
+
+      if (combatTurnHighlightAnimRef.current) {
+        cancelAnimationFrame(combatTurnHighlightAnimRef.current);
+        combatTurnHighlightAnimRef.current = null;
+      }
+      combatTurnHighlightRef.current = null;
 
       if (!exploredMaskWasResetRef.current) {
         saveExploredMaskSnapshot(sceneIdRef.current);
@@ -755,6 +914,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       selectedTokenIdRef,
       selectedTokenIdsRef,
       tokensRef,
+            combatTurnHighlightRef,
       wallsRef,
       doorsRef,
       windowsRef,
@@ -1121,6 +1281,81 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     getTokenAt,
     snapToGrid,
     activeTool,
+    followCameraOnTokenMoveRef,
+    restrictPlayerMovementOutsideTurnRef,
+    currentCombatTurnLabelRef,
+    centerOnWorldPosition: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
+      const start = { ...viewportRef.current };
+      const targetX = canvas.width / 2 - x * start.scale;
+      const targetY = canvas.height / 2 - y * start.scale;
+      const duration = 280;
+      const startTime = performance.now();
+
+      const easeInOutCubic = (t: number) =>
+        t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const rawT = Math.min(1, elapsed / duration);
+        const t = easeInOutCubic(rawT);
+
+        viewportRef.current = {
+          ...viewportRef.current,
+          x: start.x + (targetX - start.x) * t,
+          y: start.y + (targetY - start.y) * t,
+        };
+
+        onViewportChangeRef.current?.({
+          x: viewportRef.current.x,
+          y: viewportRef.current.y,
+          scale: viewportRef.current.scale,
+        });
+
+        drawRef.current();
+
+        if (rawT < 1) {
+          viewportFocusAnimRef.current = requestAnimationFrame(animate);
+        } else {
+          viewportFocusAnimRef.current = null;
+        }
+      };
+
+      viewportFocusAnimRef.current = requestAnimationFrame(animate);
+    },
+    centerOnWorldPositionImmediate: (x: number, y: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (viewportFocusAnimRef.current) {
+        cancelAnimationFrame(viewportFocusAnimRef.current);
+        viewportFocusAnimRef.current = null;
+      }
+
+      const vp = viewportRef.current;
+      viewportRef.current = {
+        ...vp,
+        x: canvas.width / 2 - x * vp.scale,
+        y: canvas.height / 2 - y * vp.scale,
+      };
+
+      onViewportChangeRef.current?.({
+        x: viewportRef.current.x,
+        y: viewportRef.current.y,
+        scale: viewportRef.current.scale,
+      });
+
+      drawRef.current();
+    },
   });
 
   // -------------------
@@ -1238,4 +1473,4 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   );
 });
 
-VTTCanvas.displayName = 'VTTCanvas'; 
+VTTCanvas.displayName = 'VTTCanvas';
