@@ -128,7 +128,7 @@ export function VTTSettingsPanel({
               checked={lockPlayerMovementOutsideTurn}
               onChange={onToggleLockPlayerMovementOutsideTurn}
               label="Bloquer les déplacements des joueurs hors tour"
-              description="Visible uniquement côté MJ. Empêche les joueurs de déplacer leur token tant que ce n’est pas leur tour."
+              description="Empêche les joueurs de déplacer leur token tant que ce n’est pas leur tour."
             />
           )}
         </div>
