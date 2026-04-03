@@ -669,6 +669,41 @@ function DiceInitButton({
 }
 
 // ---------------------------------------------------------------------------
+// SpinDiceButton — bouton dé générique avec animation spin au clic
+// ---------------------------------------------------------------------------
+function SpinDiceButton({
+  onRoll,
+  title,
+  className,
+  imgSize = 'w-6 h-6',
+}: {
+  onRoll: () => void;
+  title?: string;
+  className?: string;
+  imgSize?: string;
+}) {
+  const [spinning, setSpinning] = useState(false);
+
+  const handleClick = () => {
+    setSpinning(true);
+    onRoll();
+    setTimeout(() => setSpinning(false), 500);
+  };
+
+  return (
+    <button onClick={handleClick} title={title} className={className ?? 'shrink-0'}>
+      <img
+        src={DICE_ICON_URL}
+        alt="dé"
+        className={`${imgSize} object-contain ${spinning ? 'animate-spin' : ''}`}
+        style={{ animationDuration: '0.4s', animationIterationCount: 1 }}
+      />
+    </button>
+  );
+}
+
+
+// ---------------------------------------------------------------------------
 // PrepParticipantsList
 // ---------------------------------------------------------------------------
 function PrepParticipantsList({
