@@ -1461,7 +1461,10 @@ const fuseWallPoints = (
               blockedByTurnLock = true;
             }
           });
-          if (blockedByTurnLock) return;
+                   if (blockedByTurnLock) {
+            onBlockedByTurnLock?.();
+            return;
+          }
 
           if (currentWalls.length > 0) {
             let blocked = false;
