@@ -44,6 +44,7 @@ import {
 type VTTCombatTabProps = CombatTabProps & {
   autoFocusCombatTurn?: boolean;
   onFocusCombatTokenByLabel?: (displayName: string) => void;
+  onCurrentTurnLabelChange?: (displayName: string | null) => void;
 };
 
 export function VTTCombatTab({
