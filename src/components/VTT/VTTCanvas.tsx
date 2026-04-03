@@ -1480,7 +1480,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
           </div>
         </div>
       )}
-
+      {turnLockMessageVisible && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <div className="px-3 py-2 rounded-lg bg-red-900/90 border border-red-500/40 text-red-100 text-sm shadow-lg">
+            Ce n’est pas votre tour
+          </div>
+        </div>
+      )}
       <div
         ref={brushOverlayRef}
         className="pointer-events-none fixed rounded-full border-2 -translate-x-1/2 -translate-y-1/2"
