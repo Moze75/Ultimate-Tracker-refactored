@@ -2367,11 +2367,14 @@ onSelectTokens={ids => {
             userName={userName}
             pendingChatRoll={pendingChatRoll}
             onChatRollConsumed={() => setPendingChatRoll(null)}
-              autoFocusCombatTurn={autoFocusCombatTurn}
-  onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)} 
+  autoFocusCombatTurn={autoFocusCombatTurn}
+  onToggleAutoFocusCombatTurn={() => setAutoFocusCombatTurn((prev) => !prev)}
   onFocusCombatTokenByLabel={focusCombatTokenByLabel}
-              followCameraOnTokenMove={followCameraOnTokenMove}
+  onCurrentTurnLabelChange={setCurrentCombatTurnLabel}
+  followCameraOnTokenMove={followCameraOnTokenMove}
   onToggleFollowCameraOnTokenMove={() => setFollowCameraOnTokenMove((prev) => !prev)}
+  lockPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
+  onToggleLockPlayerMovementOutsideTurn={() => setLockPlayerMovementOutsideTurn((prev) => !prev)}
           />
         </div>
       </div>
