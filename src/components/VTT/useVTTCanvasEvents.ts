@@ -1439,6 +1439,16 @@ const fuseWallPoints = (
           const dy = snapped.y - primaryInit.y;
           const currentWalls = wallsRef.current || [];
 
+          let blockedByTurnLock = false;
+          drag.multiInitial.forEach((_, tid) => {
+            if (blockedByTurnLock) return;
+            const mt = tokensRef.current.find(t => t.id === tid);
+            if (isPlayerBlockedByTurnLock(mt)) {
+              blockedByTurnLock = true;
+            }
+          });
+          if (blockedByTurnLock) return;
+
           if (currentWalls.length > 0) {
             let blocked = false;
             drag.multiInitial.forEach((initPos, tid) => {
