@@ -321,13 +321,12 @@ export function VTTCombatTab({
             <div className="flex gap-1.5 w-full">
               {isActive ? (
                 <>
-                  <button
-                    onClick={handleRollMonsterInitiativeActive}
-                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                  <SpinDiceButton
+                    onRoll={handleRollMonsterInitiativeActive}
                     title="Relancer l'initiative des monstres"
-                  >
-                    <img src={DICE_ICON_URL} alt="dé" className="w-4 h-4 object-contain" />
-                  </button>
+                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
+                    imgSize="w-4 h-4"
+                  />
                   <button
                     onClick={handleNextTurn}
                     className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
