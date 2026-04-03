@@ -737,8 +737,16 @@ function PrepParticipantsList({
 
   if (playerEntries.length === 0 && monsterEntries.length === 0) {
     return (
-      <div className="px-4 py-8 text-center text-gray-500 text-sm">
-        Ajoutez des monstres depuis la recherche
+      <div className="px-4 py-8 text-center text-gray-500 text-sm flex flex-col items-center gap-3">
+        <p>Ajoutez des monstres depuis la recherche</p>
+        {onLoadEncounter && (
+          <button
+            onClick={onLoadEncounter}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-900/20 hover:bg-amber-900/30 border border-amber-800/40 rounded-lg transition-colors"
+          >
+            <BookOpen size={12} /> Charger un combat
+          </button>
+        )}
       </div>
     );
   }
