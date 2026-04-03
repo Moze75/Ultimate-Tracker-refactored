@@ -2196,6 +2196,7 @@ onSelectTokens={ids => {
             followCameraOnTokenMove={followCameraOnTokenMove}
             restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
             currentCombatTurnLabel={currentCombatTurnLabel}
+            isCombatActive={currentCombatTurnLabel !== null}
           />
 
           {/* -------------------
