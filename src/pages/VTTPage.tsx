@@ -2195,10 +2195,11 @@ onSelectTokens={ids => {
             fogResetSignal={fogResetSignal}
             followCameraOnTokenMove={followCameraOnTokenMove}
             restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
+            restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
             currentCombatTurnLabel={currentCombatTurnLabel}
             isCombatActive={currentCombatTurnLabel !== null}
           />
-
+          
           {/* -------------------
               Anneaux de ciblage — couche HTML par-dessus le canvas
               -------------------
