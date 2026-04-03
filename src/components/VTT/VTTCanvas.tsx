@@ -409,6 +409,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   onTokenDoubleClickRef.current = onTokenDoubleClick;
     const followCameraOnTokenMoveRef = useRef(followCameraOnTokenMove);
   followCameraOnTokenMoveRef.current = followCameraOnTokenMove;
+    const restrictPlayerMovementOutsideTurnRef = useRef(restrictPlayerMovementOutsideTurn);
+  restrictPlayerMovementOutsideTurnRef.current = restrictPlayerMovementOutsideTurn;
+
+  const currentCombatTurnLabelRef = useRef<string | null>(currentCombatTurnLabel);
+  currentCombatTurnLabelRef.current = currentCombatTurnLabel;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
    
