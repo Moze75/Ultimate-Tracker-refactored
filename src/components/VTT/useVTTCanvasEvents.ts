@@ -293,11 +293,13 @@ const fuseWallPoints = (
     return token.label !== currentTurnLabel;
   };
 
-    useEffect(() => {
+  useEffect(() => {
     const selectedId = selectedTokenIdRef.current;
     if (!selectedId) return;
     if (roleRef.current !== 'player') return;
     if (!restrictPlayerMovementOutsideTurnRef.current) return;
+    // Pas de combat actif = pas de blocage à forcer
+    if (!currentCombatTurnLabelRef.current) return;
 
     const selectedToken = tokensRef.current.find(t => t.id === selectedId);
     if (!isPlayerBlockedByTurnLock(selectedToken)) return;
