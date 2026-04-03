@@ -721,6 +721,7 @@ function PrepParticipantsList({
   onRollDice,
   isDesktop,
   liveTokens,
+  onLoadEncounter,
 }: {
   playerEntries: CombatPreparationEntry[];
   monsterEntries: CombatPreparationEntry[];
@@ -732,6 +733,7 @@ function PrepParticipantsList({
   onRollDice?: (data: DiceRollData) => void;
   isDesktop: boolean;
   liveTokens?: TokenLike[];
+  onLoadEncounter?: () => void;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
