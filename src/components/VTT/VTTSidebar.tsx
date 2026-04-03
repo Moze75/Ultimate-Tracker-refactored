@@ -123,7 +123,7 @@ export function VTTSidebar({
   onToggleAutoFocusCombatTurn,
   followCameraOnTokenMove = false,
   onToggleFollowCameraOnTokenMove,
-  lockPlayerMovementOutsideTurn = false,
+  lockPlayerMovementOutsideTurn = true,
   onToggleLockPlayerMovementOutsideTurn,
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
@@ -722,7 +722,7 @@ const visibleTokens = isGM
         )}
 
         {activeTab === 'settings' && (
-                  <VTTSettingsPanel
+          <VTTSettingsPanel
             autoFocusCombatTurn={autoFocusCombatTurn}
             onToggleAutoFocusCombatTurn={onToggleAutoFocusCombatTurn}
             followCameraOnTokenMove={followCameraOnTokenMove}
@@ -735,6 +735,7 @@ const visibleTokens = isGM
             saveOk={saveOk}
             setSaving={setSaving}
             setSaveOk={setSaveOk}
+            isGM={isGM}
           />
         )}
 
@@ -860,5 +861,4 @@ function TabBtn({ icon, title, active, onClick }: { icon: React.ReactNode; title
       </span>
     </button>
   );
-}  
-  
+}
