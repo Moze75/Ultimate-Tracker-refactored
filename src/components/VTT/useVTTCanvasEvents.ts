@@ -16,6 +16,7 @@ export interface VTTCanvasRefs {
   wallsRef: React.MutableRefObject<any[]>;
     restrictPlayerMovementOutsideTurnRef: React.MutableRefObject<boolean>;
   currentCombatTurnLabelRef: React.MutableRefObject<string | null>;
+    isCombatActiveRef: React.MutableRefObject<boolean>;
   wallPointsRef: React.MutableRefObject<{ x: number; y: number }[]>;
   wallPreviewPosRef: React.MutableRefObject<{ x: number; y: number } | null>;
   measureStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
