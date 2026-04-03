@@ -601,7 +601,19 @@ export function useCombatController({
     if (!encounter) return;
 
     try {
-      await monsterService.endEncounter(encounter.id);
+      const endedEncounterId = encounter.id;
+
+      await monsterService.endEncounter(endedEncounterId);
+
+      supabase.channel(`combat-encounter-sync-${endedEncounterId}`).send({
+        type: 'broadcast',
+        event: 'combat-ended',
+        payload: {
+          encounterId: endedEncounterId,
+          status: 'completed',
+        },
+      });
+
       setEncounter(null);
       setParticipants([]);
       setPrepEntries(
