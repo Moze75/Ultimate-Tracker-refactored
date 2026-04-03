@@ -2194,6 +2194,8 @@ onSelectTokens={ids => {
             onSeenDoorsUpdate={role === 'player' ? handleSeenDoorsUpdate : undefined}
             fogResetSignal={fogResetSignal}
             followCameraOnTokenMove={followCameraOnTokenMove}
+            restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
+            currentCombatTurnLabel={currentCombatTurnLabel}
           />
 
           {/* -------------------
