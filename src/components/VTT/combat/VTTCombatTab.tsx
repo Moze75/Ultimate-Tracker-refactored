@@ -545,8 +545,9 @@ function TokenAvatar({
   const pct = hpPct ?? 100;
   const dash = (pct / 100) * circumference;
   const gap = circumference - dash; 
-  const ringColor =
-    pct <= 25 ? '#ef4444' : pct <= 50 ? '#f59e0b' : '#22c55e';
+  // Interpolation HSL continue : 120° (vert) → 0° (rouge)
+  const hue = Math.round((pct / 100) * 120);
+  const ringColor = `hsl(${hue}, 80%, 45%)`;
 
   const inner = imageUrl ? (
     <img
