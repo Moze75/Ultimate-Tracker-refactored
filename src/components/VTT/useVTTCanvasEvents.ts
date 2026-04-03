@@ -161,6 +161,8 @@ export function useVTTCanvasEvents({
     snapToGrid,
     activeTool,
     followCameraOnTokenMoveRef,
+    restrictPlayerMovementOutsideTurnRef,
+    currentCombatTurnLabelRef,
     centerOnWorldPosition,
     centerOnWorldPositionImmediate,
 }: VTTCanvasRefs) {
