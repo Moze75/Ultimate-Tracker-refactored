@@ -58,6 +58,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   followCameraOnTokenMove = false,
   restrictPlayerMovementOutsideTurn = false,
   currentCombatTurnLabel = null,
+  isCombatActive = false,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
