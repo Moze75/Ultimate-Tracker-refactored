@@ -76,4 +76,6 @@ export interface VTTCanvasProps {
   fogResetSignal?: number;
   onTokenDoubleClick?: (token: VTTToken) => void;
   followCameraOnTokenMove?: boolean;
+  restrictPlayerMovementOutsideTurn?: boolean;
+  currentCombatTurnLabel?: string | null;
 }
