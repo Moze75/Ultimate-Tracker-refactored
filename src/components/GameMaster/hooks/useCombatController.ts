@@ -198,6 +198,12 @@ export function useCombatController({
   });
 
   const handleEncounterUpdatedFromRealtime = useCallback((updates: Partial<CampaignEncounter>) => {
+    if (updates.status && updates.status !== 'active') {
+      setEncounter(null);
+      setParticipants([]);
+      return;
+    }
+
     setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
   }, []);
 
