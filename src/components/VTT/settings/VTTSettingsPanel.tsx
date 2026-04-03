@@ -94,6 +94,8 @@ export function VTTSettingsPanel({
   onToggleAutoFocusCombatTurn,
   followCameraOnTokenMove = false,
   onToggleFollowCameraOnTokenMove,
+  lockPlayerMovementOutsideTurn = false,
+  onToggleLockPlayerMovementOutsideTurn,
   onSaveScene,
   roomId,
   saving,
