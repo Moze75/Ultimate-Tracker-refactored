@@ -848,15 +848,16 @@ function PrepRow({
   expandedContent: React.ReactNode;
   liveTokens?: TokenLike[];
 }) {
-  const isPlayer = entry.type === 'player';
+   const isPlayer = entry.type === 'player';
   const clickable = !!onClick;
   const [spinning, setSpinning] = useState(false);
+  const [editingInit, setEditingInit] = useState(false);
 
   const handleDiceClick = () => {
     setSpinning(true);
-    // Lancer un d20 simple + bonus DEX à 0 (initiative basique)
     const rolled = Math.floor(Math.random() * 20) + 1;
     onUpdateInitiative(entry.id, rolled);
+    setEditingInit(false);
     setTimeout(() => setSpinning(false), 450);
   };
 
