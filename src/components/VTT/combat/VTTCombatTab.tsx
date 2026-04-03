@@ -415,7 +415,7 @@ export function VTTCombatTab({
               liveTokens={liveTokens}
             />
           ) : isGM ? (
-            <PrepParticipantsList
+                        <PrepParticipantsList
               playerEntries={playerPrep}
               monsterEntries={monsterPrep}
               onUpdateInitiative={handleUpdatePrepInitiative}
@@ -426,6 +426,7 @@ export function VTTCombatTab({
               onRollDice={onRollDice}
               isDesktop={isDesktop}
               liveTokens={liveTokens}
+              onLoadEncounter={() => setShowLoadEncounterModal(true)}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
