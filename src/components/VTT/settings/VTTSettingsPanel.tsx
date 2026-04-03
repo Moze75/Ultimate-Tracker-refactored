@@ -103,7 +103,7 @@ export function VTTSettingsPanel({
 }: VTTSettingsPanelProps) {
   return (
     <div className="p-3 space-y-4">
-           <SettingsSection title="Combat" defaultOpen>
+      <SettingsSection title="Combat" defaultOpen>
         <div className="divide-y divide-gray-800">
           <ToggleSwitch
             checked={autoFocusCombatTurn}
@@ -117,6 +117,13 @@ export function VTTSettingsPanel({
             onChange={onToggleFollowCameraOnTokenMove}
             label="Suivi du token par la caméra"
             description="Suit uniquement les déplacements locaux du token sur cette fenêtre."
+          />
+
+          <ToggleSwitch
+            checked={lockPlayerMovementOutsideTurn}
+            onChange={onToggleLockPlayerMovementOutsideTurn}
+            label="Bloquer les déplacements hors tour"
+            description="Côté joueur uniquement, empêche de déplacer son token tant que ce n’est pas son tour."
           />
         </div>
       </SettingsSection>
