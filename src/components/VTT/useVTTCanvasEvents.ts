@@ -1490,6 +1490,7 @@ const fuseWallPoints = (
           const oldPos = movingToken?.position;
 
           if (isPlayerBlockedByTurnLock(movingToken)) {
+            onBlockedByTurnLock?.();
             return;
           }
 
