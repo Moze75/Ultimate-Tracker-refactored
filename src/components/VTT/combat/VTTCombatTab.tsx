@@ -1111,9 +1111,15 @@ function ActiveParticipantsList({
           >
             {/* Ligne principale : avatar | nom+hp | stats | dégâts | initiative */}
             <div className="flex items-center gap-1.5">
-              {/* Avatar */}
+              {/* Avatar avec cercle barre de vie */}
               <div className="shrink-0" onClick={handleParticipantClick} style={{ cursor: clickable ? 'pointer' : 'default' }}>
-                <TokenAvatar name={p.display_name} liveTokens={liveTokens} size={28} isMonster={isMonster} />
+                <TokenAvatar
+                  name={p.display_name}
+                  liveTokens={liveTokens}
+                  size={32}
+                  isMonster={isMonster}
+                  hpPct={p.max_hp > 0 ? Math.max(0, Math.min(100, (p.current_hp / p.max_hp) * 100)) : undefined}
+                />
               </div>
 
               {/* Nom + mini barre HP */}
