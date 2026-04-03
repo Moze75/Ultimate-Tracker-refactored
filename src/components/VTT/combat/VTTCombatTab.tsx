@@ -526,32 +526,105 @@ function TokenAvatar({
   liveTokens,
   size = 28,
   isMonster = false,
+  hpPct,
 }: {
   name: string;
   liveTokens?: TokenLike[];
   size?: number;
   isMonster?: boolean;
+  hpPct?: number; // 0–100, undefined = pas de barre
 }) {
   const { imageUrl, color } = resolveTokenAvatar(name, liveTokens);
 
-  if (imageUrl) {
+  // Calcul du cercle SVG
+  const strokeWidth = 3;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = hpPct ?? 100;
+  const dash = (pct / 100) * circumference;
+  const gap = circumference - dash;
+  const ringColor =
+    pct <= 25 ? '#ef4444' : pct <= 50 ? '#f59e0b' : '#22c55e';
+
+  const inner = imageUrl ? (
+    <img
+      src={imageUrl}
+      alt={name}
+      draggable={false}
+      className="rounded-full object-cover"
+      style={{ width: size - strokeWidth * 2 - 2, height: size - strokeWidth * 2 - 2 }}
+    />
+  ) : (
+    <div
+      className="rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+      style={{
+        width: size - strokeWidth * 2 - 2,
+        height: size - strokeWidth * 2 - 2,
+        backgroundColor: isMonster ? '#7f1d1d' : color,
+      }}
+    >
+      {isMonster ? <Skull size={10} className="text-red-300" /> : <User size={10} className="text-gray-300" />}
+    </div>
+  );
+
+  if (hpPct === undefined) {
+    // Pas de barre, juste le token simple
     return (
-      <img
-        src={imageUrl}
-        alt={name}
-        draggable={false}
-        className="rounded-full object-cover shrink-0 border border-gray-700"
-        style={{ width: size, height: size }}
-      />
+      <div className="relative shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
+        <div
+          className="rounded-full overflow-hidden border border-gray-700"
+          style={{ width: size, height: size }}
+        >
+          {imageUrl ? (
+            <img src={imageUrl} alt={name} draggable={false} className="w-full h-full object-cover" />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center text-[9px] font-bold text-white"
+              style={{ backgroundColor: isMonster ? '#7f1d1d' : color }}
+            >
+              {isMonster ? <Skull size={10} className="text-red-300" /> : <User size={10} className="text-gray-300" />}
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 
   return (
-    <div
-      className="rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white border border-gray-700"
-      style={{ width: size, height: size, backgroundColor: isMonster ? '#7f1d1d' : color }}
-    >
-      {isMonster ? <Skull size={10} className="text-red-300" /> : <User size={10} className="text-gray-300" />}
+    <div className="relative shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Cercle barre de vie SVG */}
+      <svg
+        width={size}
+        height={size}
+        className="absolute inset-0"
+        style={{ transform: 'rotate(-90deg)' }}
+      >
+        {/* Track gris */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#374151"
+          strokeWidth={strokeWidth}
+        />
+        {/* Arc coloré */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${dash} ${gap}`}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray 0.4s ease, stroke 0.4s ease' }}
+        />
+      </svg>
+      {/* Image/icône centrée dans le cercle */}
+      <div className="relative z-10 rounded-full overflow-hidden" style={{ width: size - strokeWidth * 2 - 2, height: size - strokeWidth * 2 - 2 }}>
+        {inner}
+      </div>
     </div>
   );
 }
