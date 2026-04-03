@@ -341,12 +341,7 @@ export function VTTCombatTab({
                   >
                     <SkipForward size={12} className="shrink-0" /> Suivant
                   </button>
-                  <button
-                    onClick={handleSaveEncounter}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
-                  >
-                    <Save size={12} className="shrink-0" /> Sauver
-                  </button>
+
                   <button
                     onClick={handleEndCombat}
                     className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
