@@ -2080,7 +2080,10 @@ if (e.key === 'Escape' && activeToolRef.current === 'wall-draw') {
       const newY = token.position.y + dy;
       const tokenSizePx = (token.size || 1) * c;
       const currentWalls = wallsRef.current || [];
-      if (isPlayerBlockedByTurnLock(token)) return;
+            if (isPlayerBlockedByTurnLock(token)) {
+        onBlockedByTurnLock?.();
+        return;
+      }
       if (currentWalls.length > 0 && wallBlocksToken(newX, newY, tokenSizePx, currentWalls, doorsRef.current, token.position.x, token.position.y)) return;
       onMoveTokenRef.current(
         selId,
