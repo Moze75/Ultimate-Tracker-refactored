@@ -56,6 +56,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   fogResetSignal = 0,
   onTokenDoubleClick,
   followCameraOnTokenMove = false,
+  restrictPlayerMovementOutsideTurn = false,
+  currentCombatTurnLabel = null,
 }: VTTCanvasProps, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
