@@ -58,6 +58,7 @@ export function VTTCombatTab({
   onUpdateToken,
   autoFocusCombatTurn = true,
   onFocusCombatTokenByLabel,
+  onCurrentTurnLabelChange,
 }: VTTCombatTabProps) {
   const {
     isGM,
