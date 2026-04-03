@@ -416,6 +416,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   const currentCombatTurnLabelRef = useRef<string | null>(currentCombatTurnLabel);
   currentCombatTurnLabelRef.current = currentCombatTurnLabel;
+    const isCombatActiveRef = useRef(isCombatActive);
+  isCombatActiveRef.current = isCombatActive;
   const wallPointsRef = useRef<{ x: number; y: number }[]>([]);
   const wallPreviewPosRef = useRef<{ x: number; y: number } | null>(null);
    
