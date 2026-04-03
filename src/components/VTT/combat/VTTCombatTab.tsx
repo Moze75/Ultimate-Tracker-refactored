@@ -1297,23 +1297,12 @@ function ActiveParticipantsList({
                 </button>
               </div>
 
-              {/* Initiative : icône dé si manquante, valeur sinon */}
-              <div className="shrink-0 w-8 flex items-center justify-center">
-                {hasInitiative ? (
-                  <span className="text-[10px] font-bold text-amber-300">{p.initiative_roll}</span>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const rolled = Math.floor(Math.random() * 20) + 1;
-                      onUpdateInitiative(p.id, rolled);
-                    }}
-                    title="Lancer l'initiative"
-                    className="hover:scale-110 transition-transform"
-                  >
-                    <img src={DICE_ICON_URL} alt="dé" className="w-5 h-5 object-contain opacity-60 hover:opacity-100" />
-                  </button>
-                )}
-              </div>
+              {/* Initiative éditable inline */}
+              <InitiativeCell
+                participantId={p.id}
+                value={p.initiative_roll}
+                onUpdate={onUpdateInitiative}
+              />
 
               {/* Supprimer */}
               <button
