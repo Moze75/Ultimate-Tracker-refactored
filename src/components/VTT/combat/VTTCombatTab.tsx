@@ -523,17 +523,10 @@ function resolveTokenAvatar(
   };
 }
 
-/** Calcule la couleur du cercle HP : vert → orange → rouge */
-function hpRingColor(pct: number): string {
-  // Interpolation linéaire HSL : 120° (vert) → 0° (rouge)
-  const hue = Math.round((pct / 100) * 120);
-  return `hsl(${hue}, 80%, 45%)`;
-}
-
 function TokenAvatar({
   name,
   liveTokens,
-  size = 48,
+  size = 28,
   isMonster = false,
   hpPct,
 }: {
@@ -541,80 +534,40 @@ function TokenAvatar({
   liveTokens?: TokenLike[];
   size?: number;
   isMonster?: boolean;
-  hpPct?: number; // 0–100, undefined = pas de cercle
+  hpPct?: number; // 0–100, undefined = pas de barre
 }) {
   const { imageUrl, color } = resolveTokenAvatar(name, liveTokens);
 
+  // Calcul du cercle SVG
   const strokeWidth = 3;
-  const innerSize = size - strokeWidth * 2 - 2;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const pct = hpPct ?? 100;
   const dash = (pct / 100) * circumference;
-  const gap = circumference - dash;
-  const ringColor = hpRingColor(pct);
+  const gap = circumference - dash; 
+  const ringColor =
+    pct <= 25 ? '#ef4444' : pct <= 50 ? '#f59e0b' : '#22c55e';
 
-  const innerContent = imageUrl ? (
+  const inner = imageUrl ? (
     <img
       src={imageUrl}
       alt={name}
       draggable={false}
-      className="w-full h-full object-cover rounded-full"
+      className="rounded-full object-cover"
+      style={{ width: size - strokeWidth * 2 - 2, height: size - strokeWidth * 2 - 2 }}
     />
   ) : (
     <div
-      className="w-full h-full rounded-full flex items-center justify-center font-bold text-white"
-      style={{ backgroundColor: isMonster ? '#7f1d1d' : color, fontSize: innerSize * 0.32 }}
+      className="rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+      style={{
+        width: size - strokeWidth * 2 - 2,
+        height: size - strokeWidth * 2 - 2,
+        backgroundColor: isMonster ? '#7f1d1d' : color,
+      }}
     >
-      {isMonster
-        ? <Skull size={Math.round(innerSize * 0.38)} className="text-red-300" />
-        : <User size={Math.round(innerSize * 0.38)} className="text-gray-300" />}
+      {isMonster ? <Skull size={10} className="text-red-300" /> : <User size={10} className="text-gray-300" />}
     </div>
   );
-
-  return (
-    <div className="relative shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Cercle barre de vie SVG */}
-      <svg
-        width={size}
-        height={size}
-        className="absolute inset-0"
-        style={{ transform: 'rotate(-90deg)' }}
-      >
-        {/* Track sombre */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#1f2937"
-          strokeWidth={strokeWidth}
-        />
-        {/* Arc coloré */}
-        {hpPct !== undefined && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={ringColor}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${dash} ${gap}`}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dasharray 0.5s ease, stroke 0.5s ease' }}
-          />
-        )}
-      </svg>
-      {/* Image/icône dans le cercle */}
-      <div
-        className="relative z-10 rounded-full overflow-hidden"
-        style={{ width: innerSize, height: innerSize }}
-      >
-        {innerContent}
-      </div>
-    </div>
-  );
-}
 
   if (hpPct === undefined) {
     // Pas de barre, juste le token simple
