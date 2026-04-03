@@ -2195,7 +2195,6 @@ onSelectTokens={ids => {
             fogResetSignal={fogResetSignal}
             followCameraOnTokenMove={followCameraOnTokenMove}
             restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
-            restrictPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
             currentCombatTurnLabel={currentCombatTurnLabel}
             isCombatActive={currentCombatTurnLabel !== null}
           />
