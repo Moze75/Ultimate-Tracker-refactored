@@ -135,23 +135,32 @@ export function VTTCombatTab({
     const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!isActive || !encounter) {
+      onCurrentTurnLabelChange?.(null);
+      if (!autoFocusCombatTurn) {
+        lastAutoFocusedTurnKeyRef.current = null;
+      }
+      return;
+    }
+
+    const currentParticipant = participants[encounter.current_turn_index];
+    const currentLabel = currentParticipant?.display_name ?? null;
+
+    onCurrentTurnLabelChange?.(currentLabel);
+
     if (!autoFocusCombatTurn) {
       lastAutoFocusedTurnKeyRef.current = null;
       return;
     }
 
-    if (!isActive) return;
-    if (!encounter) return;
+    if (!currentLabel) return;
 
-    const currentParticipant = participants[encounter.current_turn_index];
-    if (!currentParticipant?.display_name) return;
-
-    const turnKey = `${encounter.id}:${encounter.current_turn_index}:${currentParticipant.display_name}`;
+    const turnKey = `${encounter.id}:${encounter.current_turn_index}:${currentLabel}`;
 
     if (lastAutoFocusedTurnKeyRef.current === turnKey) return;
 
     lastAutoFocusedTurnKeyRef.current = turnKey;
-    onFocusCombatTokenByLabel?.(currentParticipant.display_name);
+    onFocusCombatTokenByLabel?.(currentLabel);
   }, [
     autoFocusCombatTurn,
     isActive,
@@ -159,6 +168,7 @@ export function VTTCombatTab({
     encounter?.current_turn_index,
     participants,
     onFocusCombatTokenByLabel,
+    onCurrentTurnLabelChange,
   ]);
 
   if (loading) {
