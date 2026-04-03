@@ -1211,6 +1211,21 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
 
+  const turnLockMessageTimeoutRef = useRef<number | null>(null);
+
+  const showTurnLockMessage = useCallback(() => {
+    setTurnLockMessageVisible(true);
+
+    if (turnLockMessageTimeoutRef.current) {
+      window.clearTimeout(turnLockMessageTimeoutRef.current);
+    }
+
+    turnLockMessageTimeoutRef.current = window.setTimeout(() => {
+      setTurnLockMessageVisible(false);
+      turnLockMessageTimeoutRef.current = null;
+    }, 1500);
+  }, []);
+
   useVTTCanvasEvents({
     canvasRef,
     brushOverlayRef,
