@@ -14,6 +14,7 @@ interface VTTSettingsPanelProps {
   saveOk: boolean;
   setSaving: React.Dispatch<React.SetStateAction<boolean>>;
   setSaveOk: React.Dispatch<React.SetStateAction<boolean>>;
+  isGM?: boolean;
 }
 
 function ToggleSwitch({
@@ -66,7 +67,7 @@ function SettingsSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-<section className="border-b border-gray-800 pb-2">
+    <section className="border-b border-gray-800 pb-2">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -94,7 +95,7 @@ export function VTTSettingsPanel({
   onToggleAutoFocusCombatTurn,
   followCameraOnTokenMove = false,
   onToggleFollowCameraOnTokenMove,
-  lockPlayerMovementOutsideTurn = false,
+  lockPlayerMovementOutsideTurn = true,
   onToggleLockPlayerMovementOutsideTurn,
   onSaveScene,
   roomId,
@@ -102,6 +103,7 @@ export function VTTSettingsPanel({
   saveOk,
   setSaving,
   setSaveOk,
+  isGM = false,
 }: VTTSettingsPanelProps) {
   return (
     <div className="p-3 space-y-4">
@@ -121,12 +123,14 @@ export function VTTSettingsPanel({
             description="Suit uniquement les déplacements locaux du token sur cette fenêtre."
           />
 
-          <ToggleSwitch
-            checked={lockPlayerMovementOutsideTurn}
-            onChange={onToggleLockPlayerMovementOutsideTurn}
-            label="Bloquer les déplacements hors tour"
-            description="Côté joueur uniquement, empêche de déplacer son token tant que ce n’est pas son tour."
-          />
+          {isGM && (
+            <ToggleSwitch
+              checked={lockPlayerMovementOutsideTurn}
+              onChange={onToggleLockPlayerMovementOutsideTurn}
+              label="Bloquer les déplacements des joueurs hors tour"
+              description="Visible uniquement côté MJ. Empêche les joueurs de déplacer leur token tant que ce n’est pas leur tour."
+            />
+          )}
         </div>
       </SettingsSection>
 
