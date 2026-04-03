@@ -163,6 +163,7 @@ export function useVTTCanvasEvents({
     followCameraOnTokenMoveRef,
     restrictPlayerMovementOutsideTurnRef,
     currentCombatTurnLabelRef,
+    onBlockedByTurnLock,
     centerOnWorldPosition,
     centerOnWorldPositionImmediate,
 }: VTTCanvasRefs) {
