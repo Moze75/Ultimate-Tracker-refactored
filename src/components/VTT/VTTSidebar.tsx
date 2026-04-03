@@ -123,7 +123,10 @@ export function VTTSidebar({
   onToggleAutoFocusCombatTurn,
   followCameraOnTokenMove = false,
   onToggleFollowCameraOnTokenMove,
+  lockPlayerMovementOutsideTurn = false,
+  onToggleLockPlayerMovementOutsideTurn,
   onFocusCombatTokenByLabel,
+  onCurrentTurnLabelChange,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
