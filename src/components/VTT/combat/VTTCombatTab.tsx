@@ -905,50 +905,57 @@ function PrepRow({
           </button>
         )}
 
-        {/* Dé d'initiative cliquable ou valeur */}
-        {hasInitiative ? (
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-xs font-bold text-amber-300 w-6 text-center">{entry.initiative}</span>
-            <button
-              onClick={handleDiceClick}
-              title="Relancer"
-              className="opacity-40 hover:opacity-100 transition-opacity"
-            >
-              <img
-                src={DICE_ICON_URL}
-                alt="relancer"
-                className={`w-4 h-4 object-contain ${spinning ? 'animate-spin' : ''}`}
-                style={{ animationDuration: '0.4s', animationIterationCount: 1 }}
-              />
-            </button>
-          </div>
-        ) : (
+             {/* Initiative : dé cliquable + valeur cliquable pour édition inline */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Dé — toujours visible */}
           <button
             onClick={handleDiceClick}
-            title="Lancer l'initiative"
-            className="shrink-0"
+            title={hasInitiative ? 'Relancer' : "Lancer l'initiative"}
+            className={`shrink-0 transition-opacity ${hasInitiative ? 'opacity-40 hover:opacity-100' : ''}`}
           >
             <img
               src={DICE_ICON_URL}
-              alt="dé initiative"
-              className={`w-6 h-6 object-contain transition-transform ${
-                spinning ? 'animate-spin' : 'hover:scale-110'
-              }`}
+              alt="dé"
+              className={`object-contain transition-transform ${
+                hasInitiative ? 'w-4 h-4' : 'w-6 h-6 hover:scale-110'
+              } ${spinning ? 'animate-spin' : ''}`}
               style={{ animationDuration: '0.4s', animationIterationCount: 1 }}
             />
           </button>
-        )}
 
-        {/* Input manuel initiative (compact) */}
-        <input
-          type="number"
-          min={0}
-          max={30}
-          className="w-9 px-1 py-0.5 bg-gray-900 border border-gray-700 rounded text-[10px] text-center text-gray-300 focus:border-amber-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shrink-0"
-          value={entry.initiative || ''}
-          onChange={(e) => onUpdateInitiative(entry.id, parseInt(e.target.value) || 0)}
-          title="Initiative manuelle"
-        />
+          {/* Valeur : clic → input inline, sinon affichage */}
+          {hasInitiative && (
+            editingInit ? (
+              <input
+                type="number"
+                min={0}
+                max={30}
+                autoFocus
+                className="w-9 px-1 py-0.5 bg-gray-900 border border-amber-600 rounded text-[10px] text-center text-amber-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                defaultValue={entry.initiative ?? ''}
+                onBlur={(e) => {
+                  onUpdateInitiative(entry.id, parseInt(e.target.value) || 0);
+                  setEditingInit(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onUpdateInitiative(entry.id, parseInt((e.target as HTMLInputElement).value) || 0);
+                    setEditingInit(false);
+                  }
+                  if (e.key === 'Escape') setEditingInit(false);
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setEditingInit(true)}
+                title="Modifier l'initiative"
+                className="w-7 text-center text-xs font-bold text-amber-300 hover:text-amber-100 hover:bg-gray-800 rounded transition-colors px-0.5"
+              >
+                {entry.initiative}
+              </button>
+            )
+          )}
+        </div>
 
         <button
           onClick={() => onRemove(entry.id)}
