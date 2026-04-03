@@ -1148,18 +1148,18 @@ function ActiveParticipantsList({
           >
             {/* Ligne principale : avatar | nom+hp | stats | dégâts | initiative */}
             <div className="flex items-center gap-1.5">
-              {/* Avatar avec cercle barre de vie */}
+                          {/* Avatar avec cercle barre de vie — taille 48px */}
               <div className="shrink-0" onClick={handleParticipantClick} style={{ cursor: clickable ? 'pointer' : 'default' }}>
                 <TokenAvatar
                   name={p.display_name}
                   liveTokens={liveTokens}
-                  size={32}
+                  size={48}
                   isMonster={isMonster}
                   hpPct={p.max_hp > 0 ? Math.max(0, Math.min(100, (p.current_hp / p.max_hp) * 100)) : undefined}
                 />
               </div>
 
-              {/* Nom + mini barre HP */}
+              {/* Nom seul (barre HP supprimée, remplacée par le cercle SVG) */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
                   <button
@@ -1176,7 +1176,6 @@ function ActiveParticipantsList({
                     <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />
                   )}
                 </div>
-                <HpBar current={p.current_hp} max={p.max_hp} temp={p.temporary_hp || 0} />
               </div>
 
               {/* HP / CA compacts */}
