@@ -1032,6 +1032,10 @@ function ConditionBadges({ conditions, onToggle }: { conditions: string[]; onTog
 // ---------------------------------------------------------------------------
 // InitiativeCell — initiative éditable inline dans le combat actif
 // ---------------------------------------------------------------------------
+// InitiativeCell — combat actif uniquement
+// Pas de dé aléatoire : saisie manuelle uniquement.
+// - Si pas de valeur : input direct avec placeholder
+// - Si valeur présente : clic sur la valeur → input inline
 function InitiativeCell({
   participantId,
   value,
@@ -1042,68 +1046,41 @@ function InitiativeCell({
   onUpdate: (id: string, val: number) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [spinning, setSpinning] = useState(false);
   const hasValue = !!value && value > 0;
 
-  const handleDice = () => {
-    setSpinning(true);
-    const rolled = Math.floor(Math.random() * 20) + 1;
-    onUpdate(participantId, rolled);
-    setEditing(false);
-    setTimeout(() => setSpinning(false), 450);
-  };
+  if (!hasValue || editing) {
+    return (
+      <input
+        type="number"
+        min={0}
+        max={30}
+        autoFocus={editing}
+        placeholder="—"
+        className="w-9 px-1 py-0.5 bg-gray-900 border border-gray-700 hover:border-amber-700 focus:border-amber-600 rounded text-[10px] text-center text-gray-300 focus:text-amber-300 focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        defaultValue={value ?? ''}
+        onBlur={(e) => {
+          onUpdate(participantId, parseInt(e.target.value) || 0);
+          setEditing(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            onUpdate(participantId, parseInt((e.target as HTMLInputElement).value) || 0);
+            setEditing(false);
+          }
+          if (e.key === 'Escape') setEditing(false);
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="flex items-center gap-1 shrink-0">
-      {/* Dé — toujours visible */}
-      <button
-        onClick={handleDice}
-        title={hasValue ? 'Relancer' : "Lancer l'initiative"}
-        className={`shrink-0 transition-opacity ${hasValue ? 'opacity-30 hover:opacity-90' : ''}`}
-      >
-        <img
-          src={DICE_ICON_URL}
-          alt="dé"
-          className={`object-contain transition-transform ${
-            hasValue ? 'w-4 h-4' : 'w-5 h-5 hover:scale-110 opacity-60 hover:opacity-100'
-          } ${spinning ? 'animate-spin' : ''}`}
-          style={{ animationDuration: '0.4s', animationIterationCount: 1 }}
-        />
-      </button>
-
-      {/* Valeur : clic → input inline */}
-      {hasValue && (
-        editing ? (
-          <input
-            type="number"
-            min={0}
-            max={30}
-            autoFocus
-            className="w-9 px-1 py-0.5 bg-gray-900 border border-amber-600 rounded text-[10px] text-center text-amber-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            defaultValue={value ?? ''}
-            onBlur={(e) => {
-              onUpdate(participantId, parseInt(e.target.value) || 0);
-              setEditing(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                onUpdate(participantId, parseInt((e.target as HTMLInputElement).value) || 0);
-                setEditing(false);
-              }
-              if (e.key === 'Escape') setEditing(false);
-            }}
-          />
-        ) : (
-          <button
-            onClick={() => setEditing(true)}
-            title="Modifier l'initiative"
-            className="w-7 text-center text-[10px] font-bold text-amber-300 hover:text-amber-100 hover:bg-gray-800 rounded transition-colors px-0.5"
-          >
-            {value}
-          </button>
-        )
-      )}
-    </div>
+    <button
+      onClick={() => setEditing(true)}
+      title="Modifier l'initiative"
+      className="w-9 text-center text-[10px] font-bold text-amber-300 hover:text-amber-100 hover:bg-gray-800 border border-transparent hover:border-gray-700 rounded transition-colors px-0.5 py-0.5"
+    >
+      {value}
+    </button>
   );
 }
   
