@@ -84,6 +84,7 @@ export interface VTTCanvasRefs {
   snapToGrid: (wx: number, wy: number) => { x: number; y: number };
   activeTool: VTTActiveTool;
   followCameraOnTokenMoveRef: React.MutableRefObject<boolean>;
+  onBlockedByTurnLock?: () => void;
   centerOnWorldPosition: (x: number, y: number) => void;
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
 
