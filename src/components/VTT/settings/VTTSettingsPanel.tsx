@@ -6,6 +6,8 @@ interface VTTSettingsPanelProps {
   onToggleAutoFocusCombatTurn?: () => void;
   followCameraOnTokenMove?: boolean;
   onToggleFollowCameraOnTokenMove?: () => void;
+  lockPlayerMovementOutsideTurn?: boolean;
+  onToggleLockPlayerMovementOutsideTurn?: () => void;
   onSaveScene?: () => Promise<void>;
   roomId: string;
   saving: boolean;
