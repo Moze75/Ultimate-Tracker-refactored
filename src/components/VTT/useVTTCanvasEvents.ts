@@ -302,6 +302,7 @@ const fuseWallPoints = (
     if (roleRef.current !== 'player') return;
     if (!restrictPlayerMovementOutsideTurnRef.current) return;
     // Pas de combat actif = pas de blocage à forcer
+    if (!isCombatActiveRef.current) return;
     if (!currentCombatTurnLabelRef.current) return;
 
     const selectedToken = tokensRef.current.find(t => t.id === selectedId);
