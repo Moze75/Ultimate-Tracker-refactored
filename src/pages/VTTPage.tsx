@@ -239,7 +239,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [showWalls, setShowWalls] = useState(true);
 const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
 const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState(false);
-const [lockPlayerMovementOutsideTurn, setLockPlayerMovementOutsideTurn] = useState(false);
+const [lockPlayerMovementOutsideTurn, setLockPlayerMovementOutsideTurn] = useState(true);
 const [currentCombatTurnLabel, setCurrentCombatTurnLabel] = useState<string | null>(null);
 
 
