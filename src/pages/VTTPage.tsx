@@ -237,8 +237,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat'>(role === 'player' ? 'chat' : 'tokens');
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
-    const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
-    const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState(false);
+const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
+const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState(false);
+const [lockPlayerMovementOutsideTurn, setLockPlayerMovementOutsideTurn] = useState(false);
+const [currentCombatTurnLabel, setCurrentCombatTurnLabel] = useState<string | null>(null);
 
 
 
