@@ -1279,6 +1279,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     followCameraOnTokenMoveRef,
     restrictPlayerMovementOutsideTurnRef,
     currentCombatTurnLabelRef,
+    onBlockedMoveAttemptRef,
     centerOnWorldPosition: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -1425,17 +1426,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full relative overflow-hidden bg-gray-950"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div ref={containerRef} className="relative w-full h-full">
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
-               style={{ cursor: isFogTool ? 'none' : (isFogRectTool || isWallTool || isMeasureTool) ? 'crosshair' : 'default' }}
+        style={{ cursor: isFogTool ? 'none' : (isFogRectTool || isWallTool || isMeasureTool) ? 'crosshair' : 'default' }}
       />
 
       {isDragOver && (
@@ -1464,6 +1459,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         className="pointer-events-none fixed rounded-full border-2 -translate-x-1/2 -translate-y-1/2"
         style={{ display: 'none' }}
       />
+
+      {blockedMoveMessage && (
+        <div className="absolute left-1/2 bottom-6 -translate-x-1/2 z-30 pointer-events-none">
+          <div className="px-3 py-2 rounded-lg bg-red-900/90 border border-red-500/50 text-white text-sm shadow-lg">
+            {blockedMoveMessage}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
