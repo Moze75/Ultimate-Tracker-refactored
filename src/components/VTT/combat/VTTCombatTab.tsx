@@ -1324,6 +1324,7 @@ function ActiveParticipantsList({
                 participantId={p.id}
                 value={p.initiative_roll}
                 onUpdate={onUpdateInitiative}
+                canRollDice={!!canRollDice}
               />
 
               {/* Supprimer */}
