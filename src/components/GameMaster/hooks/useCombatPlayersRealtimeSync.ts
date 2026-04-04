@@ -44,13 +44,15 @@ export function useCombatPlayersRealtimeSync({
   // members et participants changent de référence à chaque re-render du parent.
   // On les stocke dans des refs pour que le useEffect ne se ré-abonne pas
   // inutilement → le channel Supabase reste stable.
-  const membersRef = useRef(members);
+    const membersRef = useRef(members);
   const participantsRef = useRef(participants);
   const callbackRef = useRef(onParticipantHPUpdate);
+  const onParticipantInitiativeUpdateRef = useRef(onParticipantInitiativeUpdate);
   useEffect(() => {
     membersRef.current = members;
     participantsRef.current = participants;
     callbackRef.current = onParticipantHPUpdate;
+    onParticipantInitiativeUpdateRef.current = onParticipantInitiativeUpdate;
   });
 
   // -------------------
