@@ -392,7 +392,7 @@ export function VTTCombatTab({
 
         <div className="flex-1 overflow-y-auto min-h-0" ref={scrollContainerRef}>
           {isActive ? (
-            <ActiveParticipantsList
+                 <ActiveParticipantsList
               encounter={encounter}
               participants={participants}
               hpDelta={hpDelta}
@@ -411,6 +411,8 @@ export function VTTCombatTab({
               vttMode
               onFocusToken={onFocusCombatTokenByLabel}
               liveTokens={liveTokens}
+              role={role}
+              userId={userId}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-4">
