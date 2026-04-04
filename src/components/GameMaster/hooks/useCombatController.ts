@@ -1043,6 +1043,7 @@ export function useCombatController({
     handleRollAllInitiative,
     handleRollMonsterInitiativeActive,
     handleLaunchCombat,
+    handleDirectLaunchCombat,
     handleSavePreparation,
     handleSaveEncounter,
     handleEndCombat,
