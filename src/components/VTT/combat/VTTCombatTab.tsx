@@ -45,6 +45,7 @@ type VTTCombatTabProps = CombatTabProps & {
   autoFocusCombatTurn?: boolean;
   onFocusCombatTokenByLabel?: (displayName: string) => void;
   onCurrentTurnLabelChange?: (displayName: string | null) => void;
+  onDirectLaunchCombat?: (tokens: import('../../../types/vtt').VTTToken[]) => void;
 };
 
 export function VTTCombatTab({
