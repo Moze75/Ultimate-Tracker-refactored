@@ -18,10 +18,16 @@ export interface HpChangedBroadcast {
   temporary_hp: number;
 }
 
+export interface InitiativeChangedBroadcast {
+  participantId: string;
+  initiative_roll: number;
+}
+
 interface UseCombatPlayersRealtimeSyncParams {
   members: CampaignMember[];
   participants: EncounterParticipant[];
   onParticipantHPUpdate: (participantId: string, updates: { current_hp: number; temporary_hp: number }) => void;
+  onParticipantInitiativeUpdate?: (participantId: string, initiative_roll: number) => void;
 }
 
 export function useCombatPlayersRealtimeSync({
