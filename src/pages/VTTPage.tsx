@@ -2423,7 +2423,12 @@ onSelectTokens={ids => {
   }}
   onManageBinding={(token) => { const fresh = tokensRef.current.find(t => t.id === token.id); setBindingToken(fresh || token); }}
   onConfigureVision={(token) => { const fresh = tokensRef.current.find(t => t.id === token.id); setVisionToken(fresh || token); }}
-  onLaunchCombat={(tokens) => { setCombatInitTokens(tokens); setSidebarActiveTab('combat'); }}
+  onLaunchCombat={(tokens) => {
+    setCombatInitTokens(tokens);
+    setSidebarActiveTab('combat');
+    // Lance directement le combat sans passer par la préparation
+    setTimeout(() => directLaunchCombatRef.current?.(tokens), 50);
+  }}
   onToggleTarget={(token) => {
     const fresh = tokensRef.current.find(t => t.id === token.id) || token;
     const isTargeted = (fresh.targetedByUserIds ?? []).includes(userId);
