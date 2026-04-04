@@ -854,8 +854,17 @@ export function useCombatController({
       });
       setEncounter(updated);
 
-      // Broadcast aux joueurs : nouveau tri + index 0
-      supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+      const channel = supabase.channel(`combat-encounter-sync-${encounter.id}`);
+
+      // Broadcast 1 : nouvel ordre des participants → les joueurs réordonnent leur liste
+      channel.send({
+        type: 'broadcast',
+        event: 'participants-reordered',
+        payload: { orderedIds: ids },
+      });
+
+      // Broadcast 2 : index remis à 0 → les joueurs mettent en surbrillance le bon participant
+      channel.send({
         type: 'broadcast',
         event: 'turn-changed',
         payload: {
