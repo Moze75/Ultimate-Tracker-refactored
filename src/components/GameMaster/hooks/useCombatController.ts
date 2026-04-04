@@ -804,6 +804,9 @@ export function useCombatController({
 
   const handleUpdateActiveInitiative = async (id: string, value: number) => {
     setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, initiative_roll: value } : p)));
+    // Broadcast immédiat pour la vue MJ (et tous les autres clients)
+    markLocalUpdate(id);
+    sendInitiativeBroadcast({ participantId: id, initiative_roll: value });
 
     try {
       await monsterService.updateParticipant(id, { initiative_roll: value });
