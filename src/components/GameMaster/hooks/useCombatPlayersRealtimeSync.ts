@@ -92,7 +92,16 @@ export function useCombatPlayersRealtimeSync({
   // supabase.channel(name).send(...) qui crée un channel éphémère.
   // Le channel est déjà souscrit → le message est bien distribué
   // à tous les clients (joueurs inclus) en < 100ms.
-  const sendInitiativeBroadcast = (payload: InitiativeChangedBroadcast) => {
+  const sendHpBroadcast = (payload: HpChangedBroadcast) => {
+    if (!channelRef.current) return;
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'hp-changed',
+      payload,
+    });
+  };
+
+    const sendInitiativeBroadcast = (payload: InitiativeChangedBroadcast) => {
     if (!channelRef.current) return;
     channelRef.current.send({
       type: 'broadcast',
