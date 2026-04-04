@@ -40,6 +40,7 @@ interface UseCombatEncounterRealtimeSyncParams {
 export function useCombatEncounterRealtimeSync({
   encounterId,
   onEncounterUpdated,
+  onParticipantsReordered,
 }: UseCombatEncounterRealtimeSyncParams) {
 
   // -------------------
