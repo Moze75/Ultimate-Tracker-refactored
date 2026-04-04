@@ -823,11 +823,28 @@ export function useCombatController({
 
     try {
       await monsterService.reorderParticipants(encounter.id, ids);
-      setParticipants(sorted.map((p, i) => ({ ...p, sort_order: i })));
-      await monsterService.updateEncounter(encounter.id, { current_turn_index: 0 });
-      setEncounter((prev) => (prev ? { ...prev, current_turn_index: 0 } : prev));
+      const sortedWithOrder = sorted.map((p, i) => ({ ...p, sort_order: i }));
+      setParticipants(sortedWithOrder);
+
+      const updated = await monsterService.updateEncounter(encounter.id, {
+        current_turn_index: 0,
+        round_number: encounter.round_number,
+      });
+      setEncounter(updated);
+
+      // Broadcast aux joueurs : nouveau tri + index 0
+      supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+        type: 'broadcast',
+        event: 'turn-changed',
+        payload: {
+          current_turn_index: 0,
+          round_number: updated.round_number,
+          status: updated.status,
+        },
+      });
     } catch (err) {
       console.error(err);
+      toast.error('Erreur tri initiative');
     }
   };
 
