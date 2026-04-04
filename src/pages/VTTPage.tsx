@@ -236,6 +236,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [pendingChatRoll, setPendingChatRoll] = useState<VTTChatMessage | null>(null);
   const [sidebarActiveTab, setSidebarActiveTab] = useState<'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat'>(role === 'player' ? 'chat' : 'tokens');
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
+    // Ref vers handleDirectLaunchCombat exposé par VTTCombatTab
+  const directLaunchCombatRef = useRef<((tokens: VTTToken[]) => void) | null>(null);
   const [showWalls, setShowWalls] = useState(true);
 const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
 const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState<boolean>(() => {
