@@ -145,6 +145,13 @@ export function useCombatPlayersRealtimeSync({
           temporary_hp: data.temporary_hp,
         });
       })
+
+            .on('broadcast', { event: 'initiative-changed' }, (payload) => {
+        const data = payload.payload as InitiativeChangedBroadcast;
+        if (recentLocalUpdatesRef.current.has(data.participantId)) return;
+        onParticipantInitiativeUpdateRef.current?.(data.participantId, data.initiative_roll);
+      })
+      
       // -------------------
       // Écoute postgres_changes : HP joueur via table players (filet de secours)
       // -------------------
