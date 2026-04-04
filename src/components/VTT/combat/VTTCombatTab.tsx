@@ -1278,31 +1278,33 @@ function ActiveParticipantsList({
                 </div>
               )}
 
-              {/* Zone dégâts */}
-              <div className="flex items-center gap-0.5 shrink-0">
-                <input
-                  type="number"
-                  className="w-9 h-6 px-0.5 bg-black/40 border border-gray-700 rounded text-[10px] text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  placeholder="0"
-                  value={hpDelta[p.id] || ''}
-                  onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
-                />
-                <button
-                  onClick={() => onApplyHp(p, 'damage')}
-                  className="w-5 h-6 flex items-center justify-center text-red-500 hover:bg-red-900/30 rounded transition-colors"
-                  title="Dégâts"
-                >
-                  <Minus size={10} />
-                </button>
-                <button
-                  onClick={() => onApplyHp(p, 'heal')}
-                  className="w-5 h-6 flex items-center justify-center text-green-500 hover:bg-green-900/30 rounded transition-colors"
-                  title="Soins"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
+              {/* Zone dégâts — masquée côté joueur */}
+              {role === 'gm' && (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <input
+                    type="number"
+                    className="w-9 h-6 px-0.5 bg-black/40 border border-gray-700 rounded text-[10px] text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="0"
+                    value={hpDelta[p.id] || ''}
+                    onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
+                  />
+                  <button
+                    onClick={() => onApplyHp(p, 'damage')}
+                    className="w-5 h-6 flex items-center justify-center text-red-500 hover:bg-red-900/30 rounded transition-colors"
+                    title="Dégâts"
+                  >
+                    <Minus size={10} />
+                  </button>
+                  <button
+                    onClick={() => onApplyHp(p, 'heal')}
+                    className="w-5 h-6 flex items-center justify-center text-green-500 hover:bg-green-900/30 rounded transition-colors"
+                    title="Soins"
+                  >
+                    <Plus size={10} />
+                  </button>
+                </div>
+              )}
 
               {/* Initiative éditable inline */}
               <InitiativeCell
