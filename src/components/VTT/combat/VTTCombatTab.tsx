@@ -1140,6 +1140,8 @@ function ActiveParticipantsList({
   vttMode,
   onFocusToken,
   liveTokens,
+  role,
+  userId,
 }: {
   encounter: CampaignEncounter;
   participants: EncounterParticipant[];
