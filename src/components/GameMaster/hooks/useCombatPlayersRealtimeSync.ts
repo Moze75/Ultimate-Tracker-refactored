@@ -34,6 +34,7 @@ export function useCombatPlayersRealtimeSync({
   members,
   participants,
   onParticipantHPUpdate,
+  onParticipantInitiativeUpdate,
 }: UseCombatPlayersRealtimeSyncParams) {
   const recentLocalUpdatesRef = useRef<Set<string>>(new Set());
 
