@@ -1708,6 +1708,11 @@ if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) 
 
       isDragSelectingRef.current = false;
       selectionRectRef.current = null;
+      // Stoppe le suivi caméra dès que le drag de token se termine
+      // Sinon followWorldPosition continue en boucle et écrase le pan manuel
+      if (draggingTokenRef.current) {
+        stopFollowingWorldPosition?.();
+      }
       draggingTokenRef.current = null;
       resizingTokenRef.current = null;
           // -------------------
