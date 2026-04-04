@@ -311,8 +311,8 @@ export function VTTCombatTab({
         <div className="px-4 py-3 border-b border-gray-800 space-y-2">
           <div className="flex items-center gap-3 min-w-0">
             <div className="min-w-0 flex-1">
-              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-                <span className="truncate">{isActive ? encounter.name : 'Préparation du combat'}</span>
+                          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                <span className="truncate">{isActive ? encounter.name : 'Combat'}</span>
                 {isActive && (
                   <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                     Round {encounter.round_number}
@@ -322,7 +322,7 @@ export function VTTCombatTab({
               <p className="text-[11px] text-gray-500">
                 {isActive
                   ? `${participants.length} participant${participants.length > 1 ? 's' : ''}`
-                  : `${prepEntries.length} participant${prepEntries.length > 1 ? 's' : ''}`}
+                  : 'Aucun combat actif'}
               </p>
             </div>
           </div>
