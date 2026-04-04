@@ -60,6 +60,7 @@ interface VTTSidebarProps {
   onToggleLockPlayerMovementOutsideTurn?: () => void;
   onFocusCombatTokenByLabel?: (displayName: string) => void;
   onCurrentTurnLabelChange?: (displayName: string | null) => void;
+  onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: VTTToken[]) => void) | null>;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
