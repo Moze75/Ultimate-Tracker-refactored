@@ -368,6 +368,13 @@ export function VTTCombatTab({
                     imgSize="w-4 h-4"
                   />
                   <button
+                    onClick={handleLaunchRound}
+                    title="Trier par initiative et focus sur le premier joueur"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 bg-amber-900/40 hover:bg-amber-900/60 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/50 transition-colors shrink-0"
+                  >
+                    <Swords size={12} className="shrink-0" /> Lancer
+                  </button>
+                  <button
                     onClick={handleNextTurn}
                     className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
                   >
