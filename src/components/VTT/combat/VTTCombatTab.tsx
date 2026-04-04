@@ -1205,6 +1205,16 @@ function ActiveParticipantsList({
         const isPlayer = p.participant_type === 'player';
         const clickable = isMonster || (isPlayer && !!p.player_member_id);
         const hasInitiative = !!p.initiative_roll && p.initiative_roll > 0;
+        // MJ peut toujours lancer. Joueur uniquement sur son propre token.
+        const canRollDice =
+          role === 'gm' ||
+          (role === 'player' &&
+            p.participant_type === 'player' &&
+            liveTokens?.some(
+              (t) =>
+                t.label.toLowerCase() === p.display_name.toLowerCase() &&
+                t.controlledByUserIds?.includes(userId ?? '')
+            ));
 
         const useInlineExpand = !isDesktop || vttMode;
         const isExpanded = useInlineExpand && expandedId === p.id && isMonster;
