@@ -120,6 +120,13 @@ export function useCombatEncounterRealtimeSync({
           status: data.status ?? 'completed',
         });
       })
+
+      .on('broadcast', { event: 'participants-reordered' }, (payload) => {
+        const data = payload.payload as ParticipantsReorderedBroadcast;
+        console.log('[RealtimeSync] Broadcast participants-reordered reçu:', data);
+        onParticipantsReorderedRef.current?.(data.orderedIds);
+      })
+      
       // -------------------
       // Écoute postgres_changes : filet de secours WAL (1-3s)
       // -------------------
