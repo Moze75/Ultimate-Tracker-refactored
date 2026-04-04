@@ -1161,6 +1161,8 @@ function ActiveParticipantsList({
   vttMode?: boolean;
   onFocusToken?: (displayName: string) => void;
   liveTokens?: TokenLike[];
+  role?: string;
+  userId?: string;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const participantRefs = useRef<Record<string, HTMLDivElement | null>>({});
