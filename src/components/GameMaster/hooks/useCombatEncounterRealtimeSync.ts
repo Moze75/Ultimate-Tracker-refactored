@@ -27,9 +27,14 @@ export interface TurnChangedBroadcast {
   status?: string;
 }
 
+export interface ParticipantsReorderedBroadcast {
+  orderedIds: string[]; // IDs dans le nouvel ordre
+}
+
 interface UseCombatEncounterRealtimeSyncParams {
   encounterId: string | null | undefined;
   onEncounterUpdated: (updates: Partial<CampaignEncounter>) => void;
+  onParticipantsReordered?: (orderedIds: string[]) => void;
 }
 
 export function useCombatEncounterRealtimeSync({
