@@ -500,6 +500,57 @@ export function useCombatController({
     toast.success(`Initiative lancée pour ${updates.length} monstre${updates.length > 1 ? 's' : ''}`);
   };
 
+  // Lance directement un combat depuis une liste de tokens VTT (sans passer par prepEntries)
+  // Utilisé par le clic droit canvas → "Lancer le combat"
+  const handleDirectLaunchCombat = async (tokens: VTTToken[]) => {
+    if (tokens.length === 0) {
+      toast.error('Sélectionnez au moins un token pour lancer le combat');
+      return;
+    }
+
+    try {
+      setLaunching(true);
+
+      const enc = await monsterService.createEncounter(campaignId, 'Combat');
+
+      const participantData = tokens.map((t, i) => {
+        const matchedMember = members.find(
+          (m) => m.player_id && t.characterId && m.player_id === t.characterId
+        );
+        const isPlayer = !!matchedMember;
+
+        return {
+          encounter_id: enc.id,
+          participant_type: (isPlayer ? 'player' : 'monster') as 'player' | 'monster',
+          monster_id: undefined as string | undefined,
+          player_member_id: matchedMember?.id,
+          display_name: t.label || 'Token',
+          initiative_roll: 0,
+          current_hp: t.hp ?? matchedMember?.current_hp ?? 0,
+          max_hp: t.maxHp ?? matchedMember?.max_hp ?? 0,
+          temporary_hp: 0,
+          armor_class: matchedMember?.armor_class ?? 10,
+          conditions: [] as string[],
+          sort_order: i,
+          is_active: true,
+          notes: '',
+        };
+      });
+
+      const added = await monsterService.addParticipants(participantData);
+
+      setEncounter(enc);
+      setParticipants(added);
+      setPrepEntries([]);
+      toast.success('Combat lancé !');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur création combat');
+    } finally {
+      setLaunching(false);
+    }
+  };
+  
   const handleLaunchCombat = async () => {
     if (prepEntries.length === 0) {
       toast.error('Ajoutez des participants avant de lancer le combat');
