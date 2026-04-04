@@ -62,6 +62,7 @@ export function VTTCombatTab({
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
+  userId,
 }: VTTCombatTabProps & {
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: import('../../../types/vtt').VTTToken[]) => void) | null>;
 }) {
