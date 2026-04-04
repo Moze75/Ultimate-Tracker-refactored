@@ -137,15 +137,10 @@ export function VTTCombatTab({
     onUpdateToken,
   });
 
-  // Expose handleDirectLaunchCombat vers VTTPage via ref
-  useEffect(() => {
-    if (onDirectLaunchCombatRef) {
-      onDirectLaunchCombatRef.current = handleDirectLaunchCombat;
-    }
-    return () => {
-      if (onDirectLaunchCombatRef) onDirectLaunchCombatRef.current = null;
-    };
-  }, [handleDirectLaunchCombat, onDirectLaunchCombatRef]);
+  const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
+
+  useEffect(() => { 
+    if (!isActive || !encounter) {
       onCurrentTurnLabelChange?.(null);
       if (!autoFocusCombatTurn) {
         lastAutoFocusedTurnKeyRef.current = null;
