@@ -354,6 +354,8 @@ const fuseWallPoints = (
       if (e.button === 2 && !e.shiftKey) {
         lastPanRef.current = { x: e.clientX, y: e.clientY };
         isPanningRef.current = true;
+        // Stoppe le suivi caméra : le pan manuel doit prendre le dessus
+        stopFollowingWorldPosition?.();
         // Empêche le menu contextuel natif
         e.preventDefault();
         return;
