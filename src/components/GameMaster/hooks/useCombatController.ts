@@ -217,9 +217,31 @@ export function useCombatController({
     setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
   }, []);
 
+  // -------------------
+  // Réception du tri broadcast par le MJ
+  // -------------------
+  // On reçoit la liste ordonnée des IDs et on réordonne le state local
+  // sans refaire de requête réseau (les données sont déjà en mémoire).
+  const handleParticipantsReorderedFromRealtime = useCallback((orderedIds: string[]) => {
+    setParticipants((prev) => {
+      const map = new Map(prev.map((p) => [p.id, p]));
+      const reordered = orderedIds
+        .map((id, i) => {
+          const p = map.get(id);
+          return p ? { ...p, sort_order: i } : null;
+        })
+        .filter(Boolean) as typeof prev;
+      // Ajoute les éventuels participants absents de l'ordre (sécurité)
+      const orderedSet = new Set(orderedIds);
+      const extras = prev.filter((p) => !orderedSet.has(p.id));
+      return [...reordered, ...extras];
+    });
+  }, []);
+
   useCombatEncounterRealtimeSync({
     encounterId: encounter?.id,
     onEncounterUpdated: handleEncounterUpdatedFromRealtime,
+    onParticipantsReordered: handleParticipantsReorderedFromRealtime,
   });
 
   useEffect(() => {
