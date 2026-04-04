@@ -238,7 +238,16 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
   const [showWalls, setShowWalls] = useState(true);
 const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
-const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState(false);
+const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState<boolean>(() => {
+  try {
+    const stored = localStorage.getItem('vtt:setting:followCameraOnTokenMove');
+    // Si jamais défini → true par défaut
+    // Si défini explicitement par l'utilisateur → respecter son choix
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+});
 const [lockPlayerMovementOutsideTurn, setLockPlayerMovementOutsideTurn] = useState(true);
 const [currentCombatTurnLabel, setCurrentCombatTurnLabel] = useState<string | null>(null);
 
