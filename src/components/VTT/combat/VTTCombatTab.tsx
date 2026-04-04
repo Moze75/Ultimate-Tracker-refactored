@@ -106,6 +106,7 @@ export function VTTCombatTab({
     handleRollAllInitiative,
     handleRollMonsterInitiativeActive,
     handleLaunchCombat,
+    handleDirectLaunchCombat,
     handleSavePreparation,
     handleSaveEncounter,
     handleEndCombat,
