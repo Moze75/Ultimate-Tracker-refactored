@@ -1017,12 +1017,8 @@ function ConditionBadges({ conditions, onToggle }: { conditions: string[]; onTog
 }
 
 // ---------------------------------------------------------------------------
-// InitiativeCell — initiative éditable inline dans le combat actif
+// InitiativeCell — initiative avec dé animé + édition inline (combat actif)
 // ---------------------------------------------------------------------------
-// InitiativeCell — combat actif uniquement
-// Pas de dé aléatoire : saisie manuelle uniquement.
-// - Si pas de valeur : input direct avec placeholder
-// - Si valeur présente : clic sur la valeur → input inline
 function InitiativeCell({
   participantId,
   value,
@@ -1045,14 +1041,14 @@ function InitiativeCell({
     onUpdate(participantId, rolled);
     setTimeout(() => setSpinning(false), 450);
   };
-  
+
   return (
     <div className="flex items-center gap-1 shrink-0">
-      {/* Dé — visible si canRollDice */}
+      {/* Dé — visible uniquement si autorisé à lancer */}
       {canRollDice && (
         <button
           onClick={handleDiceClick}
-          title={hasValue ? 'Relancer l\'initiative' : 'Lancer l\'initiative'}
+          title={hasValue ? "Relancer l'initiative" : "Lancer l'initiative"}
           className={`shrink-0 transition-opacity ${hasValue ? 'opacity-40 hover:opacity-100' : ''}`}
         >
           <img
@@ -1066,7 +1062,7 @@ function InitiativeCell({
         </button>
       )}
 
-      {/* Valeur : si présente → cliquable pour édition inline */}
+      {/* Valeur présente → cliquable pour édition inline */}
       {hasValue ? (
         editing ? (
           <input
@@ -1098,25 +1094,8 @@ function InitiativeCell({
           </button>
         )
       ) : !canRollDice ? (
-        /* Joueur non autorisé à lancer : input manuel direct */
-        <input
-          type="number"
-          min={0}
-          max={30}
-          className="w-9 px-1 py-0.5 bg-gray-900 border border-gray-700 rounded text-[10px] text-center text-gray-400 focus:border-amber-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          placeholder="—"
-          defaultValue=""
-          onBlur={(e) => {
-            const v = parseInt(e.target.value);
-            if (v > 0) onUpdate(participantId, v);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              const v = parseInt((e.target as HTMLInputElement).value);
-              if (v > 0) onUpdate(participantId, v);
-            }
-          }}
-        />
+        /* Lecture seule : valeur manquante, pas autorisé à lancer */
+        <span className="w-6 text-center text-xs text-gray-600">—</span>
       ) : null}
     </div>
   );
