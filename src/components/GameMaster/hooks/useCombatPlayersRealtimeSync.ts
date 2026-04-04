@@ -198,5 +198,5 @@ export function useCombatPlayersRealtimeSync({
     };
   }, [playerIdsKey]);
 
-  return { markLocalUpdate, sendHpBroadcast };
+  return { markLocalUpdate, sendHpBroadcast, sendInitiativeBroadcast };
 }
