@@ -1211,9 +1211,6 @@ function ActiveParticipantsList({
                     {p.display_name}
                   </button>
                   {isDead && <Skull size={10} className="text-gray-500 shrink-0" />}
-                  {isCurrentTurn && !isDead && (
-                    <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />
-                  )}
                 </div>
               </div>
 
