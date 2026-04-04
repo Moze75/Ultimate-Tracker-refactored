@@ -50,8 +50,10 @@ export function useCombatEncounterRealtimeSync({
   // ne se ré-abonnent PAS à chaque re-render du parent.
   // Le channel Supabase reste stable tant que encounterId ne change pas.
   const callbackRef = useRef(onEncounterUpdated);
+  const onParticipantsReorderedRef = useRef(onParticipantsReordered);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
+    onParticipantsReorderedRef.current = onParticipantsReordered;
   });
 
   // -------------------
