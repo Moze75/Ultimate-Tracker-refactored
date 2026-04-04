@@ -1305,6 +1305,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     currentCombatTurnLabelRef,
     isCombatActiveRef,
     onBlockedByTurnLock: showTurnLockMessage,
+    stopFollowingWorldPosition: () => {
+      viewportFollowTargetRef.current = null;
+      if (viewportFollowAnimRef.current) {
+        cancelAnimationFrame(viewportFollowAnimRef.current);
+        viewportFollowAnimRef.current = null;
+      }
+    },
     centerOnWorldPosition: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
