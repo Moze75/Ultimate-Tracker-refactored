@@ -2384,7 +2384,11 @@ onSelectTokens={ids => {
   onFocusCombatTokenByLabel={focusCombatTokenByLabel}
   onCurrentTurnLabelChange={setCurrentCombatTurnLabel}
   followCameraOnTokenMove={followCameraOnTokenMove}
-  onToggleFollowCameraOnTokenMove={() => setFollowCameraOnTokenMove((prev) => !prev)}
+  onToggleFollowCameraOnTokenMove={() => setFollowCameraOnTokenMove((prev) => {
+    const next = !prev;
+    try { localStorage.setItem('vtt:setting:followCameraOnTokenMove', String(next)); } catch {}
+    return next;
+  })}
   lockPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
   onToggleLockPlayerMovementOutsideTurn={() => setLockPlayerMovementOutsideTurn((prev) => !prev)}
           />
