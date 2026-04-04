@@ -148,6 +148,21 @@ export function VTTCombatTab({
       if (onDirectLaunchCombatRef) onDirectLaunchCombatRef.current = null;
     };
   }, [handleDirectLaunchCombat, onDirectLaunchCombatRef]);
+
+  // -------------------
+  // Lancer le round : tri par initiative + focus sur le premier participant
+  // -------------------
+  const handleLaunchRound = async () => {
+    await handleSortByInitiative();
+    // Après le tri, les participants sont réordonnés et current_turn_index = 0
+    // On récupère le premier participant trié pour le focus caméra
+    const sorted = [...participants].sort((a, b) => b.initiative_roll - a.initiative_roll);
+    const first = sorted[0];
+    if (first?.display_name) {
+      lastAutoFocusedTurnKeyRef.current = null; // reset pour forcer le focus
+      onFocusCombatTokenByLabel?.(first.display_name);
+    }
+  };
   
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
 
