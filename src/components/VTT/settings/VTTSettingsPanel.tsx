@@ -93,7 +93,7 @@ function SettingsSection({
 export function VTTSettingsPanel({
   autoFocusCombatTurn = true,
   onToggleAutoFocusCombatTurn,
-  followCameraOnTokenMove = false,
+  followCameraOnTokenMove = true,
   onToggleFollowCameraOnTokenMove,
   lockPlayerMovementOutsideTurn = true,
   onToggleLockPlayerMovementOutsideTurn,
