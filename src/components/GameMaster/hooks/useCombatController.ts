@@ -191,10 +191,20 @@ export function useCombatController({
     []
   );
 
-  const { markLocalUpdate, sendHpBroadcast } = useCombatPlayersRealtimeSync({
+  const handlePlayerInitiativeUpdateFromRealtime = useCallback(
+    (participantId: string, initiative_roll: number) => {
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === participantId ? { ...p, initiative_roll } : p))
+      );
+    },
+    []
+  );
+
+  const { markLocalUpdate, sendHpBroadcast, sendInitiativeBroadcast } = useCombatPlayersRealtimeSync({
     members,
     participants,
     onParticipantHPUpdate: handlePlayerHPUpdateFromRealtime,
+    onParticipantInitiativeUpdate: handlePlayerInitiativeUpdateFromRealtime,
   });
 
   const handleEncounterUpdatedFromRealtime = useCallback((updates: Partial<CampaignEncounter>) => {
