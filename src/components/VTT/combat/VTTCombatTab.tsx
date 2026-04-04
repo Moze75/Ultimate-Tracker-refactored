@@ -1315,13 +1315,15 @@ function ActiveParticipantsList({
               />
 
               {/* Supprimer */}
-              <button
-                onClick={() => onRemove(p.id)}
-                className="w-5 h-5 flex items-center justify-center text-gray-700 hover:text-red-400 rounded transition-colors shrink-0"
-                title="Supprimer"
-              >
-                <Trash2 size={10} />
-              </button>
+              {role === 'gm' && (
+                <button
+                  onClick={() => onRemove(p.id)}
+                  className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors shrink-0"
+                  title="Retirer"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
 
             {/* Conditions */}
