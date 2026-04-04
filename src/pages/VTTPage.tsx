@@ -2363,6 +2363,7 @@ onSelectTokens={ids => {
             activeTab={sidebarActiveTab}
             onChangeTab={setSidebarActiveTab}
             combatInitTokens={combatInitTokens}
+                        onDirectLaunchCombatRef={directLaunchCombatRef}
             onSelectToken={setSelectedTokenId}
             onEditToken={setEditingToken}
             onRemoveToken={handleRemoveToken}
