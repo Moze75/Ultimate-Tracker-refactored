@@ -88,6 +88,7 @@ export interface VTTCanvasRefs {
   onBlockedByTurnLock?: () => void;
   centerOnWorldPosition: (x: number, y: number) => void;
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
+  stopFollowingWorldPosition?: () => void;
 
 }
 
