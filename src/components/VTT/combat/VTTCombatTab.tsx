@@ -60,7 +60,10 @@ export function VTTCombatTab({
   autoFocusCombatTurn = true,
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
-}: VTTCombatTabProps) {
+  onDirectLaunchCombatRef,
+}: VTTCombatTabProps & {
+  onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: import('../../../types/vtt').VTTToken[]) => void) | null>;
+}) {
   const {
     isGM,
     isDesktop,
