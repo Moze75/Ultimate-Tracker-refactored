@@ -1262,19 +1262,21 @@ function ActiveParticipantsList({
                 </div>
               </div>
 
-              {/* HP / CA compacts */}
-              <div className="flex items-center gap-1.5 text-[10px] shrink-0">
-                <span className={`flex items-center gap-0.5 ${isDead ? 'text-gray-600' : 'text-gray-300'}`}>
-                  <Heart size={9} className={isDead ? 'text-gray-700' : 'text-red-500'} />
-                  {p.current_hp}
-                  {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400">+{p.temporary_hp}</span>}
-                </span>
-                <span className="text-gray-600">|</span>
-                <span className="flex items-center gap-0.5 text-gray-400">
-                  <Shield size={9} className="text-gray-500" />
-                  {p.armor_class}
-                </span>
-              </div>
+              {/* HP / CA compacts — masqués côté joueur */}
+              {role === 'gm' && (
+                <div className="flex items-center gap-1.5 text-[10px] shrink-0">
+                  <span className={`flex items-center gap-0.5 ${isDead ? 'text-gray-600' : 'text-gray-300'}`}>
+                    <Heart size={9} className={isDead ? 'text-gray-700' : 'text-red-500'} />
+                    {p.current_hp}
+                    {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400">+{p.temporary_hp}</span>}
+                  </span>
+                  <span className="text-gray-600">|</span>
+                  <span className="flex items-center gap-0.5 text-gray-400">
+                    <Shield size={9} className="text-gray-500" />
+                    {p.armor_class}
+                  </span>
+                </div>
+              )}
 
               {/* Zone dégâts */}
               <div className="flex items-center gap-0.5 shrink-0">
