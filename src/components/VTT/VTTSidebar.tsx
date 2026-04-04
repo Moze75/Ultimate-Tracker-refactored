@@ -628,6 +628,7 @@ const visibleTokens = isGM
               onToggleLockPlayerMovementOutsideTurn={onToggleLockPlayerMovementOutsideTurn}
               onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
               onCurrentTurnLabelChange={onCurrentTurnLabelChange}
+              onDirectLaunchCombatRef={onDirectLaunchCombatRef}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center gap-3">
