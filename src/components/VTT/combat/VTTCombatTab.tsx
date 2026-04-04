@@ -416,25 +416,29 @@ export function VTTCombatTab({
               onFocusToken={onFocusCombatTokenByLabel}
               liveTokens={liveTokens}
             />
-          ) : isGM ? (
-                        <PrepParticipantsList
-              playerEntries={playerPrep}
-              monsterEntries={monsterPrep}
-              onUpdateInitiative={handleUpdatePrepInitiative}
-              onRemove={handleRemovePrepEntry}
-              onClickMonster={viewMonsterBySlug}
-              selectedMonster={selectedMonster}
-              loadingDetail={loadingDetail}
-              onRollDice={onRollDice}
-              isDesktop={isDesktop}
-              liveTokens={liveTokens}
-              onLoadEncounter={() => setShowLoadEncounterModal(true)}
-            />
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-4">
               <Swords size={28} className="text-gray-600" />
-              <p className="text-sm text-gray-400">Aucun combat en cours.</p>
-              <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
+              {isGM ? (
+                <>
+                  <p className="text-sm text-gray-400">Aucun combat en cours.</p>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Sélectionnez des tokens sur le canvas puis faites un<br />
+                    <span className="text-amber-400">Shift + clic droit</span> → "Lancer le combat"
+                  </p>
+                  <button
+                    onClick={() => setShowLoadEncounterModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-900/20 hover:bg-amber-900/30 border border-amber-800/40 rounded-lg transition-colors"
+                  >
+                    <BookOpen size={12} /> Charger un combat sauvegardé
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-400">Aucun combat en cours.</p>
+                  <p className="text-xs text-gray-600">Le Maître de Jeu n'a pas encore lancé de combat.</p>
+                </>
+              )}
             </div>
           )}
         </div>
