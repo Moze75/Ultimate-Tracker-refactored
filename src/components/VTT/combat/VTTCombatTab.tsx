@@ -351,15 +351,7 @@ export function VTTCombatTab({
                     <Square size={12} className="shrink-0" /> Fin
                   </button>
                 </>
-              ) : (
-                <button
-                  onClick={handleRollAllInitiative}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/40 transition-colors"
-                >
-                  <img src={DICE_ICON_URL} alt="dé" className="w-4 h-4 object-contain" />
-                  Initiatives
-                </button>
-              )}
+               ) : null}
             </div>
           )}
         </div>
