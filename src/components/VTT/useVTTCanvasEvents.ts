@@ -168,8 +168,9 @@ export function useVTTCanvasEvents({
     currentCombatTurnLabelRef,
     onBlockedByTurnLock,
       isCombatActiveRef,
-    centerOnWorldPosition, 
+    centerOnWorldPosition,
     centerOnWorldPositionImmediate,
+    stopFollowingWorldPosition,
 }: VTTCanvasRefs) {
 
 
