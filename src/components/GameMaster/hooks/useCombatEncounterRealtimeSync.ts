@@ -47,6 +47,7 @@ export function useCombatEncounterRealtimeSync({
   encounterId,
   onEncounterUpdated,
   onParticipantsReordered,
+  onFriendlyChanged,
 }: UseCombatEncounterRealtimeSyncParams) {
 
   // -------------------
