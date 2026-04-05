@@ -1317,7 +1317,7 @@ function ActiveParticipantsList({
                     onClick={handleParticipantClick}
                     disabled={!clickable}
                     className={`text-xs font-semibold truncate leading-tight ${
-                      isDead ? 'text-gray-500 line-through' : isMonster ? 'text-red-400' : 'text-white'
+                      isDead ? 'text-gray-500 line-through' : isFriendly ? 'text-white' : 'text-red-400'
                     } ${clickable ? 'hover:underline cursor-pointer' : ''}`}
                   >
                     {p.display_name}
