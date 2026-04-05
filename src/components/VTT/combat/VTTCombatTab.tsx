@@ -1323,10 +1323,10 @@ function ActiveParticipantsList({
               document.addEventListener('mousedown', close);
             } : undefined}
           >
-            {/* Ligne principale : avatar | nom+hp | stats | dégâts | initiative */}
-            <div className="flex items-center gap-1.5">
-                          {/* Avatar avec cercle barre de vie — taille 48px */}
-              <div className="shrink-0" onClick={handleParticipantClick} style={{ cursor: clickable ? 'pointer' : 'default' }}>
+             {/* Layout : 2 lignes — ligne 1 : avatar | nom | init | poubelle / ligne 2 : vide | hp+ca | input dégâts */}
+            <div className="flex gap-1.5">
+              {/* Colonne gauche : avatar (s'étend sur les 2 lignes) */}
+              <div className="shrink-0 self-center" onClick={handleParticipantClick} style={{ cursor: clickable ? 'pointer' : 'default' }}>
                 <TokenAvatar
                   name={p.display_name}
                   liveTokens={liveTokens}
@@ -1336,8 +1336,9 @@ function ActiveParticipantsList({
                 />
               </div>
 
-              {/* Nom seul (barre HP supprimée, remplacée par le cercle SVG) */}
-              <div className="flex-1 min-w-0">
+              {/* Colonne centrale : nom (ligne 1) + PV/CA (ligne 2) */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+                {/* Ligne 1 : Nom */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handleParticipantClick}
@@ -1350,70 +1351,71 @@ function ActiveParticipantsList({
                   </button>
                   {isDead && <Skull size={10} className="text-gray-500 shrink-0" />}
                 </div>
+                {/* Ligne 2 : HP / CA — masqués côté joueur */}
+                {role === 'gm' && (
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span className={`flex items-center gap-0.5 ${isDead ? 'text-gray-600' : 'text-gray-300'}`}>
+                      <Heart size={9} className={isDead ? 'text-gray-700' : 'text-red-500'} />
+                      {p.current_hp}
+                      {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400">+{p.temporary_hp}</span>}
+                    </span>
+                    <span className="text-gray-600">|</span>
+                    <span className="flex items-center gap-0.5 text-gray-400">
+                      <Shield size={9} className="text-gray-500" />
+                      {p.armor_class}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* HP / CA compacts — masqués côté joueur */}
-              {role === 'gm' && (
-                <div className="flex items-center gap-1.5 text-[10px] shrink-0">
-                  <span className={`flex items-center gap-0.5 ${isDead ? 'text-gray-600' : 'text-gray-300'}`}>
-                    <Heart size={9} className={isDead ? 'text-gray-700' : 'text-red-500'} />
-                    {p.current_hp}
-                    {(p.temporary_hp || 0) > 0 && <span className="text-cyan-400">+{p.temporary_hp}</span>}
-                  </span>
-                  <span className="text-gray-600">|</span>
-                  <span className="flex items-center gap-0.5 text-gray-400">
-                    <Shield size={9} className="text-gray-500" />
-                    {p.armor_class}
-                  </span>
-                </div>
-              )}
-
-              {/* Zone dégâts — masquée côté joueur */}
-              {role === 'gm' && (
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <input
-                    type="number"
-                    className="w-9 h-6 px-0.5 bg-black/40 border border-gray-700 rounded text-[10px] text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="0"
-                    value={hpDelta[p.id] || ''}
-                    onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                    onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
+              {/* Colonne droite : 2 lignes — ligne 1 : init + poubelle / ligne 2 : input dégâts */}
+              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                {/* Ligne 1 : Initiative + Supprimer */}
+                <div className="flex items-center gap-0.5">
+                  <InitiativeCell
+                    participantId={p.id}
+                    value={p.initiative_roll}
+                    onUpdate={onUpdateInitiative}
+                    canRollDice={!!canRollDice}
                   />
-                  <button
-                    onClick={() => onApplyHp(p, 'damage')}
-                    className="w-5 h-6 flex items-center justify-center text-red-500 hover:bg-red-900/30 rounded transition-colors"
-                    title="Dégâts"
-                  >
-                    <Minus size={10} />
-                  </button>
-                  <button
-                    onClick={() => onApplyHp(p, 'heal')}
-                    className="w-5 h-6 flex items-center justify-center text-green-500 hover:bg-green-900/30 rounded transition-colors"
-                    title="Soins"
-                  >
-                    <Plus size={10} />
-                  </button>
+                  {role === 'gm' && (
+                    <button
+                      onClick={() => onRemove(p.id)}
+                      className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors"
+                      title="Retirer"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
-              )}
-
-              {/* Initiative éditable inline */}
-              <InitiativeCell
-                participantId={p.id}
-                value={p.initiative_roll}
-                onUpdate={onUpdateInitiative}
-                canRollDice={!!canRollDice}
-              />
-
-              {/* Supprimer */}
-              {role === 'gm' && (
-                <button
-                  onClick={() => onRemove(p.id)}
-                  className="p-1 text-gray-600 hover:text-red-400 rounded transition-colors shrink-0"
-                  title="Retirer"
-                >
-                  <Trash2 size={12} />
-                </button>
-              )}
+                {/* Ligne 2 : Zone dégâts — masquée côté joueur */}
+                {role === 'gm' && (
+                  <div className="flex items-center gap-0.5">
+                    <input
+                      type="number"
+                      className="w-9 h-6 px-0.5 bg-black/40 border border-gray-700 rounded text-[10px] text-center text-gray-200 focus:border-red-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="0"
+                      value={hpDelta[p.id] || ''}
+                      onChange={(e) => setHpDelta((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') onApplyHp(p, 'damage'); }}
+                    />
+                    <button
+                      onClick={() => onApplyHp(p, 'damage')}
+                      className="w-5 h-6 flex items-center justify-center text-red-500 hover:bg-red-900/30 rounded transition-colors"
+                      title="Dégâts"
+                    >
+                      <Minus size={10} />
+                    </button>
+                    <button
+                      onClick={() => onApplyHp(p, 'heal')}
+                      className="w-5 h-6 flex items-center justify-center text-green-500 hover:bg-green-900/30 rounded transition-colors"
+                      title="Soins"
+                    >
+                      <Plus size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Conditions */}
