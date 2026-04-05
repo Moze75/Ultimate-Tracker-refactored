@@ -136,20 +136,18 @@ function ChatRollCard({ msg }: { msg: VTTChatMessage }) {
   const isCritFail = msg.rolls?.length === 1 && msg.diceFormula === '1d20' && msg.rolls[0] === 1;
 
   return (
-    <div className="flex gap-2">
-      {/* Avatar */}
-      <TokenAvatar
-        imageUrl={msg.tokenImageUrl}
-        label={msg.tokenLabel || msg.userName}
-        color={msg.tokenColor}
-        size={34}
-      />
-
+    <div className="flex justify-start">
       {/* Carte roll */}
-      <div className="flex-1 min-w-0 bg-gray-800/70 border border-gray-600/50 rounded-lg overflow-hidden">
-        {/* En-tête */}
+      <div className="max-w-[85%] bg-gray-800/70 border border-gray-600/50 rounded-lg overflow-hidden">
+        {/* En-tête : avatar + nom + timestamp */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1">
           <div className="flex items-center gap-1.5 min-w-0">
+            <TokenAvatar
+              imageUrl={msg.tokenImageUrl}
+              label={msg.tokenLabel || msg.userName}
+              color={msg.tokenColor}
+              size={22}
+            />
             <span className="text-[11px] font-semibold text-gray-200 truncate max-w-[90px]">
               {msg.tokenLabel || msg.userName}
             </span>
