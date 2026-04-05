@@ -1739,8 +1739,8 @@ if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) 
       e.preventDefault();
       const vp = viewportRef.current;
 
-      // ── Pinch trackpad (ctrlKey=true) ou molette souris → ZOOM ──────────────
-      if (e.ctrlKey || e.metaKey) {
+      // ── Molette seule OU pinch trackpad (ctrlKey=true) → ZOOM ───────────────
+      if (!e.shiftKey) {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
