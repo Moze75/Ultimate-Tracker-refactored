@@ -417,13 +417,14 @@ export function VTTCombatTab({
 
         <div className="flex-1 overflow-y-auto min-h-0" ref={scrollContainerRef}>
           {isActive ? (
-                 <ActiveParticipantsList
+            <ActiveParticipantsList
               encounter={encounter}
               participants={participants}
               hpDelta={hpDelta}
               setHpDelta={setHpDelta}
               onApplyHp={applyHp}
               onToggleCondition={toggleCondition}
+              onToggleFriendly={toggleFriendly}
               onRemove={handleRemoveParticipant}
               onViewMonster={viewMonsterById}
               onViewPlayer={viewPlayerById}
