@@ -41,6 +41,7 @@ interface UseCombatEncounterRealtimeSyncParams {
   onEncounterUpdated: (updates: Partial<CampaignEncounter>) => void;
   onParticipantsReordered?: (orderedIds: string[]) => void;
   onFriendlyChanged?: (participantId: string, friendly: boolean) => void;
+  onParticipantsUpdated?: (encounterId: string) => void;
 }
 
 export function useCombatEncounterRealtimeSync({
@@ -48,6 +49,7 @@ export function useCombatEncounterRealtimeSync({
   onEncounterUpdated,
   onParticipantsReordered,
   onFriendlyChanged,
+  onParticipantsUpdated,
 }: UseCombatEncounterRealtimeSyncParams) {
 
   // -------------------
@@ -59,10 +61,12 @@ export function useCombatEncounterRealtimeSync({
   const callbackRef = useRef(onEncounterUpdated);
   const onParticipantsReorderedRef = useRef(onParticipantsReordered);
   const onFriendlyChangedRef = useRef(onFriendlyChanged);
+  const onParticipantsUpdatedRef = useRef(onParticipantsUpdated);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
     onParticipantsReorderedRef.current = onParticipantsReordered;
     onFriendlyChangedRef.current = onFriendlyChanged;
+    onParticipantsUpdatedRef.current = onParticipantsUpdated;
   });
 
   // -------------------
@@ -139,6 +143,11 @@ export function useCombatEncounterRealtimeSync({
             .on('broadcast', { event: 'friendly-changed' }, (payload) => {
         const data = payload.payload as FriendlyChangedBroadcast;
         onFriendlyChangedRef.current?.(data.participantId, data.friendly);
+      })
+
+      .on('broadcast', { event: 'participants-updated' }, (payload) => {
+        const data = payload.payload as { encounterId: string };
+        onParticipantsUpdatedRef.current?.(data.encounterId);
       })
       
       // -------------------

@@ -217,6 +217,15 @@ export function useCombatController({
     setEncounter((prev) => (prev ? { ...prev, ...updates } : prev));
   }, []);
 
+  const handleParticipantsUpdatedFromRealtime = useCallback(async (encounterId: string) => {
+    try {
+      const parts = await monsterService.getEncounterParticipants(encounterId);
+      setParticipants(parts);
+    } catch {
+      // Silencieux
+    }
+  }, []);
+
   // -------------------
   // Réception du tri broadcast par le MJ
   // -------------------
@@ -252,6 +261,7 @@ export function useCombatController({
     onEncounterUpdated: handleEncounterUpdatedFromRealtime,
     onParticipantsReordered: handleParticipantsReorderedFromRealtime,
     onFriendlyChanged: handleFriendlyChangedFromRealtime,
+    onParticipantsUpdated: handleParticipantsUpdatedFromRealtime,
   });
 
   useEffect(() => {
@@ -585,6 +595,13 @@ export function useCombatController({
 
         const added = await monsterService.addParticipants(participantData);
         setParticipants((prev) => [...prev, ...added]);
+
+        supabase.channel(`combat-encounter-sync-${currentEncounter.id}`).send({
+          type: 'broadcast',
+          event: 'participants-updated',
+          payload: { encounterId: currentEncounter.id },
+        });
+
         toast.success(`${tokens.length} token${tokens.length > 1 ? 's' : ''} ajouté${tokens.length > 1 ? 's' : ''} au combat`);
       } else {
         const enc = await monsterService.createEncounter(campaignId, 'Combat');
