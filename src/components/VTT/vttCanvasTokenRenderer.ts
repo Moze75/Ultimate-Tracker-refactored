@@ -1,15 +1,6 @@
 import type { VTTToken } from '../../types/vtt';
- 
-// -------------------
-// Registre des shakes (tokenId → timestamp du hit)
-// Durée : 400ms, décroissance sinusoïdale
-// -------------------
-const SHAKE_DURATION_MS = 400;
-const shakeRegistry = new Map<string, number>();
 
-export function triggerTokenShake(tokenId: string): void {
-  shakeRegistry.set(tokenId, performance.now());
-}
+ 
 
 export interface DrawTokenOptions {
   ctx: CanvasRenderingContext2D;
@@ -48,41 +39,9 @@ export function drawToken({
   const cy = py + size / 2;
   const r = size / 2 - 4;
 
-  // --- Calcul offset shake ---
-  let shakeOffsetX = 0;
-  const shakeStart = shakeRegistry.get(token.id);
-  if (shakeStart !== undefined) {
-    const elapsed = performance.now() - shakeStart;
-    if (elapsed < SHAKE_DURATION_MS) {
-      const t = elapsed / SHAKE_DURATION_MS;
-      const decay = 1 - t;           // décroissance linéaire
-      const freq = 28;               // fréquence des oscillations
-      shakeOffsetX = Math.sin(t * freq) * decay * size * 0.10;
-    } else {
-      shakeRegistry.delete(token.id);
-    }
-  }
-
-  // --- Shake au dégat ---
-  let shakeX = 0;
-  let shakeY = 0;
-  const shakeStart = _shakeRegistry.get(token.id);
-  if (shakeStart !== undefined) {
-    const elapsed = animTime - shakeStart + (Date.now() - animTime); // fallback si animTime est 0
-    const t = (Date.now() - shakeStart);
-    if (t < SHAKE_DURATION_MS) {
-      const decay = 1 - t / SHAKE_DURATION_MS;
-      const amp = 4 * decay / (scale || 1);
-      shakeX = Math.sin(t * 0.08) * amp;
-      shakeY = Math.cos(t * 0.11) * amp * 0.6;
-    } else {
-      _shakeRegistry.delete(token.id);
-    }
-  }
-
   // --- Dessin image / couleur ---
   ctx.save();
-  ctx.translate(cx + shakeX, cy + shakeY);
+  ctx.translate(cx, cy);
   ctx.rotate((token.rotation || 0) * Math.PI / 180);
 
   if (token.imageUrl) {
@@ -123,7 +82,7 @@ export function drawToken({
 
   // --- Surcouches (sélection, bordure, HP) ---
   ctx.save();
-  ctx.translate(cx + shakeX, cy + shakeY);
+  ctx.translate(cx, cy);
 
   if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
     const pad = 4 / scale;
