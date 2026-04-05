@@ -66,7 +66,7 @@ export function drawToken({
   // --- Dessin image / couleur --- 
   ctx.save();
   ctx.translate(cx + shakeOffsetX, cy);
-  ctx.rotate((token.rotation || 0) * Math.PI / 180);  ctx.rotate((token.rotation || 0) * Math.PI / 180);
+  ctx.rotate((token.rotation || 0) * Math.PI / 180);  
 
   if (token.imageUrl) {
     let img = tokenImageCache.get(token.imageUrl);
