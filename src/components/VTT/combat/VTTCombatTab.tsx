@@ -127,6 +127,7 @@ export function VTTCombatTab({
     handleAddPlayersToEncounter,
     applyHp,
     toggleCondition,
+    toggleFriendly,
   } = useCombatController({
     campaignId,
     members,
