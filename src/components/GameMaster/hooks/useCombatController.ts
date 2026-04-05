@@ -542,52 +542,88 @@ export function useCombatController({
     toast.success(`Initiative lancée pour ${updates.length} monstre${updates.length > 1 ? 's' : ''}`);
   };
 
-  // Lance directement un combat depuis une liste de tokens VTT (sans passer par prepEntries)
-  // Utilisé par le clic droit canvas → "Lancer le combat"
+  // Ajoute des tokens VTT au combat depuis le clic droit canvas → "Ajouter au combat"
+  // Si un encounter existe déjà, ajoute les participants sans écraser.
+  // Si aucun encounter n'existe, crée l'encounter mais sans déclencher le highlight/focus.
   const handleDirectLaunchCombat = async (tokens: VTTToken[]) => {
     if (tokens.length === 0) {
-      toast.error('Sélectionnez au moins un token pour lancer le combat');
+      toast.error('Sélectionnez au moins un token pour ajouter au combat');
       return;
     }
 
     try {
       setLaunching(true);
 
-      const enc = await monsterService.createEncounter(campaignId, 'Combat');
+      const currentEncounter = encounter;
 
-      const participantData = tokens.map((t, i) => {
-        const matchedMember = members.find(
-          (m) => m.player_id && t.characterId && m.player_id === t.characterId
-        );
-        const isPlayer = !!matchedMember;
+      if (currentEncounter) {
+        const nextSortOrder = participants.length;
+        const participantData = tokens.map((t, i) => {
+          const matchedMember = members.find(
+            (m) => m.player_id && t.characterId && m.player_id === t.characterId
+          );
+          const isPlayer = !!(matchedMember || t.characterId || (t.controlledByUserIds && t.controlledByUserIds.length > 0));
 
-        return {
-          encounter_id: enc.id,
-          participant_type: (isPlayer ? 'player' : 'monster') as 'player' | 'monster',
-          monster_id: undefined as string | undefined,
-          player_member_id: matchedMember?.id,
-          display_name: t.label || 'Token',
-          initiative_roll: 0,
-          current_hp: t.hp ?? matchedMember?.current_hp ?? 0,
-          max_hp: t.maxHp ?? matchedMember?.max_hp ?? 0,
-          temporary_hp: 0,
-          armor_class: matchedMember?.armor_class ?? 10,
-          conditions: [] as string[],
-          sort_order: i,
-          is_active: true,
-          notes: '',
-        };
-      });
+          return {
+            encounter_id: currentEncounter.id,
+            participant_type: (isPlayer ? 'player' : 'monster') as 'player' | 'monster',
+            monster_id: undefined as string | undefined,
+            player_member_id: matchedMember?.id,
+            display_name: t.label || 'Token',
+            initiative_roll: 0,
+            current_hp: t.hp ?? matchedMember?.current_hp ?? 0,
+            max_hp: t.maxHp ?? matchedMember?.max_hp ?? 0,
+            temporary_hp: 0,
+            armor_class: matchedMember?.armor_class ?? 10,
+            conditions: [] as string[],
+            sort_order: nextSortOrder + i,
+            is_active: true,
+            notes: '',
+            friendly: isPlayer,
+          };
+        });
 
-      const added = await monsterService.addParticipants(participantData);
+        const added = await monsterService.addParticipants(participantData);
+        setParticipants((prev) => [...prev, ...added]);
+        toast.success(`${tokens.length} token${tokens.length > 1 ? 's' : ''} ajouté${tokens.length > 1 ? 's' : ''} au combat`);
+      } else {
+        const enc = await monsterService.createEncounter(campaignId, 'Combat');
 
-      setEncounter(enc);
-      setParticipants(added);
-      setPrepEntries([]);
-      toast.success('Combat lancé !');
+        const participantData = tokens.map((t, i) => {
+          const matchedMember = members.find(
+            (m) => m.player_id && t.characterId && m.player_id === t.characterId
+          );
+          const isPlayer = !!(matchedMember || t.characterId || (t.controlledByUserIds && t.controlledByUserIds.length > 0));
+
+          return {
+            encounter_id: enc.id,
+            participant_type: (isPlayer ? 'player' : 'monster') as 'player' | 'monster',
+            monster_id: undefined as string | undefined,
+            player_member_id: matchedMember?.id,
+            display_name: t.label || 'Token',
+            initiative_roll: 0,
+            current_hp: t.hp ?? matchedMember?.current_hp ?? 0,
+            max_hp: t.maxHp ?? matchedMember?.max_hp ?? 0,
+            temporary_hp: 0,
+            armor_class: matchedMember?.armor_class ?? 10,
+            conditions: [] as string[],
+            sort_order: i,
+            is_active: true,
+            notes: '',
+            friendly: isPlayer,
+          };
+        });
+
+        const added = await monsterService.addParticipants(participantData);
+
+        setEncounter(enc);
+        setParticipants(added);
+        setPrepEntries([]);
+        toast.success(`${tokens.length} token${tokens.length > 1 ? 's' : ''} ajouté${tokens.length > 1 ? 's' : ''} au combat`);
+      }
     } catch (err) {
       console.error(err);
-      toast.error('Erreur création combat');
+      toast.error('Erreur ajout au combat');
     } finally {
       setLaunching(false);
     }

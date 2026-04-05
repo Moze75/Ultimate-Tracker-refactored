@@ -160,7 +160,7 @@ export function VTTContextMenu({
         <div className="border-t border-gray-700/60 mt-1 pt-1">
           <MenuItem
             icon={<Swords size={13} />}
-            label={selectedTokens!.length > 1 ? `Lancer combat (${selectedTokens!.length})` : 'Lancer le combat'}
+            label={selectedTokens!.length > 1 ? `Ajouter au combat (${selectedTokens!.length})` : 'Ajouter au combat'}
             highlight
             onClick={() => { onLaunchCombat(selectedTokens!); onClose(); }}
           />
