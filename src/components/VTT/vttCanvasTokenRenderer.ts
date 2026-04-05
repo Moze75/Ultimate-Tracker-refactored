@@ -106,7 +106,7 @@ export function drawToken({
 
   // --- Surcouches (sélection, bordure, HP) ---
   ctx.save();
-  ctx.translate(cx, cy);
+  ctx.translate(cx + shakeOffsetX, cy);
 
   if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
     const pad = 4 / scale;
