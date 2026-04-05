@@ -62,6 +62,8 @@ interface VTTSidebarProps {
   onCurrentTurnLabelChange?: (displayName: string | null) => void;
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: VTTToken[]) => void) | null>;
   onCombatLaunched?: () => void;
+  autoApplyDamage?: boolean;
+  onToggleAutoApplyDamage?: () => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -131,6 +133,8 @@ export function VTTSidebar({
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
   onCombatLaunched,
+  autoApplyDamage = true,
+  onToggleAutoApplyDamage,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
@@ -743,6 +747,8 @@ const visibleTokens = isGM
             setSaving={setSaving}
             setSaveOk={setSaveOk}
             isGM={isGM}
+            autoApplyDamage={autoApplyDamage}
+            onToggleAutoApplyDamage={onToggleAutoApplyDamage}
           />
         )}
 

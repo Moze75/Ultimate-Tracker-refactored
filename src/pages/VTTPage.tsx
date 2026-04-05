@@ -48,6 +48,7 @@ import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
 import { VTTModals } from '../components/VTT/VTTModals';
 import CombatBanner from '../components/VTT/combat/VTTCombatbanner';
+import { getTargetedTokensForUser, computeNewHp } from '../services/vttAutoDamageService';
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -186,6 +187,9 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [fogResetSignal, setFogResetSignal] = useState(0);
   const [combatBannerTrigger, setCombatBannerTrigger] = useState(0);
+  const [autoApplyDamage, setAutoApplyDamage] = useState<boolean>(() => {
+    try { return localStorage.getItem('vtt:setting:autoApplyDamage') !== 'false'; } catch { return true; }
+  });
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -218,12 +222,15 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
     modifier: number;
   } | null>(null);
 
+  const currentRollTypeRef = useRef<'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage' | null>(null);
+
   const rollDice = useCallback((data: {
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
     attackName: string;
     diceFormula: string;
     modifier: number;
   }) => {
+    currentRollTypeRef.current = data.type;
     setDiceRollData(data);
   }, []);
   const [bindingToken, setBindingToken] = useState<VTTToken | null>(null);
@@ -1842,7 +1849,18 @@ useEffect(() => {
     };
 
     setPendingChatRoll(msg);
-  }, [role, userId, userName]);
+
+    if (autoApplyDamage && currentRollTypeRef.current === 'damage') {
+      const targeted = getTargetedTokensForUser(tokensRef.current, userId);
+      targeted.forEach((token) => {
+        const newHp = computeNewHp(token, result.total);
+        vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
+        setTokens((prev) =>
+          prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
+        );
+      });
+    }
+  }, [role, userId, userName, autoApplyDamage]);
 
   const leaveRoom = useCallback(async () => {
     if (fogSaveTimerRef.current) {
@@ -2397,6 +2415,14 @@ onSelectTokens={ids => {
   lockPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
   onToggleLockPlayerMovementOutsideTurn={() => setLockPlayerMovementOutsideTurn((prev) => !prev)}
   onCombatLaunched={() => setCombatBannerTrigger((n) => n + 1)}
+  autoApplyDamage={autoApplyDamage}
+  onToggleAutoApplyDamage={() => {
+    setAutoApplyDamage((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('vtt:setting:autoApplyDamage', String(next)); } catch {}
+      return next;
+    });
+  }}
           />
         </div>
       </div>

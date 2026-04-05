@@ -8,6 +8,8 @@ interface VTTSettingsPanelProps {
   onToggleFollowCameraOnTokenMove?: () => void;
   lockPlayerMovementOutsideTurn?: boolean;
   onToggleLockPlayerMovementOutsideTurn?: () => void;
+  autoApplyDamage?: boolean;
+  onToggleAutoApplyDamage?: () => void;
   onSaveScene?: () => Promise<void>;
   roomId: string;
   saving: boolean;
@@ -97,6 +99,8 @@ export function VTTSettingsPanel({
   onToggleFollowCameraOnTokenMove,
   lockPlayerMovementOutsideTurn = true,
   onToggleLockPlayerMovementOutsideTurn,
+  autoApplyDamage = true,
+  onToggleAutoApplyDamage,
   onSaveScene,
   roomId,
   saving,
@@ -128,9 +132,16 @@ export function VTTSettingsPanel({
               checked={lockPlayerMovementOutsideTurn}
               onChange={onToggleLockPlayerMovementOutsideTurn}
               label="Bloquer les déplacements des joueurs hors tour"
-              description="Empêche les joueurs de déplacer leur token tant que ce n’est pas leur tour."
+              description="Empêche les joueurs de déplacer leur token tant que ce n'est pas leur tour."
             />
           )}
+
+          <ToggleSwitch
+            checked={autoApplyDamage}
+            onChange={onToggleAutoApplyDamage}
+            label="Application auto des dégats"
+            description="Applique automatiquement les dégats d'armes et de sorts aux tokens ciblés (clic droit → Cibler)."
+          />
         </div>
       </SettingsSection>
 
