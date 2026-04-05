@@ -31,10 +31,16 @@ export interface ParticipantsReorderedBroadcast {
   orderedIds: string[]; // IDs dans le nouvel ordre
 }
 
+export interface FriendlyChangedBroadcast {
+  participantId: string;
+  friendly: boolean;
+}
+
 interface UseCombatEncounterRealtimeSyncParams {
   encounterId: string | null | undefined;
   onEncounterUpdated: (updates: Partial<CampaignEncounter>) => void;
   onParticipantsReordered?: (orderedIds: string[]) => void;
+  onFriendlyChanged?: (participantId: string, friendly: boolean) => void;
 }
 
 export function useCombatEncounterRealtimeSync({
