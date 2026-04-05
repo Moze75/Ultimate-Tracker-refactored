@@ -1140,5 +1140,6 @@ export function useCombatController({
     handleAddPlayersToEncounter,
     applyHp,
     toggleCondition,
+    toggleFriendly,
   };
 }
