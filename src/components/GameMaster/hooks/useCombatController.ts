@@ -837,11 +837,18 @@ export function useCombatController({
   };
 
   const toggleFriendly = async (participant: EncounterParticipant) => {
+    if (!encounter) return;
     const newFriendly = !participant.friendly;
     // Mise à jour optimiste locale
     setParticipants((prev) =>
       prev.map((p) => (p.id === participant.id ? { ...p, friendly: newFriendly } : p))
     );
+    // Broadcast immédiat vers les joueurs
+    supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+      type: 'broadcast',
+      event: 'friendly-changed',
+      payload: { participantId: participant.id, friendly: newFriendly },
+    });
     try {
       await monsterService.updateParticipant(participant.id, { friendly: newFriendly });
     } catch (err) {
