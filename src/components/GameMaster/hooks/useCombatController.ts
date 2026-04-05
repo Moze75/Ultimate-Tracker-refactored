@@ -611,6 +611,7 @@ export function useCombatController({
         sort_order: i,
         is_active: true,
         notes: '',
+        friendly: entry.type === 'player', // joueurs = amicaux, monstres = hostiles par défaut
       }));
 
       const added = await monsterService.addParticipants(participantData);
@@ -659,6 +660,7 @@ export function useCombatController({
         sort_order: i,
         is_active: true,
         notes: '',
+        friendly: entry.type === 'player', // joueurs = amicaux, monstres = hostiles par défaut
       }));
 
       await monsterService.addParticipants(participantData);
