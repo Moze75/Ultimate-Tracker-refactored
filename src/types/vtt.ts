@@ -233,6 +233,7 @@ export type VTTChatMessage = {
   rolls?: number[];
   diceTotal?: number;
   total?: number;
+  rollType?: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
 };
 
 export type VTTServerEvent =

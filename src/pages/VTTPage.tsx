@@ -1846,21 +1846,11 @@ useEffect(() => {
       rolls: result.rolls,
       diceTotal: result.diceTotal,
       total: result.total,
+      rollType: currentRollTypeRef.current ?? undefined,
     };
 
     setPendingChatRoll(msg);
-
-    if (autoApplyDamage && currentRollTypeRef.current === 'damage') {
-      const targeted = getTargetedTokensForUser(tokensRef.current, userId);
-      targeted.forEach((token) => {
-        const newHp = computeNewHp(token, result.total);
-        vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
-        setTokens((prev) =>
-          prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
-        );
-      });
-    }
-  }, [role, userId, userName, autoApplyDamage]);
+  }, [role, userId, userName]);
 
   const leaveRoom = useCallback(async () => {
     if (fogSaveTimerRef.current) {
@@ -2421,6 +2411,15 @@ onSelectTokens={ids => {
       const next = !prev;
       try { localStorage.setItem('vtt:setting:autoApplyDamage', String(next)); } catch {}
       return next;
+    });
+  }}
+  onDamageRoll={(total) => {
+    if (!autoApplyDamage) return;
+    const targeted = getTargetedTokensForUser(tokensRef.current, userId);
+    targeted.forEach((token) => {
+      const newHp = computeNewHp(token, total);
+      vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
+      setTokens((prev) => prev.map((t) => t.id === token.id ? { ...t, hp: newHp } : t));
     });
   }}
           />

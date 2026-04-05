@@ -38,6 +38,8 @@ interface VTTChatPanelProps {
   onUnreadChange?: (count: number) => void;
   // Si l'onglet chat est actif (pour reset les non-lus)
   isActive: boolean;
+  // Appelé quand un jet de dégats (damage) vient d'être publié par cet utilisateur
+  onDamageRoll?: (total: number) => void;
 }
 
 // ===================================
@@ -244,6 +246,7 @@ export function VTTChatPanel({
   onConsumed,
   onUnreadChange,
   isActive,
+  onDamageRoll,
 }: VTTChatPanelProps) {
   // -------------------
   // État local des messages (max 20)
@@ -321,8 +324,17 @@ export function VTTChatPanel({
     vttService.sendChat(externalMessage);
     // Ajout local immédiat (l'expéditeur ne reçoit pas son propre broadcast)
     appendMessage(externalMessage);
+
+    if (
+      externalMessage.kind === 'roll' &&
+      externalMessage.rollType === 'damage' &&
+      typeof externalMessage.total === 'number'
+    ) {
+      onDamageRoll?.(externalMessage.total);
+    }
+
     onConsumed?.();
-  }, [externalMessage, appendMessage, onConsumed]);
+  }, [externalMessage, appendMessage, onConsumed, onDamageRoll]);
 
   // -------------------
   // Reset des non-lus quand l'onglet devient actif

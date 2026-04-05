@@ -64,6 +64,7 @@ interface VTTSidebarProps {
   onCombatLaunched?: () => void;
   autoApplyDamage?: boolean;
   onToggleAutoApplyDamage?: () => void;
+  onDamageRoll?: (total: number) => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -135,6 +136,7 @@ export function VTTSidebar({
   onCombatLaunched,
   autoApplyDamage = true,
   onToggleAutoApplyDamage,
+  onDamageRoll,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
@@ -603,6 +605,7 @@ const visibleTokens = isGM
             onConsumed={onChatRollConsumed}
             onUnreadChange={setUnreadChat}
             isActive={activeTab === 'chat'}
+            onDamageRoll={onDamageRoll}
           />
         </div>
 
