@@ -135,6 +135,11 @@ export function useCombatEncounterRealtimeSync({
         console.log('[RealtimeSync] Broadcast participants-reordered reçu:', data);
         onParticipantsReorderedRef.current?.(data.orderedIds);
       })
+
+            .on('broadcast', { event: 'friendly-changed' }, (payload) => {
+        const data = payload.payload as FriendlyChangedBroadcast;
+        onFriendlyChangedRef.current?.(data.participantId, data.friendly);
+      })
       
       // -------------------
       // Écoute postgres_changes : filet de secours WAL (1-3s)
