@@ -1259,6 +1259,43 @@ function ActiveParticipantsList({
                   ? 'bg-gray-800/60 opacity-60'
                   : 'hover:bg-gray-800/40'
             }`}
+            onContextMenu={role === 'gm' ? (e) => {
+              e.preventDefault();
+              // Petit menu contextuel inline : friendly / hostile
+              const existing = document.getElementById('vtt-ctx-menu');
+              if (existing) existing.remove();
+              const menu = document.createElement('div');
+              menu.id = 'vtt-ctx-menu';
+              menu.style.cssText = `
+                position:fixed;left:${e.clientX}px;top:${e.clientY}px;
+                z-index:9999;background:#1f2937;border:1px solid #374151;
+                border-radius:8px;padding:4px;min-width:160px;
+                box-shadow:0 10px 25px rgba(0,0,0,0.5);
+              `;
+              const makeItem = (label: string, icon: string, onClick: () => void) => {
+                const btn = document.createElement('button');
+                btn.innerHTML = `${icon} ${label}`;
+                btn.style.cssText = `
+                  display:flex;width:100%;text-align:left;padding:6px 10px;
+                  font-size:11px;color:#d1d5db;background:none;border:none;
+                  border-radius:4px;cursor:pointer;align-items:center;gap:6px;
+                `;
+                btn.onmouseenter = () => { btn.style.background = '#374151'; };
+                btn.onmouseleave = () => { btn.style.background = 'none'; };
+                btn.onclick = () => { menu.remove(); onClick(); };
+                return btn;
+              };
+              if (!isFriendly) {
+                menu.appendChild(makeItem('Marquer comme amical', '🤝', () => onToggleFriendly(p)));
+              } else {
+                menu.appendChild(makeItem('Marquer comme hostile', '⚔️', () => onToggleFriendly(p)));
+              }
+              document.body.appendChild(menu);
+              const close = (ev: MouseEvent) => {
+                if (!menu.contains(ev.target as Node)) { menu.remove(); document.removeEventListener('mousedown', close); }
+              };
+              document.addEventListener('mousedown', close);
+            } : undefined}
           >
             {/* Ligne principale : avatar | nom+hp | stats | dégâts | initiative */}
             <div className="flex items-center gap-1.5">
