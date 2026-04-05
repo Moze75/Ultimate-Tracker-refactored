@@ -1136,6 +1136,7 @@ function ActiveParticipantsList({
   onApplyHp,
   onToggleCondition,
   onRemove,
+  onToggleFriendly,
   onViewMonster,
   onViewPlayer,
   onUpdateInitiative,
