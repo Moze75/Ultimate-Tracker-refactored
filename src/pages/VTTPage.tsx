@@ -249,6 +249,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [combatInitTokens, setCombatInitTokens] = useState<VTTToken[]>([]);
     // Ref vers handleDirectLaunchCombat exposé par VTTCombatTab
   const directLaunchCombatRef = useRef<((tokens: VTTToken[]) => void) | null>(null);
+  const syncTokenHpRef = useRef<((tokenId: string, newHp: number) => void) | null>(null);
   const [showWalls, setShowWalls] = useState(true);
 const [autoFocusCombatTurn, setAutoFocusCombatTurn] = useState(true);
 const [followCameraOnTokenMove, setFollowCameraOnTokenMove] = useState<boolean>(() => {
@@ -1861,6 +1862,7 @@ useEffect(() => {
         setTokens((prev) =>
           prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
         );
+        syncTokenHpRef.current?.(token.id, newHp);
       });
     }
   }, [role, userId, userName]);
@@ -2387,6 +2389,7 @@ onSelectTokens={ids => {
             onChangeTab={setSidebarActiveTab}
             combatInitTokens={combatInitTokens}
                         onDirectLaunchCombatRef={directLaunchCombatRef}
+            onSyncTokenHpRef={syncTokenHpRef}
             onSelectToken={setSelectedTokenId}
             onEditToken={setEditingToken}
             onRemoveToken={handleRemoveToken}

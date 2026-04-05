@@ -63,10 +63,12 @@ export function VTTCombatTab({
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
+  onSyncTokenHpRef,
   onCombatLaunched,
   userId,
 }: VTTCombatTabProps & {
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: import('../../../types/vtt').VTTToken[]) => void) | null>;
+  onSyncTokenHpRef?: React.MutableRefObject<((tokenId: string, newHp: number) => void) | null>;
   onCombatLaunched?: () => void;
 }) {
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
@@ -141,6 +143,7 @@ export function VTTCombatTab({
     applyHp,
     toggleCondition,
     toggleFriendly,
+    syncTokenHpToParticipant,
   } = useCombatController({
     campaignId,
     members,
@@ -176,6 +179,16 @@ export function VTTCombatTab({
       if (onDirectLaunchCombatRef) onDirectLaunchCombatRef.current = null;
     };
   }, [handleDirectLaunchCombat, onDirectLaunchCombatRef]);
+
+  // Expose syncTokenHpToParticipant vers VTTPage via ref
+  useEffect(() => {
+    if (onSyncTokenHpRef) {
+      onSyncTokenHpRef.current = syncTokenHpToParticipant;
+    }
+    return () => {
+      if (onSyncTokenHpRef) onSyncTokenHpRef.current = null;
+    };
+  }, [syncTokenHpToParticipant, onSyncTokenHpRef]);
 
    // -------------------
   // Lancer le round : tri par initiative + focus sur le premier participant

@@ -1169,6 +1169,41 @@ export function useCombatController({
     }
   };
 
+  const participantsForSyncRef = useRef(participants);
+  participantsForSyncRef.current = participants;
+
+  const syncTokenHpToParticipant = useCallback(
+    (tokenId: string, newHp: number) => {
+      if (!liveTokensRef.current) return;
+      const token = liveTokensRef.current.find((t) => t.id === tokenId);
+      if (!token) return;
+
+      const matched = participantsForSyncRef.current.find(
+        (p) =>
+          (p.participant_type === 'player' &&
+            token.characterId &&
+            p.player_member_id &&
+            members.find((m) => m.id === p.player_member_id)?.player_id === token.characterId) ||
+          token.label === p.display_name,
+      );
+      if (!matched) return;
+
+      const clampedHp = Math.max(0, Math.min(matched.max_hp, newHp));
+
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === matched.id ? { ...p, current_hp: clampedHp } : p)),
+      );
+      handleUpdateParticipant(matched.id, { current_hp: clampedHp });
+      markLocalUpdate(matched.id);
+      sendHpBroadcast({
+        participantId: matched.id,
+        current_hp: clampedHp,
+        temporary_hp: matched.temporary_hp ?? 0,
+      });
+    },
+    [members, markLocalUpdate, sendHpBroadcast, handleUpdateParticipant],
+  );
+
   const toggleCondition = (p: EncounterParticipant, condition: string) => {
     const current = p.conditions || [];
     const next = current.includes(condition)
@@ -1265,5 +1300,6 @@ export function useCombatController({
     applyHp,
     toggleCondition,
     toggleFriendly,
+    syncTokenHpToParticipant,
   };
 }

@@ -61,6 +61,7 @@ interface VTTSidebarProps {
   onFocusCombatTokenByLabel?: (displayName: string) => void;
   onCurrentTurnLabelChange?: (displayName: string | null) => void;
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: VTTToken[]) => void) | null>;
+  onSyncTokenHpRef?: React.MutableRefObject<((tokenId: string, newHp: number) => void) | null>;
   onCombatLaunched?: () => void;
   autoApplyDamage?: boolean;
   onToggleAutoApplyDamage?: () => void;
@@ -133,6 +134,7 @@ export function VTTSidebar({
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
+  onSyncTokenHpRef,
   onCombatLaunched,
   autoApplyDamage = true,
   onToggleAutoApplyDamage,
@@ -640,6 +642,7 @@ const visibleTokens = isGM
               onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
               onCurrentTurnLabelChange={onCurrentTurnLabelChange}
               onDirectLaunchCombatRef={onDirectLaunchCombatRef}
+              onSyncTokenHpRef={onSyncTokenHpRef}
               onCombatLaunched={onCombatLaunched}
               userId={userId}
             />
