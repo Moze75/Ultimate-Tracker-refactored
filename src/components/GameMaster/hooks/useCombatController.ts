@@ -826,6 +826,24 @@ export function useCombatController({
     }
   };
 
+  const toggleFriendly = async (participant: EncounterParticipant) => {
+    const newFriendly = !participant.friendly;
+    // Mise à jour optimiste locale
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === participant.id ? { ...p, friendly: newFriendly } : p))
+    );
+    try {
+      await monsterService.updateParticipant(participant.id, { friendly: newFriendly });
+    } catch (err) {
+      // Rollback si erreur
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === participant.id ? { ...p, friendly: participant.friendly } : p))
+      );
+      console.error(err);
+      toast.error('Erreur mise à jour amicalité');
+    }
+  };
+  
   const handleUpdateActiveInitiative = async (id: string, value: number) => {
     setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, initiative_roll: value } : p)));
     // Broadcast immédiat pour la vue MJ (et tous les autres clients)
