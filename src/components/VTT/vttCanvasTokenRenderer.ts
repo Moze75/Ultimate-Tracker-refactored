@@ -48,10 +48,25 @@ export function drawToken({
   const cy = py + size / 2;
   const r = size / 2 - 4;
 
+  // --- Calcul offset shake ---
+  let shakeOffsetX = 0;
+  const shakeStart = shakeRegistry.get(token.id);
+  if (shakeStart !== undefined) {
+    const elapsed = performance.now() - shakeStart;
+    if (elapsed < SHAKE_DURATION_MS) {
+      const t = elapsed / SHAKE_DURATION_MS;
+      const decay = 1 - t;           // décroissance linéaire
+      const freq = 28;               // fréquence des oscillations
+      shakeOffsetX = Math.sin(t * freq) * decay * size * 0.10;
+    } else {
+      shakeRegistry.delete(token.id);
+    }
+  }
+
   // --- Dessin image / couleur ---
   ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((token.rotation || 0) * Math.PI / 180);
+  ctx.translate(cx + shakeOffsetX, cy);
+  ctx.rotate((token.rotation || 0) * Math.PI / 180);  ctx.rotate((token.rotation || 0) * Math.PI / 180);
 
   if (token.imageUrl) {
     let img = tokenImageCache.get(token.imageUrl);
