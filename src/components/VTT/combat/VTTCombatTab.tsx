@@ -68,6 +68,11 @@ export function VTTCombatTab({
 }) {
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
   const roundLaunchedRef = useRef(false);
+  const participantsRef = useRef<import('../../../types/campaign').EncounterParticipant[]>([]);
+  const onFocusCombatTokenByLabelRef = useRef(onFocusCombatTokenByLabel);
+  useEffect(() => {
+    onFocusCombatTokenByLabelRef.current = onFocusCombatTokenByLabel;
+  });
 
   const {
     isGM,
@@ -141,8 +146,19 @@ export function VTTCombatTab({
     vttMode: true,
     role,
     onUpdateToken,
-    onRoundLaunchedFromRealtime: () => { roundLaunchedRef.current = true; },
+    onRoundLaunchedFromRealtime: () => {
+      roundLaunchedRef.current = true;
+      lastAutoFocusedTurnKeyRef.current = null;
+      setTimeout(() => {
+        const first = participantsRef.current[0];
+        if (first?.display_name) {
+          onFocusCombatTokenByLabelRef.current?.(first.display_name);
+        }
+      }, 150);
+    },
   });
+
+  participantsRef.current = participants;
 
   // Expose handleDirectLaunchCombat vers VTTPage via ref
   useEffect(() => {
