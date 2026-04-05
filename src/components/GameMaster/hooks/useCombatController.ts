@@ -945,6 +945,7 @@ export function useCombatController({
           sort_order: participants.length + i,
           is_active: true,
           notes: '',
+          friendly: false, // monstre du bestiaire → hostile par défaut
         });
       }
 
