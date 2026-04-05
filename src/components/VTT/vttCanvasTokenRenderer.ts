@@ -1,5 +1,16 @@
 import type { VTTToken } from '../../types/vtt';
 
+// -------------------
+// Registre des shakes (tokenId → timestamp du hit)
+// Durée : 400ms, décroissance sinusoïdale
+// -------------------
+const SHAKE_DURATION_MS = 400;
+const shakeRegistry = new Map<string, number>();
+
+export function triggerTokenShake(tokenId: string): void {
+  shakeRegistry.set(tokenId, performance.now());
+}
+
 export interface DrawTokenOptions {
   ctx: CanvasRenderingContext2D;
   token: VTTToken;
