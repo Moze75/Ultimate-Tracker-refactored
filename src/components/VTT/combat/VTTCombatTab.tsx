@@ -1157,6 +1157,7 @@ function ActiveParticipantsList({
   onApplyHp: (p: EncounterParticipant, mode: 'damage' | 'heal') => void;
   onToggleCondition: (p: EncounterParticipant, condition: string) => void;
   onRemove: (id: string) => void;
+  onToggleFriendly: (participant: EncounterParticipant) => void;
   onViewMonster: (monsterId?: string) => void;
   onViewPlayer: (memberId?: string) => void;
   onUpdateInitiative: (id: string, value: number) => void;
