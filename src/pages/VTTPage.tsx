@@ -47,6 +47,7 @@ import type { VTTChatMessage } from '../types/vtt';
 import { useVTTUndo } from '../hooks/useVTTUndo';
 import { useVTTGeometry } from '../hooks/useVTTGeometry';
 import { VTTModals } from '../components/VTT/VTTModals';
+import CombatBanner from '../components/VTT/combat/VTTCombatbanner';
 
 type VTTCopyBuffer =
   | { kind: 'token'; data: VTTToken }
@@ -184,6 +185,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [tokens, setTokens] = useState<VTTToken[]>([]);
   const [fogState, setFogState] = useState<VTTFogState>(DEFAULT_FOG);
   const [fogResetSignal, setFogResetSignal] = useState(0);
+  const [combatBannerTrigger, setCombatBannerTrigger] = useState(0);
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -2394,6 +2396,7 @@ onSelectTokens={ids => {
   })}
   lockPlayerMovementOutsideTurn={lockPlayerMovementOutsideTurn}
   onToggleLockPlayerMovementOutsideTurn={() => setLockPlayerMovementOutsideTurn((prev) => !prev)}
+  onCombatLaunched={() => setCombatBannerTrigger((n) => n + 1)}
           />
         </div>
       </div>
@@ -2471,6 +2474,7 @@ onSelectTokens={ids => {
   onCloseDiceRoll={() => setDiceRollData(null)}
   onDiceRollResult={handleRollResult}
 />
+      <CombatBanner trigger={combatBannerTrigger} />
           </div>
     </DiceRollContext.Provider>
   );

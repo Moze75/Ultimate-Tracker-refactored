@@ -61,6 +61,7 @@ interface VTTSidebarProps {
   onFocusCombatTokenByLabel?: (displayName: string) => void;
   onCurrentTurnLabelChange?: (displayName: string | null) => void;
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: VTTToken[]) => void) | null>;
+  onCombatLaunched?: () => void;
 }
 
 function compressImageToDataUrl(file: File, maxPx = 1920, quality = 0.82): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -129,6 +130,7 @@ export function VTTSidebar({
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
+  onCombatLaunched,
 }: VTTSidebarProps) {
   const [saving, setSaving] = React.useState(false);
   const [saveOk, setSaveOk] = React.useState(false);
@@ -631,6 +633,7 @@ const visibleTokens = isGM
               onFocusCombatTokenByLabel={onFocusCombatTokenByLabel}
               onCurrentTurnLabelChange={onCurrentTurnLabelChange}
               onDirectLaunchCombatRef={onDirectLaunchCombatRef}
+              onCombatLaunched={onCombatLaunched}
               userId={userId}
             />
           ) : (

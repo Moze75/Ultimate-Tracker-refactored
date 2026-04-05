@@ -38,7 +38,6 @@ import {
   type CombatTabProps,
   type CombatPreparationEntry,
 } from '../../GameMaster/hooks/useCombatController';
-import CombatBanner from './VTTCombatbanner';
 
 const DICE_ICON_URL =
   'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/wmremove-transformed.webp';
@@ -64,14 +63,15 @@ export function VTTCombatTab({
   onFocusCombatTokenByLabel,
   onCurrentTurnLabelChange,
   onDirectLaunchCombatRef,
+  onCombatLaunched,
   userId,
 }: VTTCombatTabProps & {
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: import('../../../types/vtt').VTTToken[]) => void) | null>;
+  onCombatLaunched?: () => void;
 }) {
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
   const roundLaunchedRef = useRef(false);
   const [roundLaunched, setRoundLaunched] = useState(false);
-  const [bannerTrigger, setBannerTrigger] = useState(0);
   const participantsRef = useRef<import('../../../types/campaign').EncounterParticipant[]>([]);
   const onFocusCombatTokenByLabelRef = useRef(onFocusCombatTokenByLabel);
   useEffect(() => {
@@ -154,7 +154,7 @@ export function VTTCombatTab({
     onRoundLaunchedFromRealtime: () => {
       roundLaunchedRef.current = true;
       setRoundLaunched(true);
-      setBannerTrigger((n) => n + 1);
+      onCombatLaunched?.();
       lastAutoFocusedTurnKeyRef.current = null;
       setTimeout(() => {
         const first = participantsRef.current[0];
@@ -187,7 +187,7 @@ export function VTTCombatTab({
     const first = sorted[0];
     roundLaunchedRef.current = true;
     setRoundLaunched(true);
-    setBannerTrigger((n) => n + 1);
+    onCombatLaunched?.();
     await handleSortByInitiative();
     if (first?.display_name) {
       lastAutoFocusedTurnKeyRef.current = null; // reset pour forcer le focus
@@ -263,7 +263,6 @@ export function VTTCombatTab({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 relative">
-      <CombatBanner trigger={bannerTrigger} />
       {/* Barre du bestiaire — uniquement le bouton "Charger" reste en haut */}
       {isGM && (
         <div className="border-b border-gray-800 px-3 py-2">
