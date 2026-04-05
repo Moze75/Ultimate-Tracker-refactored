@@ -58,9 +58,11 @@ export function useCombatEncounterRealtimeSync({
   // Le channel Supabase reste stable tant que encounterId ne change pas.
   const callbackRef = useRef(onEncounterUpdated);
   const onParticipantsReorderedRef = useRef(onParticipantsReordered);
+  const onFriendlyChangedRef = useRef(onFriendlyChanged);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
     onParticipantsReorderedRef.current = onParticipantsReordered;
+    onFriendlyChangedRef.current = onFriendlyChanged;
   });
 
   // -------------------
