@@ -25,6 +25,7 @@ export interface TurnChangedBroadcast {
   current_turn_index: number;
   round_number: number;
   status?: string;
+  roundLaunched?: boolean;
 }
 
 export interface ParticipantsReorderedBroadcast {
@@ -42,6 +43,7 @@ interface UseCombatEncounterRealtimeSyncParams {
   onParticipantsReordered?: (orderedIds: string[]) => void;
   onFriendlyChanged?: (participantId: string, friendly: boolean) => void;
   onParticipantsUpdated?: (encounterId: string) => void;
+  onRoundLaunched?: () => void;
 }
 
 export function useCombatEncounterRealtimeSync({
@@ -50,6 +52,7 @@ export function useCombatEncounterRealtimeSync({
   onParticipantsReordered,
   onFriendlyChanged,
   onParticipantsUpdated,
+  onRoundLaunched,
 }: UseCombatEncounterRealtimeSyncParams) {
 
   // -------------------
@@ -62,11 +65,13 @@ export function useCombatEncounterRealtimeSync({
   const onParticipantsReorderedRef = useRef(onParticipantsReordered);
   const onFriendlyChangedRef = useRef(onFriendlyChanged);
   const onParticipantsUpdatedRef = useRef(onParticipantsUpdated);
+  const onRoundLaunchedRef = useRef(onRoundLaunched);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
     onParticipantsReorderedRef.current = onParticipantsReordered;
     onFriendlyChangedRef.current = onFriendlyChanged;
     onParticipantsUpdatedRef.current = onParticipantsUpdated;
+    onRoundLaunchedRef.current = onRoundLaunched;
   });
 
   // -------------------
@@ -125,6 +130,9 @@ export function useCombatEncounterRealtimeSync({
           round_number: data.round_number,
           ...(data.status ? { status: data.status } : {}),
         });
+        if (data.roundLaunched) {
+          onRoundLaunchedRef.current?.();
+        }
       })
       .on('broadcast', { event: 'combat-ended' }, (payload) => {
         const data = payload.payload as { encounterId?: string; status?: string };

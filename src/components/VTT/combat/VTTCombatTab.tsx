@@ -66,6 +66,9 @@ export function VTTCombatTab({
 }: VTTCombatTabProps & {
   onDirectLaunchCombatRef?: React.MutableRefObject<((tokens: import('../../../types/vtt').VTTToken[]) => void) | null>;
 }) {
+  const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
+  const roundLaunchedRef = useRef(false);
+
   const {
     isGM,
     isDesktop,
@@ -138,6 +141,7 @@ export function VTTCombatTab({
     vttMode: true,
     role,
     onUpdateToken,
+    onRoundLaunchedFromRealtime: () => { roundLaunchedRef.current = true; },
   });
 
   // Expose handleDirectLaunchCombat vers VTTPage via ref
@@ -149,9 +153,6 @@ export function VTTCombatTab({
       if (onDirectLaunchCombatRef) onDirectLaunchCombatRef.current = null;
     };
   }, [handleDirectLaunchCombat, onDirectLaunchCombatRef]);
-
-  const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
-  const roundLaunchedRef = useRef(false);
 
    // -------------------
   // Lancer le round : tri par initiative + focus sur le premier participant

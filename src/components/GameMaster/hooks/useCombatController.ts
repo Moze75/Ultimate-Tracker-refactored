@@ -25,6 +25,7 @@ export interface CombatTabProps {
   vttMode?: boolean;
   role?: 'gm' | 'player';
   onUpdateToken?: (tokenId: string, changes: Partial<VTTToken>) => void;
+  onRoundLaunchedFromRealtime?: () => void;
 }
 
 export interface CombatPreparationEntry {
@@ -68,6 +69,7 @@ export function useCombatController({
   liveTokens,
   role = 'gm',
   onUpdateToken,
+  onRoundLaunchedFromRealtime,
 }: CombatTabProps) {
   const isGM = role === 'gm';
 
@@ -262,6 +264,7 @@ export function useCombatController({
     onParticipantsReordered: handleParticipantsReorderedFromRealtime,
     onFriendlyChanged: handleFriendlyChangedFromRealtime,
     onParticipantsUpdated: handleParticipantsUpdatedFromRealtime,
+    onRoundLaunched: onRoundLaunchedFromRealtime,
   });
 
   useEffect(() => {
@@ -953,7 +956,7 @@ export function useCombatController({
         payload: { orderedIds: ids },
       });
 
-      // Broadcast 2 : index remis à 0 → les joueurs mettent en surbrillance le bon participant
+      // Broadcast 2 : index remis à 0 + signal round lancé → les joueurs focus le premier participant
       channel.send({
         type: 'broadcast',
         event: 'turn-changed',
@@ -961,6 +964,7 @@ export function useCombatController({
           current_turn_index: 0,
           round_number: updated.round_number,
           status: updated.status,
+          roundLaunched: true,
         },
       });
     } catch (err) {
