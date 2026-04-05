@@ -150,6 +150,9 @@ export function VTTCombatTab({
     };
   }, [handleDirectLaunchCombat, onDirectLaunchCombatRef]);
 
+  const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
+  const roundLaunchedRef = useRef(false);
+
    // -------------------
   // Lancer le round : tri par initiative + focus sur le premier participant
   // -------------------
@@ -158,16 +161,20 @@ export function VTTCombatTab({
   const handleLaunchRound = async () => {
     const sorted = [...participants].sort((a, b) => b.initiative_roll - a.initiative_roll);
     const first = sorted[0];
+    roundLaunchedRef.current = true;
     await handleSortByInitiative();
     if (first?.display_name) {
       lastAutoFocusedTurnKeyRef.current = null; // reset pour forcer le focus
       onFocusCombatTokenByLabel?.(first.display_name);
     }
   };
-  
-  const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
+    roundLaunchedRef.current = false;
+    lastAutoFocusedTurnKeyRef.current = null;
+  }, [encounter?.id]);
+
+  useEffect(() => {
     if (!isActive || !encounter) {
       onCurrentTurnLabelChange?.(null);
       if (!autoFocusCombatTurn) {
@@ -185,6 +192,8 @@ export function VTTCombatTab({
       lastAutoFocusedTurnKeyRef.current = null;
       return;
     }
+
+    if (!roundLaunchedRef.current) return;
 
     if (!currentLabel) return;
 
