@@ -1212,6 +1212,7 @@ function ActiveParticipantsList({
         const isDead = p.current_hp <= 0 && p.max_hp > 0;
         const isMonster = p.participant_type === 'monster';
         const isPlayer = p.participant_type === 'player';
+        const isFriendly = p.friendly ?? (isPlayer); // fallback si champ absent en base
         const clickable = isMonster || (isPlayer && !!p.player_member_id);
         const hasInitiative = !!p.initiative_roll && p.initiative_roll > 0;
         // MJ peut toujours lancer. Joueur uniquement sur son propre token.
