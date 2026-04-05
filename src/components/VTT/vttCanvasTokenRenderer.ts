@@ -1,5 +1,5 @@
 import type { VTTToken } from '../../types/vtt';
-
+ 
 // -------------------
 // Registre des shakes (tokenId → timestamp du hit)
 // Durée : 400ms, décroissance sinusoïdale
