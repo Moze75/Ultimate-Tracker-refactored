@@ -37,6 +37,10 @@ export interface FriendlyChangedBroadcast {
   friendly: boolean;
 }
 
+export interface InitiativeRerolledBroadcast {
+  updates: { id: string; initiative_roll: number }[];
+}
+
 interface UseCombatEncounterRealtimeSyncParams {
   encounterId: string | null | undefined;
   onEncounterUpdated: (updates: Partial<CampaignEncounter>) => void;
@@ -44,6 +48,7 @@ interface UseCombatEncounterRealtimeSyncParams {
   onFriendlyChanged?: (participantId: string, friendly: boolean) => void;
   onParticipantsUpdated?: (encounterId: string) => void;
   onRoundLaunched?: () => void;
+  onInitiativeRerolled?: (updates: { id: string; initiative_roll: number }[]) => void;
 }
 
 export function useCombatEncounterRealtimeSync({
@@ -53,25 +58,22 @@ export function useCombatEncounterRealtimeSync({
   onFriendlyChanged,
   onParticipantsUpdated,
   onRoundLaunched,
+  onInitiativeRerolled,
 }: UseCombatEncounterRealtimeSyncParams) {
 
-  // -------------------
-  // Stabilisation du callback via ref
-  // -------------------
-  // On stocke onEncounterUpdated dans une ref pour que les useEffect
-  // ne se ré-abonnent PAS à chaque re-render du parent.
-  // Le channel Supabase reste stable tant que encounterId ne change pas.
   const callbackRef = useRef(onEncounterUpdated);
   const onParticipantsReorderedRef = useRef(onParticipantsReordered);
   const onFriendlyChangedRef = useRef(onFriendlyChanged);
   const onParticipantsUpdatedRef = useRef(onParticipantsUpdated);
   const onRoundLaunchedRef = useRef(onRoundLaunched);
+  const onInitiativeRerolledRef = useRef(onInitiativeRerolled);
   useEffect(() => {
     callbackRef.current = onEncounterUpdated;
     onParticipantsReorderedRef.current = onParticipantsReordered;
     onFriendlyChangedRef.current = onFriendlyChanged;
     onParticipantsUpdatedRef.current = onParticipantsUpdated;
     onRoundLaunchedRef.current = onRoundLaunched;
+    onInitiativeRerolledRef.current = onInitiativeRerolled;
   });
 
   // -------------------
@@ -156,6 +158,11 @@ export function useCombatEncounterRealtimeSync({
       .on('broadcast', { event: 'participants-updated' }, (payload) => {
         const data = payload.payload as { encounterId: string };
         onParticipantsUpdatedRef.current?.(data.encounterId);
+      })
+
+      .on('broadcast', { event: 'initiative-rerolled' }, (payload) => {
+        const data = payload.payload as InitiativeRerolledBroadcast;
+        onInitiativeRerolledRef.current?.(data.updates);
       })
       
       // -------------------

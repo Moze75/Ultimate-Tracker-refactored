@@ -265,6 +265,14 @@ export function useCombatController({
     onFriendlyChanged: handleFriendlyChangedFromRealtime,
     onParticipantsUpdated: handleParticipantsUpdatedFromRealtime,
     onRoundLaunched: onRoundLaunchedFromRealtime,
+    onInitiativeRerolled: (updates) => {
+      setParticipants((prev) =>
+        prev.map((p) => {
+          const upd = updates.find((u) => u.id === p.id);
+          return upd ? { ...p, initiative_roll: upd.initiative_roll } : p;
+        })
+      );
+    },
   });
 
   useEffect(() => {
@@ -552,6 +560,12 @@ export function useCombatController({
       })
     );
 
+    supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+      type: 'broadcast',
+      event: 'initiative-rerolled',
+      payload: { updates },
+    });
+
     toast.success(`Initiative lancée pour ${updates.length} monstre${updates.length > 1 ? 's' : ''}`);
   };
 
@@ -824,6 +838,40 @@ export function useCombatController({
     } catch (err) {
       console.error(err);
       toast.error('Erreur tour suivant');
+    }
+  };
+
+  const handlePreviousTurn = async () => {
+    if (!encounter || participants.length === 0) return;
+
+    let prevIdx = encounter.current_turn_index - 1;
+    let newRound = encounter.round_number;
+
+    if (prevIdx < 0) {
+      prevIdx = participants.length - 1;
+      newRound = Math.max(1, newRound - 1);
+    }
+
+    try {
+      const updated = await monsterService.updateEncounter(encounter.id, {
+        current_turn_index: prevIdx,
+        round_number: newRound,
+      });
+
+      setEncounter(updated);
+
+      supabase.channel(`combat-encounter-sync-${encounter.id}`).send({
+        type: 'broadcast',
+        event: 'turn-changed',
+        payload: {
+          current_turn_index: prevIdx,
+          round_number: newRound,
+          status: updated.status,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur tour précédent');
     }
   };
 
@@ -1204,6 +1252,7 @@ export function useCombatController({
     handleSaveEncounter,
     handleEndCombat,
     handleNextTurn,
+    handlePreviousTurn,
     handleSelectMonsterFromSearch,
     handleSaveMonster,
     handleDeleteMonster,

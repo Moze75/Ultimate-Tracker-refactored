@@ -13,6 +13,7 @@ import {
   Heart,
   User,
   SkipForward,
+  SkipBack,
   Square,
   Minus,
   Plus,
@@ -68,6 +69,7 @@ export function VTTCombatTab({
 }) {
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
   const roundLaunchedRef = useRef(false);
+  const [roundLaunched, setRoundLaunched] = useState(false);
   const participantsRef = useRef<import('../../../types/campaign').EncounterParticipant[]>([]);
   const onFocusCombatTokenByLabelRef = useRef(onFocusCombatTokenByLabel);
   useEffect(() => {
@@ -125,6 +127,7 @@ export function VTTCombatTab({
     handleSaveEncounter,
     handleEndCombat,
     handleNextTurn,
+    handlePreviousTurn,
     handleSelectMonsterFromSearch,
     handleSaveMonster,
     handleDeleteMonster,
@@ -148,6 +151,7 @@ export function VTTCombatTab({
     onUpdateToken,
     onRoundLaunchedFromRealtime: () => {
       roundLaunchedRef.current = true;
+      setRoundLaunched(true);
       lastAutoFocusedTurnKeyRef.current = null;
       setTimeout(() => {
         const first = participantsRef.current[0];
@@ -179,6 +183,7 @@ export function VTTCombatTab({
     const sorted = [...participants].sort((a, b) => b.initiative_roll - a.initiative_roll);
     const first = sorted[0];
     roundLaunchedRef.current = true;
+    setRoundLaunched(true);
     await handleSortByInitiative();
     if (first?.display_name) {
       lastAutoFocusedTurnKeyRef.current = null; // reset pour forcer le focus
@@ -188,6 +193,7 @@ export function VTTCombatTab({
 
   useEffect(() => {
     roundLaunchedRef.current = false;
+    setRoundLaunched(false);
     lastAutoFocusedTurnKeyRef.current = null;
   }, [encounter?.id]);
 
@@ -370,7 +376,7 @@ export function VTTCombatTab({
             <div className="min-w-0 flex-1">
                         <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                 <span className="truncate">{isActive ? encounter.name : 'Combat'}</span>
-                {isActive && (
+                {isActive && roundLaunched && (
                   <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded whitespace-nowrap shrink-0 border border-gray-700">
                     Round {encounter.round_number}
                   </span>
@@ -385,61 +391,51 @@ export function VTTCombatTab({
           </div>
 
           {isGM && (
-            <div className="flex gap-1.5 w-full">
+            <div className="flex items-center gap-0.5 w-full">
               {isActive ? (
                 <>
                   <SpinDiceButton
                     onRoll={handleRollMonsterInitiativeActive}
                     title="Relancer l'initiative des monstres"
-                    className="flex items-center justify-center p-1.5 bg-gray-800 hover:bg-gray-700 text-amber-300 text-xs rounded-lg border border-gray-700 transition-colors"
-                    imgSize="w-4 h-4"
+                    className="flex items-center justify-center p-2 bg-transparent hover:bg-gray-800/60 text-amber-300 rounded-lg transition-colors"
+                    imgSize="w-5 h-5"
                   />
                   <button
                     onClick={handleLaunchRound}
-                    title="Trier par initiative et focus sur le premier joueur"
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 bg-amber-900/40 hover:bg-amber-900/60 text-amber-300 text-xs font-medium rounded-lg border border-amber-800/50 transition-colors shrink-0"
+                    title="Lancer le combat (trier par initiative)"
+                    className="flex items-center justify-center p-2 bg-transparent hover:bg-amber-900/30 text-amber-300 rounded-lg transition-colors"
                   >
-                    <Swords size={12} className="shrink-0" /> Lancer
+                    <Swords size={18} />
+                  </button>
+                  <button
+                    onClick={handlePreviousTurn}
+                    title="Tour précédent"
+                    className="flex items-center justify-center p-2 bg-transparent hover:bg-gray-800/60 text-gray-300 rounded-lg transition-colors"
+                  >
+                    <SkipBack size={18} />
                   </button>
                   <button
                     onClick={handleNextTurn}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                    title="Tour suivant"
+                    className="flex items-center justify-center p-2 bg-transparent hover:bg-gray-800/60 text-white rounded-lg transition-colors"
                   >
-                    <SkipForward size={12} className="shrink-0" /> Suivant
+                    <SkipForward size={18} />
                   </button>
-
                   <button
                     onClick={handleEndCombat}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition-colors"
+                    title="Terminer le combat"
+                    className="flex items-center justify-center p-2 bg-transparent hover:bg-red-900/30 text-red-400 rounded-lg transition-colors ml-auto"
                   >
-                    <Square size={12} className="shrink-0" /> Fin
+                    <Square size={18} />
                   </button>
                 </>
-               ) : null}
+              ) : null}
             </div>
           )}
         </div>
 
            {/* Champ nom de combat supprimé — le combat se lance depuis le clic droit canvas */}
 
-        {isActive && isGM && (
-          <div className="px-4 py-2 border-b border-gray-800">
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddPlayersToEncounter}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
-              >
-                <Users size={12} /> Ajouter joueurs
-              </button>
-              <button
-                onClick={handleSortByInitiative}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
-              >
-                Trier
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="flex-1 overflow-y-auto min-h-0" ref={scrollContainerRef}>
           {isActive ? (
