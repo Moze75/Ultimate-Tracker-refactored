@@ -238,10 +238,20 @@ export function useCombatController({
     });
   }, []);
 
+  const handleFriendlyChangedFromRealtime = useCallback(
+    (participantId: string, friendly: boolean) => {
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === participantId ? { ...p, friendly } : p))
+      );
+    },
+    []
+  );
+
   useCombatEncounterRealtimeSync({
     encounterId: encounter?.id,
     onEncounterUpdated: handleEncounterUpdatedFromRealtime,
     onParticipantsReordered: handleParticipantsReorderedFromRealtime,
+    onFriendlyChanged: handleFriendlyChangedFromRealtime,
   });
 
   useEffect(() => {
