@@ -280,7 +280,7 @@ const cdnUrl = await uploadVttAsset(file, 'maps', userId, roomId);
     const onMove = (ev: MouseEvent) => {
       if (!isResizing.current) return;
       const delta = resizeStartX.current - ev.clientX;
-           const newWidth = Math.max(100, Math.min(480, resizeStartWidth.current + delta));
+           const newWidth = Math.max(250, Math.min(480, resizeStartWidth.current + delta));
       setSidebarWidth(newWidth);
     };
     const onUp = () => {
@@ -305,7 +305,7 @@ const visibleTokens = isGM
     // La poignée doit être ici, HORS du overflow-hidden,
     // sinon le navigateur coupe le positionnement absolu
     // et top:50% ne se calcule que sur la zone visible, pas toute la hauteur.
- <div className="relative h-full flex-shrink-0 z-20" style={{ width: sidebarWidth, minWidth: 350, maxWidth: 480 }}>
+ <div className="relative h-full flex-shrink-0 z-20" style={{ width: sidebarWidth, minWidth: 250, maxWidth: 480 }}>
 
       
       <div
