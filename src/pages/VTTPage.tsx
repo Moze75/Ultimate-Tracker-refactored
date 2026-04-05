@@ -190,6 +190,8 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [autoApplyDamage, setAutoApplyDamage] = useState<boolean>(() => {
     try { return localStorage.getItem('vtt:setting:autoApplyDamage') !== 'false'; } catch { return true; }
   });
+  const autoApplyDamageRef = useRef(autoApplyDamage);
+  autoApplyDamageRef.current = autoApplyDamage;
   const [connectedUsers, setConnectedUsers] = useState<VTTConnectedUser[]>([]);
   const [connected, setConnected] = useState(false);
 
@@ -1850,6 +1852,17 @@ useEffect(() => {
     };
 
     setPendingChatRoll(msg);
+
+    if (autoApplyDamageRef.current && currentRollTypeRef.current === 'damage') {
+      const targeted = getTargetedTokensForUser(tokensRef.current, userId);
+      targeted.forEach((token) => {
+        const newHp = computeNewHp(token, result.total);
+        vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
+        setTokens((prev) =>
+          prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
+        );
+      });
+    }
   }, [role, userId, userName]);
 
   const leaveRoom = useCallback(async () => {
@@ -2411,15 +2424,6 @@ onSelectTokens={ids => {
       const next = !prev;
       try { localStorage.setItem('vtt:setting:autoApplyDamage', String(next)); } catch {}
       return next;
-    });
-  }}
-  onDamageRoll={(total) => {
-    if (!autoApplyDamage) return;
-    const targeted = getTargetedTokensForUser(tokensRef.current, userId);
-    targeted.forEach((token) => {
-      const newHp = computeNewHp(token, total);
-      vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
-      setTokens((prev) => prev.map((t) => t.id === token.id ? { ...t, hp: newHp } : t));
     });
   }}
           />
