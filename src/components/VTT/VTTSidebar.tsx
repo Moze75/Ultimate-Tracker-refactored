@@ -280,7 +280,7 @@ const cdnUrl = await uploadVttAsset(file, 'maps', userId, roomId);
     const onMove = (ev: MouseEvent) => {
       if (!isResizing.current) return;
       const delta = resizeStartX.current - ev.clientX;
-           const newWidth = Math.max(280, Math.min(480, resizeStartWidth.current + delta));
+           const newWidth = Math.max(200, Math.min(480, resizeStartWidth.current + delta));
       setSidebarWidth(newWidth);
     };
     const onUp = () => {
