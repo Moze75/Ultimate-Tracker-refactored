@@ -93,22 +93,16 @@ function ChatTextCard({ msg, isSelf }: { msg: VTTChatMessage; isSelf: boolean })
   const timeLabel = formatRelativeTime(msg.timestamp);
 
   return (
-    <div className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[85%] rounded-lg border px-2.5 py-2 ${
-          isSelf
-            ? 'bg-amber-600/20 border-amber-500/30'
-            : 'bg-gray-700/50 border-gray-600/40'
-        }`}
-      >
-        {/* En-tête : avatar + nom + rôle + timestamp */}
-        <div className={`flex items-center gap-1.5 mb-1 ${isSelf ? 'flex-row-reverse' : 'flex-row'}`}>
-          <TokenAvatar
-            imageUrl={msg.tokenImageUrl}
-            label={msg.tokenLabel || msg.userName}
-            color={msg.tokenColor}
-            size={22}
-          />
+    <div className={`flex gap-2 ${isSelf ? 'flex-row-reverse' : 'flex-row'}`}>
+      <TokenAvatar
+        imageUrl={msg.tokenImageUrl}
+        label={msg.tokenLabel || msg.userName}
+        color={msg.tokenColor}
+        size={34}
+      />
+      <div className={`flex-1 min-w-0 ${isSelf ? 'items-end' : 'items-start'} flex flex-col`}>
+        {/* En-tête : nom + rôle + timestamp */}
+        <div className={`flex items-center gap-1.5 mb-0.5 ${isSelf ? 'flex-row-reverse' : 'flex-row'}`}>
           <span className="text-[11px] font-semibold text-gray-200 truncate max-w-[100px]">
             {msg.tokenLabel || msg.userName}
           </span>
@@ -118,12 +112,19 @@ function ChatTextCard({ msg, isSelf }: { msg: VTTChatMessage; isSelf: boolean })
           <span className="text-[9px] text-gray-500 shrink-0">{timeLabel}</span>
         </div>
         {/* Corps du message */}
-        <div className="text-xs text-gray-100 break-words">
+        <div
+          className={`px-2.5 py-1.5 rounded-lg text-xs text-gray-100 max-w-full break-words ${
+            isSelf
+              ? 'bg-amber-600/30 border border-amber-500/30 rounded-tr-sm'
+              : 'bg-gray-700/60 border border-gray-600/40 rounded-tl-sm'
+          }`}
+        >
           {msg.text}
         </div>
       </div>
     </div>
   );
+} 
 
 // ===================================
 // Sous-composant : carte de jet de dés
