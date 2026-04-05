@@ -63,10 +63,27 @@ export function drawToken({
     }
   }
 
-  // --- Dessin image / couleur --- 
+  // --- Shake au dégat ---
+  let shakeX = 0;
+  let shakeY = 0;
+  const shakeStart = _shakeRegistry.get(token.id);
+  if (shakeStart !== undefined) {
+    const elapsed = animTime - shakeStart + (Date.now() - animTime); // fallback si animTime est 0
+    const t = (Date.now() - shakeStart);
+    if (t < SHAKE_DURATION_MS) {
+      const decay = 1 - t / SHAKE_DURATION_MS;
+      const amp = 4 * decay / (scale || 1);
+      shakeX = Math.sin(t * 0.08) * amp;
+      shakeY = Math.cos(t * 0.11) * amp * 0.6;
+    } else {
+      _shakeRegistry.delete(token.id);
+    }
+  }
+
+  // --- Dessin image / couleur ---
   ctx.save();
-  ctx.translate(cx + shakeOffsetX, cy);
-  ctx.rotate((token.rotation || 0) * Math.PI / 180);   
+  ctx.translate(cx + shakeX, cy + shakeY);
+  ctx.rotate((token.rotation || 0) * Math.PI / 180);
 
   if (token.imageUrl) {
     let img = tokenImageCache.get(token.imageUrl);
@@ -106,7 +123,7 @@ export function drawToken({
 
   // --- Surcouches (sélection, bordure, HP) ---
   ctx.save();
-  ctx.translate(cx + shakeOffsetX, cy);
+  ctx.translate(cx + shakeX, cy + shakeY);
 
   if (multiIds.length > 1 && multiIds.includes(token.id) && token.id !== currentSelectedId) {
     const pad = 4 / scale;
