@@ -202,15 +202,15 @@ let _flickerPhase = 0;
 let _torchNoise = 0;
 
 function getTorchFlicker(): number {
-  _flickerPhase += 0.045 + Math.random() * 0.02;
+  _flickerPhase += 0.018 + Math.random() * 0.008;
 
-  // Bruit lissé pour éviter un scintillement trop brutal
-  const targetNoise = (Math.random() - 0.5) * 0.12;
-  _torchNoise += (targetNoise - _torchNoise) * 0.18;
+  // Bruit lissé — lissage plus fort = transitions plus douces
+  const targetNoise = (Math.random() - 0.5) * 0.06;
+  _torchNoise += (targetNoise - _torchNoise) * 0.06;
 
-  // Mélange de deux oscillations + bruit léger
+  // Mélange de deux oscillations lentes + bruit léger
   const waveA = Math.sin(_flickerPhase * 2.8) * 0.035;
-  const waveB = Math.sin(_flickerPhase * 6.4 + 1.7) * 0.02;
+  const waveB = Math.sin(_flickerPhase * 3.2 + 1.7) * 0.02;
 
   return 0.95 + waveA + waveB + _torchNoise;
 }
