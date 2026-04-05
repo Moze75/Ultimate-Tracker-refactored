@@ -138,7 +138,7 @@ function ChatRollCard({ msg }: { msg: VTTChatMessage }) {
   return (
     <div className="flex justify-start">
       {/* Carte roll */}
-      <div className="max-w-[85%] bg-gray-800/70 border border-gray-600/50 rounded-lg overflow-hidden">
+      <div className="w-full bg-gray-800/70 border border-gray-600/50 rounded-lg overflow-hidden">
         {/* En-tête : avatar + nom + timestamp */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1">
           <div className="flex items-center gap-1.5 min-w-0">
