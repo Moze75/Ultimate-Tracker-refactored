@@ -137,26 +137,7 @@ export function drawToken({
     }
   }
 
-  // --- Overlay mort (skull) si HP = 0 ---
-  if (token.maxHp != null && token.maxHp > 0 && token.hp != null && token.hp <= 0) {
-    // Voile rouge semi-transparent sur le token
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(120, 0, 0, 0.45)';
-    ctx.fill();
-
-    // Skull emoji centré
-    const skullSize = Math.max(12, size * 0.38);
-    ctx.font = `${skullSize}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.globalAlpha = 0.90;
-    ctx.fillText('☠️', 0, 0);
-    ctx.globalAlpha = 1.0;
-  }
-
-  // --- Nom du token EN BAS, texte seul sans fond ---
-  if (token.showLabel) {
+ 
   
   // --- Nom du token EN BAS, texte seul sans fond ---
   if (token.showLabel) {
