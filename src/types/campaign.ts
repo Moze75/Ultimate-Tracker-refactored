@@ -187,6 +187,7 @@ export interface EncounterParticipant {
   sort_order: number;
   is_active: boolean;
   notes: string;
+  friendly: boolean; // true = amical (blanc), false = hostile (rouge)
   created_at: string;
 }
 
