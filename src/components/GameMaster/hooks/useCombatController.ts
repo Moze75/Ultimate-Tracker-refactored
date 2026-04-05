@@ -916,7 +916,7 @@ export function useCombatController({
     }
   };
 
-  const handleAddMonsterToEncounter = async (monster: Monster, count: number) => {
+    const handleAddMonsterToEncounter = async (monster: Monster, count: number) => {
     if (!encounter) return;
 
     try {
