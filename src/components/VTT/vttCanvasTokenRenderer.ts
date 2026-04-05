@@ -60,7 +60,10 @@ export function drawToken({
       const side = r * 2 * ZOOM;
       const excess = side - r * 2;
       const ox = -(token.imageOffsetX || 0) * (excess / 2);
-      const oy = -(token.imageOffsetY || 0) * (excess / 2);
+      // Par défaut : offset vertical = -1 (image décalée au max vers le bas)
+      // pour que la tête (en haut de l'image) soit centrée dans le token.
+      const defaultOffsetY = -1;
+      const oy = -(token.imageOffsetY ?? defaultOffsetY) * (excess / 2);
       const aspect = img.naturalWidth / img.naturalHeight;
       let dw: number, dh: number;
       if (aspect >= 1) { dw = side; dh = side / aspect; }
