@@ -697,31 +697,7 @@ const visibleTokens = isGM
               />
             </div>
 
-            {/* URL manuelle (repli) */}
-            <div className="p-3 space-y-2 shrink-0">
-              <div>
-                <label className="block text-xs text-gray-300 mb-1">
-                  <span className="flex items-center gap-1"><RefreshCw size={10} /> URL directe</span>
-                </label>
-                <div className="flex gap-1">
-                  <input
-                    type="text"
-                    value={mapUrl}
-                    onChange={e => setMapUrl(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleApplyUrl(); }}
-                    placeholder="https://..."
-                    className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500"
-                  />
-                  <button
-                    onClick={handleApplyUrl}
-                    className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs transition-colors"
-                  >
-                    OK
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div> 
+
         )}
 
         {activeTab === 'props' && (
