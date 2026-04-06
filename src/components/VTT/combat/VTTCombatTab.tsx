@@ -487,7 +487,7 @@ export function VTTCombatTab({
                   <p className="text-sm text-gray-400">Aucun combat en cours.</p>
                   <p className="text-xs text-gray-500 leading-relaxed">
                     Sélectionnez des tokens sur le canvas puis faites un<br />
-                    <span className="text-amber-400">Shift + clic droit</span> → "Ajouter au combat"
+                    <span className="text-amber-400">clic droit</span> → "Ajouter au combat"
                   </p>
                   <button
                     onClick={() => setShowLoadEncounterModal(true)}
