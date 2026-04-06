@@ -209,10 +209,21 @@ export function VTTCombatTab({
   };
 
   useEffect(() => {
+    // Quand l'encounter change (nouveau chargement ou nouveau combat),
+    // on remet roundLaunched à false par défaut…
     roundLaunchedRef.current = false;
     setRoundLaunched(false);
     lastAutoFocusedTurnKeyRef.current = null;
   }, [encounter?.id]);
+
+  // …mais si l'encounter chargé a déjà des participants (combat chargé depuis la BDD),
+  // on active immédiatement roundLaunched pour afficher le round et les boutons.
+  useEffect(() => {
+    if (isActive && participants.length > 0 && !roundLaunchedRef.current) {
+      roundLaunchedRef.current = true;
+      setRoundLaunched(true);
+    }
+  }, [isActive, participants.length]);
 
   useEffect(() => {
     if (!isActive || !encounter) {
