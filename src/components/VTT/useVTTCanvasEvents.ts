@@ -1494,8 +1494,7 @@ const fuseWallPoints = (
 
           drag.multiInitial.forEach((initPos, tid) => {
             const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
-            const isPrimary = tid === drag.id;
-            onMoveTokenRef.current(tid, newPos, isPrimary ? { localCameraFollow: followCameraOnTokenMoveRef.current } : undefined);
+            onMoveTokenRef.current(tid, newPos);
           });
 
         } else {
@@ -1516,7 +1515,7 @@ const fuseWallPoints = (
             return;
           }
 
-          onMoveTokenRef.current(drag.id, snapped, { localCameraFollow: followCameraOnTokenMoveRef.current });
+          onMoveTokenRef.current(drag.id, snapped);
 
 
         }
@@ -1711,10 +1710,15 @@ if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) 
 
       isDragSelectingRef.current = false;
       selectionRectRef.current = null;
-      // Stoppe le suivi caméra dès que le drag de token se termine
-      // Sinon followWorldPosition continue en boucle et écrase le pan manuel
       if (draggingTokenRef.current) {
-        stopFollowingWorldPosition?.();
+        if (followCameraOnTokenMoveRef.current) {
+          const draggedToken = tokensRef.current.find(t => t.id === draggingTokenRef.current!.id);
+          if (draggedToken) {
+            onMoveTokenRef.current(draggedToken.id, draggedToken.position, { localCameraFollow: true });
+          }
+        } else {
+          stopFollowingWorldPosition?.();
+        }
       }
       draggingTokenRef.current = null;
       resizingTokenRef.current = null;
