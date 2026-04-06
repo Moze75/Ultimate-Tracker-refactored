@@ -235,7 +235,33 @@ function formatRelativeTime(timestamp: number): string {
 // ===================================
 // Composant principal : VTTChatPanel
 // ===================================
+// -------------------
+// Clé localStorage par roomId
+// -------------------
+function chatStorageKey(roomId: string) {
+  return `vtt-chat-${roomId}`;
+}
+
+function loadMessagesFromStorage(roomId: string): VTTChatMessage[] {
+  try {
+    const raw = localStorage.getItem(chatStorageKey(roomId));
+    if (!raw) return [];
+    return JSON.parse(raw) as VTTChatMessage[];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessagesToStorage(roomId: string, msgs: VTTChatMessage[]) {
+  try {
+    localStorage.setItem(chatStorageKey(roomId), JSON.stringify(msgs));
+  } catch {
+    // localStorage plein ou indisponible — silencieux
+  }
+}
+
 export function VTTChatPanel({
+  roomId,
   userId,
   userName,
   role,
@@ -247,9 +273,9 @@ export function VTTChatPanel({
   onDamageRoll,
 }: VTTChatPanelProps) {
   // -------------------
-  // État local des messages (max 20)
+  // État local des messages (max 20) — initialisé depuis localStorage
   // -------------------
-  const [messages, setMessages] = useState<VTTChatMessage[]>([]);
+  const [messages, setMessages] = useState<VTTChatMessage[]>(() => loadMessagesFromStorage(roomId));
   const [inputText, setInputText] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const listEndRef = useRef<HTMLDivElement>(null);
