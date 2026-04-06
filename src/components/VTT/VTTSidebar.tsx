@@ -514,7 +514,7 @@ const visibleTokens = isGM
                 Cette section contient les tokens importes et ranges
                 dans des dossiers, avec drag and drop vers le canvas.
             */}
-            <div className="flex flex-col border-t border-gray-700/60">
+            <div className="flex flex-col flex-1 min-h-0 border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowTokenLibrary(prev => !prev)}
