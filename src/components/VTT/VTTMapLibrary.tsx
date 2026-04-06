@@ -387,11 +387,26 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-700/60">
-        <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Bibliothèque</span>
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-700/60">
         <button onClick={() => { setNewFolderMode(true); setNewFolderName(''); }} className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors">
           <FolderPlus size={10} /> Dossier
         </button>
+        {addUrlMode === 'root' ? (
+          <div className="flex-1 flex gap-1">
+            <input autoFocus type="text" value={addUrlValue} onChange={e => setAddUrlValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(null); if (e.key === 'Escape') setAddUrlMode(null); }} placeholder="https://..." className="flex-1 px-2 py-0.5 bg-gray-700 border border-gray-600 rounded text-white text-[10px] outline-none focus:ring-1 focus:ring-amber-500 min-w-0" />
+            <button onClick={() => handleAddUrl(null)} disabled={!addUrlValue.trim()} className="px-1.5 py-0.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded text-[10px] transition-colors shrink-0">OK</button>
+            <button onClick={() => { setAddUrlMode(null); setAddUrlValue(''); }} className="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-[10px] transition-colors shrink-0">✕</button>
+          </div>
+        ) : (
+          <>
+            <button onClick={() => { setAddUrlMode('root'); setAddUrlValue(''); setAddUrlName(''); }} className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors">
+              <Link size={9} /> URL
+            </button>
+            <button onClick={() => { fileTargetFolderRef.current = null; fileInputRef.current?.click(); }} disabled={uploading} className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors disabled:opacity-50">
+              <Upload size={9} /> {uploading ? '...' : 'Fichier'}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Formulaire nouveau dossier */}
