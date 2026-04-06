@@ -531,8 +531,8 @@ const visibleTokens = isGM
               </button>
 
               {showTokenLibrary && (
-                <div style={{ height: '200px' }}>
-              <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} userId={userId} />
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <VTTTokenLibraryPanel roomId={roomId} campaignId={campaignId} userId={userId} />
                 </div>
               )}
             </div>
