@@ -301,7 +301,7 @@ export function VTTCombatTab({
             </button>
             {isActive && (
               <button
-                onClick={handleSaveEncounter}
+                onClick={() => setShowSaveModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-amber-300 transition-colors"
               >
                 <Save size={12} /> Sauver combat
