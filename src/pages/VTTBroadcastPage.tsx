@@ -128,7 +128,9 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         handleServerEvent(payload as VTTServerEvent);
       })
       .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
-        setBroadcastViewport(payload as BroadcastViewport);
+        const vp = payload as BroadcastViewport;
+        setBroadcastViewport(vp); // conservé pour le viewport initial (forceViewport au montage)
+        vttCanvasRef.current?.followViewport(vp); // smooth temps réel
       })
       // Écoute l'événement dédié d'initialisation broadcast
       .on('broadcast', { event: 'vtt-broadcast-init' }, ({ payload }) => {
