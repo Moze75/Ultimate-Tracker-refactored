@@ -307,11 +307,6 @@ export function VTTLeftToolbar({
               active={activeTool === 'note-place' || notesPopupOpen}
               onClick={() => setNotesPopupOpen(v => !v)}
             />
-            {(noteCount ?? gmNotes.length) > 0 && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-[8px] font-bold text-gray-900 flex items-center justify-center pointer-events-none z-10">
-                {noteCount ?? gmNotes.length}
-              </span>
-            )}
             {notesPopupOpen && (
               <div
                 ref={notesPopupRef}
