@@ -128,6 +128,7 @@ interface VTTWeatherOverlayProps {
   effects: VTTWeatherEffect[];
   width: number;
   height: number;
+  viewport?: { x: number; y: number; scale: number };
 }
 
 // -------------------
@@ -147,15 +148,20 @@ const CLOUD_ALPHA_LIST = [
   { time: 1,    value: 0 },
 ];
 
-function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean): CloudParticle {
+function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean, vp = { x: 0, y: 0, scale: 1 }): CloudParticle {
   const rawSpeed   = (CLOUD_SPEED_MIN + Math.random() * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) * speedFactor;
   const scale      = CLOUD_SCALE_MIN + Math.random() * (CLOUD_SCALE_MAX - CLOUD_SCALE_MIN);
   const size       = scale * CLOUD_SPRITE_BASE * speedFactor;
-  const travelDist = w + size * 2;
+  const worldW     = (w - vp.x) / vp.scale;
+  const worldH     = (h - vp.y) / vp.scale;
+  const travelDist = worldW + size * 2;
+  const spawnX     = spawnLeft
+    ? (-vp.x / vp.scale) - size - 10
+    : (-vp.x / vp.scale) - size + Math.random() * (worldW + size);
   return {
     type: 'cloud',
-    x: spawnLeft ? -size - 10 : -size + Math.random() * (w + size),
-    y: Math.random() * h * 0.75,
+    x: spawnX,
+    y: (Math.random() * worldH * 0.75) + (-vp.y / vp.scale),
     vx: rawSpeed,
     vy: (-0.3 + Math.random() * 0.6) * rawSpeed * 0.05,
     size,
@@ -164,20 +170,20 @@ function makeCloud(w: number, h: number, speedFactor: number, spawnLeft: boolean
     alpha: 0,
     imgSrc: CLOUD_SRCS[Math.floor(Math.random() * CLOUD_SRCS.length)],
   };
-}  
+}
 
 // -------------------
 // Fabrique une particule de pluie : position aléatoire + phase désynchronisée
 // -------------------
-function makeRain(w: number, h: number, speedFactor: number): RainParticle {
+function makeRain(w: number, h: number, speedFactor: number, vp = { x: 0, y: 0, scale: 1 }): RainParticle {
   return {
     type: 'rain',
-    x: Math.random() * w,
-    y: Math.random() * h,
+    x: (Math.random() * w - vp.x) / vp.scale,
+    y: (Math.random() * h - vp.y) / vp.scale,
     alpha: 0.45,
     lifeNorm: 0,
     lifeInc: 0,
-    phase: Math.random(),  // désynchronise les impacts entre particules
+    phase: Math.random(),
     phaseInc: (0.7 + Math.random() * 1.1) * speedFactor,
     radius: 1.5 + Math.random() * 2.5,
   };
@@ -206,18 +212,22 @@ const CROW_SCALE_LIST = [
   { time: 1,   value: CROW_SCALE_EDGE },
 ];
 
-function makeCrow(w: number, h: number, speedFactor: number): CrowParticle {
+function makeCrow(w: number, h: number, speedFactor: number, vp = { x: 0, y: 0, scale: 1 }): CrowParticle {
   const baseSpeed       = CROW_SPEED_MIN + Math.random() * (CROW_SPEED_MAX - CROW_SPEED_MIN);
   const angle           = Math.random() * Math.PI * 2;
   const dirX            = Math.cos(angle);
   const dirY            = Math.sin(angle);
   const baseLifetimeSec = 20 + Math.random() * 20;
+  const worldW = (w - vp.x) / vp.scale;
+  const worldH = (h - vp.y) / vp.scale;
+  const ox = -vp.x / vp.scale;
+  const oy = -vp.y / vp.scale;
   let x: number, y: number;
   const border = Math.floor(Math.random() * 4);
-  if      (border === 0) { x = Math.random() * w; y = -50; }
-  else if (border === 1) { x = Math.random() * w; y = h + 50; }
-  else if (border === 2) { x = -50; y = Math.random() * h; }
-  else                   { x = w + 50; y = Math.random() * h; }
+  if      (border === 0) { x = ox + Math.random() * worldW; y = oy - 50; }
+  else if (border === 1) { x = ox + Math.random() * worldW; y = oy + worldH + 50; }
+  else if (border === 2) { x = ox - 50; y = oy + Math.random() * worldH; }
+  else                   { x = ox + worldW + 50; y = oy + Math.random() * worldH; }
 
   return {
     type: 'crow',
@@ -258,7 +268,7 @@ const EMBER_SCALE_LIST = [
   { time: 1, value: 0.01 },
 ];
 
-function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
+function makeEmber(w: number, h: number, speedFactor: number, vp = { x: 0, y: 0, scale: 1 }): EmberParticle {
   const baseSpeed       = EMBER_SPEED_MIN + Math.random() * (EMBER_SPEED_MAX - EMBER_SPEED_MIN);
   const angle           = Math.random() * Math.PI * 2;
   const rawDirX         = Math.cos(angle);
@@ -270,8 +280,8 @@ function makeEmber(w: number, h: number, speedFactor: number): EmberParticle {
 
   return {
     type: 'embers',
-    x: Math.random() * w,
-    y: Math.random() * h,
+    x: (Math.random() * w - vp.x) / vp.scale,
+    y: (Math.random() * h - vp.y) / vp.scale,
     vx: dirX * baseSpeed * speedFactor,
     vy: dirY * baseSpeed * speedFactor,
     baseSpeed, dirX, dirY,
@@ -344,6 +354,7 @@ const particles: AnyParticle[] = Array.from({ length: maxParticles }, () => {
   if (effect.type === 'rain')   return makeRain(w, h, speedFactor);
   return { ...makeCrow(w, h, speedFactor), lifeNorm: Math.random() };
 });
+
 
   return { effect, particles, maxParticles, frequency, spawnAccum: 0 };
 }
@@ -644,7 +655,7 @@ const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
 // -------------------
 // Gestion du composant principal
 // -------------------
-export function VTTWeatherOverlay({ effects, width, height }: VTTWeatherOverlayProps) {
+export function VTTWeatherOverlay({ effects, width, height, viewport = { x: 0, y: 0, scale: 1 } }: VTTWeatherOverlayProps) {
 const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds
 const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows
 const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers
@@ -659,11 +670,13 @@ const fogGLA = useFogWebGL(canvasFogARef);
 const fogGLB = useFogWebGL(canvasFogBRef);
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
+  const viewportRef = useRef(viewport);
   const layersRef   = useRef<WeatherLayer[]>([]);
   const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  effectsRef.current = effects;
+  effectsRef.current  = effects;
+  viewportRef.current = viewport;
 
   // -------------------
   // gestion de la synchro des layers particules
@@ -739,25 +752,29 @@ ctxRain?.clearRect(0, 0, width, height);
       // -------------------
       // gestion du rendu particules 2D
       // -------------------
+      const vp = viewportRef.current;
+
       for (const layer of layersRef.current) {
         const { effect, particles } = layer;
 
         let ctx: CanvasRenderingContext2D | null;
 if      (effect.type === 'clouds') ctx = ctxScreen;
 else if (effect.type === 'embers') ctx = ctxAdd;
-else if (effect.type === 'rain')   ctx = ctxRain; 
+else if (effect.type === 'rain')   ctx = ctxRain;
 else                               ctx = ctxNormal;
         if (!ctx) continue;
 
         layer.spawnAccum += dt;
 while (layer.spawnAccum >= layer.frequency && particles.length < layer.maxParticles) {
   layer.spawnAccum -= layer.frequency;
-  if (effect.type === 'clouds')      particles.push(makeCloud(width, height, effect.speed, true));
-  else if (effect.type === 'embers') particles.push(makeEmber(width, height, effect.speed));
-  else if (effect.type === 'rain')   particles.push(makeRain(width, height, effect.speed));
-  else                               particles.push(makeCrow(width, height, effect.speed));
+  if (effect.type === 'clouds')      particles.push(makeCloud(width, height, effect.speed, true, vp));
+  else if (effect.type === 'embers') particles.push(makeEmber(width, height, effect.speed, vp));
+  else if (effect.type === 'rain')   particles.push(makeRain(width, height, effect.speed, vp));
+  else                               particles.push(makeCrow(width, height, effect.speed, vp));
 }
         if (layer.spawnAccum > layer.frequency * 2) layer.spawnAccum = 0;
+
+        ctx.setTransform(vp.scale, 0, 0, vp.scale, vp.x, vp.y);
 
         for (let i = particles.length - 1; i >= 0; i--) {
 const p = particles[i];
@@ -838,8 +855,8 @@ if (p.type !== 'rain') {
 
             if (p.phase >= 1) {
               p.phase -= 1;
-              p.x = Math.random() * width;
-              p.y = Math.random() * height;
+              p.x = (Math.random() * width - vp.x) / vp.scale;
+              p.y = (Math.random() * height - vp.y) / vp.scale;
               p.radius = (1.2 + Math.random() * 2.8) * (effect.scale ?? 1);
               p.phaseInc = (0.7 + Math.random() * 1.1) * Math.max(0.2, effect.speed);
             }
@@ -856,7 +873,6 @@ if (p.type !== 'rain') {
               ctx.save();
               ctx.globalAlpha = aBase * 0.35 * fall;
 
-              // dégradé type "rain.webp" : tête plus lumineuse, queue plus faible
               const grad = ctx.createLinearGradient(p.x, p.y - streakLen, p.x, p.y);
               grad.addColorStop(0, 'rgba(255,255,255,0.0)');
               grad.addColorStop(0.35, col);
@@ -895,6 +911,8 @@ if (p.type !== 'rain') {
             ctx.restore();
           }
         }
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
 
       // -------------------
