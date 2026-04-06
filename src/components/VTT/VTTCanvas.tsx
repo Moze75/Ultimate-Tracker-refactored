@@ -190,17 +190,26 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         const nextY     = vp.y     + (t.y     - vp.y)     * lerp;
         const nextScale = vp.scale + (t.scale - vp.scale) * lerp;
 
-        viewportRef.current = { x: nextX, y: nextY, scale: nextScale };
-        drawRef.current();
-
         const done =
           Math.abs(t.x - nextX) < 0.5 &&
           Math.abs(t.y - nextY) < 0.5 &&
           Math.abs(t.scale - nextScale) < 0.001;
 
+        const finalX     = done ? t.x     : nextX;
+        const finalY     = done ? t.y     : nextY;
+        const finalScale = done ? t.scale : nextScale;
+
+        viewportRef.current = { x: finalX, y: finalY, scale: finalScale };
+
+        onViewportChangeRef.current?.({
+          x: finalX,
+          y: finalY,
+          scale: finalScale,
+        });
+
+        drawRef.current();
+
         if (done) {
-          viewportRef.current = { x: t.x, y: t.y, scale: t.scale };
-          drawRef.current();
           viewportLerpAnimRef.current = null;
           return;
         }
@@ -236,32 +245,28 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         const nextX = vp.x + (targetX - vp.x) * lerp;
         const nextY = vp.y + (targetY - vp.y) * lerp;
 
-        viewportRef.current = {
-          ...vp,
-          x: nextX,
-          y: nextY,
-        };
-
-        drawRef.current();
-
         const done =
           Math.abs(targetX - nextX) < 0.5 &&
           Math.abs(targetY - nextY) < 0.5;
 
+        const finalX = done ? targetX : nextX;
+        const finalY = done ? targetY : nextY;
+
+        viewportRef.current = {
+          ...vp,
+          x: finalX,
+          y: finalY,
+        };
+
+        onViewportChangeRef.current?.({
+          x: finalX,
+          y: finalY,
+          scale: vp.scale,
+        });
+
+        drawRef.current();
+
         if (done) {
-          viewportRef.current = {
-            ...viewportRef.current,
-            x: targetX,
-            y: targetY,
-          };
-
-          onViewportChangeRef.current?.({
-            x: viewportRef.current.x,
-            y: viewportRef.current.y,
-            scale: viewportRef.current.scale,
-          });
-
-          drawRef.current();
           viewportFollowAnimRef.current = null;
           return;
         }
