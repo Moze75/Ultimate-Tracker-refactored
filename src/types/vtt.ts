@@ -51,6 +51,22 @@ export interface VTTWeatherEffect {
   color?: string;    // utilisé par fog/rain
 }
 
+export type VTTNoteIcon =
+  | 'StickyNote' | 'Skull' | 'Gem' | 'Key' | 'AlertTriangle' | 'Eye'
+  | 'Crown' | 'Swords' | 'Map' | 'Lock' | 'Flame' | 'MessageSquare'
+  | 'Bookmark' | 'Star' | 'ShieldAlert' | 'DoorOpen';
+
+export interface VTTNote {
+  id: string;
+  x: number;
+  y: number;
+  title: string;
+  body: string;
+  icon: VTTNoteIcon;
+  size: number;
+  color: string;
+}
+
 export interface VTTRoomConfig {
   mapImageUrl: string;
   gridSize: number;
@@ -66,6 +82,7 @@ export interface VTTRoomConfig {
   timeOfDay?: number;
   weatherEffects?: VTTWeatherEffect[];  // effets actifs (cumulables)
   savedViewport?: { x: number; y: number; scale: number };  // vue enregistrée par le GM
+  gmNotes?: VTTNote[];
 }
 
 // -------------------

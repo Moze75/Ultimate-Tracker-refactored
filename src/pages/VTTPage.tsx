@@ -35,7 +35,10 @@ import type {
   VTTConnectedUser,
   VTTWeatherEffect,
   VTTPing,
+  VTTNote,
 } from '../types/vtt';
+import { VTTNotesOverlay } from '../components/VTT/VTTNotesOverlay';
+import { VTTNoteEditModal } from '../components/VTT/VTTNoteEditModal';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
@@ -196,6 +199,10 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   const [connected, setConnected] = useState(false);
 
   const [activeTool, setActiveTool] = useState<VTTActiveTool>('select');
+  const [gmNotes, setGmNotes] = useState<VTTNote[]>([]);
+  const gmNotesRef = useRef<VTTNote[]>([]);
+  const [showGmNotes, setShowGmNotes] = useState(true);
+  const [editingNote, setEditingNote] = useState<{ note: VTTNote | null; initialX?: number; initialY?: number } | null>(null);
 
   const handleToolChange = useCallback((tool: VTTActiveTool) => {
     setActiveTool(tool);
@@ -416,6 +423,11 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         setWindows((event.state.room as any).windows || []);
         setRole(event.state.yourRole);
         setWeatherEffects(event.state.room.config.weatherEffects || []);
+        if (event.state.yourRole === 'gm') {
+          const notes = event.state.room.config.gmNotes || [];
+          setGmNotes(notes);
+          gmNotesRef.current = notes;
+        }
         // -------------------
         // Récupération du sceneId actif dès la première connexion
         // Sans cela, le VTTCanvas du joueur reste sur sceneId=null
@@ -462,6 +474,10 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
       }
       case 'MAP_UPDATED':
         setConfig(prev => ({ ...prev, ...event.config }));
+        if (event.config.gmNotes !== undefined && role === 'gm') {
+          setGmNotes(event.config.gmNotes);
+          gmNotesRef.current = event.config.gmNotes;
+        }
         break;
       // ===================================
       // Réception d'un changement de scène (joueur ou broadcast)
@@ -631,6 +647,9 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
     setSavedViewport(scene.config.savedViewport ?? null);
+    const sceneNotes = scene.config.gmNotes || [];
+    setGmNotes(sceneNotes);
+    gmNotesRef.current = sceneNotes;
     sceneLoadedRef.current = scene.id;
     console.log('[VTT] applySceneToLive: doors=', scene.doors?.length ?? 0, 'windows=', scene.windows?.length ?? 0);
 
@@ -1811,6 +1830,22 @@ useEffect(() => {
     }
   }, [role]);
 
+  const handleNotesChange = useCallback((notes: VTTNote[]) => {
+    if (role !== 'gm') return;
+    setGmNotes(notes);
+    gmNotesRef.current = notes;
+    vttService.send({ type: 'UPDATE_MAP', config: { gmNotes: notes } });
+    const sceneId = activeSceneIdRef.current;
+    if (sceneId) {
+      setConfig(prev => ({ ...prev, gmNotes: notes }));
+      supabase
+        .from('vtt_scenes')
+        .update({ config: { ...configRef.current, gmNotes: notes }, updated_at: new Date().toISOString() })
+        .eq('id', sceneId)
+        .then(({ error }) => { if (error) console.error('[VTT] notes save error:', error); });
+    }
+  }, [role]);
+
   
   // -------------------
   // Réception d'un résultat de jet de dés depuis DiceBox3D
@@ -2066,6 +2101,11 @@ onToggleGmFollow={() => {
   onUpdateWeather={handleUpdateWeather}
   isPingActive={isPingMode}
   onPing={() => setIsPingMode(v => !v)}
+  gmNotes={gmNotes}
+  noteCount={gmNotes.length}
+  onNotesChange={handleNotesChange}
+  showGmNotes={showGmNotes}
+  onToggleShowGmNotes={() => setShowGmNotes(v => !v)}
 />
         </div>
 
@@ -2286,6 +2326,29 @@ onSelectTokens={ids => {
               </div>
             );
           })}
+
+          {role === 'gm' && showGmNotes && (
+            <VTTNotesOverlay
+              notes={gmNotes}
+              role={role}
+              pan={{ x: canvasViewport.x, y: canvasViewport.y }}
+              zoom={canvasViewport.scale}
+              isNoteTool={activeTool === 'note-place'}
+              onEdit={note => setEditingNote({ note })}
+              onMove={(id, x, y) => {
+                const updated = gmNotesRef.current.map(n => n.id === id ? { ...n, x, y } : n);
+                handleNotesChange(updated);
+              }}
+              onDelete={id => {
+                const updated = gmNotesRef.current.filter(n => n.id !== id);
+                handleNotesChange(updated);
+              }}
+              onCanvasClick={(wx, wy) => {
+                setEditingNote({ note: null, initialX: wx, initialY: wy });
+                setActiveTool('select');
+              }}
+            />
+          )}
 
           {/* -------------------
               Liste des joueurs connectés (overlay bottom-left)
@@ -2508,6 +2571,27 @@ onSelectTokens={ids => {
   onDiceRollResult={handleRollResult}
 />
       <CombatBanner trigger={combatBannerTrigger} />
+
+      {editingNote !== undefined && editingNote !== null && (
+        <VTTNoteEditModal
+          note={editingNote.note}
+          initialX={editingNote.initialX}
+          initialY={editingNote.initialY}
+          onSave={note => {
+            const existing = gmNotesRef.current.find(n => n.id === note.id);
+            const updated = existing
+              ? gmNotesRef.current.map(n => n.id === note.id ? note : n)
+              : [...gmNotesRef.current, note];
+            handleNotesChange(updated);
+            setEditingNote(null);
+          }}
+          onDelete={id => {
+            handleNotesChange(gmNotesRef.current.filter(n => n.id !== id));
+            setEditingNote(null);
+          }}
+          onClose={() => setEditingNote(null)}
+        />
+      )}
           </div>
     </DiceRollContext.Provider>
   );

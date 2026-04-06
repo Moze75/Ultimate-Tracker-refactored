@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MousePointer2, Eye, EyeOff, UserPlus, Users, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset, Sparkles, Wind, SlidersHorizontal, Square, MapPin } from 'lucide-react';
-import type { VTTWeatherEffect, VTTWeatherType } from '../../types/vtt';
+import { MousePointer2, Eye, EyeOff, UserPlus, Users, Cloud, X, RefreshCw, Grid3x3 as Grid3X3, Crosshair, Trash2, Sun, Moon, Fence, Ruler, MonitorPlay, ExternalLink, Copy, Check, RectangleHorizontal, Lock, Unlock, Clock, Sunrise, Sunset, Sparkles, Wind, SlidersHorizontal, Square, MapPin, StickyNote } from 'lucide-react';
+import type { VTTWeatherEffect, VTTWeatherType, VTTNote } from '../../types/vtt';
 import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 
 // -------------------
 // Outils actifs du VTT
 // fog-rect-reveal / fog-rect-erase : sélection rectangulaire pour reveal/masquage
 // -------------------
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'window-place' | 'measure';
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'window-place' | 'measure' | 'note-place';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
@@ -49,6 +49,11 @@ interface VTTLeftToolbarProps {
   onToggleGmFollow?: () => void;
   onPing?: () => void;
   isPingActive?: boolean;
+  gmNotes?: VTTNote[];
+  noteCount?: number;
+  onNotesChange?: (notes: VTTNote[]) => void;
+  showGmNotes?: boolean;
+  onToggleShowGmNotes?: () => void;
 }
 
 export function VTTLeftToolbar({
@@ -89,6 +94,11 @@ export function VTTLeftToolbar({
   onToggleGmFollow,
   onPing,
   isPingActive = false,
+  gmNotes = [],
+  noteCount,
+  onNotesChange,
+  showGmNotes = true,
+  onToggleShowGmNotes,
 }: VTTLeftToolbarProps) {
   const [fogPopupOpen, setFogPopupOpen] = useState(false);
   const [gridPopupOpen, setGridPopupOpen] = useState(false);
@@ -98,6 +108,9 @@ export function VTTLeftToolbar({
   const weatherPopupRef = useRef<HTMLDivElement>(null);
   const [broadcastPopupOpen, setBroadcastPopupOpen] = useState(false);
   const [timePopupOpen, setTimePopupOpen] = useState(false);
+  const [notesPopupOpen, setNotesPopupOpen] = useState(false);
+  const notesBtnRef = useRef<HTMLDivElement>(null);
+  const notesPopupRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const fogPopupRef = useRef<HTMLDivElement>(null);
   const fogBtnRef = useRef<HTMLDivElement>(null);
@@ -113,7 +126,7 @@ export function VTTLeftToolbar({
   activeToolRef.current = activeTool;
 
   useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen) return;
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen && !notesPopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
@@ -152,10 +165,15 @@ export function VTTLeftToolbar({
         weatherBtnRef.current && !weatherBtnRef.current.contains(target)) {
         setWeatherPopupOpen(false);
       }
+      if (notesPopupOpen &&
+        notesPopupRef.current && !notesPopupRef.current.contains(target) &&
+        notesBtnRef.current && !notesBtnRef.current.contains(target)) {
+        setNotesPopupOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen]); 
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen, notesPopupOpen]);
 
   // -------------------
   // Détection de tous les outils fog (pinceau + rectangle)
@@ -281,6 +299,64 @@ export function VTTLeftToolbar({
             active={false}
             onClick={onAddToken}
           />
+
+          <div ref={notesBtnRef} className="w-full flex flex-col items-center relative">
+            <ToolBtn
+              icon={<StickyNote size={17} />}
+              label="Notes MJ"
+              active={activeTool === 'note-place' || notesPopupOpen}
+              onClick={() => setNotesPopupOpen(v => !v)}
+            />
+            {(noteCount ?? gmNotes.length) > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-[8px] font-bold text-gray-900 flex items-center justify-center pointer-events-none z-10">
+                {noteCount ?? gmNotes.length}
+              </span>
+            )}
+            {notesPopupOpen && (
+              <div
+                ref={notesPopupRef}
+                className="absolute left-full ml-2 top-0 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 p-3 space-y-2"
+                onMouseDown={e => e.stopPropagation()}
+              >
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Notes MJ</p>
+                <p className="text-xs text-gray-400">
+                  {(noteCount ?? gmNotes.length) === 0 ? 'Aucune note' : `${noteCount ?? gmNotes.length} note${(noteCount ?? gmNotes.length) > 1 ? 's' : ''}`}
+                </p>
+                <button
+                  onClick={() => { onToolChange('note-place'); setNotesPopupOpen(false); }}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                    activeTool === 'note-place'
+                      ? 'bg-amber-600/30 border-amber-600/50 text-amber-300'
+                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <StickyNote size={12} />
+                  Placer une note
+                </button>
+                <button
+                  onClick={() => onToggleShowGmNotes?.()}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 transition-colors"
+                >
+                  {showGmNotes ? <Eye size={12} /> : <EyeOff size={12} />}
+                  {showGmNotes ? 'Masquer les notes' : 'Afficher les notes'}
+                </button>
+                {(noteCount ?? gmNotes.length) > 0 && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Supprimer toutes les notes ?')) {
+                        onNotesChange?.([]);
+                        setNotesPopupOpen(false);
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium bg-red-900/30 border border-red-700/50 text-red-400 hover:bg-red-900/50 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                    Tout effacer
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </>
       )}
 
