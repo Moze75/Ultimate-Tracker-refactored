@@ -698,6 +698,7 @@ const visibleTokens = isGM
             </div>
 
 
+          </div> 
         )}
 
         {activeTab === 'props' && (
