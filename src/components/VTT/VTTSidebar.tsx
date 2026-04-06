@@ -546,7 +546,7 @@ const visibleTokens = isGM
               >
                 <span className="flex items-center gap-1.5 text-[10px] text-gray-200 font-medium uppercase tracking-wide">
                   <Skull size={10} className="text-red-400" />
-                  Bestiaire
+                  Bestiaire D&D 5.24
                 </span>
                 {showBestiary ? (
                   <ChevronDown size={12} className="text-gray-500" />
