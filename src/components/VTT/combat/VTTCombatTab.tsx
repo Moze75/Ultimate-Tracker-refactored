@@ -75,6 +75,7 @@ export function VTTCombatTab({
   const lastAutoFocusedTurnKeyRef = useRef<string | null>(null);
   const roundLaunchedRef = useRef(false);
   const [roundLaunched, setRoundLaunched] = useState(false);
+    const [showSaveModal, setShowSaveModal] = useState(false);
   const participantsRef = useRef<import('../../../types/campaign').EncounterParticipant[]>([]);
   const onFocusCombatTokenByLabelRef = useRef(onFocusCombatTokenByLabel);
   useEffect(() => {
