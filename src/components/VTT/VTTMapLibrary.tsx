@@ -455,7 +455,6 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
                     <p className="text-[10px] text-gray-600 px-3 py-1 italic">Dossier vide — glissez une carte ici</p>
                   )}
                   {folderMaps.map(renderMap)}
-                  {renderAddButtons(folder.id)}
                 </div>
               )}
             </div>
@@ -475,7 +474,7 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
           {rootMaps.map(renderMap)}
         </div>
 
-        {renderAddButtons(null)}
+      
       </div>
 
       {/* Input fichier caché */}
