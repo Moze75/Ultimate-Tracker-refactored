@@ -396,6 +396,9 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     uniform vec3  color;
     uniform float rotation;
     uniform vec2  uResolution;
+    uniform float u_vpX;
+    uniform float u_vpY;
+    uniform float u_vpScale;
 
     float rand(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453123); }
 
@@ -436,8 +439,8 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
       vec2 uv = gl_FragCoord.xy / uResolution; // 0..1 écran
       uv.y = 1.0 - uv.y;
 
-      // // gestion de l'ancrage "world-like"
-      vec2 p = (uv * 8.0 - uv) * dimensions * 0.25;
+      vec2 worldShift = vec2(-u_vpX, u_vpY) / (u_vpScale * max(uResolution.x, uResolution.y)) * 4.0;
+      vec2 p = (uv * 8.0 - uv) * dimensions * 0.25 + worldShift;
       if (rotation != 0.0) p = rot2(rotation) * (p - 0.5) + 0.5;
 
       float t = time * 0.25;
@@ -500,6 +503,9 @@ uniforms: {
   color:       WebGLUniformLocation | null;
   rotation:    WebGLUniformLocation | null;
   uResolution: WebGLUniformLocation | null;
+  u_vpX:       WebGLUniformLocation | null;
+  u_vpY:       WebGLUniformLocation | null;
+  u_vpScale:   WebGLUniformLocation | null;
 };
 }
 
@@ -585,6 +591,9 @@ uniforms: {
   color:       gl.getUniformLocation(program, 'color'),
   rotation:    gl.getUniformLocation(program, 'rotation'),
   uResolution: gl.getUniformLocation(program, 'uResolution'),
+  u_vpX:       gl.getUniformLocation(program, 'u_vpX'),
+  u_vpY:       gl.getUniformLocation(program, 'u_vpY'),
+  u_vpScale:   gl.getUniformLocation(program, 'u_vpScale'),
 },
     };
 
@@ -605,6 +614,7 @@ uniforms: {
     fe:     VTTWeatherEffect,
     width:  number,
     height: number,
+    vp: { x: number; y: number; scale: number } = { x: 0, y: 0, scale: 1 },
   ) => {
     const state = glStateRef.current;
     if (!state) return;
@@ -636,6 +646,9 @@ const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
     gl.uniform3f(uniforms.color,       tr, tg, tb);
     gl.uniform1f(uniforms.rotation,    rotation);
     gl.uniform2f(uniforms.uResolution, width, height);
+    gl.uniform1f(uniforms.u_vpX,       vp.x);
+    gl.uniform1f(uniforms.u_vpY,       vp.y);
+    gl.uniform1f(uniforms.u_vpScale,   vp.scale);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }, []);
@@ -920,7 +933,7 @@ if (p.type !== 'rain') {
       // -------------------
       const fe = effectsRef.current.find(e => e.type === 'fog');
       if (fe) {
-fogGLA.render(dt, fe, width, height);
+fogGLA.render(dt, fe, width, height, viewportRef.current ?? { x: 0, y: 0, scale: 1 });
 // fogGLB.render(dt, fe, width, height);
       } else {
         fogGLA.clear(width, height);
