@@ -264,7 +264,7 @@ const defaultViewport = broadcastViewport ?? undefined;
       )}
 
 <VTTCanvas
-  ref={null as never}
+  ref={vttCanvasRef}
   sceneId={currentSceneId ?? undefined}
   config={config}
   tokens={tokens}
