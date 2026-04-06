@@ -538,7 +538,7 @@ const visibleTokens = isGM
             </div>
 
             {/* Bestiaire */}
-            <div className="flex flex-col border-t border-gray-700/60">
+            <div className="flex flex-col flex-1 min-h-0 border-t border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowBestiary(prev => !prev)}
