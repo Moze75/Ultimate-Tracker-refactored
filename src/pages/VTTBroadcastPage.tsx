@@ -51,6 +51,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [showControls, setShowControls] = useState(true);
   const [waitingForSync, setWaitingForSync] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+    const vttCanvasRef = useRef<import('../components/VTT/VTTCanvas').VTTCanvasHandle>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
