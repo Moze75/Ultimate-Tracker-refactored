@@ -166,6 +166,50 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       drawRef.current();
     },
 
+    followViewport: (target: { x: number; y: number; width: number; height: number }) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      // Calcul du scale et de la position cibles depuis le BroadcastViewport
+      const scaleTarget = canvas.width / target.width;
+      const xTarget = -target.x * scaleTarget;
+      const yTarget = -target.y * scaleTarget;
+
+      viewportLerpTargetRef.current = { x: xTarget, y: yTarget, scale: scaleTarget };
+
+      if (viewportLerpAnimRef.current) return;
+
+      const animate = () => {
+        const t = viewportLerpTargetRef.current;
+        if (!t) { viewportLerpAnimRef.current = null; return; }
+
+        const vp = viewportRef.current;
+        const lerp = 0.18;
+        const nextX     = vp.x     + (t.x     - vp.x)     * lerp;
+        const nextY     = vp.y     + (t.y     - vp.y)     * lerp;
+        const nextScale = vp.scale + (t.scale - vp.scale) * lerp;
+
+        viewportRef.current = { x: nextX, y: nextY, scale: nextScale };
+        drawRef.current();
+
+        const done =
+          Math.abs(t.x - nextX) < 0.5 &&
+          Math.abs(t.y - nextY) < 0.5 &&
+          Math.abs(t.scale - nextScale) < 0.001;
+
+        if (done) {
+          viewportRef.current = { x: t.x, y: t.y, scale: t.scale };
+          drawRef.current();
+          viewportLerpAnimRef.current = null;
+          return;
+        }
+
+        viewportLerpAnimRef.current = requestAnimationFrame(animate);
+      };
+
+      viewportLerpAnimRef.current = requestAnimationFrame(animate);
+    },
+    
         followWorldPosition: (x: number, y: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
