@@ -394,7 +394,7 @@ const visibleTokens = isGM
                 -------------------
                 Cette section affiche les tokens actuellement poses sur le canvas.
             */}
-            <div className="shrink-0 border-b border-gray-700/60">
+            <div className="flex flex-col flex-1 min-h-0 border-b border-gray-700/60">
               <button
                 type="button"
                 onClick={() => setShowCanvasTokens(prev => !prev)}
