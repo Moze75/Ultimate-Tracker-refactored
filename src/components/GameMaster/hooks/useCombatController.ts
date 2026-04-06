@@ -755,10 +755,17 @@ export function useCombatController({
     }
   };
 
-  const handleSaveEncounter = async () => {
+  const handleSaveEncounter = async (newName?: string) => {
     if (!encounter) return;
 
     try {
+      if (newName && newName.trim() !== encounter.name) {
+        await supabase
+          .from('campaign_encounters')
+          .update({ name: newName.trim() })
+          .eq('id', encounter.id);
+        setEncounter((prev) => prev ? { ...prev, name: newName.trim() } : prev);
+      }
       await monsterService.saveEncounter(encounter.id);
       toast.success('Combat sauvegardé');
     } catch (err) {
