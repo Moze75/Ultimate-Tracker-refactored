@@ -310,7 +310,9 @@ export function VTTChatPanel({
     setMessages(prev => {
       const next = [...prev, msg];
       // Limite à MAX_MESSAGES — suppression des plus anciens
-      return next.length > MAX_MESSAGES ? next.slice(next.length - MAX_MESSAGES) : next;
+      const limited = next.length > MAX_MESSAGES ? next.slice(next.length - MAX_MESSAGES) : next;
+      saveMessagesToStorage(roomId, limited);
+      return limited;
     });
 
     // -------------------
