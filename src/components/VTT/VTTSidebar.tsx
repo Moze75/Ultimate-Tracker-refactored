@@ -556,7 +556,7 @@ const visibleTokens = isGM
               </button>
 
               {showBestiary && (
-                <div style={{ height: '400px' }}>
+                <div className="flex-1 min-h-0 overflow-hidden">
                   <VTTMonsterBestiary
                     onAddAsToken={onAddMonsterAsToken ? (m: MonsterListItem, detail: Monster | null) => {
                       const hp = typeof m.hp === 'number' ? m.hp : parseInt(String(m.hp ?? '0')) || 10;
