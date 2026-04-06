@@ -592,7 +592,7 @@ useEffect(() => {
               alt="Chargement..." 
               className="animate-spin rounded-full h-12 w-12 mx-auto object-cover" 
             />
-            <p className="text-gray-400">Chargement des composants...</p>
+            <p className="text-gray-400">Invocation des artéfacts ...</p>
             {retryCount > 0 && (
               <p className="text-yellow-400 text-sm">
                 Tentative {retryCount + 1}/{MAX_RETRIES}
