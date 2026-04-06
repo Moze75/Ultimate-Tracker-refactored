@@ -72,6 +72,8 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const viewportFocusAnimRef = useRef<number | null>(null);
   const viewportFollowAnimRef = useRef<number | null>(null);
   const viewportFollowTargetRef = useRef<{ x: number; y: number } | null>(null);
+    const viewportLerpTargetRef = useRef<{ x: number; y: number; scale: number } | null>(null);
+  const viewportLerpAnimRef   = useRef<number | null>(null);
     const combatTurnHighlightRef = useRef<{ tokenId: string; startedAt: number } | null>(null);
   const combatTurnHighlightAnimRef = useRef<number | null>(null);
 
