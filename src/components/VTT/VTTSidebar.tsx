@@ -411,7 +411,7 @@ const visibleTokens = isGM
               </button>
 
               {showCanvasTokens && (
-                <div ref={tokenListRef} className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: '220px' }}>
+                <div ref={tokenListRef} className="p-2 space-y-1 overflow-y-auto flex-1 min-h-0">
                   {visibleTokens.length === 0 && (
                     <p className="text-xs text-gray-400 text-center py-4">Aucun token sur la carte</p>
                   )}
