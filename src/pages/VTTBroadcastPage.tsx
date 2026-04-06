@@ -46,7 +46,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   // -------------------
   const [currentSceneId, setCurrentSceneId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
-  const [broadcastViewport, setBroadcastViewport] = useState<BroadcastViewport | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [waitingForSync, setWaitingForSync] = useState(true);
@@ -54,6 +53,8 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     const vttCanvasRef = useRef<import('../components/VTT/VTTCanvas').VTTCanvasHandle>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const initialViewportAppliedRef = useRef(false);
+  const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null);
 
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
@@ -129,8 +130,11 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
       })
       .on('broadcast', { event: 'vtt-viewport' }, ({ payload }) => {
         const vp = payload as BroadcastViewport;
-        setBroadcastViewport(vp); // conservé pour le viewport initial (forceViewport au montage)
-        vttCanvasRef.current?.followViewport(vp); // smooth temps réel
+        if (!initialViewportAppliedRef.current) {
+          setInitialForceViewport(vp);
+          initialViewportAppliedRef.current = true;
+        }
+        vttCanvasRef.current?.followViewport(vp);
       })
       // Écoute l'événement dédié d'initialisation broadcast
       .on('broadcast', { event: 'vtt-broadcast-init' }, ({ payload }) => {
@@ -237,10 +241,15 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
     return () => { if (hideTimer.current) clearTimeout(hideTimer.current); };
   }, []);
 
+  useEffect(() => {
+    if (!initialForceViewport) return;
+    const timer = setTimeout(() => setInitialForceViewport(null), 100);
+    return () => clearTimeout(timer);
+  }, [initialForceViewport]);
+
   const noOp = useCallback(() => {}, []);
   const noOpStroke = useCallback(() => {}, []);
 
-const defaultViewport = broadcastViewport ?? undefined;
 
   return (
     <div
@@ -281,7 +290,7 @@ const defaultViewport = broadcastViewport ?? undefined;
   walls={walls}
   doors={doors}
   windows={windows}
-  forceViewport={defaultViewport}
+  forceViewport={initialForceViewport ?? undefined}
 />
 
       {(config.weatherEffects ?? []).length > 0 && (
