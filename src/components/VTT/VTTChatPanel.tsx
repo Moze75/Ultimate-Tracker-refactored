@@ -281,7 +281,10 @@ export function VTTChatPanel({
   const listEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // Ref pour suivre les IDs de messages déjà traités (anti-doublon)
-  const processedIdsRef = useRef<Set<string>>(new Set());
+  // Pré-rempli avec les IDs des messages restaurés depuis localStorage
+  const processedIdsRef = useRef<Set<string>>(
+    new Set(loadMessagesFromStorage(roomId).map(m => m.id))
+  );
 
   // -------------------
   // Résolution de l'avatar du joueur courant
