@@ -533,6 +533,17 @@ export function VTTCombatTab({
         />
       )}
 
+      {showSaveModal && encounter && (
+        <SaveEncounterModal
+          currentName={encounter.name}
+          onClose={() => setShowSaveModal(false)}
+          onSave={async (name) => {
+            setShowSaveModal(false);
+            await handleSaveEncounter(name);
+          }}
+        />
+      )}
+      
       {showLoadEncounterModal && (
         <LoadEncounterModal
           campaignId={campaignId}
