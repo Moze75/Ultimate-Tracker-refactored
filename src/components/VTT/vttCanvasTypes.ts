@@ -8,6 +8,7 @@ export interface VTTCanvasHandle {
   centerOnWorldPositionImmediate: (x: number, y: number) => void;
   followWorldPosition: (x: number, y: number) => void;
   stopFollowingWorldPosition: () => void;
+    followViewport: (target: { x: number; y: number; width: number; height: number }) => void;
   triggerCombatTurnHighlight: (tokenId: string) => void;
   // -------------------
   // Permet à VTTPage de déclencher la sauvegarde du snapshot
