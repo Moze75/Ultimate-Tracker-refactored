@@ -186,7 +186,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         if (!t) { viewportLerpAnimRef.current = null; return; }
 
         const vp = viewportRef.current;
-        const lerp = 0.18;
+        const lerp = 0.35;
         const nextX     = vp.x     + (t.x     - vp.x)     * lerp;
         const nextY     = vp.y     + (t.y     - vp.y)     * lerp;
         const nextScale = vp.scale + (t.scale - vp.scale) * lerp;

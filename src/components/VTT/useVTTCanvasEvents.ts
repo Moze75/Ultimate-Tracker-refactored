@@ -1494,7 +1494,8 @@ const fuseWallPoints = (
 
           drag.multiInitial.forEach((initPos, tid) => {
             const newPos = snapToGrid(initPos.x + dx, initPos.y + dy);
-            onMoveTokenRef.current(tid, newPos);
+            const isPrimary = tid === drag.id;
+            onMoveTokenRef.current(tid, newPos, isPrimary ? { localCameraFollow: followCameraOnTokenMoveRef.current } : undefined);
           });
 
         } else {
@@ -1515,7 +1516,7 @@ const fuseWallPoints = (
             return;
           }
 
-          onMoveTokenRef.current(drag.id, snapped);
+          onMoveTokenRef.current(drag.id, snapped, { localCameraFollow: followCameraOnTokenMoveRef.current });
 
 
         }
