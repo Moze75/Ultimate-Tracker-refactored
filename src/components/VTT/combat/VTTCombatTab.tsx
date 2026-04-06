@@ -32,6 +32,7 @@ import { MonsterStatBlock, DiceRollData } from '../../Combat/MonsterStatBlock';
 import { CustomMonsterModal } from '../../Combat/CustomMonsterModal';
 import { ImportMonsterModal } from '../../Combat/ImportMonsterModal';
 import { LoadEncounterModal } from '../../GameMaster/modals/LoadEncounterModal';
+import { SaveEncounterModal } from './SaveEncounterModal';
 import { PlayerDetailsModal } from '../../modals/PlayerDetailsModal';
 import {
   useCombatController,
