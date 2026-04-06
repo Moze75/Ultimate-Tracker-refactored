@@ -387,8 +387,8 @@ const visibleTokens = isGM
       </div>
 
       <div className="flex-1 overflow-y-auto">
-                  {activeTab === 'tokens' && isGM && (
-          <div className="flex flex-col">
+        {activeTab === 'tokens' && isGM && (
+          <div className="flex flex-col h-full">
             {/* -------------------
                 Gestion des tokens presents sur la carte
                 -------------------
