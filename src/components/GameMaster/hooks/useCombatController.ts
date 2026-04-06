@@ -300,10 +300,17 @@ export function useCombatController({
       setShowLoadEncounterModal(false);
       setLoading(true);
 
+      // Désactiver l'encounter actif éventuel avant d'en charger un nouveau
+      if (encounter) {
+        await monsterService.endEncounter(encounter.id);
+      }
+
+      // Réactiver l'encounter chargé en base
       const { data: encounterData, error: encounterError } = await supabase
         .from('campaign_encounters')
-        .select('*')
+        .update({ status: 'active' })
         .eq('id', encounterId)
+        .select('*')
         .single();
 
       if (encounterError) throw encounterError;
@@ -316,20 +323,12 @@ export function useCombatController({
 
       if (participantsError) throw participantsError;
 
-      const nextPrepEntries: CombatPreparationEntry[] = (participantsData || []).map((p) => ({
-        id: `prep-${p.participant_type}-${p.id}`,
-        type: p.participant_type as 'player' | 'monster',
-        name: p.display_name,
-        memberId: p.player_member_id || undefined,
-        monsterId: p.monster_id || undefined,
-        hp: p.current_hp,
-        maxHp: p.max_hp,
-        ac: p.armor_class,
-        initiative: p.initiative_roll,
-      }));
-
-      setPrepEntries(nextPrepEntries);
+      // Mettre à jour l'état : encounter actif + participants dans la liste active
+      setEncounter(encounterData);
+      setParticipants(participantsData || []);
+      setPrepEntries([]);
       setEncounterName(encounterData.name);
+
       toast.success(`Combat "${encounterData.name}" chargé`);
     } catch (err) {
       console.error(err);
