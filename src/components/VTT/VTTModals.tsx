@@ -102,6 +102,7 @@ export interface VTTModalsProps {
   characterSheetToken: VTTToken | null;
   onCloseCharacterSheet: () => void;
   onSyncTokenHpFromCharacter: (tokenId: string, hp: number | null, maxHp: number | null) => void;
+  characterSheetForcedHp?: number | null;
 
   monsterStatBlockToken: VTTToken | null;
   onCloseMonsterStatBlock: () => void;
