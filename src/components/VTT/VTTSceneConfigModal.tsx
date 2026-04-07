@@ -16,6 +16,7 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose, onRese
   const [mapWidth, setMapWidth] = useState(config.mapWidth || 3000);
   const [mapHeight, setMapHeight] = useState(config.mapHeight || 2000);
   const [panMargin, setPanMargin] = useState(config.panMargin ?? 200);
+  const [clampToMap, setClampToMap] = useState(config.clampToMap ?? false);
 
   const handleSave = () => {
     onSave({
@@ -24,6 +25,7 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose, onRese
       mapWidth: Math.max(200, Number(mapWidth) || 3000),
       mapHeight: Math.max(200, Number(mapHeight) || 2000),
       panMargin: Math.max(0, Number(panMargin) || 0),
+      clampToMap,
     });
     onClose();
   };
@@ -107,7 +109,7 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose, onRese
                 className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
-            <div className="flex-1">
+            <div className={`flex-1 transition-opacity ${clampToMap ? 'opacity-40 pointer-events-none' : ''}`}>
               <label className="block text-xs text-gray-400 mb-1">
                 Marge de déplacement (px)
               </label>
@@ -118,14 +120,37 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose, onRese
                 min={0}
                 max={2000}
                 step={50}
-                className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                disabled={clampToMap}
+                className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500 disabled:cursor-not-allowed"
               />
             </div>
           </div>
 
-          <p className="text-[11px] text-gray-500">
-            La marge contrôle l'espace navigable au-delà des bords de la carte. Mettez 0 pour bloquer strictement aux bords.
-          </p>
+          <label className="flex items-center gap-3 cursor-pointer select-none py-1">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={clampToMap}
+              onClick={() => setClampToMap(v => !v)}
+              className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${clampToMap ? 'bg-amber-500' : 'bg-gray-600'}`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 ${clampToMap ? 'translate-x-4' : 'translate-x-0'}`}
+              />
+            </button>
+            <div>
+              <span className="text-sm text-gray-200">Verrouiller aux bordures de la carte</span>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Empêche de voir au-delà des bords de la carte importée. Prend le dessus sur la marge.
+              </p>
+            </div>
+          </label>
+
+          {!clampToMap && (
+            <p className="text-[11px] text-gray-500">
+              La marge contrôle l'espace navigable au-delà des bords de la carte. Mettez 0 pour bloquer strictement aux bords.
+            </p>
+          )}
 
           {onResetImageSize && (
             <div className="pt-1 border-t border-gray-700/60">

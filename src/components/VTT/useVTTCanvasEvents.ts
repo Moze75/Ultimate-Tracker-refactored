@@ -346,7 +346,9 @@ const fuseWallPoints = (
 
     const clampPan = (vp: { x: number; y: number; scale: number }): { x: number; y: number; scale: number } => {
       const cfg = configRef.current;
-      const margin = cfg.panMargin ?? 200;
+      const hasMargin = cfg.panMargin !== undefined && cfg.panMargin !== null;
+      if (!cfg.clampToMap && !hasMargin) return vp;
+      const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
       const mapW = (cfg.mapWidth ?? 3000) * vp.scale;
       const mapH = (cfg.mapHeight ?? 2000) * vp.scale;
       const cw = canvas.width;

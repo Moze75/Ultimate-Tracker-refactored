@@ -84,6 +84,7 @@ export interface VTTRoomConfig {
   savedViewport?: { x: number; y: number; scale: number };  // vue enregistrée par le GM
   gmNotes?: VTTNote[];
   panMargin?: number;
+  clampToMap?: boolean;
 }
 
 // -------------------
