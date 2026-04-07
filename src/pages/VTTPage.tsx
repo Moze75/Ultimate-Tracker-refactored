@@ -39,6 +39,7 @@ import type {
 } from '../types/vtt';
 import { VTTNotesOverlay } from '../components/VTT/VTTNotesOverlay';
 import { VTTNoteEditModal } from '../components/VTT/VTTNoteEditModal';
+import { clampViewport } from '../components/VTT/vttCanvasUtils';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
 import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
@@ -651,7 +652,14 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
     setProps(Array.isArray(scene.props) ? scene.props : []);
     setSelectedPropId(null);
     setWeatherEffects(scene.config.weatherEffects || []);
-    setSavedViewport(scene.config.savedViewport ?? null);
+    {
+      const rawSv = scene.config.savedViewport ?? null;
+      const svContainer = canvasContainerRef.current;
+      const clampedSv = rawSv && svContainer
+        ? clampViewport(rawSv, scene.config, svContainer.clientWidth, svContainer.clientHeight)
+        : rawSv;
+      setSavedViewport(clampedSv);
+    }
     const sceneNotes = scene.config.gmNotes || [];
     setGmNotes(sceneNotes);
     gmNotesRef.current = sceneNotes;
@@ -661,7 +669,11 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
     // -------------------
     // Synchronisation du viewport React pour les props HTML
     // -------------------
-    const nextViewport = scene.config.savedViewport ?? { x: 0, y: 0, scale: 1 };
+    const rawViewport = scene.config.savedViewport ?? { x: 0, y: 0, scale: 1 };
+    const container = canvasContainerRef.current;
+    const nextViewport = container
+      ? clampViewport(rawViewport, scene.config, container.clientWidth, container.clientHeight)
+      : rawViewport;
     setCanvasViewport(nextViewport);
     canvasViewportRef.current = nextViewport;
 
@@ -837,14 +849,25 @@ useEffect(() => {
 
       vttService.setActiveSceneId(sceneId);
       setScenes(prev => prev.map(s => s.id === sceneId ? { ...s, ...scene, props: Array.isArray(scene.props) ? scene.props : [] } : s));
-      setSavedViewport(scene.config.savedViewport ?? null);
+      {
+        const rawSv2 = scene.config.savedViewport ?? null;
+        const svContainer2 = canvasContainerRef.current;
+        const clampedSv2 = rawSv2 && svContainer2
+          ? clampViewport(rawSv2, scene.config, svContainer2.clientWidth, svContainer2.clientHeight)
+          : rawSv2;
+        setSavedViewport(clampedSv2);
+      }
 
       // -------------------
       // Synchronisation du viewport React pour les props HTML
       // -------------------
       if (scene.config.savedViewport) {
-        setCanvasViewport(scene.config.savedViewport);
-        canvasViewportRef.current = scene.config.savedViewport;
+        const switchContainer = canvasContainerRef.current;
+        const clampedSwitchVp = switchContainer
+          ? clampViewport(scene.config.savedViewport, scene.config, switchContainer.clientWidth, switchContainer.clientHeight)
+          : scene.config.savedViewport;
+        setCanvasViewport(clampedSwitchVp);
+        canvasViewportRef.current = clampedSwitchVp;
       }
     } finally {
       switchingSceneRef.current = false;
