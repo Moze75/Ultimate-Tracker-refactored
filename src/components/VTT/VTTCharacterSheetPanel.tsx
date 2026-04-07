@@ -39,6 +39,27 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+    const panelRef = useRef<HTMLDivElement>(null);
+
+  // -------------------
+  // Sync Supabase realtime sur la table players
+  // -------------------
+  // Quand le MJ applique des dégâts via useCombatController.syncTokenHpToParticipant,
+  // celui-ci fait un supabase.from('players').update({ current_hp }) qui déclenche
+  // ce hook côté joueur B via postgres_changes — c'est le seul canal fiable
+  // pour mettre à jour la feuille ouverte chez le joueur cible.
+  usePlayerRealtimeSync({
+    playerId: token.characterId ?? '',
+    currentPlayer: player ?? ({ current_hp: 0, temporary_hp: 0 } as any),
+    onPlayerUpdated: (updates) => {
+      setPlayer(prev => {
+        if (!prev) return prev;
+        return { ...prev, ...updates };
+      });
+    },
+    soundsEnabled: false,
+  });
+
    useEffect(() => {
     if (!token.characterId) return;
     let cancelled = false;
