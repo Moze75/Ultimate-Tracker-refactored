@@ -492,6 +492,11 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         setDoors((event as any).doors || []);
         setWindows((event as any).windows || []);
         setWeatherEffects(event.config.weatherEffects || []);
+        if (role === 'gm') {
+          const sceneNotes = event.config.gmNotes || [];
+          setGmNotes(sceneNotes);
+          gmNotesRef.current = sceneNotes;
+        }
         // -------------------
         // Propagation du sceneId au joueur distant
         // Sans cela, le VTTCanvas du joueur ne déclenche jamais
@@ -823,6 +828,9 @@ useEffect(() => {
       setWindows(scene.windows || []);
       setProps(Array.isArray(scene.props) ? scene.props : []);
       setSelectedPropId(null);
+      const switchedNotes = scene.config.gmNotes || [];
+      setGmNotes(switchedNotes);
+      gmNotesRef.current = switchedNotes;
       setActiveSceneId(sceneId);
 
       localStorage.setItem(getLastSceneStorageKey(roomId!), sceneId);
