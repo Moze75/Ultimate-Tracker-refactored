@@ -2620,7 +2620,7 @@ onSelectTokens={ids => {
   onCloseCharacterSheet={() => { setCharacterSheetToken(null); setCharacterSheetForcedHp(null); }}
   onSyncTokenHpFromCharacter={handleSyncTokenHpFromCharacter}
   characterSheetForcedHp={characterSheetForcedHp}
-
+ 
   monsterStatBlockToken={monsterStatBlockToken}
   onCloseMonsterStatBlock={() => setMonsterStatBlockToken(null)}
 
