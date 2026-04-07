@@ -1164,6 +1164,7 @@ export function useCombatController({
       if (member?.player_id) {
         markLocalUpdate(member.player_id);
 
+        // Persistance longue durée dans players
         supabase
           .from('players')
           .update({ current_hp: newHp })
@@ -1171,8 +1172,26 @@ export function useCombatController({
           .then(({ error }) => {
             if (error) console.error('Erreur sync HP joueur:', error);
           });
+
+        // Filet Realtime léger : alimente vtt_player_state
+        // Le broadcast hp-changed est déjà parti (< 100ms).
+        // Ce upsert sert uniquement au rattrapage (reconnexion, arrivée tardive).
+        supabase
+          .from('vtt_player_state')
+          .upsert(
+            {
+              player_id: member.player_id,
+              room_id: campaignId,
+              current_hp: newHp,
+              temporary_hp: p.temporary_hp ?? 0,
+            },
+            { onConflict: 'player_id,room_id' }
+          )
+          .then(({ error }) => {
+            if (error) console.error('Erreur sync vtt_player_state HP:', error);
+          });
       }
-    } 
+    }
   };
 
   const participantsForSyncRef = useRef(participants);
