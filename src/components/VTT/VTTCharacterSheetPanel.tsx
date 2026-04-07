@@ -69,43 +69,30 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   }, [token.characterId]);
 
   // -------------------
-  // Synchronisation HP token → feuille de personnage
+  // Synchronisation HP forcé depuis VTTPage
   // -------------------
-  // Quand le MJ applique des dégâts via VTTCombatTab :
-  //   1. applyHp() appelle onUpdateToken() → VTTPage met à jour tokens[]
-  //   2. VTTPage re-rend VTTCharacterSheetPanel avec le token mis à jour
-  //   3. Ce useEffect détecte le changement de token.hp et met à jour player
-  // Zéro subscription supplémentaire — réutilise le broadcast TOKEN_UPDATED existant.
-   // -------------------
-  // Synchronisation HP token → feuille de personnage
-  // -------------------
-  // token.hp peut être undefined si le token n'a jamais reçu de HP.
-  // On utilise une ref pour détecter les vrais changements depuis la valeur
-  // précédente du token, y compris la transition undefined → valeur.
-  const prevTokenHpRef = useRef<number | undefined>(token.hp);
-
+  // forcedHp est mis à jour directement par VTTPage lors d'un auto-apply
+  // (handleRollResult) ou de tout autre changement HP externe.
+  // C'est la source la plus fiable car elle ne dépend pas de token.hp
+  // qui peut être undefined si le token n'a jamais été synchronisé.
   useEffect(() => {
-    // Ne synchroniser que si la valeur a vraiment changé (y compris undefined → valeur)
-    if (token.hp === prevTokenHpRef.current) return;
-    prevTokenHpRef.current = token.hp;
-
-    if (typeof token.hp !== 'number') return;
-
+    if (typeof forcedHp !== 'number') return;
     setPlayer(prev => {
       if (!prev) return prev;
-      if (prev.current_hp === token.hp) return prev;
-      return { ...prev, current_hp: token.hp as number };
+      if (prev.current_hp === forcedHp) return prev;
+      return { ...prev, current_hp: forcedHp };
     });
-  }, [token.hp]);
+  }, [forcedHp]);
 
+  // -------------------
+  // Synchronisation maxHp token → feuille (fallback)
+  // -------------------
   const prevTokenMaxHpRef = useRef<number | undefined>(token.maxHp);
 
   useEffect(() => {
     if (token.maxHp === prevTokenMaxHpRef.current) return;
     prevTokenMaxHpRef.current = token.maxHp;
-
     if (typeof token.maxHp !== 'number') return;
-
     setPlayer(prev => {
       if (!prev) return prev;
       if (prev.max_hp === token.maxHp) return prev;
