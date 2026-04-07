@@ -15,6 +15,8 @@ interface VTTCharacterSheetPanelProps {
   userId: string;
   onClose: () => void;
   onSyncTokenHp: (tokenId: string, hp: number | null, maxHp: number | null) => void;
+  /** Appelé depuis VTTPage quand les HP du token changent en externe (auto-apply, dégâts MJ) */
+  forcedHp?: number | null;
 }
 
 export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTokenHp }: VTTCharacterSheetPanelProps) {
