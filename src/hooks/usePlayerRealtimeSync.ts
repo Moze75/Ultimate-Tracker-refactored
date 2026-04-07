@@ -56,26 +56,34 @@ export function usePlayerRealtimeSync({
   }, [currentPlayer.current_hp, currentPlayer.temporary_hp]);
 
   useEffect(() => {
-    if (!playerId) {
-      console.log('[Realtime] No playerId, skipping subscription');
+    if (!playerId || !roomId) {
+      console.log('[Realtime] No playerId or roomId, skipping subscription');
       return;
     }
 
-    console.log('[Realtime] Setting up subscription for player:', playerId);
+    console.log('[Realtime] Setting up subscription on vtt_player_state for player:', playerId, 'room:', roomId);
 
+    // -------------------
+    // Écoute vtt_player_state (table légère) filtrée par room_id
+    // -------------------
+    // Plus d'écoute sur players (REPLICA IDENTITY FULL → lourd WAL).
+    // vtt_player_state ne contient que HP, conditions, initiative.
+    // Le filtre room_id=eq.X couvre tous les joueurs de la room en 1 subscription.
     const channel = supabase
-      .channel(`player-hp-sync-${playerId}`)
+      .channel(`vtt-state-player-${playerId}-${roomId}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'players',
-          filter: `id=eq.${playerId}`,
+          table: 'vtt_player_state',
+          filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          console.log('[Realtime] Received UPDATE event:', payload);
-          const { new: newData } = payload as unknown as RealtimePayload;
+          const newData = payload.new as VttPlayerStatePayload;
+
+          // Ne traiter que les updates du joueur courant
+          if (newData.player_id !== playerId) return;
 
           const timeSinceLocalUpdate = Date.now() - lastLocalUpdateRef.current;
           if (timeSinceLocalUpdate < 2000) {
@@ -86,7 +94,6 @@ export function usePlayerRealtimeSync({
           const prevHP = prevHPRef.current;
           const newCurrentHP = newData.current_hp ?? prevHP.current_hp;
           const newTempHP = newData.temporary_hp ?? prevHP.temporary_hp;
-          const newConditions = (newData as any).active_conditions;
 
           const oldTotalHP = prevHP.current_hp + prevHP.temporary_hp;
           const newTotalHP = newCurrentHP + newTempHP;
@@ -124,18 +131,12 @@ export function usePlayerRealtimeSync({
 
           const updates: Partial<Player> = {};
 
-          if (newData.current_hp !== undefined) {
-            updates.current_hp = newData.current_hp;
-          }
-          if (newData.temporary_hp !== undefined) {
-            updates.temporary_hp = newData.temporary_hp;
-          }
-          if (newConditions !== undefined) {
-            updates.conditions = newConditions;
-          }
+          if (newData.current_hp !== undefined) updates.current_hp = newData.current_hp;
+          if (newData.temporary_hp !== undefined) updates.temporary_hp = newData.temporary_hp;
+          if (newData.active_conditions !== undefined) updates.conditions = newData.active_conditions;
 
           if (Object.keys(updates).length > 0) {
-            console.log('[Realtime] Applying updates:', updates);
+            console.log('[Realtime] Applying updates from vtt_player_state:', updates);
             onPlayerUpdated(updates);
           }
         }
@@ -143,17 +144,17 @@ export function usePlayerRealtimeSync({
       .subscribe((status, err) => {
         console.log('[Realtime] Subscription status:', status, err ? `Error: ${err}` : '');
         if (status === 'SUBSCRIBED') {
-          console.log('[Realtime] Successfully subscribed to player HP changes for:', playerId);
+          console.log('[Realtime] Successfully subscribed to vtt_player_state for player:', playerId);
         } else if (status === 'CHANNEL_ERROR') {
           console.error('[Realtime] Channel error for player:', playerId);
         }
       });
 
     return () => {
-      console.log('[Realtime] Unsubscribing from player HP changes for:', playerId);
+      console.log('[Realtime] Unsubscribing from vtt_player_state for player:', playerId);
       supabase.removeChannel(channel);
     };
-  }, [playerId, onPlayerUpdated]);
+  }, [playerId, roomId, onPlayerUpdated]);
 
   const markLocalUpdate = () => {
     lastLocalUpdateRef.current = Date.now();
