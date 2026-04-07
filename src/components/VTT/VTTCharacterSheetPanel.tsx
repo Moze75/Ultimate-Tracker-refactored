@@ -69,20 +69,24 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   }, [token.characterId]);
 
   // -------------------
-  // Synchronisation HP forcé depuis VTTPage
+  // Synchronisation HP via événement custom window
   // -------------------
-  // forcedHp est mis à jour directement par VTTPage lors d'un auto-apply
-  // (handleRollResult) ou de tout autre changement HP externe.
-  // C'est la source la plus fiable car elle ne dépend pas de token.hp
-  // qui peut être undefined si le token n'a jamais été synchronisé.
+  // Écoute 'vtt:token-hp-changed' émis par VTTPage lors d'un auto-apply.
+  // Court-circuite toute la chaîne React (props, refs, batching).
+  // Utilise token.id capturé dans la closure — stable car token.id ne change pas.
   useEffect(() => {
-    if (typeof forcedHp !== 'number') return;
-    setPlayer(prev => {
-      if (!prev) return prev;
-      if (prev.current_hp === forcedHp) return prev;
-      return { ...prev, current_hp: forcedHp };
-    });
-  }, [forcedHp]);
+    const handler = (e: Event) => {
+      const { tokenId, newHp } = (e as CustomEvent).detail;
+      if (tokenId !== token.id) return;
+      setPlayer(prev => {
+        if (!prev) return prev;
+        if (prev.current_hp === newHp) return prev;
+        return { ...prev, current_hp: newHp };
+      });
+    };
+    window.addEventListener('vtt:token-hp-changed', handler);
+    return () => window.removeEventListener('vtt:token-hp-changed', handler);
+  }, [token.id]);
 
   // -------------------
   // Synchronisation maxHp token → feuille (fallback)
