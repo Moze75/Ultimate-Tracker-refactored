@@ -348,17 +348,29 @@ const fuseWallPoints = (
       const cfg = configRef.current;
       const hasMargin = cfg.panMargin !== undefined && cfg.panMargin !== null;
       if (!cfg.clampToMap && !hasMargin) return vp;
-      const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
-      const mapW = (cfg.mapWidth ?? 3000) * vp.scale;
-      const mapH = (cfg.mapHeight ?? 2000) * vp.scale;
+
+      const rawMapW = cfg.mapWidth ?? 3000;
+      const rawMapH = cfg.mapHeight ?? 2000;
       const cw = canvas.width;
       const ch = canvas.height;
+
+      let scale = vp.scale;
+
+      if (cfg.clampToMap) {
+        const minScale = Math.max(cw / rawMapW, ch / rawMapH);
+        scale = Math.max(scale, minScale);
+      }
+
+      const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
+      const mapW = rawMapW * scale;
+      const mapH = rawMapH * scale;
       const minX = cw - mapW - margin;
       const maxX = margin;
       const minY = ch - mapH - margin;
       const maxY = margin;
+
       return {
-        scale: vp.scale,
+        scale,
         x: Math.min(maxX, Math.max(minX, vp.x)),
         y: Math.min(maxY, Math.max(minY, vp.y)),
       };
@@ -1767,7 +1779,7 @@ if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) 
       if (!e.shiftKey) {
         const sp = getCanvasXY(e.clientX, e.clientY);
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
+        const newScale = Math.max(0.1, Math.min(4, vp.scale * delta));
         const wx = (sp.x - vp.x) / vp.scale;
         const wy = (sp.y - vp.y) / vp.scale;
         viewportRef.current = clampPan({ scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale });

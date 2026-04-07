@@ -433,7 +433,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         // Sans cela, le VTTCanvas du joueur reste sur sceneId=null
         // et ne restaure jamais le masque exploré depuis localStorage
         // -------------------
-        if ((event.state as any).activeSceneId && !activeSceneIdRef.current) {
+        if ((event.state as any).activeSceneId && !activeSceneIdRef.current && event.state.yourRole !== 'gm') {
           const scId = (event.state as any).activeSceneId as string;
           setActiveSceneId(scId);
           activeSceneIdRef.current = scId;
@@ -716,7 +716,7 @@ useEffect(() => {
       if (data && data.length > 0) {
         const parsed = data.map(dbSceneToVTTScene);
         setScenes(parsed);
-        if (!activeSceneIdRef.current) {
+        if (!sceneLoadedRef.current) {
           const lastSceneId = localStorage.getItem(getLastSceneStorageKey(roomId));
           const restoredScene = lastSceneId
             ? parsed.find(scene => scene.id === lastSceneId)
