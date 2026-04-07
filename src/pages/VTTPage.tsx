@@ -2611,8 +2611,9 @@ onSelectTokens={ids => {
       ? (tokens.find(t => t.id === characterSheetToken.id) ?? characterSheetToken)
       : null
   }
-  onCloseCharacterSheet={() => setCharacterSheetToken(null)}
+  onCloseCharacterSheet={() => { setCharacterSheetToken(null); setCharacterSheetForcedHp(null); }}
   onSyncTokenHpFromCharacter={handleSyncTokenHpFromCharacter}
+  characterSheetForcedHp={characterSheetForcedHp}
 
   monsterStatBlockToken={monsterStatBlockToken}
   onCloseMonsterStatBlock={() => setMonsterStatBlockToken(null)}
