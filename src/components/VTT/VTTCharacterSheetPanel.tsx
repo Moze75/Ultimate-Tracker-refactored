@@ -104,8 +104,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     // -------------------
     onSyncTokenHp(
       token.id,
-      typeof updated.currentHp === 'number' ? updated.currentHp : null,
-      typeof updated.maxHp === 'number' ? updated.maxHp : null,
+      typeof updated.current_hp === 'number' ? updated.current_hp : null,
+      typeof updated.max_hp === 'number' ? updated.max_hp : null,
     );
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
