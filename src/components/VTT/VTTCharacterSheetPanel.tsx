@@ -74,18 +74,36 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   //   2. VTTPage re-rend VTTCharacterSheetPanel avec le token mis à jour
   //   3. Ce useEffect détecte le changement de token.hp et met à jour player
   // Zéro subscription supplémentaire — réutilise le broadcast TOKEN_UPDATED existant.
+   // -------------------
+  // Synchronisation HP token → feuille de personnage
+  // -------------------
+  // token.hp peut être undefined si le token n'a jamais reçu de HP.
+  // On utilise une ref pour détecter les vrais changements depuis la valeur
+  // précédente du token, y compris la transition undefined → valeur.
+  const prevTokenHpRef = useRef<number | undefined>(token.hp);
+
   useEffect(() => {
-    if (token.hp === undefined || token.hp === null) return;
+    // Ne synchroniser que si la valeur a vraiment changé (y compris undefined → valeur)
+    if (token.hp === prevTokenHpRef.current) return;
+    prevTokenHpRef.current = token.hp;
+
+    if (typeof token.hp !== 'number') return;
+
     setPlayer(prev => {
       if (!prev) return prev;
-      // Ne pas écraser si le joueur vient de modifier lui-même (évite les flashs)
       if (prev.current_hp === token.hp) return prev;
       return { ...prev, current_hp: token.hp as number };
     });
   }, [token.hp]);
 
+  const prevTokenMaxHpRef = useRef<number | undefined>(token.maxHp);
+
   useEffect(() => {
-    if (token.maxHp === undefined || token.maxHp === null) return;
+    if (token.maxHp === prevTokenMaxHpRef.current) return;
+    prevTokenMaxHpRef.current = token.maxHp;
+
+    if (typeof token.maxHp !== 'number') return;
+
     setPlayer(prev => {
       if (!prev) return prev;
       if (prev.max_hp === token.maxHp) return prev;
