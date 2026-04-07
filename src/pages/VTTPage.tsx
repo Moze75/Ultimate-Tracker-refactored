@@ -1939,10 +1939,14 @@ useEffect(() => {
           prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
         );
         syncTokenHpRef.current?.(token.id, newHp);
-        // Force la mise à jour du snapshot + HP forcé dans la fiche si elle est ouverte sur ce token
+        // Force la mise à jour du snapshot characterSheetToken si la fiche de ce token est ouverte
         setCharacterSheetToken((prev) =>
           prev?.id === token.id ? { ...prev, hp: newHp } : prev
         );
+        // Utilise la ref (pas la closure) pour éviter le problème de deps stales
+        if (characterSheetTokenRef.current?.id === token.id) {
+          setCharacterSheetForcedHp(newHp);
+        }
         if (characterSheetToken?.id === token.id) {
           setCharacterSheetForcedHp(newHp);
         }
