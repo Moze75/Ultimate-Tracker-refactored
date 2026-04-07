@@ -161,16 +161,17 @@ export function useCombatPlayersRealtimeSync({
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'players',
-          filter: `id=in.(${playerIds.join(',')})`,
+          table: 'vtt_player_state',
+          filter: `player_id=in.(${playerIds.join(',')})`,
         },
         (payload) => {
-          const newData = payload.new as PlayerHPUpdate;
-          if (recentLocalUpdatesRef.current.has(newData.id)) return;
+          const newData = payload.new as VttPlayerStateUpdate;
+          if (!newData?.player_id) return;
+          if (recentLocalUpdatesRef.current.has(newData.player_id)) return;
 
-          const member = membersRef.current.find((m) => m.player_id === newData.id);
+          const member = membersRef.current.find((m) => m.player_id === newData.player_id);
           if (!member) return;
 
           const participant = participantsRef.current.find(
