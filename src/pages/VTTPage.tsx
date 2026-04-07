@@ -1931,18 +1931,13 @@ useEffect(() => {
       const targeted = getTargetedTokensForUser(tokensRef.current, userId);
       targeted.forEach((token) => {
         const newHp = computeNewHp(token, result.total);
-        // Broadcast vers le serveur
         vttService.send({ type: 'UPDATE_TOKEN', tokenId: token.id, changes: { hp: newHp } });
-        // Mise à jour optimiste locale de tokens[] → re-rend VTTCharacterSheetPanel si ouvert
         setTokens((prev) =>
           prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
         );
-        // Mise à jour de l'onglet combat
         syncTokenHpRef.current?.(token.id, newHp);
-        // Mise à jour de la feuille de perso si ouverte sur ce token
-        // (setTokens ci-dessus suffit si VTTModals passe le token live,
-        //  mais on force aussi le player.current_hp via setCharacterSheetToken)
-        setCharacterSheetToken(prev =>
+        // Force la mise à jour du snapshot characterSheetToken si la fiche de ce token est ouverte
+        setCharacterSheetToken((prev) =>
           prev?.id === token.id ? { ...prev, hp: newHp } : prev
         );
       });
