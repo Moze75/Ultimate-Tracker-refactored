@@ -37,7 +37,8 @@ export function usePlayerRealtimeSync({
   }, [currentPlayer.current_hp, currentPlayer.temporary_hp]);
 
   useEffect(() => {
-    if (!playerId) return;
+    // roomId null = GamePage hors-VTT, pas de subscription nécessaire
+    if (!playerId || !roomId) return;
 
     const channel = supabase
       .channel(`player-hp-sync-${playerId}`)
