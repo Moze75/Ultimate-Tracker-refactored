@@ -83,6 +83,7 @@ export interface VTTRoomConfig {
   weatherEffects?: VTTWeatherEffect[];  // effets actifs (cumulables)
   savedViewport?: { x: number; y: number; scale: number };  // vue enregistrée par le GM
   gmNotes?: VTTNote[];
+  panMargin?: number;
 }
 
 // -------------------

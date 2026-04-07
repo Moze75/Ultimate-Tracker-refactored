@@ -344,6 +344,23 @@ const fuseWallPoints = (
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const clampPan = (vp: { x: number; y: number; scale: number }): { x: number; y: number; scale: number } => {
+      const cfg = configRef.current;
+      const margin = cfg.panMargin ?? 200;
+      const mapW = (cfg.mapWidth ?? 3000) * vp.scale;
+      const mapH = (cfg.mapHeight ?? 2000) * vp.scale;
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const minX = cw - mapW - margin;
+      const maxX = margin;
+      const minY = ch - mapH - margin;
+      const maxY = margin;
+      return {
+        scale: vp.scale,
+        x: Math.min(maxX, Math.max(minX, vp.x)),
+        y: Math.min(maxY, Math.max(minY, vp.y)),
+      };
+    };
 
     const onMouseDown = (e: MouseEvent) => {
       // Nouveau comportement :
@@ -1417,7 +1434,7 @@ const fuseWallPoints = (
         const dx = e.clientX - lastPanRef.current.x;
         const dy = e.clientY - lastPanRef.current.y;
         lastPanRef.current = { x: e.clientX, y: e.clientY };
-        viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        viewportRef.current = clampPan({ ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy });
         onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
         return;
@@ -1751,14 +1768,14 @@ if (activeToolRef.current === 'wall-select' && draggingDoorEndpointRef.current) 
         const newScale = Math.max(0.2, Math.min(4, vp.scale * delta));
         const wx = (sp.x - vp.x) / vp.scale;
         const wy = (sp.y - vp.y) / vp.scale;
-        viewportRef.current = { scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale };
+        viewportRef.current = clampPan({ scale: newScale, x: sp.x - wx * newScale, y: sp.y - wy * newScale });
       } else {
         // ── Scroll 2 doigts trackpad → PAN ────────────────────────────────────
-        viewportRef.current = {
+        viewportRef.current = clampPan({
           ...vp,
           x: vp.x - e.deltaX,
           y: vp.y - e.deltaY,
-        };
+        });
       }
 
       onViewportChangeRef.current?.(viewportRef.current);
@@ -1899,11 +1916,11 @@ if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
           const panDx = newMid.x - lastTouchMid.x;
           const panDy = newMid.y - lastTouchMid.y;
 
-          viewportRef.current = {
+          viewportRef.current = clampPan({
             scale: newScale,
             x: sp.x - wx * newScale + panDx,
             y: sp.y - wy * newScale + panDy,
-          };
+          });
           onViewportChangeRef.current?.(viewportRef.current);
           drawRef.current();
         }
@@ -1915,11 +1932,11 @@ if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
         const dx = e.touches[0].clientX - lastPanRef.current.x;
         const dy = e.touches[0].clientY - lastPanRef.current.y;
         lastPanRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        viewportRef.current = {
+        viewportRef.current = clampPan({
           ...viewportRef.current,
           x: viewportRef.current.x + dx,
           y: viewportRef.current.y + dy,
-        };
+        });
         onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
       }
@@ -1955,7 +1972,7 @@ if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
         const dx = e.clientX - lastPanRef.current.x;
         const dy = e.clientY - lastPanRef.current.y;
         lastPanRef.current = { x: e.clientX, y: e.clientY };
-        viewportRef.current = { ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy };
+        viewportRef.current = clampPan({ ...viewportRef.current, x: viewportRef.current.x + dx, y: viewportRef.current.y + dy });
         onViewportChangeRef.current?.(viewportRef.current);
         drawRef.current();
       }

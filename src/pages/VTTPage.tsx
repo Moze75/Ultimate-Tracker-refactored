@@ -1374,6 +1374,16 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     }
   }, []);
 
+  const handleResetImageSize = useCallback((sceneId: string) => {
+    const scene = scenes.find(s => s.id === sceneId);
+    if (!scene?.config.mapImageUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      handleSaveSceneConfig(sceneId, { mapWidth: img.naturalWidth, mapHeight: img.naturalHeight });
+    };
+    img.src = scene.config.mapImageUrl;
+  }, [scenes, handleSaveSceneConfig]);
+
   const handleCalibrationPoint = useCallback((pt: { x: number; y: number }) => {
     setCalibrationPoints(prev => {
       if (prev.length >= 2) return [pt];
@@ -2566,6 +2576,7 @@ onSelectTokens={ids => {
   sceneConfigEdit={sceneConfigEdit}
   onCloseSceneConfig={() => setSceneConfigEdit(null)}
   onSaveSceneConfig={handleSaveSceneConfig}
+  onResetImageSize={handleResetImageSize}
 
   characterSheetToken={characterSheetToken}
   onCloseCharacterSheet={() => setCharacterSheetToken(null)}

@@ -96,6 +96,7 @@ export interface VTTModalsProps {
   sceneConfigEdit: SceneConfigEdit | null;
   onCloseSceneConfig: () => void;
   onSaveSceneConfig: (sceneId: string, changes: Partial<VTTRoomConfig>) => void;
+  onResetImageSize?: (sceneId: string) => void;
 
   // State modales personnages
   characterSheetToken: VTTToken | null;
@@ -159,6 +160,7 @@ export function VTTModals({
   sceneConfigEdit,
   onCloseSceneConfig,
   onSaveSceneConfig,
+  onResetImageSize,
 
   characterSheetToken,
   onCloseCharacterSheet,
@@ -300,6 +302,7 @@ export function VTTModals({
           config={sceneConfigEdit.config}
           onSave={changes => onSaveSceneConfig(sceneConfigEdit.sceneId, changes)}
           onClose={onCloseSceneConfig}
+          onResetImageSize={onResetImageSize ? () => onResetImageSize(sceneConfigEdit.sceneId) : undefined}
         />
       )}
 

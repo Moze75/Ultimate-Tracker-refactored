@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Map } from 'lucide-react';
+import { X, Map, RefreshCw } from 'lucide-react';
 import type { VTTRoomConfig } from '../../types/vtt';
 
 interface VTTSceneConfigModalProps {
@@ -7,13 +7,15 @@ interface VTTSceneConfigModalProps {
   config: VTTRoomConfig;
   onSave: (changes: Partial<VTTRoomConfig>) => void;
   onClose: () => void;
+  onResetImageSize?: () => void;
 }
 
-export function VTTSceneConfigModal({ sceneName, config, onSave, onClose }: VTTSceneConfigModalProps) {
+export function VTTSceneConfigModal({ sceneName, config, onSave, onClose, onResetImageSize }: VTTSceneConfigModalProps) {
   const [mapUrl, setMapUrl] = useState(config.mapImageUrl || '');
   const [gridSize, setGridSize] = useState(config.gridSize || 60);
   const [mapWidth, setMapWidth] = useState(config.mapWidth || 3000);
   const [mapHeight, setMapHeight] = useState(config.mapHeight || 2000);
+  const [panMargin, setPanMargin] = useState(config.panMargin ?? 200);
 
   const handleSave = () => {
     onSave({
@@ -21,7 +23,13 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose }: VTTS
       gridSize: Math.max(10, Number(gridSize) || 60),
       mapWidth: Math.max(200, Number(mapWidth) || 3000),
       mapHeight: Math.max(200, Number(mapHeight) || 2000),
+      panMargin: Math.max(0, Number(panMargin) || 0),
     });
+    onClose();
+  };
+
+  const handleResetImageSize = () => {
+    onResetImageSize?.();
     onClose();
   };
 
@@ -87,17 +95,49 @@ export function VTTSceneConfigModal({ sceneName, config, onSave, onClose }: VTTS
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Taille de case (px)</label>
-            <input
-              type="number"
-              value={gridSize}
-              onChange={e => setGridSize(Number(e.target.value))}
-              min={10}
-              max={200}
-              className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
-            />
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-400 mb-1">Taille de case (px)</label>
+              <input
+                type="number"
+                value={gridSize}
+                onChange={e => setGridSize(Number(e.target.value))}
+                min={10}
+                max={200}
+                className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-400 mb-1">
+                Marge de déplacement (px)
+              </label>
+              <input
+                type="number"
+                value={panMargin}
+                onChange={e => setPanMargin(Number(e.target.value))}
+                min={0}
+                max={2000}
+                step={50}
+                className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
           </div>
+
+          <p className="text-[11px] text-gray-500">
+            La marge contrôle l'espace navigable au-delà des bords de la carte. Mettez 0 pour bloquer strictement aux bords.
+          </p>
+
+          {onResetImageSize && (
+            <div className="pt-1 border-t border-gray-700/60">
+              <button
+                onClick={handleResetImageSize}
+                className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 hover:text-white text-sm transition-colors"
+              >
+                <RefreshCw size={13} />
+                Réinitialiser la taille de l'image importée
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 px-4 pb-4">
