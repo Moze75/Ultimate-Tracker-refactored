@@ -39,8 +39,6 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-    const panelRef = useRef<HTMLDivElement>(null);
-
   // -------------------
   // Sync Supabase realtime sur la table players
   // -------------------
@@ -59,6 +57,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     },
     soundsEnabled: false,
   });
+
+  
 
    useEffect(() => {
     if (!token.characterId) return;
