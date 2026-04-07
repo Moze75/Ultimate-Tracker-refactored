@@ -129,6 +129,7 @@ interface VTTWeatherOverlayProps {
   width: number;
   height: number;
   viewport?: { x: number; y: number; scale: number };
+  viewportRef?: React.RefObject<{ x: number; y: number; scale: number }>;
 }
 
 // -------------------
@@ -668,7 +669,7 @@ const densityVal  = Math.min(0.85, Math.max(0, fe.density ?? 0.35));
 // -------------------
 // Gestion du composant principal
 // -------------------
-export function VTTWeatherOverlay({ effects, width, height, viewport = { x: 0, y: 0, scale: 1 } }: VTTWeatherOverlayProps) {
+export function VTTWeatherOverlay({ effects, width, height, viewport, viewportRef: externalViewportRef }: VTTWeatherOverlayProps) {
 const canvasScreenRef = useRef<HTMLCanvasElement>(null); // clouds
 const canvasNormalRef = useRef<HTMLCanvasElement>(null); // crows
 const canvasAddRef    = useRef<HTMLCanvasElement>(null); // embers
@@ -683,13 +684,14 @@ const fogGLA = useFogWebGL(canvasFogARef);
 const fogGLB = useFogWebGL(canvasFogBRef);
 
   const effectsRef  = useRef<VTTWeatherEffect[]>(effects);
-  const viewportRef = useRef(viewport);
+  const internalViewportRef = useRef(viewport ?? { x: 0, y: 0, scale: 1 });
+  const viewportRef = externalViewportRef ?? internalViewportRef;
   const layersRef   = useRef<WeatherLayer[]>([]);
   const rafRef      = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
   effectsRef.current  = effects;
-  viewportRef.current = viewport;
+  if (!externalViewportRef && viewport) internalViewportRef.current = viewport;
 
   // -------------------
   // gestion de la synchro des layers particules

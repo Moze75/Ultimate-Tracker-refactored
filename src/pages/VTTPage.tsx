@@ -2201,7 +2201,7 @@ onMouseDown={e => {
               effects={weatherEffects}
               width={canvasContainerRef.current.clientWidth || window.innerWidth}
               height={canvasContainerRef.current.clientHeight || window.innerHeight}
-              viewport={canvasViewport}
+              viewportRef={canvasViewportRef}
             />
           )}
 

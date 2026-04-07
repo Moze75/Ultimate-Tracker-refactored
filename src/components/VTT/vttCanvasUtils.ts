@@ -23,6 +23,12 @@ export function clampViewport(
   if (cfg.clampToMap) {
     const minScale = Math.max(canvasWidth / rawMapW, canvasHeight / rawMapH);
     scale = Math.max(scale, minScale);
+  } else if (hasMargin) {
+    const margin = cfg.panMargin ?? 200;
+    const minScaleX = (canvasWidth - 2 * margin) / rawMapW;
+    const minScaleY = (canvasHeight - 2 * margin) / rawMapH;
+    const minScale = Math.max(minScaleX, minScaleY);
+    if (minScale > 0) scale = Math.max(scale, minScale);
   }
 
   const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
