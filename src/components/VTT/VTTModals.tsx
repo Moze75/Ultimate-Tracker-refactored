@@ -312,14 +312,13 @@ export function VTTModals({
       {/* Fiche de personnage                                                  */}
       {/* ------------------------------------------------------------------ */}
       {characterSheetToken && (
-        // characterSheetToken est déjà le token live résolu par VTTPage via tokens.find()
-        // On ne relit pas tokensRef ici pour ne pas court-circuiter la prop fraîche
         <VTTCharacterSheetPanel
           token={characterSheetToken}
           role={role}
           userId={userId}
           onClose={onCloseCharacterSheet}
           onSyncTokenHp={onSyncTokenHpFromCharacter}
+          forcedHp={characterSheetForcedHp}
         />
       )}
 
