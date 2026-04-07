@@ -35,7 +35,7 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+   useEffect(() => {
     if (!token.characterId) return;
     let cancelled = false;
     setLoading(true);
@@ -65,6 +65,33 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     fetchData();
     return () => { cancelled = true; };
   }, [token.characterId]);
+
+  // -------------------
+  // Synchronisation HP token → feuille de personnage
+  // -------------------
+  // Quand le MJ applique des dégâts via VTTCombatTab :
+  //   1. applyHp() appelle onUpdateToken() → VTTPage met à jour tokens[]
+  //   2. VTTPage re-rend VTTCharacterSheetPanel avec le token mis à jour
+  //   3. Ce useEffect détecte le changement de token.hp et met à jour player
+  // Zéro subscription supplémentaire — réutilise le broadcast TOKEN_UPDATED existant.
+  useEffect(() => {
+    if (token.hp === undefined || token.hp === null) return;
+    setPlayer(prev => {
+      if (!prev) return prev;
+      // Ne pas écraser si le joueur vient de modifier lui-même (évite les flashs)
+      if (prev.current_hp === token.hp) return prev;
+      return { ...prev, current_hp: token.hp as number };
+    });
+  }, [token.hp]);
+
+  useEffect(() => {
+    if (token.maxHp === undefined || token.maxHp === null) return;
+    setPlayer(prev => {
+      if (!prev) return prev;
+      if (prev.max_hp === token.maxHp) return prev;
+      return { ...prev, max_hp: token.maxHp as number };
+    });
+  }, [token.maxHp]);
 
   useEffect(() => {
     if (!player) return;
