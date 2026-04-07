@@ -437,11 +437,9 @@ function buildFogFragSrc(mode: 0 | 1 | 2): string {
     }
 
     void main(void){
-      vec2 uv = gl_FragCoord.xy / uResolution; // 0..1 écran
-      uv.y = 1.0 - uv.y;
-
-      vec2 uvShift = vec2(u_vpX / uResolution.x, u_vpY / uResolution.y) / u_vpScale;
-      vec2 p = (uv - uvShift) * 7.0 * dimensions * 0.25;
+      float screenY = uResolution.y - gl_FragCoord.y;
+      vec2 worldPos = vec2(gl_FragCoord.x - u_vpX, screenY - u_vpY) / u_vpScale;
+      vec2 p = worldPos / uResolution * 7.0 * dimensions * 0.25;
       if (rotation != 0.0) p = rot2(rotation) * (p - 0.5) + 0.5;
 
       float t = time * 0.25;
