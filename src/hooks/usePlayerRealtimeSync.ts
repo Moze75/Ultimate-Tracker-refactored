@@ -5,9 +5,15 @@ import { triggerBloodSplash } from '../utils/bloodSplash';
 import { triggerHealingAura } from '../utils/healingAura';
 import { audioManager } from '../utils/audioManager';
 
-interface RealtimePayload {
-  new: Partial<Player>;
-  old: Partial<Player>;
+// -------------------
+// Payload de vtt_player_state (table légère, remplace players pour le Realtime)
+// -------------------
+interface VttPlayerStatePayload {
+  player_id: string;
+  room_id: string;
+  current_hp: number;
+  temporary_hp: number;
+  active_conditions: string[];
 }
 
 interface UsePlayerRealtimeSyncOptions {
