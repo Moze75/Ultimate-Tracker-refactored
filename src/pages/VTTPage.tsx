@@ -1937,10 +1937,13 @@ useEffect(() => {
           prev.map((t) => (t.id === token.id ? { ...t, hp: newHp } : t)),
         );
         syncTokenHpRef.current?.(token.id, newHp);
-        // Force la mise à jour du snapshot characterSheetToken si la fiche de ce token est ouverte
+        // Force la mise à jour du snapshot + HP forcé dans la fiche si elle est ouverte sur ce token
         setCharacterSheetToken((prev) =>
           prev?.id === token.id ? { ...prev, hp: newHp } : prev
         );
+        if (characterSheetToken?.id === token.id) {
+          setCharacterSheetForcedHp(newHp);
+        }
       });
     }
   }, [role, userId, userName]);
