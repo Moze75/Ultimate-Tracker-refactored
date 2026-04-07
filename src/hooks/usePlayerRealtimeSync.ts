@@ -5,13 +5,9 @@ import { triggerBloodSplash } from '../utils/bloodSplash';
 import { triggerHealingAura } from '../utils/healingAura';
 import { audioManager } from '../utils/audioManager';
 
-interface RealtimePayload {
-  new: Partial<Player>;
-  old: Partial<Player>;
-}
-
 interface UsePlayerRealtimeSyncOptions {
   playerId: string;
+  roomId: string | null; // null = hors VTT, subscription inactive
   currentPlayer: Player;
   onPlayerUpdated: (updates: Partial<Player>) => void;
   soundsEnabled?: boolean;
