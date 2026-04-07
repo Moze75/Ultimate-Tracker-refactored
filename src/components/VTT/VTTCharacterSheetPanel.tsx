@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { X, ChevronRight, ChevronLeft, Loader2, User, GripVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { vttService } from '../../services/vttService';
 import type { VTTToken, VTTRole } from '../../types/vtt';
 import type { Player } from '../../types/dnd';
 import { DesktopView } from '../DesktopView';
