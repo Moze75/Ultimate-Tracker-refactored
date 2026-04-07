@@ -309,15 +309,20 @@ export function VTTModals({
       {/* ------------------------------------------------------------------ */}
       {/* Fiche de personnage                                                  */}
       {/* ------------------------------------------------------------------ */}
-      {characterSheetToken && (
-        <VTTCharacterSheetPanel
-          token={characterSheetToken}
-          role={role}
-          userId={userId}
-          onClose={onCloseCharacterSheet}
-          onSyncTokenHp={onSyncTokenHpFromCharacter}
-        />
-      )}
+      {characterSheetToken && (() => {
+        // Résoudre le token live depuis tokensRef pour que les HP
+        // restent synchronisés en temps réel (MJ applique dégâts → token.hp change → panel se met à jour)
+        const liveToken = tokensRef.current.find(t => t.id === characterSheetToken.id) ?? characterSheetToken;
+        return (
+          <VTTCharacterSheetPanel
+            token={liveToken}
+            role={role}
+            userId={userId}
+            onClose={onCloseCharacterSheet}
+            onSyncTokenHp={onSyncTokenHpFromCharacter}
+          />
+        );
+      })()}
 
       {/* ------------------------------------------------------------------ */}
       {/* Bloc de stats monstre                                                */}
