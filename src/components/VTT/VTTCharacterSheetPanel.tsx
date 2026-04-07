@@ -19,7 +19,7 @@ interface VTTCharacterSheetPanelProps {
   forcedHp?: number | null;
 }
 
-export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTokenHp }: VTTCharacterSheetPanelProps) {
+export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTokenHp, forcedHp }: VTTCharacterSheetPanelProps) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [inventory, setInventory] = useState<any[]>([]);
   const [classSections, setClassSections] = useState<any[] | null>(null);
