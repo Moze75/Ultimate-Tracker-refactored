@@ -224,6 +224,7 @@ export function VTTPage({ session, onBack }: VTTPageProps) {
   
   const [editingToken, setEditingToken] = useState<VTTToken | null>(null);
   const [characterSheetToken, setCharacterSheetToken] = useState<VTTToken | null>(null);
+  const [characterSheetForcedHp, setCharacterSheetForcedHp] = useState<number | null>(null);
   const [monsterStatBlockToken, setMonsterStatBlockToken] = useState<VTTToken | null>(null);
   const [diceRollData, setDiceRollData] = useState<{
     type: 'ability' | 'saving-throw' | 'skill' | 'attack' | 'damage';
