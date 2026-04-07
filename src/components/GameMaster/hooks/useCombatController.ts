@@ -1225,6 +1225,26 @@ export function useCombatController({
         current_hp: clampedHp,
         temporary_hp: matched.temporary_hp ?? 0,
       });
+
+      // -------------------
+      // Persistance dans la table players
+      // -------------------
+      // Nécessaire quand les dégâts viennent de la fiche d'un PNJ (auto-apply)
+      // et non de l'onglet combat. Sans ce write, la fiche du joueur cible
+      // affiche les anciens HP au chargement (elle lit depuis Supabase).
+      if (matched.participant_type === 'player' && matched.player_member_id) {
+        const member = members.find((m) => m.id === matched.player_member_id);
+        if (member?.player_id) {
+          markLocalUpdate(member.player_id);
+          supabase
+            .from('players')
+            .update({ current_hp: clampedHp })
+            .eq('id', member.player_id)
+            .then(({ error }) => {
+              if (error) console.error('Erreur sync HP joueur (syncTokenHpToParticipant):', error);
+            });
+        }
+      }
     },
     [members, markLocalUpdate, sendHpBroadcast, handleUpdateParticipant],
   );
