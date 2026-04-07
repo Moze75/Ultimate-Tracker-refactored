@@ -27,6 +27,7 @@ interface UsePlayerRealtimeSyncOptions {
 
 export function usePlayerRealtimeSync({
   playerId,
+  roomId,
   currentPlayer,
   onPlayerUpdated,
   soundsEnabled = true,
