@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { CampaignMember, EncounterParticipant } from '../../../types/campaign';
 
-interface PlayerHPUpdate {
+interface VttPlayerStateUpdate {
   id: string;
+  player_id: string;
   current_hp: number;
   temporary_hp: number;
 }
