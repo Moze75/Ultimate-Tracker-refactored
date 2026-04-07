@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { VTTToken, VTTDoor, VTTWindow } from '../../types/vtt';
-import { wallBlocksToken, getDoorT1T2, getWindowT1T2 } from './vttCanvasUtils';
+import { wallBlocksToken, getDoorT1T2, getWindowT1T2, clampViewport } from './vttCanvasUtils';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasRefs {
@@ -344,37 +344,8 @@ const fuseWallPoints = (
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const clampPan = (vp: { x: number; y: number; scale: number }): { x: number; y: number; scale: number } => {
-      const cfg = configRef.current;
-      const hasMargin = cfg.panMargin !== undefined && cfg.panMargin !== null;
-      if (!cfg.clampToMap && !hasMargin) return vp;
-
-      const rawMapW = cfg.mapWidth ?? 3000;
-      const rawMapH = cfg.mapHeight ?? 2000;
-      const cw = canvas.width;
-      const ch = canvas.height;
-
-      let scale = vp.scale;
-
-      if (cfg.clampToMap) {
-        const minScale = Math.max(cw / rawMapW, ch / rawMapH);
-        scale = Math.max(scale, minScale);
-      }
-
-      const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
-      const mapW = rawMapW * scale;
-      const mapH = rawMapH * scale;
-      const minX = cw - mapW - margin;
-      const maxX = margin;
-      const minY = ch - mapH - margin;
-      const maxY = margin;
-
-      return {
-        scale,
-        x: Math.min(maxX, Math.max(minX, vp.x)),
-        y: Math.min(maxY, Math.max(minY, vp.y)),
-      };
-    };
+    const clampPan = (vp: { x: number; y: number; scale: number }): { x: number; y: number; scale: number } =>
+      clampViewport(vp, configRef.current, canvas.width, canvas.height);
 
     const onMouseDown = (e: MouseEvent) => {
       // Nouveau comportement :

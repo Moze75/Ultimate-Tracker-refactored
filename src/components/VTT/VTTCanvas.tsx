@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type { VTTToken, VTTFogStroke, VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
 import type { VTTCanvasHandle, VTTCanvasProps } from './vttCanvasTypes';
-import { wallBlocksToken } from './vttCanvasUtils';
+import { wallBlocksToken, clampViewport } from './vttCanvasUtils';
 import { applyStrokeToFogCanvas, buildFogCanvas } from './vttCanvasFog';
 import { useVTTCanvasEvents } from './useVTTCanvasEvents';
 import { drawVTTCanvas } from './vttCanvasDraw';
@@ -105,8 +105,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
 
       const start = { ...viewportRef.current };
-      const targetX = canvas.width / 2 - x * start.scale;
-      const targetY = canvas.height / 2 - y * start.scale;
+      const rawTarget = clampViewport(
+        { scale: start.scale, x: canvas.width / 2 - x * start.scale, y: canvas.height / 2 - y * start.scale },
+        configRef.current, canvas.width, canvas.height,
+      );
+      const targetX = rawTarget.x;
+      const targetY = rawTarget.y;
       const duration = 280;
       const startTime = performance.now();
 
@@ -153,11 +157,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
 
       const vp = viewportRef.current;
-      viewportRef.current = {
-        ...vp,
-        x: canvas.width / 2 - x * vp.scale,
-        y: canvas.height / 2 - y * vp.scale,
-      };
+      viewportRef.current = clampViewport(
+        { scale: vp.scale, x: canvas.width / 2 - x * vp.scale, y: canvas.height / 2 - y * vp.scale },
+        configRef.current, canvas.width, canvas.height,
+      );
 
       onViewportChangeRef.current?.({
         x: viewportRef.current.x,
@@ -238,8 +241,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
         }
 
         const vp = viewportRef.current;
-        const targetX = currentCanvas.width / 2 - target.x * vp.scale;
-        const targetY = currentCanvas.height / 2 - target.y * vp.scale;
+        const rawTargetX = currentCanvas.width / 2 - target.x * vp.scale;
+        const rawTargetY = currentCanvas.height / 2 - target.y * vp.scale;
+        const clampedTarget = clampViewport(
+          { scale: vp.scale, x: rawTargetX, y: rawTargetY },
+          configRef.current, currentCanvas.width, currentCanvas.height,
+        );
+        const targetX = clampedTarget.x;
+        const targetY = clampedTarget.y;
 
         const lerp = 0.18;
         const nextX = vp.x + (targetX - vp.x) * lerp;
@@ -1248,13 +1257,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       Math.abs(prev.scale - initialViewport.scale) < 0.0001
     ) return;
     lastAppliedInitialViewportRef.current = { ...initialViewport };
-    viewportRef.current = { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
+    const canvas = canvasRef.current;
+    const clamped = canvas
+      ? clampViewport(
+          { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale },
+          configRef.current, canvas.width, canvas.height,
+        )
+      : { x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale };
+    viewportRef.current = clamped;
     draw();
     // -------------------
     // Notifie VTTPage du viewport réel appliqué
     // (sans cela, canvasViewport reste à {x:0,y:0,scale:1} jusqu'au 1er mouvement)
     // -------------------
-    onViewportChangeRef.current?.({ x: initialViewport.x, y: initialViewport.y, scale: initialViewport.scale });
+    onViewportChangeRef.current?.(clamped);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialViewport?.x, initialViewport?.y, initialViewport?.scale]);
 
@@ -1366,8 +1382,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
 
       const start = { ...viewportRef.current };
-      const targetX = canvas.width / 2 - x * start.scale;
-      const targetY = canvas.height / 2 - y * start.scale;
+      const rawTarget = clampViewport(
+        { scale: start.scale, x: canvas.width / 2 - x * start.scale, y: canvas.height / 2 - y * start.scale },
+        configRef.current, canvas.width, canvas.height,
+      );
+      const targetX = rawTarget.x;
+      const targetY = rawTarget.y;
       const duration = 280;
       const startTime = performance.now();
 
@@ -1414,11 +1434,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
 
       const vp = viewportRef.current;
-      viewportRef.current = {
-        ...vp,
-        x: canvas.width / 2 - x * vp.scale,
-        y: canvas.height / 2 - y * vp.scale,
-      };
+      viewportRef.current = clampViewport(
+        { scale: vp.scale, x: canvas.width / 2 - x * vp.scale, y: canvas.height / 2 - y * vp.scale },
+        configRef.current, canvas.width, canvas.height,
+      );
 
       onViewportChangeRef.current?.({
         x: viewportRef.current.x,

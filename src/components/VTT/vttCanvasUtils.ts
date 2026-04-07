@@ -1,4 +1,45 @@
-import type { VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
+import type { VTTWall, VTTDoor, VTTWindow, VTTRoomConfig } from '../../types/vtt';
+
+export interface Viewport {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+export function clampViewport(
+  vp: Viewport,
+  cfg: Pick<VTTRoomConfig, 'clampToMap' | 'panMargin' | 'mapWidth' | 'mapHeight'>,
+  canvasWidth: number,
+  canvasHeight: number,
+): Viewport {
+  const hasMargin = cfg.panMargin !== undefined && cfg.panMargin !== null;
+  if (!cfg.clampToMap && !hasMargin) return vp;
+
+  const rawMapW = cfg.mapWidth ?? 3000;
+  const rawMapH = cfg.mapHeight ?? 2000;
+
+  let scale = vp.scale;
+
+  if (cfg.clampToMap) {
+    const minScale = Math.max(canvasWidth / rawMapW, canvasHeight / rawMapH);
+    scale = Math.max(scale, minScale);
+  }
+
+  const margin = cfg.clampToMap ? 0 : (cfg.panMargin ?? 200);
+  const mapW = rawMapW * scale;
+  const mapH = rawMapH * scale;
+
+  const minX = canvasWidth - mapW - margin;
+  const maxX = margin;
+  const minY = canvasHeight - mapH - margin;
+  const maxY = margin;
+
+  return {
+    scale,
+    x: Math.min(maxX, Math.max(minX, vp.x)),
+    y: Math.min(maxY, Math.max(minY, vp.y)),
+  };
+}
 
 export function segmentsIntersect(
   ax: number, ay: number, bx: number, by: number,
