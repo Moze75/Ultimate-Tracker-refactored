@@ -1223,6 +1223,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const resize = () => {
       canvas.width = container.clientWidth;
       canvas.height = container.clientHeight;
+      const reclamped = clampViewport(viewportRef.current, configRef.current, canvas.width, canvas.height);
+      if (reclamped.x !== viewportRef.current.x || reclamped.y !== viewportRef.current.y || reclamped.scale !== viewportRef.current.scale) {
+        viewportRef.current = reclamped;
+        onViewportChangeRef.current?.(reclamped);
+      }
       draw();
     };
     resize();
