@@ -1186,19 +1186,10 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
   const normalizedHp = typeof hp === 'number' && Number.isFinite(hp) ? Math.max(0, hp) : null;
   const normalizedMaxHp = typeof maxHp === 'number' && Number.isFinite(maxHp) ? Math.max(0, maxHp) : null;
 
-  // -------------------
-  // Mise à jour optimiste locale
-  // -------------------
-  // Met à jour l'état React immédiatement pour que le canvas,
-  // la sidebar et toutes les vues reflètent les nouveaux PV
-  // sans attendre le broadcast serveur.
   setTokens(prev => prev.map(t =>
     t.id === tokenId ? { ...t, hp: normalizedHp ?? undefined, maxHp: normalizedMaxHp ?? undefined } : t
   ));
 
-  // -------------------
-  // Envoi au serveur via vttService
-  // -------------------
   vttService.send({
     type: 'UPDATE_TOKEN',
     tokenId,
@@ -1207,6 +1198,12 @@ const handleSyncTokenHpFromCharacter = useCallback((tokenId: string, hp: number 
       maxHp: normalizedMaxHp ?? undefined,
     },
   });
+
+  // Synchronisation vers l'onglet combat (participants)
+  // Nécessaire quand le joueur modifie ses HP depuis sa feuille de perso
+  if (normalizedHp !== null) {
+    syncTokenHpRef.current?.(tokenId, normalizedHp);
+  }
 }, [canControlToken]); 
 
 // -------------------
