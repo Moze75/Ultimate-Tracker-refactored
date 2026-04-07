@@ -18,6 +18,7 @@ interface VttPlayerStatePayload {
 
 interface UsePlayerRealtimeSyncOptions {
   playerId: string;
+  roomId: string | null;   // ← nouveau : nécessaire pour filtrer vtt_player_state
   currentPlayer: Player;
   onPlayerUpdated: (updates: Partial<Player>) => void;
   soundsEnabled?: boolean;
