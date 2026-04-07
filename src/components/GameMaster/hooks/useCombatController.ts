@@ -1241,12 +1241,28 @@ export function useCombatController({
       const member = members.find((m) => m.id === p.player_member_id);
 
       if (member?.player_id) {
+        // Persistance longue durée dans players
         supabase
           .from('players')
           .update({ conditions: next })
           .eq('id', member.player_id)
           .then(({ error }) => {
             if (error) console.error('Erreur sync conditions joueur:', error);
+          });
+
+        // Filet Realtime léger : alimente vtt_player_state
+        supabase
+          .from('vtt_player_state')
+          .upsert(
+            {
+              player_id: member.player_id,
+              room_id: campaignId,
+              active_conditions: next,
+            },
+            { onConflict: 'player_id,room_id' }
+          )
+          .then(({ error }) => {
+            if (error) console.error('Erreur sync vtt_player_state conditions:', error);
           });
       }
     }
