@@ -70,13 +70,16 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   }, [token.characterId]);
 
   // -------------------
-  // Synchronisation HP via événement custom window
+  // Synchronisation HP en temps réel
   // -------------------
-  // Écoute 'vtt:token-hp-changed' émis par VTTPage lors d'un auto-apply.
-  // Court-circuite toute la chaîne React (props, refs, batching).
-  // Utilise token.id capturé dans la closure — stable car token.id ne change pas.
+  // Double écoute :
+  // 1. window event 'vtt:token-hp-changed' — pour le MJ qui applique
+  //    des dégâts sur sa propre machine (auto-apply local)
+  // 2. vttService.onMessage TOKEN_UPDATED — pour le joueur qui reçoit
+  //    le broadcast réseau quand un autre client (MJ) modifie son token
   useEffect(() => {
-    const handler = (e: Event) => {
+    // Écoute locale (MJ côté MJ)
+    const windowHandler = (e: Event) => {
       const { tokenId, newHp } = (e as CustomEvent).detail;
       if (tokenId !== token.id) return;
       setPlayer(prev => {
@@ -85,8 +88,31 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
         return { ...prev, current_hp: newHp };
       });
     };
-    window.addEventListener('vtt:token-hp-changed', handler);
-    return () => window.removeEventListener('vtt:token-hp-changed', handler);
+    window.addEventListener('vtt:token-hp-changed', windowHandler);
+
+    // Écoute réseau (joueur B reçoit broadcast du MJ)
+    const unsub = vttService.onMessage((event) => {
+      if (event.type !== 'TOKEN_UPDATED') return;
+      if (event.tokenId !== token.id) return;
+      const changes = event.changes as Partial<{ hp: number; maxHp: number }>;
+      setPlayer(prev => {
+        if (!prev) return prev;
+        const updates: Partial<Player> = {};
+        if (typeof changes.hp === 'number' && changes.hp !== prev.current_hp) {
+          updates.current_hp = changes.hp;
+        }
+        if (typeof changes.maxHp === 'number' && changes.maxHp !== prev.max_hp) {
+          updates.max_hp = changes.maxHp;
+        }
+        if (Object.keys(updates).length === 0) return prev;
+        return { ...prev, ...updates };
+      });
+    });
+
+    return () => {
+      window.removeEventListener('vtt:token-hp-changed', windowHandler);
+      unsub();
+    };
   }, [token.id]);
 
   // -------------------
