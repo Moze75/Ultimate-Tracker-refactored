@@ -2598,7 +2598,11 @@ onSelectTokens={ids => {
   onSaveSceneConfig={handleSaveSceneConfig}
   onResetImageSize={handleResetImageSize}
 
-  characterSheetToken={characterSheetToken}
+  characterSheetToken={
+    characterSheetToken
+      ? (tokens.find(t => t.id === characterSheetToken.id) ?? characterSheetToken)
+      : null
+  }
   onCloseCharacterSheet={() => setCharacterSheetToken(null)}
   onSyncTokenHpFromCharacter={handleSyncTokenHpFromCharacter}
 
