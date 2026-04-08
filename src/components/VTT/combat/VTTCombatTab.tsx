@@ -53,6 +53,7 @@ type VTTCombatTabProps = CombatTabProps & {
 
 export function VTTCombatTab({
   campaignId,
+  roomId,
   members,
   onReload,
   onRollDice,
