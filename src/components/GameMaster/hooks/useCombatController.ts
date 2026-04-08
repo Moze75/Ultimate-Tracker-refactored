@@ -1256,12 +1256,13 @@ export function useCombatController({
                 {
                   player_id: member.player_id,
                   room_id: roomId,
-                  active_conditions: next,
+                  current_hp: clampedHp,
+                  temporary_hp: matched.temporary_hp ?? 0,
                 },
                 { onConflict: 'player_id,room_id' }
               )
               .then(({ error }) => {
-                if (error) console.error('Erreur sync vtt_player_state conditions:', error);
+                if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
               });
           }
         }
