@@ -1168,12 +1168,11 @@ export function useCombatController({
 
       if (matchingToken) {
         onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
-        window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
-          detail: { tokenId: matchingToken.id, characterId: matchingToken.characterId, newHp }
-        }));
       }
     }
 
+    // Dispatch vers VTTCharacterSheetPanel — toujours basé sur player_id du member
+    // (indépendant du token canvas, couvre les cas où characterId est absent du token)
     if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
 
