@@ -1206,7 +1206,7 @@ export function useCombatController({
   const participantsForSyncRef = useRef(participants);
   participantsForSyncRef.current = participants;
 
-  const syncTokenHpToParticipant = useCallback(
+   const syncTokenHpToParticipant = useCallback(
     (tokenId: string, newHp: number) => {
       if (!liveTokensRef.current) return;
       const token = liveTokensRef.current.find((t) => t.id === tokenId);
@@ -1235,12 +1235,6 @@ export function useCombatController({
         temporary_hp: matched.temporary_hp ?? 0,
       });
 
-      // -------------------
-      // Persistance dans la table players
-      // -------------------
-      // Nécessaire quand les dégâts viennent de la fiche d'un PNJ (auto-apply)
-      // et non de l'onglet combat. Sans ce write, la fiche du joueur cible
-      // affiche les anciens HP au chargement (elle lit depuis Supabase).
       if (matched.participant_type === 'player' && matched.player_member_id) {
         const member = members.find((m) => m.id === matched.player_member_id);
         if (member?.player_id) {
@@ -1252,8 +1246,6 @@ export function useCombatController({
             .then(({ error }) => {
               if (error) console.error('Erreur sync HP joueur (syncTokenHpToParticipant):', error);
             });
-          // Filet Realtime → déclenche postgres_changes sur vtt_player_state
-          // côté VTTCharacterSheetPanel (players est hors publication Realtime)
           if (roomId) {
             supabase
               .from('vtt_player_state')
