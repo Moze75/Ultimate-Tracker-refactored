@@ -133,10 +133,16 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     tokenIdRef.current = token.id;
   });
 
+  // Refs stables pour éviter la closure stale sur token.characterId / token.id
+  const tokenCharacterIdRef = useRef(token.characterId);
+  const tokenIdRef = useRef(token.id);
+  useEffect(() => {
+    tokenCharacterIdRef.current = token.characterId;
+    tokenIdRef.current = token.id;
+  });
+
   useEffect(() => {
     // Écoute locale (MJ côté MJ)
-    // On lit les IDs depuis des refs pour éviter le problème de closure stale :
-    // token.characterId peut être défini après le premier render.
     const windowHandler = (e: Event) => {
       const { tokenId, characterId, newHp } = (e as CustomEvent).detail;
       const currentCharId = tokenCharacterIdRef.current;
@@ -144,7 +150,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
       const isMatch = (characterId && currentCharId)
         ? characterId === currentCharId
         : tokenId === currentTokenId;
-      if (!isMatch) return; 
+      console.log('[CharacterSheetPanel] vtt:token-hp-changed reçu', { tokenId, characterId, newHp, currentCharId, currentTokenId, isMatch });
+      if (!isMatch) return;
       setPlayer(prev => {
         if (!prev) return prev;
         if (prev.current_hp === newHp) return prev;
