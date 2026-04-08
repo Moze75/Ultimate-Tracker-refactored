@@ -1268,7 +1268,7 @@ export function useCombatController({
     [members, markLocalUpdate, sendHpBroadcast, handleUpdateParticipant, roomId],
   );
 
-  const toggleCondition = (p: EncounterParticipant, condition: string) => {
+    const toggleCondition = (p: EncounterParticipant, condition: string) => {
     const current = p.conditions || [];
     const next = current.includes(condition)
       ? current.filter((c) => c !== condition)
@@ -1280,7 +1280,6 @@ export function useCombatController({
       const member = members.find((m) => m.id === p.player_member_id);
 
       if (member?.player_id) {
-        // Persistance longue durée dans players
         supabase
           .from('players')
           .update({ conditions: next })
@@ -1289,22 +1288,21 @@ export function useCombatController({
             if (error) console.error('Erreur sync conditions joueur:', error);
           });
 
-        // Filet Realtime léger : alimente vtt_player_state
-          if (roomId) {
-            supabase
-              .from('vtt_player_state')
-              .upsert(
-                {
-                  player_id: member.player_id,
-                  room_id: roomId,
-                  active_conditions: next,
-                },
-                { onConflict: 'player_id,room_id' }
-              )
-              .then(({ error }) => {
-                if (error) console.error('Erreur sync vtt_player_state conditions:', error);
-              });
-          }
+        if (roomId) {
+          supabase
+            .from('vtt_player_state')
+            .upsert(
+              {
+                player_id: member.player_id,
+                room_id: roomId,
+                active_conditions: next,
+              },
+              { onConflict: 'player_id,room_id' }
+            )
+            .then(({ error }) => {
+              if (error) console.error('Erreur sync vtt_player_state conditions:', error);
+            });
+        }
       }
     }
   };
