@@ -1243,18 +1243,15 @@ export function useCombatController({
             .then(({ error }) => {
               if (error) console.error('Erreur sync HP joueur (syncTokenHpToParticipant):', error);
             });
-          if (roomId) {
+            if (roomId) {
             supabase
               .from('vtt_player_state')
-              .upsert(
-                {
-                  player_id: member.player_id,
-                  room_id: roomId,
-                  current_hp: clampedHp,
-                  temporary_hp: matched.temporary_hp ?? 0,
-                },
-                { onConflict: 'player_id,room_id' }
-              )
+              .update({
+                current_hp: clampedHp,
+                temporary_hp: matched.temporary_hp ?? 0,
+              })
+              .eq('player_id', member.player_id)
+              .eq('room_id', roomId)
               .then(({ error }) => {
                 if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
               });
