@@ -39,23 +39,50 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   const panelRef = useRef<HTMLDivElement>(null);
 
   // -------------------
-  // Sync Supabase realtime sur la table players
+  // Filet Realtime via vtt_player_state
   // -------------------
-  // Quand le MJ applique des dégâts via useCombatController.syncTokenHpToParticipant,
-  // celui-ci fait un supabase.from('players').update({ current_hp }) qui déclenche
-  // ce hook côté joueur B via postgres_changes — c'est le seul canal fiable
-  // pour mettre à jour la feuille ouverte chez le joueur cible.
-  usePlayerRealtimeSync({
-    playerId: token.characterId ?? '',
-    currentPlayer: player ?? ({ current_hp: 0, temporary_hp: 0 } as any),
-    onPlayerUpdated: (updates) => {
-      setPlayer(prev => {
-        if (!prev) return prev;
-        return { ...prev, ...updates };
-      });
-    },
-    soundsEnabled: false,
-  });
+  // Écoute les changements de HP/conditions persistés dans vtt_player_state
+  // (écrit par syncTokenHpToParticipant et applyHp).
+  // Couvre le cas : joueur ouvre sa fiche PENDANT qu'un autre client
+  // lui applique des dégâts et que le chargement initial est déjà passé.
+  // players est hors publication Realtime → on écoute vtt_player_state.
+  useEffect(() => {
+    if (!token.characterId) return;
+
+    const channel = supabase
+      .channel(`char-sheet-hp-${token.characterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vtt_player_state',
+          filter: `player_id=eq.${token.characterId}`,
+        },
+        (payload) => {
+          const newData = payload.new as { current_hp?: number; temporary_hp?: number; active_conditions?: string[] };
+          if (!newData) return;
+          setPlayer(prev => {
+            if (!prev) return prev;
+            const updates: Partial<Player> = {};
+            if (typeof newData.current_hp === 'number' && newData.current_hp !== prev.current_hp) {
+              updates.current_hp = newData.current_hp;
+            }
+            if (typeof newData.temporary_hp === 'number' && newData.temporary_hp !== prev.temporary_hp) {
+              updates.temporary_hp = newData.temporary_hp;
+            }
+            if (Array.isArray(newData.active_conditions)) {
+              updates.conditions = newData.active_conditions;
+            }
+            if (Object.keys(updates).length === 0) return prev;
+            return { ...prev, ...updates };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [token.characterId]);
 
   
 
