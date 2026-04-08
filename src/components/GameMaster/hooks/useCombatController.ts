@@ -1240,18 +1240,15 @@ export function useCombatController({
             .then(({ error }) => {
               if (error) console.error('Erreur sync HP joueur (syncTokenHpToParticipant):', error);
             });
-            if (roomId) {
-            supabase
-              .from('vtt_player_state')
-              .update({
-                current_hp: clampedHp,
-                temporary_hp: matched.temporary_hp ?? 0,
-              })
-              .eq('player_id', member.player_id)
-              .eq('room_id', roomId)
-              .then(({ error }) => {
-                if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
-              });
+          if (roomId) {
+            supabase.rpc('update_player_state_hp', {
+              p_player_id: member.player_id,
+              p_room_id: roomId,
+              p_current_hp: clampedHp,
+              p_temporary_hp: matched.temporary_hp ?? 0,
+            }).then(({ error }) => {
+              if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
+            });
           }
         }
       }
