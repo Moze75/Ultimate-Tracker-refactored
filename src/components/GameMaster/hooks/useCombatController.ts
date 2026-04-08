@@ -1166,18 +1166,23 @@ export function useCombatController({
           t.label === p.display_name
       );
 
-      if (matchingToken) {
+       if (matchingToken) {
         onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
       }
     }
 
-    // Dispatch vers VTTCharacterSheetPanel — toujours basé sur player_id du member
-    // (indépendant du token canvas, couvre les cas où characterId est absent du token)
     if (p.participant_type === 'player' && p.player_member_id) {
       const member = members.find((m) => m.id === p.player_member_id);
 
       if (member?.player_id) {
         markLocalUpdate(member.player_id);
+
+        // Dispatch direct vers VTTCharacterSheetPanel (MJ côté local)
+        // Basé sur player_id = token.characterId — fiable même si le token
+        // canvas n'a pas de characterId renseigné.
+        window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
+          detail: { characterId: member.player_id, newHp }
+        }));
 
         // Persistance longue durée dans players
         supabase
@@ -1188,26 +1193,16 @@ export function useCombatController({
             if (error) console.error('Erreur sync HP joueur:', error);
           });
 
-        // Filet Realtime léger : alimente vtt_player_state
-        // Le broadcast hp-changed est déjà parti (< 100ms).
-        // Ce upsert sert uniquement au rattrapage (reconnexion, arrivée tardive).
-          console.log('[applyHp] roomId=', roomId, 'player_id=', member.player_id);
-          if (roomId) {
-            supabase.rpc('update_player_state_hp', {
-              p_player_id: member.player_id,
-              p_room_id: roomId,
-              p_current_hp: newHp,
-              p_temporary_hp: p.temporary_hp ?? 0,
-            }).then(({ error }) => {
-              if (error) console.error('Erreur sync vtt_player_state HP:', error);
-            });
-          }
-
-          // Dispatch local direct vers VTTCharacterSheetPanel
-          // Utilise player_id comme characterId — c'est la même clé que token.characterId
-          window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
-            detail: { characterId: member.player_id, newHp }
-          }));
+        if (roomId) {
+          supabase.rpc('update_player_state_hp', {
+            p_player_id: member.player_id,
+            p_room_id: roomId,
+            p_current_hp: newHp,
+            p_temporary_hp: p.temporary_hp ?? 0,
+          }).then(({ error }) => {
+            if (error) console.error('Erreur sync vtt_player_state HP:', error);
+          });
+        }
       }
     }
   };
