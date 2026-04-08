@@ -1158,6 +1158,7 @@ export function useCombatController({
       if (matchingToken) {
         onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
         // Déclenche la mise à jour de VTTCharacterSheetPanel si la fiche est ouverte
+        console.log('[applyHp] dispatching vtt:token-hp-changed tokenId=', matchingToken.id, 'newHp=', newHp);
         window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
           detail: { tokenId: matchingToken.id, newHp }
         }));
