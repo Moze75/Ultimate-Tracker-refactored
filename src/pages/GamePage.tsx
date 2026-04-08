@@ -147,7 +147,7 @@ const [showCampaignModal, setShowCampaignModal] = useState(false);
 
   const { markLocalUpdate } = usePlayerRealtimeSync({
     playerId: currentPlayer?.id ?? '',
-    roomId: null, // GamePage hors-VTT : pas de room, subscription inactive
+    roomId: null,
     currentPlayer: currentPlayer ?? selectedCharacter,
     onPlayerUpdated: handleRealtimePlayerUpdate,
     soundsEnabled: diceSettings.soundsEnabled ?? true,
