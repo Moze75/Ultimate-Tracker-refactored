@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 
 export interface CombatTabProps {
   campaignId: string;
+  roomId?: string;
   members: CampaignMember[];
   onReload: () => void;
   onRollDice?: (data: DiceRollData) => void;
