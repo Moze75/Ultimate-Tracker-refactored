@@ -1292,19 +1292,22 @@ export function useCombatController({
           });
 
         // Filet Realtime léger : alimente vtt_player_state
-        supabase
-          .from('vtt_player_state')
-          .upsert(
-            {
-              player_id: member.player_id,
-              room_id: campaignId,
-              active_conditions: next,
-            },
-            { onConflict: 'player_id,room_id' }
-          )
-          .then(({ error }) => {
-            if (error) console.error('Erreur sync vtt_player_state conditions:', error);
-          });
+          if (roomId) {
+            supabase
+              .from('vtt_player_state')
+              .upsert(
+                {
+                  player_id: member.player_id,
+                  room_id: roomId,
+                  current_hp: clampedHp,
+                  temporary_hp: matched.temporary_hp ?? 0,
+                },
+                { onConflict: 'player_id,room_id' }
+              )
+              .then(({ error }) => {
+                if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
+              });
+          }
       }
     }
   };
