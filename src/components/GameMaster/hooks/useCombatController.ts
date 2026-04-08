@@ -1182,6 +1182,7 @@ export function useCombatController({
         // Filet Realtime léger : alimente vtt_player_state
         // Le broadcast hp-changed est déjà parti (< 100ms).
         // Ce upsert sert uniquement au rattrapage (reconnexion, arrivée tardive).
+          console.log('[applyHp] roomId=', roomId, 'player_id=', member.player_id);
           if (roomId) {
             supabase
               .from('vtt_player_state')
