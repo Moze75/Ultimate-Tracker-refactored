@@ -149,6 +149,7 @@ export function VTTCombatTab({
     syncTokenHpToParticipant,
   } = useCombatController({
     campaignId,
+    roomId,
     members,
     onReload,
     onRollDice,
