@@ -60,6 +60,7 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
           filter: `player_id=eq.${token.characterId}`,
         },
         (payload) => {
+          console.log('[CharacterSheetPanel] vtt_player_state Realtime reçu', payload);
           const newData = payload.new as { current_hp?: number; temporary_hp?: number; active_conditions?: string[] };
           if (!newData) return;
           setPlayer(prev => {
