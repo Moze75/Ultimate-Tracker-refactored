@@ -1285,14 +1285,9 @@ export function useCombatController({
         if (roomId) {
           supabase
             .from('vtt_player_state')
-            .upsert(
-              {
-                player_id: member.player_id,
-                room_id: roomId,
-                active_conditions: next,
-              },
-              { onConflict: 'player_id,room_id' }
-            )
+            .update({ active_conditions: next })
+            .eq('player_id', member.player_id)
+            .eq('room_id', roomId)
             .then(({ error }) => {
               if (error) console.error('Erreur sync vtt_player_state conditions:', error);
             });
