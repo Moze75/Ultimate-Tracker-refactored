@@ -182,6 +182,22 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   }, [token.id]);
 
   // -------------------
+  // forcedHp : HP poussé depuis VTTPage (auto-apply dés, applyHp MJ)
+  // Mécanisme de fallback garanti indépendant du window event.
+  // -------------------
+  const prevForcedHpRef = useRef<number | null | undefined>(forcedHp);
+  useEffect(() => {
+    if (forcedHp === null || forcedHp === undefined) return;
+    if (forcedHp === prevForcedHpRef.current) return;
+    prevForcedHpRef.current = forcedHp;
+    setPlayer(prev => {
+      if (!prev) return prev;
+      if (prev.current_hp === forcedHp) return prev;
+      return { ...prev, current_hp: forcedHp };
+    });
+  }, [forcedHp]);
+
+  // -------------------
   // Synchronisation maxHp token → feuille (fallback)
   // -------------------
   const prevTokenMaxHpRef = useRef<number | undefined>(token.maxHp);

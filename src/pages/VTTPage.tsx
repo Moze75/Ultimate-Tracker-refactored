@@ -1646,7 +1646,25 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     handleCopySelection,
     handlePasteSelection,
   ]);
-  
+
+  // -------------------
+  // Écoute de vtt:token-hp-changed pour mettre à jour forcedHp
+  // de la fiche de personnage ouverte (cas applyHp depuis CombatTab)
+  // -------------------
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { characterId, tokenId, newHp } = (e as CustomEvent).detail as { characterId?: string; tokenId?: string; newHp: number };
+      const sheet = characterSheetTokenRef.current;
+      if (!sheet) return;
+      const matches = (characterId && sheet.characterId && characterId === sheet.characterId)
+        || (tokenId && tokenId === sheet.id);
+      if (!matches) return;
+      setCharacterSheetForcedHp(newHp);
+    };
+    window.addEventListener('vtt:token-hp-changed', handler);
+    return () => window.removeEventListener('vtt:token-hp-changed', handler);
+  }, []);
+
   const handlePropMouseDown = useCallback((e: React.MouseEvent, prop: VTTProp) => {
     if (role !== 'gm' || prop.locked) return;
 

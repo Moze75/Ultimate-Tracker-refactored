@@ -1145,19 +1145,6 @@ export function useCombatController({
       temporary_hp: p.temporary_hp ?? 0,
     });
 
-       // Dispatch direct vers la fiche de perso ouverte — basé sur characterId du participant
-    // Fonctionne même si le token canvas n'est pas trouvé
-    if (p.participant_type === 'player' && p.player_member_id) {
-      const memberForDispatch = members.find((m) => m.id === p.player_member_id);
-      if (memberForDispatch?.player_id) {
-        window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
-          detail: { characterId: memberForDispatch.player_id, newHp }
-        }));
-      }
-    }
-
-
-    
     if (onUpdateToken && liveTokensRef.current) {
       const matchingToken = liveTokensRef.current.find(
         (t) =>
@@ -1168,7 +1155,7 @@ export function useCombatController({
           t.label === p.display_name
       );
 
-       if (matchingToken) {
+      if (matchingToken) {
         onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
       }
     }
@@ -1179,14 +1166,18 @@ export function useCombatController({
       if (member?.player_id) {
         markLocalUpdate(member.player_id);
 
-        // Dispatch direct vers VTTCharacterSheetPanel (MJ côté local)
-        // Basé sur player_id = token.characterId — fiable même si le token
-        // canvas n'a pas de characterId renseigné.
+        const matchingToken = liveTokensRef.current?.find(
+          (t) => t.characterId === member.player_id
+        );
+
         window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
-          detail: { characterId: member.player_id, newHp }
+          detail: {
+            characterId: member.player_id,
+            tokenId: matchingToken?.id ?? null,
+            newHp,
+          }
         }));
 
-        // Persistance longue durée dans players
         supabase
           .from('players')
           .update({ current_hp: newHp })
