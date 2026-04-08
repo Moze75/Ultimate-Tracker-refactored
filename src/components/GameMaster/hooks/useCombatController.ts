@@ -1249,20 +1249,21 @@ export function useCombatController({
             });
           // Filet Realtime → déclenche postgres_changes sur vtt_player_state
           // côté VTTCharacterSheetPanel (players est hors publication Realtime)
-          supabase
-            .from('vtt_player_state')
-            .upsert(
-              {
-                player_id: member.player_id,
-                room_id: campaignId,
-                current_hp: clampedHp,
-                temporary_hp: matched.temporary_hp ?? 0,
-              },
-              { onConflict: 'player_id,room_id' }
-            )
-            .then(({ error }) => {
-              if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
-            });
+          if (roomId) {
+            supabase
+              .from('vtt_player_state')
+              .upsert(
+                {
+                  player_id: member.player_id,
+                  room_id: roomId,
+                  active_conditions: next,
+                },
+                { onConflict: 'player_id,room_id' }
+              )
+              .then(({ error }) => {
+                if (error) console.error('Erreur sync vtt_player_state conditions:', error);
+              });
+          }
         }
       }
     },
