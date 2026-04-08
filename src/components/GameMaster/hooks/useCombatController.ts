@@ -1202,6 +1202,12 @@ export function useCombatController({
               if (error) console.error('Erreur sync vtt_player_state HP:', error);
             });
           }
+
+          // Dispatch local direct vers VTTCharacterSheetPanel
+          // Utilise player_id comme characterId — c'est la même clé que token.characterId
+          window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
+            detail: { characterId: member.player_id, newHp }
+          }));
       }
     }
   };
