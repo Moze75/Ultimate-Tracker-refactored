@@ -1660,6 +1660,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
         || (tokenId && tokenId === sheet.id);
       if (!matches) return;
       setCharacterSheetForcedHp(newHp);
+      setCharacterSheetToken(prev => prev ? { ...prev, hp: newHp } : prev);
     };
     window.addEventListener('vtt:token-hp-changed', handler);
     return () => window.removeEventListener('vtt:token-hp-changed', handler);

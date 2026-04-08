@@ -198,6 +198,24 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   }, [forcedHp]);
 
   // -------------------
+  // Synchronisation token.hp → feuille
+  // Couvre le cas où onUpdateToken met à jour le token dans VTTPage
+  // (ex: applyHp depuis CombatTab) sans passer par window event.
+  // -------------------
+  const prevTokenHpRef = useRef<number | undefined>(token.hp);
+
+  useEffect(() => {
+    if (token.hp === undefined) return;
+    if (token.hp === prevTokenHpRef.current) return;
+    prevTokenHpRef.current = token.hp;
+    setPlayer(prev => {
+      if (!prev) return prev;
+      if (prev.current_hp === token.hp) return prev;
+      return { ...prev, current_hp: token.hp as number };
+    });
+  }, [token.hp]);
+
+  // -------------------
   // Synchronisation maxHp token → feuille (fallback)
   // -------------------
   const prevTokenMaxHpRef = useRef<number | undefined>(token.maxHp);
