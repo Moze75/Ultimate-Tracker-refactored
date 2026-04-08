@@ -126,13 +126,24 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   //    des dégâts sur sa propre machine (auto-apply local)
   // 2. vttService.onMessage TOKEN_UPDATED — pour le joueur qui reçoit
   //    le broadcast réseau quand un autre client (MJ) modifie son token
+   const tokenCharacterIdRef = useRef(token.characterId);
+  const tokenIdRef = useRef(token.id);
+  useEffect(() => {
+    tokenCharacterIdRef.current = token.characterId;
+    tokenIdRef.current = token.id;
+  });
+
   useEffect(() => {
     // Écoute locale (MJ côté MJ)
+    // On lit les IDs depuis des refs pour éviter le problème de closure stale :
+    // token.characterId peut être défini après le premier render.
     const windowHandler = (e: Event) => {
       const { tokenId, characterId, newHp } = (e as CustomEvent).detail;
-      const isMatch = (characterId && token.characterId)
-        ? characterId === token.characterId
-        : tokenId === token.id;
+      const currentCharId = tokenCharacterIdRef.current;
+      const currentTokenId = tokenIdRef.current;
+      const isMatch = (characterId && currentCharId)
+        ? characterId === currentCharId
+        : tokenId === currentTokenId;
       if (!isMatch) return;
       setPlayer(prev => {
         if (!prev) return prev;
