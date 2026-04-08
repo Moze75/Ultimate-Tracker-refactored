@@ -1277,14 +1277,13 @@ export function useCombatController({
           });
 
         if (roomId) {
-          supabase
-            .from('vtt_player_state')
-            .update({ active_conditions: next })
-            .eq('player_id', member.player_id)
-            .eq('room_id', roomId)
-            .then(({ error }) => {
-              if (error) console.error('Erreur sync vtt_player_state conditions:', error);
-            });
+          supabase.rpc('update_player_state_conditions', {
+            p_player_id: member.player_id,
+            p_room_id: roomId,
+            p_conditions: next,
+          }).then(({ error }) => {
+            if (error) console.error('Erreur sync vtt_player_state conditions:', error);
+          });
         }
       }
     }
