@@ -156,9 +156,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
     // Écoute réseau (joueur B reçoit broadcast du MJ)
     const unsub = vttService.onMessage((event) => {
       if (event.type !== 'TOKEN_UPDATED') return;
-      // Match sur token.id OU sur characterId si disponible
-      const tokenMatch = event.tokenId === token.id;
-      const charMatch = token.characterId && (event.changes as any)?.characterId === token.characterId;
+      const tokenMatch = event.tokenId === tokenIdRef.current;
+      const charMatch = tokenCharacterIdRef.current && (event.changes as any)?.characterId === tokenCharacterIdRef.current;
       if (!tokenMatch && !charMatch) return;
       const changes = event.changes as Partial<{ hp: number; maxHp: number }>;
       setPlayer(prev => {
