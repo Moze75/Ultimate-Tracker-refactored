@@ -300,7 +300,9 @@ const cdnUrl = await uploadVttAsset(file, 'maps', userId, roomId);
     window.addEventListener('mouseup', onUp);
   };
 
-const isGM = role === 'gm';
+
+    console.log('[VTTSidebar] roomId=', roomId, 'campaignId=', campaignId);
+  const isGM = role === 'gm';
 
 const visibleTokens = isGM
   ? tokens
