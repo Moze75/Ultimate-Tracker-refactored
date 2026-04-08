@@ -128,9 +128,12 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
   useEffect(() => {
     // Écoute locale (MJ côté MJ)
     const windowHandler = (e: Event) => {
-      const { tokenId, newHp } = (e as CustomEvent).detail;
-      console.log('[CharacterSheetPanel] vtt:token-hp-changed reçu tokenId=', tokenId, 'token.id=', token.id, 'match=', tokenId === token.id);
-      if (tokenId !== token.id) return;
+      const { tokenId, characterId, newHp } = (e as CustomEvent).detail;
+      // Correspondance sur characterId si disponible, sinon fallback sur tokenId
+      const isMatch = (characterId && token.characterId)
+        ? characterId === token.characterId
+        : tokenId === token.id;
+      if (!isMatch) return;
       setPlayer(prev => {
         if (!prev) return prev;
         if (prev.current_hp === newHp) return prev;
