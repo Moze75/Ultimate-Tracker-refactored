@@ -627,6 +627,7 @@ const visibleTokens = isGM
                    {campaignId ? (
             <VTTCombatTab
               campaignId={campaignId}
+              roomId={roomId}
               members={members}
               onReload={reloadMembers}
               initialTokens={combatInitTokens ?? tokens}
