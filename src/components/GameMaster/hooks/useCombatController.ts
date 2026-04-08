@@ -1241,14 +1241,18 @@ export function useCombatController({
               if (error) console.error('Erreur sync HP joueur (syncTokenHpToParticipant):', error);
             });
           if (roomId) {
+            console.log('[syncTokenHpToParticipant] RPC update_player_state_hp', member.player_id, 'room=', roomId, 'hp=', clampedHp);
             supabase.rpc('update_player_state_hp', {
               p_player_id: member.player_id,
               p_room_id: roomId,
               p_current_hp: clampedHp,
               p_temporary_hp: matched.temporary_hp ?? 0,
-            }).then(({ error }) => {
+            }).then(({ data, error }) => {
+              console.log('[syncTokenHpToParticipant] RPC result data=', data, 'error=', error);
               if (error) console.error('Erreur sync vtt_player_state (syncTokenHpToParticipant):', error);
             });
+          } else {
+            console.warn('[syncTokenHpToParticipant] roomId absent — RPC non appelé');
           }
         }
       }
