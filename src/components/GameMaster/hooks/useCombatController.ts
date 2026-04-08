@@ -1268,7 +1268,7 @@ export function useCombatController({
         }
       }
     },
-    [members, markLocalUpdate, sendHpBroadcast, handleUpdateParticipant, campaignId],
+    [members, markLocalUpdate, sendHpBroadcast, handleUpdateParticipant, roomId],
   );
 
   const toggleCondition = (p: EncounterParticipant, condition: string) => {
