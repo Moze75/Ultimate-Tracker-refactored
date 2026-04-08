@@ -1945,7 +1945,7 @@ useEffect(() => {
         );
         // Événement custom direct vers VTTCharacterSheetPanel — court-circuite toute la chaîne React
         window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
-          detail: { tokenId: token.id, newHp }
+          detail: { tokenId: token.id, characterId: token.characterId, newHp }
         }));
         // Utilise la ref (pas la closure) pour éviter le problème de deps stales
         if (characterSheetTokenRef.current?.id === token.id) {
