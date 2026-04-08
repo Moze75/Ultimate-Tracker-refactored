@@ -48,7 +48,7 @@ const VALID_PROMO_CODES = {
   'AIDEDD10': { type: 'percentage', value: 10 }, 
 
     // Exemple 1 : -10% pour tout le monde 
-  'ITA10': { type: 'percentage', value: 10 }, 
+  'MERCI15': { type: 'percentage', value: 15 }, 
 
 };
 
