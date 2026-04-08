@@ -37,8 +37,7 @@ export function usePlayerRealtimeSync({
   }, [currentPlayer.current_hp, currentPlayer.temporary_hp]);
 
   useEffect(() => {
-    // roomId null = GamePage hors-VTT, pas de subscription nécessaire
-    if (!playerId || !roomId) return;
+    if (!playerId) return;
 
     const channel = supabase
       .channel(`player-hp-sync-${playerId}`)
@@ -122,7 +121,7 @@ export function usePlayerRealtimeSync({
       console.log('[Realtime] Unsubscribing from player HP changes');
       supabase.removeChannel(channel);
     };
-  }, [playerId, onPlayerUpdated, soundsEnabled, fxVolume]);
+  }, [playerId, roomId, onPlayerUpdated, soundsEnabled, fxVolume]);
 
   const markLocalUpdate = () => {
     lastLocalUpdateRef.current = Date.now();
