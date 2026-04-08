@@ -65,6 +65,7 @@ export function useIsDesktop() {
 
 export function useCombatController({
   campaignId,
+  roomId,
   members,
   initialTokens,
   liveTokens,
