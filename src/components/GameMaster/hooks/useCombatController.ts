@@ -1178,20 +1178,22 @@ export function useCombatController({
         // Filet Realtime léger : alimente vtt_player_state
         // Le broadcast hp-changed est déjà parti (< 100ms).
         // Ce upsert sert uniquement au rattrapage (reconnexion, arrivée tardive).
-        supabase
-          .from('vtt_player_state')
-          .upsert(
-            {
-              player_id: member.player_id,
-              room_id: campaignId,
-              current_hp: newHp,
-              temporary_hp: p.temporary_hp ?? 0,
-            },
-            { onConflict: 'player_id,room_id' }
-          )
-          .then(({ error }) => {
-            if (error) console.error('Erreur sync vtt_player_state HP:', error);
-          });
+          if (roomId) {
+            supabase
+              .from('vtt_player_state')
+              .upsert(
+                {
+                  player_id: member.player_id,
+                  room_id: roomId,
+                  current_hp: newHp,
+                  temporary_hp: p.temporary_hp ?? 0,
+                },
+                { onConflict: 'player_id,room_id' }
+              )
+              .then(({ error }) => {
+                if (error) console.error('Erreur sync vtt_player_state HP:', error);
+              });
+          }
       }
     }
   };
