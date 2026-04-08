@@ -1145,6 +1145,17 @@ export function useCombatController({
       temporary_hp: p.temporary_hp ?? 0,
     });
 
+       // Dispatch direct vers la fiche de perso ouverte — basé sur characterId du participant
+    // Fonctionne même si le token canvas n'est pas trouvé
+    if (p.participant_type === 'player' && p.player_member_id) {
+      const memberForDispatch = members.find((m) => m.id === p.player_member_id);
+      if (memberForDispatch?.player_id) {
+        window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
+          detail: { characterId: memberForDispatch.player_id, newHp }
+        }));
+      }
+    }
+
     if (onUpdateToken && liveTokensRef.current) {
       const matchingToken = liveTokensRef.current.find(
         (t) =>
@@ -1157,7 +1168,6 @@ export function useCombatController({
 
       if (matchingToken) {
         onUpdateToken(matchingToken.id, { hp: newHp, maxHp: p.max_hp });
-        // Déclenche la mise à jour de VTTCharacterSheetPanel si la fiche est ouverte
         window.dispatchEvent(new CustomEvent('vtt:token-hp-changed', {
           detail: { tokenId: matchingToken.id, characterId: matchingToken.characterId, newHp }
         }));
