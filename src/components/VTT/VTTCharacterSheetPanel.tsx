@@ -144,7 +144,8 @@ export function VTTCharacterSheetPanel({ token, role, userId, onClose, onSyncTok
       const isMatch = (characterId && currentCharId)
         ? characterId === currentCharId
         : tokenId === currentTokenId;
-      if (!isMatch) return;  
+      console.log('[CharSheet] hp-changed reçu', { characterId, currentCharId, tokenId, currentTokenId, isMatch });
+      if (!isMatch) return; 
       setPlayer(prev => {
         if (!prev) return prev;
         if (prev.current_hp === newHp) return prev;
