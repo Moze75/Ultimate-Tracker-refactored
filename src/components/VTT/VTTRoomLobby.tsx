@@ -431,7 +431,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         >
           <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
           <div className="relative z-10">
-          <h2 className="text-sm font-semibold text-amber-300 mb-3 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Créer une nouvelle table</h2>
+          <h2 className="text-sm font-semibold text-amber-300 mb-3 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Créer une nouvelle table</h2> 
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-2">
               <input
