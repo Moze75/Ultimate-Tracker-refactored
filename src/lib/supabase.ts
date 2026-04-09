@@ -44,30 +44,13 @@ export const testConnection = async () => {
   try {
     console.log('=== TESTING CONNECTION ===');
     console.log('Testing connection to:', supabaseUrl);
-    
+
     if (!supabase.auth) {
       throw new Error('Client Supabase non initialisé');
     }
 
-    // Test de ping simple
-    console.log('Step 1: Testing basic connectivity...');
-    const pingResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
-      method: 'HEAD',
-      headers: {
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`
-      }
-    });
-    
-    console.log('Ping response status:', pingResponse.status);
-    console.log('Ping response headers:', Object.fromEntries(pingResponse.headers.entries()));
-    
-    if (!pingResponse.ok) {
-      throw new Error(`Ping failed with status: ${pingResponse.status}`);
-    }
-
-    // Test de requête à la base de données
-    console.log('Step 2: Testing database query...');
+    // Test simple d'une requête à la base de données
+    console.log('Testing database connectivity...');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
