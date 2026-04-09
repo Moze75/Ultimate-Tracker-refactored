@@ -1634,10 +1634,10 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
     const scale = viewportRef.current.scale;
     const fusionRadius = SNAP_RADIUS_PX / scale;
 
-    // Chercher un point cible sur n'importe quel mur (y compris le même)
+    // Chercher un point cible sur TOUS les murs (y compris le même mur),
     // en excluant uniquement le point en cours de déplacement
     let targetPt: { x: number; y: number } | null = null;
-    for (const other of currentWalls) {
+    outer: for (const other of currentWalls) {
       for (let pi = 0; pi < other.points.length; pi++) {
         if (other.id === drag.wallId && pi === drag.pointIndex) continue;
         const pt = other.points[pi];
@@ -1645,31 +1645,29 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
         const dy = pt.y - movedPt.y;
         if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
           targetPt = pt;
-          break;
+          break outer;
         }
       }
-      if (targetPt) break;
     }
 
-    if (targetPt) {
-      // Remplacer le point déplacé par les coordonnées exactes du point cible
-      // puis supprimer les doublons consécutifs dans le mur source
-      const fused = wall.points.map((pt: { x: number; y: number }, i: number) =>
-        i === drag.pointIndex ? { x: targetPt!.x, y: targetPt!.y } : pt
-      );
-      const deduped = fused.filter(
-        (pt: { x: number; y: number }, i: number) =>
-          i === 0 || pt.x !== fused[i - 1].x || pt.y !== fused[i - 1].y
-      );
-      const finalPoints = deduped.length >= 2 ? deduped : fused;
-      const updatedWall = { ...wall, points: finalPoints };
-      wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
-      onWallUpdatedRef.current?.(updatedWall);
-    } else {
-      // Pas de fusion, juste persister la position finale
-      onWallUpdatedRef.current?.(wall);
-    }
+    const basePoints: { x: number; y: number }[] = targetPt
+      ? wall.points.map((pt: { x: number; y: number }, i: number) =>
+          i === drag.pointIndex ? { x: targetPt!.x, y: targetPt!.y } : pt
+        )
+      : wall.points;
+
+    // Dédupliquer : supprimer les points consécutifs identiques
+    const deduped = basePoints.filter(
+      (pt: { x: number; y: number }, i: number) =>
+        i === 0 || pt.x !== basePoints[i - 1].x || pt.y !== basePoints[i - 1].y
+    );
+    const finalPoints = deduped.length >= 2 ? deduped : basePoints;
+    const updatedWall = { ...wall, points: finalPoints };
+    wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+    onWallUpdatedRef.current?.(updatedWall);
   }
+  draggingWallPointRef.current = null;
+  selectedWallPointRef.current = null;
 }
 
 // Fin du drag d'un endpoint de porte : persister la nouvelle position
