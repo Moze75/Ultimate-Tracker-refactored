@@ -421,8 +421,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         )}
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
+        <div
+          className="rounded-xl border border-amber-900/50 p-4 shadow-lg relative overflow-hidden"
+          style={{
+            backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
+          <div className="relative z-10">
+          <h2 className="text-sm font-semibold text-amber-300 mb-3 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-2">
               <input
