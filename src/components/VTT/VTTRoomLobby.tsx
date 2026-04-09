@@ -378,18 +378,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   };
 
   return (
-<div
-  className="min-h-screen text-white flex flex-col relative"
-  style={{
-    backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Forest%201.png')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
-  }}
->
-  {/* Overlay sombre pour lisibilité */}
-  <div className="absolute inset-0 bg-black/55 pointer-events-none z-0" />
-      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3"> 
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
           className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
@@ -403,7 +393,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         </span>
       </div>
 
-      <div className="relative z-10 flex-1 max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
+      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 space-y-6"> 
         {error && (
           <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-sm text-red-300 flex items-center justify-between">
             <span>{error}</span>
@@ -411,8 +401,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         )}
 
-        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
-          <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">Créer une nouvelle table</h2>
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-2">
               <input
@@ -420,16 +410,16 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 value={newRoomName}
                 onChange={e => setNewRoomName(e.target.value)}
                 placeholder="Nom de la table..."
-                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm placeholder-gray-600 focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 outline-none transition-all"
+                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
               />
             </div>
             {campaigns.length > 0 && (
               <div className="relative">
-                <BookOpen size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
+                <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                 <select
                   value={newRoomCampaignId}
                   onChange={e => setNewRoomCampaignId(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 bg-white/5 border border-white/10 rounded text-sm text-gray-300 focus:ring-1 focus:ring-amber-500/60 outline-none appearance-none transition-all"
+                  className="w-full pl-8 pr-8 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
                 >
                   <option value="">Aucune campagne liée</option>
                   {campaigns.map(c => (
@@ -442,50 +432,50 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             <button
               type="submit"
               disabled={creating || !newRoomName.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded text-sm font-medium transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
-              <Plus size={14} />
+              <Plus size={16} />
               Créer
             </button>
           </form>
         </div>
 
-        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
-          <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">Rejoindre par ID</h2>
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Rejoindre par ID</h2>
           <div className="flex gap-2">
             <input
               type="text"
               value={joinRoomId}
               onChange={e => setJoinRoomId(e.target.value)}
               placeholder="ID de la room..."
-              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm placeholder-gray-600 focus:ring-1 focus:ring-blue-500/60 focus:border-blue-500/40 outline-none transition-all"
+              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
             />
             <button
               onClick={() => joinRoomId.trim() && setPendingJoinRoomId(joinRoomId.trim())}
               disabled={!joinRoomId.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600/80 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-sm font-medium transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
-              <LogIn size={14} />
+              <LogIn size={16} />
               Rejoindre
             </button>
           </div>
         </div>
 
-        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Mes tables</h2>
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
             <button
               onClick={fetchRooms}
-              className="p-1.5 hover:bg-white/8 rounded text-gray-500 hover:text-gray-300 transition-all"
+              className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-400"
             >
-              <RefreshCw size={13} />
+              <RefreshCw size={14} />
             </button>
           </div>
 
           {loading ? (
-            <div className="text-center py-8 text-gray-600 text-sm">Chargement...</div>
+            <div className="text-center py-8 text-gray-500 text-sm">Chargement...</div>
           ) : (rooms.length === 0 && subscribedRooms.length === 0) ? (
-            <div className="text-center py-8 text-gray-600 text-sm">
+            <div className="text-center py-8 text-gray-500 text-sm">
               Aucune table. Créez-en une pour commencer.
             </div>
           ) : (
@@ -503,10 +493,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 return (
                   <div
                     key={room.id}
-                    className={`flex items-center gap-3 p-3 rounded border transition-all ${
-                      isSubscribedRoom
-                        ? 'bg-white/4 border-white/7 hover:bg-blue-950/30 hover:border-blue-500/30'
-                        : 'bg-white/4 border-white/7 hover:bg-amber-950/30 hover:border-amber-500/30'
+                    className={`flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 transition-colors ${
+                      isSubscribedRoom ? 'hover:border-blue-700/50' : 'hover:border-amber-700/50'
                     }`}
                   >
                               <Map size={18} className={isSubscribedRoom ? 'text-blue-400 shrink-0' : 'text-amber-500 shrink-0'} />
@@ -567,7 +555,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             </div>
           )}
         </div> 
- 
+
  
         
    
