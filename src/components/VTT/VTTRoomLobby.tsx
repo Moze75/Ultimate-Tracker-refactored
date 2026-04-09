@@ -439,7 +439,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 value={newRoomName}
                 onChange={e => setNewRoomName(e.target.value)}
                 placeholder="Nom de la table..."
-                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                className="flex-1 px-3 py-2 bg-black/40 border border-amber-800/60 rounded-lg text-amber-100 placeholder-amber-700/60 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
               />
             </div>
             {campaigns.length > 0 && (
