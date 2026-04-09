@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   X, User, Heart, Shield, Swords, Zap, BookOpen,
   Scroll, Package, Star, Loader2, Filter, ChevronDown,
@@ -124,6 +124,58 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
     loadPlayerData();
   }, [playerId]);
 
+  const lastLocalUpdateRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!playerId) return;
+
+    const channel = supabase
+      .channel(`player-details-hp-${playerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'players',
+          filter: `id=eq.${playerId}`,
+        },
+        (payload) => {
+          const timeSinceLocal = Date.now() - lastLocalUpdateRef.current;
+          if (timeSinceLocal < 2000) return;
+
+          const newData = payload.new as { current_hp?: number; temporary_hp?: number };
+          setPlayer(prev => {
+            if (!prev) return prev;
+            const updates: Partial<Player> = {};
+            if (typeof newData.current_hp === 'number') updates.current_hp = newData.current_hp;
+            if (typeof newData.temporary_hp === 'number') updates.temporary_hp = newData.temporary_hp;
+            if (Object.keys(updates).length === 0) return prev;
+            return { ...prev, ...updates };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [playerId]);
+
+  useEffect(() => {
+    if (!playerId) return;
+
+    const handler = (e: Event) => {
+      const { characterId, newHp } = (e as CustomEvent).detail;
+      if (characterId !== playerId) return;
+      lastLocalUpdateRef.current = Date.now();
+      setPlayer(prev => {
+        if (!prev || prev.current_hp === newHp) return prev;
+        return { ...prev, current_hp: newHp };
+      });
+    };
+
+    window.addEventListener('vtt:token-hp-changed', handler);
+    return () => window.removeEventListener('vtt:token-hp-changed', handler);
+  }, [playerId]);
+
   const loadPlayerData = async () => {
     try {
       setLoading(true);
@@ -246,6 +298,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
 
       if (error) throw error;
 
+      lastLocalUpdateRef.current = Date.now();
       setPlayer({ ...player, current_hp: newCurrentHp, temporary_hp: newTempHp });
       setHpChangeValue('');
       toast.success(`${amount} degats appliques`);
@@ -277,6 +330,7 @@ export function PlayerDetailsModal({ playerId, playerName, onClose, onPlayerUpda
 
       if (error) throw error;
 
+      lastLocalUpdateRef.current = Date.now();
       setPlayer({ ...player, current_hp: newCurrentHp });
       setHpChangeValue('');
       toast.success(`${amount} PV soignes`);
