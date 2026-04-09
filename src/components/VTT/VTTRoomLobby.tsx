@@ -378,7 +378,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col"> 
+<div
+  className="min-h-screen text-white flex flex-col relative"
+  style={{
+    backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Forest%201.png')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+  }}
+>
+  {/* Overlay sombre pour lisibilité */}
+  <div className="absolute inset-0 bg-black/55 pointer-events-none z-0" />
       <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
