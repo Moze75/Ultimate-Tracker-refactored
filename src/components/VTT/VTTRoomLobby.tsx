@@ -389,17 +389,17 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 >
   {/* Overlay sombre pour lisibilité */}
   <div className="absolute inset-0 bg-black/55 pointer-events-none z-0" />
-      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <div className="relative z-10 border-b border-white/8 px-5 py-3 flex items-center gap-3 bg-black/40 backdrop-blur-md">
         <button
           onClick={onBack}
-          className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
+          className="px-3 py-1.5 text-sm bg-white/8 hover:bg-white/14 border border-white/10 rounded text-gray-300 hover:text-white transition-all"
         >
           ← Retour
         </button>
-        <Map className="text-amber-500" size={20} />
-        <h1 className="text-lg font-bold">VTT Beta</h1>
-        <span className="px-2 py-0.5 text-xs bg-amber-900/50 text-amber-400 rounded-full border border-amber-700/50">
-          Beta fermée
+        <Map className="text-amber-400" size={18} />
+        <h1 className="text-base font-semibold tracking-wide text-white">VTT</h1>
+        <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-500/15 text-amber-400 rounded border border-amber-500/25 tracking-widest uppercase">
+          Beta
         </span>
       </div>
 
