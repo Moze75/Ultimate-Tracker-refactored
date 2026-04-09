@@ -411,8 +411,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         )}
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
+        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
+          <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-2">
               <input
@@ -420,16 +420,16 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 value={newRoomName}
                 onChange={e => setNewRoomName(e.target.value)}
                 placeholder="Nom de la table..."
-                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm placeholder-gray-600 focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 outline-none transition-all"
               />
             </div>
             {campaigns.length > 0 && (
               <div className="relative">
-                <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <BookOpen size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
                 <select
                   value={newRoomCampaignId}
                   onChange={e => setNewRoomCampaignId(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
+                  className="w-full pl-8 pr-8 py-2 bg-white/5 border border-white/10 rounded text-sm text-gray-300 focus:ring-1 focus:ring-amber-500/60 outline-none appearance-none transition-all"
                 >
                   <option value="">Aucune campagne liée</option>
                   {campaigns.map(c => (
