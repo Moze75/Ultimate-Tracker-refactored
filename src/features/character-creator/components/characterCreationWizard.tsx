@@ -216,6 +216,11 @@ useEffect(() => {
   appContextService.saveWizardSnapshot(snapshot);
   console.log('[Wizard] Snapshot sauvegardé au step', currentStep);
 }, [currentStep]); // ✅ UNIQUEMENT currentStep comme dépendance
+  // ✅ Scroll en haut à chaque changement de step
+const stepContainerRef = useRef<HTMLDivElement>(null);
+useEffect(() => {
+  stepContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, [currentStep]);
 
   // Classes qui ne lancent pas de sorts au niveau 1
   const nonCasterClasses: DndClass[] = ['Guerrier', 'Roublard', 'Barbare', 'Moine'];
