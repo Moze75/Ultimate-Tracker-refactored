@@ -389,16 +389,26 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 >
   {/* Overlay sombre pour lisibilité */}
   <div className="absolute inset-0 bg-black/55 pointer-events-none z-0" />
-      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <div
+        className="relative z-10 border-b border-amber-900/60 px-4 py-3 flex items-center gap-3"
+        style={{
+          backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
         <button
           onClick={onBack}
-          className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
+          className="relative z-10 px-3 py-1.5 text-sm bg-amber-950/70 hover:bg-amber-900/70 border border-amber-800/50 rounded-lg text-amber-200 transition-colors"
         >
           ← Retour
         </button>
-        <Map className="text-amber-500" size={20} />
-        <h1 className="text-lg font-bold">VTT Beta</h1>
-        <span className="px-2 py-0.5 text-xs bg-amber-900/50 text-amber-400 rounded-full border border-amber-700/50">
+        <Map className="relative z-10 text-amber-400" size={20} />
+        <h1 className="relative z-10 text-lg font-bold text-amber-100 tracking-wide" style={{ fontFamily: 'serif' }}>
+          VTT Beta
+        </h1>
+        <span className="relative z-10 px-2 py-0.5 text-xs bg-amber-800/60 text-amber-300 rounded-full border border-amber-600/60">
           Beta fermée
         </span>
       </div>
