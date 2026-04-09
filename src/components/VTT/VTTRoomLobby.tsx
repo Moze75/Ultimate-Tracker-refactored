@@ -442,9 +442,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             <button
               type="submit"
               disabled={creating || !newRoomName.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded text-sm font-medium transition-all"
             >
-              <Plus size={16} />
+              <Plus size={14} />
               Créer
             </button>
           </form>
