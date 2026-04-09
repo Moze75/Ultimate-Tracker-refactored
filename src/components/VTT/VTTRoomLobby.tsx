@@ -483,9 +483,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500 text-sm">Chargement...</div>
+            <div className="text-center py-8 text-gray-600 text-sm">Chargement...</div>
           ) : (rooms.length === 0 && subscribedRooms.length === 0) ? (
-            <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="text-center py-8 text-gray-600 text-sm">
               Aucune table. Créez-en une pour commencer.
             </div>
           ) : (
