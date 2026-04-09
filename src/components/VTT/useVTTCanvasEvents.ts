@@ -1152,11 +1152,17 @@ const fuseWallPoints = (
         const wall = currentWalls.find(w => w.id === drag.wallId);
         if (wall) {
           const snappedPreview = snapWallPoint(wp2, wallsRef.current, drag.wallId, drag.pointIndex);
-          const newPoints = wall.points.map((pt, i) =>
+          // Remplacer le point draggé par sa position snappée
+          const newPoints = wall.points.map((pt: { x: number; y: number }, i: number) =>
             i === drag.pointIndex ? snappedPreview : pt
           );
+          // Dédupliquer immédiatement (pour le preview visuel) sans supprimer le point draggé
           const updatedWall = { ...wall, points: newPoints };
           wallsRef.current = currentWalls.map(w => w.id === drag.wallId ? updatedWall : w);
+          // Mémoriser si on est sur un point cible (pour feedback visuel)
+          drag.isSnappedToTarget = newPoints.some((pt: { x: number; y: number }, i: number) =>
+            i !== drag.pointIndex && pt.x === snappedPreview.x && pt.y === snappedPreview.y
+          );
           drawRef.current();
         }
       }
