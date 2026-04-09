@@ -1620,7 +1620,6 @@ const fuseWallPoints = (
 // Persistance + fusion au lâcher en wall-select
 if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
   const drag = draggingWallPointRef.current;
-  const snapTargetRef = useRef<{ x: number; y: number } | null>(null);
   const currentWalls = wallsRef.current || [];
   const wall = currentWalls.find(w => w.id === drag.wallId);
   if (wall && drag.phase === 'moving') {
@@ -1628,11 +1627,13 @@ if (activeToolRef.current === 'wall-select' && draggingWallPointRef.current) {
     const scale = viewportRef.current.scale;
     const fusionRadius = SNAP_RADIUS_PX / scale;
 
-    // Chercher un point cible sur un autre mur dans le rayon de fusion
+    // Chercher un point cible sur n'importe quel mur (y compris le même)
+    // en excluant uniquement le point en cours de déplacement
     let targetPt: { x: number; y: number } | null = null;
     for (const other of currentWalls) {
-      if (other.id === drag.wallId) continue;
-      for (const pt of other.points) {
+      for (let pi = 0; pi < other.points.length; pi++) {
+        if (other.id === drag.wallId && pi === drag.pointIndex) continue;
+        const pt = other.points[pi];
         const dx = pt.x - movedPt.x;
         const dy = pt.y - movedPt.y;
         if (Math.sqrt(dx * dx + dy * dy) < fusionRadius) {
