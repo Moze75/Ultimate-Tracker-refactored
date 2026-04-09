@@ -182,6 +182,7 @@ export function useVTTCanvasEvents({
     originalX: number;
     originalY: number;
     phase?: 'selected' | 'moving';
+    isSnappedToTarget?: boolean;
   }
   const draggingWallPointRef = useRef<DraggingWallPoint | null>(null);
 
