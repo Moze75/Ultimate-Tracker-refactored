@@ -499,12 +499,21 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               <LogIn size={16} />
               Rejoindre
             </button>
-          </div> 
+          </div>{/* fin z-10 */}
         </div>
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+        <div
+          className="rounded-xl border border-amber-900/50 p-4 shadow-lg relative overflow-hidden"
+          style={{
+            backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
+            <h2 className="text-sm font-semibold text-amber-300 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Mes tables</h2>
             <button
               onClick={fetchRooms}
               className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-400"
@@ -595,13 +604,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               })}
             </div>
           )}
-        </div> 
+          </div>{/* fin z-10 */}
+        </div>
 
- 
-        
-   
-
-        <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
+        <div className="bg-emerald-950/60 border border-emerald-800/40 rounded-lg p-3 backdrop-blur-sm">
           <p className="text-xs text-blue-300">
             <strong>VTT Beta :</strong> Créez une table en tant que MJ et partagez l'ID avec vos joueurs.
             Les tokens, la carte et le brouillard de guerre sont synchronisés en temps réel.
