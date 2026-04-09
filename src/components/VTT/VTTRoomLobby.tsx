@@ -378,42 +378,22 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   };
 
   return (
-<div
-  className="min-h-screen text-white flex flex-col relative"
-  style={{
-    backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Forest%201.png')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
-  }}
->
-  {/* Overlay sombre pour lisibilité */}
-  <div className="absolute inset-0 bg-black/55 pointer-events-none z-0" />
-      <div
-        className="relative z-10 border-b border-amber-900/60 px-4 py-3 flex items-center gap-3"
-        style={{
-          backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col"> 
+      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="relative z-10 px-3 py-1.5 text-sm bg-amber-950/70 hover:bg-amber-900/70 border border-amber-800/50 rounded-lg text-amber-200 transition-colors"
+          className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
         >
           ← Retour
         </button>
-        <Map className="relative z-10 text-amber-400" size={20} />
-        <h1 className="relative z-10 text-lg font-bold text-amber-100 tracking-wide" style={{ fontFamily: 'serif' }}>
-          VTT Beta
-        </h1>
-        <span className="relative z-10 px-2 py-0.5 text-xs bg-amber-800/60 text-amber-300 rounded-full border border-amber-600/60">
+        <Map className="text-amber-500" size={20} />
+        <h1 className="text-lg font-bold">VTT Beta</h1>
+        <span className="px-2 py-0.5 text-xs bg-amber-900/50 text-amber-400 rounded-full border border-amber-700/50">
           Beta fermée
         </span>
       </div>
 
-      <div className="relative z-10 flex-1 max-w-2xl mx-auto w-full px-4 py-6 space-y-6">
+      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 space-y-6">
         {error && (
           <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-sm text-red-300 flex items-center justify-between">
             <span>{error}</span>
@@ -421,17 +401,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         )}
 
-        <div
-          className="rounded-xl border border-amber-900/50 p-4 shadow-lg relative overflow-hidden"
-          style={{
-            backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
-          <div className="relative z-10">
-          <h2 className="text-sm font-semibold text-amber-300 mb-3 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Créer une nouvelle table</h2>
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-2">
               <input
@@ -439,7 +410,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 value={newRoomName}
                 onChange={e => setNewRoomName(e.target.value)}
                 placeholder="Nom de la table..."
-                className="flex-1 px-3 py-2 bg-black/40 border border-amber-800/60 rounded-lg text-amber-100 placeholder-amber-700/60 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
               />
             </div>
             {campaigns.length > 0 && (
@@ -469,20 +440,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </form>
         </div>
 
-          </div>{/* fin z-10 */}
-        </div>
-
-        <div
-          className="rounded-xl border border-amber-900/50 p-4 shadow-lg relative overflow-hidden"
-          style={{
-            backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
-          <div className="relative z-10">
-          <h2 className="text-sm font-semibold text-amber-300 mb-3 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Rejoindre par ID</h2>
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Rejoindre par ID</h2>
           <div className="flex gap-2">
             <input
               type="text"
@@ -499,21 +458,12 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               <LogIn size={16} />
               Rejoindre
             </button>
-          </div>{/* fin z-10 */}
+          </div>
         </div>
 
-        <div
-          className="rounded-xl border border-amber-900/50 p-4 shadow-lg relative overflow-hidden"
-          style={{
-            backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/BGAmbre2.webp')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/65 pointer-events-none rounded-xl" />
-          <div className="relative z-10">
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-amber-300 tracking-wide uppercase" style={{ fontFamily: 'serif' }}>Mes tables</h2>
+            <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
             <button
               onClick={fetchRooms}
               className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-400"
@@ -604,10 +554,13 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
               })}
             </div>
           )}
-          </div>{/* fin z-10 */}
-        </div>
+        </div> 
 
-        <div className="bg-emerald-950/60 border border-emerald-800/40 rounded-lg p-3 backdrop-blur-sm">
+ 
+        
+   
+
+        <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
           <p className="text-xs text-blue-300">
             <strong>VTT Beta :</strong> Créez une table en tant que MJ et partagez l'ID avec vos joueurs.
             Les tokens, la carte et le brouillard de guerre sont synchronisés en temps réel.
