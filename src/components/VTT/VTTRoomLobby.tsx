@@ -471,14 +471,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         </div>
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
+        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Mes tables</h2>
             <button
               onClick={fetchRooms}
-              className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-400"
+              className="p-1.5 hover:bg-white/8 rounded text-gray-500 hover:text-gray-300 transition-all"
             >
-              <RefreshCw size={14} />
+              <RefreshCw size={13} />
             </button>
           </div>
 
