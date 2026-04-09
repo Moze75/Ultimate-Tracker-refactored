@@ -744,7 +744,7 @@ const renderStep = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 pt-0 pb-8">
+      <div ref={stepContainerRef} className="container mx-auto px-4 pt-0 pb-8">
         <div className="max-w-6xl mx-auto">
           <ProgressBar
             currentStep={currentStep}
