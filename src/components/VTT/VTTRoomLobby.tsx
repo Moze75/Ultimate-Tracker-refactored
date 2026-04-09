@@ -567,14 +567,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             </div>
           )}
         </div> 
-
+ 
  
         
    
 
-        <div className="bg-white/4 border border-white/8 rounded p-3">
-          <p className="text-xs text-gray-500">
-            <strong className="text-gray-400">VTT Beta :</strong> Créez une table en tant que MJ et partagez l'ID avec vos joueurs.
+        <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
+          <p className="text-xs text-blue-300">
+            <strong>VTT Beta :</strong> Créez une table en tant que MJ et partagez l'ID avec vos joueurs.
             Les tokens, la carte et le brouillard de guerre sont synchronisés en temps réel.
           </p>
         </div>
