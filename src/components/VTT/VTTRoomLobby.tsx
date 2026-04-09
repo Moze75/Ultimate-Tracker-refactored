@@ -503,8 +503,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 return (
                   <div
                     key={room.id}
-                    className={`flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg border border-gray-700/50 transition-colors ${
-                      isSubscribedRoom ? 'hover:border-blue-700/50' : 'hover:border-amber-700/50'
+                    className={`flex items-center gap-3 p-3 rounded border transition-all ${
+                      isSubscribedRoom
+                        ? 'bg-white/4 border-white/7 hover:bg-blue-950/30 hover:border-blue-500/30'
+                        : 'bg-white/4 border-white/7 hover:bg-amber-950/30 hover:border-amber-500/30'
                     }`}
                   >
                               <Map size={18} className={isSubscribedRoom ? 'text-blue-400 shrink-0' : 'text-amber-500 shrink-0'} />
