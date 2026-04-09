@@ -450,22 +450,22 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </form>
         </div>
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Rejoindre par ID</h2>
+        <div className="bg-black/45 backdrop-blur-md border border-white/8 rounded-lg p-5">
+          <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">Rejoindre par ID</h2>
           <div className="flex gap-2">
             <input
               type="text"
               value={joinRoomId}
               onChange={e => setJoinRoomId(e.target.value)}
               placeholder="ID de la room..."
-              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm placeholder-gray-600 focus:ring-1 focus:ring-blue-500/60 focus:border-blue-500/40 outline-none transition-all"
             />
             <button
               onClick={() => joinRoomId.trim() && setPendingJoinRoomId(joinRoomId.trim())}
               disabled={!joinRoomId.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600/80 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-sm font-medium transition-all"
             >
-              <LogIn size={16} />
+              <LogIn size={14} />
               Rejoindre
             </button>
           </div>
