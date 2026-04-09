@@ -437,13 +437,7 @@ if (!cfg.fogEnabled) {
 } else if (isDay && curRole === 'player' && currentWalls.length > 0 && (curUserId !== '' || isPlayerVisionSpectator)) {
     const playerTokens = myVisionTokens;
     if (playerTokens.length > 0) {
-      const dayWallSegs = currentWalls.flatMap(w => {
-        const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
-        for (let i = 0; i < w.points.length - 1; i++) {
-          segs.push({ x1: w.points[i].x, y1: w.points[i].y, x2: w.points[i + 1].x, y2: w.points[i + 1].y });
-        }
-        return segs;
-      });
+      const dayWallSegs = getEffectiveWallSegments(currentWalls, ctx2d.doorsRef.current, ctx2d.windowsRef.current);
       const dayInfiniteR = Math.max(mapW, mapH) * 1.5;
 
       // -------------------
