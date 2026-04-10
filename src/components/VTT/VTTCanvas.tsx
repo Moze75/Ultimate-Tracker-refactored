@@ -64,9 +64,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const containerRef = useRef<HTMLDivElement>(null);
   const brushOverlayRef = useRef<HTMLDivElement>(null);
 
-  const mapImgRef = useRef<HTMLImageElement | null>(null);
-  const mapLoadedRef = useRef(false);
-  const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
+const tokenImageCache = useRef<Map<string, HTMLImageElement>>(
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
   const viewportFocusAnimRef = useRef<number | null>(null);
