@@ -200,9 +200,7 @@ export function VTTLeftToolbar({
   const isMeasureConeTool = activeTool === 'measure-cone';
   const isAnyMeasureTool = isMeasureTool || isMeasureCircleTool || isMeasureConeTool;
 
-  const [measurePopupOpen, setMeasurePopupOpen] = useState(false);
-  const measureBtnRef = useRef<HTMLDivElement>(null);
-  const measurePopupRef = useRef<HTMLDivElement>(null);
+
 
   return (
     <div className="relative flex flex-col items-center w-12 bg-transparent h-full shrink-0" style={{ paddingTop: '4px', paddingBottom: '8px', gap: '4px' }}>
