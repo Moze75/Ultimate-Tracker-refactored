@@ -407,7 +407,7 @@ body::before {
    ------------------- */
 .vtt-lobby-card--compact::after {
   top: -38px;
-  bottom: -42px;
+  bottom: -38px;
   left: -36px;
   right: -36px;
   /* -------------------
