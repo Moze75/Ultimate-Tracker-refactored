@@ -275,6 +275,15 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const noOp = useCallback(() => {}, []);
   const noOpStroke = useCallback(() => {}, []);
 
+  // -------------------
+  // Synchronisation du viewport broadcast
+  // -------------------
+  // Utilisé pour aligner les props HTML (images / vidéos)
+  // avec le pan / zoom réel du canvas.
+  const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
+    setCanvasViewport(vp);
+  }, []);
+
 
   return (
     <div
