@@ -1386,9 +1386,11 @@ if (!cfg.fogEnabled) {
     }
   }
 
-  // --- MESURE ---
+   // --- MESURE ---
   const mStart = ctx2d.measureStartRef.current;
   const mEnd = ctx2d.measureEndRef.current;
+  const activeMeasureTool = ctx2d.activeToolRef.current;
+
   if (mStart && mEnd) {
     const dx = mEnd.x - mStart.x;
     const dy = mEnd.y - mStart.y;
@@ -1396,42 +1398,170 @@ if (!cfg.fogEnabled) {
     const gridSz = cfg.gridSize || 50;
     const squares = distPx / gridSz;
     const meters = squares * 1.5;
-    ctx.strokeStyle = 'rgba(56,189,248,0.8)';
-    ctx.lineWidth = 2.5 / vp.scale;
-    ctx.setLineDash([8 / vp.scale, 4 / vp.scale]);
-    ctx.beginPath();
-    ctx.moveTo(mStart.x, mStart.y);
-    ctx.lineTo(mEnd.x, mEnd.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    for (const pt of [mStart, mEnd]) {
+
+    if (activeMeasureTool === 'measure-circle') {
+      // ── Cercle (rayon) ───────���──────────────────────────────────
+      const radiusPx = distPx;
+
+      // Zone remplie semi-transparente
+      ctx.fillStyle = 'rgba(168,85,247,0.12)';
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 5 / vp.scale, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56,189,248,0.9)';
+      ctx.arc(mStart.x, mStart.y, radiusPx, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Contour du cercle
+      ctx.strokeStyle = 'rgba(168,85,247,0.7)';
+      ctx.lineWidth = 2 / vp.scale;
+      ctx.setLineDash([8 / vp.scale, 4 / vp.scale]);
+      ctx.beginPath();
+      ctx.arc(mStart.x, mStart.y, radiusPx, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Ligne du rayon (centre → bord)
+      ctx.strokeStyle = 'rgba(168,85,247,0.5)';
+      ctx.lineWidth = 1.5 / vp.scale;
+      ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+      ctx.beginPath();
+      ctx.moveTo(mStart.x, mStart.y);
+      ctx.lineTo(mEnd.x, mEnd.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point central
+      ctx.beginPath();
+      ctx.arc(mStart.x, mStart.y, 5 / vp.scale, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(168,85,247,0.9)';
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5 / vp.scale;
       ctx.stroke();
+
+      // Label
+      const label = `⊙ ${meters.toFixed(1)} m (${squares.toFixed(1)} cases)`;
+      const fontSize = Math.max(12, 14 / vp.scale);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      const textW = ctx.measureText(label).width;
+      const padX = 6 / vp.scale;
+      const padY = 4 / vp.scale;
+      const labelX = mStart.x;
+      const labelY = mStart.y - radiusPx - 14 / vp.scale;
+      ctx.fillStyle = 'rgba(15,23,42,0.85)';
+      ctx.beginPath();
+      ctx.roundRect(labelX - textW / 2 - padX, labelY - fontSize / 2 - padY, textW + padX * 2, fontSize + padY * 2, 4 / vp.scale);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(168,85,247,0.6)';
+      ctx.lineWidth = 1 / vp.scale;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(168,85,247,0.95)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, labelX, labelY);
+
+    } else if (activeMeasureTool === 'measure-cone') {
+      // ── Cône (53°, standard D&D 5e) ────────────────────────────
+      const coneAngle = (53 * Math.PI) / 180;
+      const halfAngle = coneAngle / 2;
+      const direction = Math.atan2(dy, dx);
+
+      // Zone remplie semi-transparente
+      ctx.fillStyle = 'rgba(251,146,60,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(mStart.x, mStart.y);
+      ctx.arc(mStart.x, mStart.y, distPx, direction - halfAngle, direction + halfAngle);
+      ctx.closePath();
+      ctx.fill();
+
+      // Contour du cône
+      ctx.strokeStyle = 'rgba(251,146,60,0.7)';
+      ctx.lineWidth = 2 / vp.scale;
+      ctx.setLineDash([8 / vp.scale, 4 / vp.scale]);
+      ctx.beginPath();
+      ctx.moveTo(mStart.x, mStart.y);
+      ctx.arc(mStart.x, mStart.y, distPx, direction - halfAngle, direction + halfAngle);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Ligne centrale (direction)
+      ctx.strokeStyle = 'rgba(251,146,60,0.4)';
+      ctx.lineWidth = 1 / vp.scale;
+      ctx.setLineDash([4 / vp.scale, 3 / vp.scale]);
+      ctx.beginPath();
+      ctx.moveTo(mStart.x, mStart.y);
+      ctx.lineTo(mEnd.x, mEnd.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point d'origine
+      ctx.beginPath();
+      ctx.arc(mStart.x, mStart.y, 5 / vp.scale, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(251,146,60,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5 / vp.scale;
+      ctx.stroke();
+
+      // Label
+      const label = `◿ ${meters.toFixed(1)} m (${squares.toFixed(1)} cases)`;
+      const fontSize = Math.max(12, 14 / vp.scale);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      const textW = ctx.measureText(label).width;
+      const padX = 6 / vp.scale;
+      const padY = 4 / vp.scale;
+      const midX = (mStart.x + mEnd.x) / 2;
+      const midY = (mStart.y + mEnd.y) / 2;
+      ctx.fillStyle = 'rgba(15,23,42,0.85)';
+      ctx.beginPath();
+      ctx.roundRect(midX - textW / 2 - padX, midY - fontSize / 2 - padY, textW + padX * 2, fontSize + padY * 2, 4 / vp.scale);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(251,146,60,0.6)';
+      ctx.lineWidth = 1 / vp.scale;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(251,146,60,0.95)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, midX, midY);
+
+    } else {
+      // ── Ligne de mesure (outil existant) ────────────────────────
+      ctx.strokeStyle = 'rgba(56,189,248,0.8)';
+      ctx.lineWidth = 2.5 / vp.scale;
+      ctx.setLineDash([8 / vp.scale, 4 / vp.scale]);
+      ctx.beginPath();
+      ctx.moveTo(mStart.x, mStart.y);
+      ctx.lineTo(mEnd.x, mEnd.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      for (const pt of [mStart, mEnd]) {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5 / vp.scale, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56,189,248,0.9)';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5 / vp.scale;
+        ctx.stroke();
+      }
+      const midX = (mStart.x + mEnd.x) / 2;
+      const midY = (mStart.y + mEnd.y) / 2;
+      const label = `${meters.toFixed(1)} m (${squares.toFixed(1)} cases)`;
+      const fontSize = Math.max(12, 14 / vp.scale);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      const textW = ctx.measureText(label).width;
+      const padX = 6 / vp.scale;
+      const padY = 4 / vp.scale;
+      ctx.fillStyle = 'rgba(15,23,42,0.85)';
+      ctx.beginPath();
+      ctx.roundRect(midX - textW / 2 - padX, midY - fontSize / 2 - padY, textW + padX * 2, fontSize + padY * 2, 4 / vp.scale);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56,189,248,0.6)';
+      ctx.lineWidth = 1 / vp.scale;
+      ctx.stroke();
+      ctx.fillStyle = '#38bdf8';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, midX, midY);
     }
-    const midX = (mStart.x + mEnd.x) / 2;
-    const midY = (mStart.y + mEnd.y) / 2;
-    const label = `${meters.toFixed(1)} m (${squares.toFixed(1)} cases)`;
-    const fontSize = Math.max(12, 14 / vp.scale);
-    ctx.font = `bold ${fontSize}px sans-serif`;
-    const textW = ctx.measureText(label).width;
-    const padX = 6 / vp.scale;
-    const padY = 4 / vp.scale;
-    ctx.fillStyle = 'rgba(15,23,42,0.85)';
-    ctx.beginPath();
-    ctx.roundRect(midX - textW / 2 - padX, midY - fontSize / 2 - padY, textW + padX * 2, fontSize + padY * 2, 4 / vp.scale);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(56,189,248,0.6)';
-    ctx.lineWidth = 1 / vp.scale;
-    ctx.stroke();
-    ctx.fillStyle = '#38bdf8';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, midX, midY);
   }
 
   // --- RECTANGLE DE PREVIEW FOG ---
