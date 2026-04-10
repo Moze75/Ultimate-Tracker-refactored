@@ -170,7 +170,6 @@ export function VTTLeftToolbar({
         notesBtnRef.current && !notesBtnRef.current.contains(target)) {
         setNotesPopupOpen(false);
       }
-    };
       if (measurePopupOpen &&
         measurePopupRef.current && !measurePopupRef.current.contains(target) &&
         measureBtnRef.current && !measureBtnRef.current.contains(target)) {
