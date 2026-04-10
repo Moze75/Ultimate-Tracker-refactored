@@ -7,7 +7,7 @@ import type { VTTRole, VTTRoomConfig } from '../../types/vtt';
 // Outils actifs du VTT
 // fog-rect-reveal / fog-rect-erase : sélection rectangulaire pour reveal/masquage
 // -------------------
-export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'window-place' | 'measure' | 'note-place';
+export type VTTActiveTool = 'select' | 'fog-reveal' | 'fog-erase' | 'fog-rect-reveal' | 'fog-rect-erase' | 'grid-calibrate' | 'wall-draw' | 'wall-select' | 'door-place' | 'window-place' | 'measure' | 'measure-circle' | 'measure-cone' | 'note-place';
 
 interface VTTLeftToolbarProps {
   role: VTTRole;
