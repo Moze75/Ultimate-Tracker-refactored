@@ -1562,6 +1562,61 @@ if (!cfg.fogEnabled) {
       ctx.textBaseline = 'middle';
       ctx.fillText(label, midX, midY);
     }
+
+    // --- HIGHLIGHT TOKENS INTERCEPTÉS (cercle / cône) ---
+    if (activeMeasureTool === 'measure-circle' || activeMeasureTool === 'measure-cone') {
+      const allTokens = ctx2d.tokensRef.current;
+      const coneAngle = (53 * Math.PI) / 180;
+      const halfAngle = coneAngle / 2;
+      const direction = Math.atan2(dy, dx);
+
+      for (const t of allTokens) {
+        if (!t.visible) continue;
+        const ts = (t.size || 1) * CELL;
+        const tcx = t.position.x + ts / 2;
+        const tcy = t.position.y + ts / 2;
+
+        let isHit = false;
+
+        if (activeMeasureTool === 'measure-circle') {
+          const tdx = tcx - mStart.x;
+          const tdy = tcy - mStart.y;
+          if (Math.sqrt(tdx * tdx + tdy * tdy) <= distPx + ts / 2) {
+            isHit = true;
+          }
+        } else {
+          const tdx = tcx - mStart.x;
+          const tdy = tcy - mStart.y;
+          const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
+          if (tDist <= distPx + ts / 2) {
+            const tAngle = Math.atan2(tdy, tdx);
+            let angleDiff = tAngle - direction;
+            while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+            while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+            if (Math.abs(angleDiff) <= halfAngle + Math.atan2(ts / 2, Math.max(1, tDist))) {
+              isHit = true;
+            }
+          }
+        }
+
+        if (isHit) {
+          const highlightColor = activeMeasureTool === 'measure-circle'
+            ? 'rgba(168,85,247,0.35)'
+            : 'rgba(251,146,60,0.35)';
+          const borderColor = activeMeasureTool === 'measure-circle'
+            ? 'rgba(168,85,247,0.8)'
+            : 'rgba(251,146,60,0.8)';
+
+          ctx.beginPath();
+          ctx.arc(tcx, tcy, ts / 2 + 4 / vp.scale, 0, Math.PI * 2);
+          ctx.fillStyle = highlightColor;
+          ctx.fill();
+          ctx.strokeStyle = borderColor;
+          ctx.lineWidth = 2 / vp.scale;
+          ctx.stroke();
+        }
+      }
+    }
   }
 
   // --- RECTANGLE DE PREVIEW FOG ---
