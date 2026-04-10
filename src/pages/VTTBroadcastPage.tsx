@@ -308,6 +308,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   walls={walls}
   doors={doors}
   windows={windows}
+  props={props}
   forceViewport={initialForceViewport ?? undefined}
 />
 
