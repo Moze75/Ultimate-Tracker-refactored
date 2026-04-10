@@ -60,6 +60,7 @@ export function VTTPlayerList({ users, tokens = [] }: VTTPlayerListProps) {
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  return (
 
 
 
