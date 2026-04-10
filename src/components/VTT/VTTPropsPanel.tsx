@@ -278,6 +278,13 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
   };
 
   // ── Rendu d'une prop ───────────────────────────────────────────────────────
+    // -------------------
+  // Gestion du rendu d'une prop dans la bibliothèque
+  // -------------------
+  // Affichage en ligne :
+  // - aperçu draggable à gauche
+  // - nom à droite
+  // - actions en fin de ligne
   const renderProp = (entry: PropEntry) => {
     const isRenaming = renamingId === entry.id;
     const isDragging = dragGhost?.propId === entry.id;
@@ -286,13 +293,17 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
     return (
       <div
         key={entry.id}
-        className={`group relative w-full overflow-hidden transition-all select-none ${
+        className={`group flex items-center gap-3 mx-2 my-1 px-2 py-2 rounded-lg border border-gray-700/60 bg-gray-800/40 hover:bg-gray-800/70 transition-all select-none ${
           isDragging ? 'opacity-40' : 'opacity-100'
         }`}
       >
-        {/* Zone thumbnail — drag HTML5 vers le canvas */}
+        {/* -------------------
+            Aperçu draggable du prop
+            -------------------
+            Sert au drag & drop vers le canvas.
+        ------------------- */}
         <div
-          className="w-full h-20 relative"
+          className="relative shrink-0 w-14 h-14 flex items-center justify-center cursor-grab active:cursor-grabbing"
           draggable
           onDragStart={e => {
             e.dataTransfer.setData('application/vtt-prop-url', entry.url);
@@ -303,26 +314,17 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
         >
           {renderThumb(entry)}
           {isVid && (
-            <div className="absolute top-1 left-1 p-0.5 bg-black/60 rounded">
+            <div className="absolute top-0 left-0 p-0.5 bg-black/60 rounded">
               <Film size={9} className="text-purple-400" />
             </div>
           )}
-          {/* Poignée de drag interne (réorganisation vers dossier) */}
-          <div
-            className="absolute top-1 right-1 p-0.5 bg-black/50 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Déplacer vers un dossier"
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              startInternalDrag(e, entry);
-            }}
-          >
-            <span className="text-gray-300 text-[10px] leading-none select-none">⠿</span>
-          </div>
         </div>
 
-        {/* Bandeau bas */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-1.5 py-1 flex items-end justify-between gap-1">
+        {/* -------------------
+            Nom et renommage du prop
+            -------------------
+        ------------------- */}
+        <div className="flex-1 min-w-0">
           {isRenaming ? (
             <input
               ref={renameInputRef}
@@ -333,33 +335,83 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
                 if (e.key === 'Escape') setRenamingId(null);
               }}
               onClick={e => e.stopPropagation()}
-              className="flex-1 px-1 py-0 bg-black/60 border border-amber-500 rounded text-white text-[10px] outline-none"
+              className="w-full px-2 py-1 bg-black/40 border border-amber-500 rounded text-white text-xs outline-none"
             />
           ) : (
-            <span className="flex-1 text-[10px] truncate font-medium leading-tight text-gray-200" title={entry.name}>
+            <span className="block text-xs text-gray-200 truncate font-medium" title={entry.name}>
               {entry.name}
             </span>
           )}
-          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            {/* Placer sur le canvas */}
-               <button
-              onMouseDown={e => { e.stopPropagation(); console.log('[DEBUG PROP] onMouseDown bouton Placer'); }}
-              onClick={e => { e.stopPropagation(); e.preventDefault(); console.log('[DEBUG PROP] onClick bouton Placer', entry.name); handlePlaceProp(entry); }}
-              className="p-0.5 rounded bg-amber-600/90 hover:bg-amber-500 text-white"
-              title="Placer sur le canvas"
+        </div>
+
+        {/* -------------------
+            Actions sur la prop
+            -------------------
+        ------------------- */}
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              startInternalDrag(e, entry);
+            }}
+            className="p-1 rounded bg-black/40 hover:bg-gray-700 text-gray-300"
+            title="Déplacer vers un dossier"
+          >
+            <span className="text-[10px] leading-none select-none">⠿</span>
+          </button>
+
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => {
+              e.stopPropagation();
+              e.preventDefault();
+              handlePlaceProp(entry);
+            }}
+            className="p-1 rounded bg-amber-600/90 hover:bg-amber-500 text-white"
+            title="Placer sur le canvas"
+          >
+            <Check size={10} />
+          </button>
+
+          {isRenaming ? (
+            <>
+              <button
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => handleRenameConfirm('prop')}
+                className="p-1 rounded bg-green-600/90 hover:bg-green-500 text-white"
+                title="Valider"
+              >
+                <Check size={10} />
+              </button>
+              <button
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => setRenamingId(null)}
+                className="p-1 rounded bg-gray-600/90 hover:bg-gray-500 text-white"
+                title="Annuler"
+              >
+                <X size={10} />
+              </button>
+            </>
+          ) : (
+            <button
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => handleRenameStart(entry.id, entry.name)}
+              className="p-1 rounded bg-gray-600/90 hover:bg-gray-500 text-white"
+              title="Renommer"
             >
-              <Check size={10} />
+              <Edit2 size={10} />
             </button>
-            {isRenaming ? (
-              <>
-                <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameConfirm('prop')} className="p-0.5 rounded bg-green-600/90 hover:bg-green-500 text-white"><Check size={10} /></button>
-                <button onMouseDown={e => e.stopPropagation()} onClick={() => setRenamingId(null)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white"><X size={10} /></button>
-              </>
-            ) : (
-              <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameStart(entry.id, entry.name)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white" title="Renommer"><Edit2 size={10} /></button>
-            )}
-            <button onMouseDown={e => e.stopPropagation()} onClick={() => handleDeleteProp(entry.id)} className="p-0.5 rounded bg-red-700/90 hover:bg-red-600 text-white" title="Supprimer"><Trash2 size={10} /></button>
-          </div>
+          )}
+
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={() => handleDeleteProp(entry.id)}
+            className="p-1 rounded bg-red-700/90 hover:bg-red-600 text-white"
+            title="Supprimer"
+          >
+            <Trash2 size={10} />
+          </button>
         </div>
       </div>
     );
