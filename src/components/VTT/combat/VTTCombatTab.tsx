@@ -220,14 +220,22 @@ export function VTTCombatTab({
     lastAutoFocusedTurnKeyRef.current = null;
   }, [encounter?.id]);
 
-  // …mais si l'encounter chargé a déjà des participants (combat chargé depuis la BDD),
-  // on active immédiatement roundLaunched pour afficher le round et les boutons.
+  // …mais si l'encounter chargé a déjà des participants ET qu'un round a
+  // effectivement démarré (round_number >= 1 ET current_turn_index > 0, ou
+  // round_number >= 2), on active roundLaunched pour afficher le round et
+  // les boutons. Cela évite de highlight/focus dès l'ajout de tokens.
   useEffect(() => {
-    if (isActive && participants.length > 0 && !roundLaunchedRef.current) {
+    if (
+      isActive &&
+      participants.length > 0 &&
+      !roundLaunchedRef.current &&
+      encounter &&
+      (encounter.round_number >= 2 || encounter.current_turn_index > 0)
+    ) {
       roundLaunchedRef.current = true;
       setRoundLaunched(true);
     }
-  }, [isActive, participants.length]);
+  }, [isActive, participants.length, encounter?.round_number, encounter?.current_turn_index]);
 
   useEffect(() => {
     if (!isActive || !encounter) {
