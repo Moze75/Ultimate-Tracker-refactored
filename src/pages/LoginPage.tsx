@@ -257,7 +257,7 @@ const toggleForgotPassword = () => {
             className="animate-spin h-12 w-12 mx-auto mb-4 object-contain"
             style={{ backgroundColor: 'transparent' }}
           />
-          <p className="text-gray-200">Vérification de la connexion...</p>
+          <p className="text-gray-200">Établissement du lien mystique ...</p>
         </div>
       </div>
     );
