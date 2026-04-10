@@ -476,11 +476,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         </div>
 
         {/* -------------------
-            Carte "Mes tables" — frame AmbreFrame.png
-            padding-top élevé pour inclure le titre dans la zone visuellement encadrée
+            Carte "Mes tables" — frame AmbreFrame.png via ::after CSS
             ------------------- */}
-        <div className="vtt-lobby-card px-4 pt-8 pb-6">
-          <div className="vtt-lobby-card-frame" aria-hidden="true" />
+        <div className="vtt-lobby-card">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
             <button
