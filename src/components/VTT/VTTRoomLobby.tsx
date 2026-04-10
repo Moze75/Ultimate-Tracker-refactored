@@ -455,15 +455,20 @@ const fetchSubscribedRooms = async () => {
   // -------------------
   // Bloque complètement l'affichage du lobby tant que
   // le fond et les données critiques ne sont pas prêts.
+  // -------------------
+  // Écran de chargement initial
+  // -------------------
+  // Affiche un loader bloquant avec le fond bleu nuit
+  // déjà utilisé dans les autres écrans de chargement.
   if (isBootstrapLoading || !isBackgroundReady) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white px-6 text-center">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white px-6 text-center">
         <img
           src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/wmremove-transformed.webp"
           alt="Chargement"
-          className="w-20 h-20 animate-spin mb-6"
+          className="w-12 h-12 animate-spin mb-4"
         />
-        <p className="text-lg font-medium text-gray-200">Stabilisation de la Toile ...</p>
+        <p className="text-sm font-medium text-slate-300">Stabilisation de la Toile ...</p>
       </div>
     );
   }
