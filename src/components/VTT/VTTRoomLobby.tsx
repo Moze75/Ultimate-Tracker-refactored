@@ -193,53 +193,35 @@ const fetchSubscribedRooms = async () => {
   }
 };
   
-  useEffect(() => {
-  // -------------------
-  // Initialisation complète du lobby
-  // -------------------
-  // Attend le chargement des données critiques et du fond avant
-  // d'autoriser l'affichage du layout principal.
-  let isMounted = true;
+   useEffect(() => {
+    // -------------------
+    // Initialisation complète du lobby
+    // -------------------
+    // Attend le chargement des données critiques et du fond avant
+    // d'autoriser l'affichage du layout principal.
+    let isMounted = true;
 
-  const bootstrapLobby = async () => {
-    setIsBootstrapLoading(true);
+    const bootstrapLobby = async () => {
+      setIsBootstrapLoading(true);
 
-    await Promise.all([
-      preloadLobbyBackground(),
-      fetchRooms(),
-      fetchCampaigns(),
-      fetchSubscribedRooms(),
-    ]);
+      await Promise.all([
+        preloadLobbyBackground(),
+        fetchRooms(),
+        fetchCampaigns(),
+        fetchSubscribedRooms(),
+      ]);
 
-    if (isMounted) {
-      setIsBootstrapLoading(false);
-    }
-  };
+      if (isMounted) {
+        setIsBootstrapLoading(false);
+      }
+    };
 
-  bootstrapLobby();
+    bootstrapLobby();
 
-   // -------------------
-  // Écran de chargement initial
-  // -------------------
-  // Bloque complètement l'affichage du lobby tant que le fond
-  // et les données critiques ne sont pas prêts.
-  if (isBootstrapLoading || !isBackgroundReady) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white px-6 text-center">
-        <img
-          src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/wmremove-transformed.webp"
-          alt="Chargement"
-          className="w-20 h-20 animate-spin mb-6"
-        />
-        <p className="text-lg font-medium text-gray-200">Stabilisation de la Toile ...</p>
-      </div>
-    );
-  }
-
-  return () => {
-    isMounted = false;
-  };
-}, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
