@@ -949,6 +949,66 @@ const fuseWallPoints = (
           measureLockedRef.current = false;
         } else {
           measureLockedRef.current = true;
+
+          // Sélectionner les tokens interceptés par le cercle ou le cône
+          if (tool === 'measure-circle' || tool === 'measure-cone') {
+            const mStart = measureStartRef.current;
+            const mEnd = measureEndRef.current;
+            if (mStart && mEnd) {
+              const dx = mEnd.x - mStart.x;
+              const dy = mEnd.y - mStart.y;
+              const distPx = Math.sqrt(dx * dx + dy * dy);
+              const cfg = configRef.current;
+              const CELL = cfg.gridSize || 50;
+
+              const hitIds: string[] = [];
+
+              for (const t of tokensRef.current) {
+                if (!t.visible) continue;
+                const ts = (t.size || 1) * CELL;
+                const tcx = t.position.x + ts / 2;
+                const tcy = t.position.y + ts / 2;
+
+                if (tool === 'measure-circle') {
+                  // Token dans le cercle ?
+                  const tdx = tcx - mStart.x;
+                  const tdy = tcy - mStart.y;
+                  if (Math.sqrt(tdx * tdx + tdy * tdy) <= distPx + ts / 2) {
+                    hitIds.push(t.id);
+                  }
+                } else {
+                  // Token dans le cône ? (53° D&D 5e)
+                  const coneAngle = (53 * Math.PI) / 180;
+                  const halfAngle = coneAngle / 2;
+                  const direction = Math.atan2(dy, dx);
+
+                  const tdx = tcx - mStart.x;
+                  const tdy = tcy - mStart.y;
+                  const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
+
+                  // Tolérance : le bord du token peut dépasser légèrement
+                  if (tDist <= distPx + ts / 2) {
+                    const tAngle = Math.atan2(tdy, tdx);
+                    let angleDiff = tAngle - direction;
+                    // Normaliser entre -π et +π
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+                    if (Math.abs(angleDiff) <= halfAngle + Math.atan2(ts / 2, Math.max(1, tDist))) {
+                      hitIds.push(t.id);
+                    }
+                  }
+                }
+              }
+
+              if (hitIds.length > 0) {
+                onSelectTokensRef.current?.(hitIds);
+                if (hitIds.length === 1) {
+                  onSelectTokenRef.current(hitIds[0]);
+                }
+              }
+            }
+          }
         }
       }
     };
