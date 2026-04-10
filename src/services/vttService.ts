@@ -297,6 +297,17 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           this.localState.doors = serverEvent.doors;
         } else if (serverEvent.type === 'WEATHER_UPDATED') {
           this.localState.config = { ...this.localState.config, weatherEffects: serverEvent.effects };
+        } else if (serverEvent.type === 'PROP_ADDED') {
+          const exists = this.localState.props.some(p => p.id === serverEvent.prop.id);
+          if (!exists) {
+            this.localState.props = [...this.localState.props, serverEvent.prop];
+          }
+        } else if (serverEvent.type === 'PROP_REMOVED') {
+          this.localState.props = this.localState.props.filter(p => p.id !== serverEvent.propId);
+        } else if (serverEvent.type === 'PROP_UPDATED') {
+          this.localState.props = this.localState.props.map(p =>
+            p.id === serverEvent.propId ? { ...p, ...serverEvent.changes } : p
+          );
         }
         this.messageHandlers.forEach(h => h(serverEvent));
       })
