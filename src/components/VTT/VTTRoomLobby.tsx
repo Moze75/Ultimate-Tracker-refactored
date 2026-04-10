@@ -410,23 +410,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         )}
 
-        <div className="relative bg-gray-900/60 rounded-xl border border-gray-700/50 p-4 overflow-visible">
-          {/* Cadre décoratif coin haut-gauche */}
-          <img
-            src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png"
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-3 -left-3 w-14 h-14 object-contain z-10"
-          />
-          {/* Cadre décoratif coin bas-droite */}
-          <img
-            src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png"
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-3 -right-3 w-14 h-14 object-contain z-10"
-          />
+        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
-          <form onSubmit={handleCreate} className="space-y-3">
+          <form onSubmit={handleCreate} className="space-y-3"> 
             <div className="flex gap-2">
               <input
                 type="text"
