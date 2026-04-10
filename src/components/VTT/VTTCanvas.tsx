@@ -854,6 +854,14 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       }
       combatTurnHighlightRef.current = null;
 
+      // -------------------
+      // Arrêt de la boucle vidéo de fond
+      // -------------------
+      if (mapVideoAnimRef.current) {
+        cancelAnimationFrame(mapVideoAnimRef.current);
+        mapVideoAnimRef.current = null;
+      }
+
       if (!exploredMaskWasResetRef.current) {
         saveExploredMaskSnapshot(sceneIdRef.current);
       }
