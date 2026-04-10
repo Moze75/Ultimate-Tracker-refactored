@@ -409,12 +409,8 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
             <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-300">✕</button>
           </div>
         )}
-
+ 
         <div className="vtt-create-card p-4">
-          <img src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png" aria-hidden="true" className="vtt-corner vtt-corner--tl" alt="" />
-          <img src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png" aria-hidden="true" className="vtt-corner vtt-corner--tr" alt="" />
-          <img src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png" aria-hidden="true" className="vtt-corner vtt-corner--bl" alt="" />
-          <img src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png" aria-hidden="true" className="vtt-corner vtt-corner--br" alt="" />
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3"> 
             <div className="flex gap-2">
