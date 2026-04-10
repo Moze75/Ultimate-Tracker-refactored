@@ -937,7 +937,7 @@ const fuseWallPoints = (
           };
           drawRef.current();
         }
-      } else if (tool === 'measure') {
+      } else if (tool === 'measure' || tool === 'measure-circle' || tool === 'measure-cone') {
         if (measureLockedRef.current) {
           measureStartRef.current = null;
           measureEndRef.current = null;
