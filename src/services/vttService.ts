@@ -145,7 +145,7 @@ private localState: LocalState = {
     try {
 const { data: scenes, error: scenesError } = await supabase
   .from('vtt_scenes')
-  .select('id, walls, doors, windows, fog_state')
+  .select('id, walls, doors, windows, fog_state, props')
   .eq('room_id', roomId)
   .order('order_index', { ascending: true });
 
@@ -178,6 +178,10 @@ if (resolvedScenes && resolvedScenes.length > 0) {
     this.localState.windows = activeScene.windows;
   }
 
+  if (Array.isArray(activeScene?.props)) {
+    this.localState.props = activeScene.props;
+  }
+
   // -------------------
   // Chargement du brouillard de guerre de la scène active
   // -------------------
@@ -207,6 +211,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           windows: this.localState.windows,
           walls: this.localState.walls,
           doors: this.localState.doors,
+          props: this.localState.props,
           connectedUsers: [userId],
           lastSnapshot: Date.now(),
         },

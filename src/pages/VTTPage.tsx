@@ -425,6 +425,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         setWalls(event.state.room.walls || []);
         setDoors(event.state.room.doors || []);
         setWindows((event.state.room as any).windows || []);
+        setProps((event.state.room as any).props || []);
         setRole(event.state.yourRole);
         setWeatherEffects(event.state.room.config.weatherEffects || []);
         if (event.state.yourRole === 'gm') {
@@ -2240,43 +2241,7 @@ onMouseDown={e => {
   setSelectedPropId(null);
 }}
           onDragOver={e => e.preventDefault()}
-          onDrop={e => {
-            e.preventDefault();
-
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            const dropX = e.clientX - rect.left;
-            const dropY = e.clientY - rect.top;
-
-            const propId = e.dataTransfer.getData('application/vtt-prop-id');
-            if (propId) {
-              handleUpdateProp(propId, {
-                position: { x: dropX, y: dropY },
-              });
-              return;
-            }
-
-            const propUrl = e.dataTransfer.getData('application/vtt-prop-url');
-            const propName = e.dataTransfer.getData('application/vtt-prop-name');
-            const propIsVideo = e.dataTransfer.getData('application/vtt-prop-isvideo') === 'true';
-
-            if (propUrl) {
-              const width = propIsVideo ? 200 : 150;
-              const height = propIsVideo ? 200 : 150;
-
-              handleAddProp({
-                label: propName || 'Prop',
-                imageUrl: propUrl,
-                position: {
-                  x: dropX - width / 2,
-                  y: dropY - height / 2,
-                },
-                width,
-                height,
-                opacity: 1,
-                locked: false,
-              });
-            }
-          }}
+          onDrop={e => { e.preventDefault(); }}
         >
           {role === 'gm' && scenes.length > 0 && (
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none flex justify-center">

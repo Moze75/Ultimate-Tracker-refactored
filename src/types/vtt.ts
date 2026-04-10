@@ -178,6 +178,7 @@ export interface VTTRoom {
   walls: VTTWall[];
   doors?: VTTDoor[];
   windows?: VTTWindow[];
+  props?: VTTProp[];
   connectedUsers: string[];
   lastSnapshot: number;
 }
