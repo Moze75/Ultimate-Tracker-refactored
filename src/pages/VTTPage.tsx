@@ -1558,13 +1558,29 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     vttService.broadcastPropEvent({ type: 'PROP_REMOVED', propId });
   }, [persistSceneProps, pushUndoSnapshot]);
 
-    const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
+  const propBroadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPropBroadcastRef = useRef<{ propId: string; changes: Partial<VTTProp> } | null>(null);
+
+  const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
     setProps(prev => {
       const next = prev.map(p => (p.id === propId ? { ...p, ...changes } : p));
       const sceneId = activeSceneIdRef.current;
       if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
+
+    // Debounce le broadcast à 50ms pour éviter de spammer pendant le drag
+    pendingPropBroadcastRef.current = { propId, changes };
+    if (!propBroadcastTimerRef.current) {
+      propBroadcastTimerRef.current = setTimeout(() => {
+        propBroadcastTimerRef.current = null;
+        const pending = pendingPropBroadcastRef.current;
+        if (pending) {
+          vttService.broadcastPropEvent({ type: 'PROP_UPDATED', propId: pending.propId, changes: pending.changes });
+          pendingPropBroadcastRef.current = null;
+        }
+      }, 50);
+    }
   }, [persistSceneProps]);
 
   useEffect(() => {
