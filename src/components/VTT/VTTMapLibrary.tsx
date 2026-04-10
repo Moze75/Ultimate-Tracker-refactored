@@ -300,14 +300,14 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
         >
           {map.url && !map.url.startsWith('data:') ? (
             isVideoMapUrl(map.url) ? (
-              <video
-                src={map.url}
-                muted
-                playsInline
-                preload="metadata"
-                draggable={false}
-                className="w-full h-full object-cover block pointer-events-none bg-gray-900"
-              />
+<video
+  src={map.url}
+  muted
+  playsInline
+  preload="metadata"
+  draggable={false}
+  className="w-full h-full object-cover block pointer-events-none bg-gray-900"
+/>
             ) : (
               <img
                 src={map.url}
