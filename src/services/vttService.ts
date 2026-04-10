@@ -525,6 +525,28 @@ if (resolvedScenes && resolvedScenes.length > 0) {
         serverEvent = { type: 'WINDOWS_UPDATED', windows: event.windows };
         this._persistNow();
         break;
+
+      case 'ADD_PROP': {
+        const prop: VTTProp = { ...event.prop, id: generateTokenId() } as VTTProp;
+        serverEvent = { type: 'PROP_ADDED', prop };
+        this.localState.props = [...this.localState.props, prop];
+        this._persistNow();
+        break;
+      }
+
+      case 'REMOVE_PROP':
+        serverEvent = { type: 'PROP_REMOVED', propId: event.propId };
+        this.localState.props = this.localState.props.filter(p => p.id !== event.propId);
+        this._persistNow();
+        break;
+
+      case 'UPDATE_PROP':
+        serverEvent = { type: 'PROP_UPDATED', propId: event.propId, changes: event.changes };
+        this.localState.props = this.localState.props.map(p =>
+          p.id === event.propId ? { ...p, ...event.changes } : p
+        );
+        this._persistNow();
+        break;
     }
 
     if (serverEvent) {
