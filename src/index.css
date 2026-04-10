@@ -350,7 +350,7 @@ body::before {
   bottom: -52px;
   left: -32px;
   right: -32px;
-  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
+  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png'); 
   /* plus protecteur pour les coins et les ornements */
   border-image-slice: 46%;
   /* suffisamment large pour préserver les détails */
