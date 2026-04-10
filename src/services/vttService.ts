@@ -58,6 +58,7 @@ interface LocalState {
   walls: VTTWall[];
   doors: VTTDoor[];
   windows: VTTWindow[];
+  props: VTTProp[];
 }
 
 class VTTService {
