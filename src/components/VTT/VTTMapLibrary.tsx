@@ -171,13 +171,22 @@ if (type === 'folder') mapLibrary.renameFolder(roomId, renamingId, renameValue);
   };
 
   // ── Cartes ────────────────────────────────────────────────────────────────
+  // -------------------
+  // Ajout d'une carte par URL
+  // -------------------
+  // Accepte aussi bien les images que les vidéos (.mp4, .webm, .ogv).
   const handleAddUrl = (folderId: string | null) => {
     if (!addUrlValue.trim()) return;
+
+    const url = addUrlValue.trim();
+    const fallbackName = url.split('/').pop()?.split('?')[0] || 'Carte';
+
     mapLibrary.addMap(roomId, {
-      name: addUrlName.trim() || addUrlValue.split('/').pop() || 'Carte',
-      url: addUrlValue.trim(),
+      name: addUrlName.trim() || fallbackName,
+      url,
       folderId,
     });
+
     setAddUrlValue('');
     setAddUrlName('');
     setAddUrlMode(null);
