@@ -408,7 +408,7 @@ body::before {
 .vtt-lobby-card--compact::after {
   top: -34px;
   bottom: -40px;
-  left: -36px;
+  left: -30px;
   right: -36px;
   /* -------------------
      Épaisseur du cadre doré (coins + bords)
