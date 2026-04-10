@@ -346,10 +346,10 @@ body::before {
 
 .vtt-create-card-frame {
   position: absolute;
-  top: -50px;
-  bottom: -50px;
-  left: -30px;
-  right: -30px;
+  top: -60px;
+  bottom: -60px;
+  left: -40px;
+  right: -40px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png'); 
   /* plus protecteur pour les coins et les ornements */
   border-image-slice: 26%;
