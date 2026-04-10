@@ -355,32 +355,33 @@ body::before {
 
 /* -------------------
    Frame décoratif via ::after — AmbreFrame.png
-   Cadre doré autour des cartes "Rejoindre par ID" et "Mes tables".
-   Les offsets négatifs permettent au cadre de déborder autour du fond
-   de la carte entière (titre inclus). Les valeurs de border-image-width
-   et border-image-slice contrôlent la taille des coins ornementaux.
+   Cadre doré ornamental autour des cartes "Rejoindre par ID" et "Mes tables".
+   Réplique exacte du style frame-card::after (lignes 264-281) qui fonctionne
+   dans tout le reste de l'app : border-image-slice 45%, width 150px, border 12px.
+   Les offsets (top/bottom/left/right) définissent le débordement du cadre
+   autour du fond de la carte.
    ------------------- */
 .vtt-lobby-card::after {
   content: '';
   position: absolute;
   /* -------------------
-     Offsets du cadre par rapport au contenu de la carte
-     top/bottom : marge verticale du frame autour du padding
-     left/right : marge horizontale du frame
+     Offsets du cadre : débordement autour de la zone padding de la carte
+     Mêmes proportions que frame-card::after (-64 / -72 / -57 / -57)
      ------------------- */
-  top: -20px;
-  bottom: -20px;
-  left: -20px;
-  right: -20px;
-  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
+  top: -64px;
+  bottom: -72px;
+  left: -57px;
+  right: -57px;
   /* -------------------
-     border-image-slice : % du PNG réservé aux coins (plus haut = coins plus gros)
-     border-image-width : taille de rendu des coins du cadre PNG
-     border-width       : épaisseur CSS de la bordure (doit rester fine)
-     border-image-repeat: stretch étire les bords entre les coins
+     Rendu border-image : identique à frame-card::after
+     slice 45% = découpe assez large pour garder les coins ornementaux intacts
+     width 150px = taille de rendu des coins (indépendant de border-width)
+     stretch = étire les bords droits entre les coins (pas de répétition)
+     border-width 12px = épaisseur CSS du support de la bordure (doit rester fine)
      ------------------- */
+  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
   border-image-slice: 45%;
-  border-image-width: 100px;
+  border-image-width: 150px;
   border-image-repeat: stretch;
   border-style: solid;
   border-width: 12px;
