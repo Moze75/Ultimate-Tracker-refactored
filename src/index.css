@@ -346,7 +346,7 @@ body::before {
 
 .vtt-create-card-frame {
   position: absolute;
-  top: -65px;
+  top: -60px;
   bottom: -65px;
   left: -45px;
   right: -45px;
