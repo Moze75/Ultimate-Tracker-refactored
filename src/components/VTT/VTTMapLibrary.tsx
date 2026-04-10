@@ -5,6 +5,13 @@ import {
 } from 'lucide-react';
 import { mapLibrary, fetchMapLibrary, saveMapLibrary, type MapEntry, type MapLibrary } from '../../services/mapLibraryService';
 
+// -------------------
+// Détection des cartes vidéo
+// -------------------
+// Permet d'accepter les URLs .mp4 / .webm / .ogv dans la bibliothèque
+// et d'afficher un aperçu vidéo au lieu d'une image.
+const isVideoMapUrl = (url: string) => /\.(mp4|webm|ogv)(\?.*)?$/i.test(url);
+
 // 1. Ajouter userId dans l'interface props (vers ligne 8)
 interface VTTMapLibraryProps {
   roomId: string;
