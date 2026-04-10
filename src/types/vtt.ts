@@ -268,6 +268,9 @@ export type VTTServerEvent =
   | { type: 'DOORS_UPDATED'; doors: VTTDoor[] }
   | { type: 'WINDOWS_UPDATED'; windows: VTTWindow[] }
   | { type: 'WEATHER_UPDATED'; effects: VTTWeatherEffect[] }
+  | { type: 'PROP_ADDED'; prop: VTTProp }
+  | { type: 'PROP_REMOVED'; propId: string }
+  | { type: 'PROP_UPDATED'; propId: string; changes: Partial<VTTProp> }
   | { type: 'PING_RECEIVED'; ping: VTTPing }
   | { type: 'USER_JOINED'; userId: string; name?: string }
   | { type: 'USER_LEFT'; userId: string }
