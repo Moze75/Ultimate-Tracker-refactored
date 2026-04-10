@@ -58,13 +58,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const initialViewportAppliedRef = useRef(false);
   const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null);
 
-  // -------------------
-  // Gestion du viewport broadcast
-  // -------------------
-  // Permet de positionner correctement les props HTML animés
-  // au-dessus du canvas dans la page broadcast.
-  const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
-
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
@@ -275,15 +268,6 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const noOp = useCallback(() => {}, []);
   const noOpStroke = useCallback(() => {}, []);
 
-  // -------------------
-  // Synchronisation du viewport broadcast
-  // -------------------
-  // Utilisé pour aligner les props HTML (images / vidéos)
-  // avec le pan / zoom réel du canvas.
-  const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
-    setCanvasViewport(vp);
-  }, []);
-
 
   return (
     <div
@@ -327,7 +311,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   props={props}
   forceViewport={initialForceViewport ?? undefined}
 />
- 
+
       {(config.weatherEffects ?? []).length > 0 && (
         <VTTWeatherOverlay
           effects={config.weatherEffects!}
