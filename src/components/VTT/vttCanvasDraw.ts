@@ -12,6 +12,7 @@ import { drawToken } from './vttCanvasTokenRenderer';
 export interface VTTDrawContext {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   mapImgRef: React.MutableRefObject<HTMLImageElement | null>;
+  mapVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
   mapLoadedRef: React.MutableRefObject<boolean>;
   tokenImageCache: React.MutableRefObject<Map<string, HTMLImageElement>>;
   viewportRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
