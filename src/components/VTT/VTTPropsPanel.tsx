@@ -446,13 +446,25 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
     <div className="flex flex-col h-full relative">
 
       {/* Ghost drag interne */}
-      {dragGhost && (
+           {dragGhost && (
         <div
-          className="fixed z-[9999] pointer-events-none opacity-90 shadow-2xl border-2 border-purple-500"
-          style={{ left: dragGhost.x + 12, top: dragGhost.y - 30, width: 100 }}
+          className="fixed z-[9999] pointer-events-none opacity-90 shadow-2xl border border-purple-500/70 rounded-lg bg-gray-900/95 px-2 py-2 flex items-center gap-2"
+          style={{ left: dragGhost.x + 12, top: dragGhost.y - 20 }}
         >
-          {renderThumb({ id: dragGhost.propId, name: dragGhost.label, url: dragGhost.url, folderId: null, addedAt: '', isVideo: dragGhost.isVideo }, true)}
-          <div className="bg-black/80 px-1.5 py-0.5 text-[10px] text-purple-300 truncate">{dragGhost.label}</div>
+          {renderThumb(
+            {
+              id: dragGhost.propId,
+              name: dragGhost.label,
+              url: dragGhost.url,
+              folderId: null,
+              addedAt: '',
+              isVideo: dragGhost.isVideo,
+            },
+            true
+          )}
+          <div className="max-w-[120px] text-[10px] text-purple-300 truncate">
+            {dragGhost.label}
+          </div>
         </div>
       )}
 
