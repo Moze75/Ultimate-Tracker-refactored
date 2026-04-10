@@ -351,18 +351,18 @@ body::before {
 .vtt-create-card::after {
   content: '';
   position: absolute;
-  top: -28px;
-  bottom: -30px;
-  left: -24px;
-  right: -24px;
+  top: -14px;
+  bottom: -16px;
+  left: -10px;
+  right: -10px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png');
-  border-image-slice: 38%;
-  border-image-width: 70px;
-  border-image-repeat: round;
+  border-image-slice: 30%;
+  border-image-width: 40px;
+  border-image-repeat: stretch;
   border-style: solid;
   border-width: 12px;
   pointer-events: none;
-  z-index: 10; 
+  z-index: 10;
 }
 
 .vtt-create-card > * {
