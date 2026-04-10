@@ -969,6 +969,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     drawVTTCanvas({
       canvasRef,
       mapImgRef,
+      mapVideoRef,
       mapLoadedRef,
       tokenImageCache,
       viewportRef,
