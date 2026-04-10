@@ -80,6 +80,122 @@ const fetchRooms = async () => {
   }
 };
 
+// -------------------
+// Gestion du fond du lobby
+// -------------------
+// Précharge l'image de fond pour éviter l'affichage progressif
+// du décor avant que le lobby soit visuellement prêt.
+const LOBBY_BACKGROUND_URL = 'https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/MysticForest2.jpg';
+
+const preloadLobbyBackground = () => {
+  return new Promise<void>((resolve) => {
+    const img = new Image();
+    img.src = LOBBY_BACKGROUND_URL;
+    img.onload = () => {
+      setIsBackgroundReady(true);
+      resolve();
+    };
+    img.onerror = () => {
+      // On débloque quand même l'écran pour éviter un loader infini
+      setIsBackgroundReady(true);
+      resolve();
+    };
+  });
+};
+
+// -------------------
+// Chargement des campagnes du MJ
+// -------------------
+// Alimente les listes de sélection pour la création et la liaison
+// d'une table VTT à une campagne.
+const fetchCampaigns = async () => {
+  try {
+    const myCampaigns = await campaignService.getMyCampaigns();
+    setCampaigns(myCampaigns);
+    return myCampaigns;
+  } catch {
+    setCampaigns([]);
+    return [];
+  }
+};
+
+// -------------------
+// Chargement des tables abonnées
+// -------------------
+// Récupère les rooms liées aux campagnes auxquelles le joueur est
+// membre actif, puis résout les noms de campagnes correspondants.
+const fetchSubscribedRooms = async () => {
+  try {
+    const { data: memberships } = await supabase
+      .from('campaign_members')
+      .select('campaign_id')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (!memberships || memberships.length === 0) {
+      setSubscribedRooms([]);
+      setSubscribedCampaignNames({});
+      return [];
+    }
+
+    const campaignIds = [...new Set(memberships.map(m => m.campaign_id))];
+
+    const { data: allRooms } = await supabase
+      .from('vtt_rooms')
+      .select('id, name, gm_user_id, created_at, state_json');
+
+    if (!allRooms) {
+      setSubscribedRooms([]);
+      setSubscribedCampaignNames({});
+      return [];
+    }
+
+    const matchingRooms: Room[] = allRooms
+      .filter(r => {
+        const stateJson = (r.state_json as Record<string, unknown>) ?? {};
+        const roomCampaignId = stateJson._campaignId as string | null;
+        return roomCampaignId && campaignIds.includes(roomCampaignId) && r.gm_user_id !== userId;
+      })
+      .map(r => ({
+        id: r.id,
+        name: r.name,
+        gmUserId: r.gm_user_id,
+        createdAt: r.created_at,
+        campaignId: ((r.state_json as Record<string, unknown>)?._campaignId as string) ?? null,
+      }));
+
+    setSubscribedRooms(matchingRooms);
+
+    const uniqueCampaignIds = [...new Set(matchingRooms.map(r => r.campaignId).filter(Boolean))] as string[];
+
+    if (uniqueCampaignIds.length > 0) {
+      const { data: campaignRows } = await supabase
+        .from('campaigns')
+        .select('id, name')
+        .in('id', uniqueCampaignIds);
+
+      if (campaignRows) {
+        const namesMap: Record<string, string> = {};
+        campaignRows.forEach(c => {
+          namesMap[c.id] = c.name;
+        });
+        setSubscribedCampaignNames(namesMap);
+      } else {
+        setSubscribedCampaignNames({});
+      }
+    } else {
+      setSubscribedCampaignNames({});
+    }
+
+    return matchingRooms;
+  } catch (err) {
+    console.error('Erreur chargement rooms abonnées:', err);
+    setSubscribedRooms([]);
+    setSubscribedCampaignNames({});
+    return [];
+  }
+};
+  
   useEffect(() => {
     fetchRooms();
 
