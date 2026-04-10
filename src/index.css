@@ -410,6 +410,12 @@ body::before {
   bottom: -40px;
   left: -36px;
   right: -36px;
+  /* -------------------
+     Épaisseur du cadre doré (coins + bords)
+     Réduit par rapport au 150px standard pour rester proportionné
+     à la petite taille de la carte. Augmenter pour épaissir les bords.
+     ------------------- */
+  border-image-width: 120px;
 }
 
 .vtt-create-card {
