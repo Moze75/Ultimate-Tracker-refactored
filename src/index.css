@@ -350,10 +350,13 @@ body::before {
 
 /* -------------------
    Pseudo-élément frame — AmbreFrame.png
-   Déborde autour du contenu pour simuler un cadre doré
+   Même paramètres que vtt-create-card-frame pour cohérence visuelle.
+   Les offsets négatifs font déborder le cadre autour du fond de la carte,
+   le titre étant inclus dans le padding interne de vtt-lobby-card.
    ------------------- */
 .vtt-lobby-card-frame {
   position: absolute;
+  /* Débordement identique à vtt-create-card-frame */
   top: -57px;
   bottom: -65px;
   left: -45px;
@@ -363,6 +366,7 @@ body::before {
   border-image-width: 140px;
   border-image-repeat: round;
   border-style: solid;
+  /* border-width élevé = zone de rendu du border-image (ne clip pas le contenu) */
   border-width: 120px;
   pointer-events: none;
   z-index: 10;
@@ -370,6 +374,7 @@ body::before {
 
 /* -------------------
    Contenu au-dessus du frame
+   z-index: 1 garantit que titre + inputs passent devant le cadre PNG
    ------------------- */
 .vtt-lobby-card > :not(.vtt-lobby-card-frame) {
   position: relative;
