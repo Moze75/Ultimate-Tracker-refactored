@@ -569,13 +569,16 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                           <Trash2 size={14} />
                         </button>
                       )}
+                      {/* -------------------
+                          Bouton Ouvrir (MJ) / Rejoindre (joueur)
+                          btn-primary = bouton rouge thème (MJ)
+                          btn-secondary = bouton bleu thème (joueur abonné)
+                          ------------------- */}
                       <button
                         onClick={() => setPendingJoinRoomId(room.id)}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-white rounded-lg text-xs font-medium transition-colors ${
-                          isSubscribedRoom
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-amber-600 hover:bg-amber-500'
-                        }`}
+                        className={`${
+                          isSubscribedRoom ? 'btn-secondary' : 'btn-primary'
+                        } flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs`}
                       >
                         <LogIn size={12} />
                         {isSubscribedRoom ? 'Rejoindre' : 'Ouvrir'}
