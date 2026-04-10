@@ -355,7 +355,7 @@ body::before {
   border-image-slice: 46%;
   /* suffisamment large pour préserver les détails */
   border-image-width: 140px;
-  border-image-repeat: round;
+  border-image-repeat: null;
   border-style: solid;
   border-width: 40px;
   pointer-events: none;
