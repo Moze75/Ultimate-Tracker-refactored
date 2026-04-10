@@ -324,7 +324,7 @@ const fuseWallPoints = (
     if (activeTool !== 'wall-select') {
       draggingWallPointRef.current = null;
     }
-    if (activeTool !== 'measure') {
+    if (activeTool !== 'measure' && activeTool !== 'measure-circle' && activeTool !== 'measure-cone') {
       measureStartRef.current = null;
       measureEndRef.current = null;
       measureLockedRef.current = false;
