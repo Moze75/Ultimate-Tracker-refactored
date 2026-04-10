@@ -408,14 +408,14 @@ body::before {
 .vtt-lobby-card--compact::after {
   top: -34px;
   bottom: -40px;
-  left: -32px;
-  right: -32px;
+  left: -42px;
+  right: -42px;
   /* -------------------
      Épaisseur du cadre doré (coins + bords)
-     Réduit par rapport au 150px standard pour rester proportionné
-     à la petite taille de la carte. Augmenter pour épaissir les bords.
+     140px = plus épais que 120px pour que les bords latéraux
+     soient bien visibles et proportionnés à la carte compacte.
      ------------------- */
-  border-image-width: 120px;
+  border-image-width: 140px;
 }
 
 .vtt-create-card {
