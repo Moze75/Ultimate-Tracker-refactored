@@ -56,7 +56,17 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const initialViewportAppliedRef = useRef(false);
-  const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null);  
+  const noOp = useCallback(() => {}, []);
+  const noOpStroke = useCallback(() => {}, []);
+
+  // -------------------
+  // Synchronisation du viewport broadcast
+  // -------------------
+  // Utilisé pour aligner les props HTML (images / vidéos)
+  // avec le pan / zoom réel du canvas.
+  const handleCanvasViewportChange = useCallback((vp: { x: number; y: number; scale: number }) => {
+    setCanvasViewport(vp);
+  }, []);
 
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
