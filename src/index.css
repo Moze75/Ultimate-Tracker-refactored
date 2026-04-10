@@ -362,7 +362,7 @@ body::before {
   border-style: solid;
   border-width: 12px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 10; 
 }
 
 .vtt-create-card > * {
