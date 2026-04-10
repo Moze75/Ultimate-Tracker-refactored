@@ -1531,7 +1531,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     }
   }, [role, copyBuffer, pushUndoSnapshot, persistSceneProps]);
 
-    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     pushUndoSnapshot();
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
@@ -1541,7 +1541,9 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
       if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
-  }, [persistSceneProps, pushUndoSnapshot]); 
+
+    vttService.broadcastPropEvent({ type: 'PROP_ADDED', prop: newProp });
+  }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleRemoveProp = useCallback((propId: string) => {
     pushUndoSnapshot();
