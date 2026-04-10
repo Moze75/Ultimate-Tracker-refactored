@@ -84,6 +84,7 @@ private localState: LocalState = {
   walls: [],
   doors: [],
   windows: [],
+  props: [],
 };
   private persistDebounce: ReturnType<typeof setTimeout> | null = null;
   private suppressNotifs = false;
