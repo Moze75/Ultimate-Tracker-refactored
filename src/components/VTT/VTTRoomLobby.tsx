@@ -413,14 +413,14 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         <div
           className="bg-gray-900/60 rounded-xl p-4"
           style={{
-            borderWidth: '142px',
+            borderWidth: '32px',
             borderStyle: 'solid',
             borderColor: 'transparent',
             borderImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png') 32 fill`,
             borderImageRepeat: 'stretch',
           }}
         >
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2> 
           <form onSubmit={handleCreate} className="space-y-3"> 
             <div className="flex gap-2">
               <input
