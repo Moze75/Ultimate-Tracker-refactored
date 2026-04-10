@@ -64,7 +64,19 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const containerRef = useRef<HTMLDivElement>(null);
   const brushOverlayRef = useRef<HTMLDivElement>(null);
 
-const tokenImageCache = useRef<Map<string, HTMLImageElement>>(
+  // -------------------
+  // Gestion du média de fond de carte
+  // -------------------
+  // La carte peut être une image classique ou une vidéo (.mp4/.webm/.ogv).
+  const mapImgRef = useRef<HTMLImageElement | null>(null);
+  const mapVideoRef = useRef<HTMLVideoElement | null>(null);
+  const mapLoadedRef = useRef(false);
+  const tokenImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
+
+  // -------------------
+  // Détection des cartes vidéo
+  // -------------------
+  const isVideoMapUrl = (url: string) => /\.(mp4|webm|ogv)(\?.*)?$/i.test(url);
 
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 });
   const viewportFocusAnimRef = useRef<number | null>(null);
