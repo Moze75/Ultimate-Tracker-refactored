@@ -197,79 +197,34 @@ const fetchSubscribedRooms = async () => {
 };
   
   useEffect(() => {
-    fetchRooms();
+  // -------------------
+  // Initialisation complète du lobby
+  // -------------------
+  // Attend le chargement des données critiques et du fond avant
+  // d'autoriser l'affichage du layout principal.
+  let isMounted = true;
 
-    // -------------------
-    // Chargement des campagnes créées par le MJ (pour le select de liaison)
-    // -------------------
-    campaignService.getMyCampaigns()
-      .then(setCampaigns)
-      .catch(() => setCampaigns([]));
+  const bootstrapLobby = async () => {
+    setIsBootstrapLoading(true);
 
-    // -------------------
-    // Chargement des rooms liées aux campagnes auxquelles le joueur est abonné
-    // -------------------
-    // 1. Récupère les campaign_ids où le joueur est membre actif
-    // 2. Récupère les rooms VTT liées à ces campagnes via state_json->_campaignId
-    // 3. Exclut les rooms dont le joueur est déjà le GM (déjà dans "Mes tables")
-    (async () => {
-      try {
-        const { data: memberships } = await supabase
-          .from('campaign_members')
-          .select('campaign_id')
-          .eq('user_id', userId)
-          .eq('is_active', true);
+    await Promise.all([
+      preloadLobbyBackground(),
+      fetchRooms(),
+      fetchCampaigns(),
+      fetchSubscribedRooms(),
+    ]);
 
-        if (!memberships || memberships.length === 0) return;
+    if (isMounted) {
+      setIsBootstrapLoading(false);
+    }
+  };
 
-        const campaignIds = [...new Set(memberships.map(m => m.campaign_id))];
+  bootstrapLobby();
 
-        // Récupère toutes les rooms VTT et filtre celles liées à ces campagnes
-        const { data: allRooms } = await supabase
-          .from('vtt_rooms')
-          .select('id, name, gm_user_id, created_at, state_json');
-
-        if (!allRooms) return;
-
-         const matchingRooms: Room[] = allRooms
-          .filter(r => {
-            const stateJson = (r.state_json as Record<string, unknown>) ?? {};
-            const roomCampaignId = stateJson._campaignId as string | null;
-            return roomCampaignId && campaignIds.includes(roomCampaignId) && r.gm_user_id !== userId;
-          })
-          .map(r => ({
-            id: r.id,
-            name: r.name,
-            gmUserId: r.gm_user_id,
-            createdAt: r.created_at,
-            campaignId: ((r.state_json as Record<string, unknown>)?._campaignId as string) ?? null,
-          }));
-
-        setSubscribedRooms(matchingRooms);
-
-        // -------------------
-        // Résolution des noms de campagnes abonnées
-        // -------------------
-        // Récupère le nom réel de chaque campagne liée aux rooms
-        // pour l'afficher dans "Mes tables" à la place de l'UUID.
-        const uniqueCampaignIds = [...new Set(matchingRooms.map(r => r.campaignId).filter(Boolean))] as string[];
-        if (uniqueCampaignIds.length > 0) {
-          const { data: campaignRows } = await supabase
-            .from('campaigns')
-            .select('id, name')
-            .in('id', uniqueCampaignIds);
-
-          if (campaignRows) {
-            const namesMap: Record<string, string> = {};
-            campaignRows.forEach(c => { namesMap[c.id] = c.name; });
-            setSubscribedCampaignNames(namesMap);
-          }
-        }
-      } catch (err) {
-        console.error('Erreur chargement rooms abonnées:', err);
-      }
-    })();
-  }, []);
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
