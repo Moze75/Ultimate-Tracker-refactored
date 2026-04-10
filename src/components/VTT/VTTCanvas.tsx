@@ -1034,37 +1034,100 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
 
   drawRef.current = draw;
 
-  // Load map image — clear old image immediately to prevent stale map showing
+   // -------------------
+  // Chargement du média de carte
+  // -------------------
+  // Accepte une image classique ou une vidéo (.mp4/.webm/.ogv).
+  // On nettoie d'abord l'ancien média pour éviter l'affichage résiduel.
   useEffect(() => {
     if (!config.mapImageUrl) {
       setMapLoading(false);
       mapLoadedRef.current = false;
       mapImgRef.current = null;
+      mapVideoRef.current = null;
       draw();
       return;
     }
-    // Immediately clear previous image so canvas shows dark bg while loading
+
     mapImgRef.current = null;
+    mapVideoRef.current = null;
     mapLoadedRef.current = false;
     setMapLoading(true);
     draw();
 
+    // -------------------
+    // Gestion des cartes vidéo
+    // -------------------
+    if (isVideoMapUrl(config.mapImageUrl)) {
+      const video = document.createElement('video');
+      video.src = config.mapImageUrl;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.crossOrigin = 'anonymous';
+
+      const handleLoaded = () => {
+        mapVideoRef.current = video;
+        mapLoadedRef.current = true;
+        setMapLoading(false);
+
+        if (onMapDimensionsRef.current && video.videoWidth > 0) {
+          onMapDimensionsRef.current(video.videoWidth, video.videoHeight);
+        }
+
+        const tick = () => {
+          if (mapVideoRef.current === video) {
+            drawRef.current();
+            requestAnimationFrame(tick);
+          }
+        };
+
+        video.play().catch(() => {});
+        requestAnimationFrame(tick);
+        draw();
+      };
+
+      const handleError = () => {
+        mapVideoRef.current = null;
+        mapLoadedRef.current = false;
+        setMapLoading(false);
+        draw();
+      };
+
+      video.addEventListener('loadeddata', handleLoaded, { once: true });
+      video.addEventListener('error', handleError, { once: true });
+
+      return () => {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      };
+    }
+
+    // -------------------
+    // Gestion des cartes image
+    // -------------------
     const img = new Image();
     img.onload = () => {
       mapImgRef.current = img;
       mapLoadedRef.current = true;
       setMapLoading(false);
+
       if (onMapDimensionsRef.current && img.naturalWidth > 0) {
         onMapDimensionsRef.current(img.naturalWidth, img.naturalHeight);
       }
+
       draw();
     };
+
     img.onerror = () => {
       mapImgRef.current = null;
       mapLoadedRef.current = false;
       setMapLoading(false);
       draw();
     };
+
     img.src = config.mapImageUrl;
   }, [config.mapImageUrl, draw]);
 
