@@ -171,16 +171,10 @@ export function VTTLeftToolbar({
         setNotesPopupOpen(false);
       }
     };
-      if (measurePopupOpen &&
-        measurePopupRef.current && !measurePopupRef.current.contains(target) &&
-        measureBtnRef.current && !measureBtnRef.current.contains(target)) {
-        setMeasurePopupOpen(false);
-      }
-    };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen, notesPopupOpen, measurePopupOpen]);
-
+  }, [fogPopupOpen, gridPopupOpen, wallPopupOpen, broadcastPopupOpen, timePopupOpen, weatherPopupOpen, notesPopupOpen]); 
+ 
   // -------------------
   // Détection de tous les outils fog (pinceau + rectangle)
   // -------------------
