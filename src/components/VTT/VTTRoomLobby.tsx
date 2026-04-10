@@ -62,18 +62,23 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
   // dans la liste "Mes tables" pour les rooms abonnées.
   const [subscribedCampaignNames, setSubscribedCampaignNames] = useState<Record<string, string>>({});
 
-  const fetchRooms = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await listVTTRooms(userId, authToken);
-      setRooms(list);
-    } catch (err) {
-      setError('Erreur lors du chargement des tables : ' + (err instanceof Error ? err.message : String(err)));
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchRooms = async () => {
+  // -------------------
+  // Chargement des tables du MJ
+  // -------------------
+  setLoading(true);
+  setError(null);
+  try {
+    const list = await listVTTRooms(userId, authToken);
+    setRooms(list);
+    return list;
+  } catch (err) {
+    setError('Erreur lors du chargement des tables : ' + (err instanceof Error ? err.message : String(err)));
+    return [];
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchRooms();
