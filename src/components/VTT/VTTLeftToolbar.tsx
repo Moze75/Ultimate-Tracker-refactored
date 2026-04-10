@@ -126,8 +126,12 @@ export function VTTLeftToolbar({
   const activeToolRef = useRef(activeTool);
   activeToolRef.current = activeTool;
 
+  const [measurePopupOpen, setMeasurePopupOpen] = useState(false);
+  const measureBtnRef = useRef<HTMLDivElement>(null);
+  const measurePopupRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen && !notesPopupOpen) return;
+    if (!fogPopupOpen && !gridPopupOpen && !wallPopupOpen && !broadcastPopupOpen && !timePopupOpen && !weatherPopupOpen && !notesPopupOpen && !measurePopupOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (fogPopupOpen &&
