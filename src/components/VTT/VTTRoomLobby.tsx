@@ -414,7 +414,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           <div className="vtt-create-card-frame" aria-hidden="true" />
 
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
-          <form onSubmit={handleCreate} className="space-y-3"> 
+               <form onSubmit={handleCreate} className="space-y-3"> 
+            {/* -------------------
+                Input nom de la table
+                ------------------- */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -424,6 +427,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
               />
             </div>
+            {/* -------------------
+                Select campagne liée (optionnel, affiché si le MJ a des campagnes)
+                ------------------- */}
             {campaigns.length > 0 && (
               <div className="relative">
                 <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -440,14 +446,19 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
                 <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
             )}
-            <button
-              type="submit"
-              disabled={creating || !newRoomName.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              <Plus size={16} />
-              Créer
-            </button>
+            {/* -------------------
+                Bouton Créer — aligné à droite, style btn-primary (bouton rouge thème)
+                ------------------- */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={creating || !newRoomName.trim()}
+                className="btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm"
+              >
+                <Plus size={16} />
+                Créer
+              </button>
+            </div>
           </form>
         </div>
 
