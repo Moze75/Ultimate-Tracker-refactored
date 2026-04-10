@@ -451,7 +451,11 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </form>
         </div>
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+        {/* -------------------
+            Carte "Rejoindre par ID" — frame AmbreFrame.png
+            ------------------- */}
+        <div className="vtt-lobby-card p-4">
+          <div className="vtt-lobby-card-frame" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Rejoindre par ID</h2>
           <div className="flex gap-2">
             <input
