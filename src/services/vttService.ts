@@ -243,6 +243,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
             windows: this.localState.windows,
             walls: this.localState.walls,
             doors: this.localState.doors,
+            props: this.localState.props,
             sceneId: this.activeSceneId,
           },
         }).catch(console.error);
