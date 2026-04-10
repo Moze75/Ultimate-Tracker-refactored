@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTWindow, VTTConnectedUser, VTTPing } from '../types/vtt';
+import type { VTTClientEvent, VTTServerEvent, VTTRoomConfig, VTTToken, VTTFogState, VTTFogStroke, VTTWall, VTTDoor, VTTWindow, VTTProp, VTTConnectedUser, VTTPing, VTTChatMessage } from '../types/vtt';
 
 type MessageHandler = (event: VTTServerEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
