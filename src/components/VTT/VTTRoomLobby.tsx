@@ -387,7 +387,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
     backgroundAttachment: 'fixed',
   }}
 >
-  <div className="absolute inset-0 bg-black/50 pointer-events-none z-0" />
+  {/* Overlay retiré — laisse l'image de fond MysticForest2 visible sans assombrissement */}
       <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
