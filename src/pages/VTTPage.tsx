@@ -1545,7 +1545,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     vttService.broadcastPropEvent({ type: 'PROP_ADDED', prop: newProp });
   }, [persistSceneProps, pushUndoSnapshot]);
 
-    const handleRemoveProp = useCallback((propId: string) => {
+  const handleRemoveProp = useCallback((propId: string) => {
     pushUndoSnapshot();
     setProps(prev => {
       const next = prev.filter(p => p.id !== propId);
@@ -1555,6 +1555,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     });
 
     setSelectedPropId(id => (id === propId ? null : id));
+    vttService.broadcastPropEvent({ type: 'PROP_REMOVED', propId });
   }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleUpdateProp = useCallback((propId: string, changes: Partial<VTTProp>) => {
