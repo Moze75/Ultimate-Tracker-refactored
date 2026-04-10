@@ -41,6 +41,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const [walls, setWalls] = useState<VTTWall[]>([]);
   const [doors, setDoors] = useState<VTTDoor[]>([]);
   const [windows, setWindows] = useState<VTTWindow[]>([]);
+  const [props, setProps] = useState<VTTProp[]>([]);
   // -------------------
   // Suivi de la scène active reçue du MJ
   // Nécessaire pour déclencher save/restore du fog exploré dans VTTCanvas
