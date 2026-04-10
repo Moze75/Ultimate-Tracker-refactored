@@ -346,16 +346,16 @@ body::before {
 
 .vtt-create-card-frame {
   position: absolute;
-  top: -22px;
-  bottom: -24px;
-  left: -16px;
-  right: -16px;
+  top: -34px;
+  bottom: -42px;
+  left: -28px;
+  right: -28px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame2.png');
-  border-image-slice: 30%;
-  border-image-width: 72px;
+  border-image-slice: 42%;
+  border-image-width: 118px;
   border-image-repeat: stretch;
   border-style: solid;
-  border-width: 20px;
+  border-width: 18px;
   pointer-events: none;
   z-index: 10;
 }
