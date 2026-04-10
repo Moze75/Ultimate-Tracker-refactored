@@ -409,7 +409,7 @@ body::before {
   top: -34px;
   bottom: -40px;
   left: -32px;
-  right: -39px;
+  right: -32px;
   /* -------------------
      Épaisseur du cadre doré (coins + bords)
      Réduit par rapport au 150px standard pour rester proportionné
