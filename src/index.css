@@ -352,7 +352,7 @@ body::before {
   display: none !important;
 }
 
-.vtt-create-card > * {
+.vtt-create-card > :not(.vtt-create-card-frame):not(.vtt-create-card-ornament) {
   position: relative;
   z-index: 1;
 }
