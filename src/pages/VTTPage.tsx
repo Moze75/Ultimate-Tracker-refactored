@@ -1531,7 +1531,7 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     }
   }, [role, copyBuffer, pushUndoSnapshot, persistSceneProps]);
 
-    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+  const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
     pushUndoSnapshot();
     const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
 
@@ -1541,6 +1541,9 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
       if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
+
+    // Broadcast aux joueurs et au broadcast local
+    vttService.send({ type: 'ADD_PROP', prop: propData });
   }, [persistSceneProps, pushUndoSnapshot]);
 
     const handleRemoveProp = useCallback((propId: string) => {
