@@ -361,7 +361,7 @@ body::before {
 .vtt-lobby-card::after {
   content: '';
   position: absolute;
-  top: -57px;
+  top: -67px;
   bottom: -65px;
   left: -45px;
   right: -45px;
