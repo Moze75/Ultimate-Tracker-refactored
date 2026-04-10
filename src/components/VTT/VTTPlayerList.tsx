@@ -61,9 +61,10 @@ export function VTTPlayerList({ users, tokens = [] }: VTTPlayerListProps) {
   };
 
   return (
+    <div className="absolute bottom-3 left-14 z-30 flex flex-col gap-1 pointer-events-auto">
+      <div className="bg-gray-900/90 border border-gray-700/60 rounded-lg px-2.5 py-2 backdrop-blur-sm shadow-xl min-w-[140px]">
 
-
-
+ 
 
         {/* -------------------
             Liste des joueurs connectés (visible uniquement si déplié)
