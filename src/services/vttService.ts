@@ -777,6 +777,9 @@ this.localState = {
   tokens: [],
   fogState: { revealedCells: [], strokes: [], exploredStrokes: [] },
   walls: [],
+  doors: [],
+  windows: [],
+  props: [],
 };
     this.activeSceneId = null;
   }
