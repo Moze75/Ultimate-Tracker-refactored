@@ -64,8 +64,17 @@ export function VTTPlayerList({ users, tokens = [] }: VTTPlayerListProps) {
     <div className="absolute bottom-3 left-14 z-30 flex flex-col gap-1 pointer-events-auto">
       <div className="bg-gray-900/90 border border-gray-700/60 rounded-lg px-2.5 py-2 backdrop-blur-sm shadow-xl min-w-[140px]">
 
+        {/* -------------------
+            En-tête cliquable : replie / déplie la liste
+            ------------------- */}
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="flex items-center justify-between w-full text-[10px] text-gray-500 font-semibold uppercase tracking-wider hover:text-gray-300 transition-colors"
+        >
+          <span>En ligne ({users.length})</span>
+          {expanded ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+        </button>
  
-
         {/* -------------------
             Liste des joueurs connectés (visible uniquement si déplié)
             Chaque entrée est draggable si le joueur a un token assigné
