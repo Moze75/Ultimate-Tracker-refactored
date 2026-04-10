@@ -406,7 +406,7 @@ body::before {
    (-64/-72/-57/-57) pour coller à une carte basse et étroite visuellement.
    ------------------- */
 .vtt-lobby-card--compact::after {
-  top: -34px;
+  top: -38px;
   bottom: -40px;
   left: -36px;
   right: -36px;
