@@ -12,6 +12,7 @@ import type {
   VTTWall,
   VTTDoor,
   VTTWindow,
+  VTTProp,
 } from '../types/vtt';
 import { Maximize, Minimize } from 'lucide-react';
 
