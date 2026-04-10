@@ -288,20 +288,38 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
         } ${isActive ? 'ring-2 ring-inset ring-amber-500' : ''}`}
       >
         {/* Thumbnail — zone de drag */}
+        {/* -------------------
+            Aperçu de carte
+            -------------------
+            Affiche une vidéo si l'URL pointe vers un fichier .mp4/.webm/.ogv,
+            sinon garde le rendu image classique.
+        ------------------- */}
         <div
           className="w-full h-20 cursor-grab active:cursor-grabbing"
           onMouseDown={e => startDrag(e, map)}
         >
           {map.url && !map.url.startsWith('data:') ? (
-            <img
-              src={map.url}
-              alt={map.name}
-              draggable={false}
-              className="w-full h-full object-cover block pointer-events-none"
-            />
+            isVideoMapUrl(map.url) ? (
+              <video
+                src={map.url}
+                muted
+                loop
+                autoPlay
+                playsInline
+                draggable={false}
+                className="w-full h-full object-cover block pointer-events-none bg-gray-900"
+              />
+            ) : (
+              <img
+                src={map.url}
+                alt={map.name}
+                draggable={false}
+                className="w-full h-full object-cover block pointer-events-none"
+              />
+            )
           ) : (
             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                           <MapIcon size={24} className="text-gray-600" />
+              <MapIcon size={24} className="text-gray-600" />
             </div>
           )}
         </div>
