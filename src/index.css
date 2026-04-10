@@ -400,14 +400,16 @@ body::before {
 
 /* -------------------
    Variante compacte du cadre lobby (carte "Rejoindre par ID")
-   Réduit les offsets verticaux du cadre pour les cartes
-   avec peu de contenu, évitant un cadre disproportionné en hauteur.
-   Les offsets horizontaux et le border-image restent identiques
-   au .vtt-lobby-card::after standard.
+   Réduit les offsets verticaux ET horizontaux du cadre pour les cartes
+   avec peu de contenu, évitant un cadre disproportionné.
+   Offsets réduits par rapport au .vtt-lobby-card::after standard
+   (-64/-72/-57/-57) pour coller à une carte basse et étroite visuellement.
    ------------------- */
 .vtt-lobby-card--compact::after {
   top: -34px;
   bottom: -40px;
+  left: -36px;
+  right: -36px;
 }
 
 .vtt-create-card {
