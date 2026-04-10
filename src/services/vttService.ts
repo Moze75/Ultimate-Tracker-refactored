@@ -497,6 +497,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
         this.localState.windows = event.windows || [];
         this.localState.walls = event.walls;
         this.localState.doors = event.doors || [];
+        this.localState.props = event.props || [];
         if (event.sceneId) {
           this.activeSceneId = event.sceneId;
         }
@@ -509,6 +510,7 @@ if (resolvedScenes && resolvedScenes.length > 0) {
           windows: event.windows || [],
           walls: event.walls,
           doors: event.doors || [],
+          props: event.props || [],
         };
         this._persistNow();
         break;
@@ -696,8 +698,8 @@ if (resolvedScenes && resolvedScenes.length > 0) {
     };
   }
 
-    updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[], doors: VTTDoor[] = [], windows: VTTWindow[] = []) {
-    this.localState = { config, tokens, fogState, walls, doors, windows };
+    updateLocalState(config: VTTRoomConfig, tokens: VTTToken[], fogState: VTTFogState, walls: VTTWall[], doors: VTTDoor[] = [], windows: VTTWindow[] = [], props: VTTProp[] = []) {
+    this.localState = { config, tokens, fogState, walls, doors, windows, props };
   }
   
 sendBroadcastViewport(viewport: BroadcastViewport) {
@@ -752,6 +754,20 @@ sendChat(message: VTTChatMessage): void {
 // -------------------
 broadcastPropEvent(event: VTTServerEvent): void {
   if (!this.channel) return;
+
+  if (event.type === 'PROP_ADDED') {
+    const exists = this.localState.props.some(p => p.id === event.prop.id);
+    if (!exists) {
+      this.localState.props = [...this.localState.props, event.prop];
+    }
+  } else if (event.type === 'PROP_REMOVED') {
+    this.localState.props = this.localState.props.filter(p => p.id !== event.propId);
+  } else if (event.type === 'PROP_UPDATED') {
+    this.localState.props = this.localState.props.map(p =>
+      p.id === event.propId ? { ...p, ...event.changes } : p
+    );
+  }
+
   this.channel
     .send({ type: 'broadcast', event: 'vtt', payload: event })
     .catch((e: unknown) => console.warn('[VTT] broadcastPropEvent error', e));

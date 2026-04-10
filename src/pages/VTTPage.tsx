@@ -495,6 +495,7 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
         setWalls(event.walls);
         setDoors((event as any).doors || []);
         setWindows((event as any).windows || []);
+        setProps((event as any).props || []);
         setWeatherEffects(event.config.weatherEffects || []);
         if (role === 'gm') {
           const sceneNotes = event.config.gmNotes || [];
@@ -724,6 +725,7 @@ const applySceneToLive = useCallback((scene: VTTScene, { silent = false }: { sil
         walls: scene.walls || [],
         doors: scene.doors || [],
         windows: scene.windows || [],
+        props: Array.isArray(scene.props) ? scene.props : [],
       });
     }
 
@@ -756,7 +758,7 @@ useEffect(() => {
           };
           setActiveSceneId(initialScene.id);
           applySceneToLive(initialScene);
-          vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || []);
+          vttService.updateLocalState(initialScene.config, initialScene.tokens, initialScene.fogState, initialScene.walls || [], initialScene.doors || [], initialScene.windows || [], Array.isArray(initialScene.props) ? initialScene.props : []);
         }
       } else {
         supabase
@@ -842,6 +844,7 @@ useEffect(() => {
         walls: scene.walls || [],
         doors: scene.doors || [],
         windows: scene.windows || [],
+        props: Array.isArray(scene.props) ? scene.props : [],
       });
 
       setConfig(scene.config);

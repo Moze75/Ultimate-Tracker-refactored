@@ -218,7 +218,7 @@ export type VTTClientEvent =
   | { type: 'ADD_PROP'; prop: Omit<VTTProp, 'id'> }
   | { type: 'REMOVE_PROP'; propId: string }
   | { type: 'UPDATE_PROP'; propId: string; changes: Partial<VTTProp> }
-  | { type: 'SWITCH_SCENE'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[] }
+  | { type: 'SWITCH_SCENE'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[]; props?: VTTProp[] }
   | { type: 'UPDATE_WALLS'; walls: VTTWall[] }
   | { type: 'UPDATE_DOORS'; doors: VTTDoor[] }
   | { type: 'UPDATE_WINDOWS'; windows: VTTWindow[] }
@@ -263,7 +263,7 @@ export type VTTServerEvent =
   | { type: 'TOKEN_UPDATED'; tokenId: string; changes: Partial<VTTToken> }
   | { type: 'FOG_UPDATED'; fogState: VTTFogState }
   | { type: 'MAP_UPDATED'; config: Partial<VTTRoomConfig> }
-  | { type: 'SCENE_SWITCHED'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[] }
+  | { type: 'SCENE_SWITCHED'; sceneId?: string; config: VTTRoomConfig; tokens: VTTToken[]; fogState: VTTFogState; walls: VTTWall[]; doors?: VTTDoor[]; windows?: VTTWindow[]; props?: VTTProp[] }
   | { type: 'WALLS_UPDATED'; walls: VTTWall[] }
   | { type: 'DOORS_UPDATED'; doors: VTTDoor[] }
   | { type: 'WINDOWS_UPDATED'; windows: VTTWindow[] }
