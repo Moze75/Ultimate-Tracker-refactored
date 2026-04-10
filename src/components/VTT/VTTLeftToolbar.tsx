@@ -207,12 +207,28 @@ export function VTTLeftToolbar({
         onClick={() => { onToolChange('select'); setFogPopupOpen(false); setGridPopupOpen(false); setWallPopupOpen(false); }}
       />
 
-      <ToolBtn
-        icon={<Ruler size={17} />}
-        label="Mesurer la distance"
-        active={isMeasureTool}
-        onClick={() => { onToolChange(isMeasureTool ? 'select' : 'measure'); setFogPopupOpen(false); setGridPopupOpen(false); setWallPopupOpen(false); }}
-      />
+      <div ref={measureBtnRef} className="w-full flex flex-col items-center">
+        <ToolBtn
+          icon={<Ruler size={17} />}
+          label="Outils de mesure"
+          active={isAnyMeasureTool || measurePopupOpen}
+          onClick={() => {
+            const opening = !measurePopupOpen;
+            setMeasurePopupOpen(opening);
+            setFogPopupOpen(false);
+            setGridPopupOpen(false);
+            setWallPopupOpen(false);
+          }}
+        />
+        {measurePopupOpen && (
+          <MeasureToolsPopup
+            ref={measurePopupRef}
+            activeTool={activeTool}
+            onToolChange={(t) => { onToolChange(t); setMeasurePopupOpen(false); }}
+            onClose={() => setMeasurePopupOpen(false)}
+          />
+        )}
+      </div>
 
       <ToolBtn
         icon={<MapPin size={17} />}
