@@ -1066,6 +1066,11 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     // Gestion des cartes vidéo
     // -------------------
     if (isVideoMapUrl(config.mapImageUrl)) {
+      // -------------------
+      // Chargement d'une carte vidéo
+      // -------------------
+      // On attend des événements plus fiables que loadeddata seul
+      // pour garantir que la première frame est exploitable.
       const video = document.createElement('video');
       video.src = config.mapImageUrl;
       video.muted = true;
@@ -1073,40 +1078,86 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       video.autoplay = true;
       video.playsInline = true;
       video.crossOrigin = 'anonymous';
+      video.preload = 'auto';
 
-      const handleLoaded = () => {
+      const stopVideoLoop = () => {
+        if (mapVideoAnimRef.current) {
+          cancelAnimationFrame(mapVideoAnimRef.current);
+          mapVideoAnimRef.current = null;
+        }
+      };
+
+      const startVideoLoop = () => {
+        stopVideoLoop();
+
+        const tick = () => {
+          if (mapVideoRef.current !== video) return;
+
+          if (!video.paused && !video.ended && video.readyState >= 2) {
+            drawRef.current();
+          }
+
+          mapVideoAnimRef.current = requestAnimationFrame(tick);
+        };
+
+        mapVideoAnimRef.current = requestAnimationFrame(tick);
+      };
+
+      const finalizeVideoReady = () => {
         mapVideoRef.current = video;
         mapLoadedRef.current = true;
         setMapLoading(false);
 
-        if (onMapDimensionsRef.current && video.videoWidth > 0) {
+        if (onMapDimensionsRef.current && video.videoWidth > 0 && video.videoHeight > 0) {
           onMapDimensionsRef.current(video.videoWidth, video.videoHeight);
         }
 
-        const tick = () => {
-          if (mapVideoRef.current === video) {
-            drawRef.current();
-            requestAnimationFrame(tick);
-          }
-        };
+        drawRef.current();
+        startVideoLoop();
 
-        video.play().catch(() => {});
-        requestAnimationFrame(tick);
-        draw();
+        video.play()
+          .then(() => {
+            drawRef.current();
+          })
+          .catch((err) => {
+            console.warn('[VTTCanvas] Lecture vidéo impossible :', err);
+          });
+      };
+
+      const handleLoadedMetadata = () => {
+        if (onMapDimensionsRef.current && video.videoWidth > 0 && video.videoHeight > 0) {
+          onMapDimensionsRef.current(video.videoWidth, video.videoHeight);
+        }
+      };
+
+      const handleCanPlay = () => {
+        finalizeVideoReady();
+      };
+
+      const handlePlay = () => {
+        drawRef.current();
       };
 
       const handleError = () => {
+        stopVideoLoop();
         mapVideoRef.current = null;
         mapLoadedRef.current = false;
         setMapLoading(false);
-        draw();
+        drawRef.current();
       };
 
-      video.addEventListener('loadeddata', handleLoaded, { once: true });
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('canplay', handleCanPlay, { once: true });
+      video.addEventListener('play', handlePlay);
       video.addEventListener('error', handleError, { once: true });
 
+      video.load();
+
       return () => {
+        stopVideoLoop();
         video.pause();
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.removeEventListener('play', handlePlay);
         video.removeAttribute('src');
         video.load();
       };
