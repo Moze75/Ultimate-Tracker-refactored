@@ -326,57 +326,8 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   windows={windows}
   props={props}
   forceViewport={initialForceViewport ?? undefined}
-  onViewportChange={handleCanvasViewportChange}
 />
-
-      {/* -------------------
-          Rendu HTML des props animés
-          -------------------
-          Reproduit la couche de props visible dans VTTPage afin que
-          les images et vidéos broadcastées soient aussi visibles
-          dans la page spectateur / broadcast.
-      ------------------- */}
-      {props.map(prop => (
-        <div
-          key={prop.id}
-          className="absolute pointer-events-none select-none"
-          style={{
-            left: prop.position.x * canvasViewport.scale + canvasViewport.x,
-            top: prop.position.y * canvasViewport.scale + canvasViewport.y,
-            width: prop.width * canvasViewport.scale,
-            height: prop.height * canvasViewport.scale,
-            opacity: prop.opacity,
-            zIndex: 5,
-            transformOrigin: 'top left',
-          }}
-        >
-          {prop.imageUrl ? (
-            /\.(webm|mp4|ogv)(\?.*)?$/i.test(prop.imageUrl) ? (
-              <video
-                src={prop.imageUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                draggable={false}
-                className="w-full h-full object-contain pointer-events-none"
-              />
-            ) : (
-              <img
-                src={prop.imageUrl}
-                alt={prop.label}
-                className="w-full h-full object-contain pointer-events-none"
-                draggable={false}
-              />
-            )
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-900/70 border border-gray-600/50 rounded px-2">
-              <span className="text-white text-sm font-medium text-center break-words">{prop.label}</span>
-            </div>
-          )}
-        </div>
-      ))}
-
+ 
       {(config.weatherEffects ?? []).length > 0 && (
         <VTTWeatherOverlay
           effects={config.weatherEffects!}
