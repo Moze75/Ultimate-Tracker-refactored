@@ -238,34 +238,41 @@ url = await uploadVttAsset(file, 'props', userId, roomId);
   };
 
   // ── Thumbnail ──────────────────────────────────────────────────────────────
+  // -------------------
+  // Gestion des miniatures de props
+  // -------------------
+  // Dans la bibliothèque, les props animés doivent rester figés.
+  // On affiche donc un snapshot statique, plus petit et dézoomé.
   const renderThumb = (entry: PropEntry, compact = false) => {
-    const h = compact ? 'h-14' : 'h-20';
+    const sizeClass = compact ? 'w-12 h-12' : 'w-14 h-14';
+
     if (entry.isVideo || isVideoUrl(entry.url)) {
       return (
         <video
           src={entry.url}
-          autoPlay
-          loop
           muted
           playsInline
+          preload="metadata"
           draggable={false}
-          className={`w-full ${h} object-cover block pointer-events-none bg-gray-900`}
+          className={`${sizeClass} object-contain scale-75 block pointer-events-none bg-gray-900 rounded-md`}
         />
       );
     }
+
     if (entry.url && !entry.url.startsWith('data:')) {
       return (
         <img
           src={entry.url}
           alt={entry.name}
           draggable={false}
-          className={`w-full ${h} object-cover block pointer-events-none`}
+          className={`${sizeClass} object-contain scale-75 block pointer-events-none rounded-md`}
         />
       );
     }
+
     return (
-      <div className={`w-full ${h} bg-gray-800 flex items-center justify-center`}>
-        <ImageIcon size={24} className="text-gray-600" />
+      <div className={`${sizeClass} bg-gray-800 flex items-center justify-center rounded-md`}>
+        <ImageIcon size={20} className="text-gray-600" />
       </div>
     );
   };
