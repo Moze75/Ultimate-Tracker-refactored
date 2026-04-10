@@ -476,7 +476,11 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
           </div>
         </div>
 
-        <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 p-4">
+        {/* -------------------
+            Carte "Mes tables" — frame AmbreFrame.png
+            ------------------- */}
+        <div className="vtt-lobby-card p-4">
+          <div className="vtt-lobby-card-frame" aria-hidden="true" />
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-300">Mes tables</h2>
             <button
