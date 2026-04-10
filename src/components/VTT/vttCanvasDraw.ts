@@ -204,7 +204,13 @@ export function drawVTTCanvas(ctx2d: VTTDrawContext): void {
   const mapW = cfg.mapWidth || 2000;
   const mapH = cfg.mapHeight || 2000;
 
-  if (ctx2d.mapImgRef.current && ctx2d.mapLoadedRef.current) {
+  // -------------------
+  // Gestion du rendu du média de fond
+  // -------------------
+  // La carte peut être une image classique ou une vidéo.
+  if (ctx2d.mapVideoRef.current && ctx2d.mapLoadedRef.current) {
+    ctx.drawImage(ctx2d.mapVideoRef.current, 0, 0, mapW, mapH);
+  } else if (ctx2d.mapImgRef.current && ctx2d.mapLoadedRef.current) {
     ctx.drawImage(ctx2d.mapImgRef.current, 0, 0, mapW, mapH);
   } else {
     ctx.fillStyle = '#1a1f2e';
