@@ -1559,20 +1559,18 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     vttService.broadcastPropEvent({ type: 'PROP_ADDED', prop: newProp });
   }, [persistSceneProps, pushUndoSnapshot]);
 
-    const handleAddProp = useCallback((propData: Omit<VTTProp, 'id'>) => {
+  const handleRemoveProp = useCallback((propId: string) => {
     pushUndoSnapshot();
-    const newProp: VTTProp = { ...propData, id: crypto.randomUUID() };
-
     setProps(prev => {
-      const next = [...prev, newProp];
+      const next = prev.filter(p => p.id !== propId);
       const sceneId = activeSceneIdRef.current;
       if (sceneId) persistSceneProps(sceneId, next);
       return next;
     });
 
-    console.log('[VTT][Props] Broadcasting PROP_ADDED:', newProp.id, newProp.label);
-    vttService.broadcastPropEvent({ type: 'PROP_ADDED', prop: newProp });
-  }, [persistSceneProps, pushUndoSnapshot]);
+    setSelectedPropId(id => (id === propId ? null : id)); 
+    vttService.broadcastPropEvent({ type: 'PROP_REMOVED', propId });
+  }, [persistSceneProps, pushUndoSnapshot]); 
 
   const propBroadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPropBroadcastRef = useRef<{ propId: string; changes: Partial<VTTProp> } | null>(null);
