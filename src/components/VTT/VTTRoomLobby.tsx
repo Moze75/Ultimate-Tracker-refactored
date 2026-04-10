@@ -462,7 +462,7 @@ const fetchSubscribedRooms = async () => {
   // déjà utilisé dans les autres écrans de chargement.
   if (isBootstrapLoading || !isBackgroundReady) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white px-6 text-center">
+className="min-h-screen bg-blue-950 flex flex-col items-center justify-center text-white px-6 text-center"
         <img
           src="https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/icons/wmremove-transformed.webp"
           alt="Chargement"
