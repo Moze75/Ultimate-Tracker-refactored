@@ -1559,6 +1559,18 @@ const handleAddTokenAtPos = useCallback((tokenData: Omit<VTTToken, 'id'> & { nee
     vttService.broadcastPropEvent({ type: 'PROP_ADDED', prop: newProp });
   }, [persistSceneProps, pushUndoSnapshot]);
 
+  const handleDropProp = useCallback((propData: { url: string; name: string; isVideo: boolean }, worldPos: { x: number; y: number }) => {
+    handleAddProp({
+      label: propData.name,
+      imageUrl: propData.url,
+      position: worldPos,
+      width: propData.isVideo ? 200 : 150,
+      height: propData.isVideo ? 200 : 150,
+      opacity: 1,
+      locked: false,
+    });
+  }, [handleAddProp]);
+
   const handleRemoveProp = useCallback((propId: string) => {
     pushUndoSnapshot();
     setProps(prev => {
@@ -2352,6 +2364,7 @@ onSelectTokens={ids => {
             onRightClickToken={(token, x, y) => setContextMenu({ token, x, y })}
             onTokenDoubleClick={handleTokenDoubleClick}
             onDropToken={handleDropToken}
+            onDropProp={handleDropProp}
             onAddTokenAtPos={handleAddTokenAtPos}
             onResizeToken={handleResizeToken}
             calibrationPoints={calibrationPoints}
