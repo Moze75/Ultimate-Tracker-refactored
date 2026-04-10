@@ -1463,7 +1463,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const isWallTool = activeTool === 'wall-draw';
   const isWallSelectTool = activeTool === 'wall-select';
   const isAnyWallTool = isWallTool || isWallSelectTool;
-  const isMeasureTool = activeTool === 'measure';
+  const isMeasureTool = activeTool === 'measure' || activeTool === 'measure-circle' || activeTool === 'measure-cone';
 
   const handleDragOver = (e: React.DragEvent) => {
     if (e.dataTransfer.types.includes('application/vtt-token-id')) {
