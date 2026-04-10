@@ -411,6 +411,10 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         )}
  
         <div className="vtt-create-card p-4">
+          <div className="vtt-create-card-frame" aria-hidden="true" />
+          <div className="vtt-create-card-ornament vtt-create-card-ornament--top" aria-hidden="true" />
+          <div className="vtt-create-card-ornament vtt-create-card-ornament--bottom" aria-hidden="true" />
+
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Créer une nouvelle table</h2>
           <form onSubmit={handleCreate} className="space-y-3"> 
             <div className="flex gap-2">
