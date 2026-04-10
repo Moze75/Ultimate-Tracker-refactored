@@ -56,7 +56,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const initialViewportAppliedRef = useRef(false);
-  const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null);
+  const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null); 
 
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
