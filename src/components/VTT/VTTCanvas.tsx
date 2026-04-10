@@ -525,6 +525,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   // -------------------
 
   const torchAnimRef = useRef<number | null>(null);
+
+  // -------------------
+  // Gestion de la boucle de redraw vidéo
+  // -------------------
+  // Permet de rafraîchir le canvas tant qu'une carte vidéo est active.
+  const mapVideoAnimRef = useRef<number | null>(null);
   const forceViewportRef = useRef(forceViewportProp);
   forceViewportRef.current = forceViewportProp;
   const spectatorModeRef = useRef(spectatorMode);
