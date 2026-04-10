@@ -381,7 +381,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 <div
   className="min-h-screen text-white flex flex-col relative"
   style={{
-    backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/Forest%201.png')`,
+    backgroundImage: `url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backscreen/MysticForest2.jpg')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed',
