@@ -1405,7 +1405,7 @@ const fuseWallPoints = (
         drawRef.current();
       }
 
-      if (activeToolRef.current === 'measure' && measureStartRef.current && !measureLockedRef.current) {
+      if ((activeToolRef.current === 'measure' || activeToolRef.current === 'measure-circle' || activeToolRef.current === 'measure-cone') && measureStartRef.current && !measureLockedRef.current) {
         const sp2 = getCanvasXY(e.clientX, e.clientY);
         measureEndRef.current = screenToWorld(sp2.x, sp2.y);
         drawRef.current();
