@@ -598,7 +598,7 @@ const handleSignOut = async () => {
             className="animate-spin h-12 w-12 mx-auto object-contain"
             style={{ backgroundColor: 'transparent' }}
           />
-          <p className="text-gray-200">Chargement des personnages...</p>
+          <p className="text-gray-200">Invocation des personnages...</p>
         </div>
       </div>
     );
