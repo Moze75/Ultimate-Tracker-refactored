@@ -161,6 +161,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
           fogState?: VTTFogState;
           walls?: VTTWall[];
           doors?: VTTDoor[];
+          props?: VTTProp[];
           sceneId?: string | null;
         };
         if (s.config) setConfig(prev => ({ ...prev, ...s.config }));
@@ -169,6 +170,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         if (s.walls) setWalls(s.walls);
         if (s.doors) setDoors(s.doors);
         if ((s as any).windows) setWindows((s as any).windows);
+        if (s.props) setProps(s.props);
         if (s.sceneId) setCurrentSceneId(s.sceneId);
         setWaitingForSync(false);
       })
