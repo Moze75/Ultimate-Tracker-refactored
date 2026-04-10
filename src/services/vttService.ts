@@ -745,6 +745,18 @@ sendChat(message: VTTChatMessage): void {
     .catch((e: unknown) => console.warn('[VTT] sendChat error', e));
 }
 
+  // -------------------
+// Broadcast d'un événement props (sans double persistance DB)
+// Les props sont persistés par scène via persistSceneProps dans VTTPage.
+// On ne fait ici que diffuser l'event aux autres clients.
+// -------------------
+broadcastPropEvent(event: VTTServerEvent): void {
+  if (!this.channel) return;
+  this.channel
+    .send({ type: 'broadcast', event: 'vtt', payload: event })
+    .catch((e: unknown) => console.warn('[VTT] broadcastPropEvent error', e));
+}
+
 // -------------------
 // Abonnement aux messages de chat entrants
 // -------------------
