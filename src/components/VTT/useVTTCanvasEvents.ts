@@ -1999,7 +1999,7 @@ if (activeToolRef.current === 'wall-draw' && roleRef.current === 'gm') {
   // Keyboard events (arrows + Escape)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeToolRef.current === 'measure') {
+         if (e.key === 'Escape' && (activeToolRef.current === 'measure' || activeToolRef.current === 'measure-circle' || activeToolRef.current === 'measure-cone')) {
         measureStartRef.current = null;
         measureEndRef.current = null;
         measureLockedRef.current = false;
