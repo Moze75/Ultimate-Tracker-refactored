@@ -402,7 +402,7 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
         </span>
       </div>
 
-      <div className="relative z-10 flex-1 max-w-2xl mx-auto w-full px-4 py-8 space-y-16">
+      <div className="relative z-10 flex-1 max-w-2xl mx-auto w-full px-16 py-8 space-y-16">
         {error && (
           <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-sm text-red-300 flex items-center justify-between">
             <span>{error}</span>
