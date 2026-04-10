@@ -368,6 +368,12 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
           </div>
         </div>
 
+        {isVideoMapUrl(map.url) && (
+          <div className="absolute top-1.5 right-1.5 px-1 py-0.5 bg-purple-600/90 rounded text-[8px] text-white font-bold leading-none pointer-events-none">
+            VIDÉO
+          </div>
+        )}
+
         {isActive && (
           <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-amber-500 rounded text-[8px] text-white font-bold leading-none pointer-events-none">
             EN COURS
