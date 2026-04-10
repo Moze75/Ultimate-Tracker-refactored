@@ -326,6 +326,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   windows={windows}
   props={props}
   forceViewport={initialForceViewport ?? undefined}
+  onViewportChange={handleCanvasViewportChange}
 />
 
       {(config.weatherEffects ?? []).length > 0 && (
