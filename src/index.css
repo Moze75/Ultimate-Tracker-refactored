@@ -331,9 +331,15 @@ body::before {
    VTT Lobby — carte "Créer une nouvelle table"
    ======================================== */
 
+/* ========================================
+   VTT Lobby — cartes "Rejoindre par ID" et "Mes tables"
+   Utilise un pseudo-élément ::after comme vtt-create-card
+   pour que le cadre enveloppe toute la carte (titre inclus)
+   ======================================== */
+
 /* -------------------
-   Carte générique framée du lobby VTT (Rejoindre par ID, Mes tables)
-   Utilise AmbreFrame.png (frame principal, plus large)
+   Structure de la carte : fond semi-transparent, overflow visible
+   pour laisser le pseudo-élément ::after déborder autour
    ------------------- */
 .vtt-lobby-card {
   position: relative;
@@ -344,19 +350,17 @@ body::before {
   border-radius: 0;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   overflow: visible;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding: 16px;
 }
 
 /* -------------------
-   Pseudo-élément frame — AmbreFrame.png
-   Même paramètres que vtt-create-card-frame pour cohérence visuelle.
-   Les offsets négatifs font déborder le cadre autour du fond de la carte,
-   le titre étant inclus dans le padding interne de vtt-lobby-card.
+   Frame décoratif via ::after — AmbreFrame.png
+   Décalages identiques à vtt-create-card-frame pour cohérence.
+   Le pseudo-élément déborde autour du fond de la carte entière.
    ------------------- */
-.vtt-lobby-card-frame {
+.vtt-lobby-card::after {
+  content: '';
   position: absolute;
-  /* Débordement identique à vtt-create-card-frame */
   top: -57px;
   bottom: -65px;
   left: -45px;
@@ -366,17 +370,16 @@ body::before {
   border-image-width: 140px;
   border-image-repeat: round;
   border-style: solid;
-  /* border-width élevé = zone de rendu du border-image (ne clip pas le contenu) */
   border-width: 120px;
   pointer-events: none;
   z-index: 10;
 }
 
 /* -------------------
-   Contenu au-dessus du frame
-   z-index: 1 garantit que titre + inputs passent devant le cadre PNG
+   Contenu au-dessus du pseudo-élément frame
+   Tous les enfants directs passent en z-index: 1
    ------------------- */
-.vtt-lobby-card > :not(.vtt-lobby-card-frame) {
+.vtt-lobby-card > * {
   position: relative;
   z-index: 1;
 }
