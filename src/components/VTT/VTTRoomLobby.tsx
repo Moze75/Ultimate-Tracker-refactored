@@ -453,8 +453,9 @@ export function VTTRoomLobby({ userId, authToken, onJoinRoom, onBack }: VTTRoomL
 
         {/* -------------------
             Carte "Rejoindre par ID" — frame AmbreFrame.png via ::after CSS
+            Variante compacte (vtt-lobby-card--compact) car moins de contenu vertical
             ------------------- */}
-        <div className="vtt-lobby-card">
+        <div className="vtt-lobby-card vtt-lobby-card--compact">
           <h2 className="text-sm font-semibold text-gray-300 mb-3">Rejoindre par ID</h2>
           <div className="flex gap-2">
             <input
