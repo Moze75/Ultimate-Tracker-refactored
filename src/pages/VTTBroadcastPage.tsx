@@ -58,6 +58,13 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   const initialViewportAppliedRef = useRef(false);
   const [initialForceViewport, setInitialForceViewport] = useState<BroadcastViewport | null>(null);
 
+  // -------------------
+  // Gestion du viewport broadcast
+  // -------------------
+  // Permet de positionner correctement les props HTML animés
+  // au-dessus du canvas dans la page broadcast.
+  const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
+
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
