@@ -415,7 +415,7 @@ body::before {
      Réduit par rapport au 150px standard pour rester proportionné
      à la petite taille de la carte. Augmenter pour épaissir les bords.
      ------------------- */
-  border-image-width: 120px;
+  border-image-width: 140px;
 }
 
 .vtt-create-card {
