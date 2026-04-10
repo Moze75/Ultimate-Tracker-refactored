@@ -303,9 +303,8 @@ url = await uploadVttAsset(file, 'maps', userId, roomId);
               <video
                 src={map.url}
                 muted
-                loop
-                autoPlay
                 playsInline
+                preload="metadata"
                 draggable={false}
                 className="w-full h-full object-cover block pointer-events-none bg-gray-900"
               />
