@@ -331,6 +331,51 @@ body::before {
    VTT Lobby — carte "Créer une nouvelle table"
    ======================================== */
 
+/* -------------------
+   Carte générique framée du lobby VTT (Rejoindre par ID, Mes tables)
+   Utilise AmbreFrame.png (frame principal, plus large)
+   ------------------- */
+.vtt-lobby-card {
+  position: relative;
+  background-color: rgba(31, 41, 55, 0.60);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  overflow: visible;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* -------------------
+   Pseudo-élément frame — AmbreFrame.png
+   Déborde autour du contenu pour simuler un cadre doré
+   ------------------- */
+.vtt-lobby-card-frame {
+  position: absolute;
+  top: -57px;
+  bottom: -65px;
+  left: -45px;
+  right: -45px;
+  border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
+  border-image-slice: 26%;
+  border-image-width: 140px;
+  border-image-repeat: round;
+  border-style: solid;
+  border-width: 120px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* -------------------
+   Contenu au-dessus du frame
+   ------------------- */
+.vtt-lobby-card > :not(.vtt-lobby-card-frame) {
+  position: relative;
+  z-index: 1;
+}
+
 .vtt-create-card {
   position: relative;
   background-color: rgba(31, 41, 55, 0.60);
