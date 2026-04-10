@@ -524,6 +524,20 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
       case 'WEATHER_UPDATED':
         setWeatherEffects(event.effects);
         break;
+                case 'PROP_ADDED':
+          setProps(prev => {
+            if (prev.some(p => p.id === event.prop.id)) return prev;
+            return [...prev, event.prop];
+          });
+          break;
+        case 'PROP_REMOVED':
+          setProps(prev => prev.filter(p => p.id !== event.propId));
+          break;
+        case 'PROP_UPDATED':
+          setProps(prev => prev.map(p =>
+            p.id === event.propId ? { ...p, ...event.changes } : p
+          ));
+          break;
       case 'PING_RECEIVED': {
         const ping = event.ping;
         setActivePings(prev => [...prev, ping]);
