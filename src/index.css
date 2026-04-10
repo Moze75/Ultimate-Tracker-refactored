@@ -361,16 +361,27 @@ body::before {
 .vtt-lobby-card::after {
   content: '';
   position: absolute;
-  top: -90px;
-  bottom: -90px;
-  left: -80px;
-  right: -80px;
+  /* -------------------
+     Offsets : couvrent le fond + le titre au-dessus + marges en dessous
+     top  : -57px couvre le titre "Rejoindre par ID" / "Mes tables"
+     bottom : -65px laisse de la marge sous le contenu
+     left/right : -45px idem vtt-create-card-frame
+     ------------------- */
+  top: -57px;
+  bottom: -65px;
+  left: -45px;
+  right: -45px;
   border-image-source: url('https://pub-34f7ade8969e4687945b58e1d1b80dd8.r2.dev/static/backgroundAmbre/AmbreFrame.png');
   border-image-slice: 26%;
-  border-image-width: 180px;
+  /* -------------------
+     border-image-width = taille des coins du frame PNG
+     border-width = zone de rendu (doit être <= border-image-width)
+     Valeurs identiques à vtt-create-card-frame qui fonctionne
+     ------------------- */
+  border-image-width: 140px;
   border-image-repeat: round;
   border-style: solid;
-  border-width: 160px;
+  border-width: 120px;
   pointer-events: none;
   z-index: 10;
 }
