@@ -361,16 +361,7 @@ body::before {
 }
 
 .vtt-create-card-ornament {
-  position: absolute;
-  left: 50%;
-  width: 140px;
-  height: 24px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 11;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
+  display: none !important;
 }
 
 .vtt-create-card-ornament--top {
