@@ -357,7 +357,7 @@ body::before {
   border-image-width: 140px;
   border-image-repeat: space;
   border-style: solid;
-  border-width: 40px;
+  border-width: 120px;
   pointer-events: none;
   z-index: 10;
 }
