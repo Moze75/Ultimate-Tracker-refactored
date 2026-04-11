@@ -207,9 +207,13 @@ return (
       onClick={() => setActiveTooltip && setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
 
       >
-        <div className="text-xl font-bold text-gray-100 mb-1">
-          {formatFr(stats.speed)} m
-        </div>
+{/* gestion de l'affichage de la vitesse sur une seule ligne */}
+<div className="text-xl font-bold text-gray-100 mb-1">
+  <span className="inline-flex items-baseline whitespace-nowrap">
+    <span>{formatFr(stats.speed)}</span>
+    <span className="ml-1">m</span>
+  </span>
+</div>
         <div className="text-xs uppercase tracking-wide text-gray-500">Vitesse</div>
         {activeTooltip === 'speed' && (
           <>

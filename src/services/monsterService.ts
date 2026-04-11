@@ -93,6 +93,17 @@ export const monsterService = {
     return data as Monster;
   },
 
+  async getCampaignMonsterById(monsterId: string): Promise<Monster | null> {
+    const { data, error } = await supabase
+      .from('campaign_monsters')
+      .select('*')
+      .eq('id', monsterId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return (data as Monster | null) ?? null;
+  },
+
   async getCampaignMonsters(campaignId: string): Promise<Monster[]> {
     const { data, error } = await supabase
       .from('campaign_monsters')

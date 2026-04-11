@@ -141,6 +141,45 @@ export function CustomMonsterModal({ onClose, onSave, editMonster }: CustomMonst
     return () => { document.body.style.overflow = prev; };
   }, []);
 
+  useEffect(() => {
+    if (!editMonster) return;
+
+    // gestion du préremplissage du formulaire pour l'édition d'un monstre custom
+    setName(editMonster.name || '');
+    setType(editMonster.type || '');
+    setSize(editMonster.size || 'M');
+    setAlignment(editMonster.alignment || '');
+    setAc(editMonster.armor_class || 10);
+    setAcDesc(editMonster.armor_desc || '');
+    setHp(editMonster.hit_points || 1);
+    setHpFormula(editMonster.hit_points_formula || '');
+    setSpeedText(
+      editMonster.speed
+        ? Object.entries(editMonster.speed)
+            .map(([k, v]) => (k === 'marche' ? v : `${k} ${v}`))
+            .join(', ')
+        : '9 m'
+    );
+    setAbilities(editMonster.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 });
+    setSavingThrows(editMonster.saving_throws || '');
+    setSkills(editMonster.skills || '');
+    setVulns(editMonster.vulnerabilities || '');
+    setResistances(editMonster.resistances || '');
+    setDmgImmunities(editMonster.damage_immunities || '');
+    setCondImmunities(editMonster.condition_immunities || '');
+    setSenses(editMonster.senses || '');
+    setLanguages(editMonster.languages || '');
+    setCr(editMonster.challenge_rating || '1');
+    setXp(editMonster.xp || 200);
+    setTraits(editMonster.traits || []);
+    setActions(editMonster.actions?.length ? editMonster.actions : [{ name: '', description: '' }]);
+    setBonusActions(editMonster.bonus_actions || []);
+    setReactions(editMonster.reactions || []);
+    setLegendaryActions(editMonster.legendary_actions || []);
+    setLegendaryDesc(editMonster.legendary_description || '');
+    setImageUrl(editMonster.image_url || '');
+  }, [editMonster]);
+
   const parseSpeed = (): Record<string, string> => {
     const speed: Record<string, string> = {};
     const parts = speedText.split(',').map((s) => s.trim()).filter(Boolean);

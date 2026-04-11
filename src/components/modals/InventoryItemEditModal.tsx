@@ -6,7 +6,8 @@ import { supabase } from '../../lib/supabase';
 import { ImageUrlInput } from '../ImageUrlInput';
 import type { InventoryItem } from '../../types/dnd';
 
-type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+// gestion des types d'objets éditables
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'ring' | 'tool' | 'other';
 type WeaponCategory =
   | 'Armes courantes'
   | 'Armes de guerre'
@@ -372,6 +373,7 @@ const handleSave = async () => {
               <option value="armor">Armure</option>
               <option value="shield">Bouclier</option>
               <option value="jewelry">Bijoux</option>
+              <option value="ring">Anneau</option>
               <option value="tool">Outils</option>
               <option value="other">Autre</option>
             </select>
@@ -479,7 +481,7 @@ const handleSave = async () => {
           )}
 
  {/* ✅ NOUVEAU : Section bonus pour jewelry, equipment, tool, other */}
-          {(type === 'jewelry' || type === 'equipment' || type === 'tool' || type === 'other') && (
+          {(type === 'jewelry' || type === 'ring' || type === 'equipment' || type === 'tool' || type === 'other') && (
             <div className="bg-gray-800/30 p-3 rounded space-y-3">
               <h4 className="text-sm font-medium text-gray-300">Bonus (optionnel)</h4>
               <p className="text-xs text-gray-500">

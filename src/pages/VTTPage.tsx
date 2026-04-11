@@ -2179,6 +2179,8 @@ useEffect(() => {
   activeTool={activeTool}
   fogBrushSize={fogBrushSize}
   config={config}
+  tokens={tokens}
+  connectedUsers={connectedUsers}
   onToolChange={handleToolChange}
   onFogBrushSizeChange={setFogBrushSize}
   onAddToken={() => setShowAddToken(true)}

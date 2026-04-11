@@ -1604,8 +1604,20 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const isAnyWallTool = isWallTool || isWallSelectTool;
   const isMeasureTool = activeTool === 'measure' || activeTool === 'measure-circle' || activeTool === 'measure-cone';
 
+  // -------------------
+  // Gestion du drag & drop sur le canvas
+  // -------------------
+  // Accepte :
+  // - un token existant depuis la sidebar / le canvas
+  // - un nouveau token depuis une bibliothèque
+  // - un prop
+  // - un joueur connecté depuis la liste overlay, afin de repositionner
+  //   automatiquement son token associé sur la carte
   const handleDragOver = (e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes('application/vtt-token-id')) {
+    if (
+      e.dataTransfer.types.includes('application/vtt-token-id') ||
+      e.dataTransfer.types.includes('application/vtt-player-user-id')
+    ) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       setIsDragOver(true);
@@ -1625,9 +1637,16 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     }
   };
 
+  // -------------------
+  // Gestion du drop sur le canvas
+  // -------------------
+  // Si le payload vient de la liste des joueurs connectés,
+  // on résout le userId vers le token actuellement contrôlé par ce joueur,
+  // puis on réutilise le flux standard onDropToken.
   const handleDrop = (e: React.DragEvent) => {
     setIsDragOver(false);
     e.preventDefault();
+
     const sp = getCanvasXY(e.clientX, e.clientY);
     const wp = screenToWorld(sp.x, sp.y);
     const cfg = configRef.current;
@@ -1650,6 +1669,21 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
     const tokenId = e.dataTransfer.getData('application/vtt-token-id');
     if (tokenId && onDropTokenRef.current) {
       onDropTokenRef.current(tokenId, snapped);
+      return;
+    }
+
+    // -------------------
+    // Gestion du drag & drop depuis la liste des joueurs connectés
+    // -------------------
+    const playerUserId = e.dataTransfer.getData('application/vtt-player-user-id');
+    if (playerUserId && onDropTokenRef.current) {
+      const playerToken = tokensRef.current.find(token =>
+        token.controlledByUserIds?.includes(playerUserId)
+      );
+
+      if (playerToken) {
+        onDropTokenRef.current(playerToken.id, snapped);
+      }
       return;
     }
 

@@ -10,6 +10,7 @@ interface VTTCustomMonsterModalProps {
   roomId: string;
   onClose: () => void;
   onSaved: () => void;
+  editMonster?: Monster | null;
 }
 
 const CUSTOM_MONSTERS_FOLDER = 'Monstres customs';
@@ -78,7 +79,7 @@ function DynamicEntryList({
   );
 }
 
-export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: VTTCustomMonsterModalProps) {
+export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved, editMonster = null }: VTTCustomMonsterModalProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [size, setSize] = useState('M');
@@ -130,21 +131,23 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
     return speed;
   };
 
+  // gestion du dossier des monstres customs dans la bibliothèque de tokens 
   const ensureCustomMonstersFolder = async (): Promise<string> => {
     const lib = await fetchTokenLibrary(roomId);
-    tokenLibrary.setCache(lib);
+    tokenLibrary.setCache(roomId, lib);
 
     const existing = lib.folders.find(f => f.name === CUSTOM_MONSTERS_FOLDER);
     if (existing) return existing.id;
 
-    const folder = tokenLibrary.createFolder(CUSTOM_MONSTERS_FOLDER);
-    const updated = tokenLibrary.get();
+    const folder = tokenLibrary.createFolder(roomId, CUSTOM_MONSTERS_FOLDER);
+    const updated = tokenLibrary.get(roomId);
     await saveTokenLibrary(roomId, updated);
     return folder.id;
   };
 
+  // gestion du token de bibliothèque lié à un monstre custom éditable
   const addTokenToLibrary = async (monster: Monster, folderId: string) => {
-    tokenLibrary.addToken({
+    tokenLibrary.addToken(roomId, {
       name: monster.name,
       imageUrl: monster.image_url || '',
       folderId,
@@ -153,8 +156,11 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
       hp: monster.hit_points,
       maxHp: monster.hit_points,
       showLabel: true,
+      source: 'custom-monster',
+      linkedMonsterId: monster.id ?? null,
     });
-    await saveTokenLibrary(roomId, tokenLibrary.get());
+
+    await saveTokenLibrary(roomId, tokenLibrary.get(roomId));
   };
 
   const getSizeMultiplier = (size: string): number => {
@@ -201,7 +207,10 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
       };
 
       let savedMonster = monster;
-      if (campaignId) {
+      if (editMonster?.id) {
+        // gestion de la mise à jour d'un monstre custom existant
+        savedMonster = await monsterService.updateCampaignMonster(editMonster.id, monster);
+      } else if (campaignId) {
         savedMonster = await monsterService.saveToCampaign(campaignId, monster);
       }
 
@@ -251,7 +260,9 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
           <div>
-            <h3 className="text-lg font-semibold text-white">Nouveau monstre custom</h3>
+             <h3 className="text-lg font-semibold text-white">
+              {editMonster ? 'Éditer le monstre custom' : 'Nouveau monstre custom'}
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {campaignId
                 ? 'Sauvegarde dans la campagne + dossier "Monstres customs" de la bibliotheque'
@@ -564,7 +575,7 @@ export function VTTCustomMonsterModal({ campaignId, roomId, onClose, onSaved }: 
             disabled={!name.trim() || saving}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Sauvegarde...' : 'Creer et ajouter a la bibliotheque'}
+                     {saving ? 'Sauvegarde...' : editMonster ? 'Enregistrer les modifications' : 'Creer et ajouter a la bibliotheque'}
           </button>
         </div>
       </div>

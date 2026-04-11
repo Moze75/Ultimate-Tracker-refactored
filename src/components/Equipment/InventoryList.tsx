@@ -8,7 +8,8 @@ import { CampaignMember } from '../../types/campaign';
 import { ShareItemToPlayerModal } from '../modals/ShareItemToPlayerModal';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 
-type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+// gestion des types d'objets affichés dans le sac
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'ring' | 'tool' | 'other';
 
 interface ItemMeta {
   type: MetaType;
@@ -110,8 +111,18 @@ export function InventoryList({
   currentUserId
 }: InventoryListProps) {
   const [bagFilter, setBagFilter] = useState('');
+  // gestion des filtres de types dans le sac
+  // gestion des filtres de types dans le sac
   const [bagKinds, setBagKinds] = useState<Record<MetaType, boolean>>({
-    armor: true, shield: true, weapon: true, equipment: true, potion: true, jewelry: true, tool: true, other: true
+    armor: true,
+    shield: true,
+    weapon: true,
+    equipment: true,
+    potion: true,
+    jewelry: true,
+    ring: true,
+    tool: true,
+    other: true
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -202,8 +213,10 @@ export function InventoryList({
             const isWeapon = meta?.type === 'weapon';
 
             const hasBonuses = meta?.bonuses && Object.keys(meta.bonuses).length > 0;
+            // gestion des objets custom équipables à bonus
+            // gestion des objets custom équipables à bonus
             const isEquippableItem = hasBonuses &&
-              (meta?.type === 'jewelry' || meta?.type === 'equipment' ||
+              (meta?.type === 'jewelry' || meta?.type === 'ring' || meta?.type === 'equipment' ||
                meta?.type === 'tool' || meta?.type === 'other');
 
             const isEquipped =
@@ -248,12 +261,14 @@ export function InventoryList({
                         {smartCapitalize(item.name)}
                       </button>
                       {qty > 1 && <span className="text-xs px-2 py-0.5 rounded bg-gray-700/60 text-gray-300 whitespace-nowrap">x{qty}</span>}
+                      {/* gestion des tags d'affichage des objets */}
                       {isArmor && <span className="text-xs px-2 py-0.5 rounded bg-purple-900/30 text-purple-300 whitespace-nowrap">Armure</span>}
                       {isShield && <span className="text-xs px-2 py-0.5 rounded bg-blue-900/30 text-blue-300 whitespace-nowrap">Bouclier</span>}
                       {isWeapon && <span className="text-xs px-2 py-0.5 rounded bg-red-900/30 text-red-300 whitespace-nowrap">Arme</span>}
                       {meta?.type === 'equipment' && <span className="text-xs px-2 py-0.5 rounded bg-gray-800/60 text-gray-300 whitespace-nowrap">Équipement</span>}
                       {meta?.type === 'tool' && <span className="text-xs px-2 py-0.5 rounded bg-teal-900/30 text-teal-300 whitespace-nowrap">Outil</span>}
                       {meta?.type === 'jewelry' && <span className="text-xs px-2 py-0.5 rounded bg-yellow-900/30 text-yellow-300 whitespace-nowrap">Bijou</span>}
+                      {meta?.type === 'ring' && <span className="text-xs px-2 py-0.5 rounded bg-amber-900/30 text-amber-300 whitespace-nowrap">Anneau</span>}
                       {meta?.type === 'potion' && <span className="text-xs px-2 py-0.5 rounded bg-green-900/30 text-green-300 whitespace-nowrap">Potion/Poison</span>}
                       {meta?.type === 'other' && <span className="text-xs px-2 py-0.5 rounded bg-slate-900/30 text-slate-300 whitespace-nowrap">Autre</span>}
                     </div>
@@ -393,14 +408,16 @@ export function InventoryList({
               </button>
             </div>
             <div className="space-y-1">
-              {(['armor','shield','weapon','equipment','potion','jewelry','tool','other'] as MetaType[]).map(k => (
+              {(['armor','shield','weapon','equipment','potion','jewelry','ring','tool','other'] as MetaType[]).map(k => (
                 <label key={k} className="flex items-center justify-between text-sm text-gray-200 px-2 py-1 rounded hover:bg-gray-800/60 cursor-pointer">
                   <span>
+                    {/* gestion des libellés de filtres du sac */}
                     {k === 'armor' ? 'Armure'
                       : k === 'shield' ? 'Bouclier'
                       : k === 'weapon' ? 'Arme'
                       : k === 'potion' ? 'Potion/Poison'
                       : k === 'jewelry' ? 'Bijoux'
+                      : k === 'ring' ? 'Anneaux'
                       : k === 'tool' ? 'Outils'
                       : k === 'other' ? 'Autre' : 'Équipement'}
                   </span>

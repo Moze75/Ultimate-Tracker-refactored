@@ -199,13 +199,18 @@ const baseAC = armorFormula
 
       {/* Vitesse */}
     <div className="flex flex-col items-center pt-2">
-        <div
-          className="relative w-16 h-10 -mt-2 -mb-1 group cursor-pointer"
-          onClick={() => setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
-        >
-          <div className="text-lg font-bold text-gray-100 whitespace-nowrap">
-            {formatFr(stats.speed)} m
-          </div>
+{/* gestion de la largeur minimale de la cellule vitesse */}
+<div
+  className="relative h-10 -mt-2 -mb-1 group cursor-pointer min-w-[72px]"
+  onClick={() => setActiveTooltip(activeTooltip === 'speed' ? null : 'speed')}
+>
+{/* gestion de l'affichage de la vitesse sur une seule ligne */}
+<div className="text-lg font-bold text-gray-100">
+  <span className="inline-flex items-baseline whitespace-nowrap">
+    <span>{formatFr(stats.speed)}</span>
+    <span className="ml-1">m</span>
+  </span>
+</div>
           {activeTooltip === 'speed' && (
             <>
               <div className="fixed inset-0" onClick={() => setActiveTooltip(null)} />

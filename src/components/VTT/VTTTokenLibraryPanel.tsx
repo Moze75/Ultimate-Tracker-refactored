@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FolderPlus, Folder, FolderOpen, Trash2, Upload, CreditCard as Edit2, Check, X, Link, Image as ImageIcon, Skull } from 'lucide-react';
 import type { VTTToken } from '../../types/vtt';
 import {
@@ -6,6 +7,8 @@ import {
   type TokenEntry, type TokenLibrary,
 } from '../../services/tokenLibraryService';
 import { VTTCustomMonsterModal } from './VTTCustomMonsterModal';
+import { ImportMonsterModal } from '../Combat/ImportMonsterModal';
+import type { Monster } from '../../types/campaign';
 
 interface VTTTokenLibraryPanelProps {
   roomId: string;
@@ -25,6 +28,13 @@ export function VTTTokenLibraryPanel({ roomId, campaignId }: VTTTokenLibraryPane
 const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get(roomId));
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
   const [showMonsterModal, setShowMonsterModal] = useState(false);
+
+  // gestion du monstre custom actuellement édité
+  const [editingMonster, setEditingMonster] = useState<Monster | null>(null);
+
+  // gestion de l'import JSON de monstres vers la bibliothèque de tokens
+  const [showImportModal, setShowImportModal] = useState(false);
+
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -35,6 +45,13 @@ const [lib, setLib] = useState<TokenLibrary>(() => tokenLibrary.get(roomId));
   const [addUrlValue, setAddUrlValue] = useState('');
   const [addUrlName, setAddUrlName] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  // gestion du menu contextuel des tokens de bibliothèque
+  const [contextMenu, setContextMenu] = useState<{
+    tokenId: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileTargetFolderRef = useRef<string | null>(null);
@@ -61,6 +78,32 @@ const current = tokenLibrary.get(roomId);
       renameInputRef.current.select();
     }
   }, [renamingId]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    // gestion de la fermeture différée du menu contextuel
+    const timeoutId = window.setTimeout(() => {
+      const closeMenu = () => setContextMenu(null);
+      const closeOnEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setContextMenu(null);
+      };
+
+      window.addEventListener('click', closeMenu);
+      window.addEventListener('scroll', closeMenu, true);
+      window.addEventListener('keydown', closeOnEscape);
+
+      return () => {
+        window.removeEventListener('click', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        window.removeEventListener('keydown', closeOnEscape);
+      };
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [contextMenu]);
 
   // -------------------
   // Gestion du drag interne
@@ -176,13 +219,15 @@ tokenLibrary.deleteFolder(roomId, folderId);
       size: 1,
       color: '#3b82f6',
       showLabel: true,
+      source: 'url',
+      linkedMonsterId: null,
     });
 
     setAddUrlValue('');
     setAddUrlName('');
     setAddUrlMode(null);
     persist();
-  };
+  }; 
 
   const handleFileUpload = async (file: File, folderId: string | null) => {
     const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
@@ -203,13 +248,16 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
         });
       }
 
-      tokenLibrary.addToken({
+      // gestion de l'ajout d'un token image uploadé dans la bibliothèque
+      tokenLibrary.addToken(roomId, {
         name: file.name.replace(/\.[^.]+$/, ''),
         imageUrl,
         folderId,
         size: 1,
         color: '#3b82f6',
         showLabel: true,
+        source: 'upload',
+        linkedMonsterId: null,
       });
 
       persist();
@@ -248,6 +296,52 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
   };
 
   // -------------------
+  // Gestion de la conversion des monstres importés en tokens de bibliothèque
+  // -------------------
+  // gestion de l'ajout des monstres importés JSON dans la bibliothèque de tokens
+  const addImportedMonsterToLibrary = useCallback(async (monster: Monster) => {
+    const currentLib = await fetchTokenLibrary(roomId);
+    tokenLibrary.setCache(roomId, currentLib);
+
+    let targetFolder = currentLib.folders.find(f => f.name === 'Monstres customs');
+
+    if (!targetFolder) {
+      targetFolder = tokenLibrary.createFolder(roomId, 'Monstres customs');
+    }
+
+    tokenLibrary.addToken(roomId, {
+      name: monster.name,
+      imageUrl: monster.image_url || '',
+      folderId: targetFolder.id,
+      size:
+        monster.size === 'TP' ? 0.5 :
+        monster.size === 'P' ? 0.75 :
+        monster.size === 'G' ? 2 :
+        monster.size === 'TG' ? 3 :
+        monster.size === 'Gig' ? 4 :
+        1,
+      color: '#ef4444',
+      hp: monster.hit_points,
+      maxHp: monster.hit_points,
+      showLabel: true,
+      source: 'monster-import',
+      linkedMonsterId: monster.id ?? null,
+    });
+
+    const updated = tokenLibrary.get(roomId);
+    await saveTokenLibrary(roomId, updated);
+
+    const refreshed = await fetchTokenLibrary(roomId);
+    tokenLibrary.setCache(roomId, refreshed);
+    setLib(refreshed);
+
+    const refreshedCustomFolder = refreshed.folders.find(f => f.name === 'Monstres customs');
+    if (refreshedCustomFolder) {
+      setOpenFolders(prev => new Set([...prev, refreshedCustomFolder.id]));
+    }
+  }, [roomId]);
+
+  // -------------------
   // Construction du token drag vers canvas
   // -------------------
   const buildCanvasTokenData = (entry: TokenEntry): Omit<VTTToken, 'id'> => ({
@@ -269,21 +363,44 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
     lightRadius: 0,
   });
 
-  const renderToken = (entry: TokenEntry) => {
+    function LibraryTokenRow({ entry }: { entry: TokenEntry }) {
+    const rowRef = React.useRef<HTMLDivElement>(null);
     const isRenaming = renamingId === entry.id;
     const isDragging = dragGhost?.tokenId === entry.id;
 
+    useEffect(() => {
+      const node = rowRef.current;
+      if (!node) return;
+
+      const handleNativeContextMenu = (e: MouseEvent) => {
+        // gestion native du clic droit pour éviter les conflits avec draggable
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenu({
+          tokenId: entry.id,
+          x: e.clientX,
+          y: e.clientY,
+        });
+      };
+
+      node.addEventListener('contextmenu', handleNativeContextMenu);
+      return () => {
+        node.removeEventListener('contextmenu', handleNativeContextMenu);
+      };
+    }, [entry.id]);
+
     return (
       <div
-        key={entry.id}
-        className={`group relative w-full overflow-hidden transition-all select-none ${
+        ref={rowRef}
+        className={`group flex items-center gap-2 px-2 py-1.5 rounded-md transition-all select-none ${
           isDragging ? 'opacity-40' : 'opacity-100'
-        }`}
+        } hover:bg-gray-800/40`}
       >
         <div
-          className="w-full h-20 relative"
+          className="relative shrink-0 cursor-grab active:cursor-grabbing"
           draggable
           onDragStart={e => {
+            // gestion du drag direct sur le token
             e.dataTransfer.setData(
               'application/vtt-new-token',
               JSON.stringify(buildCanvasTokenData(entry))
@@ -291,67 +408,91 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
             e.dataTransfer.effectAllowed = 'copy';
           }}
         >
-          {entry.imageUrl && !entry.imageUrl.startsWith('data:') ? (
+          {entry.imageUrl ? (
             <img
               src={entry.imageUrl}
               alt={entry.name}
               draggable={false}
-              className="w-full h-full object-cover block pointer-events-none"
+              className="w-8 h-8 rounded-full object-cover border border-gray-700 pointer-events-none"
             />
           ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <ImageIcon size={24} className="text-gray-600" />
+            <div
+              className="w-8 h-8 rounded-full border flex items-center justify-center text-[9px] font-bold text-white"
+              style={{ backgroundColor: entry.color || '#374151', borderColor: entry.color || '#4b5563' }}
+            >
+              {entry.name.slice(0, 2).toUpperCase()}
             </div>
           )}
-
-          <div
-            className="absolute top-1 right-1 p-0.5 bg-black/50 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Déplacer vers un dossier"
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              startInternalDrag(e, entry);
-            }}
-          >
-            <span className="text-gray-300 text-[10px] leading-none select-none">⠿</span>
-          </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-1.5 py-1 flex items-end justify-between gap-1">
+        <div className="flex-1 min-w-0">
           {isRenaming ? (
-            <input
-              ref={renameInputRef}
-              value={renameValue}
-              onChange={e => setRenameValue(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleRenameConfirm('token');
-                if (e.key === 'Escape') setRenamingId(null);
-              }}
-              onClick={e => e.stopPropagation()}
-              className="flex-1 px-1 py-0 bg-black/60 border border-amber-500 rounded text-white text-[10px] outline-none"
-            />
+            <div className="flex items-center gap-1">
+              <input
+                ref={renameInputRef}
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleRenameConfirm('token');
+                  if (e.key === 'Escape') setRenamingId(null);
+                }}
+                onClick={e => e.stopPropagation()}
+                className="w-full px-2 py-0.5 bg-black/60 border border-amber-500 rounded text-white text-[11px] outline-none"
+              />
+              <button
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => handleRenameConfirm('token')}
+                className="p-0.5 rounded bg-green-600/90 hover:bg-green-500 text-white"
+              >
+                <Check size={9} />
+              </button>
+              <button
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => setRenamingId(null)}
+                className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white"
+              >
+                <X size={9} />
+              </button>
+            </div>
           ) : (
-            <span className="flex-1 text-[10px] truncate font-medium leading-tight text-gray-200" title={entry.name}>
-              {entry.name}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] truncate font-medium text-gray-200" title={entry.name}>
+                {entry.name}
+              </span>
+              {(entry.hp != null || entry.maxHp != null) && (
+                <span className="text-[9px] text-gray-500 truncate">
+                  {entry.hp ?? 0}/{entry.maxHp ?? 0} PV
+                </span>
+              )}
+            </div>
           )}
-
-          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            {isRenaming ? (
-              <>
-                <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameConfirm('token')} className="p-0.5 rounded bg-green-600/90 hover:bg-green-500 text-white"><Check size={10} /></button>
-                <button onMouseDown={e => e.stopPropagation()} onClick={() => setRenamingId(null)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white"><X size={10} /></button>
-              </>
-            ) : (
-              <button onMouseDown={e => e.stopPropagation()} onClick={() => handleRenameStart(entry.id, entry.name)} className="p-0.5 rounded bg-gray-600/90 hover:bg-gray-500 text-white" title="Renommer"><Edit2 size={10} /></button>
-            )}
-            <button onMouseDown={e => e.stopPropagation()} onClick={() => handleDeleteToken(entry.id)} className="p-0.5 rounded bg-red-700/90 hover:bg-red-600 text-white" title="Supprimer"><Trash2 size={10} /></button>
-          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            // gestion d'un fallback d'ouverture du menu d'actions
+            e.preventDefault();
+            e.stopPropagation();
+            const rect = e.currentTarget.getBoundingClientRect();
+            console.log('open token menu', entry.id);
+            setContextMenu({
+              tokenId: entry.id,
+              x: Math.round(rect.right - 8),
+              y: Math.round(rect.bottom + 4),
+            });
+          }}
+          className="shrink-0 px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-white hover:bg-gray-700/60 rounded transition-colors"
+          title="Actions"
+        >
+          •••
+        </button>
       </div>
     );
-  };
+  }
 
+  const renderToken = (entry: TokenEntry) => <LibraryTokenRow key={entry.id} entry={entry} />;
+  
   const renderAddUrlForm = (folderId: string | null) => (
     <div className="mx-2 mt-1 mb-1 space-y-1 p-2 bg-gray-800/60 rounded-lg border border-gray-700">
       <input type="text" value={addUrlName} onChange={e => setAddUrlName(e.target.value)} placeholder="Nom (optionnel)" className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none focus:ring-1 focus:ring-amber-500" />
@@ -399,7 +540,19 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
           Le titre est deja porte par le bandeau repliable du parent.
           On ne garde ici que l'action de creation de dossier.
       */}
-      <div className="flex items-center justify-end gap-1 px-2 py-1.5">
+
+      <div className="flex items-center justify-end gap-2 px-2 py-1.5">
+        {/* gestion de l'import JSON vers des tokens dragables */}
+        <button
+          onClick={() => setShowImportModal(true)}
+          disabled={!campaignId}
+          className="flex items-center gap-1 px-2 py-1 bg-amber-900/40 hover:bg-amber-800/60 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-gray-700 border border-amber-700/60 text-amber-300 hover:text-amber-100 rounded text-[10px] font-medium transition-colors"
+          title={campaignId ? 'Importer des monstres JSON dans la bibliothèque' : 'Import disponible uniquement depuis une campagne'}
+        >
+          <Upload size={10} /> Importer
+        </button>
+
+        {/* gestion de la création d'un monstre custom dans la bibliothèque */}
         <button
           onClick={() => setShowMonsterModal(true)}
           className="flex items-center gap-1 px-2 py-1 bg-red-900/50 hover:bg-red-800/70 border border-red-700/60 text-red-400 hover:text-red-200 rounded text-[10px] font-medium transition-colors"
@@ -407,9 +560,11 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
         >
           <Skull size={10} /> + Monstre custom
         </button>
+
+        {/* gestion de la création de dossiers dans la bibliothèque */}
         <button
           onClick={() => { setNewFolderMode(true); setNewFolderName(''); }}
-          className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] transition-colors"
+          className="flex items-center gap-1 px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white rounded text-[10px] font-medium transition-colors"
         >
           <FolderPlus size={10} /> Dossier
         </button>
@@ -502,20 +657,113 @@ imageUrl = await uploadVttAsset(file, 'tokens', userId, roomId);
         }}
       />
 
+        {contextMenu && createPortal(
+        <div
+          className="fixed inset-0 z-[10000]"
+          onClick={() => setContextMenu(null)}
+        >
+          <div
+            className="absolute min-w-[160px] rounded-md border border-gray-700 bg-gray-900 shadow-2xl overflow-hidden"
+            style={{
+              left: Math.max(8, Math.min(window.innerWidth - 168, contextMenu.x)),
+              top: Math.max(8, Math.min(window.innerHeight - 120, contextMenu.y)),
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* gestion de l'édition du token depuis le menu contextuel */}
+            <button
+              type="button"
+              onClick={async () => {
+                // gestion de l'ouverture de l'éditeur pour un token lié à un monstre custom
+                const token = lib.tokens.find(t => t.id === contextMenu.tokenId);
+                setContextMenu(null);
+
+                if (!token?.linkedMonsterId || token.source !== 'custom-monster') {
+                  return;
+                }
+
+                try {
+                  const monster = await monsterService.getCampaignMonsterById(token.linkedMonsterId);
+                  if (!monster) return;
+                  setEditingMonster(monster);
+                  setShowMonsterModal(true);
+                } catch (err) {
+                  console.error('Erreur chargement monstre custom:', err);
+                }
+              }}
+              className="w-full px-3 py-2 text-left text-xs text-gray-200 hover:bg-gray-800 transition-colors"
+            >
+              Éditer
+            </button>
+
+            {/* gestion du renommage du token depuis le menu contextuel */}
+            <button
+              type="button"
+              onClick={() => {
+                const token = lib.tokens.find(t => t.id === contextMenu.tokenId);
+                if (token) {
+                  handleRenameStart(token.id, token.name);
+                }
+                setContextMenu(null);
+              }}
+              className="w-full px-3 py-2 text-left text-xs text-gray-200 hover:bg-gray-800 transition-colors"
+            >
+              Renommer
+            </button>
+
+            {/* gestion de la suppression du token depuis le menu contextuel */}
+            <button
+              type="button"
+              onClick={() => {
+                handleDeleteToken(contextMenu.tokenId);
+                setContextMenu(null);
+              }}
+              className="w-full px-3 py-2 text-left text-xs text-red-400 hover:bg-red-950/40 transition-colors"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {showMonsterModal && (
         <VTTCustomMonsterModal
           campaignId={campaignId ?? null}
           roomId={roomId}
-          onClose={() => setShowMonsterModal(false)}
+          editMonster={editingMonster}
+          onClose={() => {
+            setShowMonsterModal(false);
+            setEditingMonster(null);
+          }}
           onSaved={() => {
             fetchTokenLibrary(roomId).then(fetched => {
-   tokenLibrary.setCache(roomId, fetched);
+              tokenLibrary.setCache(roomId, fetched);
               setLib(fetched);
               const customFolder = fetched.folders.find(f => f.name === 'Monstres customs');
               if (customFolder) {
                 setOpenFolders(prev => new Set([...prev, customFolder.id]));
               }
             });
+          }}
+        />
+      )}
+
+            {showImportModal && campaignId && (
+        <ImportMonsterModal
+          campaignId={campaignId}
+          existingMonsterNames={[]}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={async (monsters) => {
+            try {
+              // gestion de la conversion des monstres importés JSON en vrais tokens dragables
+              for (const monster of monsters) {
+                await addImportedMonsterToLibrary(monster);
+              }
+              setShowImportModal(false);
+            } catch (err) {
+              console.error('Erreur import tokens:', err);
+            }
           }}
         />
       )}

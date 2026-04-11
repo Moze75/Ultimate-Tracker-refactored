@@ -773,8 +773,9 @@ function SpellCard({
   }, [spell.spell_description, spell.spell_higher_levels, spell.spell_level, spell.spell_name]);
   
   // ✅ NOUVEAU : Calculer les dégâts totaux selon le niveau sélectionné
+  // gestion du calcul des dégâts ou soins du sort
   const totalDamage = useMemo(() => {
-    if (!damageInfo.isDamageSpell) return null;
+    if (!damageInfo.isDamageSpell && !damageInfo.isHealingSpell) return null;
     
     let result = '';
     
@@ -1010,7 +1011,7 @@ function SpellCard({
           {/* Petit bouton dé pour lancer au niveau sélectionné */}
           <button
             type="button"
-            className="w-6 h-6 flex items-center justify-center rounded border border-orange-400/60 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 hover:border-orange-400 transition-colors text-[10px] font-mono"
+            className="w-6 h-6 flex items-center justify-center rounded border border-orange-400/60 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 hover:border-orange-400 transition-colors"
             title={`Lancer les dégâts au niveau ${selectedCastLevel}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -1029,10 +1030,10 @@ function SpellCard({
               );
             }}
           >
-             <Dice5 className="w-3 h-3" /> 
+            <Dice5 className="w-3 h-3" />
           </button>
         </div>
-          ) : glasDamageAlternatives ? (
+      ) : glasDamageAlternatives ? (
         // 🛎️ CAS SPÉCIAL GLAS : deux badges 1d8 / 1d12 séparés
         <div className="inline-flex items-center gap-1">
           <button
@@ -1071,7 +1072,7 @@ function SpellCard({
             {glasDamageAlternatives.d12}
           </button>
         </div>
-         ) : (
+      ) : (
         // Cas général : un seul badge avec la formule totale
         <button
           type="button"
@@ -1089,6 +1090,91 @@ function SpellCard({
         >
           {formatDamageDisplay(totalDamage)}
           {effectiveDamageBonus !== 0 && <span className="ml-1">★</span>}
+        </button>
+      )}
+    </>
+  )}
+
+  {/* Badge soin avec sélecteur de niveau */}
+  {damageInfo.isHealingSpell && totalDamage && (
+    <>
+      {availableLevels.length > 1 && spell.spell_level > 0 ? (
+        <div className="inline-flex items-center gap-1">
+          <select
+            value={selectedCastLevel}
+            onChange={(e) => {
+              e.stopPropagation();
+              const newLevel = Number(e.target.value);
+              setSelectedCastLevel(newLevel);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="
+              text-xs
+              px-2 py-1
+              rounded
+              border border-green-400/60
+              bg-transparent text-white
+              font-sans
+              cursor-pointer
+              focus:outline-none focus:ring-1 focus:ring-green-400 focus:border-green-400
+            "
+            title={`Niveau de lancement du soin (actuel : ${selectedCastLevel})`}
+          >
+            {availableLevels.map((lvl) => {
+              const lvlHealing = calculateSlotDamage(
+                damageInfo,
+                spell.spell_level,
+                lvl,
+                abilityModifier
+              );
+              return (
+                <option
+                  key={lvl}
+                  value={lvl}
+                  className="bg-white text-gray-900"
+                >
+                  {lvlHealing} (Niv. {lvl})
+                </option>
+              );
+            })}
+          </select>
+
+          <button
+            type="button"
+            className="w-6 h-6 flex items-center justify-center rounded border border-green-400/60 bg-green-500/20 text-green-300 hover:bg-green-500/30 hover:border-green-400 transition-colors"
+            title={`Lancer le soin au niveau ${selectedCastLevel}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              const lvlHealing = calculateSlotDamage(
+                damageInfo,
+                spell.spell_level,
+                selectedCastLevel,
+                abilityModifier
+              );
+              const { diceFormula, modifier } = parseDamageFormula(lvlHealing);
+              onRoll(
+                'damage',
+                `Soin - ${spell.spell_name} (Niv. ${selectedCastLevel})`,
+                diceFormula,
+                modifier
+              );
+            }}
+          >
+            <Dice5 className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="text-xs px-2 py-1 rounded border font-mono font-bold hover:opacity-80 transition-colors bg-green-500/20 text-green-300 border-green-500/30"
+          title="Lancer le soin du sort"
+          onClick={(e) => {
+            e.stopPropagation();
+            const { diceFormula, modifier } = parseDamageFormula(totalDamage);
+            onRoll('damage', `Soin - ${spell.spell_name}`, diceFormula, modifier);
+          }}
+        >
+          {formatDamageDisplay(totalDamage)}
         </button>
       )}
     </>

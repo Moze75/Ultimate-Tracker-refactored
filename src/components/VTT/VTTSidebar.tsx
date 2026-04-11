@@ -10,6 +10,7 @@ import type { MonsterListItem, Monster, CampaignMember } from '../../types/campa
 import { campaignService } from '../../services/campaignService';
 import { VTTCombatTab } from './combat/VTTCombatTab';
 import { VTTSettingsPanel } from './settings/VTTSettingsPanel';
+import { ImportMonsterModal } from '../Combat/ImportMonsterModal';
 
 type SidebarTab = 'tokens' | 'map' | 'props' | 'combat' | 'settings' | 'chat';
 
@@ -176,10 +177,11 @@ export function VTTSidebar({
   // ainsi que la bibliotheque de tokens.
   const [showCanvasTokens, setShowCanvasTokens] = useState(true);
   const [showTokenLibrary, setShowTokenLibrary] = useState(true);
-  const [showBestiary, setShowBestiary] = useState(false);
-  // -------------------
-  // État de la section joueurs connectés (repliée par défaut)
-  // -------------------
+
+  // gestion de l'affichage du bestiaire
+  const [showBestiary, setShowBestiary] = useState(true);
+  // gestion de l'import JSON depuis la bibliothèque de tokens
+  const [showImportModal, setShowImportModal] = useState(false);
   const [showConnectedUsers, setShowConnectedUsers] = useState(false);
   const [members, setMembers] = useState<CampaignMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -320,13 +322,13 @@ const visibleTokens = isGM
       
       <div
         onMouseDown={handleResizeMouseDown}
-        className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-40 group"
+        className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-10 group"
         title="Redimensionner"
       >
         <div className="absolute inset-y-0 left-0 w-px bg-white/10 group-hover:bg-amber-400/50 transition-colors" />
         <div
           onMouseDown={handleResizeMouseDown}
-          className="fixed flex flex-col items-center justify-center gap-[3px] px-[3px] py-2 rounded-full bg-gray-700/80 hover:bg-amber-500/90 transition-colors shadow-md cursor-col-resize z-50"
+          className="fixed pointer-events-auto flex flex-col items-center justify-center gap-[3px] px-[3px] py-2 rounded-full bg-gray-700/80 hover:bg-amber-500/90 transition-colors shadow-md cursor-col-resize z-20"
           style={{ top: '50vh', left: 'auto', transform: 'translateY(-50%)' }}
         >
           <span className="block w-[3px] h-[3px] rounded-full bg-gray-400" />
@@ -337,7 +339,7 @@ const visibleTokens = isGM
 
  
       
-      <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-hidden shadow-2xl">
+      <div className="flex flex-col h-full bg-gray-900/70 backdrop-blur-md border-l border-white/10 overflow-visible shadow-2xl">
 
 
       {/* -------------------
@@ -388,7 +390,7 @@ const visibleTokens = isGM
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-visible">
         {activeTab === 'tokens' && isGM && (
           <div className="flex flex-col h-full">
             {/* -------------------
@@ -769,6 +771,15 @@ const visibleTokens = isGM
             <div className="mt-2 space-y-1.5">
               {connectedUsers.map(user => {
                 // -------------------
+                // Gestion du drag & drop des joueurs connectés
+                // -------------------
+                // Le MJ peut glisser un joueur connecté vers le canvas
+                // pour repositionner automatiquement son token associé.
+                const playerToken = tokens.find(t =>
+                  t.controlledByUserIds?.includes(user.userId)
+                );
+
+                // -------------------
                 // Résolution du nom d'affichage d'un joueur connecté
                 // -------------------
                 // Priorité :
@@ -780,20 +791,29 @@ const visibleTokens = isGM
                 let displayName: string;
                 if (user.role === 'gm') {
                   displayName = 'MJ';
+                } else if (playerToken) {
+                  displayName = playerToken.label;
+                } else if (user.name?.includes('@')) {
+                  displayName = user.name.split('@')[0];
                 } else {
-                  const playerToken = tokens.find(t =>
-                    t.controlledByUserIds?.includes(user.userId)
-                  );
-                  if (playerToken) {
-                    displayName = playerToken.label;
-                  } else if (user.name?.includes('@')) {
-                    displayName = user.name.split('@')[0];
-                  } else {
-                    displayName = user.name || 'Inconnu';
-                  }
+                  displayName = user.name || 'Inconnu';
                 }
+
+                const canDragPlayerToken = isGM && !!playerToken;
+
                 return (
-                  <div key={user.userId} className="flex items-center gap-2 min-w-0">
+                  <div
+                    key={user.userId}
+                    draggable={canDragPlayerToken}
+                    onDragStart={canDragPlayerToken ? (e) => {
+                      e.dataTransfer.setData('application/vtt-player-user-id', user.userId);
+                      e.dataTransfer.effectAllowed = 'move';
+                    } : undefined}
+                    className={`flex items-center gap-2 min-w-0 ${
+                      canDragPlayerToken ? 'cursor-grab active:cursor-grabbing' : ''
+                    }`}
+                    title={canDragPlayerToken ? 'Glisser sur le canvas pour déplacer le token' : undefined}
+                  >
                     <div className="relative shrink-0">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[9px] font-bold text-white">
                         {displayName.slice(0, 2).toUpperCase()}
@@ -805,13 +825,18 @@ const visibleTokens = isGM
                       {displayName}
                     </span>
 
+                    {canDragPlayerToken && (
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide shrink-0">
+                        drag
+                      </span>
+                    )}
+
                     {user.role === 'gm' && (
                       <span className="text-[9px] text-amber-400 uppercase tracking-wide shrink-0">
                         MJ
                       </span>
                     )}
                   </div>
-                   
                 );
               })}
             </div>
@@ -838,6 +863,17 @@ const visibleTokens = isGM
           </button>
         </div>
       </div>
+
+      {showImportModal && campaignId && (
+        <ImportMonsterModal
+          campaignId={campaignId}
+          existingMonsterNames={[]}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false);
+          }}
+        />
+      )}
     </div>
   </div>
   );

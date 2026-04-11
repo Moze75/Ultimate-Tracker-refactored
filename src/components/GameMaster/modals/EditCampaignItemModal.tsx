@@ -344,7 +344,8 @@ export function EditCampaignItemModal({ item, onClose, onSaved }: EditCampaignIt
             </div>
           )}
 
-          {(type === 'jewelry' || type === 'equipment' || type === 'tool' || type === 'other') && (
+                 {/* gestion des bonus des objets équipables */}
+          {(type === 'jewelry' || type === 'ring' || type === 'equipment' || type === 'tool' || type === 'other') && (
             <div className="mt-4 space-y-3 border-t border-gray-700 pt-4">
               <h4 className="text-sm font-medium text-gray-300">Bonus (optionnel)</h4>
               <p className="text-xs text-gray-500">

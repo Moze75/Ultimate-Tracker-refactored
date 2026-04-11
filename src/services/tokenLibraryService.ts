@@ -16,6 +16,12 @@ export interface TokenEntry {
   hp?: number;
   maxHp?: number;
   showLabel?: boolean;
+
+  // gestion de l'origine du token de bibliothèque
+  source?: 'upload' | 'url' | 'monster-import' | 'custom-monster';
+
+  // gestion du lien vers un monstre de campagne éditable
+  linkedMonsterId?: string | null;
 }
 
 export interface TokenFolder {

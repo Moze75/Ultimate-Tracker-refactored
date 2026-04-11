@@ -40,7 +40,8 @@ function CollapsibleSection({ icon, title, children, defaultOpen = false }: Coll
   );
 }
 
-type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+// gestion des types d'objets dans le détail joueur
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'ring' | 'tool' | 'other';
 
 interface ItemMeta {
   type: MetaType;
@@ -82,22 +83,26 @@ function visibleDescription(desc: string | null | undefined): string {
   return desc.split('\n').filter((l) => !l.trim().startsWith(META_PREFIX)).join('\n').trim();
 }
 
+// gestion des libellés d'affichage des types
 const TYPE_LABELS: Record<MetaType, string> = {
   weapon: 'Arme',
   armor: 'Armure',
   shield: 'Bouclier',
   jewelry: 'Bijou',
+  ring: 'Anneau',
   potion: 'Potion',
   tool: 'Outil',
   equipment: 'Equipement',
   other: 'Autre',
 };
 
+// gestion des couleurs d'affichage des types
 const TYPE_COLORS: Record<MetaType, string> = {
   weapon: 'bg-red-500/20 text-red-300 border-red-500/40',
   armor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
   shield: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-  jewelry: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+  jewelry: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+  ring: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   potion: 'bg-green-500/20 text-green-300 border-green-500/40',
   tool: 'bg-gray-500/20 text-gray-300 border-gray-500/40',
   equipment: 'bg-slate-500/20 text-slate-300 border-slate-500/40',

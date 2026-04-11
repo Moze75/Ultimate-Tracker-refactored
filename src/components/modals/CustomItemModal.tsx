@@ -4,7 +4,8 @@ import { X } from 'lucide-react';
 import { ImageUrlInput } from '../ImageUrlInput';
 import toast from 'react-hot-toast';
 
-type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+// gestion des types d'objets personnalisés
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'ring' | 'tool' | 'other';
 type WeaponCategory =
   | 'Armes courantes'
   | 'Armes de guerre'
@@ -225,6 +226,7 @@ export function CustomItemModal({
               <option value="armor">Armure</option>
               <option value="shield">Bouclier</option>
               <option value="jewelry">Bijoux</option>
+              <option value="ring">Anneau</option>
               <option value="tool">Outils</option>
               <option value="other">Autre</option>
             </select>
@@ -384,8 +386,8 @@ export function CustomItemModal({
             </div>
           )}
 
-          {/* Bonus section for jewelry, equipment, tool, other */}
-          {(type === 'jewelry' || type === 'equipment' || type === 'tool' || type === 'other') && (
+          {/* gestion des bonus des objets équipables */}
+          {(type === 'jewelry' || type === 'ring' || type === 'equipment' || type === 'tool' || type === 'other') && (
             <div className="space-y-3 border-t border-gray-700 pt-4">
               <h4 className="text-sm font-medium text-gray-300">Bonus (optionnel)</h4>
               <p className="text-xs text-gray-500">

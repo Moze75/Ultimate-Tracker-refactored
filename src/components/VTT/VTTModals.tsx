@@ -186,6 +186,8 @@ export function VTTModals({
           onConfirm={onConfirmAddToken}
           onClose={onCloseAddToken}
           onCharDragStart={onCloseAddToken}
+          tokens={tokensRef.current}
+          connectedUsers={connectedUsers}
         />
       )}
 

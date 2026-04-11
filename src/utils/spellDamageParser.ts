@@ -15,6 +15,7 @@ export interface DamageComponent {
  */
 export interface SpellDamageInfo {
   isDamageSpell: boolean;
+  isHealingSpell: boolean;
   isAttackRoll: boolean;        // true si le LANCEUR doit faire un jet d'attaque
   isSavingThrow: boolean;       // true si la CIBLE doit faire un jet de sauvegarde
   baseDamage: DamageComponent[];  // Ex: [{2d8 feu}, {1d6 radiant}]
@@ -47,7 +48,33 @@ export function isDamageSpell(description: string): boolean {
     /subissant/i,                  // "subissant 8d6 dégâts"
   ];
   
-  return damageKeywords.some(regex => regex.test(description));
+  return damageKeywords.some(regex => regex.test(description)); 
+}
+ 
+/**
+ * Détecte si un sort rend des points de vie
+ */
+export function isHealingSpell(description: string): boolean {
+  if (!description) return false;
+
+  const hasDiceFormula = /\d+d\d+/i.test(description);
+  if (!hasDiceFormula) return false;
+
+  const healingKeywords = [
+    /récupère\s+\d+d\d+\s+points?\s+de\s+vie/i,
+    /récupère\s+un\s+nombre\s+de\s+points?\s+de\s+vie\s+égal\s+à\s+\d+d\d+/i,
+    /regagne(?:nt)?\s+\d+d\d+\s+points?\s+de\s+vie/i,
+    /regagne(?:nt)?\s+des\s+points?\s+de\s+vie\s+équivalents?\s+à\s+\d+d\d+/i,
+    /retrouve\s+\d+d\d+\s+points?\s+de\s+vie/i,
+    /rend\s+\d+d\d+\s+points?\s+de\s+vie/i,
+    /gagne\s+\d+d\d+\s+points?\s+de\s+vie/i,
+    /points?\s+de\s+vie\s+égal\s+à\s+\d+d\d+/i,
+    /points?\s+de\s+vie\s+équivalents?\s+à\s+\d+d\d+/i,
+    /soins?\s+augmentent\s+de/i,
+    /points?\s+de\s+vie\s+plus\s+le\s+modificateur/i,
+  ];
+
+  return healingKeywords.some(regex => regex.test(description));
 }
 
 /**
@@ -172,9 +199,10 @@ export function extractDamageComponents(text: string): DamageComponent[] {
     
     // Vérifier que le contexte mentionne bien des dégâts
     const isDamageContext = /dégâts?|subir|subit|inflige|infligeant|perd|perdant|blessure/i.test(context);
-    
-    if (!isDamageContext) {
-      continue; // Ignorer si pas de contexte de dégât
+    const isHealingContext = /points?\s+de\s+vie|récupère|regagne|retrouve|soins?|guérison/i.test(context);
+
+    if (!isDamageContext && !isHealingContext) {
+      continue; // Ignorer si pas de contexte de dégât ou de soin
     }
     
     // Extraire le type de dégât après la formule
@@ -248,6 +276,15 @@ export function detectModifier(description: string): { hasModifier: boolean; abi
       ability: match[1],
     };
   }
+
+  // gestion des formulations génériques de caractéristique d'incantation
+  const spellcastingAbilityRegex = /modificateur de votre caractéristique d['’]incantation(?:s)?/i;
+  if (spellcastingAbilityRegex.test(description)) {
+    return {
+      hasModifier: true,
+      ability: undefined,
+    };
+  }
   
   // Alternative: "bonus de Charisme", "+ CHA", etc.
   const shortModRegex = /\+\s*(FOR|DEX|CON|INT|SAG|CHA)\b/i;
@@ -282,35 +319,27 @@ export function parseSlotUpgrade(higherLevels: string): {
 } | null {
   if (!higherLevels) return null;
   
-  // 1. Nettoyage basique pour faciliter la regex
+  // gestion des textes d'amélioration des dégâts ou soins
   const cleanText = higherLevels.replace(/\*\*/g, '').replace(/\n/g, ' ');
 
-  // 2. Regex Principale : "+1d6 par niveau" ou "1d6 supplémentaire par emplacement"
-  let upgradeRegex = /(?:\+)?(\d+d\d+)(?:.*?(?:supplémentaire|en plus))?.*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i;
-  let match = cleanText.match(upgradeRegex);
+  let match =
+    cleanText.match(/(?:\+)?(\d+d\d+)(?:.*?(?:supplémentaire|en plus))?.*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i) ||
+    cleanText.match(/augment(?:ent|e)?\s+(?:de\s+)?(\d+d\d+).*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i);
 
-  // 3. Regex Secondaire : "Les dégâts augmentent de 1d6 pour chaque..." (Cas Boule de Feu)
-  if (!match) {
-    const augmentRegex = /augment(?:ent|e)?\s+(?:de\s+)?(\d+d\d+).*?(?:par|pour\s+chaque|pour\s+tous).*?(?:niveau|emplacement)/i;
-    match = cleanText.match(augmentRegex);
-  }
-  
   if (match) {
-    const diceFormula = match[1]; // ex: "1d6" ou "1d8"
-    
-    // On simule un contexte pour que l'extracteur valide le dé
-    const fakeContext = `inflige ${diceFormula} dégâts`;
+    const diceFormula = match[1];
+
+    const fakeContext = `récupère ${diceFormula} points de vie`;
     const components = extractDamageComponents(fakeContext);
-    
+
     if (components.length === 0) {
-      // Construction manuelle si extractDamageComponents est trop strict
       const [countStr, typeStr] = diceFormula.split('d');
       return {
         components: [{
           diceCount: parseInt(countStr, 10),
           diceType: parseInt(typeStr, 10),
           formula: diceFormula,
-          damageType: undefined, 
+          damageType: undefined,
         }],
         perLevels: 1,
       };
@@ -518,6 +547,7 @@ export function analyzeSpellDamage(
   
   return {
     isDamageSpell: isDamageSpell(description),
+    isHealingSpell: isHealingSpell(description),
     isAttackRoll: isAttackRoll(description),
     isSavingThrow: isSavingThrowSpell(description),
     baseDamage,
@@ -546,7 +576,7 @@ export function calculateSlotDamage(
     console.log(`[calculateSlotDamage] upgradePattern:`, JSON.stringify(info.upgradePattern));
   }
   
-  if (!info.isDamageSpell) return '';
+  if (!info.isDamageSpell && !info.isHealingSpell) return '';
   
   // ✅ CORRECTION : Deep copy STRICTE pour éviter toute mutation
   let totalComponents: DamageComponent[] = info.baseDamage.map(comp => ({
@@ -636,7 +666,7 @@ export function calculateCantripDamage(
   characterLevel: number,
   abilityModifier?: number
 ): string {
-  if (!info.isDamageSpell) return '';
+  if (!info.isDamageSpell && !info.isHealingSpell) return '';
   
   // ✅ CORRECTION : Deep copy STRICTE pour éviter toute mutation
   let totalComponents: DamageComponent[] = info.baseDamage.map(comp => ({

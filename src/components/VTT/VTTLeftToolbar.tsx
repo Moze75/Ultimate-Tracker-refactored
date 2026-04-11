@@ -27,7 +27,7 @@ interface VTTLeftToolbarProps {
   onClearCalibration?: () => void;
   onApplyCalibration?: () => void;
   wallCount?: number;
-  onClearWalls?: () => void;
+  onClearWalls?: () => void; 
   showWalls: boolean;
   onToggleShowWalls: () => void;
   doorCount?: number;
@@ -326,7 +326,7 @@ export function VTTLeftToolbar({
 
           <ToolBtn
             icon={<UserPlus size={17} />}
-            label="Ajouter un token"
+            label="Ajouter un joueur"
             active={false}
             onClick={onAddToken}
           />
@@ -359,7 +359,7 @@ export function VTTLeftToolbar({
                   <StickyNote size={12} />
                   Placer une note
                 </button>
-                <button
+                <button 
                   onClick={() => onToggleShowGmNotes?.()}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 transition-colors"
                 >

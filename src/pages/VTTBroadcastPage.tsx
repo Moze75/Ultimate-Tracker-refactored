@@ -109,6 +109,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         setWalls(event.walls);
         setDoors(event.doors || []);
         setWindows((event as any).windows || []);
+        setProps((event as any).props || []);
         if (event.sceneId) setCurrentSceneId(event.sceneId);
         break;
       case 'WALLS_UPDATED':

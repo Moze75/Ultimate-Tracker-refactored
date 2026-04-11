@@ -105,6 +105,7 @@ const calculateUnarmoredAC = (
 /**
  * Recalcule et met à jour la CA du joueur si nécessaire
  */
+// gestion du recalcul de la classe d'armure après équipement
 const recalculateAndUpdateAC = async (
   player: Player,
   updatedInventory: InventoryItem[],
@@ -180,7 +181,8 @@ interface Equipment {
   } | null;
 }
 
-type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'tool' | 'other';
+// gestion des types d'objets d'inventaire
+type MetaType = 'armor' | 'shield' | 'weapon' | 'potion' | 'equipment' | 'jewelry' | 'ring' | 'tool' | 'other';
 type WeaponCategory = 'Armes courantes' | 'Armes de guerre' | 'Armes de guerre dotées de la propriété Légère' | 'Armes de guerre présentant la propriété Finesse ou Légère';
 
 interface WeaponMeta {
@@ -574,13 +576,15 @@ export function EquipmentTab({
     if (updates.length) await Promise.allSettled(updates);
   };
 
+  // gestion du process d'équipement
   const performEquipToggle = async (freshItem: InventoryItem, mode: 'equip' | 'unequip') => {
     const meta = parseMeta(freshItem.description);
     if (!meta) return;
 
+    // gestion des objets custom équipables à bonus
     const hasBonuses = meta?.bonuses && Object.keys(meta.bonuses).length > 0;
     const isEquippableItem = hasBonuses &&
-      (meta?.type === 'jewelry' || meta?.type === 'equipment' ||
+      (meta?.type === 'jewelry' || meta?.type === 'ring' || meta?.type === 'equipment' ||
        meta?.type === 'tool' || meta?.type === 'other');
 
     try {
@@ -691,7 +695,12 @@ export function EquipmentTab({
         }
        } else if (isEquippableItem) {
       if (mode === 'unequip' && meta.equipped) {
-        await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
+         await updateItemMetaComplete(freshItem, { ...meta, equipped: false });
+        console.log('[EquipmentTab] bonusItem unequipped meta updated', {
+          itemName: freshItem.name,
+          metaType: meta.type,
+          equippedAfter: false,
+        });
 
         // ✅ Recalculer la CA après déséquipement
         const updatedInv = inventory.map(it =>
@@ -709,10 +718,12 @@ export function EquipmentTab({
           console.warn('[performEquipToggle] dispatch inventory:refresh failed', e);
         }
 
+        // gestion du libellé des objets équipables
         const itemTypeName =
           meta.type === 'jewelry' ? 'Bijou' :
+          meta.type === 'ring' ? 'Anneau' :
           meta.type === 'equipment' ? 'Équipement' :
-          meta.type === 'tool' ?  'Outil' : 'Objet';
+          meta.type === 'tool' ? 'Outil' : 'Objet';
         toast.success(`${itemTypeName} déséquipé`);
       } else if (mode === 'equip' && ! meta.equipped) {
         await updateItemMetaComplete(freshItem, { ...meta, equipped: true });
@@ -781,6 +792,7 @@ export function EquipmentTab({
     setProficiencyCheck(null);
   };
 
+  // gestion du diagnostic de bascule d'équipement
   const requestToggleWithConfirm = (item: InventoryItem) => {
     if (pendingEquipment.has(item.id)) return;
     const freshItem = inventory.find(i => i.id === item.id);
@@ -796,8 +808,9 @@ export function EquipmentTab({
     const isWeapon = meta.type === 'weapon';
 
     const hasBonuses = meta?.bonuses && Object.keys(meta.bonuses).length > 0;
+    // gestion des objets custom équipables à bonus
     const isEquippableItem = hasBonuses &&
-      (meta?.type === 'jewelry' || meta?.type === 'equipment' ||
+      (meta?.type === 'jewelry' || meta?.type === 'ring' || meta?.type === 'equipment' ||
        meta?.type === 'tool' || meta?.type === 'other');
 
     const equipped =

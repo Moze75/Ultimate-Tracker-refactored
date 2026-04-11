@@ -154,6 +154,8 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
   }, [selectedImageIndex, nextImage, prevImage]);
 
 
+   // gestion de la FAQ de la page d'accueil
+  // gestion de la FAQ de la page d'accueil
   const faqs = [
     {
       question: "Est-ce que c’est gratuit au début ?",
@@ -161,15 +163,23 @@ export function HomePage({ onGetStarted, onChangelog }: HomePageProps) {
     },
     {
       question: "Est-ce que c’est comme Roll20 ou Foundry ?",
-      answer: "Non. Le Compagnon n’est pas une table virtuelle (VTT). C’est un assistant intelligent pour vos parties en présentiel ou en vocal, conçu pour fluidifier le jeu, pas pour gérer des cartes tactiques complexes."
+      answer: "Non. Le Compagnon n’est pas une table virtuelle (VTT). C’est un assistant intelligent pour vos parties en présentiel ou en vocal, conçu pour fluidifier le jeu, pas pour gérer des[...]"
     },
     {
       question: "Est-ce que ça fonctionne hors ligne ?",
-      answer: "Non. L’app est 100% en ligne, pour garantir une navigation rapide, fluide, et à jour. Cependant, une fois installée en tant qu'App (PWA), elle offre une expérience très proche du natif."
+      answer: "Non. L’app est 100% en ligne, pour garantir une navigation rapide, fluide, et à jour. Cependant, une fois installée en tant qu'App (PWA), elle offre une expérience très proche du [...]"
     },
     {
       question: "Est-ce compatible mobile/tablette/PC ?",
       answer: "Oui. Vous pouvez y accéder depuis n’importe quel appareil connecté. L'interface s'adapte automatiquement."
+    },
+    {
+      question: "Pourquoi certaines illustrations ont un style IA ?",
+      answer: "Nous préférons être transparents : certaines illustrations du projet ont été réalisées avec l’aide de l’IA. Nous comprenons totalement que cela puisse faire réagir. Aujourd’hui, le projet ne nous permet pas encore de financer des illustrations sur mesure, mais dès que Le Compagnon sera suffisamment rentable, notre objectif sera de faire appel à des illustrateurs et illustratrices."
+    },
+    {
+      question: "Un MJ peut-il inviter des joueurs sans qu’ils aient besoin de payer un abonnement ?",
+      answer: "Oui. Un Maître du Jeu peut inviter des joueurs à rejoindre sa campagne sans qu’ils aient besoin d’un abonnement dédié. En pratique, cela suppose d’utiliser le compte du MJ pour créer ou gérer les accès : le MJ peut inviter sa propre adresse e-mail depuis l’onglet « Gérer mes campagnes », puis les joueurs peuvent se connecter avec leur personnage et accepter l’invitation via le bouton « Campagnes » dans l’application."
     },
     {
       question: "Et si j’ai un bug ou un souci ?",
