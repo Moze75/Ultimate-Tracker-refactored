@@ -1694,7 +1694,7 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
               alt="Chargement..."
               className="w-16 h-16 object-contain animate-spin opacity-80"
             />
-            <span className="text-gray-400 text-sm">Chargement de la carte...</span>
+            <span className="text-gray-400 text-sm">Invocation des artéfacts ...</span>
           </div>
         </div>
       )}
