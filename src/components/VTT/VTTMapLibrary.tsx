@@ -193,7 +193,18 @@ if (type === 'folder') mapLibrary.renameFolder(roomId, renamingId, renameValue);
     persist();
   };
 
+  // -------------------
+  // Gestion de l'upload de carte depuis un fichier local
+  // -------------------
+  // Les vidéos ne doivent PAS être uploadées via la bibliothèque de cartes.
+  // Elles sont autorisées uniquement via URL pour éviter le stockage R2.
   const handleFileUpload = async (file: File, folderId: string | null) => {
+    if (file.type.startsWith('video/') || /\.(mp4|webm|ogv)$/i.test(file.name)) {
+      alert('Les cartes vidéo ne peuvent être ajoutées que via URL.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const workerUrl = import.meta.env.VITE_CF_UPLOAD_WORKER_URL;
     setUploading(true);
     try {
