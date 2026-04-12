@@ -65,6 +65,14 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   // au-dessus du canvas dans la page broadcast.
   const [canvasViewport, setCanvasViewport] = useState({ x: 0, y: 0, scale: 1 });
 
+  // -------------------
+  // Gestion des animations de déplacement des tokens
+  // -------------------
+  const tokenMoveAnimationFrameRef = useRef<Map<string, number>>(new Map());
+  const tokenAnimatedPositionRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const tokensRef = useRef<VTTToken[]>([]);
+  tokensRef.current = tokens;
+
   // Traitement des événements serveur VTT (identique à avant)
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
