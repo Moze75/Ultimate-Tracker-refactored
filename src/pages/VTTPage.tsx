@@ -956,7 +956,7 @@ const handleMoveToken = useCallback((
   const movedToken = tokensRef.current.find(t => t.id === tokenId);
   if (!movedToken) return;
 
-  const currentPosition = tokenAnimatedPositionRef.current.get(tokenId) ?? movedToken.position;
+  const currentPosition = movedToken.position;
   const gridSize = configRef.current.gridSize || 50;
   const dx = position.x - currentPosition.x;
   const dy = position.y - currentPosition.y;
