@@ -17,6 +17,10 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   sceneId,
   config,
   tokens,
+  // -------------------
+  // Gestion des positions visuelles animées des tokens
+  // -------------------
+  tokenAnimatedPositionsRef,
   fogState,
   role,
   userId,
