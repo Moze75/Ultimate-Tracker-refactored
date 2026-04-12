@@ -32,8 +32,9 @@ export function drawToken({
   onImageLoad,
   animTime = 0,
 }: DrawTokenOptions): void {
-  const px = token.position.x;
-  const py = token.position.y;
+const renderPosition = token.renderPosition ?? token.position;
+const px = renderPosition.x;
+const py = renderPosition.y;
   const size = (token.size || 1) * CELL;
   const cx = px + size / 2;
   const cy = py + size / 2;
