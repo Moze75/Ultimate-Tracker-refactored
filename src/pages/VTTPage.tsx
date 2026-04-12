@@ -1012,7 +1012,7 @@ const handleMoveToken = useCallback((
     // -------------------
     // Gestion de la vitesse de glissement des tokens
     // -------------------
-    const animationDuration = 220;
+    const animationDuration = 320;
     const animationStart = performance.now();
 
 const easeOutCubic = (t: number) => t < 0.5
