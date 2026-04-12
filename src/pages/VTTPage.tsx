@@ -42,7 +42,6 @@ import { VTTNoteEditModal } from '../components/VTT/VTTNoteEditModal';
 import { clampViewport } from '../components/VTT/vttCanvasUtils';
 
 import { VTTWeatherOverlay } from '../components/VTT/VTTWeatherOverlay';
-import { VTTTargetingRing } from '../components/VTT/VTTTargetingRing';
 // import { VTTCharacterSheetPanel } from '../components/VTT/VTTCharacterSheetPanel';
 // import { VTTMonsterStatBlockPanel } from '../components/VTT/VTTMonsterStatBlockPanel';
 // import { VTTChatPanel } from '../components/VTT/VTTChatPanel';
