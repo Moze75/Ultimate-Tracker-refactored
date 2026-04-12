@@ -96,6 +96,12 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
   const saveExploredMaskSnapshotRef = useRef<((targetSceneId?: string | null) => void) | null>(null);
 
   useImperativeHandle(ref, () => ({
+    // -------------------
+    // Gestion du redraw impératif du canvas
+    // -------------------
+    redraw: () => {
+      drawRef.current();
+    },
     getViewportCenter: () => {
       const vp = viewportRef.current;
       const canvas = canvasRef.current;
