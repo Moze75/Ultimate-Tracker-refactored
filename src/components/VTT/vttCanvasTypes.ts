@@ -1,4 +1,5 @@
 import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWall, VTTDoor, VTTWindow } from '../../types/vtt';
+import type React from 'react';
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
