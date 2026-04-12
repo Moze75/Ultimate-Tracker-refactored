@@ -2630,14 +2630,11 @@ onSelectTokens={ids => {
               const tokenSize = (t.size || 1) * CELL;
 
               // -------------------
-              // Gestion de la position visuelle animée du ciblage
+              // Gestion de la position de rendu du ciblage
               // -------------------
-              const animatedPosition = tokenAnimatedPositionRef.current.get(t.id);
-              const renderX = animatedPosition?.x ?? t.position.x;
-              const renderY = animatedPosition?.y ?? t.position.y;
-
-              const sx = renderX * vp.scale + vp.x;
-              const sy = renderY * vp.scale + vp.y;
+              const renderedPosition = getRenderedTokenPosition(t);
+              const sx = renderedPosition.x * vp.scale + vp.x;
+              const sy = renderedPosition.y * vp.scale + vp.y;
               const displaySize = tokenSize * vp.scale;
 
               return (
