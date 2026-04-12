@@ -36,6 +36,10 @@ export interface VTTCanvasProps {
   sceneId?: string;
   config: VTTRoomConfig;
   tokens: VTTToken[];
+  // -------------------
+  // Gestion des positions visuelles animées des tokens
+  // -------------------
+  tokenAnimatedPositionsRef?: React.MutableRefObject<Map<string, { x: number; y: number }>>;
   fogState: VTTFogState;
   role: VTTRole;
   userId: string;
