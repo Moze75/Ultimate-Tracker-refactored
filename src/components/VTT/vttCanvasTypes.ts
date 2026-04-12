@@ -2,6 +2,10 @@ import type { VTTToken, VTTRoomConfig, VTTFogState, VTTFogStroke, VTTRole, VTTWa
 import type { VTTActiveTool } from './VTTLeftToolbar';
 
 export interface VTTCanvasHandle {
+  // -------------------
+  // Gestion du redraw impératif du canvas
+  // -------------------
+  redraw: () => void;
   getViewportCenter: () => { x: number; y: number };
     onBlockedByTurnLock?: () => void;
   centerOnWorldPosition: (x: number, y: number) => void;
