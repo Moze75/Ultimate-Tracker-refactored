@@ -688,7 +688,7 @@ const animateTokenToPosition = useCallback((
       case 'USER_LEFT':
         break;
     }
-  }, []);
+  }, [animateTokenToPosition]);
 
   useEffect(() => {
     if (!roomId) { setCampaignId(null); return; }
