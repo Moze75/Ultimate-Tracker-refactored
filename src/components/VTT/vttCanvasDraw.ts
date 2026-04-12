@@ -373,6 +373,10 @@ ctx2d.tokensRef.current.forEach(token => {
     curUserId,
     tokenImageCache: ctx2d.tokenImageCache.current,
     onImageLoad: () => ctx2d.drawRef.current(),
+    // -------------------
+    // Gestion des positions visuelles animées des tokens
+    // -------------------
+    tokenAnimatedPositions: ctx2d.tokenAnimatedPositionsRef?.current,
   });
 });
 
