@@ -39,13 +39,13 @@ export function drawToken({
   tokenImageCache,
   onImageLoad,
   // -------------------
-  // Gestion de la position visuelle animée des tokens
+  // Gestion des positions visuelles animées des tokens
   // -------------------
   tokenAnimatedPositions,
   animTime = 0,
 }: DrawTokenOptions): void {
   // -------------------
-  // Gestion de la position visuelle animée des tokens
+  // Gestion de la position visuelle animée du token
   // -------------------
   const animatedPosition = tokenAnimatedPositions?.get(token.id);
   const px = animatedPosition?.x ?? token.position.x;
