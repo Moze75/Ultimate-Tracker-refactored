@@ -976,7 +976,7 @@ const handleMoveToken = useCallback((
       return next;
     }
 
-    const animationDuration = 220;
+    const animationDuration = 320;
     const animationStart = performance.now();
 
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
