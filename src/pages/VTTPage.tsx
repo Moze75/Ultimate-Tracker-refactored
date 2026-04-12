@@ -558,9 +558,18 @@ const animateRemoteTokenToPosition = useCallback((tokenId: string, position: { x
         }
         break; 
       case 'TOKEN_MOVED':
-        setTokens(prev => prev.map(t =>
-          t.id === event.tokenId ? { ...t, position: event.position } : t
-        ));
+        // -------------------
+        // Gestion des déplacements réseau des tokens
+        // -------------------
+        // Côté MJ : simple synchronisation pour ne pas casser le glissé local.
+        // Côté joueur : animation des déplacements envoyés par le MJ.
+        if (role === 'gm') {
+          setTokens(prev => prev.map(t =>
+            t.id === event.tokenId ? { ...t, position: event.position } : t
+          ));
+        } else {
+          animateRemoteTokenToPosition(event.tokenId, event.position);
+        }
         break;
       case 'TOKEN_ADDED':
         setTokens(prev => {
