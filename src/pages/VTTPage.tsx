@@ -2591,9 +2591,18 @@ onSelectTokens={ids => {
               const vp = canvasViewport;
               const CELL = config.gridSize;
               const tokenSize = (t.size || 1) * CELL;
-              const sx = t.position.x * vp.scale + vp.x;
-              const sy = t.position.y * vp.scale + vp.y;
+
+              // -------------------
+              // Gestion de la position visuelle animée du ciblage
+              // -------------------
+              const animatedPosition = tokenAnimatedPositionRef.current.get(t.id);
+              const renderX = animatedPosition?.x ?? t.position.x;
+              const renderY = animatedPosition?.y ?? t.position.y;
+
+              const sx = renderX * vp.scale + vp.x;
+              const sy = renderY * vp.scale + vp.y;
               const displaySize = tokenSize * vp.scale;
+
               return (
                 <div
                   key={`targeting-${t.id}`}
