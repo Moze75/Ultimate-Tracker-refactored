@@ -513,14 +513,27 @@ const animateRemoteTokenToPosition = useCallback((tokenId: string, position: { x
 
     vttCanvasRef.current?.redraw?.();
 
-    if (rawT < 1) {
-      const rafId = requestAnimationFrame(animate);
-      tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
-    } else {
-      tokenMoveAnimationFrameRef.current.delete(tokenId);
-      tokenAnimatedPositionRef.current.delete(tokenId);
-      vttCanvasRef.current?.redraw?.();
-    }
+      if (rawT < 1) {
+        const rafId = requestAnimationFrame(animate);
+        tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
+      } else {
+        // -------------------
+        // Gestion de la fin d'animation du token distant
+        // -------------------
+        // On garde une frame finale alignée sur la destination avant nettoyage
+        // pour empêcher le ring HTML de sauter brièvement.
+        tokenAnimatedPositionRef.current.set(tokenId, {
+          x: position.x,
+          y: position.y,
+        });
+        vttCanvasRef.current?.redraw?.();
+
+        requestAnimationFrame(() => {
+          tokenMoveAnimationFrameRef.current.delete(tokenId);
+          tokenAnimatedPositionRef.current.delete(tokenId);
+          vttCanvasRef.current?.redraw?.();
+        });
+      }
   };
 
   const rafId = requestAnimationFrame(animate);
