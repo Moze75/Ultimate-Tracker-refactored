@@ -17,6 +17,10 @@ export interface DrawTokenOptions {
   // -------------------
   tokenAnimatedPositions?: Map<string, { x: number; y: number }>;
   // -------------------
+  // Gestion de la position visuelle animée des tokens
+  // -------------------
+  tokenAnimatedPositions?: Map<string, { x: number; y: number }>;
+  // -------------------
   // Timestamp animé pour le ciblage pulsant
   // -------------------
   // Passé depuis la boucle de rendu du canvas (requestAnimationFrame)
