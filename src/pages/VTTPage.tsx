@@ -579,9 +579,12 @@ const animateTokenToPosition = useCallback((
         }
         break;
       case 'TOKEN_MOVED':
-        setTokens(prev => prev.map(t =>
-          t.id === event.tokenId ? { ...t, position: event.position } : t
-        ));
+        // -------------------
+        // Gestion des déplacements distants des tokens
+        // -------------------
+        // Permet d'animer côté joueur les mouvements envoyés par le MJ
+        // au lieu de faire sauter immédiatement le token.
+        animateTokenToPosition(event.tokenId, event.position);
         break;
       case 'TOKEN_ADDED':
         setTokens(prev => {
