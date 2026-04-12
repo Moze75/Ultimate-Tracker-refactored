@@ -34,11 +34,18 @@ export function drawToken({
   curUserId,
   tokenImageCache,
   onImageLoad,
+  // -------------------
+  // Gestion de la position visuelle animée des tokens
+  // -------------------
+  tokenAnimatedPositions,
   animTime = 0,
 }: DrawTokenOptions): void {
-const renderPosition = token.renderPosition ?? token.position;
-const px = renderPosition.x;
-const py = renderPosition.y;
+  // -------------------
+  // Gestion de la position visuelle animée des tokens
+  // -------------------
+  const animatedPosition = tokenAnimatedPositions?.get(token.id);
+  const px = animatedPosition?.x ?? token.position.x;
+  const py = animatedPosition?.y ?? token.position.y;
   const size = (token.size || 1) * CELL;
   const cx = px + size / 2;
   const cy = py + size / 2;
