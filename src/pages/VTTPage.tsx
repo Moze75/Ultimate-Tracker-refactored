@@ -938,10 +938,92 @@ const handleMoveToken = useCallback((
   position: { x: number; y: number },
   options?: { localCameraFollow?: boolean }
 ) => {
+  // -------------------
+  // Gestion des déplacements animés de token
+  // -------------------
+  // Objectif :
+  // - conserver la position logique finale pour le gameplay / sync réseau
+  // - lisser visuellement les déplacements clavier case par case
+  // - ne pas gêner les drags souris ni les grands déplacements instantanés
   setTokens(prev => {
-    const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
-    tokensRef.current = next;
-    return next;
+    const movedToken = prev.find(t => t.id === tokenId);
+    if (!movedToken) return prev;
+
+    const currentPosition = movedToken.position;
+    const gridSize = configRef.current.gridSize || 50;
+    const dx = position.x - currentPosition.x;
+    const dy = position.y - currentPosition.y;
+    const distance = Math.hypot(dx, dy);
+
+    // -------------------
+    // Gestion du glissement case à case
+    // -------------------
+    // On anime uniquement les petits déplacements alignés sur la grille.
+    // Cela couvre les déplacements clavier sans perturber les téléportations
+    // ni les repositionnements plus larges.
+    const isSingleGridStep =
+      gridSize > 0 &&
+      distance > 0 &&
+      distance <= gridSize * 1.5 &&
+      (
+        (Math.abs(dx) === gridSize && dy === 0) ||
+        (Math.abs(dy) === gridSize && dx === 0)
+      );
+
+    if (!isSingleGridStep) {
+      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+      tokensRef.current = next;
+      return next;
+    }
+
+    const animationDuration = 120;
+    const animationStart = performance.now();
+
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const animate = (now: number) => {
+      const rawT = Math.min(1, (now - animationStart) / animationDuration);
+      const t = easeOutCubic(rawT);
+
+      setTokens(current => {
+        const animated = current.map(token => {
+          if (token.id !== tokenId) return token;
+
+          return {
+            ...token,
+            position: {
+              x: currentPosition.x + dx * t,
+              y: currentPosition.y + dy * t,
+            },
+          };
+        });
+
+        tokensRef.current = animated;
+        return animated;
+      });
+
+      if (rawT < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setTokens(current => {
+          const finalized = current.map(token =>
+            token.id === tokenId
+              ? { ...token, position }
+              : token
+          );
+          tokensRef.current = finalized;
+          return finalized;
+        });
+      }
+    };
+
+    requestAnimationFrame(animate);
+
+    return prev.map(t =>
+      t.id === tokenId
+        ? { ...t, position: currentPosition }
+        : t
+    );
   });
 
   if (options?.localCameraFollow && followCameraOnTokenMove) {
