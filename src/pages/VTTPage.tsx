@@ -413,7 +413,14 @@ pushUndoSnapshotRef.current = pushUndoSnapshot;
 
   const pendingMovesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const moveThrottleRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+// -------------------
+// Gestion des animations de déplacement des tokens
+// -------------------
+// Stocke l'identifiant requestAnimationFrame par token pour
+// annuler proprement une animation en cours avant d'en démarrer une nouvelle.
+const tokenMoveAnimationFrameRef = useRef<Map<string, number>>(new Map());
 
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
