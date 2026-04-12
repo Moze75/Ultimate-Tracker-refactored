@@ -239,7 +239,7 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
         ));
         break;
     }
-  }, []);
+  }, [animateTokenToPosition]);
 
   // Connexion au canal Supabase Realtime — AUCUNE requête DB
   useEffect(() => {
