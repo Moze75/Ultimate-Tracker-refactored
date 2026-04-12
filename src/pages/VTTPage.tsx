@@ -944,7 +944,7 @@ const handleMoveToken = useCallback((
   // Objectif :
   // - conserver la position logique finale pour le gameplay / sync réseau
   // - lisser visuellement les déplacements clavier case par case
-  // - ne pas gêner les drags souris ni les grands déplacements instantanés
+  // - éviter un ghost / flash sur la case d'arrivée
   setTokens(prev => {
     const movedToken = prev.find(t => t.id === tokenId);
     if (!movedToken) return prev;
@@ -958,9 +958,6 @@ const handleMoveToken = useCallback((
     // -------------------
     // Gestion du glissement case à case
     // -------------------
-    // On anime uniquement les petits déplacements alignés sur la grille.
-    // Cela couvre les déplacements clavier sans perturber les téléportations
-    // ni les repositionnements plus larges.
     const isSingleGridStep =
       gridSize > 0 &&
       distance > 0 &&
@@ -970,13 +967,34 @@ const handleMoveToken = useCallback((
         (Math.abs(dy) === gridSize && dx === 0)
       );
 
+    // -------------------
+    // Gestion des déplacements instantanés
+    // -------------------
     if (!isSingleGridStep) {
+      const existingAnimation = tokenMoveAnimationFrameRef.current.get(tokenId);
+      if (existingAnimation) {
+        cancelAnimationFrame(existingAnimation);
+        tokenMoveAnimationFrameRef.current.delete(tokenId);
+      }
+
       const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
       tokensRef.current = next;
       return next;
     }
 
-    const animationDuration = 520;
+    // -------------------
+    // Annulation d'une animation précédente du même token
+    // -------------------
+    const existingAnimation = tokenMoveAnimationFrameRef.current.get(tokenId);
+    if (existingAnimation) {
+      cancelAnimationFrame(existingAnimation);
+      tokenMoveAnimationFrameRef.current.delete(tokenId);
+    }
+
+    // -------------------
+    // Gestion de la vitesse de glissement des tokens
+    // -------------------
+    const animationDuration = 220;
     const animationStart = performance.now();
 
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -1003,8 +1021,11 @@ const handleMoveToken = useCallback((
       });
 
       if (rawT < 1) {
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
       } else {
+        tokenMoveAnimationFrameRef.current.delete(tokenId);
+
         setTokens(current => {
           const finalized = current.map(token =>
             token.id === tokenId
@@ -1017,13 +1038,10 @@ const handleMoveToken = useCallback((
       }
     };
 
-    requestAnimationFrame(animate);
+    const rafId = requestAnimationFrame(animate);
+    tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
 
-    return prev.map(t =>
-      t.id === tokenId
-        ? { ...t, position: currentPosition }
-        : t
-    );
+    return prev;
   });
 
   if (options?.localCameraFollow && followCameraOnTokenMove) {
