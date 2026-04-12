@@ -2622,38 +2622,13 @@ onSelectTokens={ids => {
               Utilise canvasViewport (mis à jour via onViewportChange)
               pour rester synchronisé avec le pan/zoom du canvas.
           */}
-          {tokens
-            .filter(t => (t.targetedByUserIds ?? []).length > 0 && t.visible)
-            .map(t => {
-              const vp = canvasViewport;
-              const CELL = config.gridSize;
-              const tokenSize = (t.size || 1) * CELL;
-
-              // -------------------
-              // Gestion de la position de rendu du ciblage
-              // -------------------
-              const renderedPosition = getRenderedTokenPosition(t);
-              const sx = renderedPosition.x * vp.scale + vp.x;
-              const sy = renderedPosition.y * vp.scale + vp.y;
-              const displaySize = tokenSize * vp.scale;
-
-              return (
-                <div
-                  key={`targeting-${t.id}`}
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: sx,
-                    top: sy,
-                    width: displaySize,
-                    height: displaySize,
-                    zIndex: 15,
-                  }}
-                >
-                  <VTTTargetingRing size={displaySize} />
-                </div>
-              );
-            })
-          }
+             {/* -------------------
+              Gestion du ciblage des tokens
+              -------------------
+              Le ciblage est désormais rendu directement dans le canvas
+              via vttCanvasTokenRenderer pour rester parfaitement synchronisé
+              avec les animations de déplacement des tokens.
+          ------------------- */}
 
           {activePings.map(ping => {
             const vp = canvasViewport;
