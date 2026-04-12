@@ -1002,7 +1002,13 @@ export const VTTCanvas = forwardRef<VTTCanvasHandle, VTTCanvasProps>(function VT
       selectedTokenIdRef,
       selectedTokenIdsRef,
       tokensRef,
-            combatTurnHighlightRef,
+      // -------------------
+      // Gestion des positions visuelles animées des tokens
+      // -------------------
+      tokenAnimatedPositionRef: (ref as React.RefObject<VTTCanvasHandle & {
+        tokenAnimatedPositionRef?: React.MutableRefObject<Map<string, { x: number; y: number }>>;
+      }>)?.current?.tokenAnimatedPositionRef,
+      combatTurnHighlightRef,
       wallsRef,
       doorsRef,
       windowsRef,
