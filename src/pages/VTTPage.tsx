@@ -422,6 +422,14 @@ const fogSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 // annuler proprement une animation en cours avant d'en démarrer une nouvelle.
 const tokenMoveAnimationFrameRef = useRef<Map<string, number>>(new Map());
 
+// -------------------
+// Gestion de la position visuelle animée des tokens
+// -------------------
+// La position logique reste dans token.position.
+// La position visuelle temporaire est stockée ici pour éviter
+// de re-render React à chaque frame pendant le glissement.
+const tokenAnimatedPositionRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
 
   const handleServerEvent = useCallback((event: VTTServerEvent) => {
     switch (event.type) {
