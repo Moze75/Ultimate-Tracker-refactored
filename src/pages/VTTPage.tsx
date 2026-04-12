@@ -1140,9 +1140,23 @@ const easeOutCubic = (t: number) => t < 0.5
         const rafId = requestAnimationFrame(animate);
         tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
       } else {
-        tokenMoveAnimationFrameRef.current.delete(tokenId);
-        tokenAnimatedPositionRef.current.delete(tokenId);
+        // -------------------
+        // Gestion de la fin d'animation du token
+        // -------------------
+        // On force une dernière frame exactement sur la destination
+        // avant de nettoyer la position animée, pour éviter un saut
+        // visuel du ring HTML.
+        tokenAnimatedPositionRef.current.set(tokenId, {
+          x: position.x,
+          y: position.y,
+        });
         vttCanvasRef.current?.redraw?.();
+
+        requestAnimationFrame(() => {
+          tokenMoveAnimationFrameRef.current.delete(tokenId);
+          tokenAnimatedPositionRef.current.delete(tokenId);
+          vttCanvasRef.current?.redraw?.();
+        });
       }
     };
 
