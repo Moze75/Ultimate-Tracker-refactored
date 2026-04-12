@@ -1015,7 +1015,7 @@ const handleMoveToken = useCallback((
     const animationDuration = 220;
     const animationStart = performance.now();
 
-    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeOutCubic = (t: number) => t;
 
     const animate = (now: number) => {
       const rawT = Math.min(1, (now - animationStart) / animationDuration);
