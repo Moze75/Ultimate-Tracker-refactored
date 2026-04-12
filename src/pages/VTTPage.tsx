@@ -673,7 +673,7 @@ const animateRemoteTokenToPosition = useCallback((tokenId: string, position: { x
       case 'USER_LEFT':
         break;
     }
-  }, []);
+  }, [animateRemoteTokenToPosition, role]);
 
   useEffect(() => {
     if (!roomId) { setCampaignId(null); return; }
