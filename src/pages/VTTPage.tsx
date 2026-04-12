@@ -953,53 +953,56 @@ const handleMoveToken = useCallback((
   position: { x: number; y: number },
   options?: { localCameraFollow?: boolean }
 ) => {
+  const movedToken = tokensRef.current.find(t => t.id === tokenId);
+  if (!movedToken) return;
+
+  const currentPosition = tokenAnimatedPositionRef.current.get(tokenId) ?? movedToken.position;
+  const gridSize = configRef.current.gridSize || 50;
+  const dx = position.x - currentPosition.x;
+  const dy = position.y - currentPosition.y;
+  const distance = Math.hypot(dx, dy);
+
   // -------------------
-  // Gestion des déplacements animés de token
+  // Gestion du glissement case à case
   // -------------------
-  // Objectif :
-  // - conserver la position logique finale pour le gameplay / sync réseau
-  // - lisser visuellement les déplacements clavier case par case
-  // - éviter un ghost / flash sur la case d'arrivée
-  setTokens(prev => {
-    const movedToken = prev.find(t => t.id === tokenId);
-    if (!movedToken) return prev;
+  const isSingleGridStep =
+    gridSize > 0 &&
+    distance > 0 &&
+    distance <= gridSize * 1.5 &&
+    (
+      (Math.abs(dx) === gridSize && dy === 0) ||
+      (Math.abs(dy) === gridSize && dx === 0)
+    );
 
-    const currentPosition = movedToken.position;
-    const gridSize = configRef.current.gridSize || 50;
-    const dx = position.x - currentPosition.x;
-    const dy = position.y - currentPosition.y;
-    const distance = Math.hypot(dx, dy);
+  // -------------------
+  // Gestion des déplacements instantanés
+  // -------------------
+  if (!isSingleGridStep) {
+    const existingAnimation = tokenMoveAnimationFrameRef.current.get(tokenId);
+    if (existingAnimation) {
+      cancelAnimationFrame(existingAnimation);
+      tokenMoveAnimationFrameRef.current.delete(tokenId);
+    }
 
-    // -------------------
-    // Gestion du glissement case à case
-    // -------------------
-    const isSingleGridStep =
-      gridSize > 0 &&
-      distance > 0 &&
-      distance <= gridSize * 1.5 &&
-      (
-        (Math.abs(dx) === gridSize && dy === 0) ||
-        (Math.abs(dy) === gridSize && dx === 0)
-      );
+    tokenAnimatedPositionRef.current.delete(tokenId);
 
-    // -------------------
-    // Gestion des déplacements instantanés
-    // -------------------
-    if (!isSingleGridStep) {
-      const existingAnimation = tokenMoveAnimationFrameRef.current.get(tokenId);
-      if (existingAnimation) {
-        cancelAnimationFrame(existingAnimation);
-        tokenMoveAnimationFrameRef.current.delete(tokenId);
-      }
-
+    setTokens(prev => {
       const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
       tokensRef.current = next;
       return next;
-    }
+    });
+  } else {
+    // -------------------
+    // Gestion de la position logique du token
+    // -------------------
+    // On pose immédiatement la destination logique pour la sync,
+    // mais l'affichage utilisera une position visuelle interpolée.
+    setTokens(prev => {
+      const next = prev.map(t => t.id === tokenId ? { ...t, position } : t);
+      tokensRef.current = next;
+      return next;
+    });
 
-    // -------------------
-    // Annulation d'une animation précédente du même token
-    // -------------------
     const existingAnimation = tokenMoveAnimationFrameRef.current.get(tokenId);
     if (existingAnimation) {
       cancelAnimationFrame(existingAnimation);
@@ -1018,49 +1021,28 @@ const handleMoveToken = useCallback((
       const rawT = Math.min(1, (now - animationStart) / animationDuration);
       const t = easeOutCubic(rawT);
 
-      setTokens(current => {
-        const animated = current.map(token => {
-          if (token.id !== tokenId) return token;
-
-          return {
-            ...token,
-            position: {
-              x: currentPosition.x + dx * t,
-              y: currentPosition.y + dy * t,
-            },
-          };
-        });
-
-        tokensRef.current = animated;
-        return animated;
+      tokenAnimatedPositionRef.current.set(tokenId, {
+        x: currentPosition.x + dx * t,
+        y: currentPosition.y + dy * t,
       });
+
+      vttCanvasRef.current?.redraw?.();
 
       if (rawT < 1) {
         const rafId = requestAnimationFrame(animate);
         tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
       } else {
         tokenMoveAnimationFrameRef.current.delete(tokenId);
-
-        setTokens(current => {
-          const finalized = current.map(token =>
-            token.id === tokenId
-              ? { ...token, position }
-              : token
-          );
-          tokensRef.current = finalized;
-          return finalized;
-        });
+        tokenAnimatedPositionRef.current.delete(tokenId);
+        vttCanvasRef.current?.redraw?.();
       }
     };
 
     const rafId = requestAnimationFrame(animate);
     tokenMoveAnimationFrameRef.current.set(tokenId, rafId);
-
-    return prev;
-  });
+  }
 
   if (options?.localCameraFollow && followCameraOnTokenMove) {
-    const movedToken = tokensRef.current.find(t => t.id === tokenId);
     const tokenSizePx = ((movedToken?.size || 1) * (configRef.current.gridSize || 50));
 
     vttCanvasRef.current?.followWorldPosition(
