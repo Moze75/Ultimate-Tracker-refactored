@@ -412,6 +412,10 @@ export function VTTBroadcastPage({ session, roomId, onBack }: VTTBroadcastPagePr
   sceneId={currentSceneId ?? undefined}
   config={config}
   tokens={tokens}
+  // -------------------
+  // Gestion des positions visuelles animées des tokens
+  // -------------------
+  tokenAnimatedPositionsRef={tokenAnimatedPositionRef}
   fogState={fogState}
   role="player"
   userId=""
