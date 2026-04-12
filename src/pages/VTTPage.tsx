@@ -2402,6 +2402,10 @@ onMouseDown={e => {
             sceneId={activeSceneId ?? undefined}
             config={config}
             tokens={tokens}
+            // -------------------
+            // Gestion des positions visuelles animées des tokens
+            // -------------------
+            tokenAnimatedPositionsRef={tokenAnimatedPositionRef}
             fogState={fogState}
             role={role}
             userId={userId}
