@@ -13,6 +13,10 @@ export interface DrawTokenOptions {
   tokenImageCache: Map<string, HTMLImageElement>;
   onImageLoad: () => void;
   // -------------------
+  // Gestion de la position visuelle animée des tokens
+  // -------------------
+  tokenAnimatedPositions?: Map<string, { x: number; y: number }>;
+  // -------------------
   // Timestamp animé pour le ciblage pulsant
   // -------------------
   // Passé depuis la boucle de rendu du canvas (requestAnimationFrame)
