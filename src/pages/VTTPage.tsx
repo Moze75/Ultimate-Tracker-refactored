@@ -431,6 +431,16 @@ const tokenMoveAnimationFrameRef = useRef<Map<string, number>>(new Map());
 const tokenAnimatedPositionRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
 // -------------------
+// Gestion de la position de rendu des tokens
+// -------------------
+// Utilise la position animée si elle existe, sinon la position logique.
+// Ce helper doit être utilisé par tous les overlays HTML synchronisés
+// avec les tokens (ciblage, futurs badges, etc.).
+const getRenderedTokenPosition = useCallback((token: VTTToken) => {
+  return tokenAnimatedPositionRef.current.get(token.id) ?? token.position;
+}, []);
+
+// -------------------
 // Gestion des déplacements distants des tokens
 // -------------------
 // Utilisé uniquement pour animer les TOKEN_MOVED reçus côté joueur.
